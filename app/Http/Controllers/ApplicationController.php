@@ -8,6 +8,10 @@ use App\Models\ApplicationDocument;
 use App\Models\UserDocument;
 use App\Rules\KotorMunicipalityAddress;
 use App\Support\KotorAddress;
+use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
+use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
+use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +31,22 @@ class ApplicationController extends Controller
         $competition->load('upNumber');
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
+        $identityResolver = app(CurrentIdentityResolver::class);
+
+        if (! $request->has('application_id') && $identityResolver->gatesSubjectFlows()) {
+            try {
+                $identityResolver->requireCurrentSubject($user);
+            } catch (IdentityUseGateException $e) {
+                if (app(ExistingSubjectIdentityEligibility::class)->isEligible($user)) {
+                    app(ExistingSubjectIdentityReturnTo::class)->rememberFromRequest($request);
+
+                    return redirect()->route('identity.completion.create');
+                }
+
+                return redirect()->route('competitions.show', $competition)
+                    ->withErrors(['error' => $e->getMessage()]);
+            }
+        }
         
         // Provjeri da li je ovo read-only pristup za člana komisije
         $readOnly = false;
@@ -62,6 +82,10 @@ class ApplicationController extends Controller
 
                 if ($appCompetition && !in_array($appCompetition->status, ['closed', 'completed']) && !$appCompetition->isApplicationDeadlinePassed()) {
                     abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
+                }
+
+                if ($appCompetition && $appCompetition->isCommissionProcessingBlocked()) {
+                    abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
                 }
             }
 
@@ -198,6 +222,19 @@ class ApplicationController extends Controller
     {
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
+        if (app(CurrentIdentityResolver::class)->gatesSubjectFlows()) {
+            try {
+                app(CurrentIdentityResolver::class)->requireCurrentSubject($user);
+            } catch (IdentityUseGateException $e) {
+                if (app(ExistingSubjectIdentityEligibility::class)->isEligible($user)) {
+                    app(ExistingSubjectIdentityReturnTo::class)->rememberFromRequest($request);
+
+                    return redirect()->route('identity.completion.create');
+                }
+
+                return back()->withErrors(['error' => $e->getMessage()])->withInput();
+            }
+        }
         // Blokiraj članove komisije od podnošenja prijave NA KONKURSE za koje su imenovani kao članovi
         if ($roleName === 'komisija') {
             $isCommissionMemberForThisCompetition = false;
@@ -265,7 +302,7 @@ class ApplicationController extends Controller
         // Dodatna pravila za fizičko lice BEZ registrovane djelatnosti
         if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
             // Ako je korisnik "Fizičko lice (Rezident)", business_stage je obavezno
-            $userType = auth()->user()->user_type ?? '';
+            $userType = app(CurrentIdentityResolver::class)->viewFor(auth()->user())->userType ?? '';
             if ($userType === 'Fizičko lice' || $userType === 'Rezident') {
                 $rules['business_stage'] = 'required|in:započinjanje,razvoj';
             }
@@ -532,6 +569,10 @@ class ApplicationController extends Controller
             $competition = $application->competition;
             if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
+            }
+
+            if ($competition && $competition->isCommissionProcessingBlocked()) {
+                abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
             }
         }
 
@@ -872,6 +913,10 @@ class ApplicationController extends Controller
             if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
+
+            if ($competition && $competition->isCommissionProcessingBlocked()) {
+                abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+            }
         }
 
         // Ako lokalni fajl ne postoji, a ima MEGA link – preuzmi sa MEGA-e
@@ -989,7 +1034,13 @@ class ApplicationController extends Controller
                 return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
             }
         } else {
-            $address = $application->businessPlan?->applicant_address ?: $application->user?->formattedAddress();
+            $identity = $application->user
+                ? app(CurrentIdentityResolver::class)->viewFor($application->user)
+                : null;
+            $identityAddress = $identity
+                ? KotorAddress::formatStreetAndCity($identity->address, $identity->city)
+                : '';
+            $address = $application->businessPlan?->applicant_address ?: $identityAddress;
             if (!KotorAddress::isInKotorMunicipality($address)) {
                 return KotorAddress::validationMessage();
             }
@@ -1027,7 +1078,8 @@ class ApplicationController extends Controller
             return;
         }
 
-        $profileAddress = $request->user()->formattedAddress();
+        $identity = app(CurrentIdentityResolver::class)->viewFor($request->user());
+        $profileAddress = \App\Support\KotorAddress::formatStreetAndCity($identity->address, $identity->city);
         if ($profileAddress === '') {
             return;
         }
@@ -1076,7 +1128,7 @@ class ApplicationController extends Controller
             }
         }
 
-        $userJmb = $request->user()->jmb;
+        $userJmb = app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
         if (filled($userJmb)) {
             $request->merge(['applicant_jmbg' => trim((string) $userJmb)]);
         }
@@ -1088,7 +1140,8 @@ class ApplicationController extends Controller
             return 'Nije moguće učitati adresu iz profila.';
         }
 
-        $profileAddress = $user->formattedAddress();
+        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
+        $profileAddress = KotorAddress::formatStreetAndCity($identity->address, $identity->city);
         if ($profileAddress === '') {
             return 'Popunite ulicu i grad u svom profilu prije nastavka prijave.';
         }

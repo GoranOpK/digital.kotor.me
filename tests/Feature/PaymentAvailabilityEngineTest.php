@@ -26,6 +26,7 @@ class PaymentAvailabilityEngineTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->enableEpIdentityFlows();
         $this->seed(RoleSeeder::class);
         $this->engine = $this->app->make(PaymentAvailabilityService::class);
     }

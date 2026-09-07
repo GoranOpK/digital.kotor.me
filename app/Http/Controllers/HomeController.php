@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Identity\CanonicalIdentityWriteException;
+use App\Identity\Runtime\CanonicalHttpIdentityService;
+use App\Identity\Runtime\IdentityMutationDeniedException;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -22,6 +25,7 @@ class HomeController extends Controller
     {
         $activeNotices = Notice::query()
             ->where('visible_in_active_panel', true)
+            ->with(['sourceObject.competition'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get();
@@ -109,6 +113,10 @@ class HomeController extends Controller
             $user = Auth::user();
             if ($user && $user->role && $user->role->name === 'kk_admin') {
                 $default = route('cultural-calendar.index');
+            } elseif ($user && $user->role && $user->role->name === 'konkurs_admin') {
+                $request->session()->forget('url.intended');
+
+                return redirect()->route('admin.dashboard');
             }
 
             return $this->redirectAfterLogin($request, $default);
@@ -431,8 +439,18 @@ class HomeController extends Controller
             $userData['passport_number'] = strtoupper($validated['passport_number']);
         }
 
-        // Kreiranje korisnika
-        $user = User::create($userData);
+        try {
+            $user = app(CanonicalHttpIdentityService::class)->registerFromValidated(
+                $userData,
+                $validated,
+                $jmbToValidate,
+                $storedUserType,
+            );
+        } catch (IdentityMutationDeniedException $e) {
+            abort(403, $e->getMessage());
+        } catch (CanonicalIdentityWriteException $e) {
+            return back()->withErrors(['user_type' => 'Registracija identiteta nije uspjela.'])->withInput();
+        }
 
         // Slanje email verifikacije
         event(new Registered($user));

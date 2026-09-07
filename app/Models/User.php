@@ -200,6 +200,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(NewsletterSubscription::class);
     }
 
+    /**
+     * Canonical registered-subject identity (D1). Inert in Phase 1 — not a runtime SSOT.
+     */
+    public function identity()
+    {
+        return $this->hasOne(PlatformIdentity::class);
+    }
+
     public function paymentInitiations()
     {
         return $this->hasMany(PaymentInitiation::class);

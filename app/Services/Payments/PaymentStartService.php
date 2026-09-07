@@ -10,6 +10,7 @@ use App\Models\PaymentTransactionEvent;
 use App\Models\PaymentType;
 use App\Models\User;
 use App\Support\UserType;
+use App\Identity\Runtime\EpIdentityFlowGuard;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -24,6 +25,7 @@ class PaymentStartService
         private readonly PaymentDraftService $drafts,
         private readonly PaymentAvailabilityService $availability,
         private readonly EpModuleSettings $module,
+        private readonly EpIdentityFlowGuard $epIdentityFlows,
         private readonly PaymentGatewayResolver $gateways,
     ) {}
 
@@ -33,6 +35,8 @@ class PaymentStartService
         if ($user === null) {
             throw new PaymentResultRejectedException('Unauthenticated payment start.');
         }
+
+        $this->epIdentityFlows->assertEnabled();
 
         if (! $this->module->newPaymentsEnabled()) {
             throw new PaymentResultRejectedException('New payments are disabled.');
@@ -223,6 +227,8 @@ class PaymentStartService
      */
     public function snapshot(User $user, PaymentType $type, PaymentAccount $account, string $amount): array
     {
+        $this->epIdentityFlows->assertEnabled();
+
         return [
             'payer_user_id' => $user->id,
             'payer_label' => $this->drafts->payerLabel($user),

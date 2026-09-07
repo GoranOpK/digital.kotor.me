@@ -145,7 +145,7 @@
                 <div class="form-group">
                     <label for="first_name" class="form-label">Ime <span class="required">*</span></label>
                     <input type="text" name="first_name" id="first_name" class="form-control" 
-                           value="{{ old('first_name', $user->first_name) }}" required>
+                           value="{{ old('first_name', $subjectIdentity->firstName) }}" required>
                     @error('first_name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -154,7 +154,7 @@
                 <div class="form-group">
                     <label for="last_name" class="form-label">Prezime <span class="required">*</span></label>
                     <input type="text" name="last_name" id="last_name" class="form-control" 
-                           value="{{ old('last_name', $user->last_name) }}" required>
+                           value="{{ old('last_name', $subjectIdentity->lastName) }}" required>
                     @error('last_name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -172,7 +172,7 @@
                 <div class="form-group">
                     <label for="phone" class="form-label">Broj telefona <span class="required">*</span></label>
                     <input type="text" name="phone" id="phone" class="form-control" 
-                           value="{{ old('phone', $user->phone) }}" required>
+                           value="{{ old('phone', $subjectIdentity->phone) }}" required>
                     @error('phone')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
@@ -181,7 +181,7 @@
                 <div class="form-group">
                     <label for="address" class="form-label">Ulica i broj (ili bb) <span class="required">*</span></label>
                     <input type="text" name="address" id="address" class="form-control" 
-                           value="{{ old('address', $user->address) }}" required
+                           value="{{ old('address', $subjectIdentity->address) }}" required
                            autocomplete="address-line1"
                            placeholder="Npr. Njegoševa 12 ili Njegoševa bb">
                     <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
@@ -195,7 +195,7 @@
                 <div class="form-group">
                     <label for="city" class="form-label">Grad <span class="required">*</span></label>
                     <input type="text" name="city" id="city" class="form-control" 
-                           value="{{ old('city', $user->city) }}" required
+                           value="{{ old('city', $subjectIdentity->city) }}" required
                            placeholder="Npr. Kotor, Dobrota, Risan">
                     <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
                         Za rezidente i pravna lica grad mora biti na teritoriji Opštine Kotor.
@@ -205,12 +205,21 @@
                     @enderror
                 </div>
 
-                    @if($user->collectsBusinessIdentity())
+                    @php
+                        $identityFormBranch = config('identity.canonical_read')
+                            ? ($subjectIdentity->hasCurrentSubjectIdentity()
+                                && (
+                                    \App\Support\UserType::isNaturalPerson($subjectIdentity->userType)
+                                    || \App\Support\UserType::isLegalEntity($subjectIdentity->userType)
+                                ))
+                            : $user->collectsBusinessIdentity();
+                    @endphp
+                    @if($identityFormBranch)
                     <div class="form-group">
                     <label for="user_type" class="form-label">Tip korisnika <span class="required">*</span></label>
                     <select name="user_type" id="user_type" class="form-control" required onchange="toggleUserTypeFields()">
-                        @foreach(\App\Support\UserType::profileSelectOptions($user->user_type) as $value => $label)
-                            <option value="{{ $value }}" {{ old('user_type', $user->user_type) === $value ? 'selected' : '' }}>
+                        @foreach(\App\Support\UserType::profileSelectOptions($subjectIdentity->userType) as $value => $label)
+                            <option value="{{ $value }}" {{ old('user_type', $subjectIdentity->userType) === $value ? 'selected' : '' }}>
                                 {{ $label }}
                             </option>
                         @endforeach
@@ -221,7 +230,7 @@
                 </div>
 
                 @php
-                    $selectedType = old('user_type', $user->user_type);
+                    $selectedType = old('user_type', $subjectIdentity->userType);
                     $isNaturalPerson = \App\Support\UserType::isNaturalPerson($selectedType);
                     $isEntrepreneur = \App\Support\UserType::isEntrepreneur($selectedType);
                     $isLegalEntity = \App\Support\UserType::isLegalEntity($selectedType);
@@ -230,8 +239,8 @@
                 <div class="form-group" id="residentialStatusGroup" style="{{ $isNaturalPerson ? '' : 'display: none;' }}">
                     <label for="residential_status" class="form-label">Status rezidentnosti <span class="required">*</span></label>
                     <select name="residential_status" id="residential_status" class="form-control" @if($isNaturalPerson) required @endif>
-                        <option value="resident" {{ old('residential_status', $user->residential_status) === 'resident' ? 'selected' : '' }}>Rezident</option>
-                        <option value="non-resident" {{ old('residential_status', $user->residential_status) === 'non-resident' ? 'selected' : '' }}>Nerezident</option>
+                        <option value="resident" {{ old('residential_status', $subjectIdentity->residentialStatus) === 'resident' ? 'selected' : '' }}>Rezident</option>
+                        <option value="non-resident" {{ old('residential_status', $subjectIdentity->residentialStatus) === 'non-resident' ? 'selected' : '' }}>Nerezident</option>
                     </select>
                     @error('residential_status')
                         <div class="form-error">{{ $message }}</div>
@@ -240,9 +249,9 @@
 
                 <div id="physicalPersonFields" class="{{ $isNaturalPerson ? '' : 'conditional-field' }}" style="{{ $isNaturalPerson ? '' : 'display: none;' }}">
                     <div class="form-group">
-                        <label for="jmb" class="form-label">JMB @if(old('residential_status', $user->residential_status) === 'resident')<span class="required">*</span>@endif</label>
+                        <label for="jmb" class="form-label">JMB @if(old('residential_status', $subjectIdentity->residentialStatus) === 'resident')<span class="required">*</span>@endif</label>
                         <input type="text" name="jmb" id="jmb" class="form-control" 
-                               value="{{ old('jmb', $user->jmb) }}" 
+                               value="{{ old('jmb', $subjectIdentity->jmb) }}" 
                                maxlength="13" 
                                pattern="[0-9]{13}"
                                placeholder="13 cifara">
@@ -259,7 +268,7 @@
                     <div class="form-group">
                         <label for="company_name" class="form-label" id="companyNameLabel">{{ $isLegalEntity ? 'Naziv privrednog subjekta' : 'Poslovno ime' }} @if($isLegalEntity)<span class="required">*</span>@endif</label>
                         <input type="text" name="company_name" id="company_name" class="form-control"
-                               value="{{ old('company_name', $user->company_name) }}"
+                               value="{{ old('company_name', $subjectIdentity->companyName) }}"
                                maxlength="255">
                         @error('company_name')
                             <div class="form-error">{{ $message }}</div>
@@ -271,7 +280,7 @@
                     <div class="form-group">
                         <label for="pib" class="form-label">PIB <span class="required">*</span></label>
                         <input type="text" name="pib" id="pib" class="form-control" 
-                               value="{{ old('pib', $user->pib) }}" 
+                               value="{{ old('pib', $subjectIdentity->pib) }}" 
                                maxlength="8"
                                pattern="[0-9]{8}"
                                placeholder="8 cifara">
@@ -285,11 +294,11 @@
                 </div>
 
                 <!-- Polje za passport (opciono za nerezidente fizička lica / preduzetnike) -->
-                <div id="passportFields" class="{{ ($isNaturalPerson && old('residential_status', $user->residential_status) !== 'resident') ? '' : 'conditional-field' }}" style="{{ ($isNaturalPerson && old('residential_status', $user->residential_status) !== 'resident') ? '' : 'display: none;' }}">
+                <div id="passportFields" class="{{ ($isNaturalPerson && old('residential_status', $subjectIdentity->residentialStatus) !== 'resident') ? '' : 'conditional-field' }}" style="{{ ($isNaturalPerson && old('residential_status', $subjectIdentity->residentialStatus) !== 'resident') ? '' : 'display: none;' }}">
                     <div class="form-group">
                         <label for="passport_number" class="form-label">Broj pasoša</label>
                         <input type="text" name="passport_number" id="passport_number" class="form-control"
-                               value="{{ old('passport_number', $user->passport_number) }}"
+                               value="{{ old('passport_number', $subjectIdentity->passportNumber) }}"
                                maxlength="50"
                                placeholder="Broj pasoša">
                         @error('passport_number')

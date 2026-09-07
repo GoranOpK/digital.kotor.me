@@ -63,6 +63,23 @@ return [
             ]) : [],
         ],
 
+        'identity_census_readonly' => [
+            'driver' => 'mysql',
+            'host' => env('IDENTITY_CENSUS_DB_HOST'),
+            'port' => env('IDENTITY_CENSUS_DB_PORT', '3306'),
+            'database' => env('IDENTITY_CENSUS_DB_DATABASE'),
+            'username' => env('IDENTITY_CENSUS_DB_USERNAME'),
+            'password' => env('IDENTITY_CENSUS_DB_PASSWORD'),
+            'unix_socket' => env('IDENTITY_CENSUS_DB_SOCKET'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

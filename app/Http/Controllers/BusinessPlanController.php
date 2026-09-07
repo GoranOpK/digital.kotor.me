@@ -7,6 +7,8 @@ use App\Models\BusinessPlan;
 use App\Rules\KotorMunicipalityAddress;
 use App\Support\PhoneNumber;
 use App\Support\Pib;
+use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Support\KotorAddress;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -52,8 +54,11 @@ class BusinessPlanController extends Controller
             return $application->pib;
         }
 
-        if ($user && filled($user->pib)) {
-            return $user->pib;
+        if ($user) {
+            $pib = app(CurrentIdentityResolver::class)->viewFor($user)->pib;
+            if (filled($pib)) {
+                return $pib;
+            }
         }
 
         return null;
@@ -112,6 +117,10 @@ class BusinessPlanController extends Controller
             $competition = $application->competition;
             if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
+            }
+
+            if ($competition && $competition->isCommissionProcessingBlocked()) {
+                abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
             }
         }
 
@@ -214,30 +223,34 @@ class BusinessPlanController extends Controller
         // Pripremi podatke za automatsko popunjavanje iz prijave
         $application->loadMissing('user');
         $applicantUser = $application->user ?? Auth::user();
+        $identity = app(CurrentIdentityResolver::class)->viewFor($applicantUser);
+        $identityAddress = $applicantUser
+            ? \App\Support\KotorAddress::formatStreetAndCity($identity->address, $identity->city)
+            : '';
         $defaultData = [];
         
         // Podaci o podnosiocu - uzmi iz prijave ili korisničkog profila podnosioca
         if ($application->applicant_type === 'fizicko_lice') {
             // Za fizičko lice, podaci su u prijavi
             $defaultData['applicant_name'] = $application->physical_person_name ?? $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $applicantUser->jmb ?? '';
-            $defaultData['applicant_phone'] = PhoneNumber::normalize($application->physical_person_phone ?? $applicantUser->phone ?? '');
+            $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $identity->jmb ?? '';
+            $defaultData['applicant_phone'] = PhoneNumber::normalize($application->physical_person_phone ?? $identity->phone ?? '');
             $defaultData['applicant_email'] = $application->physical_person_email ?? $applicantUser->email ?? '';
-            $defaultData['applicant_address'] = $applicantUser->formattedAddress();
+            $defaultData['applicant_address'] = $identityAddress;
         } elseif ($application->applicant_type === 'preduzetnica') {
             // Za preduzetnicu, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? '';
-            $defaultData['applicant_phone'] = PhoneNumber::normalize($applicantUser->phone ?? '');
+            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
+            $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
             $defaultData['applicant_email'] = $applicantUser->email ?? '';
-            $defaultData['applicant_address'] = $applicantUser->formattedAddress();
+            $defaultData['applicant_address'] = $identityAddress;
         } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
             // Za DOO/Ostalo, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? '';
-            $defaultData['applicant_phone'] = PhoneNumber::normalize($applicantUser->phone ?? '');
+            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
+            $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
             $defaultData['applicant_email'] = $applicantUser->email ?? '';
-            $defaultData['applicant_address'] = $applicantUser->formattedAddress();
+            $defaultData['applicant_address'] = $identityAddress;
         }
 
         // Podaci o registrovanom biznisu - uzmi iz prijave (Obrazac 1a/1b)

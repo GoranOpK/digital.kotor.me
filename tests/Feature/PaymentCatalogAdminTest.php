@@ -20,6 +20,7 @@ class PaymentCatalogAdminTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->enableEpIdentityFlows();
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
         $this->admin = $this->userWithRole('admin', 'Platform Admin', 'ep-admin@example.com');

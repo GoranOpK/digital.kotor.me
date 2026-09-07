@@ -1,251 +1,227 @@
 # Digital Kotor
 # Registar skraćenica i oznaka dokumentacije Konkursa
-## Modul: Konkursi
 
 **Oznaka dokumenta:** KN-RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Konkursa
 **Modul:** Konkursi
-**Namespace:** KN
-**Status dokumenta:** U IZRADI
-**Verzija:** 0.1.1
-**Datum:** 2026-08-19
-
----
-
-# Istorija verzija
-
-| Verzija / PATCH | Datum | Opis |
-|-----------------|--------|------|
-| 0.1.0 | 2026-08-18 | Uspostavljen KN-RG-001 kao jedinstveni registar oznaka modula Konkursi. Razdvojeni namespace cijelog modula i obuhvat trenutne dokumentacione faze. Razdvojeni zajednički konfigurabilni okvir od zasebnih poslovnih i funkcionalnih profila tipa konkursa. Registrovan kanonski lanac KN-RG-001 → KN-BM-001 → KN-BM-002 → KN-FS-001 → KN-FS-002 → KN-TS-001. Uvedeno pravilo da se oznake evidentiraju u istom koraku u kojem se prvi put koriste. Opcioni tipovi dokumenata, PATCH instance i interne oznake nijesu rezervisani unaprijed. |
-| 0.1.1 | 2026-08-19 | Evidentirana struktura interne oznake `BM-KN-NNN` i ažuriran status `KN-BM-001` na `U IZRADI`. |
-
-Napomena:
-
-Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
-
-Kod svake naredne verzije dodaje se novi red u tabeli.
-
-Ne mijenjaju se postojeći redovi.
-
-Dokument ima status `U IZRADI` i nije formalno usvojen. Dok dokument ima status `U IZRADI`, redakcijske korekcije koje ne mijenjaju značenje mogu se unositi u okviru iste radne verzije. Kada se odobrenim dokumentacionim korakom doda ili promijeni sadržaj, obuhvat ili usvojeno pravilo dokumenta, povećava se radna verzija i dodaje novi red u istoriju verzija. Više povezanih izmjena jednog odobrenog dokumentacionog koraka mogu se evidentirati kao jedna radna verzija. Postojeći redovi istorije verzija ne mijenjaju se. PATCH oznaka se ne izdaje dok dokument nije formalno usvojen.
-
----
-
-## Svrha dokumenta
-
-KN-RG-001 je referentni i živi dokument. Predstavlja jedinstveni registar skraćenica i dokumentacionih oznaka modula **Konkursi**.
-
-Nije poslovni pojmovnik. Ne definiše poslovna pravila, uslove konkursa, rokove, iznose, bodovanje, uloge ni statuse. Ne zamjenjuje KN-BM, KN-FS ili KN-TS dokumente.
-
-Uključene su samo oznake koje se stvarno koriste u dokumentaciji Konkursa. Oznake se ne uvode niti rezervišu unaprijed bez stvarne upotrebe.
-
-Platformski dokumentacioni standard: `DK-DS-001`.
-Proces: `docs/METHODOLOGY.md`.
-
----
-
-# Status razvoja
-
-| Poglavlje | Status |
-|-----------|--------|
-| 1. Identitet i svrha | U IZRADI |
-| 2. Obuhvat registra | U IZRADI |
-| 3. Pravilo namespace-a | U IZRADI |
-| 4. Dokumentacione oznake | U IZRADI |
-| 5. Opcioni tipovi dokumenata | U IZRADI |
-| 6. PATCH model | U IZRADI |
-| 7. Runtime vrijednosti | U IZRADI |
-| 8. Interne oznake | U IZRADI |
-| 9. Drugi moduli | U IZRADI |
-| 10. Zabranjene oznake | U IZRADI |
-| 11. Pravila održavanja | U IZRADI |
-
----
-
-# Pravila upravljanja dokumentom
-
-1. KN-RG-001 nije izvor istine za poslovna ili pravna pravila.
-2. Prednost imaju vlasnički dokumenti: KN-BM, KN-FS, KN-TS.
-3. Svaka nova skraćenica ili interna oznaka evidentira se u `KN-RG-001` u istom dokumentacionom koraku u kojem se prvi put koristi, uključujući dokumente sa statusom `U IZRADI`. Uz oznaku se navode značenje, namjena, dokument u kojem se koristi, tip konkursa kojem pripada i status. Oznake se ne uvode niti rezervišu unaprijed bez stvarne upotrebe.
-4. Dokumenti sa statusom `U IZRADI` mogu se korigovati bez PATCH oznake dok nijesu formalno usvojeni.
-5. Cursor ima ulogu urednika verzionisanog dokumenta i ne smije samostalno uvoditi poslovna pravila niti oznake koje se još ne koriste.
-
----
-
-## Sadržaj
-
-1. Identitet i svrha
-2. Obuhvat registra
-3. Pravilo namespace-a
-4. Dokumentacione oznake
-5. Opcioni tipovi dokumenata
-6. PATCH model
-7. Runtime vrijednosti
-8. Interne oznake
-9. Drugi moduli
-10. Zabranjene oznake
-11. Pravila održavanja
+**Vlasništvo:** cjelina Konkursi (`KN`)
+**Status dokumenta:** USVOJENO
+**Verzija:** 1.0.10
+**Datum:** 2026-09-04
 
 ---
 
 # 1. Identitet i svrha
 
-KN-RG-001 je jedinstveni registar skraćenica i dokumentacionih oznaka modula Konkursi (`KN-*`).
+KN-RG-001 je referentni i živi dokument. Predstavlja centralni registar skraćenica i dokumentacionih oznaka cjeline **Konkursi**.
 
-Namijenjen je članovima projektnog tima, analitičarima, testerima i tehničkim saradnicima koji rade na dokumentaciji Konkursa.
+Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje KN-PRO-001, KN-BM-001, KN-FS-001 ili KN-TS-001.
 
-Odgovara na pitanja:
+Nije registar Kalendara kulture (`KK-RG-001`), e-Plaćanja (`EP-RG-001`) ni platformskog sloja (`DK-RG-001`). Nije globalni katalog svih poslovnih oznaka svih modula.
 
-* koji je dokumentacioni namespace;
-* koji su tipovi i kanonski document ID-evi trenutne faze;
-* koje su oznake aktivne, a koje zabranjene;
-* kako se nove oznake evidentiraju.
-
-KN-RG-001:
-
-* **nije** poslovni pojmovnik;
-* **ne** definiše poslovna ni tehnička pravila;
-* **ne** zamjenjuje BM, FS ili TS.
+Normativni dokumentacioni standard platforme je **DK-DS-001** (`docs/reference/Digital-Kotor-Documentation-Standard.md`). Proces i TS struktura: `docs/METHODOLOGY.md`. Ovaj registar **referencira** ta pravila; ne uvodi paralelni platformski standard.
 
 ---
 
-# 2. Obuhvat registra
+# 2. Namespace
 
-Namespace `KN` obuhvata dokumentaciju svih konkursa u okviru modula Konkursi. Trenutna dokumentaciona faza uspostavlja zajednički konfigurabilni okvir modula Konkursi i zasebni poslovni i funkcionalni profil konkursa za podršku preduzetništvu mladih.
+Dokumentacioni namespace cjeline Konkursi je **`KN`**.
 
-Dokumentacija se dijeli na:
+Značenje: poslovna cjelina **Konkursi** na platformi Digital Kotor, uključujući podršku preduzetnicima i mikro, malim i srednjim preduzećima kroz dodjelu subvencija.
 
-1. zajednički konfigurabilni okvir modula Konkursi;
-2. zasebne poslovne i funkcionalne profile svakog tipa konkursa;
-3. godišnje instance konkursa kao podatke i konfiguraciju sistema.
+Namespace `KN` je usvojen u DK-DS-001 §1. Ovaj paket **ne** predlaže niti mijenja prefiks.
 
-Zajednički dokumenti ne smiju pretpostaviti da svi konkursi imaju iste aktere, kategorije, dokumente, obrasce, faze ili pravila.
+Žensko preduzetništvo i omladinski konkurs **nijesu** zasebni dokumentacioni moduli. Oni su vrste/tokovi unutar cjeline Konkursi. Poseban `OM-*` namespace **ne postoji** (DK-DS-001 §1).
 
-Registar razdvaja, kada budu uvedene:
-
-* zajedničke oznake modula Konkursi;
-* oznake pojedinačnih tipova konkursa;
-* interne oznake poslovnih i funkcionalnih pravila;
-* dokumentacione oznake od runtime vrijednosti.
-
-Ove kategorije se ne spajaju. Prazne kategorije se ne popunjavaju unaprijed.
-
-Usvojeni dokumentacioni lanac ove faze:
-
-`KN-RG-001 → KN-BM-001 → KN-BM-002 → KN-FS-001 → KN-FS-002 → KN-TS-001`
-
-Razgraničenje sadržaja:
-
-* `KN-BM-001` ne definiše konkretne aktere i dokumente svih konkursa; definiše zajednički model i mehanizam profila;
-* `KN-BM-002` definiše poslovne posebnosti konkursa za mlade;
-* `KN-FS-001` definiše zajedničke i konfigurabilne funkcionalnosti;
-* `KN-FS-002` definiše funkcionalnu primjenu profila mladih;
-* `KN-TS-001` definiše zajedničku tehničku realizaciju;
-* godišnja instanca konkursa nije novi BM/FS/TS dokument.
-
-Filename **nije** document ID. Document ID živi u zaglavlju dokumenta (`DK-DS-001` §2).
+Tenderi **nemaju** namespace `KN`. `KK-*`, `EP-*` i `DK-*` **ne** pripadaju ovom registru.
 
 ---
 
-# 3. Pravilo namespace-a
+# 3. Document ID
 
-Svi kanonski Document ID-evi modula Konkursi koriste namespace prefiks `KN-`. Interne poslovne, funkcionalne i runtime oznake nisu Document ID-evi i njihov format se odobrava zasebno prije prve upotrebe.
+Kanonski format (DK-DS-001 §2):
 
-Numeracija document ID-eva je lokalna unutar namespace-a `KN` i tipa dokumenta. Rupe u numeraciji su dozvoljene (`DK-DS-001` §1). Dokument se ne kreira samo da bi se popunio broj.
+`{NS}-{TYPE}-{NNN}`
 
-Lista namespace prefiksa platforme **nije** zatvorena. Prefiks `KN` je usvojen. Novi prefiks se ne uvodi ovim dokumentom.
+Primjeri: `KN-RG-001`, `KN-PRO-001`, `KN-BM-001`, `KN-FS-001`, `KN-TS-001`.
 
----
+Numeracija je **lokalna unutar namespace-a `KN` i tipa dokumenta**. Ne postoji jedan globalni BM/FS/TS niz. Rupe u numeraciji su dozvoljene. Dokument se ne kreira samo da bi se popunio broj (DK-DS-001 §1).
 
-# 4. Dokumentacione oznake
-
-## 4.1 Prefiksi dokumenata
-
-Prefiksi pripadaju **namespace-u KN**.
-
-| Oznaka | Puni naziv | Značenje | Gdje se koristi | Status |
-|--------|------------|----------|-----------------|--------|
-| **KN** | Konkursi | Prefiks dokumentacionog namespace-a cijelog modula Konkursi. | Svi KN dokumenti | aktivna |
-| **KN-RG** | Registar skraćenica i oznaka dokumentacije Konkursa | Tip dokumenta: RG. | KN-RG-001 | aktivna |
-| **KN-BM** | Poslovni model Konkursa | Tip dokumenta: poslovni model. | KN-BM-001; KN-BM-002 | aktivna |
-| **KN-FS** | Funkcionalna specifikacija Konkursa | Tip dokumenta: funkcionalna specifikacija. | KN-FS-001; KN-FS-002 | aktivna |
-| **KN-TS** | Tehnička specifikacija Konkursa | Tip dokumenta: tehnička specifikacija. | KN-TS-001 | aktivna |
-
-## 4.2 Kanonski dokumenti ove faze
-
-| Oznaka | Dokument | Putanja | Obuhvat sadržaja | Status |
-|--------|----------|---------|------------------|--------|
-| **KN-RG-001** | Registar skraćenica i oznaka dokumentacije Konkursa | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | namespace KN; granice faze; pravila evidencije oznaka | U IZRADI |
-| **KN-BM-001** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi.md` | Zajednički pojmovi, konfigurabilni okvir i pravila razdvajanja tipova konkursa | U IZRADI |
-| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Akteri, kategorije, dokumenti, obrasci, faze i poslovna pravila profila mladih koja utiču na platformu | planiran; fajl nije kreiran |
-| **KN-FS-001** | Zajedničke funkcionalnosti modula Konkursi | `docs/functional-specifications/Functional-Specification_Konkursi.md` | Zajedničke i konfigurabilne funkcionalnosti modula | planiran; fajl nije kreiran |
-| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Funkcionalno ponašanje, forme i validacije profila mladih izvedeni iz `KN-BM-002` | planiran; fajl nije kreiran |
-| **KN-TS-001** | Zajednička tehnička specifikacija modula Konkursi | `docs/technical-specifications/Technical-Specification_Konkursi.md` | Zajednička arhitektura, konfiguracioni mehanizam i tehnički model modula | planiran; fajl nije kreiran |
+Document ID živi u zaglavlju dokumenta. **Filename nije document ID i nije SSOT.** SSOT je Document ID (DK-DS-001 §2, §14).
 
 ---
 
-# 5. Opcioni tipovi dokumenata
+# 4. Tipovi dokumenata
 
-Dodatni tip dokumenta uvodi se prema `DK-DS-001` tek kada postane stvarno potreban i nakon posebnog odobrenja.
+Tipovi i obaveznost preuzeti su iz DK-DS-001 §3. Ovaj registar ih ne proširuje.
 
-Konkretne oznake opcionih tipova se **ne** rezervišu unaprijed. Kada odobrena oznaka bude prvi put upotrijebljena, evidentira se u ovom registru u istom dokumentacionom koraku.
+| Type | Namjena | Status u KN paketu (2026-08-18) |
+|------|---------|----------------------------------|
+| **RG** | Registar skraćenica i oznaka | Kreiran: KN-RG-001 (ovaj dokument) |
+| **PRO** | Pravni okvir (novi moduli) | Kreiran: KN-PRO-001 — NACRT |
+| **BM** | Poslovni model | Kanonski: KN-BM-001 — USVOJENO. Sačuvani profili/framework: KN-BM-002, KN-BM-003, KN-BM-004 (vidi §5.1; nijesu trenutni Odluka SSOT). |
+| **FS** | Funkcionalna specifikacija | Kanonski: KN-FS-001 — USVOJENO. Sačuvani profil: KN-FS-003; planiran profil: KN-FS-002 (vidi §5.1; nijesu trenutni Odluka SSOT). |
+| **TS** | Tehnička specifikacija | Kreiran: KN-TS-001 — NACRT |
+| **UC** | Use Cases | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
+| **FR** | Feature Registry | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
+| **CR-REG** | Change Request Register | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
+| **IS** | Implementation Strategy | OPTIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
+| **IR** | Implementation Roadmap | OPTIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
+| **KF** | Katalog | CONDITIONAL — **NOT YET CREATED** |
+| **DS** | Dokumentacioni standard | Nije modulni tip; samo `DK-DS-001` |
 
----
+Modul može imati jedan ili više TS dokumenata. Svaki ima lokalnu numeraciju. `KN-TS-001` je prvi TS; dodatni `KN-TS-00n` se ne kreiraju unaprijed.
 
-# 6. PATCH model
+**Ne** kreirati UC, FR, CR-REG, IS, IR ili KF radi forme (DK-DS-001 §3).
 
-Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema obrascu `KN-PATCH-{TIP}-{NNN}`. Konkretna PATCH oznaka evidentira se u `KN-RG-001` tek kada se prvi put stvarno upotrijebi. Dokumenti sa statusom `U IZRADI` mogu se korigovati bez PATCH oznake dok nijesu formalno usvojeni.
-
-Nijedna `KN-PATCH-*` oznaka trenutno nije izdata.
-
----
-
-# 7. Runtime vrijednosti
-
-Dokumentacione oznake modula Konkursi nisu isto što i runtime vrijednosti aplikacije. Vrijednosti koje postoje u kodu ili bazi ne postaju automatski usvojene oznake. Runtime oznake definišu se i odobravaju u `KN-TS-001`, a u `KN-RG-001` evidentiraju se samo ako se koriste za sljedivost između dokumentacije i implementacije.
-
-Trenutno nema evidentiranih runtime oznaka.
-
----
-
-# 8. Interne oznake
-
-Interne oznake poslovnih i funkcionalnih pravila ne uvode se unaprijed. Njihova struktura odobrava se prije prve upotrebe u odgovarajućem dokumentu. Oznake moraju razlikovati zajednička pravila modula, pravila tipa konkursa i, samo ako bude potrebno, pravila godišnje instance. Svaka odobrena oznaka evidentira se u `KN-RG-001` u istom koraku u kojem se prvi put koristi.
-
-| Oznaka | Značenje | Namjena | Dokument | Tip konkursa / sloj | Status |
-|--------|----------|---------|----------|---------------------|--------|
-| **BM-KN-NNN** | Zajedničko poslovno pravilo modula Konkursi | Označavanje pravila zajedničkog poslovnog okvira | `KN-BM-001` | Zajednički sloj modula Konkursi | aktivna struktura |
-
-* `BM-KN-NNN` nije Document ID.
-* Konkretni brojevi se ne rezervišu unaprijed.
-* Prva konkretna oznaka nastaje tek kada se napiše i odobri prvo zajedničko poslovno pravilo.
+Pravni okvir novog modula koristi tip **PRO**, ne `PO`. `PO-*` u drugim modulima može označavati Product Owner odluku; to **nije** document type Pravnog okvira (DK-DS-001 §4). `EP-PO-001` ostaje KEEP za e-Plaćanje i **nije** KN dokument.
 
 ---
 
-# 9. Drugi moduli
+# 5. Kanonski dokumenti (aktuelno)
 
-`KN-RG-001` vodi oznake modula Konkursi. Oznake drugih modula i zajedničkih platformskih funkcionalnosti vode se u njihovim matičnim registrima. Kada modul Konkursi koristi zajedničku funkcionalnost drugog modula, veza se evidentira u odgovarajućem BM, FS ili TS dokumentu, bez preuzimanja tuđe oznake u registar Konkursa.
+| Oznaka | Dokument | Putanja | Status dokumenta |
+|--------|----------|---------|------------------|
+| **KN-RG-001** | Registar skraćenica i oznaka dokumentacije Konkursa | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | USVOJENO |
+| **KN-PRO-001** | Pravni okvir Konkursa | `docs/pravni-okvir/Pravni_okvir_Konkursi.md` | NACRT |
+| **KN-BM-001** | Poslovni model Konkursa | `docs/business-model/Business_Model_Konkursi.md` | USVOJENO |
+| **KN-FS-001** | Funkcionalna specifikacija Konkursa | `docs/functional-specifications/Functional-Specification_Konkursi.md` | USVOJENO |
+| **KN-TS-001** | Tehnička specifikacija Konkursa | `docs/technical-specifications/Technical-Specification_Konkursi.md` | NACRT |
+
+Dokumentaciona hijerarhija (nije prenos pravnih pravila):
+
+```text
+DK-DS-001 / METHODOLOGY
+        ↓
+KN-RG-001
+        ↓
+KN-PRO-001
+        ↓
+KN-BM-001
+        ↓
+KN-FS-001
+        ↓
+KN-TS-001
+```
+
+Minimalni kanonski lanac sadržaja prema DK-DS-001 §11: `KN-BM-*` → `KN-FS-*` → `KN-TS-*`. Za tekući Odluka SSOT to znači: `KN-BM-001` → `KN-FS-001` → `KN-TS-001`. Pravni izvor, kada bude analiziran, ulazi preko KN-PRO-001 u BM, ne zaobilazeći taj lanac.
+
+Sačuvani profili i framework (`KN-BM-002`, `KN-BM-003`, `KN-BM-004`, `KN-FS-002`, `KN-FS-003`) **nijesu** umetnuti u gornji kanonski SSOT lanac; vidi §5.1.
 
 ---
 
-# 10. Zabranjene oznake
+# 5.1 Sačuvani profili i framework (remote linija)
 
-| Oznaka | Razlog |
-|--------|--------|
-| **OM-*** | Poseban namespace ne postoji (`DK-DS-001` §1). |
+Ovi Document ID-evi su sačuvani iz remote dokumentacione linije pri kontrolisanoj integraciji. **Nijesu** trenutni kanonski poslovni ni funkcionalni SSOT pod važećom Odlukom i **ne** zamjenjuju `KN-BM-001` / `KN-FS-001`.
 
-Trenutno nema oznaka sa statusom **ZASTARJELO**.
+Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; **nije** automatsko usvajanje kao tekući Odluka SSOT. Registar **ne** prenosi poslovna pravila profila (npr. sastav Komisije, povlačenje Prijave, dobne granice, kvartalne/procentualne odredbe) u univerzalna KN pravila.
 
----
+| Oznaka | Dokument | Putanja | Uloga | Status u izvornom zaglavlju |
+|--------|----------|---------|-------|------------------------------|
+| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.2) |
+| **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.9) |
+| **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
+| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Planirani funkcionalni profil (mladi); fajl nije kreiran u ovoj fuzi | planiran |
+| **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.0) |
 
-# 11. Pravila održavanja
-
-* KN-RG-001 se ažurira u istom dokumentacionom koraku u kojem nastane nova stvarno korišćena skraćenica, novi tip dokumenta, kada se promijeni zvanični naziv oznake, ili kada oznaka postane zastarjela.
-* Uz svaku novu oznaku navode se značenje, namjena, dokument u kojem se koristi, tip konkursa kojem pripada i status.
-* Zastarjela oznaka se ne briše bez traga — označava se kao **ZASTARJELO** i upućuje na važeći naziv.
-* U KN-RG-001 se **ne** unose: poslovni pojmovnik; opšte tehničke skraćenice; poslovna pravila; tuđe oznake drugih modula; unaprijed rezervisane oznake bez stvarne upotrebe.
-* Dodavanje novog tipa konkursa zahtijeva poseban odobreni dokumentacioni korak. Zajednički BM, FS i TS dokumenti mijenjaju se samo ako novi tip zahtijeva proširenje zajedničkog konfigurabilnog okvira. Svaki novi tip konkursa dobija zaseban poslovni profil i, kada je potreban, zaseban funkcionalni profil sa sopstvenim akterima, kategorijama, dokumentima, obrascima, fazama i pravilima. Poseban tehnički dokument kreira se samo kada tip zahtijeva tehničku realizaciju koja nije obuhvaćena zajedničkim `KN-TS-001`. Svaki novi dokument mora biti posebno odobren i evidentiran u `KN-RG-001` prije prve upotrebe.
+Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.1**
+
+# 6. PATCH, Feature ID, Change Request
+
+Pravila su DK-DS-001 §6–§8. KN ih primjenjuje, ne mijenja.
+
+| Kategorija | KN model | Status |
+|------------|----------|--------|
+| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-BM-004`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005`, `KN-PATCH-FS-006` |
+| Feature ID | Globalni `FT-*` **nije obavezan**. Ako se kasnije uvede FR: `{NS}-FR-001`; model feature ID-a definiše se tada u ovom RG-u i **ne** nastavlja automatski istorijski `FT-*` niz. | **NOT YET CREATED** |
+| CR | Ako zatreba: `KN-CR-{NNN}`; registar `KN-CR-REG-001` | **NOT YET CREATED** |
+| KN-DOC | Dokumentaciona načela otvaranja paketa (`KN-DOC-01` … `KN-DOC-07`) | Žive u KN-BM-001 §5. **Nisu** poslovna pravila konkursa i **nisu** BR. |
+
+KK `PATCH-*` / `CR-*` i EP `EP-PATCH-*` **ne** koriste se u KN dokumentima.
+
+Kategorije oznaka se ne smiju mehanički poistovjećivati (DK-DS-001 §5): Document ID ≠ poslovno pravilo ≠ BR ≠ Feature ID ≠ CR ≠ PATCH ≠ runtime ključ.
+
+---
+
+# 7. Runtime / stable key
+
+Promjena document ID-a **nikada** automatski ne znači promjenu runtime/stable ključa (DK-DS-001 §9).
+
+U ovom otvaranju paketa **nije dodijeljen** nijedan KN runtime ključ (`source_module` ili drugi).
+
+Postojeći runtime identiteti implementacije ženskog preduzetništva (klase, tabele, rute, statusi u kodu) ostaju KEEP dok poseban application/data migration audit i PO paket ne odrede drugačije. Ovaj dokumentacioni paket ih **ne** mijenja implicitno.
+
+---
+
+# 8. Status, verzija, changelog
+
+Četiri dimenzije statusa nijesu sinonimi (DK-DS-001 §12).
+
+Za **nove** KN dokumente status dokumenta: `NACRT` · `U IZRADI` · `USVOJENO` · `SUPERSEDED` · `ARHIVIRANO`.
+
+PO odluka da se **otvara** kanonski KN paket je USVOJENA. Trenutni statusi sadržajnih dokumenata (usklađeno sa zaglavljima): **KN-BM-001 = USVOJENO** (v0.2.11); **KN-FS-001 = USVOJENO** (v0.2.13); **KN-PRO-001 = NACRT**; **KN-TS-001 = NACRT**.
+
+Minimalni metadata: Document ID · Naziv · Namespace / modul · Verzija · Status dokumenta · Datum posljednje izmjene (DK-DS-001 §13).
+
+Changelog: novi red; stari redovi se ne prepisuju. Razlikovati poslovnu, funkcionalnu, tehničku, administrativnu i status/closeout izmjenu.
+
+Closeout feature-a ili faze **nije** isto što i status dokumenta (DK-DS-001 §18).
+
+---
+
+# 9. Folderi
+
+KEEP CURRENT TYPE-BASED STRUCTURE (DK-DS-001 §14). KN dokumenti stoje u postojećim tip-folderima. **Ne** postoji `docs/KN/`.
+
+---
+
+# 10. Cross-module granice
+
+* `KN-*` ne registruje Kalendar kulture, e-Plaćanje ni platformski FT-004 kao KN sadržaj.
+* `KK-*` i `EP-*` nijesu izvor poslovnih pravila za KN-BM/FS/TS.
+* `DK-*` je platformski sloj; `DK-RG-001` nije katalog svih KN oznaka.
+* Homofoni se ne spajaju: `PO-*` (Product Owner) ≠ pravni okvir `KN-PRO-*` ≠ `EP-PO-001`.
+
+---
+
+# 11. Legacy, profili i žensko preduzetništvo
+
+Postojeći tok ženskog preduzetništva i omladinski profil predstavljaju sačuvanu dokumentacionu/implementacionu građu cjeline Konkursi (`KN-BM-003` / `KN-FS-003`, `KN-BM-002`; vidi §5.1). Biće predmet posebnog naknadnog dokumentacionog usklađivanja. Do završetka tog procesa **ne** predstavljaju automatski kanonski izvor poslovnih pravila za tekući Odluka SSOT (`KN-BM-001` / `KN-FS-001` / `KN-TS-001`).
+
+`KN-BM-004` je sačuvani remote zajednički/framework BM i **nije** trenutni kanonski poslovni SSOT.
+
+U ovom paketu se **ne** radi retroaktivna migracija, **ne** označavaju postojeći TO dokumenti kao SUPERSEDED i **ne** mijenja runtime. Ovaj korak **ne** usvaja profilna pravila (uključujući sastav Komisije, povlačenje Prijave, dobne granice ili kvartalne/procentualne odredbe) kao univerzalna KN pravila.
+
+Zabranjene / deprecated oznake u KN kanonskim dokumentima:
+
+| Oznaka | Pravilo |
+|--------|---------|
+| **OM-*** | Ne postoji. Ne uvoditi. |
+| **KN-PO-*** kao document type pravnog okvira | Zabranjeno; pravni okvir = `KN-PRO-*`. |
+| **FT-xxx** dodijeljen samo zato što modul postoji | Zabranjeno (DK-DS-001 §6). |
+| Preuzimanje KK/EP document ID-eva kao KN ID-eva | Zabranjeno. |
+
+---
+
+# 12. Istorija verzija
+
+| Verzija | Datum | Opis |
+|---------|--------|------|
+| 1.0.0 | 2026-08-18 | Uspostavljen KN-RG-001. Otvoren kanonski dokumentacioni paket cjeline Konkursi. Registrovani namespace `KN`, tipovi, kanonski dokumenti KN-PRO/BM/FS/TS-001 (NACRT), PATCH/FR/CR model po DK-DS-001, dokumentaciona načela `KN-DOC-*`, runtime dual-key KEEP, granice prema KK/EP/DK i legacy ženskom preduzetništvu. Bez poslovnih pravila iz Odluke. Bez izmjene aplikacionog koda. |
+| 1.0.1 | 2026-09-03 | Administrativno usklađivanje registra sa kanonskim stanjem: KN-BM-001 = USVOJENO (§4, §5, §8); PATCH model ostaje `{NS}-PATCH-{TYPE}-{NNN}`; evidentirani izdati `KN-PATCH-BM-001` i `KN-PATCH-FS-001` (§6). Uklonjena netačna tvrdnja „nijedan PATCH još nije izdat“. KN-PRO/FS/TS ostaju NACRT. Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.2 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-002` (§6; KN-FS-001 v0.2.9 / FS PO DECISION 4 OPTION D). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.3 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-003` (§6; KN-FS-001 v0.2.10 / FS PO DECISION 5 OPTION B — BALANCED). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.4 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-004` (§6; KN-FS-001 v0.2.11 / FS PO DECISION 5 — OPTION B, PO CORRECTION: `evaluated` STORED). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.5 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-005` (§6; KN-FS-001 v0.2.12 / FS PO DECISION 6 OPTION A — `submitted` → Podnesena). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.6 | 2026-09-03 | Administrativno usklađivanje registra sa formalnim PO usvajanjem KN-FS-001 v0.2.12: STATUS = USVOJENO (§4, §5, §8). KN-PRO/KN-TS ostaju NACRT. Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.7 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-002` (§6; KN-BM-001 v0.2.9 / živi pokazivač na KN-PRO-001 v0.1.4). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.8 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-003` (§6; KN-BM-001 v0.2.10 / živi pokazivač na KN-FS-001 v0.2.12 USVOJENO). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.9 | 2026-09-03 | Administrativno: evidentirani izdati `KN-PATCH-BM-004` i `KN-PATCH-FS-006` (§6; KN-BM-001 v0.2.11 / KN-FS-001 v0.2.13 — PO-HYBRID-1…5). Bez `KN-PATCH-REG`. Bez dodjele Document ID-a za youth/women profile. |
+| 1.0.10 | 2026-09-04 | Kontrolisana remote integracija (Phase 3B): sačuvani Document ID-evi `KN-BM-002`, `KN-BM-003`, `KN-BM-004`, `KN-FS-002` (planiran), `KN-FS-003` (§5.1). Kanonski lanac `KN-PRO-001` / `KN-BM-001` / `KN-FS-001` / `KN-TS-001` nepromijenjen. `KN-BM-004` → `Business_Model_Konkursi_Zajednicki.md` (nije SSOT). Kanonski PATCH `KN-PATCH-BM-001`…`004` i `KN-PATCH-FS-001`…`006` sačuvani bez novih PATCH zapisa. Bez elevacije profilnih pravila u univerzalni SSOT. Bez `KN-PATCH-REG`. |
+
+---
+
+**Kraj dokumenta KN-RG-001 v1.0.10**

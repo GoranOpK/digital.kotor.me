@@ -35,4 +35,9 @@ abstract class TestCase extends BaseTestCase
 
         return $app;
     }
+
+    protected function enableEpIdentityFlows(): void
+    {
+        config(['identity.ep_identity_flows' => true]);
+    }
 }

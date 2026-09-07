@@ -15,6 +15,10 @@ use App\Models\Role;
 use App\Models\Tender;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Identity\CanonicalIdentityWriteException;
+use App\Identity\Runtime\CanonicalHttpIdentityService;
+use App\Identity\Runtime\IdentityMutationGuard;
+use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -356,11 +360,30 @@ class AdminController extends Controller
 
         $this->assertRoleIdAssignableViaUsersAdministration((int) $validated['role_id']);
 
-        $user->first_name = $validated['first_name'];
-        $user->last_name = $validated['last_name'];
-        $user->name = $validated['first_name'].' '.$validated['last_name'];
+        $identityService = app(CanonicalHttpIdentityService::class);
+        $guard = app(IdentityMutationGuard::class);
+
+        if ($guard->canonicalHttpWriteAllowed()) {
+            try {
+                $identityService->updateAdminIdentityContact(
+                    $user,
+                    $validated['first_name'],
+                    $validated['last_name'],
+                    $validated['phone'] ?? null
+                );
+            } catch (IdentityUseGateException) {
+                // NON_SUBJECT / no graph: account-layer only
+            } catch (CanonicalIdentityWriteException $e) {
+                return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
+            }
+        } elseif ($guard->legacyIdentityMutationAllowed()) {
+            $user->first_name = $validated['first_name'];
+            $user->last_name = $validated['last_name'];
+            $user->name = $validated['first_name'].' '.$validated['last_name'];
+            $user->phone = $validated['phone'] ?? null;
+        }
+
         $user->email = $validated['email'];
-        $user->phone = $validated['phone'] ?? null;
         $user->role_id = $validated['role_id'];
         $user->activation_status = $validated['activation_status'];
 
@@ -786,6 +809,14 @@ class AdminController extends Controller
         }
 
         $oldCommissionId = $competition->commission_id;
+        $newCommissionId = isset($validated['commission_id']) && $validated['commission_id'] !== ''
+            ? (int) $validated['commission_id']
+            : null;
+
+        $assignmentError = $competition->commissionAssignmentChangeError($newCommissionId);
+        if ($assignmentError) {
+            return back()->withErrors(['commission_id' => $assignmentError])->withInput();
+        }
 
         $competition->update($data);
 
@@ -796,7 +827,7 @@ class AdminController extends Controller
 
         // Ako je dodijeljena nova komisija, obavijesti članove te komisije
         $newCommissionId = $validated['commission_id'] ?? null;
-        if ($newCommissionId && $newCommissionId !== $oldCommissionId) {
+        if ($newCommissionId && (int) $newCommissionId !== (int) $oldCommissionId) {
             $commission = Commission::with(['activeMembers.user'])->find($newCommissionId);
             if ($commission) {
                 $this->notifyCommissionMembersAboutCompetition($commission, $competition);
@@ -1257,6 +1288,33 @@ class AdminController extends Controller
             }
         }
 
+        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
+            $newWouldBeComplete = count($filledMembers) === 5
+                && collect($filledMembers)->contains(fn ($m) => ($m['position'] ?? '') === 'predsjednik');
+
+            $targets = Competition::whereIn('id', $validated['competition_ids'])->get();
+            foreach ($targets as $assignedCompetition) {
+                if (! $assignedCompetition->profileProvidesCommission() || $assignedCompetition->commission_id === null) {
+                    continue;
+                }
+
+                $deadlinePassed = $assignedCompetition->isApplicationDeadlinePassed()
+                    || in_array($assignedCompetition->status, ['closed', 'completed'], true);
+
+                if ($deadlinePassed) {
+                    return back()->withErrors([
+                        'competition_ids' => Competition::WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE,
+                    ])->withInput();
+                }
+
+                if (! $newWouldBeComplete) {
+                    return back()->withErrors([
+                        'competition_ids' => Competition::WHOLE_COMMISSION_REPLACE_MUST_BE_VALID_MESSAGE,
+                    ])->withInput();
+                }
+            }
+        }
+
         $commission = Commission::create([
             'name' => $validated['name'],
             'year' => $validated['year'],
@@ -1290,8 +1348,6 @@ class AdminController extends Controller
                     'password' => Hash::make($memberData['password']),
                     'role_id' => $komisijaRole->id,
                     'activation_status' => 'active',
-                    'user_type' => 'Fizičko lice',
-                    'residential_status' => 'resident',
                 ]);
             }
 
@@ -1438,6 +1494,29 @@ class AdminController extends Controller
 
         $validated['end_date'] = $endDate ?? $validated['end_date'];
 
+        $newIds = collect($validated['competition_ids'] ?? [])->map(fn ($id) => (int) $id)->all();
+        $currentlyAssigned = Competition::where('commission_id', $commission->id)->get();
+
+        foreach ($currentlyAssigned as $assignedCompetition) {
+            if (in_array((int) $assignedCompetition->id, $newIds, true)) {
+                continue;
+            }
+            $assignmentError = $assignedCompetition->commissionAssignmentChangeError(null);
+            if ($assignmentError) {
+                return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
+            }
+        }
+
+        if ($newIds !== []) {
+            $targets = Competition::whereIn('id', $newIds)->get();
+            foreach ($targets as $assignedCompetition) {
+                $assignmentError = $assignedCompetition->commissionAssignmentChangeError((int) $commission->id);
+                if ($assignmentError) {
+                    return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
+                }
+            }
+        }
+
         $commission->update([
             'name' => $validated['name'],
             'year' => $validated['year'],
@@ -1527,12 +1606,6 @@ class AdminController extends Controller
             if ($hasSubstituteMember) {
                 return back()->withErrors(['error' => 'Komisija može imati samo jednog aktivnog zamjenskog člana.'])->withInput();
             }
-
-            if ($commission->isEvaluationInProgressOnAnyCompetition()) {
-                return back()->withErrors([
-                    'error' => 'Zamjena članova nije dozvoljena usred ocjenjivanja prijava na konkurs.',
-                ])->withInput();
-            }
         } else {
             if ($regularMembersCount >= 5) {
                 return back()->withErrors(['error' => 'Komisija može imati najviše 5 redovnih članova.'])->withInput();
@@ -1560,12 +1633,6 @@ class AdminController extends Controller
             if (! $replacedMember) {
                 return back()->withErrors([
                     'replaces_member_number' => 'Izabrani član/predsjednik trenutno nije aktivan ili ne postoji.',
-                ])->withInput();
-            }
-
-            if ($replacesNumber === 1 && $commission->isDecisionMakingInProgressOnAnyCompetition()) {
-                return back()->withErrors([
-                    'replaces_member_number' => 'Zamjena predsjednika nije dozvoljena usred donošenja odluka na konkursu.',
                 ])->withInput();
             }
 
@@ -1622,8 +1689,6 @@ class AdminController extends Controller
                 'password' => Hash::make($validated['password']),
                 'role_id' => $komisijaRole->id,
                 'activation_status' => 'active',
-                'user_type' => 'Fizičko lice',
-                'residential_status' => 'resident',
             ]);
 
             $this->sendEmailVerificationToCommissionMember($user);
@@ -1966,6 +2031,14 @@ class AdminController extends Controller
             }
         }
 
+        if ($competition->isCommissionProcessingBlocked()) {
+            abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+
+        if ($competition->isCommissionProcessingBlocked()) {
+            abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+
         // Učitaj sve prijave za ovaj konkurs
         $allApplications = Application::where('competition_id', $competition->id)
             ->with(['user', 'businessPlan', 'evaluationScores'])
@@ -2115,6 +2188,10 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za odabir dobitnika. Samo predsjednik komisije može odabirati dobitnike.');
         }
 
+        if ($competition->isCommissionProcessingBlocked()) {
+            abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+
         // Prikupi odabrane dobitnike iz forme
         $winnersData = [];
         foreach ($request->all() as $key => $value) {
@@ -2194,6 +2271,10 @@ class AdminController extends Controller
         // Za arhivirane konkurse: read-only uvid imaju i konkurs_admin i članovi komisije.
         if (! $isSuperAdmin && ! $isChairman && ! $isArchiveViewer) {
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
+        }
+
+        if ($competition->isCommissionProcessingBlocked()) {
+            abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
         $documentData = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)

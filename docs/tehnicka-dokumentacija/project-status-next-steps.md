@@ -1,6 +1,6 @@
 # Status projekta i indeks dokumentacije
 
-**Poslednje ažuriranje:** 2026-08-17
+**Poslednje ažuriranje:** 2026-09-06
 
 Portal **digital.kotor.me** — Laravel 12 aplikacija Opštine Kotor. **Konceptualni model:** [platforma + cjeline](architecture-overview.md#konceptualni-model-projekta-važeće) — trenutno produkcija: biblioteka dokumenata (platforma), kalendar kulture, Podrška ženskom preduzetništvu. Hosting: Plesk.
 
@@ -13,6 +13,7 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 | Cjelina / sloj | Komponenta | Status | Dokumentacija |
 |----------------|------------|--------|---------------|
 | **Platforma** | Autentikacija i registracija | **Produkcija** | [authentication-and-registration.md](authentication-and-registration.md) |
+| **Platforma** | Korisnički identitet (DK-TS-002 D15 Step 8) | **Produkcija — kanonski autoritet / R1 ACTIVE** (Step 8 CLOSED / PRODUCTION PASS; kasnije D15 faze OPEN) | [DK-TS-002 §14.1](../technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md) |
 | **Platforma** | Biblioteka dokumenata + MEGA | **Produkcija** | [document-library-and-mega.md](document-library-and-mega.md) |
 | **Kalendar kulture** | Pregled, admin, newsletter | **Produkcija** | [cultural-calendar.md](cultural-calendar.md) |
 | **Podrška ženskom preduzetništvu** | Prijave (1a/1b, biznis plan) | **Produkcija** | [application-lifecycle.md](application-lifecycle.md) |

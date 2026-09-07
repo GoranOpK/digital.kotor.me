@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** DK-TS-001  
 **Funkcionalna cjelina:** Obavještenja (platformska prezentacija)  
 **Status dokumenta:** U IZRADI  
-**Verzija:** 0.1  
-**Datum:** 2026-07-31
+**Verzija:** 0.1.9
+**Datum:** 2026-09-03
 **Namespace:** DK-* (platforma Digital Kotor)
 **Istorijski document ID:** TS-013
 
@@ -19,6 +19,16 @@
 |-----------------|--------|------|
 | 0.1 | 2026-07-31 | Početna Technical Specification (TS-013) za FT-004. Jedna koherentna Laravel implementacija usvojenih FR-OB-001 do FR-OB-017. Neriješeni OFD evidentirani kao tehnički blocker-i. Bez uvođenja novih poslovnih pravila. |
 | 2026-08-17 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a sa `TS-013` na `DK-TS-001`; poslovni, funkcionalni i tehnički sadržaj ostaju nepromijenjeni. |
+| 2026-08-29 | 2026-08-29 | Usklađivanje sa DK-FS-001 PATCH-FS-OB-002 i KN-FS-003 v0.1.16 za source-specific objavu i korekciju zvanične Odluke Konkursa. Razdvojene panel vidljivost i javna dostupnost; persisted trag korekcije; `competition_decision_html` nije target delivery zvanične Odluke. Header 0.1 KEEP. Status U IZRADI. Runtime **nije** implementiran ovim redoslijedom. |
+| 0.1.1 | 2026-08-31 | Implementation-state closeout nakon Phase C. Delivery `competition_decision_signed_copy`, first publication i source-specific korekcija zvanične Odluke Konkursa prešli su iz target/design u **IMPLEMENTED** runtime. Ordinary UC-OB-005 semantika KEEP. OFD-OB-006 i OFD-OB-007 ostaju generički OTVORENO. Header 0.1.1. Status U IZRADI. |
+| 0.1.2 | 2026-09-01 | Evidencija LOCAL PO MANUAL ACCEPTANCE. Tok upload potpisanog primjerka → prva objava → javni signed-copy → korekcija ručno potvrđen lokalno 01.09.2026. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** Plesk/production nijesu bili predmet testa. Automatski testovi ostaju. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.3 | 2026-09-01 | Dokumentacioni channel contract za KN lifecycle zvanične Odluke (`KN-BM-003` v1.0.6 §15.4; `KN-FS-003` v0.1.21; DK-FS PATCH-FS-OB-003). Razdvojeni poslovni datum prikaza i `published_at`. Dokumentovani metadata update, source-specific revoke, republish, korekcija svih aktivnih reprezentacija i permanent-delete revoke. **Bez implementacije.** Ordinary UC-OB-005 KEEP. OFD-OB-006 / OFD-OB-007 ostaju generički OTVORENO. Status U IZRADI. |
+| 0.1.4 | 2026-09-01 | Inventory/status sinhronizacija. First-publish source-provided `title` / `public_display_date` (KN `business_title` / `business_published_on`), Notice kolona `public_display_date` i publication payload `public_display_date` su **IMPLEMENTED** (CURRENT RUNTIME). Channel primitive `updatePublicMetadata` / `revokePublicAvailability` i dedicated event/listener sloj (`OfficialContentPublicMetadataUpdated`, `UpdateOfficialContentPublicMetadata`, `OfficialContentPublicAvailabilityRevoked`, `RevokeOfficialContentPublicAvailability`) su **IMPLEMENTED** (CURRENT RUNTIME). **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** Postojeći PDF correction tok i dalje šalje hardkodovani naslov (DEFERRED gap). Republish, permanent-delete, uniqueness, leftover HTML cleanup i finalni javni prikaz poslovnog datuma ostaju **DOCUMENTED / NOT YET IMPLEMENTED**. Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.5 | 2026-09-02 | Inventory/status sinhronizacija. Republish iste povučene kopije (`KN-FS-003` §16.13) je **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME): KN `republish()`; ista `CompetitionOfficialDecisionCopy` / isti PDF; novi Notice kroz postojeći `OfficialContentReadyForPublicPublication` (`public_revoke=false`, `supersedes_notice_id=null`); lifecycle audit `official_decision_republished`. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED. Permanent-delete, uniqueness, leftover HTML cleanup i finalni javni prikaz poslovnog datuma ostaju **DOCUMENTED / NOT YET IMPLEMENTED**. Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.6 | 2026-09-02 | Inventory/status sinhronizacija. Application-level Decision publication invariant i leftover `competition_decision_html` cleanup (`KN-FS-003` §15.7.1 / §15.7.5 / §16.10 / §16.13 / §16.16) su **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME): first publish, PDF correction i republish povlače leftover HTML Notice-e istog Konkursa kroz postojeći `OfficialContentPublicAvailabilityRevoked`; PDF correction koristi `Copy B.business_title` i obavezan `business_published_on` (`Notice B.public_display_date` = isti datum; `published_at` ostaje tehnički timestamp). **Nema** DB unique constraint. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED. Permanent-delete i finalni javni prikaz poslovnog datuma ostaju **DOCUMENTED / NOT YET IMPLEMENTED**. Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.7 | 2026-09-02 | Inventory/status sinhronizacija. Permanent-delete lifecycle zvanične Odluke (`KN-FS-003` §16.14 / §16.15) je **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME): dvostepeni T1 / filesystem / T2 model; `permanent_delete_pending_at`; fizičko uklanjanje PDF-a uz `exists()===false` post-condition; completed tombstone (`permanently_deleted_at/by`, `storage_path=null`, Copy row ostaje); STARTED/COMPLETED lifecycle audit; idempotent retry; leftover HTML revoke u T1; nova Copy B poslije completed A; `competitionHasNonTombstonedSignedCopyPublication()`; `correct()` live guard; Copy `lockForUpdate()` u T1/T2. **GENERIC FT-004 CHANGE REQUIRED = NO.** **MIGRATION REQUIRED = NO.** **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED. Finalni javni prikaz poslovnog datuma ostaje **DOCUMENTED / NOT YET IMPLEMENTED** (Faza 8). Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.8 | 2026-09-02 | Inventory/status sinhronizacija. Finalni javni prikaz poslovnog datuma zvanične Odluke na FT-004 panelu (`KN-FS-003` §16.16 rendering; Faza 8) je **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME): `obavjestenja-panel.blade.php` prikazuje `Notice.public_display_date` kada je non-null; label **Datum objave**; visible `d.m.Y`; `<time datetime>` ISO `Y-m-d`; null = nema datumskog reda; **nema** `published_at` / `created_at` fallback-a; title i `short_description` KEEP; listing query KEEP; direct PDF KEEP; lifecycle Faza 2–7 KEEP. Tehnički render je `@if($notice->public_display_date)` bez `content_delivery` branch-a; to **nije** generička FT-004 date policy i **ne** zatvara OFD-OB-006. Ordinary/leftover HTML sa null ostaju bez datuma. **GENERIC FT-004 CHANGE REQUIRED = NO.** **MIGRATION REQUIRED = NO.** **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED. Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.9 | 2026-09-03 | Inventory/status sinhronizacija. CURRENT UX corrective je **IMPLEMENTED LOCALLY / PO ACCEPTED** i **NOT YET COMMITTED / NOT YET PUSHED**: CURRENT admin projekcija; never-published permanent delete (`KN-BM-003` v1.0.7 §15.4 / `KN-FS-003` v0.1.22 §16.14); pending retry UI „Ponovi trajno brisanje“; metadata omitted/blank = KEEP i no-op. Faza 8 javni prikaz poslovnog datuma je **PUSHED TO ORIGIN/MAIN** (`8d34ecf129008386faaf826332ad0fd3a6536332`). **GENERIC FT-004 CHANGE REQUIRED = NO.** **MIGRATION REQUIRED = NO.** **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED. Feature nije CLOSED. |
 
 Napomena:
 
@@ -38,7 +48,7 @@ DK-TS-001:
 
 * implementira usvojene FR-OB zahtjeve;
 * **ne** uvodi nova poslovna pravila;
-* **ne** rješava Product Owner odluke (OFD);
+* **ne** rješava Product Owner odluke (OFD) generički;
 * **ne** mijenja Business Model, Use Case Specification ni Functional Specification;
 * **ne** predstavlja napisan aplikativni kod.
 
@@ -46,8 +56,10 @@ Izvori istine:
 
 * **DK-BM-001** — `docs/business-model/Business_Model_Obavjestenja.md`
 * **DK-UC-001** — `docs/use-cases/Use_Cases_Obavjestenja.md`
-* **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001)
+* **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001 + PATCH-FS-OB-002 + **PATCH-FS-OB-003**)
 * **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md`
+* **KN-BM-003** v1.0.7 — §15.4 (poslovna osnova lifecycle-a elektronskog primjerka, uključujući trajno uklanjanje učitanog primjerka prije prve objave)
+* **KN-FS-003** v0.1.22 — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (source-specific binding: §15.6, §15.7.1, §15.7.5, §16.6, §16.8–§16.16, §18.7.4, §18.9)
 * `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
 
 ---
@@ -71,7 +83,11 @@ Izvori istine:
 | 13. Matrica sljedivosti | U IZRADI |
 | 14. Napomene za implementaciju | U IZRADI |
 
-Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju potpunu produkcijsku pokrivenost svih FR).
+Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju potpunu produkcijsku pokrivenost svih FR; source-specific KN binding ne zatvara OFD generički).
+
+Source-specific runtime za zvaničnu Odluku Konkursa (`competition_decision_signed_copy`, first publication, **direct predecessor revoke pri signed-copy korekciji**, **correction business title/date**, **in-place metadata update**, **source-specific unpublish**, **republish iste povučene kopije**, **leftover `competition_decision_html` cleanup / application-level Decision publication uniqueness**, **permanent-delete lifecycle / nova Copy nakon completed tombstone**, **finalni javni prikaz poslovnog datuma na FT-004 panelu**, **CURRENT admin UX / never-published delete / pending retry**) **jeste implementiran** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**). Generički OFD-OB-006 / OFD-OB-007 ostaju OTVORENO.
+
+Lokalni PO ručni prihvatni test (01.09.2026) potvrdio je signed-copy tok upload → first publication → korekcija (§14.10). Republish, Faza 6 leftover HTML uniqueness / correction metadata i Faza 7 permanent-delete su **IMPLEMENTED LOCALLY / PO ACCEPTED** u CURRENT RUNTIME; Faza 7 je **PUSHED TO ORIGIN/MAIN** (commit `afd042296798cffb352a47fd815a01fdeda6fb5b`) i **nije** local uncommitted. Faza 8 javni prikaz poslovnog datuma je **IMPLEMENTED / PO ACCEPTED / PUSHED TO ORIGIN/MAIN** (commit `8d34ecf129008386faaf826332ad0fd3a6536332`, `feat(notices): render business publication date`) i **nije** local uncommitted. CURRENT UX corrective (CURRENT admin projekcija, never-published delete, pending retry UI, metadata KEEP/no-op) je **IMPLEMENTED LOCALLY / PO ACCEPTED** i **NOT YET COMMITTED / NOT YET PUSHED**. Nijedna od ovih faza **nije** dio ručnog testa od 01.09.2026. To **nije** production deploy i **nije** PRODUCTION ACCEPTED. Feature FT-004 **nije** CLOSED.
 
 ---
 
@@ -80,14 +96,14 @@ Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju pot
 1. DK-TS-001 pripada FT-004 – Obavještenja.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM, UC i FS.
 3. Nova poslovna pravila se ne uvode kroz DK-TS-001.
-4. Ako implementacija zahtijeva rješavanje OFD, evidentira se blocker; OFD se ne rješava u TS.
-5. Izmjene usvojenog sadržaja evidentiraju se PATCH-om / novom verzijom.
+4. Ako implementacija zahtijeva rješavanje OFD, evidentira se blocker; OFD se **generički** ne rješava u TS. Source-specific binding iz KN-FS-003 / PATCH-FS-OB-002 / PATCH-FS-OB-003 nije zatvaranje OFD za sve izvore.
+5. Izmjene sadržaja evidentiraju se novim redom u istoriji verzija. Ovaj dokument **nema** `PATCH-TS-*` porodicu.
 
 ---
 
 # 1. Pregled funkcionalne cjeline
 
-**Sekcijska sljedivost:** BM-OB-01–BM-OB-13; UC-OB-001–UC-OB-005; FR-OB-001–FR-OB-017
+**Sekcijska sljedivost:** BM-OB-01–BM-OB-13; UC-OB-001–UC-OB-005; FR-OB-001–FR-OB-017; DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003; KN-BM-003 v1.0.7 §15.4; KN-FS-003 v0.1.22
 
 ## 1.1 Svrha
 
@@ -100,11 +116,24 @@ Obavještenja su unakrsna platformska prezentacija: javni panel na početnoj str
 * događaj koji okida automatsku objavu (pokreće ga izvorna funkcionalnost);
 * javne rute i Blade prezentacija panela;
 * javna isporuka referenciranog zvaničnog sadržaja van administrativnog interfejsa;
+* razdvajanje vidljivosti u aktivnom panelu od javne dostupnosti sadržaja konkretnog Notice-a;
+* source-specific isporuka i korekcija zvanične Odluke Konkursa kao **kanal**, ne kao vlasnik dokumenta;
+* dokumentovani channel ugovor za KN lifecycle: metadata update, source-specific revoke, republish iste povučene kopije, leftover `competition_decision_html` cleanup, application-level Decision publication uniqueness, permanent-delete lifecycle (T1/T2, tombstone, nova Copy B), finalni javni prikaz poslovnog datuma na FT-004 panelu i CURRENT admin UX (never-published delete / pending retry / metadata KEEP) su **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**);
 * testovi i uticaj na deploy/migracije.
 
 ## 1.3 Van ovog TS (usvojeno FS/BM)
 
-Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „odgovarajuće“ zamjene, redoslijed, maksimum stavki, izvor opisa, tačni okidači po izvornoj funkcionalnosti.
+Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „odgovarajuće“ zamjene, redoslijed, maksimum stavki, izvor opisa, tačni okidači po **svim** izvornim funkcionalnostima (OFD-OB-006 ostaje generički OTVORENO).
+
+**Nije** dio ovog TS:
+
+* Competition SQL / KN data schema;
+* storage driver, disk, filesystem path, signed-URL tehnologija;
+* HTTP status / redirect za nedostupan sadržaj;
+* Notice CMS / admin CRUD Obavještenja;
+* zamjena učitanog ali još neobjavljenog primjerka (namjerno nedefinisano).
+
+Za zvaničnu Odluku Konkursa konkretan okidač objave i korekcija **jesu** vezani KN-FS-003 v0.1.22; lifecycle elektronskog primjerka je vezan `KN-BM-003` v1.0.7 §15.4. To **nije** generički okidač ni generički lifecycle za tenderi/ostale izvore.
 
 ## 1.4 Oznaka dokumenta
 
@@ -114,7 +143,7 @@ Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „
 
 # 2. Arhitektonski principi
 
-**Sekcijska sljedivost:** FR-OB-001–FR-OB-017; BM-OB-07; BM-OB-12
+**Sekcijska sljedivost:** FR-OB-001–FR-OB-017; BM-OB-07; BM-OB-12; DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003; KN-FS-003 §15.6, §15.7.1, §15.7.5, §16.8–§16.16; KN-BM-003 §15.4
 
 ## 2.1 Mjesto u sistemu
 
@@ -132,71 +161,167 @@ Realizacija se uklapa u postojeću Laravel monolitnu strukturu:
 
 | Komponenta | Odgovornost |
 |------------|-------------|
-| Izvorna funkcionalnost | Utvrđuje spremnost/obaveznost objave (FR-OB-011) i emituje događaj; po potrebi prosleđuje `supersedes_notice_id` |
-| `NoticePublicationService` | Kreira Obavještenje, postavlja vidljivost u aktivnom panelu, po pozivu vrši zamjenu vidljivosti |
+| Izvorna funkcionalnost | Utvrđuje spremnost/obaveznost objave (FR-OB-011) i emituje događaj; po potrebi zahtijeva ordinary panel supersession i/ili korekciju/public revoke |
+| Modul **Konkursi** (za zvaničnu Odluku) | Vlasnik je zvaničnog dokumenta; čuva elektronski primjerak; određuje poslovni naziv, poslovni datum objave i koji primjerak je predmet objave; Administrator konkursa pokreće objavu, korekciju, metadata update, povlačenje, ponovnu objavu i trajno uklanjanje |
+| `NoticePublicationService` | Kreira zapis objave (Notice); postavlja vidljivost u aktivnom panelu; po pozivu vrši ordinary panel supersession; pri korekciji upisuje persisted trag i javno povlačenje prethodnog. **IMPLEMENTED:** in-place metadata update (`updatePublicMetadata`); source-specific revoke bez novog reda (`revokePublicAvailability`) |
 | `HomeController` + Blade partial | Render panela na početnoj stranici za sve posjetioce |
-| `PublicNoticeContentController` | Javna isporuka referenciranog zvaničnog sadržaja |
-| Obavještenja sloj | **Ne** utvrđuje da li je postupak spreman za objavu (FR-OB-012) |
+| `PublicNoticeContentController` | Javna isporuka referenciranog zvaničnog sadržaja **samo ako je konkretna objava javno dostupna** |
+| Obavještenja sloj | **Ne** utvrđuje da li je postupak spreman za objavu (FR-OB-012); **ne** je vlasnik Odluke; **ne** kopira Odluku u Notice storage; **ne** briše fizički KN PDF |
 
 ## 2.3 Jedna arhitektura automatske objave
 
 Usvojena arhitektura (jedina u ovom TS):
 
-1. Izvorna funkcionalnost dispečuje domen događaj `OfficialContentReadyForPublicPublication`.
+1. Izvorna funkcionalnost dispečuje domen događaj `OfficialContentReadyForPublicPublication` **samo za publish / republish / correction-as-new-publication**.
 2. Listener `PublishOfficialContentNotice` sinhrono poziva `NoticePublicationService::publish(...)`.
 3. Nema queue job-a za V1 ovog TS (nije potreban za usvojene FR).
 4. Nema Laravel Scheduler zadatka za Obavještenja.
-5. Nema administratorskog odobrenja u toku (FR-OB-014).
+5. Nema administratorskog odobrenja u toku Obavještenja (FR-OB-014). Objava zvanične Odluke Konkursa je radnja **izvornog** modula, ne Notice CMS.
+6. **`OfficialContentReadyForPublicPublication` se ne preopterećuje** za revoke ili metadata update. Te naredbe imaju odvojen channel contract (§4.5, §4.6, §9.1.1).
 
 ## 2.4 Javni pristup sadržaju
 
 Referenca u panelu vodi na **javnu** rutu koju kontroliše `PublicNoticeContentController`, ne na administrativne rute (FR-OB-010).
 
+Ista konceptualna ruta ostaje kanal. Prije isporuke sadržaja provjerava se **javna dostupnost konkretne objave**. Ako objava nije javno dostupna, sadržaj se **ne** servira.
+
+Potpisani primjerak **ne** smije zavisiti od stabilnog direktnog public storage URL-a koji zaobilazi tu provjeru.
+
+Ovaj TS **ne** određuje HTTP status ni redirect.
+
 ## 2.5 Zabrane dizajna
 
 * Ne koristiti postojeću stub tabelu `notifications` ni `NotificationController` (druga semantika; stub).
 * Ne uvoditi read/unread kolone (FR-OB-017).
-* Ne uvoditi admin CRUD za Obavještenja u V1 ovog TS.
+* Ne uvoditi admin CRUD / CMS za Obavještenja zbog ovog corrective-a.
+* Ne kopirati zvaničnu Odluku u Notice storage.
+* Ne uvoditi generički file delivery za sve FT-004 izvore.
+* Ne tretirati svaki `supersedes_notice_id` kao korekciju / public revoke.
+* Ne preopterećivati `OfficialContentReadyForPublicPublication` za revoke ili metadata update.
+* Ne uvoditi audit subsystem niti generički versioning subsystem.
+* Ne dizajnirati Competition SQL u ovom dokumentu.
+* Ne uvoditi globalno pravilo „jedan Notice po `source_id`“ za sve FT-004 tokove.
+* Ne hard-delete-ovati istorijski Notice zbog KN trajnog uklanjanja primjerka.
+
+## 2.6 CURRENT IMPLEMENTED vs LEGACY — zvanična Odluka Konkursa
+
+**LEGACY RUNTIME — `competition_decision_html`**
+
+`content_delivery = competition_decision_html` učitava `Competition` i renderuje živi HTML iz `CompetitionDecisionDocumentBuilder` (isti poslovni sadržaj kao admin Predlog).
+
+To **nije** zvanična Odluka. **Ne** smije biti delivery **nove** zvanične Odluke. Postojeći HTML Notice redovi ostaju kompatibilan runtime path i **ne** migriraju se automatski u potpisani fajl.
+
+**CURRENT IMPLEMENTED — nova objava zvanične Odluke Konkursa**
+
+Javni objekat je elektronski primjerak fizički potpisane zvanične Odluke. Vlasnik primjerka je modul **Konkursi** (`CompetitionOfficialDecisionCopy`). FT-004 / Notice je kanal javne objave, nije vlasnik fajla i nije CMS dokumenta.
+
+Nova objava zvanične Odluke ide delivery ključem **`competition_decision_signed_copy`** kroz `GET /obavjestenja/{notice}/sadrzaj`. Direct public storage URL se **ne** koristi.
 
 ---
 
 # 3. Tehnički model
 
-**Sekcijska sljedivost:** FR-OB-004–FR-OB-016; BM-OB-04; BM-OB-13
+**Sekcijska sljedivost:** FR-OB-004–FR-OB-016; BM-OB-04; BM-OB-13; DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003; KN-FS-003 §15.7.5, §16.8–§16.16; KN-BM-003 §15.4
 
 ## 3.1 Entitet `Notice` (Obavještenje)
 
-Poslovni unos panela. Nije zvanični sadržaj.
+Poslovni unos panela **i** zapis javne objave. Nije zvanični sadržaj. Nije vlasnik fajla.
 
-### Posmatrana vidljivost (FS §5)
+### Posmatrana vidljivost u aktivnom panelu (FS §5)
 
 | Tehničko polje | Posmatrano značenje |
 |----------------|---------------------|
 | `visible_in_active_panel = true` | Vidljivo u aktivnom panelu |
 | `visible_in_active_panel = false` | Nije vidljivo u aktivnom panelu |
 
+`visible_in_active_panel` **ne** određuje smije li javna FT-004 ruta isporučiti sadržaj.
+
 Nema statusa nacrt / na odobrenju / arhivirano / obrisano / zakazano.
+
+### Javna dostupnost sadržaja konkretnog Notice-a
+
+Odvojena semantika od panela.
+
+| Logičko stanje | Posmatrano značenje |
+|----------------|---------------------|
+| sadržaj javno dostupan | javna FT-004 ruta smije isporučiti referencirani sadržaj ove objave |
+| sadržaj javno povučen | javna FT-004 ruta **ne** servira sadržaj ove objave |
+
+Fizičko ime persisted atributa: **`publicly_available`** (boolean; default `true` za legacy i nove objave).
+
+**Mora ostati moguće:**
+
+* **UC-OB-005:** `visible_in_active_panel = false` **i** sadržaj i dalje javno dostupan preko postojeće javne rute.
+* **KN korekcija / source-specific revoke:** `visible_in_active_panel = false` **i** sadržaj **nije** javno dostupan preko prethodne javne rute.
+
+Postojeći (legacy) Notice zapisi tretiraju se kao **javno dostupni**, uključujući one sa `visible_in_active_panel = false`, osim ako budu eksplicitno javno povučeni novim correction ili revoke tokom. `visible_in_active_panel = false` na postojećem zapisu **ne** znači automatski public revoke.
 
 ## 3.2 Referenca na zvanični sadržaj
 
-Obavještenje čuva **neprozirnu** vezu ka izvornom sadržaju:
+Obavještenje čuva **neprozirnu** vezu ka izvoru:
 
 * `source_type` — tip izvora (npr. `competition_decision`);
-* `source_id` — identifikator u izvornoj funkcionalnosti;
-* `content_delivery` — interni ključ načina isporuke koje `PublicNoticeContentController` razrješava.
+* `source_id` — identifikator izvorne funkcionalnosti (za HTML i signed-copy: `competitions.id`);
+* `source_object_id` — identitet tačnog izvornog objekta kada je potreban (`CompetitionOfficialDecisionCopy.id` za signed-copy);
+* `content_delivery` — interni runtime ključ načina isporuke koje `PublicNoticeContentController` razrješava.
 
-Primjer za konkursnu odluku: `source_type = competition_decision`, `source_id = competitions.id`, isporuka renderuje postojeći sadržaj odluke **van** admin middleware grupe.
+Notice **ne** čuva kopiju fajla, path, disk, MIME, original filename ni hash.
 
-## 3.3 Zamjena vidljivosti
+### LEGACY — `competition_decision_html`
 
-**Rule-level:** FR-OB-015, FR-OB-016; OFD-OB-001
+`source_type = competition_decision`, `source_id = competitions.id`, `source_object_id` može biti `null`. Isporuka renderuje živi HTML Predloga **van** admin middleware grupe.
 
-`NoticePublicationService::publish` prima opcioni `supersedes_notice_id` **isključivo od izvorne funkcionalnosti**.
+To ostaje dokumentovano kao **postojeći kompatibilni** runtime path. **Nije** delivery zvanične Odluke.
 
-* Ako je prosleđen: novo Obavještenje `visible_in_active_panel = true`; staro `visible_in_active_panel = false`; zapisi i zvanični sadržaj se **ne** brišu.
-* Ako nije prosleđen: kreira se novo vidljivo Obavještenje; TS **ne** automatski bira šta zamijeniti (OFD-OB-001 blocker).
+### CURRENT IMPLEMENTED — zvanična Odluka Konkursa
 
-## 3.4 Komponente (pregled)
+Delivery je source-specific ključ **`competition_decision_signed_copy`**.
+
+To je runtime vrijednost `content_delivery`, istog naming obrasca kao `competition_decision_html`. **Nije** nova DK dokumentaciona oznaka i **nije** generički file delivery za sve izvore.
+
+Implementirani Notice za signed-copy:
+
+* `source_type = competition_decision`
+* `source_id = competition.id`
+* `source_object_id = CompetitionOfficialDecisionCopy.id`
+* `content_delivery = competition_decision_signed_copy`
+
+Javna ruta `GET /obavjestenja/{notice}/sadrzaj` razrješava **tačan nepromjenjivi izvorni primjerak** (`source_object_id`) koji pripada **toj** Notice objavi, pa ga servira samo ako je ta objava `publicly_available = true`. Nema latest/first fallback-a.
+
+`source_id = competitions.id` **samo po sebi nije dovoljno** da razlikuje više istorijskih potpisanih primjeraka iste Odluke. Identitet primjerka je `source_object_id`.
+
+`ApplicationDocument` i `UserDocument` **nisu** vlasnici zvanične Odluke.
+
+## 3.3 Zamjena vidljivosti (ordinary / UC-OB-005)
+
+**Rule-level:** FR-OB-015, FR-OB-016; BM-OB-13; OFD-OB-001
+
+`NoticePublicationService::publish` prima od izvorne funkcionalnosti zahtjev za ordinary panel supersession (ulazni `supersedes_notice_id` u event payload-u).
+
+* Ako je ordinary supersession (`public_revoke = false`): novo Obavještenje `visible_in_active_panel = true`; staro `visible_in_active_panel = false`; zapisi se **ne** brišu; **javna dostupnost starog se ne gasi automatski** (`publicly_available` ostaje kakva je bila).
+* Ako nije prosleđen prethodnik: kreira se novo vidljivo Obavještenje; TS **ne** automatski bira šta zamijeniti (OFD-OB-001 blocker).
+
+`supersedes_notice_id` u event payload-u može se persistovati kao `Notice.superseded_notice_id`. To **samo po sebi nije** korekcija. Ordinary supersession (`public_revoke = false`) **ne** smije se reinterpretirati kao KN korekcija / public revoke.
+
+## 3.4 Korekcija pogrešno objavljenog primjerka (KN-FS-003 §15.7.5)
+
+Ovo **nije** UC-OB-005 i **nije** FS-OB-FLOW-03. Source-specific binding; OFD-OB-007 ostaje generički OTVORENO za ostale izvore.
+
+Tehnički ishod korekcije (**IMPLEMENTED**, source-specific KN):
+
+1. Izvor čuva **novi** ispravni nepromjenjivi primjerak (ne overwrite prethodnog).
+2. Nastaje **nova** Notice objava (novi zapis).
+3. Prethodni pogrešni Notice: `visible_in_active_panel = false`.
+4. Prethodni pogrešni Notice: `publicly_available = false`; javna ruta **ne** servira stari sadržaj.
+5. Prethodni Notice red, stari copy red i stari fajl ostaju.
+6. Persisted veza: `newNotice.superseded_notice_id = oldNotice.id`, sa značenjem da je prethodni **javno povučen zbog korekcije** (`public_revoke = true`), a ne samo skinut s panela.
+7. Korekcija **ne** mijenja rang-listu, rezultate ni iznose (to ostaje u izvornom modulu; FT-004 to ne dira).
+
+Ovo pravilo **nije** generičko za sve FT-004 izvore. OFD-OB-007 ostaje generički OTVORENO.
+
+Ovaj TS **ne** određuje HTTP status starog URL-a.
+
+## 3.5 Komponente (pregled)
 
 | Element | Put / naziv | FR |
 |---------|-------------|-----|
@@ -208,16 +333,17 @@ Primjer za konkursnu odluku: `source_type = competition_decision`, `source_id = 
 | Controller (public content) | `App\Http\Controllers\PublicNoticeContentController` | FR-OB-008–010 |
 | Blade | `resources/views/partials/obavjestenja-panel.blade.php` | FR-OB-001–007 |
 | Landing | uključivanje partiala u `landing.blade.php` | FR-OB-001, 004 |
+| Izvor (Konkursi) | `CompetitionOfficialDecisionCopy`; `CompetitionOfficialDecisionController` (upload / publish / correct); emitovanje događaja | FR-OB-011; KN-FS-003 |
 
 Repositories: projekat ih sistematski ne koristi — **ne uvode se**.
 
-Policies: javni pristup bez Policy klase; admin Policy nije potreban jer nema admin CRUD.
+Policies: javni pristup Notice sadržaju bez Notice Policy klase. Admin Notice CRUD se **ne** uvodi. Autorizacija upload/publish/correction je **source-side** (Konkursi), ne Notice CMS.
 
 ---
 
 # 4. Tokovi
 
-**Sekcijska sljedivost:** FS-OB-FLOW-01–03; UC-OB-001–005
+**Sekcijska sljedivost:** FS-OB-FLOW-01–03; UC-OB-001–005; KN-FS-003 §15.7.1, §15.7.5, §16.8–§16.16; KN-BM-003 §15.4
 
 ## 4.1 FS-OB-FLOW-01 — Javni pregled
 
@@ -227,40 +353,286 @@ Policies: javni pristup bez Policy klase; admin Policy nije potreban jer nema ad
 4. View renderuje partial panela ispod panela dobrodošlice.
 5. Link reference → javna ruta sadržaja.
 
+Partial panela prikazuje `$notice->title`, opciono `short_description`, i opciono poslovni datum objave kada je `public_display_date` non-null (vidi §4.9). Listing query **nije** izmijenjen Faza 8.
+
 **Isto ponašanje** za `@guest` i `@auth` (FR-OB-002, FR-OB-003).
 
 ## 4.2 FS-OB-FLOW-02 — Automatska objava
 
 1. Izvorna funkcionalnost utvrdi spremnost (van Obavještenja; FR-OB-011).
-2. Dispečuje `OfficialContentReadyForPublicPublication` sa payload-om: `title`, opcioni `short_description`, `source_type`, `source_id`, `content_delivery`, opcioni `supersedes_notice_id`.
+2. Dispečuje `OfficialContentReadyForPublicPublication`.
 3. Listener poziva `NoticePublicationService::publish`.
-4. Obavještenje je `visible_in_active_panel = true`.
-5. Javni sadržaj dostupan preko `PublicNoticeContentController`.
+4. Obavještenje je `visible_in_active_panel = true` i javno dostupno (osim ako izvor eksplicitno naredi drugačije, što nije ordinary publish).
+5. Javni sadržaj dostupan preko `PublicNoticeContentController` **ako** je objava javno dostupna.
 
-**Konkretni okidač u konkursima/tenderima nije dio ovog TS** (OFD-OB-006). TS definiše ugovor događaja; veza iz konkurasa je blocker dok PO ne usvoji stanje.
+**OFD-OB-006 ostaje generički OTVORENO** (tenderi i ostali izvori).
 
-## 4.3 FS-OB-FLOW-03 — Zamjena u aktivnom panelu
+**Source-specific IMPLEMENTED:** za zvaničnu Odluku Konkursa Administrator konkursa pokreće first publication prema KN-FS-003 v0.1.22 §15.7.1 kroz `OfficialContentReadyForPublicPublication` (`public_revoke = false`, `source_object_id` = copy.id). To ne zatvara OFD-OB-006 za ostale izvore.
 
-1. Izvorna funkcionalnost pri objavi prosledi `supersedes_notice_id`.
+**CURRENT RUNTIME — first publication signed-copy:** izvor može dostaviti poslovni naslov i poslovni/display datum objave. KN first-publish tok predaje `business_title` kao `title` i `business_published_on` kao `public_display_date` u `OfficialContentReadyForPublicPublication`. FT-004 ih čuva na Notice-u (`title`, `public_display_date`). `published_at` ostaje tehnički timestamp (`now()` pri `publish`) i **ne** prima poslovni datum. Pri first signed-copy publication KN **takođe** povlači leftover `competition_decision_html` Notice-e istog Konkursa (isti helper kao correction, republish i permanent-delete T1; vidi §4.4). `hasBeenPublished()` i `competitionHasPublishedSignedCopy()` ostaju istorijski helperi i **nisu** oslabljeni. Server/UI first-publish guard koristi `competitionHasNonTombstonedSignedCopyPublication()` (vidi §4.8).
+
+**IMPLEMENTED LOCALLY / PO ACCEPTED — Faza 8:** finalni javni prikaz `public_display_date` na FT-004 panelu. Čuvanje polja i rendering su odvojeni; rendering je CURRENT RUNTIME (vidi §4.9). To **nije** generička FT-004 date policy i **ne** zatvara OFD-OB-006.
+
+**CURRENT RUNTIME — PDF correction metadata:** KN correction predaje `Copy B.business_title` kao `title` i obavezan `business_published_on` kao `public_display_date`. Hardkodovani naslov `'Odluka o dodjeli sredstava'` **nije** CURRENT RUNTIME. Stara Copy A metadata ostaje nedirnuta. Detalj: §4.4.
+
+## 4.3 FS-OB-FLOW-03 — Zamjena u aktivnom panelu (ordinary)
+
+1. Izvorna funkcionalnost pri objavi zahtijeva ordinary panel supersession (`supersedes_notice_id` u payload-u).
 2. Servis postavi staro `visible_in_active_panel = false`, novo `true`.
-3. Redovi i zvanični sadržaj ostaju (FR-OB-016).
+3. Redovi ostaju (FR-OB-016).
+4. Javna dostupnost starog **ostaje** (nije public revoke).
 
-Bez `supersedes_notice_id` tok zamjene se **ne** izvršava automatski.
+Bez zahtjeva za supersession tok zamjene se **ne** izvršava automatski.
+
+Ovaj tok **ne** uređuje KN korekciju, KN unpublish, KN republish ni KN trajno uklanjanje.
+
+## 4.4 Korekcija zvanične Odluke Konkursa (tehnički tok)
+
+Nije novi `FS-OB-FLOW-*` ID. Nije usvojeni generički UC. Binding: KN-FS-003 §15.7.5 / §16.10; DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003.
+
+### IMPLEMENTED — direct predecessor revoke
+
+1. Administrator konkursa u izvornom modulu postavlja **novi** ispravni nepromjenjivi primjerak.
+2. Izvor dispečuje `OfficialContentReadyForPublicPublication` sa `content_delivery = competition_decision_signed_copy`, `source_object_id` novog copy-a (Copy B), `supersedes_notice_id` aktivnog prethodnog **signed-copy** Notice-a (Notice A), `public_revoke = true` (ne ordinary supersession i **ne** republish semantika), `title = Copy B.business_title` i `public_display_date = Copy B.business_published_on`.
+3. Servis u istoj transakciji: starom Notice-u `visible_in_active_panel = false` i `publicly_available = false`; kreira novi Notice (`visible_in_active_panel = true`, `publicly_available = true`, `superseded_notice_id = A.id`).
+4. Javna ruta za taj prethodni Notice **ne** servira sadržaj.
+5. Javna ruta za novi Notice servira ispravni primjerak, ako je nova objava javno dostupna.
+
+Copy A i PDF A ostaju interno. Notice A više nije public. Notice B je current public. `published_at` na Notice B je tehnički timestamp; poslovni datum je `public_display_date`. Stara Copy A metadata ostaje nedirnuta.
+
+KN correction action koristi outer DB transaction za Copy B business date, leftover HTML revoke, predecessor Notice revoke i Notice B create. Channel exception rollbackuje te DB promjene. PDF B je već uploadovan u ranijem `store()` toku i ostaje neobjavljena copy ako correction publish padne.
+
+Ako postoji 0 ili više od jednog current public signed-copy predecessor-a, correction **refuse**-uje. Faza 6 **ne** auto-healu-je višestruke current signed-copy Notice-e.
+
+Faza 7: `correct()` koristi postojeći live-copy guard (`assertCopyIsLiveOnCompetition`). Pending i permanently deleted Copy **ne** mogu ući u PDF correction. Ostala Faza 6 correction semantika ostaje KEEP.
+
+Generic `NoticePublicationService::publish()` **nije** mijenjan. Ordinary UC-OB-005 semantika se **ne** mijenja. **Ne** uvodi se globalno pravilo „jedan Notice po `source_id`“ za sve FT-004 tokove. **Nema** DB unique constraint.
+
+### IMPLEMENTED LOCALLY / PO ACCEPTED — leftover `competition_decision_html`
+
+Pri first publish, PDF correction, republish i **permanent-delete T1**, KN određuje leftover skup i za svaki leftover HTML Notice dispatch-uje postojeći `OfficialContentPublicAvailabilityRevoked` → postojeći listener → `NoticePublicationService::revokePublicAvailability()`. **Ne** uvodi se novi FT-004 event.
+
+Scope leftover skupa:
+
+* `source_type = competition_decision`;
+* `source_id` = konkretni Competition;
+* `content_delivery = competition_decision_html`;
+* `visible_in_active_panel = true` **ILI** `publicly_available = true`.
+
+Novi produkcijski tok **ne** kreira `competition_decision_html`. Historical leftover Notice može postojati; pri signed-copy activation path-u njegova javna dostupnost se revoke-uje. Istorijski Notice ostaje interno. **Nema** hard-delete-a i **nema** pretvaranja HTML-a u signed-copy.
+
+Landing query i dalje prikazuje sve `visible_in_active_panel = true`. Application-level invariant je da leftover HTML više nije visible/public kada je važeća signed-copy publikacija aktivirana, pa na panelu ostaje jedna važeća Decision reprezentacija tog Konkursa. Direktna nekonzistentna DB izmjena i dalje može zaobići application guards.
+
+**IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED.
+
+## 4.5 Metadata update — IMPLEMENTED
+
+Source-initiated operacija nad **trenutno važećim** Notice-om:
+
+* izmjena `title` i/ili poslovnog datuma za javni prikaz;
+* isti `source_object_id`;
+* isti PDF;
+* **bez** novog Notice reda.
+
+Nije generički Notice editor. Istorija poslovne izmjene ostaje u KN. `published_at` se **ne** mijenja ovom operacijom.
+
+KN `updateMetadata()` (CURRENT UX corrective; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **NOT YET COMMITTED**): omitted title = KEEP; blank title = KEEP; omitted date = KEEP; blank date = KEEP. Ako nema stvarne promjene, operacija je no-op: **nema** `save`, **nema** lifecycle audit, **nema** `OfficialContentPublicMetadataUpdated`. Empty effective title i invalid/future date se i dalje odbijaju. Transaction/rollback ostaju za stvarni update. Copy i Notice snapshot ostaju konzistentni. Generic FT-004 `updatePublicMetadata` semantika = KEEP.
+
+Minimalni ugovor: `NoticePublicationService::updatePublicMetadata` + event `OfficialContentPublicMetadataUpdated` / listener `UpdateOfficialContentPublicMetadata`, **ne** `OfficialContentReadyForPublicPublication`. CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
+
+## 4.6 Source-specific revoke (unpublish) — IMPLEMENTED
+
+Source-initiated operacija nad postojećim Notice-om:
+
+* `visible_in_active_panel → false`;
+* `publicly_available → false`;
+* **bez** novog Notice reda.
+
+Ovo **nije** ordinary UC-OB-005 supersession.
+
+Minimalni ugovor: `NoticePublicationService::revokePublicAvailability` + event `OfficialContentPublicAvailabilityRevoked` / listener `RevokeOfficialContentPublicAvailability`. Listener mapira naredbu u tu metodu. **Ne** koristiti `OfficialContentReadyForPublicPublication`. CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
+
+## 4.7 Republish istog source objekta — IMPLEMENTED
+
+Nakon source-specific revoke, KN ponovo objavljuje isti `source_object_id` kroz postojeći `publish` ugovor:
+
+* ista `CompetitionOfficialDecisionCopy` i isti PDF / `storage_path`; nema novog upload-a;
+* nastaje **novi** Notice red;
+* isti source identity (`source_type` / `source_id` / `content_delivery` / `source_object_id`);
+* `public_revoke = false`; `supersedes_notice_id = null`;
+* `published_at` je novo automatsko tehničko vrijeme;
+* KN predaje novi `title` i poslovni datum prikaza; datum nije budući;
+* stari revoked Notice ostaje nedirnut;
+* current-public konflikt i missing PDF se refuse-uju.
+
+Istorijsko postojanje Notice-a **nije** zabrana. `hasBeenPublished()` ostaje istorijski `exists()` i **nije** oslabljen; republish koristi current-public stanje (`isCurrentlyPublished()` / `activeSignedCopyNotices()`). Višestruki unpublish → republish ciklus je podržan; KN audit `official_decision_republished` bilježi `previous_notice_id` neposredno prethodnog revoked Notice-a.
+
+Pri republish KN **takođe** povlači leftover `competition_decision_html` istog Konkursa (isti leftover helper kao first publish / correction). Republish semantika ostaje: ista copy, isti PDF, novi Notice, `public_revoke=false`, `supersedes_notice_id=null`.
+
+Minimalni ugovor: KN `republish()` + postojeći event `OfficialContentReadyForPublicPublication` / listener `PublishOfficialContentNotice` / `NoticePublicationService::publish`. CURRENT RUNTIME. **IMPLEMENTED LOCALLY / PO ACCEPTED.** **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
+
+## 4.8 Permanent-delete lifecycle — IMPLEMENTED LOCALLY / PO ACCEPTED
+
+FT-004 contract završava na source-specific revoke-u važećeg Notice-a (§4.6). **GENERIC FT-004 CHANGE REQUIRED = NO.** KN reuse-uje postojeći `OfficialContentPublicAvailabilityRevoked` → listener → `NoticePublicationService::revokePublicAvailability()`. Generic `NoticePublicationService::publish()` ostaje KEEP. Ovo **nije** generička FT-004 permanent-delete funkcionalnost.
+
+Fizičko brisanje KN PDF-a i KN tombstone/audit **nisu** odgovornost FT-004. Istorijski Notice red ostaje. Hard-delete Notice-a **nije** potreban i **nije** dozvoljen zbog ove radnje (`restrictOnDelete` na `source_object_id` i `superseded_notice_id`). Hard-delete `CompetitionOfficialDecisionCopy` reda **nije** dozvoljen. Copy row ostaje tombstone. PDF fajl se fizički briše. Audit i Notice history ostaju.
+
+**Permanent delete ≠ unpublish.** Unpublish ostavlja PDF interno i dozvoljava republish iste Copy. Permanent delete fizički uklanja PDF; Copy postaje tombstone; ista Copy se više ne publish/republish/correct; nova Copy smije se uploadovati i first-publishovati tek poslije **completed** tombstone-a.
+
+**MIGRATION REQUIRED = NO.** Faza 7 koristi postojeće foundation kolone (`storage_path` nullable, `permanent_delete_pending_at`, `permanently_deleted_at`, `permanently_deleted_by`) i tabelu `competition_official_decision_lifecycle_events`. Faza 7 **nije** kreirala novu migraciju.
+
+### Dvostepeni T1 / filesystem / T2 model
+
+DB transaction **ne** može rollbackovati fizičko brisanje sa local filesystem-a.
+
+**T1** (DB transaction): Copy `lockForUpdate()`; guards (0/1 current signed-copy, `>1` REFUSE bez latest-wins); live never-published Copy **smije** ući u permanent delete; signed-copy public revoke samo ako tačno jedan current Notice **pripada ovoj** Copy; leftover HTML revoke istog Konkursa samo ako je Copy historijski objavljena; never-published put **ne** inventiše Notice i **ne** revoke-uje tuđu current publikaciju; `permanent_delete_pending_at`; **zadrži** `storage_path`; append `official_decision_permanent_delete_started`; commit.
+
+**Izvan DB transakcije:** physical PDF delete na disk `local`, kontrolisani `storage_path` iz locked Copy. Completion uslov **nije** bool iz `delete()`. Mora: `Storage::disk('local')->exists($path) === false`. Ako fajl i dalje postoji: T2 se **ne** pokreće; Copy ostaje pending; STARTED ostaje; public ostaje revoked.
+
+**T2** (DB transaction): Copy `lockForUpdate()`; fresh guards; ponovna potvrda fizičkog odsustva; `permanently_deleted_at` / `permanently_deleted_by`; `storage_path = null`; pending clear; append `official_decision_permanent_delete_completed`; commit.
+
+### Retry
+
+Crash-safe retry istog permanent-delete procesa nad **istom** Copy. U pending stanju Administrator kroz Platformu koristi akciju **„Ponovi trajno brisanje“** (ista `permanent-delete` ruta; **nije** novi Copy; **nije** drugi STARTED mimo postojeće idempotentne semantike):
+
+* pending + file exists → retry delete → T2; bez novog STARTED;
+* pending + DB path + file absent → T2;
+* pending + path null → T2;
+* completed tombstone → 404 / no-op; bez drugog STARTED/COMPLETED;
+* pending + current public signed-copy inconsistency → REFUSE (bez automatic healing);
+* multiple current signed-copy prije T1 → REFUSE (bez filesystem delete i bez STARTED).
+
+Nema latest-wins. Nema ponovnog publish-a kroz retry.
+
+### Audit
+
+Actions: `official_decision_permanent_delete_started`, `official_decision_permanent_delete_completed`. Minimalni payload snapshot: `business_title`, `business_published_on`, `notice_id` (scoped na tu Copy). Actor i tehničko vrijeme su audit kolone. PDF/path se **ne** čuvaju u payload-u.
+
+### Copy B nakon completed A (`KN-FS-003` §16.15)
+
+Slijed: A published → A STARTED → A COMPLETED → upload B → first publish B. Istorijska publication history **nije** obrisana. `hasBeenPublished()` ostaje historical copy-level. `competitionHasPublishedSignedCopy()` ostaje historical competition-wide `exists()`. Server i admin UI first-publish koriste `competitionHasNonTombstonedSignedCopyPublication()`: completed tombstone A **ne** blokira B; pending A, withdrawn non-deleted A i current A **blokiraju** B; current B **blokira** C.
+
+### Autorizacija / UI
+
+Exact `role.name === 'konkurs_admin'`; Competition `closed` ili `completed`; Copy pripada Competition. **Nema** per-competition ownership mapping. `RestrictRoleModuleAccess` samo registruje rutu `admin.competitions.official-decision.permanent-delete` u postojećem konkurs_admin allow-list obrascu; to **nije** novi authorization model.
+
+UI (CURRENT UX corrective; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **NOT YET COMMITTED**): nema `foreach` history kao CURRENT prikaz. Published/withdrawn CURRENT — „Trajno obriši“ + eksplicitno upozorenje da je nepovratno. Live never-published CURRENT — „Odustani i obriši Odluku“ (učitani PDF, još nije objavljen, nepovratno). Pending — „Trajno brisanje Odluke nije završeno.“ + „Ponovi trajno brisanje“; pending **nije** obični empty i **nije** normalna aktivna Odluka. Completed tombstone nestaje iz CURRENT UI-a; Copy red i audit ostaju u DB. Razlog za brisanje **nije** potreban. **Ne** uvodi se novi Competition status. Existing authorization/server guards ostaju. **GENERIC FT-004 CHANGE REQUIRED = NO.**
+
+**IMPLEMENTED LOCALLY / PO ACCEPTED.** **NOT PRODUCTION DEPLOYED.** **NOT PRODUCTION ACCEPTED.**
+
+---
+
+## 4.9 Finalni javni prikaz poslovnog datuma — IMPLEMENTED LOCALLY / PO ACCEPTED
+
+Javna površina Faze 8 je **samo** postojeći FT-004 Obavještenja panel (`resources/views/partials/obavjestenja-panel.blade.php`). Nema posebnog KN public detail view-a. Direct PDF (`PublicNoticeContentController`) = KEEP. Competition public page = KEEP. Leftover HTML view = KEEP.
+
+Poslovni zahtjev za business publication date potiče iz KN official Decision contracta (`KN-FS-003` §16.16). Tehnički panel rendering je:
+
+`@if($notice->public_display_date)`
+
+bez `content_delivery` branch-a.
+
+To **ne** znači usvajanje generičke FT-004 date policy, zatvaranje OFD-OB-006, obavezni datum za ordinary Notice, niti `published_at` fallback.
+
+Repository-wide PO audit: **nema** non-KN product write-path-a koji trenutno postavlja non-null `public_display_date`. Ordinary Notice i leftover `competition_decision_html` sa `public_display_date = null` ostaju bez datumskog reda.
+
+### Rendering contract
+
+- prikazuje se `Notice.public_display_date` **samo** kada je non-null;
+- label: **Datum objave**;
+- visible format: `d.m.Y` (`$notice->public_display_date->format('d.m.Y')`);
+- `<time datetime>` koristi ISO `Y-m-d` (`toDateString()`);
+- vrijeme se **ne** prikazuje;
+- title ostaje `$notice->title`;
+- `short_description` KEEP;
+- `HomeController@index` listing ostaje `visible_in_active_panel` + `orderByDesc('published_at')` + `orderByDesc('id')`.
+
+### Null / fallback
+
+`public_display_date = null` → nema „Datum objave“, nema `<time>` reda, nema fallback-a na `published_at`, `created_at`, `updated_at` niti Competition datum.
+
+Za KN current signed-copy lifecycle normalni write path obezbjeđuje non-null business date. Schema kolona ostaje nullable. Defensive rendering je null-safe.
+
+`public_display_date` = poslovni datum objave. `published_at` = tehnički timestamp objave Notice-a. Faza 8 javni panel **ne** koristi `published_at` kao poslovni datum. `published_at` ostaje u modelu i u listing sortu.
+
+### Lifecycle interaction (samo javni rendering rezultat)
+
+Lifecycle implementation ostaje Faza 2–7. Faza 8 ne mijenja te tokove.
+
+| Tok | Javni panel |
+|-----|-------------|
+| Metadata correction | isti Notice; panel odmah prikazuje novi title/date; stari metadata nije current display |
+| PDF correction | nova validna publikacija; panel prikazuje samo current B metadata; A nije current panel metadata |
+| Unpublish | entry nestaje sa panela; nema tombstone/placeholder |
+| Republish | novi current Notice; panel prikazuje novi/current business title/date |
+| Permanent delete | T1 revoke → entry nestaje sa panela |
+| Copy B after completed A | panel prikazuje B metadata; A nije current panel entry |
+
+### Granice Faze 8
+
+**GENERIC FT-004 LIFECYCLE CHANGE REQUIRED = NO.** Nisu mijenjani: `Notice` model, `NoticePublicationService`, event/listener, `HomeController`, `PublicNoticeContentController`, KN lifecycle controller.
+
+**MIGRATION REQUIRED = NO.** `notices.public_display_date` već postoji. Faza 8 nije dodala schema change.
+
+Testovi su scoped na konkretni panel item radi izbjegavanja false-positive rezultata. LOCAL / PO evidence: vidi §14.7.
+
+**IMPLEMENTED / PO ACCEPTED / PUSHED TO ORIGIN/MAIN** (commit `8d34ecf129008386faaf826332ad0fd3a6536332`). **NOT PRODUCTION DEPLOYED.** **NOT PRODUCTION ACCEPTED.**
+
+---
+
+## 4.10 CURRENT admin UX corrective — IMPLEMENTED LOCALLY / PO ACCEPTED / NOT YET COMMITTED
+
+Ovo **nije** Faza 8. Faza 8 je već na `origin/main`. Ovaj corrective postoji samo u dirty working tree-u.
+
+**Status:** **IMPLEMENTED LOCALLY / PO ACCEPTED / NOT YET COMMITTED / NOT YET PUSHED / NOT PRODUCTION DEPLOYED / NOT PRODUCTION ACCEPTED.** **GENERIC FT-004 CHANGE REQUIRED = NO.**
+
+CURRENT admin projekcija jednog poslovnog CURRENT stanja:
+
+published → newest withdrawn live → newest live never-published → pending fallback → empty
+
+Ako postoji legitimni CURRENT B i pending A: B ostaje poslovni CURRENT; pending A se prikazuje kao dodatni operativni retry blok. Pending **ne** zamjenjuje legitimate current B. Istorijske i tombstone Copy ostaju interno sačuvane, ali se **ne** prikazuju kao normalni CURRENT poslovni redovi. Nema `foreach` history UI-a kao CURRENT prikaza.
+
+Never-published uploaded PDF: Administrator može „Odustani i obriši Odluku“. PDF se fizički i nepovratno briše. Notice se **ne** inventiše. Druga current publikacija se **ne** revoke-uje. Binding: `KN-BM-003` v1.0.7 §15.4; `KN-FS-003` v0.1.22 §16.14 / §18.9.7.
+
+Pending: „Trajno brisanje Odluke nije završeno.“ + „Ponovi trajno brisanje“. Retry koristi postojeću permanent-delete rutu nad istom Copy. Pending-only nije obični empty: nema Objavi / Ponovo objavi / Ispravi podatke / Koriguj PDF / Povuci objavu / normalni „Trajno obriši“ kao nova operacija. Binding: `KN-FS-003` v0.1.22 §16.14 / §18.9.7.
+
+Metadata correction: omitted = KEEP; blank = KEEP; bez stvarne promjene = no-op bez save/audit/FT-004 metadata event. Generic FT-004 semantics = KEEP.
+
+Existing authorization/server guards ostaju: exact `konkurs_admin`; closed/completed; belongs-to; CSRF POST; pending/deleted guards; public uniqueness; correction/republish guards. Admin/Super admin nemaju poslovni bypass.
 
 ---
 
 # 5. Autorizacija i ovlašćenja
 
-**Sekcijska sljedivost:** FR-OB-002, FR-OB-003, FR-OB-010, FR-OB-014, FR-OB-017
+**Sekcijska sljedivost:** FR-OB-002, FR-OB-003, FR-OB-010, FR-OB-014, FR-OB-017; KN-FS-003 §15.7.1, §15.7.5, §16.1, §16.8–§16.16, §18.8.2
 
-| Radnja | Middleware / pravilo |
+| Radnja | Pravilo |
 |--------|----------------------|
 | Pregled panela | Javna ruta `GET /` — **bez** `auth`, **bez** `verified` |
-| Pristup zvaničnom sadržaju Obavještenja | Javna ruta — **bez** `auth` |
-| Objava Obavještenja | Samo kroz događaj iz izvorne funkcionalnosti; **nema** admin approve rute |
+| Pristup zvaničnom sadržaju Obavještenja | Javna ruta — **bez** `auth`; isporuka samo ako je **ta** objava javno dostupna |
+| Objava Obavještenja (kanal) | Samo kroz događaj iz izvorne funkcionalnosti; **nema** Notice approve rute |
 | Admin CRUD Obavještenja | **Nije** u obuhvatu |
 
 `RestrictRoleModuleAccess` i `role:*` **ne** primjenjuju se na javne rute Obavještenja.
+
+### Source-side — zvanična Odluka Konkursa
+
+| Radnja | Ko |
+|--------|--------|
+| Postavljanje (upload/store) potpisanog primjerka | Administrator konkursa |
+| Objava kroz FT-004 | Administrator konkursa |
+| Korekcija | Administrator konkursa |
+| Metadata update / povlačenje (unpublish) | Administrator konkursa (**IMPLEMENTED** na kanalu; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
+| Ponovna objava | Administrator konkursa (**IMPLEMENTED LOCALLY / PO ACCEPTED** na kanalu; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
+| Naredba kanala pri trajnom uklanjanju | Administrator konkursa (**IMPLEMENTED LOCALLY / PO ACCEPTED** na kanalu; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
+| Predsjednik Komisije | **Nema** ovu poslovnu radnju (Predlog / Zaključi nisu objava Odluke) |
+| Član Komisije | **Nema** |
+
+**IMPLEMENTED:** `RoleMiddleware` i dalje propušta `superadmin` kroz `role:*`. To **nije** dovoljno niti dopušteno kao poslovni bypass za ove radnje (KN-FS-003 §16.1, §18.8.2).
+
+Izvorni modul **sprovodi** source-side guard: `role.name === 'konkurs_admin'` za upload, publish, correct, metadata update, unpublish, republish i permanent-delete. **Nema** per-competition ownership mapping. `RestrictRoleModuleAccess` registruje permanent-delete rutu u postojećem konkurs_admin allow-list obrascu; to **nije** novi authorization model. Uloga Administratora platforme (`admin`) ili Super administratora **sama po sebi** ne daje pravo upload/publish/correction/revoke.
+
+Ovaj TS **ne** dizajnira Policy klasu ni imena metoda.
 
 Nema read-tracking autorizacije ni inbox dozvola.
 
@@ -268,34 +640,70 @@ Nema read-tracking autorizacije ni inbox dozvola.
 
 # 6. Model podataka
 
-**Sekcijska sljedivost:** FR-OB-005–007, 010, 015, 016
+**Sekcijska sljedivost:** FR-OB-005–007, 010, 015, 016; DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003
 
-## 6.1 Nova tabela `notices`
+## 6.1 Tabela `notices` — IMPLEMENTED osnova
 
 | Kolona | Tip | Null | Napomena |
-|--------|-----|------|----------|
-| `id` | BIGINT UNSIGNED PK | ne | |
+|--------|--------|------|----------|
+| `id` | BIGINT UNSIGNED PK | ne | identitet Notice-a |
 | `title` | VARCHAR(255) | ne | FR-OB-005 |
-| `short_description` | TEXT | da | FR-OB-007; izvor opisa = OFD-OB-008 (kolona prima vrijednost ako je prosleđena) |
-| `visible_in_active_panel` | BOOLEAN | ne | default `true` pri objavi; FR-OB-015 |
+| `short_description` | TEXT | da | FR-OB-007; izvor opisa = OFD-OB-008 |
+| `visible_in_active_panel` | BOOLEAN | ne | default `true` pri objavi; **samo panel**; FR-OB-015 |
+| `publicly_available` | BOOLEAN | ne | default `true`; javna isporuka; odvojeno od panela |
 | `source_type` | VARCHAR(64) | ne | veza ka izvoru |
-| `source_id` | BIGINT UNSIGNED | ne | |
-| `content_delivery` | VARCHAR(64) | ne | ključ isporuke za public controller |
-| `published_at` | TIMESTAMP | ne | tehnički trenutak objave |
+| `source_id` | BIGINT UNSIGNED | ne | izvorni entitet (Konkurs); vidi §3.2 za primjerak |
+| `superseded_notice_id` | BIGINT UNSIGNED | da | persisted predecessor; restrictOnDelete |
+| `source_object_id` | BIGINT UNSIGNED | da | tačan copy za signed-copy; null za legacy HTML |
+| `content_delivery` | VARCHAR(64) | ne | runtime ključ isporuke |
+| `published_at` | TIMESTAMP | ne | **tehničko vrijeme kreiranja/objavljivanja konkretnog Notice reda**; automatski `now()` pri `publish`; **nije** ručno uneseni poslovni datum |
+| `public_display_date` | DATE | da | source-provided poslovni/display datum za javnu reprezentaciju; **nije** `published_at`; CURRENT RUNTIME kolona |
 | `created_at` / `updated_at` | TIMESTAMP | | |
 
-**Indeksi:**
+**Indeksi (CURRENT):**
 
 * `(visible_in_active_panel, published_at)` — učitavanje panela;
 * `(source_type, source_id)` — pronalaženje po izvoru.
 
-**FK:** nema obaveznog FK ka `competitions` (izvor može biti više tipova; polimorfna logička veza preko `source_type`/`source_id`).
+**FK (IMPLEMENTED):**
 
-**Constraints:** `title` NOT NULL.
+* `superseded_notice_id` → `notices.id` — `restrictOnDelete`;
+* `source_object_id` → `competition_official_decision_copies.id` — `restrictOnDelete`.
+
+Nema obaveznog FK `source_id` ka `competitions`.
+
+## 6.1.1 Implementirani persisted atributi Notice-a
+
+Semantika iz PATCH-FS-OB-002 je **IMPLEMENTED** na Notice zapisu:
+
+| Atribut | Semantika |
+|---------|-----------|
+| `publicly_available` | da / ne; odvojeno od `visible_in_active_panel`; legacy default = **dostupno** |
+| `superseded_notice_id` | koji prethodni Notice je ova objava zamijenila, kada postoji |
+| `public_revoke` (event payload, nije kolona) | ordinary panel supersession **naspram** korekcije / public revoke |
+| `source_object_id` | jednoznačna referenca na nepromjenjivi primjerak koji ova objava servira |
+
+Ovo **nije** audit tabela. **Nije** generički versioning.
+
+Notice **ne** dobija: disk, MIME, original filename, hash, file blob/path, soft delete, generic audit metadata.
+
+### 6.1.2 Poslovni datum prikaza vs `published_at`
+
+| Pojam | Semantika | Status |
+|-------|-----------|--------|
+| `published_at` | Tehničko vrijeme izvršenja channel `publish` radnje za **taj** Notice red. Koristi se za privremeni tehnički sort panela (OFD-OB-009). **Ne** smije se prepisati ručno unesenim poslovnim datumom. | **IMPLEMENTED** |
+| `public_display_date` (storage / channel contract) | Source-provided poslovni/display datum za javnu reprezentaciju. Dolazi od KN. Nije `published_at`. Notice kolona i publication payload polje postoje u CURRENT RUNTIME. | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
+| Finalni javni prikaz `public_display_date` | Rendering poslovnog datuma na FT-004 javnom panelu (`Datum objave`, `d.m.Y`, ISO `datetime`, null-safe). | **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
+
+Panel renderuje `public_display_date` **samo** kada je non-null (vidi §4.9). Panel **ne** renderuje `published_at` kao poslovni datum. Sort panela i dalje koristi `published_at`. Čuvanje `public_display_date` i javni prikaz su odvojeni slojevi; oba su CURRENT RUNTIME.
+
+Validacija da poslovni datum nije budući **nije** FT-004 odgovornost.
 
 ## 6.2 Izmijenjene tabele
 
-Nema obaveznih izmjena postojećih tabela za V1 ovog TS.
+**Notice:** migracija `2026_08_31_100100_add_publication_state_to_notices_table` dodaje `publicly_available`, `superseded_notice_id`, `source_object_id`. Legacy redovi ostaju `publicly_available = true`.
+
+**Competition / KN tabele:** ovaj TS **ne** dizajnira KN schema. Vidi §6.4 za implementirano stanje vlasništva primjerka.
 
 ## 6.3 Šta se namjerno ne uvodi
 
@@ -304,7 +712,29 @@ Nema obaveznih izmjena postojećih tabela za V1 ovog TS.
 * `approved_by`, `approved_at`;
 * `sort_order` / `priority` kao poslovni redoslijed (OFD-OB-009);
 * `max_visible` konfiguracija (OFD-OB-010);
-* tabela grupe „odgovarajućih“ zamjena (OFD-OB-001).
+* tabela grupe „odgovarajućih“ zamjena (OFD-OB-001);
+* file storage kolone na `notices`;
+* generički file delivery za sve izvore;
+* ponašanje za uploaded-but-unpublished replacement;
+* generički Notice editor / CMS;
+* hard-delete Notice-a kao mehanizam KN trajnog uklanjanja.
+
+## 6.4 Ugovor prema izvoru Konkursi (implementation state)
+
+Konkursi **implementiraju**:
+
+* tabelu `competition_official_decision_copies` (`competition_id`, `storage_path`, `uploaded_by` nullable; insert-only; **nema** current/published/version flaga);
+* FK `competition_id` → competitions, `restrictOnDelete`;
+* FK `uploaded_by` → users, `restrictOnDelete`;
+* više istorijskih primjeraka kada korekcija koristi novi copy (bez in-place overwrite objavljenog fajla);
+* jednoznačno razrješavanje primjerka preko `Notice.source_object_id`;
+* first publication i eksplicitnu korekciju kao odvojene source-side akcije.
+
+Original filename **nije** identity primjerka. `ApplicationDocument` / `UserDocument` nisu vlasnici Odluke.
+
+Ovaj TS i dalje **ne** preuzima KN SQL kao vlasništvo FT-004.
+
+Faza 7 **ne** dodaje KN migraciju. CURRENT RUNTIME koristi već postojeće foundation kolone (`permanent_delete_pending_at`, `permanently_deleted_at`, `permanently_deleted_by`, nullable `storage_path`) i `competition_official_decision_lifecycle_events`. **MIGRATION REQUIRED = NO.**
 
 ---
 
@@ -319,11 +749,16 @@ Pri `NoticePublicationService::publish`:
 | Naslov | obavezan, string, max 255 |
 | Kratak opis | opciono, string |
 | `source_type`, `source_id`, `content_delivery` | obavezni |
-| `supersedes_notice_id` | opciono; ako postoji mora referencirati postojeći `notices.id` |
+| Prethodni Notice (payload) | opciono; ako postoji mora referencirati postojeći `notices.id` |
+| Ordinary vs korekcija | ako je korekcija / public revoke, prethodni Notice je obavezan |
+| Delivery **nove** zvanične Odluke | `competition_decision_signed_copy`; `source_object_id` identifikuje konkretni primjerak |
+| `competition_decision_html` | **nije** validan delivery za **novu** zvaničnu Odluku Konkursa |
 
 Nema validacije „odgovarajuće“ zamjene (OFD-OB-001).
 
-Nema validacije poslovnog stanja konkursa (OFD-OB-006) unutar Obavještenja.
+Nema validacije poslovnog stanja konkursa (OFD-OB-006) **unutar** Obavještenja. Izvor (Konkursi) ostaje odgovoran.
+
+FT-004 **ne** validira niti mijenja rang-listu, rezultate ni iznose.
 
 ---
 
@@ -335,7 +770,10 @@ Ne uvodi se:
 
 * evidencija otvaranja Obavještenja;
 * potvrda prijema;
-* immutable audit trail objave kao poslovni zahtjev.
+* immutable audit trail objave kao poslovni zahtjev;
+* zaseban audit subsystem za korekciju.
+
+Interni trag korekcije je **Notice zapis + persisted veza** (§3.4, §6.1.1), ne audit tabela.
 
 Operativni Laravel log (tehnički) dozvoljen je u implementacionim napomenama, ali nije FR.
 
@@ -343,26 +781,49 @@ Operativni Laravel log (tehnički) dozvoljen je u implementacionim napomenama, a
 
 # 9. Integracije
 
-**Sekcijska sljedivost:** FR-OB-008–011; BM-OB-08
+**Sekcijska sljedivost:** FR-OB-008–011; BM-OB-08; KN-FS-003 §15.7.1, §15.7.5, §16.8–§16.16; KN-BM-003 §15.4
 
 ## 9.1 Ugovor događaja (ulaz iz izvornih funkcionalnosti)
 
-`OfficialContentReadyForPublicPublication` payload:
+Osnovna semantika ostaje: izvor signalizira da je zvanični sadržaj spreman za javnu objavu.
 
-* `title` (string)
+Logički ugovor `publish` (IMPLEMENTED payload, CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**):
+
+* `title` (string) — source-provided; FT-004 ga ne generiše
 * `short_description` (?string)
 * `source_type` (string)
-* `source_id` (int)
+* `source_id` (izvorni entitet, npr. Konkurs)
 * `content_delivery` (string)
-* `supersedes_notice_id` (?int)
+* `source_object_id` (?int) — identitet izvornog objekta (`CompetitionOfficialDecisionCopy.id` za signed-copy)
+* `public_revoke` (bool; default `false`) — ordinary panel supersession **naspram** korekcije / public revoke
+* `supersedes_notice_id` (?int) — prethodni Notice; obavezan kada je `public_revoke = true`
+* `public_display_date` (?date) — **IMPLEMENTED** (CURRENT RUNTIME); source-provided; **ne** upisuje se u `published_at`
 
-## 9.2 Isporuka sadržaja — prvi podržani `content_delivery`
+`published_at` nastaje automatski pri `publish` kao `now()`. Listener `PublishOfficialContentNotice` mapira ovaj payload u `NoticePublicationService::publish`. `source_object_id` i `public_revoke` se **ne** gube.
 
-| `content_delivery` | Ponašanje `PublicNoticeContentController` |
-|--------------------|-------------------------------------------|
-| `competition_decision_html` | Učitava `Competition` po `source_id` i renderuje javni Blade ekvivalent sadržaja odluke (isti poslovni sadržaj kao admin decision view), **bez** `role:` / admin middleware |
+Payload polje `supersedes_notice_id` ostaje **ulaz**. **Nije** samo po sebi korekcija. Ordinary supersession (`public_revoke = false`) i KN korekcija (`public_revoke = true`) **ne** smiju se izjednačiti.
 
-Drugi tipovi (tenderi, ostalo) — tek nakon OFD-OB-006 i dokumentacije izvorne funkcionalnosti; do tada blocker za te izvore.
+### 9.1.1 Odvojeni channel ugovori
+
+`OfficialContentReadyForPublicPublication` ostaje **isključivo** publish / republish / correction-as-new-publication. **Ne** preopterećuje se.
+
+| Naredba | Status | Minimalni ugovor | Semantika |
+|---------|--------|------------------|-----------|
+| Metadata update | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | `NoticePublicationService::updatePublicMetadata` + event `OfficialContentPublicMetadataUpdated` | In-place `title` i/ili display date; isti `source_object_id`; bez novog Notice reda; `published_at` nedirnut |
+| Source-specific revoke | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | `NoticePublicationService::revokePublicAvailability` + event `OfficialContentPublicAvailabilityRevoked` | Postojeći Notice: `visible_in_active_panel=false`, `publicly_available=false`; bez insert-a |
+| Republish | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | postojeći `publish` (`OfficialContentReadyForPublicPublication`) | Novi Notice; isti `source_object_id`; isti PDF; `public_revoke=false`; `supersedes_notice_id=null`; novo `published_at`; istorijski Notice nije zabrana. KN dodatno povlači leftover Decision HTML istog Konkursa kroz postojeći revoke event. |
+| Permanent-delete | **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | isti revoke ugovor (`OfficialContentPublicAvailabilityRevoked`) | FT-004 ne briše PDF i ne hard-delete-uje Notice. KN radi T1/T2, physical delete i tombstone. **GENERIC FT-004 CHANGE REQUIRED = NO.** |
+
+## 9.2 Isporuka sadržaja — `content_delivery`
+
+| `content_delivery` | Status | Ponašanje |
+|--------------------|--------|-----------|
+| `competition_decision_html` | **LEGACY RUNTIME** | Učitava `Competition` po `source_id` i renderuje živi HTML Predloga. **Nije** zvanična Odluka. **Ne** smije biti delivery **nove** zvanične Odluke. Postojeći zapisi se **ne** migriraju. |
+| `competition_decision_signed_copy` | **IMPLEMENTED** za novu zvaničnu Odluku Konkursa | Javna ruta razrješava tačan `CompetitionOfficialDecisionCopy` preko `source_object_id` i servira fajl sa private `local` diska **samo** ako je konkretni Notice `publicly_available`. Notice ne drži fajl. Nije generički file delivery za sve izvore. |
+
+Drugi tipovi (tenderi, ostalo) — tek nakon OFD-OB-006 i dokumentacije izvorne funkcionalnosti.
+
+**IMPLEMENTED RUNTIME** isporučuje i `competition_decision_html` (legacy) i `competition_decision_signed_copy` (nova zvanična Odluka Konkursa). Direct public storage URL se ne koristi.
 
 ## 9.3 Eksterni sistemi
 
@@ -384,13 +845,19 @@ Usvojeno da **nije** dio V1 ovog TS / usvojenog FS obuhvata:
 
 * arhiva i pregled arhive;
 * ručna / urednička objava;
-* administratorsko odobrenje objave;
+* administratorsko odobrenje objave Obavještenja;
 * read/unread, acknowledgment, inbox;
 * automatsko određivanje „odgovarajuće“ zamjene bez ulaza izvorne funkcionalnosti;
 * poslovni algoritam redoslijeda i maksimum stavki;
 * objava na `kotor.me`;
 * queue/scheduler za Obavještenja;
-* admin UI za Obavještenja.
+* admin UI / CMS za Obavještenja;
+* **uploaded-but-unpublished replacement** (namjerno nedefinisano);
+* Competition SQL;
+* storage driver / disk / path / signed URL;
+* HTTP status / redirect za javno povučeni sadržaj;
+* retroaktivna migracija `competition_decision_html` u potpisani fajl;
+* retroaktivno gašenje svih starih hidden URL-ova.
 
 ---
 
@@ -400,20 +867,22 @@ Usvojeno da **nije** dio V1 ovog TS / usvojenog FS obuhvata:
 
 | OFD | Uticaj na implementaciju | Blokira / ograničava |
 |-----|--------------------------|----------------------|
-| OFD-OB-001 | Servis ne može sam izračunati `supersedes_notice_id` | Potpuna automatska zamjena bez ulaza izvora |
-| OFD-OB-002 | Nije poznato da li više vidljivih iz iste kategorije smije koegzistirati | Pravila pri objavi bez `supersedes` |
-| OFD-OB-003 | Nema ponašanja za otkazan / prazan novi postupak | Exception tok zamjene |
-| OFD-OB-004 | Nema arhive / dugoročnog UI | Samo `visible_in_active_panel`; nema archive feature |
+| OFD-OB-001 | Servis ne može sam izračunati prethodnika | Potpuna automatska zamjena bez ulaza izvora |
+| OFD-OB-002 | Nije poznato da li više vidljivih iz iste kategorije smije koegzistirati | Pravila pri objavi bez supersession |
+| OFD-OB-003 | Nema ponašanja za otkazan / prazan novi postupak | Exception tok ordinary zamjene |
+| OFD-OB-004 | Nema arhive / dugoročnog UI | Panel flag ≠ arhiva; public availability nije arhiva |
 | OFD-OB-005 | Nema admin create UI | Namjerno van obuhvata |
-| OFD-OB-006 | Nema veze iz konkurasa/tendera ka događaju | Produkcijski end-to-end automatizam iz izvora |
-| OFD-OB-007 | Nema toka ispravke sadržaja / ažuriranja Obavještenja | Update semantika |
+| OFD-OB-006 | Nema generičke veze iz svih izvora ka događaju | **Ostaje generički OTVORENO.** Za zvaničnu Odluku Konkursa okidač je KN-FS-003 §15.7.1. **Nije** RESOLVED / CLOSED / IMPLEMENTED generički. |
+| OFD-OB-007 | Nema generičkog toka ispravke za sve izvore | **Ostaje generički OTVORENO.** Za zvaničnu Odluku Konkursa ponašanje je KN-BM-003 §15.4 / KN-FS-003 §15.7.5 / §16.8–§16.16. **Nije** RESOLVED / CLOSED / IMPLEMENTED generički. |
 | OFD-OB-008 | Nije poznat izvor `short_description` | Kolona postoji; popuna zavisi od izvora |
 | OFD-OB-009 | Redoslijed u panelu nije poslovno usvojen | Privremeni tehnički `orderBy published_at` |
 | OFD-OB-010 | Nema limita broja stavki | Query bez `limit` osim ako PO odluči |
 
 ## 12.2 Ostalo
 
-Nema dodatnih tehničkih otvorenih pitanja van OFD blocker-a.
+Uploaded-but-unpublished replacement ostaje **nedefinisano**.
+
+Nema dodatnih tehničkih otvorenih pitanja koja bi zahtijevala PO odluku za ovaj source-specific corrective.
 
 ---
 
@@ -430,59 +899,74 @@ Nema dodatnih tehničkih otvorenih pitanja van OFD blocker-a.
 | FR-OB-005 | Prikaz `notice.title` |
 | FR-OB-006 | Link ka `route('notices.public-content', $notice)` |
 | FR-OB-007 | Prikaz `short_description` ako nije null |
-| FR-OB-008 | `PublicNoticeContentController@show` |
-| FR-OB-009 | Controller grana po `content_delivery` (HTML view ili file response) |
-| FR-OB-010 | Javna ruta; zabranjen redirect na admin decision rutu kao jedini mehanizam |
-| FR-OB-011 | Odgovornost izvora; događaj emituje **izvor** |
-| FR-OB-012 | `NoticePublicationService` ne sadrži logiku „da li je konkurs spreman“ |
+| FR-OB-008 | `PublicNoticeContentController@show`; isporuka samo ako je objava javno dostupna |
+| FR-OB-009 | Controller grana po `content_delivery`. **IMPLEMENTED:** `competition_decision_html` (legacy HTML Predloga) i file response `competition_decision_signed_copy` za zvaničnu Odluku Konkursa. To **nije** generički file delivery za sve izvore. |
+| FR-OB-010 | Javna ruta; zabranjen redirect na admin decision rutu kao jedini mehanizam; nova zvanična Odluka **nije** živi HTML Predloga |
+| FR-OB-011 | Odgovornost izvora; događaj emituje **izvor**. Za Odluku Konkursa: KN-FS-003 §15.7.1. OFD-OB-006 ostaje generički OTVORENO. |
+| FR-OB-012 | `NoticePublicationService` ne sadrži logiku „da li je konkurs spreman“ i ne mijenja rezultate |
 | FR-OB-013 | Listener → `publish()` → `visible_in_active_panel = true` |
-| FR-OB-014 | Nema approve endpointa / statusa na odobrenju |
-| FR-OB-015 | `publish(..., supersedes_notice_id)` postavlja staro `visible_in_active_panel = false` |
-| FR-OB-016 | Nema `delete()` na `Notice` ni na izvornom sadržaju u toku zamjene |
+| FR-OB-014 | Nema Notice approve endpointa / statusa na odobrenju |
+| FR-OB-015 | Ordinary supersession postavlja staro `visible_in_active_panel = false`; **ne** gasi javnu dostupnost |
+| FR-OB-016 | Nema `delete()` na `Notice` ni na izvornom sadržaju u ordinary zamjeni; korekcija je odvojen tok (public revoke, red ostaje) |
 | FR-OB-017 | Nema kolona/tabela read-tracking; nema poziva notifikacionog inboxa |
 
 ## 13.2 FR → BM → PO (sažetak)
 
-Poklapa se sa FS matricom 11.B; TS ne mijenja taj lanac.
+Poklapa se sa FS matricom 11.B; TS ne mijenja taj lanac. Source-specific KN binding je u DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003; TS ga tehnički realizuje kao kanal.
 
 ## 13.3 Pokrivenost FR
 
 Svaki FR-OB-001 … FR-OB-017 ima tehničku stavku u §13.1.
 
-Ograničenje: FR-OB-011/013 end-to-end iz konkursa zahtijeva OFD-OB-006; infrastruktura događaja je specificirana, veza izvora je blocker.
+Ograničenje: FR-OB-011/013 end-to-end iz konkursa za **generičke** izvore i dalje OFD-OB-006. Za zvaničnu Odluku Konkursa binding **i** runtime veza (upload → first publish → signed-copy delivery → direct predecessor revoke pri korekciji → unpublish/republish → leftover HTML uniqueness → permanent-delete / nova Copy B → javni prikaz poslovnog datuma na FT-004 panelu) **jesu implementirani** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**).
 
 ---
 
 # 14. Napomene za implementaciju
 
-**Nenormativno.**
+**Nenormativno** u pogledu HTTP statusa, storage drivera, diskova, path-ova i PHP potpisa. Semantika u §2–§9 ostaje mjerodavna.
 
-## 14.1 Rute (predloženo)
+## 14.1 Rute (IMPLEMENTED javni kanal)
 
 | Metoda | Putanja | Ime | Middleware | Controller |
 |--------|---------|-----|------------|------------|
 | GET | `/` | `home` | web (postojeće) | `HomeController@index` (proširenje) |
 | GET | `/obavjestenja/{notice}/sadrzaj` | `notices.public-content` | web, **bez auth** | `PublicNoticeContentController@show` |
 
-Bez novih admin ruta.
+Bez novih **Notice** admin ruta. Upload/publish/correction pripadaju izvornom modulu Konkursi; ovaj TS **ne** određuje njihove URI.
 
 ## 14.2 Kontroleri
 
-* `HomeController@index` — prosleđuje `$activeNotices` u `landing`.
-* `PublicNoticeContentController@show(Notice $notice)` — abort 404 ako nije smisleno servirati; za V1 dozvoliti isporuku i kada `visible_in_active_panel = false` **nije** usvojeno kao arhiva (OFD-OB-004). Dok OFD-OB-004 nije riješen: isporuka javnog sadržaja zahtijeva da Obavještenje postoji; **ne** implementirati archive browser. Za usklađenost sa FR-OB-010 dok je unos vidljiv, sadržaj mora biti dostupan; ponašanje nakon skidanja s panela ostaje blocker (OFD-OB-004) — implementacija V1: sadržaj ostaje dostupan preko iste javne rute (usklađeno sa FR-OB-016 „zamjena ≠ gubitak dostupnosti“), bez UI arhive.
+* `HomeController@index` — prosleđuje `$activeNotices` (`visible_in_active_panel = true`) u `landing`.
+* `PublicNoticeContentController@show(Notice $notice)`:
+  * **ne** koristi `visible_in_active_panel` kao jedini uslov isporuke;
+  * **prije isporuke** provjerava javnu dostupnost konkretne objave;
+  * ako objava **nije** javno dostupna: sadržaj se **ne** servira (ovaj TS **ne** određuje HTTP status ni redirect);
+  * **ordinary UC-OB-005:** Notice skinut s panela ostaje javno dostupan; sadržaj **smije** biti isporučen;
+  * **KN korekcija:** sadržaj prethodnog pogrešnog Notice-a **nije** javno dostupan preko prethodne javne rute;
+  * `competition_decision_html`: LEGACY HTML Predloga; **nije** delivery zvanične Odluke;
+  * `competition_decision_signed_copy`: **IMPLEMENTED** — razrješava `CompetitionOfficialDecisionCopy` preko `source_object_id` i servira fajl sa private `local` diska, bez stabilnog public storage URL-a koji zaobilazi `publicly_available` provjeru;
+  * unknown `content_delivery`: sadržaj se ne servira.
+
+OFD-OB-004 (arhiva UI) ostaje otvoren i **nije** isto što i public revoke korekcije.
 
 ## 14.3 Servisi
 
 `App\Services\Notices\NoticePublicationService`
 
-* `publish(array $payload): Notice`
-* transakcija DB pri zamjeni vidljivosti
+* `publish(...)` kreira Notice;
+* transakcija pri ordinary panel supersession **i** pri korekciji (panel + public revoke + persisted trag);
+* ordinary supersession **ne** postavlja public revoke;
+* korekcija **ne** briše prethodni Notice;
+* **IMPLEMENTED:** `updatePublicMetadata(...)`; `revokePublicAvailability(...)`. CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
 
 ## 14.4 Event / Listener
 
-* Event: `OfficialContentReadyForPublicPublication`
+* Event: `OfficialContentReadyForPublicPublication` — **samo** publish / republish / correction-as-new-publication
 * Listener: `PublishOfficialContentNotice` (sync, `ShouldQueue` **ne**)
-* Registracija u `EventServiceProvider` / Laravel 11 discovery
+* Registracija: Laravel auto-discovery (bez dvostrukog `Event::listen`)
+* Logički ugovor: §9.1. Payload uključuje `public_revoke` i `source_object_id`; listener ih mapira u `publish()`.
+* **IMPLEMENTED:** odvojen event `OfficialContentPublicMetadataUpdated` / listener `UpdateOfficialContentPublicMetadata` za metadata update; odvojen event `OfficialContentPublicAvailabilityRevoked` / listener `RevokeOfficialContentPublicAvailability` za source-specific revoke. Sync, `ShouldQueue` **ne**. CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Ne** širiti publish event na te naredbe.
 
 ## 14.5 Blade
 
@@ -492,39 +976,129 @@ Bez novih admin ruta.
 
 ## 14.6 Migracije / deploy
 
-* Nova migracija `create_notices_table`
-* `php artisan migrate` na Plesk nakon deploy-a
-* Nema promjene cron/queue worker konfiguracije za ovaj feature
-* Nema nove env varijable
+* Migracija `create_notices_table` već postoji.
+* **IMPLEMENTED:** `2026_08_31_100000_create_competition_official_decision_copies_table` i `2026_08_31_100100_add_publication_state_to_notices_table`.
+* Storage: private Laravel disk `local` (`storage/app/private`); `CompetitionOfficialDecisionCopy.storage_path`; unique immutable path; original filename **nije** identity; direct public storage URL se ne koristi.
+* Faza 7 **nije** kreirala novu migraciju. **MIGRATION REQUIRED = NO.** Permanent-delete koristi postojeće foundation kolone/tabelu.
+* Legacy redovi: `publicly_available = true`; `visible_in_active_panel = false` **ne** pretvara se u public revoke.
+* `competition_decision_html` zapisi se **ne** pretvaraju u potpisane fajlove.
+* Nema retroaktivnog gašenja svih starih hidden URL-ova.
+* Nema promjene cron/queue worker konfiguracije za ovaj feature kao uslov ovog TS.
 
-## 14.7 Testovi (plan)
+## 14.7 Testovi (implementation state)
+
+Pokrivenost je **IMPLEMENTED** u `ObavjestenjaFeatureTest`, `CompetitionOfficialDecisionCopyFoundationTest`, `CompetitionOfficialDecisionUploadTest`, `CompetitionOfficialDecisionPublicationTest`, `CompetitionOfficialDecisionLifecycleActionsTest` i `CompetitionOfficialDecisionPermanentDeleteTest`:
 
 | Test | Pokriva |
 |------|---------|
 | Feature: guest vidi panel na `/` | FR-OB-001, 002, 004 |
 | Feature: auth i guest vide iste vidljive stavke | FR-OB-003 |
 | Feature: panel prikazuje title / description / link | FR-OB-005–007 |
-| Feature: guest otvara javni sadržaj bez auth | FR-OB-008, 010 |
-| Unit/Feature: `publish` kreira visible notice | FR-OB-013, 014 |
-| Feature: `publish` sa supersedes skida staro s panela, ne briše red | FR-OB-015, 016 |
+| Feature: guest otvara javni sadržaj bez auth kada je objava javno dostupna | FR-OB-008, 010 |
+| Feature: `publish` kreira visible notice | FR-OB-013, 014 |
+| Feature: ordinary supersession skida staro s panela, ne briše red, **stari URL ostaje dostupan** | FR-OB-015, 016; UC-OB-005 regresija |
 | Feature: nema upisa u read-tracking | FR-OB-017 |
-| Negative: Obavještenja sloj ne sadrži competition-status gate | FR-OB-012 |
+| Negative: Obavještenja sloj ne sadrži competition-status / ranking gate | FR-OB-012 |
+| Feature: data foundation copy/Notice kolone i FK restrict | data foundation |
+| Feature: Administrator konkursa postavlja potpisani primjerak | KN §15.6.3; upload |
+| Feature: authorization — samo Administrator konkursa; predsjednik/član nemaju; platform `admin`/`superadmin` nisu business bypass | KN §16.1, §18.8.2 |
+| Feature: first publish zvanične Odluke kroz FT-004 | KN §15.7.1 |
+| Feature: public delivery `competition_decision_signed_copy` servira tačan source object | IMPLEMENTED |
+| Feature: Notice nije vlasnik fajla | ownership |
+| Feature: korekcija = nova objava + public revoke | KN §15.7.5 |
+| Feature: prethodni pogrešni Notice skinut s panela i stari URL ne servira sadržaj | KN §15.7.5 |
+| Feature: persisted correction trace | §3.4 |
+| Feature: correction chain A → B → C zadržava pun trag | postojeća semantika |
+| Feature: rang/rezultati/iznosi nepromijenjeni korekcijom | KN §15.7.5 |
+| Feature: `competition_decision_html` nije delivery nove zvanične Odluke | PATCH-FS-OB-002 |
+
+**IMPLEMENTED** u `CompetitionOfficialDecisionLifecycleActionsTest` / `ObavjestenjaFeatureTest`: metadata-only correction; publish → unpublish; old URL after unpublish; unpublish → republish iste kopije / istog PDF-a; uzastopni republish ciklus (`previous_notice_id` = neposredni revoked Notice). CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
+
+**IMPLEMENTED LOCALLY / PO ACCEPTED** u `CompetitionOfficialDecisionPublicationTest` / `CompetitionOfficialDecisionLifecycleActionsTest`: leftover `competition_decision_html` cleanup pri first publish, PDF correction i republish; application-level Decision publication uniqueness; correction `Copy B.business_title` / `business_published_on` / `public_display_date`; correction channel rollback. Lokalni relevantni Faza 6 regression ostaje LOCAL / PO evidence. **Nije** PRODUCTION ACCEPTED.
+
+**IMPLEMENTED LOCALLY / PO ACCEPTED** u `CompetitionOfficialDecisionPermanentDeleteTest` / `CompetitionOfficialDecisionPublicationTest`: permanent-delete T1/T2; physical PDF absence; tombstone; STARTED/COMPLETED audit; retry; leftover HTML u T1; `correct()` live guard; Copy B first publish poslije completed A; pending/withdrawn guards; multiple-current refuse. Targeted: **23 passed / 276 assertions / 0 failed**. Full relevant official-decision / Obavještenja regression: **188 passed / 1549 assertions / 0 failed**. To je LOCAL / PO evidence. **Nije** production test. **Nije** PRODUCTION ACCEPTED. Pravi parallel race test **nije** rađen; acceptance evidence za concurrency je `lockForUpdate()` u T1/T2 plus sequential idempotent retry.
+
+**IMPLEMENTED LOCALLY / PO ACCEPTED** (Faza 8 javni prikaz poslovnog datuma) u `ObavjestenjaFeatureTest` / `CompetitionOfficialDecisionPublicationTest` / `CompetitionOfficialDecisionLifecycleActionsTest` / `CompetitionOfficialDecisionPermanentDeleteTest`: panel prikaz `public_display_date` kao **Datum objave** u `d.m.Y`; ISO `datetime`; null bez datumskog reda; ordinary Notice isolation; leftover HTML isolation; defensive signed-copy null; metadata/PDF correction/unpublish/republish/permanent-delete/Copy B javni panel ishodi; direct PDF KEEP. Testovi su scoped na konkretni panel item. Independent PO review targeted: **13 passed / 416 assertions / 0 failed**. Full relevant official-decision / Obavještenja regression: **193 passed / 1716 assertions / 0 failed**. To je LOCAL / PO evidence. **Nije** production test. **Nije** production smoke. **Nije** PRODUCTION ACCEPTED. Faza 8 je naknadno **PUSHED TO ORIGIN/MAIN** (`8d34ecf129008386faaf826332ad0fd3a6536332`).
+
+**IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT UX corrective; **NOT YET COMMITTED / NOT YET PUSHED**) u `CompetitionOfficialDecisionUploadTest` / `CompetitionOfficialDecisionPublicationTest` / `CompetitionOfficialDecisionLifecycleActionsTest` / `CompetitionOfficialDecisionPermanentDeleteTest`: CURRENT admin projekcija; never-published permanent delete; pending retry UI; metadata omitted/blank KEEP i no-op; A/B isolation. Independent PO review targeted: **147 passed / 1684 assertions / 0 failed**. Full relevant official-decision / Obavještenja / foundation: **207 passed / 2032 assertions / 0 failed**. Širi KN: **22 passed / 113 assertions / 0 failed**. To je LOCAL / PO evidence. **Nije** production test. **Nije** production smoke. **Nije** PRODUCTION ACCEPTED. Docs sync **nije** production evidence.
 
 ## 14.8 Administracija
 
-Nema admin UI. Tehnička podrška = događaj + servis + javne rute.
+Nema Notice admin UI. Tehnička podrška FT-004 = događaj + servis + javne rute. Upload/publish/correction UI pripada Konkursima, ne ovom TS-u kao Notice CMS.
 
 ## 14.9 Uticaj na postojeći stub
 
 `NotificationController` i tabela `notifications` ostaju netaknuti (stub „Obavještenja“ u starom smislu ≠ FT-004). Eventualno uklanjanje stub UI-a nije dio ovog TS.
 
+## 14.10 LOCAL PO MANUAL ACCEPTANCE (2026-09-01)
+
+**Nije** PRODUCTION DEPLOYED. **Nije** PRODUCTION ACCEPTED. Plesk i produkcija **nijesu** bili predmet ovog testa.
+
+Okruženje: lokalna aplikacija `http://127.0.0.1:8000`. Konkurs tipa `zensko`, status **Završen**. Poslovna uloga: Administrator konkursa.
+
+KN ostaje vlasnik poslovnog procesa zvanične Odluke. FT-004 ostaje javni kanal objave. Ovaj zapis **ne** mijenja BM/FS zahtjeve, **ne** zatvara OFD-OB-006 / OFD-OB-007 generički, **ne** dira Poglavlje 11 `KN-FS-003` niti otvoreno pitanje zamjenskog člana Komisije.
+
+| Korak | Posmatrani ishod (lokalno) |
+|-------|----------------------------|
+| Upload PDF ≤ 2 MB | Kontrola vidljiva i funkcionalna; primjerak uspješno postavljen i evidentiran, još **nije** javno objavljen |
+| Prva objava | Akcija „Objavi“; poruka „Zvanična Odluka je objavljena.“ |
+| Javni pristup prvoj objavi | `/obavjestenja/1/sadrzaj` u Incognito/Private, bez prijave Administratora konkursa; potpisani PDF se otvorio |
+| Drugi primjerak | Novi PDF evidentiran; prvi i dalje „Objavljeno“; drugi ponudio „Koriguj objavu“ |
+| Potvrda korekcije | „Korigovati objavu? Pogrešni primjerak više neće biti javno dostupan.“ |
+| Ishod korekcije | Poruka „Objava zvanične Odluke je korigovana.“ |
+| Stari javni URL | `/obavjestenja/1/sadrzaj` u Incognito: HTTP 404 / Not Found. Posmatrani ishod ovog lokalnog testa; ovaj TS i dalje **ne** određuje HTTP status kao ugovor |
+| Novi javni URL | `/obavjestenja/2/sadrzaj` u Incognito: potpisani PDF se javno otvorio |
+
+Ručno potvrđeno: upload; odvojenost upload-a i objave; prva javna objava; javna dostupnost bez autentifikacije; postavljanje novog primjerka; source-specific korekcija; uklanjanje javne dostupnosti pogrešnog primjerka; stari direktni URL više ne servira sadržaj; novi primjerak je javno dostupan; korekcija **ne** zahtijeva izmjenu rezultata / rangiranja / Odluke kao poslovnog ishoda.
+
+Ovo **ne** zatvara FT-004 kao cijeli feature.
+
+## 14.11 IMPLEMENTED vs NOT YET IMPLEMENTED — KN channel
+
+**IMPLEMENTED** (CURRENT RUNTIME):
+
+* `competition_decision_signed_copy` delivery;
+* first publication kroz `OfficialContentReadyForPublicPublication`;
+* first-publish signed-copy: KN šalje `business_title` + `business_published_on`; FT-004 upisuje `title` + `public_display_date`;
+* `title` kao source-provided polje;
+* `public_display_date` kao source-provided kolona i publication payload polje;
+* `published_at` kao automatski tehnički timestamp;
+* correction: novi signed-copy Notice + `public_revoke` **neposrednog** signed-copy predecessor-a;
+* stari URL tog predecessor-a ne servira sadržaj; novi URL servira novi PDF;
+* ordinary UC-OB-005: panel hide bez gubitka `publicly_available`;
+* in-place metadata update (`updatePublicMetadata` + `OfficialContentPublicMetadataUpdated`);
+* source-specific unpublish (`revokePublicAvailability` + `OfficialContentPublicAvailabilityRevoked`) bez novog Notice reda;
+* republish iste povučene kopije (`republish()` + postojeći `OfficialContentReadyForPublicPublication`): isti `source_object_id` / PDF; novi Notice; `public_revoke=false`; `supersedes_notice_id=null`;
+* leftover `competition_decision_html` cleanup pri first publish, PDF correction, republish i permanent-delete T1 (KN leftover query + postojeći `OfficialContentPublicAvailabilityRevoked`);
+* application-level Decision publication uniqueness (nije DB unique constraint);
+* PDF correction business metadata: `title = Copy B.business_title`; obavezan `business_published_on` (today ili ranije); `Notice B.public_display_date` = taj datum; `published_at` tehnički timestamp; Copy A metadata nedirnuta;
+* correction outer DB transaction (Copy B date, leftover HTML revoke, predecessor revoke, Notice B create); channel exception rollbackuje te DB promjene; PDF B ostaje prethodno uploadovana neobjavljena copy;
+* `correct()` live-copy guard: pending i permanently deleted Copy refuse;
+* permanent-delete lifecycle (`KN-FS-003` v0.1.22 §16.14 / §16.15): T1 / filesystem / T2; `permanent_delete_pending_at`; fizičko uklanjanje PDF-a uz `exists()===false`; completed tombstone; STARTED/COMPLETED audit; idempotent retry; Copy row ostaje; Notice/audit history ostaje; live never-published Copy smije se trajno obrisati; Notice se ne inventiše; tuđa current publikacija se ne revoke-uje;
+* first-publish/UI helper `competitionHasNonTombstonedSignedCopyPublication()`; historical `hasBeenPublished()` i `competitionHasPublishedSignedCopy()` KEEP;
+* nova Copy B poslije completed permanent delete Copy A;
+* finalni javni prikaz `public_display_date` na FT-004 panelu (Faza 8): label **Datum objave**; visible `d.m.Y`; `<time datetime>` ISO `Y-m-d`; null-safe; **nema** `published_at` fallback-a; **PUSHED TO ORIGIN/MAIN** (`8d34ecf129008386faaf826332ad0fd3a6536332`);
+* CURRENT admin UX (`KN-FS-003` v0.1.22): published → newest withdrawn live → newest live never-published → pending fallback → empty; legitimate CURRENT B + pending A ostavlja B kao poslovni CURRENT; pending retry „Ponovi trajno brisanje“; tombstone/history nisu CURRENT redovi;
+* KN metadata KEEP/no-op: omitted/blank = KEEP; no-op nema save/audit/`OfficialContentPublicMetadataUpdated`.
+
+**DOCUMENTED / NOT YET IMPLEMENTED (ovaj KN channel paket):** nema preostalog rendering gapa iz `KN-FS-003` §16.16. Generički OFD-OB-006 / OFD-OB-007 ostaju OTVORENO. FT-004 **nije** CLOSED.
+
+Metadata update, source-specific unpublish, republish iste povučene kopije, leftover HTML cleanup, application-level uniqueness, correction business metadata, permanent-delete lifecycle i finalni javni prikaz poslovnog datuma **jesu** implementirani u CURRENT RUNTIME (**IMPLEMENTED LOCALLY / PO ACCEPTED**). Faza 8 je **PUSHED TO ORIGIN/MAIN**. CURRENT UX corrective je **IMPLEMENTED LOCALLY / PO ACCEPTED** i **NOT YET COMMITTED / NOT YET PUSHED**. Nijedno od toga **nije** PRODUCTION DEPLOYED / PRODUCTION ACCEPTED. Feature FT-004 **nije** CLOSED.
+
 ---
 
 # Provjera usklađenosti
 
-* Nova funkcionalnost van FR: **ne**
-* Nova poslovna pravila: **ne**
-* Riješeni OFD: **ne** (samo blocker lista)
-* Protivrečnost BM/UC/FS: **nije identifikovana**
-* Svaki FR ima tehničku stavku: **da** (uz zabilježena ograničenja OFD)
+* Nova funkcionalnost van FR: **ne** (source-specific binding već u DK-FS PATCH-FS-OB-002 / PATCH-FS-OB-003 / KN-FS-003 / KN-BM-003 §15.4)
+* Nova poslovna pravila: **ne** u ovom TS-u. Poslovna osnova never-published permanent delete je `KN-BM-003` v1.0.7 §15.4.
+* Riješeni OFD generički: **ne** (OFD-OB-006 i OFD-OB-007 ostaju generički OTVORENO; nisu RESOLVED / CLOSED / IMPLEMENTED generički)
+* Protivrečnost BM/UC/FS: **nije identifikovana** (UC-OB-005 KEEP; KN revoke/correction odvojeni; never-published delete vezan na `KN-BM-003` §15.4 / `KN-FS-003` §16.14)
+* Svaki FR ima tehničku stavku: **da** (uz zabilježena ograničenja OFD; signed-copy je IMPLEMENTED, HTML ostaje LEGACY)
 * Svaka tehnička komponenta u §3/§13 referencira FR: **da**
+* Source-specific KN signed-copy runtime implementiran: **da** (first publish + leftover HTML cleanup + direct predecessor revoke + correction business title/date + metadata update + source-specific unpublish + republish iste povučene kopije + permanent-delete / nova Copy B + javni prikaz poslovnog datuma na FT-004 panelu + CURRENT admin UX)
+* Puni KN lifecycle §16.8–§16.16 implementiran: **da** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**; **nije** PRODUCTION ACCEPTED; FT-004 **nije** CLOSED)
+* CURRENT UX corrective committed/pushed: **ne** (**NOT YET COMMITTED / NOT YET PUSHED**)
+* Faza 8 pushed to origin/main: **da** (`8d34ecf129008386faaf826332ad0fd3a6536332`)
+* LOCAL PO MANUAL ACCEPTANCE signed-copy toka (2026-09-01, lokalno): **da**
+* PRODUCTION DEPLOYED / PRODUCTION ACCEPTED tog toka: **ne**
+* Generički OFD-OB-006 / OFD-OB-007 zatvoreni: **ne**

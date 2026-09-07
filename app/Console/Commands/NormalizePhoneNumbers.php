@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Identity\Runtime\IdentityMutationGuard;
 use App\Models\Application;
 use App\Models\BusinessPlan;
 use App\Models\User;
@@ -16,6 +17,15 @@ class NormalizePhoneNumbers extends Command
 
     public function handle(): int
     {
+        try {
+            app(IdentityMutationGuard::class)->assertLegacyIdentityMutationAllowed();
+        } catch (\App\Identity\Runtime\IdentityMutationDeniedException $e) {
+            $this->error($e->getMessage());
+            $this->error('phones:normalize refuses to mutate users.phone while identity freeze or canonical writer authority is active.');
+
+            return self::FAILURE;
+        }
+
         $dryRun = (bool) $this->option('dry-run');
         $updated = 0;
 

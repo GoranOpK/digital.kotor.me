@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\CompetitionOfficialDecisionController;
 use App\Http\Controllers\CulturalActivityAdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\BusinessPlanController;
@@ -76,6 +77,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::post('/newsletter', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'subscribe'])->name('newsletter.subscribe');
     Route::patch('/newsletter', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'update'])->name('newsletter.update');
     Route::post('/newsletter/odjava', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
+
+    require __DIR__.'/identity.php';
 
     // Biblioteka dokumenata
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
@@ -564,6 +567,20 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
             Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            Route::post('/competitions/{competition}/official-decision', [CompetitionOfficialDecisionController::class, 'store'])
+                ->name('competitions.official-decision.store');
+            Route::post('/competitions/{competition}/official-decision/{copy}/publish', [CompetitionOfficialDecisionController::class, 'publish'])
+                ->name('competitions.official-decision.publish');
+            Route::post('/competitions/{competition}/official-decision/{copy}/correct', [CompetitionOfficialDecisionController::class, 'correct'])
+                ->name('competitions.official-decision.correct');
+            Route::post('/competitions/{competition}/official-decision/{copy}/metadata', [CompetitionOfficialDecisionController::class, 'updateMetadata'])
+                ->name('competitions.official-decision.update-metadata');
+            Route::post('/competitions/{competition}/official-decision/{copy}/unpublish', [CompetitionOfficialDecisionController::class, 'unpublish'])
+                ->name('competitions.official-decision.unpublish');
+            Route::post('/competitions/{competition}/official-decision/{copy}/republish', [CompetitionOfficialDecisionController::class, 'republish'])
+                ->name('competitions.official-decision.republish');
+            Route::post('/competitions/{competition}/official-decision/{copy}/permanent-delete', [CompetitionOfficialDecisionController::class, 'permanentlyDelete'])
+                ->name('competitions.official-decision.permanent-delete');
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
         });
     });

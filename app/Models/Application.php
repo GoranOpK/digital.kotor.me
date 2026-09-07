@@ -302,6 +302,12 @@ class Application extends Model
 
         $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
 
+        if (config('identity.canonical_read')) {
+            $jmb = $user ? app(\App\Identity\Runtime\CurrentIdentityResolver::class)->viewFor($user)->jmb : null;
+
+            return filled($jmb) ? $jmb : null;
+        }
+
         return filled($user?->jmb) ? $user->jmb : null;
     }
 

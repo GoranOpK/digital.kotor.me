@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Models\User;
 use App\Support\KotorAddress;
 use App\Support\Pib;
@@ -46,15 +47,16 @@ class ProfileUpdateRequest extends FormRequest
             'city' => ['required', 'string', 'max:255'],
         ];
 
-        if (! $user->collectsBusinessIdentity()) {
+        if (! $this->collectsCurrentBusinessIdentity($user)) {
             return $rules;
         }
 
-        $allowedTypes = UserType::allowedProfileWriteValues($user->user_type);
+        $currentType = $this->currentSubjectType($user);
+        $allowedTypes = UserType::allowedProfileWriteValues($currentType);
 
         $rules['user_type'] = ['required', 'string', Rule::in($allowedTypes)];
 
-        $incomingType = $this->input('user_type', $user->user_type);
+        $incomingType = $this->input('user_type', $currentType);
 
         if (UserType::requiresResidentialStatus($incomingType)) {
             $rules['residential_status'] = ['required', 'string', 'in:resident,non-resident'];
@@ -68,7 +70,7 @@ class ProfileUpdateRequest extends FormRequest
                 'regex:/^[0-9]{13}$/',
                 Rule::unique(User::class)->ignore($user->id),
             ];
-            if ($this->input('residential_status', $user->residential_status) === 'resident') {
+            if ($this->input('residential_status', $this->currentResidentialStatus($user)) === 'resident') {
                 $rules['jmb'] = [
                     'required',
                     'string',
@@ -146,7 +148,56 @@ class ProfileUpdateRequest extends FormRequest
             return true;
         }
 
-        return UserType::isLegalEntity($this->input('user_type', $this->user()?->user_type));
+        $user = $this->user();
+        $fallbackType = config('identity.canonical_read')
+            ? $this->currentSubjectType($user)
+            : $user?->user_type;
+
+        return UserType::isLegalEntity($this->input('user_type', $fallbackType));
+    }
+
+    private function collectsCurrentBusinessIdentity(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+
+        if (! config('identity.canonical_read')) {
+            return $user->collectsBusinessIdentity();
+        }
+
+        $view = app(CurrentIdentityResolver::class)->viewFor($user);
+        if (! $view->hasCurrentSubjectIdentity()) {
+            return false;
+        }
+
+        return UserType::isNaturalPerson($view->userType) || UserType::isLegalEntity($view->userType);
+    }
+
+    private function currentSubjectType(?User $user): ?string
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        if (! config('identity.canonical_read')) {
+            return $user->user_type;
+        }
+
+        return app(CurrentIdentityResolver::class)->viewFor($user)->userType;
+    }
+
+    private function currentResidentialStatus(?User $user): ?string
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        if (! config('identity.canonical_read')) {
+            return $user->residential_status;
+        }
+
+        return app(CurrentIdentityResolver::class)->viewFor($user)->residentialStatus;
     }
 
     /**

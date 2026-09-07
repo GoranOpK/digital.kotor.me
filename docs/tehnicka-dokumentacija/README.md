@@ -1,6 +1,6 @@
 # Tehnička dokumentacija — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-07-22
+**Poslednje ažuriranje:** 2026-09-06
 
 Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, arhitektura, moduli, deploy i operativni zapisi.
 

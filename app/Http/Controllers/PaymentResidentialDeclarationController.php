@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreResidentialDeclarationRequest;
+use App\Identity\Runtime\EpIdentityFlowGuard;
+use App\Identity\Runtime\IdentityMutationDeniedException;
+use App\Identity\Runtime\IdentityMutationGuard;
 use App\Services\Payments\EpModuleSettings;
 use App\Support\ResidentialStatusDeclaration;
 use Illuminate\Http\RedirectResponse;
@@ -12,12 +15,14 @@ use Illuminate\View\View;
 class PaymentResidentialDeclarationController extends Controller
 {
     public function __construct(
-        private readonly EpModuleSettings $module
+        private readonly EpModuleSettings $module,
+        private readonly EpIdentityFlowGuard $epIdentityFlows,
+        private readonly IdentityMutationGuard $identityWrites,
     ) {}
 
     public function create(Request $request): View|RedirectResponse
     {
-        if (! $this->module->newPaymentsEnabled()) {
+        if (! $this->epIdentityFlows->enabled() || ! $this->module->newPaymentsEnabled()) {
             return redirect()->route('payments.index');
         }
 
@@ -30,8 +35,14 @@ class PaymentResidentialDeclarationController extends Controller
 
     public function store(StoreResidentialDeclarationRequest $request): RedirectResponse
     {
-        if (! $this->module->newPaymentsEnabled()) {
+        if (! $this->epIdentityFlows->enabled() || ! $this->module->newPaymentsEnabled()) {
             return redirect()->route('payments.index');
+        }
+
+        try {
+            $this->identityWrites->assertLegacyIdentityMutationAllowed();
+        } catch (IdentityMutationDeniedException $e) {
+            abort(403, $e->getMessage());
         }
 
         $user = $request->user();

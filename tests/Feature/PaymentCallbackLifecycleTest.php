@@ -31,6 +31,7 @@ class PaymentCallbackLifecycleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->enableEpIdentityFlows();
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
         $this->payer = $this->makeKorisnik();

@@ -4,12 +4,9 @@ namespace App\Services\Payments;
 
 use App\Enums\PaymentAvailabilityOutcome;
 use App\Models\PaymentAccount;
-use App\Models\PaymentAccountAvailability;
 use App\Models\PaymentType;
-use App\Models\PaymentTypeAvailability;
 use App\Models\User;
-use App\Support\ResidentialStatusDeclaration;
-use App\Support\UserType;
+use App\Identity\Runtime\EpIdentityFlowGuard;
 use Illuminate\Support\Collection;
 
 /**
@@ -18,34 +15,27 @@ use Illuminate\Support\Collection;
  */
 class PaymentAvailabilityService
 {
+    public function __construct(
+        private readonly EpIdentityFlowGuard $epIdentityFlows = new EpIdentityFlowGuard,
+    ) {
+    }
+
     /**
      * Type-level gate only (active type + matching type rule).
      * Does not require a usable account.
      */
     public function evaluateType(User $user, PaymentType $type): PaymentAvailabilityOutcome
     {
-        $identity = $this->identityOutcome($user);
-        if ($identity !== null) {
-            return $identity;
-        }
-
-        if (! $type->is_active) {
+        if (! $this->epIdentityFlows->enabled()) {
             return PaymentAvailabilityOutcome::NotAvailable;
         }
 
         $type->loadMissing('availabilities');
 
-        $userType = (string) $user->user_type;
-
-        if ($this->naturalPersonNeedsDeclaration($user)) {
-            return $this->hasActiveTypeRuleForUserType($type, $userType)
-                ? PaymentAvailabilityOutcome::ResidentialDeclarationRequired
-                : PaymentAvailabilityOutcome::NotAvailable;
-        }
-
-        return $this->typeRuleMatches($type, $userType, $this->matchResidential($user))
-            ? PaymentAvailabilityOutcome::Available
-            : PaymentAvailabilityOutcome::NotAvailable;
+        return PaymentAvailabilityEvaluation::evaluateType(
+            PaymentAvailabilityFacts::fromUser($user),
+            $type
+        );
     }
 
     /**
@@ -53,6 +43,10 @@ class PaymentAvailabilityService
      */
     public function evaluateAccount(User $user, PaymentAccount $account): PaymentAvailabilityOutcome
     {
+        if (! $this->epIdentityFlows->enabled()) {
+            return PaymentAvailabilityOutcome::NotAvailable;
+        }
+
         $account->loadMissing(['paymentType.availabilities', 'availabilities']);
 
         $type = $account->paymentType;
@@ -60,26 +54,10 @@ class PaymentAvailabilityService
             return PaymentAvailabilityOutcome::NotAvailable;
         }
 
-        $typeOutcome = $this->evaluateType($user, $type);
-        if ($typeOutcome === PaymentAvailabilityOutcome::NotAvailable) {
-            return PaymentAvailabilityOutcome::NotAvailable;
-        }
-
-        if (! $account->is_active) {
-            return PaymentAvailabilityOutcome::NotAvailable;
-        }
-
-        $userType = (string) $user->user_type;
-
-        if ($typeOutcome === PaymentAvailabilityOutcome::ResidentialDeclarationRequired) {
-            return $this->hasActiveAccountRuleForUserType($account, $userType)
-                ? PaymentAvailabilityOutcome::ResidentialDeclarationRequired
-                : PaymentAvailabilityOutcome::NotAvailable;
-        }
-
-        return $this->accountRuleMatches($account, $userType, $this->matchResidential($user))
-            ? PaymentAvailabilityOutcome::Available
-            : PaymentAvailabilityOutcome::NotAvailable;
+        return PaymentAvailabilityEvaluation::evaluateAccount(
+            PaymentAvailabilityFacts::fromUser($user),
+            $account
+        );
     }
 
     /**
@@ -135,76 +113,4 @@ class PaymentAvailabilityService
         return $this->evaluateAccount($user, $account) === PaymentAvailabilityOutcome::Available;
     }
 
-    private function identityOutcome(User $user): ?PaymentAvailabilityOutcome
-    {
-        $userType = $user->user_type;
-        if (! is_string($userType) || $userType === '' || ! UserType::isCanonical($userType)) {
-            return PaymentAvailabilityOutcome::NotAvailable;
-        }
-
-        if (UserType::isNaturalPerson($userType)) {
-            $status = $user->residential_status;
-            if ($status !== null && ! in_array($status, ['resident', 'non-resident'], true)) {
-                return PaymentAvailabilityOutcome::NotAvailable;
-            }
-        }
-
-        return null;
-    }
-
-    private function naturalPersonNeedsDeclaration(User $user): bool
-    {
-        return UserType::isNaturalPerson($user->user_type)
-            && ResidentialStatusDeclaration::isApplicable($user);
-    }
-
-    private function matchResidential(User $user): ?string
-    {
-        if (! UserType::isNaturalPerson($user->user_type)) {
-            return null;
-        }
-
-        return $user->residential_status;
-    }
-
-    private function typeRuleMatches(PaymentType $type, string $userType, ?string $residential): bool
-    {
-        return $type->availabilities->contains(function (PaymentTypeAvailability $rule) use ($userType, $residential): bool {
-            return $rule->is_active && $this->ruleMatches($rule->user_type, $rule->residential_status, $userType, $residential);
-        });
-    }
-
-    private function accountRuleMatches(PaymentAccount $account, string $userType, ?string $residential): bool
-    {
-        return $account->availabilities->contains(function (PaymentAccountAvailability $rule) use ($userType, $residential): bool {
-            return $rule->is_active && $this->ruleMatches($rule->user_type, $rule->residential_status, $userType, $residential);
-        });
-    }
-
-    private function hasActiveTypeRuleForUserType(PaymentType $type, string $userType): bool
-    {
-        return $type->availabilities->contains(function (PaymentTypeAvailability $rule) use ($userType): bool {
-            return $rule->is_active && $rule->user_type === $userType;
-        });
-    }
-
-    private function hasActiveAccountRuleForUserType(PaymentAccount $account, string $userType): bool
-    {
-        return $account->availabilities->contains(function (PaymentAccountAvailability $rule) use ($userType): bool {
-            return $rule->is_active && $rule->user_type === $userType;
-        });
-    }
-
-    private function ruleMatches(string $ruleUserType, ?string $ruleResidential, string $userType, ?string $residential): bool
-    {
-        if ($ruleUserType !== $userType) {
-            return false;
-        }
-
-        if (UserType::isNaturalPerson($userType)) {
-            return $ruleResidential === $residential;
-        }
-
-        return $ruleResidential === null;
-    }
 }

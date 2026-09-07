@@ -223,10 +223,26 @@ class ApplicationDocumentViewTest extends TestCase
                 'commission_id' => $commission->id,
                 'user_id' => $member->id,
                 'name' => $member->name,
-                'position' => 'clan',
+                'position' => 'predsjednik',
                 'member_type' => 'opstina',
                 'status' => 'active',
             ]);
+
+            $types = ['opstina', 'opstina', 'udruzenje', 'zene_mreza'];
+            foreach ($types as $index => $memberType) {
+                $extra = User::factory()->create([
+                    'role_id' => $komisijaRole->id,
+                    'activation_status' => 'active',
+                ]);
+                CommissionMember::create([
+                    'commission_id' => $commission->id,
+                    'user_id' => $extra->id,
+                    'name' => $extra->name,
+                    'position' => 'clan',
+                    'member_type' => $memberType,
+                    'status' => 'active',
+                ]);
+            }
         }
 
         if ($member) {
