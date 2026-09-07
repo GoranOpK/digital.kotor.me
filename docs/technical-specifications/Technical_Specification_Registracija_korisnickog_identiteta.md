@@ -6,7 +6,7 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.5
+**Verzija:** 1.0.6
 **Datum:** 2026-09-07
 
 Povezani dokumenti:
@@ -27,7 +27,7 @@ Ovaj dokument **ne** uvodi nova poslovna ni funkcionalna pravila.
 
 Ovaj dokument **ne** tvrdi da je opisano ponašanje već usklađeno sa `DK-FS-002` u runtime-u.
 
-Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. Implementacija lokalizacije kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. Implementacija post-cutover dopune postojećih poslovnih subjekata je evidentirana u v1.0.3 / §14.3. Produkcioni deploy te dopune i Level A non-mutating smoke su evidentirani u v1.0.4 / §14.3. Lokalna implementacija registration correctiva (GET/POST `/register`) je evidentirana u v1.0.5 / §14.4. PO status te implementacije: **PO USVOJENO**. To **nije** production accepted i **nije** REG-14 / new-user E2E. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**. Step 9 **ostaje OPEN**. Level B real remediation **nije** izvršen.
+Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. Implementacija lokalizacije kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. Implementacija post-cutover dopune postojećih poslovnih subjekata je evidentirana u v1.0.3 / §14.3. Produkcioni deploy te dopune i Level A non-mutating smoke su evidentirani u v1.0.4 / §14.3. Lokalna implementacija registration correctiva (GET/POST `/register`) je evidentirana u v1.0.5 / §14.4. Produkcioni new-user E2E i kanonska persistencija (REG-14) su evidentirani u v1.0.6 / §14.4: **REG-14 = PASS**. Registration corrective = **PRODUCTION VERIFIED**. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**. Step 9 **ostaje OPEN**. G9-1 i G9-3 **ostaju OPEN**. Level B real remediation **nije** izvršen.
 
 ---
 
@@ -64,6 +64,7 @@ Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **n
 | 1.0.3 | 2026-09-07 | Implementaciona evidencija PO-usvojene post-cutover dopune postojećih poslovnih subjekata bez kanonskog grafa (12 legacy DOO + 1 legacy Preduzetnik). REQUIRE-ON-USE; `CanonicalIdentityWriter::createForUser()`; bez novog writera; bez globalnog login/dashboard gate-a; CRPS mark 5/1; AP user-supplied; Corrective 01: `DerivedUserTypeMirror` ostaje `final`. D1–D15 nijesu reotvorene. Step 9 ostaje OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.4 | 2026-09-07 | Produkcioni deploy commit-a `59f3d46cc38f4c3792cf6b5d5324828533793f7e` i Level A non-mutating production smoke = PASS. Live `about`: Config/Events/Routes NOT CACHED; Views CACHED; operator `view:cache`. Bez migracije/seeder-a/composer/npm/.env/flag/EP. Level B NOT YET EXECUTED. D1–D15 nijesu reotvorene. Step 9 ostaje OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.5 | 2026-09-07 | Nenormativna evidencija registration correctiva. Implementacija usvojenog V1 registration ugovora na kanonskom GET/POST `/register` putu = **PO USVOJENO**. Evidencija ostaje IMPLEMENTATION / CORRECTIVE. **Nije** production accepted. **Nije** REG-14 / new-user E2E. D1–D15 nijesu reotvorene. D16 nije kreiran. Step 9 ostaje OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
+| 1.0.6 | 2026-09-07 | Nenormativna evidencija produkcionog new-user E2E (REG-14). Real production registration → e-mail verifikacija → login → profile/dashboard = PASS. Read-only kanonska persistencija za `users.id` 68 = PASS. **REG-14 = PASS**. Registration corrective = **PRODUCTION VERIFIED**. D1–D15 nijesu reotvorene. D16 nije kreiran. Step 9 ostaje OPEN. G9-1 i G9-3 ostaju OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 
 Napomena:
 
@@ -137,7 +138,7 @@ Istorijski redovi verzija 0.1.0–0.1.22 koji navode U IZRADI ili OPEN odluke op
 
 Usvajanje DK-TS-002 v1.0.0 **ne** autorizuje implementaciju, data census, pristup bazi, backfill, izvršenje migracije, produkcioni rollout, fizički DROP legacy kolona ni deploy. Naredna implementaciona faza mora posebno slijediti usvojene D14/D15 kapije.
 
-Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. Lokalizacija kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. Post-cutover dopuna postojećih poslovnih subjekata je evidentirana u v1.0.3 / §14.3. Produkcioni deploy te dopune i Level A smoke su evidentirani u v1.0.4 / §14.3. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP). Step 9 **ostaje OPEN**. Level B real remediation **nije** izvršen.
+Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. Lokalizacija kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. Post-cutover dopuna postojećih poslovnih subjekata je evidentirana u v1.0.3 / §14.3. Produkcioni deploy te dopune i Level A smoke su evidentirani u v1.0.4 / §14.3. Produkcioni new-user E2E (REG-14) je evidentiran u v1.0.6 / §14.4. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP). Step 9 **ostaje OPEN**. G9-1 i G9-3 **ostaju OPEN**. Level B real remediation **nije** izvršen.
 
 ---
 
@@ -3968,7 +3969,7 @@ Implementacija mora slijediti usvojena normativna Poglavlja 1–13. Postojeća r
 
 Tehničke odluke 1–15 iz §12 su **CLOSED / PO USVOJENO**. Usvajanje odluke 15 **ne** autorizuje produkcioni deploy, census, backfill ni DROP. Fizički storage obrazac identiteta usvojen je odlukom 1 (Poglavlje 6.15). Obrazac kompatibilnosti `users.user_type` usvojen je odlukom 2 (Poglavlje 6.17). Semantičko mapiranje legacy `users.user_type` usvojeno je odlukom 3 (Poglavlje 6.18). Kompatibilnost KN `applicant_type` usvojena je odlukom 4 (Poglavlje 6.19). Kompatibilnost EP availability usvojena je odlukom 5 (Poglavlje 6.20). Kanonski katalog država usvojen je odlukom 6 (Poglavlje 6.21). Arhitektura JMB/PIB validatora usvojena je odlukom 7 (Poglavlje 6.22). Tehnička validacija CRPS registracionog broja usvojena je odlukom 8 (Poglavlje 6.23). Kanonski katalog validacionih poruka usvojen je odlukom 9 (Poglavlje 6.24). Dopuna postojećeg korisnika usvojena je odlukom 10 (Poglavlje 6.25). Lokalizacija korisničkog sadržaja verification e-maila usvojena je odlukom 11 (Poglavlje 6.26). Tehnički mehanizam e-mail verifikacije usvojen je odlukom 12 (Poglavlje 6.27). Tehnička realizacija uklanjanja Kotor ograničenja Grada usvojena je odlukom 13 (Poglavlje 6.28). Migracija / backfill usvojena je odlukom 14 (Poglavlje 6.29). Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30).
 
-Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1. Lokalizacija kanonskog kataloga država je evidentirana u §14.2. Post-cutover dopuna postojećih poslovnih subjekata je evidentirana u §14.3. Produkcioni deploy te dopune i Level A smoke su evidentirani u istom §14.3. Lokalna implementacija registration correctiva je evidentirana u §14.4; PO status te implementacije = **PO USVOJENO**. Evidencija ostaje IMPLEMENTATION / CORRECTIVE. **Nije** production accepted.
+Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1. Lokalizacija kanonskog kataloga država je evidentirana u §14.2. Post-cutover dopuna postojećih poslovnih subjekata je evidentirana u §14.3. Produkcioni deploy te dopune i Level A smoke su evidentirani u istom §14.3. Lokalna implementacija registration correctiva je evidentirana u §14.4; PO status te implementacije = **PO USVOJENO**. Produkcioni new-user E2E i kanonska persistencija (REG-14) su evidentirani u v1.0.6 / §14.4: **REG-14 = PASS**. Registration corrective = **PRODUCTION VERIFIED**. Ova evidencija **ne** zatvara Step 9. G9-1 i G9-3 **ostaju OPEN**. **Ne** proširuje se na nevezane identity tokove.
 
 ## 14.1 D15 Step 8 — production closeout (nenormativno; 2026-09-06)
 
@@ -4165,20 +4166,76 @@ Nije izvršen identity remediation POST. Nije dopunjen nijedan legacy poslovni n
 
 **STEP 9 = OPEN.**
 
-Ovaj deploy i Level A smoke daju dodatni pozitivni post-cutover stabilization dokaz. **Ne** zatvaraju automatski G9-1, G9-3 ni Step 9 kao cjelinu. Usvojeni evidence-based Step 9 observation model **nije** izmijenjen. Level B, kada bude legitimno izvršen, može postati dodatni post-cutover dokaz. **Ne** tvrdi se da je bilo koji od 13 korisnika već završio dopunu u produkciji.
+Ovaj deploy i Level A smoke daju dodatni pozitivni post-cutover stabilization dokaz. **Ne** zatvaraju automatski G9-1, G9-3 ni Step 9 kao cjelinu. Usvojeni evidence-based Step 9 observation model **nije** izmijenjen. Produkcioni new-user E2E iz §14.4 je legitiman post-cutover dokaz relevantan za G9-1 i G9-3; **ne** zatvara G9-1, G9-3 ni Step 9. Level B, kada bude legitimno izvršen, može postati dodatni post-cutover dokaz. **Ne** tvrdi se da je bilo koji od 13 korisnika već završio dopunu u produkciji.
 
 Ova evidencija **nije** nova numerisana tehnička odluka. Odluka 10 ostaje CLOSED / PO USVOJENO. Odluka 15 ostaje CLOSED / PO USVOJENO. Step 8 ostaje CLOSED / PRODUCTION PASS.
 
 ## 14.4 Registration corrective (nenormativno; 2026-09-07)
 
-Ovo podpoglavlje je **strogo nenormativno**. Evidencija je IMPLEMENTATION / CORRECTIVE. **Ne** mijenja D1–D15. **Ne** uvodi D16. **Ne** uvodi novo poslovno pravilo. **Ne** reotvara Step 8. **Ne** zatvara Step 9. **Ne** tvrdi production new-user E2E.
+Ovo podpoglavlje je **strogo nenormativno**. Evidencija je IMPLEMENTATION / CORRECTIVE, a od v1.0.6 i PRODUCTION E2E / REG-14. **Ne** mijenja D1–D15. **Ne** uvodi D16. **Ne** uvodi novo poslovno pravilo. **Ne** reotvara Step 8. **Ne** zatvara Step 9. **Ne** proširuje se na nevezane identity tokove (profile writer, admin, D10 dopuna, Level B, EP).
 
 **REGISTRATION CORRECTIVE IMPLEMENTATION = PO USVOJENO.**
 
 Lokalno je usklađen aktivni kanonski `GET/POST /register` put sa već usvojenim V1 ugovorom (`HomeController` → `CanonicalHttpIdentityService` → `RegistrationIdentityMapper` → `CanonicalIdentityWriter` → `DerivedUserTypeMirror`).
 
-Ova evidencija **nije** production accepted. REG-14 ostaje OPEN. Produkcioni new-user E2E **nije** izvršen. Identity flagovi, `.env`, produkciona baza, FastCGI i deploy **nijesu** dirani. Kanonski DB unique indexi identifikatora **nisu** uvedeni i **nisu** dio ovog closeout-a.
+### Produkcioni new-user E2E / REG-14 (nenormativno; 2026-09-07)
+
+**REG-14 = PASS.**
+
+**REGISTRATION CORRECTIVE = PRODUCTION VERIFIED.**
+
+PO je potvrdio real production tok za novoregistrovanog korisnika:
+
+registracija → primljen verification e-mail → uspješna e-mail verifikacija → uspješan login → dostupan profile/dashboard.
+
+Produkcioni release uključuje `8d543c90c530d82669550f42f2ea71cbca42d651` (`fix(identity): restore approved registration visuals`). Kanonski identitet ostaje produkcioni autoritet.
+
+PO je zatim izvršio read-only produkcionu DB verifikaciju za novoregistrovanog korisnika. Sirovi PII **nije** zabilježen.
+
+| Stavka | Vrijednost |
+|--------|------------|
+| USER_ID | 68 |
+| EMAIL_VERIFIED | YES |
+| ACCOUNT_ACTIVE | YES |
+| CANONICAL_ROOT_COUNT | 1 |
+| SUBJECT_KIND | physical_person |
+| CANONICAL_ROOT_OK | YES |
+| PHYSICAL_PERSON_COUNT | 1 |
+| LEGAL_ENTITY_COUNT | 0 |
+| FOREIGN_BRANCH_COUNT | 0 |
+| PHONE_PRESENT | YES |
+| IS_ENTREPRENEUR | FALSE |
+| PERSONAL_IDENTIFIER_PRESENT | YES |
+| PIB_PRESENT | NA |
+| CRPS_PRESENT | NA |
+| DERIVED_MIRROR | Fizičko lice |
+| LEGACY_IDENTITY_COLUMNS_POPULATED | NO |
+
+Tumačenje (samo registration tok):
+
+- real production registration je uspješno završena;
+- account verification radi;
+- authentication radi;
+- post-login pristup profile/dashboard radi;
+- kanonski identity root je persistovan;
+- persistovan je tačno jedan physical-person kanonski identitet;
+- ne postoji netačan legal-entity ni foreign-branch identitet;
+- obavezan physical-person identifikator je prisutan;
+- kanonski telefon je persistovan;
+- izvedeni `users.user_type` mirror je usklađen sa kanonskom physical-person klasifikacijom;
+- legacy identity kolone **nisu** popunjene novom registracijom;
+- registracija je zato koristila kanonski post-cutover identity put.
+
+Ova evidencija **ne** tvrdi production PASS za profile writer, admin identity pisce, D10 dopunu, Level B remediation, KN applicant tokove niti EP identity tokove.
+
+Kanonski DB unique indexi identifikatora **nisu** uvedeni i **nisu** dio ovog closeout-a.
+
+### Step 9 / G9 (nenormativno)
+
+**STEP 9 = OPEN.**
+
+Ovaj real production new-user E2E je legitiman post-cutover dokaz relevantan za **G9-1** i **G9-3**. Usvojeni Step 9 observation model ostaje evidence-based, **bez** fiksnog kalendarskog trajanja. **Ne** zatvara se Step 9 automatski. **G9-1 = OPEN.** **G9-3 = OPEN.** Usvojene D15/G9 izlazne kriterijume ovaj jedan physical-person E2E **ne** ispunjava kao closeout. Dodatna produkciona upotreba **nije** izmišljena. Level B real remediation **nije** izvršen.
 
 ---
 
-**Kraj dokumenta DK-TS-002 v1.0.5**
+**Kraj dokumenta DK-TS-002 v1.0.6**
