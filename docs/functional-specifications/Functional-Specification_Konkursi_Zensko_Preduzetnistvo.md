@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.2
+**Verzija:** 1.0.3
 **Datum:** 2026-09-07
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.11)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.12; **PO USVOJENO** za izbor OD/KD/AD/DOO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -57,6 +57,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.0 | 2026-09-03 | Formalno usvojena funkcionalna specifikacija Konkursa za podršku ženskom preduzetništvu. Dokument kao cjelina: `USVOJEN`. Svih 19 poglavlja ostaje `USVOJENO`. Nema izmjene usvojenih funkcionalnih pravila. |
 | 1.0.1 | 2026-09-07 | Controlled corrective prema `KN-BM-003` v1.0.10. Poglavlje 7 raslojava kanonski identitet, registrovanost biznisa, postojeći/planirani oblik i fazu. Neregistrovano fizičko lice bira planirani Preduzetnik (1a) ili DOO (1b) i samo Započinjanje. Obrazac 2 Q3 je ista zaključana činjenica. §7.19 čuva čitljivost istorijskih prijava. Katalog §7.13 KEEP uz jasno pokrivanje četiri toka. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.2 | 2026-09-07 | Controlled corrective prema `KN-BM-003` v1.0.11. §7.4–§7.8, §7.13, §7.19, §18.2.4: neregistrovano fizičko lice default `fizicko_lice` / Obrazac 1a; alternativa planiram osnivanje DOO (`doo` + `is_registered=false`) / 1b, bez promjene kanonskog identiteta. `fizicko_lice` je živi V1 `applicant_type`. Neregistrovani tokovi samo Započinjanje. Istorijski završeni snimci KEEP. **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.3 | 2026-09-07 | Controlled corrective prema implementiranom toku: FL bez djelatnosti bira Preduzetnika (1a) ili privredno društvo OD/KD/AD/DOO (1b); izbor je zaključan; kanonski registrovani OD/KD/AD/DOO koriste 1b; `ostalo` nije novi V1 korisnički tip. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 
 Napomena:
 
@@ -1120,10 +1121,12 @@ U toku Prijave Platforma razlikuje četiri činjenice. Nijesu sinonimi.
 
 **Postojeći ili planirani oblik** određuje tok Obrasca 1. To **nije** kanonski identitet:
 
-* fizičko lice bez registrovane djelatnosti → **Obrazac 1a**;
-* planirano osnivanje DOO → **Obrazac 1b**;
+* fizičko lice bez registrovane djelatnosti koje planira Preduzetnika → **Obrazac 1a**;
+* fizičko lice bez registrovane djelatnosti koje planira privredno društvo OD / KD / AD / DOO → **Obrazac 1b**;
 * postojeća Preduzetnica → **Obrazac 1a**;
-* postojeće DOO → **Obrazac 1b**.
+* postojeće privredno društvo OD / KD / AD / DOO → **Obrazac 1b**.
+
+Izbor je jednokratan i zaključan za Prijavu. `ostalo` **nije** novi V1 korisnički tip.
 
 **Faza biznisa** ima vrijednosti **Započinjanje** i **Razvoj**.
 
@@ -1131,12 +1134,12 @@ Mapiranje za **nove** Prijave:
 
 * postojeća Preduzetnica (kanonski identitet fizičkog lica / Preduzetnik; registrovan biznis = DA) → `applicant_type` = `preduzetnica` → Obrazac 1a;
 * postojeće DOO (kanonski identitet pravnog lica / DOO; registrovan biznis = DA) → `applicant_type` = `doo` → Obrazac 1b;
-* fizičko lice bez registrovanog biznisa (registrovan biznis = NE) → **podrazumijevano** `applicant_type` = `fizicko_lice` → Obrazac 1a;
-* isto fizičko lice može alternativno izabrati **planiram osnivanje DOO** → runtime encoding `applicant_type` = `doo` i `is_registered` = false → Obrazac 1b. Kanonski identitet ostaje fizičko lice. To **nije** postojeće DOO.
+* fizičko lice bez registrovanog biznisa (registrovanost = NE) → bira **planiram registraciju kao Preduzetnik** → `applicant_type` = `fizicko_lice` → Obrazac 1a, ili **planiram osnivanje privrednog društva** OD / KD / AD / DOO → Obrazac 1b, `is_registered` = false. Kanonski identitet ostaje fizičko lice.
+* postojeće privredno društvo OD / KD / AD / DOO → Obrazac 1b; konkretni oblik dolazi iz kanonskog identiteta i zaključan je.
 
 `fizicko_lice` je živi V1 `applicant_type`. **Nije** samo istorijska vrijednost.
 
-Preduzetnica se **ne** nudi kao planirani oblik neregistrovanom fizičkom licu.
+Izbor tipa i planiranog oblika je zaključan za tu Prijavu. `ostalo` **nije** novi V1 korisnički tip.
 
 Podnositeljka bira fazu biznisa, uz sljedeće ograničenje:
 
@@ -1168,8 +1171,8 @@ Ne uvodi se oblik toka van navedenog mapiranja za nove Prijave.
 Platforma otvara Obrazac 1a ili Obrazac 1b prema postojećem ili planiranom obliku poslovanja, ne prema samom tipu naloga kao jedinom pravilu:
 
 * postojeća Preduzetnica → Obrazac 1a;
-* postojeće DOO → Obrazac 1b;
-* fizičko lice bez registrovanog biznisa → podrazumijevano Obrazac 1a; alternativa planiram osnivanje DOO → Obrazac 1b.
+* postojeće privredno društvo OD / KD / AD / DOO → Obrazac 1b;
+* fizičko lice bez registrovanog biznisa → planirani Preduzetnik → Obrazac 1a; planirano društvo OD / KD / AD / DOO → Obrazac 1b.
 
 Poznati podaci profila se automatski popunjavaju.
 
@@ -1485,10 +1488,10 @@ Obrazac 1a, Obrazac 1b i Obrazac 2 su obavezni digitalni Obrasci Prijave, nisu p
 
 Postojeća struktura skupova pokriva V1 tokove, bez novog kataloga:
 
-* neregistrovano fizičko lice, podrazumijevani tok, Započinjanje, Obrazac 1a → skup **A**, uz uslovna registraciona dokumenta koja se ne zahtijevaju dok biznis nije registrovan;
-* neregistrovano fizičko lice, planiram osnivanje DOO, Započinjanje, Obrazac 1b → skup **C**, uz uslovna registraciona dokumenta koja se ne zahtijevaju dok biznis nije registrovan;
+* neregistrovano fizičko lice, planirani Preduzetnik, Započinjanje, Obrazac 1a → skup **A**, uz uslovna registraciona dokumenta koja se ne zahtijevaju dok biznis nije registrovan;
+* neregistrovano fizičko lice, planirano privredno društvo OD / KD / AD / DOO, Započinjanje, Obrazac 1b → skup **C**, uz uslovna registraciona dokumenta koja se ne zahtijevaju dok biznis nije registrovan;
 * postojeća Preduzetnica, Obrazac 1a, Započinjanje ili Razvoj → skup **A** odnosno skup **B**, uz registracionu dokumentaciju prema konkursnim pravilima tog skupa;
-* postojeće DOO, Obrazac 1b, Započinjanje ili Razvoj → skup **C** odnosno skup **D**, uz registracionu dokumentaciju prema konkursnim pravilima tog skupa.
+* postojeće privredno društvo OD / KD / AD / DOO, Obrazac 1b, Započinjanje ili Razvoj → skup **C** odnosno skup **D**, uz registracionu dokumentaciju prema konkursnim pravilima tog skupa.
 
 Neregistrovani tokovi koriste samo fazu Započinjanje. Razvojni skupovi **B** i **D** primjenjuju se na registrovani biznis.
 
@@ -1697,7 +1700,7 @@ Postojeće završene Prijave ostaju istorijski snimak. **Ne** reinterpretiraju s
 
 Postojeći zapisi `fizicko_lice` + `is_registered` = false ostaju **čitljivi**. `fizicko_lice` je istovremeno živi V1 `applicant_type` za nove Prijave neregistrovanog fizičkog lica.
 
-Za nove Prijave, neregistrovano fizičko lice podrazumijevano koristi `fizicko_lice` / Obrazac 1a, ili alternativno planirano osnivanje DOO (`doo` + registrovanost NE) / Obrazac 1b.
+Za nove Prijave, neregistrovano fizičko lice bira planiranog Preduzetnika (`fizicko_lice` / Obrazac 1a) ili planirano privredno društvo OD / KD / AD / DOO / Obrazac 1b. `ostalo` nije novi V1 korisnički tip. Istorijski `applicant_type=ostalo` ostaje čitljiv bez reinterpretacije.
 
 ---
 
@@ -3819,7 +3822,7 @@ Konkretan rok čuvanja **nije** prihvatni ishod ovog kriterijuma. **Nije** defin
 
 **Kada:** Platforma određuje Obrazac 1, registrovanost biznisa i fazu.
 
-**Onda:** kanonski identitet dolazi sa Platforme i ne bira se ručno; registrovanost biznisa je zasebna činjenica DA/NE, izvedena iz kanonskog identiteta, ne iz zahtjeva. Fizičko lice bez registrovanog biznisa podrazumijevano ide na `fizicko_lice` / Obrazac 1a, smije samo Započinjanje, i može alternativno izabrati planiram osnivanje DOO (`doo` + `is_registered=false`) / Obrazac 1b bez promjene kanonskog identiteta. Postojeća Preduzetnica ide na 1a, postojeće DOO na 1b, i biraju Započinjanje ili Razvoj prema jednogodišnjem kriterijumu kao deklaraciju. Obrazac 2 pitanje „Da li imate registrovan biznis?“ prikazuje istu zaključanu činjenicu iz Prijave.
+**Onda:** kanonski identitet dolazi sa Platforme i ne bira se ručno; registrovanost biznisa je zasebna činjenica DA/NE, izvedena iz kanonskog identiteta, ne iz zahtjeva. Fizičko lice bez registrovanog biznisa bira planiranog Preduzetnika / Obrazac 1a ili planirano privredno društvo OD/KD/AD/DOO / Obrazac 1b, smije samo Započinjanje, bez promjene kanonskog identiteta. Izbor je zaključan za Prijavu. Postojeća Preduzetnica ide na 1a, postojeći OD/KD/AD/DOO na 1b, i biraju Započinjanje ili Razvoj prema jednogodišnjem kriterijumu kao deklaraciju. `ostalo` nije novi V1 korisnički tip. Obrazac 2 pitanje „Da li imate registrovan biznis?“ prikazuje istu zaključanu činjenicu iz Prijave. **PO USVOJENO.**
 
 ## 18.3. Privatnost i pristup
 

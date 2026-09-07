@@ -374,13 +374,18 @@
             $upBroj = $competition->upNumber?->number ?? '—';
             $redniBroj = isset($existingApplication) && $existingApplication ? ($existingApplication->redni_broj ?? '—') : '—';
             $brojPrijave = $upBroj . '/' . $redniBroj;
-            $applicantType = old('applicant_type', isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null);
+            $applicantType = $lockedApplicantType ?? old('applicant_type', isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null);
             $obrazacLabel = 'Obrazac 1a/1b';
             if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
                 $obrazacLabel = 'Obrazac 1a';
             } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
                 $obrazacLabel = 'Obrazac 1b';
             }
+            $obrazacRegistracijaHeading = \App\Support\KnCommercialCompanyForm::obrazacRegistracijaHeading(
+                $lockedCommercialForm ?? null,
+                is_string($applicantType) ? $applicantType : null,
+                $lockedRegistrationForm ?? ((isset($existingApplication) && $existingApplication) ? $existingApplication->registration_form : null)
+            );
             $userProfileAddress = \App\Support\KotorAddress::formatStreetAndCity($subjectIdentity->address, $subjectIdentity->city);
         @endphp
         <div class="obrazac-zaglavlje">
@@ -412,7 +417,7 @@
             <p class="obrazac-podnaslov" id="obrazacPodnaslovHeader">
                 na javni konkurs za raspodjelu bespovratnih sredstava<br>
                 namijenjenih za podršku ženskom preduzetništvu<br>
-                <span id="obrazacRegistracijaHeader">(za oblik registracije PREDUZETNIK)</span>
+                <span id="obrazacRegistracijaHeader">{{ $obrazacRegistracijaHeading }}</span>
             </p>
         </div>
 
@@ -458,6 +463,15 @@
 
         <form method="POST" action="{{ $readOnly ? '#' : route('applications.store', $competition) }}" id="applicationForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
+            @if(!empty($startContextToken))
+                <input type="hidden" name="start_context_token" value="{{ $startContextToken }}">
+            @endif
+            @if(!empty($lockedApplicantType))
+                <input type="hidden" name="applicant_type" id="kn_locked_applicant_type" value="{{ $lockedApplicantType }}">
+            @endif
+            @if(!empty($lockedRegistrationForm))
+                <input type="hidden" name="registration_form" id="kn_locked_registration_form" value="{{ $lockedRegistrationForm }}">
+            @endif
             @if(isset($existingApplication) && $existingApplication && !$readOnly)
                 <input type="hidden" name="application_id" value="{{ $existingApplication->id }}">
             @endif
@@ -495,7 +509,7 @@
                             $userType = $subjectIdentity->userType ?? '';
                             $residentialStatus = $subjectIdentity->residentialStatus ?? '';
                             $isFizickoLiceRezident = \App\Support\ApplicationCreateApplicantTypeDefault::isFizickoLiceRezident($userType, $residentialStatus);
-                            $preferredApplicantType = $preferredApplicantType ?? null;
+                            $preferredApplicantType = $lockedApplicantType ?? $preferredApplicantType ?? null;
                             $knClassification = \App\Support\KnApplicationClassification::fromUserType($userType);
                             $knIsRegistered = $knClassification->isRegisteredBusiness;
                             $knAllowsRazvoj = $knClassification->allowsStage('razvoj');
@@ -505,32 +519,38 @@
                                 $residentialStatus,
                                 $preferredApplicantType
                             );
-                            $selectedApplicantType = old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType);
+                            $selectedApplicantType = $lockedApplicantType ?? old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType);
+                            $lockedCommercialForm = $lockedCommercialForm ?? null;
+                            $lockedRegistrationForm = $lockedRegistrationForm ?? null;
+                            $isCommercialCompanyPath = \App\Support\KnCommercialCompanyForm::isValid($lockedCommercialForm)
+                                || $selectedApplicantType === 'doo';
+                            $showOstaloRadio = false;
                         @endphp
                         <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
-                            <strong>Napomena:</strong> Ako nemate registrovanu djelatnost, podrazumijevani tok je Fizičko lice (Obrazac 1a). Možete umjesto toga izabrati „Planiram osnivanje DOO“ (Obrazac 1b). Taj izbor ne mijenja vaš identitet na Platformi. Postojeća Preduzetnica i postojeće DOO imaju zaključan oblik.
+                            <strong>Napomena:</strong> Tip prijave i planirani pravni oblik biraju se na stranici konkursa i zaključani su za ovu prijavu. Kanonski identitet se ne mijenja. Postojeća Preduzetnica i postojeće privredno društvo (DOO / AD / OD / KD) imaju zaključan oblik.
                         </div>
                         <div class="radio-group">
                             <div class="radio-option">
                                 <input 
                                     type="radio" 
                                     id="applicant_type_fizicko_lice" 
-                                    name="applicant_type" 
+                                    name="applicant_type_display"
                                     value="fizicko_lice"
                                     {{ $selectedApplicantType === 'fizicko_lice' ? 'checked' : '' }}
-                                    {{ $knAllowsFizickoLice ? '' : 'disabled' }}
-                                    {{ $knAllowsFizickoLice ? 'required' : '' }}
+                                    disabled
+                                    data-kn-locked="1"
                                 >
-                                <label for="applicant_type_fizicko_lice">Fizičko lice (nema registrovanu djelatnost)</label>
+                                <label for="applicant_type_fizicko_lice">{{ $knAllowsFizickoLice ? 'Planiram registraciju kao preduzetnik' : 'Fizičko lice (nema registrovanu djelatnost)' }}</label>
                             </div>
                             <div class="radio-option">
                                 <input 
                                     type="radio" 
                                     id="applicant_type_preduzetnica" 
-                                    name="applicant_type" 
+                                    name="applicant_type_display"
                                     value="preduzetnica"
                                     {{ $selectedApplicantType === 'preduzetnica' ? 'checked' : '' }}
-                                    {{ $knClassification->allowsApplicantType('preduzetnica') ? '' : 'disabled' }}
+                                    disabled
+                                    data-kn-locked="1"
                                 >
                                 <label for="applicant_type_preduzetnica">Preduzetnica</label>
                             </div>
@@ -538,23 +558,13 @@
                                 <input 
                                     type="radio" 
                                     id="applicant_type_doo" 
-                                    name="applicant_type" 
+                                    name="applicant_type_display"
                                     value="doo"
-                                    {{ $selectedApplicantType === 'doo' ? 'checked' : '' }}
-                                    {{ $knClassification->allowsApplicantType('doo') ? '' : 'disabled' }}
+                                    {{ $isCommercialCompanyPath ? 'checked' : '' }}
+                                    disabled
+                                    data-kn-locked="1"
                                 >
-                                <label for="applicant_type_doo">{{ !empty($knIsRegistered) ? 'DOO (Društvo sa ograničenom odgovornošću)' : 'Planiram osnivanje DOO' }}</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="applicant_type_ostalo" 
-                                    name="applicant_type" 
-                                    value="ostalo"
-                                    {{ $selectedApplicantType === 'ostalo' ? 'checked' : '' }}
-                                    {{ $knClassification->allowsApplicantType('ostalo') ? '' : 'disabled' }}
-                                >
-                                <label for="applicant_type_ostalo">Ostalo</label>
+                                <label for="applicant_type_doo">{{ !empty($knIsRegistered) ? 'Privredno društvo' : 'Planiram osnivanje privrednog društva' }}</label>
                             </div>
                         </div>
                         @error('applicant_type')
@@ -725,15 +735,19 @@
                             Oblik registracije @if(!empty($knIsRegistered))<span class="required">*</span>@endif
                         </label>
                         <select 
-                            name="registration_form" 
+                            name="registration_form_display"
                             id="registration_form_1a"
                             class="form-control @error('registration_form') error @enderror"
-                            {{ !empty($knIsRegistered) ? 'required' : '' }}
+                            disabled
+                            data-kn-locked="1"
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
                                 // Automatski postavi na osnovu tipa prijave ili user_type iz registracije
                                 $defaultRegistrationForm = old('registration_form', '');
+                                if (empty($defaultRegistrationForm) && !empty($lockedRegistrationForm)) {
+                                    $defaultRegistrationForm = $lockedRegistrationForm;
+                                }
                                 if (empty($defaultRegistrationForm) && isset($existingApplication) && $existingApplication && $existingApplication->registration_form) {
                                     $defaultRegistrationForm = $existingApplication->registration_form;
                                 }
@@ -994,35 +1008,39 @@
                             Oblik registracije @if(!empty($knIsRegistered))<span class="required">*</span>@endif
                         </label>
                         <select 
-                            name="registration_form" 
+                            name="registration_form_display"
                             id="registration_form_1b"
                             class="form-control @error('registration_form') error @enderror"
-                            {{ !empty($knIsRegistered) ? 'required' : '' }}
+                            disabled
+                            data-kn-locked="1"
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
-                                // Automatski postavi na osnovu tipa prijave ili user_type iz registracije
                                 $defaultRegistrationForm1b = old('registration_form', '');
+                                if (empty($defaultRegistrationForm1b) && !empty($lockedRegistrationForm)) {
+                                    $defaultRegistrationForm1b = $lockedRegistrationForm;
+                                }
+                                if (empty($defaultRegistrationForm1b) && isset($existingApplication) && $existingApplication && $existingApplication->registration_form) {
+                                    $defaultRegistrationForm1b = $existingApplication->registration_form;
+                                }
                                 $userType = $subjectIdentity->userType ?? '';
-                                $defaultApplicantType = old('applicant_type', $defaultType ?? '');
+                                $defaultApplicantType = $lockedApplicantType ?? old('applicant_type', $defaultType ?? '');
                                 
-                                // Ako nema old value, koristi user_type ako postoji i nije "Fizičko lice"
                                 if (empty($defaultRegistrationForm1b) && $userType && $userType !== 'Fizičko lice') {
-                                    $defaultRegistrationForm1b = $userType;
+                                    $mappedCommercial = \App\Support\KnCommercialCompanyForm::fromUserType($userType);
+                                    $defaultRegistrationForm1b = $mappedCommercial
+                                        ? \App\Support\KnCommercialCompanyForm::registrationFormLabel($mappedCommercial)
+                                        : $userType;
                                 }
                                 
-                                // Ako i dalje nema vrednost, postavi na osnovu tipa prijave
                                 if (empty($defaultRegistrationForm1b)) {
                                     if ($defaultApplicantType === 'doo') {
                                         $defaultRegistrationForm1b = 'Društvo sa ograničenom odgovornošću';
-                                    } elseif ($defaultApplicantType === 'ostalo') {
-                                        // Za "Ostalo" ne postavljamo automatski, korisnik bira
-                                        $defaultRegistrationForm1b = '';
                                     } else {
-                                        // Podrazumevano za obrazac 1b
-                                        $defaultRegistrationForm1b = 'Društvo sa ograničenom odgovornošću';
+                                        $defaultRegistrationForm1b = '';
                                     }
                                 }
+                                $defaultRegistrationForm = $defaultRegistrationForm1b;
                             @endphp
                             <option value="Preduzetnik" {{ $defaultRegistrationForm1b === 'Preduzetnik' ? 'selected' : '' }}>Preduzetnik</option>
                             <option value="Ortačko društvo" {{ $defaultRegistrationForm === 'Ortačko društvo' ? 'selected' : '' }}>Ortačko društvo</option>
@@ -1513,11 +1531,12 @@
     const isFizickoLiceRezident = @json($isFizickoLiceRezident);
     const knIsRegistered = @json((bool) ($knIsRegistered ?? false));
     const knAllowsRazvoj = @json((bool) ($knAllowsRazvoj ?? false));
+    const knLockedCommercialForm = @json($lockedCommercialForm ?? null);
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('applicationForm');
-        const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
+        const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"], input[name="applicant_type_display"]');
         const obrazac1a = document.getElementById('obrazac1a');
         const obrazac1b = document.getElementById('obrazac1b');
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
@@ -1525,6 +1544,15 @@
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const additionalDataSection = document.getElementById('additional-data-section');
         const savedBusinessStageValue = @json(old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)));
+
+        function currentApplicantType() {
+            const locked = document.getElementById('kn_locked_applicant_type');
+            if (locked && locked.value) {
+                return locked.value;
+            }
+            return document.querySelector('input[name="applicant_type_display"]:checked')?.value
+                || document.querySelector('input[name="applicant_type"]:checked')?.value;
+        }
 
         function syncBusinessStageRadiosInSection(section, stage) {
             if (!section || !stage) {
@@ -1575,7 +1603,7 @@
         }
 
         function toggleFieldsByApplicantType() {
-            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+            const selectedType = currentApplicantType();
             const headerLabel = document.getElementById('obrazacLabelHeader');
             if (headerLabel) {
                 if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') headerLabel.textContent = 'Obrazac 1a';
@@ -1584,10 +1612,18 @@
             }
             const regHeader = document.getElementById('obrazacRegistracijaHeader');
             if (regHeader) {
-                if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
-                else if (selectedType === 'doo') regHeader.textContent = '(za oblik registracije DOO)';
-                else if (selectedType === 'ostalo') regHeader.textContent = '(za ostale pravne subjekte)';
-                else regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
+                const commercialHeadings = {doo: 'DOO', ad: 'AD', od: 'OD', kd: 'KD'};
+                if (knLockedCommercialForm && commercialHeadings[knLockedCommercialForm]) {
+                    regHeader.textContent = '(za oblik registracije ' + commercialHeadings[knLockedCommercialForm] + ')';
+                } else if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') {
+                    regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
+                } else if (selectedType === 'doo') {
+                    regHeader.textContent = '(za oblik registracije DOO)';
+                } else if (selectedType === 'ostalo') {
+                    regHeader.textContent = '(za ostale pravne subjekte)';
+                } else {
+                    regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
+                }
             }
             // Resetuj sve obrazce - disable sva polja u sakrivenim sekcijama
             if (obrazac1a) {
@@ -1661,6 +1697,9 @@
                     // Enable sva polja u obrazac1a
                     const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
                     obrazac1aFields.forEach(field => {
+                        if (field.hasAttribute('data-kn-locked')) {
+                            return;
+                        }
                         field.removeAttribute('disabled');
                     });
                     const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
@@ -1692,6 +1731,9 @@
                     // Enable sva polja u obrazac1b
                     const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
                     obrazac1bFields.forEach(field => {
+                        if (field.hasAttribute('data-kn-locked')) {
+                            return;
+                        }
                         field.removeAttribute('disabled');
                     });
                     const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
@@ -1871,7 +1913,7 @@
             if (!knIsRegistered) {
                 return;
             }
-            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+            const selectedType = currentApplicantType();
             const userRegistrationForm = '{{ $subjectIdentity->userType ?? "" }}';
             
             // Proveri da li postoji existingApplication
@@ -1934,10 +1976,8 @@
             if (!form) return false;
 
             // Proveri tip podnosioca
-            const applicantType = form.querySelector('input[name="applicant_type"]:checked');
-            if (!applicantType) return false;
-
-            const applicantTypeValue = applicantType.value;
+            const applicantTypeValue = currentApplicantType();
+            if (!applicantTypeValue) return false;
 
             // Osnovna obavezna polja - traži samo u aktivnoj sekciji
             const activeSection = document.querySelector('.conditional-field.show');
@@ -2063,17 +2103,20 @@
                     // VAŽNO: Jednostavniji pristup - ukloni disabled samo iz aktivne sekcije i postavi disabled u sakrivenim
                     // Ovo je sigurniji način jer ne kopiramo vrednosti, već samo kontrolišemo koja se šalju
                     
-                    // 1. Osiguraj da se applicant_type šalje - ukloni disabled sa svih
-                    const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
-                    allApplicantTypeRadios.forEach(radio => {
-                        radio.removeAttribute('disabled');
-                    });
-                    const checkedApplicantTypeRadio = applicationForm.querySelector('input[name="applicant_type"][type="radio"]:checked');
-                    if (!checkedApplicantTypeRadio) {
-                        const defaultApplicantTypeRadio = applicationForm.querySelector('input[name="applicant_type"][type="radio"][value="preduzetnica"]') 
-                            || applicationForm.querySelector('input[name="applicant_type"][type="radio"]');
-                        if (defaultApplicantTypeRadio) {
-                            defaultApplicantTypeRadio.checked = true;
+                    // 1. applicant_type šalje zaključani hidden; ne otključavaj display radio
+                    const lockedApplicantType = applicationForm.querySelector('#kn_locked_applicant_type');
+                    if (!lockedApplicantType || !lockedApplicantType.value) {
+                        const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
+                        allApplicantTypeRadios.forEach(radio => {
+                            radio.removeAttribute('disabled');
+                        });
+                        const checkedApplicantTypeRadio = applicationForm.querySelector('input[name="applicant_type"][type="radio"]:checked');
+                        if (!checkedApplicantTypeRadio) {
+                            const defaultApplicantTypeRadio = applicationForm.querySelector('input[name="applicant_type"][type="radio"][value="preduzetnica"]')
+                                || applicationForm.querySelector('input[name="applicant_type"][type="radio"]');
+                            if (defaultApplicantTypeRadio) {
+                                defaultApplicantTypeRadio.checked = true;
+                            }
                         }
                     }
                     
@@ -2192,15 +2235,17 @@
                     console.log('Removed save_as_draft input before submit');
                 }
                 
-                // VAŽNO: Ukloni disabled sa radio button-a za applicant_type
-                const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
-                allApplicantTypeRadios.forEach(radio => {
-                    radio.removeAttribute('disabled');
-                });
+                const lockedApplicantType = applicationForm.querySelector('#kn_locked_applicant_type');
+                if (!lockedApplicantType || !lockedApplicantType.value) {
+                    const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
+                    allApplicantTypeRadios.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                    });
+                }
                 
                 // VAŽNO: Osiguraj da se registration_form i business_plan_name šalju iz aktivne sekcije
                 const activeSection = document.querySelector('.conditional-field.show');
-                const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+                const selectedType = currentApplicantType();
                 
                 // Pronađi SVE registration_form select-e, business_plan_name input-e, business_area input-e i polja specifična za Obrazac 1b
                 const allRegistrationForms = applicationForm.querySelectorAll('select[name="registration_form"]');

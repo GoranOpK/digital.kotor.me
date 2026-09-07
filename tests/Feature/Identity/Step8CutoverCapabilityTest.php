@@ -830,9 +830,13 @@ class Step8CutoverCapabilityTest extends TestCase
         config(['identity.canonical_read' => true]);
 
         $competition = $this->openCompetition();
+        $start = $this->actingAs($user)->post(route('applications.start', $competition), [
+            'business_stage' => 'započinjanje',
+        ]);
+        $start->assertRedirect();
 
         $html = $this->actingAs($user)
-            ->get(route('applications.create', $competition))
+            ->get($start->headers->get('Location'))
             ->assertOk()
             ->getContent();
 

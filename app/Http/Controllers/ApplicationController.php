@@ -13,7 +13,10 @@ use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
 use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\KnApplicationClassification;
+use App\Support\KnApplicationStartContext;
 use App\Support\Pib;
+use App\Services\KnApplicationStartContextFactory;
+use App\Services\KnApplicationStartContextStore;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +28,80 @@ use Illuminate\View\View;
 
 class ApplicationController extends Controller
 {
+    /**
+     * Autoritativni start-context za novu prijavu. Query parametar nije authority.
+     */
+    public function start(Request $request, Competition $competition): RedirectResponse
+    {
+        $user = Auth::user();
+        $roleName = $user->role ? $user->role->name : null;
+        $identityResolver = app(CurrentIdentityResolver::class);
+
+        if ($identityResolver->gatesSubjectFlows()) {
+            try {
+                $identityResolver->requireCurrentSubject($user);
+            } catch (IdentityUseGateException $e) {
+                if (app(ExistingSubjectIdentityEligibility::class)->isEligible($user)) {
+                    app(ExistingSubjectIdentityReturnTo::class)->rememberFromRequest($request);
+
+                    return redirect()->route('identity.completion.create');
+                }
+
+                return redirect()->route('competitions.show', $competition)
+                    ->withErrors(['error' => $e->getMessage()]);
+            }
+        }
+
+        if ($roleName === 'komisija' && $competition->commission_id) {
+            $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                $user->id,
+                $competition->commission_id
+            );
+            if ($commissionMember) {
+                abort(403, 'Članovi komisije ne mogu se prijaviti na konkurse za koje su imenovani kao članovi komisije.');
+            }
+        }
+
+        if ($roleName === 'konkurs_admin') {
+            abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
+        }
+
+        if ($competition->status !== 'published') {
+            abort(404, 'Konkurs nije pronađen ili nije objavljen.');
+        }
+
+        if (! $competition->is_open) {
+            $message = $competition->is_upcoming
+                ? 'Konkurs još nije počeo. Prijave će biti moguće od datuma početka konkursa.'
+                : 'Rok za prijave je istekao.';
+
+            return redirect()->route('competitions.show', $competition)
+                ->withErrors(['error' => $message]);
+        }
+
+        $existingApplication = Application::query()
+            ->where('competition_id', $competition->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingApplication) {
+            if ($existingApplication->status === 'draft') {
+                return redirect()->to($this->applicationCreateUrl($competition, $existingApplication));
+            }
+
+            return redirect()->route('applications.show', $existingApplication)
+                ->with('info', 'Već ste podneli prijavu na ovaj konkurs.');
+        }
+
+        $context = app(KnApplicationStartContextFactory::class)->fromShowRequest($user, $competition, $request);
+        $token = app(KnApplicationStartContextStore::class)->put($context);
+
+        return redirect()->route('applications.create', [
+            'competition' => $competition,
+            'start_token' => $token,
+        ]);
+    }
+
     /**
      * Prikaz forme za prijavu na konkurs (Obrazac 1a/1b)
      */
@@ -125,11 +202,8 @@ class ApplicationController extends Controller
             abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
         }
         
-        // Pročitaj applicant_type iz URL parametra (prosljeđeno sa stranice konkursa) – koristi se u svim return view()
-        $preferredApplicantType = $request->query('applicant_type');
-        if ($preferredApplicantType && !in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
-            $preferredApplicantType = null;
-        }
+        // Query applicant_type nije authority. Start-context token ili sačuvana prijava jeste.
+        $preferredApplicantType = null;
 
         // Proveri da li je konkurs otvoren (samo ako nije read-only)
         if (!$readOnly && $competition->status !== 'published') {
@@ -168,24 +242,12 @@ class ApplicationController extends Controller
             if ($existingApplication) {
                 // Ako je proslijeđen application_id query parametar, prikaži formu bez obzira na status
                 if ($request->has('application_id')) {
-                    // Preuzmi dokumente iz biblioteke korisnika
-                    $userDocuments = UserDocument::where('user_id', $user->id)
-                        ->where('status', 'active')
-                        ->get()
-                        ->groupBy('category');
-                    $preselectedBusinessStage = null;
-                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'));
+                    return $this->applicationCreateView($request, $competition, $user, $existingApplication, $readOnly);
                 }
                 
                 // Ako postoji draft prijava, omogući nastavak popunjavanja
                 if ($existingApplication->status === 'draft') {
-                    // Preuzmi dokumente iz biblioteke korisnika
-                    $userDocuments = UserDocument::where('user_id', $user->id)
-                        ->where('status', 'active')
-                        ->get()
-                        ->groupBy('category');
-                    $preselectedBusinessStage = null;
-                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'))
+                    return $this->applicationCreateView($request, $competition, $user, $existingApplication, $readOnly)
                         ->with('info', 'Već imate započetu prijavu. Možete je nastaviti popunjavati.');
                 } else {
                     // Ako je prijava već podnesena, preusmeri na detalje
@@ -195,26 +257,11 @@ class ApplicationController extends Controller
             }
         }
 
-        // Preuzmi dokumente iz biblioteke korisnika (samo za vlasnika)
-        $userDocuments = collect();
-        if (!$readOnly) {
-            $userDocuments = UserDocument::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->get()
-                ->groupBy('category');
-        }
-
-        // Pročitaj business_stage i applicant_type iz URL parametara (prosljeđeno sa stranice konkursa)
-        $preselectedBusinessStage = $request->query('business_stage');
-        if ($preselectedBusinessStage && !in_array($preselectedBusinessStage, ['započinjanje', 'razvoj'])) {
-            $preselectedBusinessStage = null;
-        }
-
         if ($readOnly && $existingApplication?->user) {
             $user = $existingApplication->user;
         }
 
-        return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'));
+        return $this->applicationCreateView($request, $competition, $user, $existingApplication, $readOnly);
     }
 
     /**
@@ -266,26 +313,47 @@ class ApplicationController extends Controller
         // Proveri da li je ovo draft ili finalno čuvanje
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
 
-        $this->mergeProfileAddressIntoRequest($request);
-        $this->mergeApplicantJmbgIntoRequest($request);
+        $existingApplication = $this->findExistingApplicationForStore($request, $competition);
+        $startContext = $this->authoritativeStartContext($request, $user, $competition, $existingApplication);
+        $this->rejectIfRequestContradictsStartContext($request, $startContext);
 
         $knContext = $this->knStoreContext($user);
         $kn = $knContext['classification'];
         $resolvedIsRegistered = $knContext['is_registered'];
-        $requestedStage = $request->input('business_stage');
-        $resolvedApplicantType = $kn->resolveApplicantType($request->input('applicant_type'));
-        $resolvedBusinessStage = $kn->resolveBusinessStage($requestedStage);
+        if ($resolvedIsRegistered !== $startContext->isRegistered) {
+            throw ValidationException::withMessages([
+                'is_registered' => 'Registrovanost biznisa se ne može mijenjati.',
+            ]);
+        }
 
+        $requestedStage = $request->input('business_stage');
         if (is_string($requestedStage) && $requestedStage !== '' && ! $kn->allowsStage($requestedStage)) {
             throw ValidationException::withMessages([
                 'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
             ]);
         }
+        if ($startContext->stageLocked
+            && $this->requestHasPresentValue($request, 'business_stage')
+            && $request->input('business_stage') !== $startContext->businessStage) {
+            throw ValidationException::withMessages([
+                'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
+            ]);
+        }
+
+        $resolvedApplicantType = $startContext->applicantType;
+        $resolvedBusinessStage = $startContext->stageLocked
+            ? $startContext->businessStage
+            : $kn->resolveBusinessStage(is_string($requestedStage) && $requestedStage !== '' ? $requestedStage : $startContext->businessStage);
+        $resolvedRegistrationForm = $startContext->registrationForm;
 
         $request->merge([
             'applicant_type' => $resolvedApplicantType,
             'business_stage' => $resolvedBusinessStage,
+            'registration_form' => $resolvedRegistrationForm ?? $request->input('registration_form'),
         ]);
+
+        $this->mergeProfileAddressIntoRequest($request);
+        $this->mergeApplicantJmbgIntoRequest($request);
 
         if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
             $profileAddressError = $this->profileAddressErrorForUser($request->user());
@@ -298,7 +366,7 @@ class ApplicationController extends Controller
             $request->merge(['registration_form' => 'Preduzetnik']);
         }
         
-        $liveApplicantTypes = implode(',', $kn->allowedApplicantTypes ?: ['fizicko_lice', 'doo']);
+        $liveApplicantTypes = $resolvedApplicantType;
         $liveStages = $kn->isRegisteredBusiness
             ? 'započinjanje,razvoj'
             : 'započinjanje';
@@ -430,8 +498,7 @@ class ApplicationController extends Controller
         }
 
         // Jedna prijava po korisniku po konkursu (Odluka): editovanje Obrazaca 1a/1b ili Forme biznis plana ažurira postojeću prijavu, ne kreira novu
-        $existingApplication = null;
-        if ($request->filled('application_id')) {
+        if (! $existingApplication && $request->filled('application_id')) {
             $existingApplication = Application::where('id', $request->application_id)
                 ->where('competition_id', $competition->id)
                 ->where('user_id', Auth::id())
@@ -469,7 +536,7 @@ class ApplicationController extends Controller
                 'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
                 'pib' => $request->has('pib') ? ($request->pib ?: null) : $existingApplication->pib,
                 'crps_number' => $request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number,
-                'registration_form' => $request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form,
+                'registration_form' => $resolvedRegistrationForm ?? ($request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form),
                 'is_registered' => $resolvedIsRegistered,
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
@@ -507,7 +574,7 @@ class ApplicationController extends Controller
                     'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
                     'pib' => $request->filled('pib') ? $request->pib : null,
                     'crps_number' => $request->filled('crps_number') ? $request->crps_number : null,
-                    'registration_form' => $request->filled('registration_form') ? $request->registration_form : null,
+                    'registration_form' => $resolvedRegistrationForm ?? ($request->filled('registration_form') ? $request->registration_form : null),
                     'is_registered' => $resolvedIsRegistered,
                     'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                     'previous_support_declaration' => $request->has('previous_support_declaration'),
@@ -517,6 +584,10 @@ class ApplicationController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Greška pri čuvanju prijave: ' . $e->getMessage()])->withInput();
         }
+
+        app(KnApplicationStartContextStore::class)->forget(
+            $request->input('start_context_token') ?: $request->query('start_token')
+        );
 
         $application->refresh();
 
@@ -1210,6 +1281,216 @@ class ApplicationController extends Controller
     protected function applicationCreateUrl(Competition $competition, Application $application): string
     {
         return route('applications.create', $competition) . '?application_id=' . $application->id;
+    }
+
+    protected function applicationCreateView(
+        Request $request,
+        Competition $competition,
+        \App\Models\User $user,
+        ?Application $existingApplication,
+        bool $readOnly
+    ): View|RedirectResponse {
+        $userDocuments = collect();
+        if (! $readOnly && $user) {
+            $userDocuments = UserDocument::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->get()
+                ->groupBy('category');
+        }
+
+        $presentation = $this->resolveCreateStartPresentation($request, $user, $competition, $existingApplication, $readOnly);
+        if ($presentation instanceof RedirectResponse) {
+            return $presentation;
+        }
+
+        $preferredApplicantType = $presentation['preferredApplicantType'];
+        $preselectedBusinessStage = $presentation['preselectedBusinessStage'];
+        $startContextToken = $presentation['startContextToken'];
+        $startContext = $presentation['startContext'];
+        $lockedApplicantType = $presentation['lockedApplicantType'];
+        $lockedRegistrationForm = $presentation['lockedRegistrationForm'];
+        $lockedCommercialForm = $presentation['lockedCommercialForm'];
+        $knStartTargetForm = $presentation['knStartTargetForm'];
+        $applicantTypeLocked = true;
+
+        return view('applications.create', compact(
+            'competition',
+            'user',
+            'userDocuments',
+            'existingApplication',
+            'readOnly',
+            'preselectedBusinessStage',
+            'preferredApplicantType',
+            'startContextToken',
+            'startContext',
+            'lockedApplicantType',
+            'lockedRegistrationForm',
+            'lockedCommercialForm',
+            'knStartTargetForm',
+            'applicantTypeLocked'
+        ));
+    }
+
+    /**
+     * @return array{
+     *     preferredApplicantType: string|null,
+     *     preselectedBusinessStage: string|null,
+     *     startContextToken: string|null,
+     *     startContext: KnApplicationStartContext|null,
+     *     lockedApplicantType: string|null,
+     *     lockedRegistrationForm: string|null,
+     *     lockedCommercialForm: string|null,
+     *     knStartTargetForm: string|null
+     * }|RedirectResponse
+     */
+    protected function resolveCreateStartPresentation(
+        Request $request,
+        \App\Models\User $user,
+        Competition $competition,
+        ?Application $existingApplication,
+        bool $readOnly
+    ): array|RedirectResponse {
+        $factory = app(KnApplicationStartContextFactory::class);
+
+        if ($existingApplication) {
+            $context = $factory->fromSavedApplication($existingApplication, $existingApplication->user ?? $user);
+
+            return [
+                'preferredApplicantType' => $context->applicantType,
+                'preselectedBusinessStage' => $context->businessStage,
+                'startContextToken' => null,
+                'startContext' => $context,
+                'lockedApplicantType' => $context->applicantType,
+                'lockedRegistrationForm' => $context->registrationForm,
+                'lockedCommercialForm' => $context->commercialForm,
+                'knStartTargetForm' => $context->targetForm,
+            ];
+        }
+
+        if ($readOnly) {
+            return [
+                'preferredApplicantType' => null,
+                'preselectedBusinessStage' => null,
+                'startContextToken' => null,
+                'startContext' => null,
+                'lockedApplicantType' => null,
+                'lockedRegistrationForm' => null,
+                'lockedCommercialForm' => null,
+                'knStartTargetForm' => null,
+            ];
+        }
+
+        $token = $request->query('start_token');
+        $context = app(KnApplicationStartContextStore::class)->get(is_string($token) ? $token : null);
+        if ($context === null || $context->userId !== (int) $user->id || $context->competitionId !== (int) $competition->id) {
+            return redirect()->route('competitions.show', $competition)
+                ->withErrors(['error' => 'Izaberite tip prijave na stranici konkursa prije ulaska u obrazac.']);
+        }
+
+        return [
+            'preferredApplicantType' => $context->applicantType,
+            'preselectedBusinessStage' => $context->businessStage,
+            'startContextToken' => is_string($token) ? $token : null,
+            'startContext' => $context,
+            'lockedApplicantType' => $context->applicantType,
+            'lockedRegistrationForm' => $context->registrationForm,
+            'lockedCommercialForm' => $context->commercialForm,
+            'knStartTargetForm' => $context->targetForm,
+        ];
+    }
+
+    protected function findExistingApplicationForStore(Request $request, Competition $competition): ?Application
+    {
+        $existingApplication = null;
+        if ($request->filled('application_id')) {
+            $existingApplication = Application::where('id', $request->application_id)
+                ->where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first();
+        }
+        if (! $existingApplication) {
+            $existingApplication = Application::where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first();
+        }
+
+        return $existingApplication;
+    }
+
+    protected function authoritativeStartContext(
+        Request $request,
+        \App\Models\User $user,
+        Competition $competition,
+        ?Application $existingApplication
+    ): KnApplicationStartContext {
+        if ($existingApplication) {
+            return app(KnApplicationStartContextFactory::class)->fromSavedApplication($existingApplication, $user);
+        }
+
+        $token = $request->input('start_context_token') ?: $request->query('start_token');
+        $context = app(KnApplicationStartContextStore::class)->get(is_string($token) ? $token : null);
+        if ($context === null || $context->userId !== (int) $user->id || $context->competitionId !== (int) $competition->id) {
+            throw ValidationException::withMessages([
+                'start_context_token' => 'Nedostaje ili je istekao kontekst početka prijave. Vratite se na konkurs i ponovo izaberite tip prijave.',
+            ]);
+        }
+
+        return $context;
+    }
+
+    protected function rejectIfRequestContradictsStartContext(Request $request, KnApplicationStartContext $context): void
+    {
+        $messages = [];
+
+        if ($this->requestHasPresentValue($request, 'applicant_type')
+            && $request->input('applicant_type') !== $context->applicantType) {
+            $messages['applicant_type'] = 'Tip prijave se ne može mijenjati.';
+        }
+
+        if ($context->registrationForm !== null
+            && $this->requestHasPresentValue($request, 'registration_form')
+            && $request->input('registration_form') !== $context->registrationForm) {
+            $messages['registration_form'] = 'Pravni oblik se ne može mijenjati.';
+        }
+
+        foreach (['planned_company_form', 'commercial_form'] as $field) {
+            if (! $this->requestHasPresentValue($request, $field)) {
+                continue;
+            }
+            $sent = (string) $request->input($field);
+            if ($context->commercialForm === null || $sent !== $context->commercialForm) {
+                $messages[$field] = 'Pravni oblik se ne može mijenjati.';
+            }
+        }
+
+        if ($request->exists('is_registered') && $request->input('is_registered') !== null && $request->input('is_registered') !== '') {
+            if ($this->requestBoolean($request->input('is_registered')) !== $context->isRegistered) {
+                $messages['is_registered'] = 'Registrovanost biznisa se ne može mijenjati.';
+            }
+        }
+
+        if ($messages !== []) {
+            throw ValidationException::withMessages($messages);
+        }
+    }
+
+    protected function requestHasPresentValue(Request $request, string $key): bool
+    {
+        if (! $request->exists($key)) {
+            return false;
+        }
+
+        $value = $request->input($key);
+        if (is_string($value)) {
+            return trim($value) !== '';
+        }
+
+        return $value !== null;
+    }
+
+    protected function requestBoolean(mixed $value): bool
+    {
+        return in_array($value, [true, 1, '1', 'true', 'on'], true);
     }
 
 }

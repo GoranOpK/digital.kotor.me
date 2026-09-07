@@ -330,25 +330,47 @@
                             <label style="display: flex; align-items: center; cursor: pointer;">
                                 <input 
                                     type="radio" 
-                                    name="planned_form_preview" 
-                                    value="fizicko_lice" 
-                                    id="planned_form_fizicko_lice_preview"
-                                    {{ ($knFormApplicantType ?? 'fizicko_lice') === 'fizicko_lice' ? 'checked' : '' }}
+                                    name="planned_intent"
+                                    value="future_entrepreneur"
+                                    id="planned_intent_future_entrepreneur"
+                                    checked
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>Fizičko lice (nema registrovanu djelatnost)</span>
+                                <span>Planiram registraciju kao preduzetnik</span>
                             </label>
                             <label style="display: flex; align-items: center; cursor: pointer;">
                                 <input 
                                     type="radio" 
-                                    name="planned_form_preview" 
-                                    value="doo" 
-                                    id="planned_form_doo_preview"
-                                    {{ ($knFormApplicantType ?? '') === 'doo' ? 'checked' : '' }}
+                                    name="planned_intent"
+                                    value="planned_company"
+                                    id="planned_intent_planned_company"
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>Planiram osnivanje DOO</span>
+                                <span>Planiram osnivanje privrednog društva</span>
                             </label>
+                        </div>
+                        <div id="planned-company-forms" style="display: none; margin-bottom: 12px; padding-left: 8px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">
+                                Planirani pravni oblik <span style="color: #dc2626;">*</span>
+                            </label>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="radio" name="planned_company_form" value="doo" id="planned_company_form_doo" style="margin-right: 8px; cursor: pointer;">
+                                    <span>DOO</span>
+                                </label>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="radio" name="planned_company_form" value="ad" id="planned_company_form_ad" style="margin-right: 8px; cursor: pointer;">
+                                    <span>AD</span>
+                                </label>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="radio" name="planned_company_form" value="od" id="planned_company_form_od" style="margin-right: 8px; cursor: pointer;">
+                                    <span>OD</span>
+                                </label>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="radio" name="planned_company_form" value="kd" id="planned_company_form_kd" style="margin-right: 8px; cursor: pointer;">
+                                    <span>KD</span>
+                                </label>
+                            </div>
                         </div>
                         @endif
                         <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
@@ -433,9 +455,15 @@
         @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
             @if($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
-                <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}" data-applicant-type="{{ $knFormApplicantType ?? $applicantType ?? '' }}">
-                    Prijavi se na konkurs
-                </a>
+                <form method="POST" action="{{ route('applications.start', $competition) }}" id="applyStartForm" style="display: inline;">
+                    @csrf
+                    <input type="hidden" name="planned_intent" id="apply_planned_intent" value="">
+                    <input type="hidden" name="planned_company_form" id="apply_planned_company_form" value="">
+                    <input type="hidden" name="business_stage" id="apply_business_stage" value="započinjanje">
+                    <button type="submit" class="btn-primary" id="applyBtn" data-applicant-type="{{ $knFormApplicantType ?? $applicantType ?? '' }}">
+                        Prijavi se na konkurs
+                    </button>
+                </form>
             @elseif($isOpen && auth()->check() && $isCommissionMemberForThisCompetition)
                 <p style="color: #6b7280; margin-bottom: 0;">
                     Članovi komisije ne mogu se prijaviti na konkurse za koje su imenovani kao članovi komisije.
@@ -465,7 +493,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const registrationDocs = @json(\App\Support\KnApplicationClassification::registrationConditionedDocumentTypes());
     const documentLabels = @json($documentLabels);
     const businessStageRadios = document.querySelectorAll('input[name="business_stage_preview"]');
-    const plannedFormRadios = document.querySelectorAll('input[name="planned_form_preview"]');
+    const plannedFormRadios = document.querySelectorAll('input[name="planned_intent"]');
+    const plannedCompanyFormRadios = document.querySelectorAll('input[name="planned_company_form"]');
+    const plannedCompanyForms = document.getElementById('planned-company-forms');
     const documentsList = document.getElementById('documents-list');
     
     // Mapa dokumenata po tipu prijave i fazi biznisa
@@ -698,7 +728,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     plannedFormRadios.forEach(radio => {
         radio.addEventListener('change', function () {
-            applicantType = radio.value;
+            const intent = radio.value;
+            if (intent === 'future_entrepreneur') {
+                applicantType = 'fizicko_lice';
+                if (plannedCompanyForms) {
+                    plannedCompanyForms.style.display = 'none';
+                }
+            } else if (intent === 'planned_company') {
+                const selectedCompany = document.querySelector('input[name="planned_company_form"]:checked')?.value;
+                applicantType = selectedCompany === 'doo' ? 'doo' : 'ostalo';
+                if (plannedCompanyForms) {
+                    plannedCompanyForms.style.display = 'block';
+                }
+            }
             const applyBtn = document.getElementById('applyBtn');
             if (applyBtn) {
                 applyBtn.setAttribute('data-applicant-type', applicantType);
@@ -707,24 +749,30 @@ document.addEventListener('DOMContentLoaded', function() {
             updateApplyLink();
         });
     });
+    plannedCompanyFormRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            applicantType = radio.value === 'doo' ? 'doo' : 'ostalo';
+            updateDocumentsList();
+            updateApplyLink();
+        });
+    });
     
-    // Ažuriraj link "Prijavi se" sa izabranim business_stage i applicant_type (prosljeđuje se kroz URL parametar)
     function updateApplyLink() {
-        const applyBtn = document.getElementById('applyBtn');
-        if (!applyBtn) return;
-        const baseUrl = applyBtn.getAttribute('data-base-url');
-        if (!baseUrl) return;
-        const selectedPlanned = document.querySelector('input[name="planned_form_preview"]:checked')?.value;
-        const applicantTypeFromBtn = selectedPlanned || applyBtn.getAttribute('data-applicant-type') || applicantType;
-        const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
-        const url = new URL(baseUrl, window.location.origin);
-        if (applicantTypeFromBtn && ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'].includes(applicantTypeFromBtn)) {
-            url.searchParams.set('applicant_type', applicantTypeFromBtn);
+        const intent = document.querySelector('input[name="planned_intent"]:checked')?.value || '';
+        const companyForm = document.querySelector('input[name="planned_company_form"]:checked')?.value || '';
+        const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value || 'započinjanje';
+        const intentInput = document.getElementById('apply_planned_intent');
+        const companyInput = document.getElementById('apply_planned_company_form');
+        const stageInput = document.getElementById('apply_business_stage');
+        if (intentInput) {
+            intentInput.value = intent;
         }
-        if (selectedStage) {
-            url.searchParams.set('business_stage', selectedStage);
+        if (companyInput) {
+            companyInput.value = intent === 'planned_company' ? companyForm : '';
         }
-        applyBtn.href = url.toString();
+        if (stageInput) {
+            stageInput.value = selectedStage;
+        }
     }
     
     // Inicijalno ažuriraj listu i link
@@ -734,6 +782,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     }
     updateApplyLink();
+
+    const applyForm = document.getElementById('applyStartForm');
+    if (applyForm) {
+        applyForm.addEventListener('submit', function (e) {
+            updateApplyLink();
+            const intent = document.getElementById('apply_planned_intent')?.value;
+            const company = document.getElementById('apply_planned_company_form')?.value;
+            if (intent === 'planned_company' && !company) {
+                e.preventDefault();
+            }
+        });
+    }
 });
 </script>
 @endif

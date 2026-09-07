@@ -30,9 +30,13 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         $user = $this->makeKorisnik();
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
             ]))
@@ -50,11 +54,17 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(21)]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'planned_company',
+            'planned_company_form' => 'doo',
+        ]);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'doo',
                 'business_stage' => 'započinjanje',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
             ]))
             ->assertRedirect();
 
@@ -62,6 +72,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertSame('doo', $application->applicant_type);
         $this->assertFalse($application->is_registered);
         $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertSame(UserType::LIMITED_LIABILITY_COMPANY, $application->registration_form);
         $user->refresh();
         $this->assertSame(UserType::PHYSICAL_PERSON, $user->user_type);
         $this->assertFalse($user->isEntrepreneur());
@@ -71,27 +82,35 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(43)]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $this->actingAs($user)
+            ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'preduzetnica',
                 'business_stage' => 'započinjanje',
             ]))
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasErrors('applicant_type');
 
-        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
-        $this->assertSame('fizicko_lice', $application->applicant_type);
-        $this->assertFalse($application->is_registered);
+        $this->assertSame(0, Application::query()->count());
     }
 
     public function test_unregistered_fl_cannot_choose_razvoj(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(22)]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $this->actingAs($user)
             ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'razvoj',
             ]))
@@ -105,10 +124,15 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(44)]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'planned_company',
+            'planned_company_form' => 'doo',
+        ]);
 
         $this->actingAs($user)
             ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'doo',
                 'business_stage' => 'razvoj',
             ]))
@@ -122,18 +146,22 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(45)]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $this->actingAs($user)
+            ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
                 'is_registered' => '1',
             ]))
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasErrors('is_registered');
 
-        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
-        $this->assertFalse($application->is_registered);
-        $this->assertSame('fizicko_lice', $application->applicant_type);
+        $this->assertSame(0, Application::query()->count());
     }
 
     public function test_existing_entrepreneur_is_preduzetnica_and_registered(): void
@@ -144,11 +172,16 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'jmb' => $this->validJmb(23),
         ]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'business_stage' => 'razvoj',
+        ]);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
-                'applicant_type' => 'doo',
+                'start_context_token' => $token,
+                'applicant_type' => 'preduzetnica',
                 'business_stage' => 'razvoj',
+                'registration_form' => 'Preduzetnik',
             ]))
             ->assertRedirect();
 
@@ -166,17 +199,21 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'jmb' => $this->validJmb(46),
         ]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'business_stage' => 'započinjanje',
+        ]);
 
         $this->actingAs($user)
+            ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
             ]))
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasErrors('applicant_type');
 
-        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
-        $this->assertSame('preduzetnica', $application->applicant_type);
-        $this->assertTrue($application->is_registered);
+        $this->assertSame(0, Application::query()->count());
     }
 
     public function test_existing_doo_is_doo_and_registered(): void
@@ -189,11 +226,16 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'jmb' => $this->validJmb(24),
         ]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'business_stage' => 'započinjanje',
+        ]);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
-                'applicant_type' => 'preduzetnica',
+                'start_context_token' => $token,
+                'applicant_type' => 'doo',
                 'business_stage' => 'započinjanje',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
             ]))
             ->assertRedirect();
 
@@ -212,18 +254,21 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'jmb' => $this->validJmb(47),
         ]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'business_stage' => 'razvoj',
+        ]);
 
         $this->actingAs($user)
+            ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'razvoj',
             ]))
-            ->assertRedirect();
+            ->assertRedirect()
+            ->assertSessionHasErrors('applicant_type');
 
-        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
-        $this->assertSame('doo', $application->applicant_type);
-        $this->assertTrue($application->is_registered);
-        $this->assertSame('razvoj', $application->business_stage);
+        $this->assertSame(0, Application::query()->count());
     }
 
     public function test_document_catalog_supports_four_v1_flows(): void
@@ -276,11 +321,12 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->assertViewHas('knCanChoosePlannedForm', true)
             ->assertDontSee('Planirani oblik poslovanja')
             ->assertDontSee('planirani oblik Preduzetnica')
-            ->assertSee('Fizičko lice (nema registrovanu djelatnost)')
-            ->assertSee('Planiram osnivanje DOO')
-            ->assertSee('name="planned_form_preview"', false)
-            ->assertSee('value="fizicko_lice"', false)
-            ->assertSee('value="doo"', false);
+            ->assertSee('Planiram registraciju kao preduzetnik')
+            ->assertSee('Planiram osnivanje privrednog društva')
+            ->assertSee('name="planned_intent"', false)
+            ->assertSee('value="future_entrepreneur"', false)
+            ->assertSee('value="planned_company"', false)
+            ->assertDontSee('Planiram osnivanje DOO');
     }
 
     public function test_obrazac_2_q3_matches_application_is_registered_and_is_locked(): void
@@ -428,6 +474,9 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $this->issueStartToken($user, $competition, [
+                    'planned_intent' => 'future_entrepreneur',
+                ]),
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
             ]))
@@ -443,7 +492,6 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
                 'business_plan_name' => 'Ažurirani nacrt',
-                'is_registered' => '1',
             ]))
             ->assertRedirect();
 
@@ -463,7 +511,6 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
                 'application_id' => $application->id,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'razvoj',
-                'is_registered' => '1',
             ]))
             ->assertRedirect($createUrl)
             ->assertSessionHasErrors('business_stage');
@@ -475,8 +522,9 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertSame('započinjanje', $application->business_stage);
     }
 
-    public function test_unregistered_fl_draft_can_switch_to_planned_doo_without_identity_change(): void
-    {        $user = $this->makeKorisnik(['jmb' => $this->validJmb(42)]);
+    public function test_unregistered_fl_draft_cannot_switch_to_planned_doo(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(42)]);
         $competition = $this->openCompetition();
         $application = Application::create([
             'competition_id' => $competition->id,
@@ -490,6 +538,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         ]);
 
         $this->actingAs($user)
+            ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
                 'application_id' => $application->id,
                 'applicant_type' => 'doo',
@@ -497,10 +546,10 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
                 'business_plan_name' => 'Nacrt ažuriran',
                 'is_registered' => '1',
             ]))
-            ->assertRedirect();
+            ->assertSessionHasErrors('applicant_type');
 
         $application->refresh();
-        $this->assertSame('doo', $application->applicant_type);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
         $this->assertFalse($application->is_registered);
         $this->assertSame('započinjanje', $application->business_stage);
         $user->refresh();
@@ -527,9 +576,12 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         [$user, $canonicalJmb] = $this->makeCanonicalPhysicalPerson();
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $html = $this->actingAs($user)
-            ->get(route('applications.create', $competition))
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
             ->assertOk()
             ->getContent();
 
@@ -542,9 +594,13 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         [$user, $canonicalJmb] = $this->makeCanonicalPhysicalPerson($this->validJmb(81));
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
                 'physical_person_jmbg' => '',
@@ -562,9 +618,13 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         [$user] = $this->makeCanonicalPhysicalPerson($this->validJmb(82));
         $manualJmb = $this->validJmb(83);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => 'future_entrepreneur',
+        ]);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
                 'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
                 'physical_person_jmbg' => $manualJmb,
@@ -615,9 +675,12 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         ]));
         config(['identity.canonical_read' => true]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'business_stage' => 'započinjanje',
+        ]);
 
         $html = $this->actingAs($user)
-            ->get(route('applications.create', $competition))
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
             ->assertOk()
             ->getContent();
 
@@ -639,9 +702,12 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         ]));
         config(['identity.canonical_read' => true]);
         $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'business_stage' => 'započinjanje',
+        ]);
 
         $html = $this->actingAs($user)
-            ->get(route('applications.create', $competition))
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
             ->assertOk()
             ->getContent();
 
@@ -687,6 +753,20 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'business_plan_name' => 'Biznis plan',
             'business_area' => 'Usluge',
         ], $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function issueStartToken(\App\Models\User $user, Competition $competition, array $payload = []): string
+    {
+        $response = $this->actingAs($user)->post(route('applications.start', $competition), $payload);
+        $response->assertRedirect();
+        $query = [];
+        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
+        $this->assertArrayHasKey('start_token', $query);
+
+        return $query['start_token'];
     }
 
     /**

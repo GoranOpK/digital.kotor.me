@@ -431,6 +431,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---
 
     // Prijava na konkurs (ApplicationController)
+    Route::post('/competitions/{competition}/apply/start', [ApplicationController::class, 'start'])->name('applications.start');
     Route::get('/competitions/{competition}/apply', [ApplicationController::class, 'create'])->name('applications.create'); // Prikaz forme za prijavu
     Route::post('/competitions/{competition}/apply', [ApplicationController::class, 'store'])->name('applications.store'); // Snimi prijavu
     Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show'); // Prikaz detalja prijave
