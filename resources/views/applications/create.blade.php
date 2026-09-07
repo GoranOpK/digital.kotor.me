@@ -1244,7 +1244,7 @@
                             type="text" 
                             name="physical_person_jmbg" 
                             class="form-control @error('physical_person_jmbg') error @enderror"
-                            value="{{ old('physical_person_jmbg', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_jmbg : '') }}"
+                                value="{{ old('physical_person_jmbg', (isset($existingApplication) && $existingApplication && filled($existingApplication->physical_person_jmbg) ? $existingApplication->physical_person_jmbg : null) ?? $subjectIdentity->jmb) }}"
                             maxlength="13"
                             pattern="[0-9]{13}"
                             placeholder="13 cifara"

@@ -2,17 +2,21 @@
 
 namespace Tests\Feature;
 
+use App\Identity\CanonicalIdentityWriter;
 use App\Models\Application;
 use App\Models\Competition;
+use App\Models\PhysicalPersonIdentity;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Support\MakesCanonicalUsers;
+use Tests\Support\MakesIdentitySnapshots;
 use Tests\TestCase;
 
 class KnV1ApplicationClassificationRuntimeTest extends TestCase
 {
     use MakesCanonicalUsers;
+    use MakesIdentitySnapshots;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -519,6 +523,131 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertContains('licna_karta', $registered);
     }
 
+    public function test_canonical_fl_create_prefills_physical_person_jmbg_from_identity_when_users_jmb_is_null(): void
+    {
+        [$user, $canonicalJmb] = $this->makeCanonicalPhysicalPerson();
+        $competition = $this->openCompetition();
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertNull($user->jmb);
+        $this->assertSame($canonicalJmb, PhysicalPersonIdentity::query()->where('jmb', $canonicalJmb)->value('jmb'));
+        $this->assertInputHasValue($html, 'physical_person_jmbg', $canonicalJmb);
+    }
+
+    public function test_canonical_fl_store_falls_back_to_canonical_jmb_when_physical_person_jmbg_empty(): void
+    {
+        [$user, $canonicalJmb] = $this->makeCanonicalPhysicalPerson($this->validJmb(81));
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'fizicko_lice',
+                'business_stage' => 'započinjanje',
+                'physical_person_jmbg' => '',
+            ]))
+            ->assertRedirect();
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('fizicko_lice', $application->applicant_type);
+        $this->assertSame($canonicalJmb, $application->physical_person_jmbg);
+        $this->assertNull($user->fresh()->jmb);
+    }
+
+    public function test_canonical_fl_store_keeps_explicit_physical_person_jmbg_over_canonical_jmb(): void
+    {
+        [$user] = $this->makeCanonicalPhysicalPerson($this->validJmb(82));
+        $manualJmb = $this->validJmb(83);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'fizicko_lice',
+                'business_stage' => 'započinjanje',
+                'physical_person_jmbg' => $manualJmb,
+            ]))
+            ->assertRedirect();
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($manualJmb, $application->physical_person_jmbg);
+    }
+
+    public function test_canonical_fl_create_prefers_saved_physical_person_jmbg_over_canonical_jmb(): void
+    {
+        [$user, $canonicalJmb] = $this->makeCanonicalPhysicalPerson($this->validJmb(84));
+        $savedJmb = $this->validJmb(85);
+        $competition = $this->openCompetition();
+        Application::create($this->completeObrazacAttributes($user, $competition, [
+            'physical_person_jmbg' => $savedJmb,
+        ]));
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertInputHasValue($html, 'physical_person_jmbg', $savedJmb);
+        $this->assertDoesNotMatchRegularExpression(
+            '/name="physical_person_jmbg"[^>]*value="'.preg_quote($canonicalJmb, '/').'"/s',
+            $html
+        );
+    }
+
+    public function test_canonical_preduzetnica_create_still_prefills_preduzetnik_jmbg(): void
+    {
+        $canonicalJmb = $this->validJmb(86);
+        $user = $this->makeKorisnik([
+            'jmb' => null,
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(86),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => [
+                'jmb' => $canonicalJmb,
+                'isEntrepreneur' => true,
+                'entrepreneurBusinessName' => 'Radnja Ana',
+                'pib' => $this->validPib(86),
+                'crpsNumber' => $this->validCrps(1, 86),
+            ],
+        ]));
+        config(['identity.canonical_read' => true]);
+        $competition = $this->openCompetition();
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertInputHasValue($html, 'preduzetnik_jmbg', $canonicalJmb);
+    }
+
+    public function test_canonical_doo_create_still_prefills_doo_jmbg(): void
+    {
+        $canonicalJmb = $this->validJmb(87);
+        $user = $this->makeKorisnik([
+            'jmb' => null,
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(87),
+            'company_name' => 'Test DOO',
+            'residential_status' => null,
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->plSnapshot($user, [
+            'jmb' => $canonicalJmb,
+        ]));
+        config(['identity.canonical_read' => true]);
+        $competition = $this->openCompetition();
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertInputHasValue($html, 'doo_jmbg', $canonicalJmb);
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
@@ -558,6 +687,30 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'business_plan_name' => 'Biznis plan',
             'business_area' => 'Usluge',
         ], $overrides);
+    }
+
+    /**
+     * @return array{0: \App\Models\User, 1: string}
+     */
+    private function makeCanonicalPhysicalPerson(?string $canonicalJmb = null): array
+    {
+        $canonicalJmb ??= $this->validJmb(80);
+        $user = $this->makeKorisnik(['jmb' => null]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['jmb' => $canonicalJmb],
+        ]));
+        config(['identity.canonical_read' => true]);
+        $user->refresh();
+
+        return [$user, $canonicalJmb];
+    }
+
+    private function assertInputHasValue(string $html, string $name, string $expected): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/name="'.preg_quote($name, '/').'"[^>]*value="'.preg_quote($expected, '/').'"/s',
+            $html
+        );
     }
 
     private function openCompetition(): Competition

@@ -1117,6 +1117,31 @@ class ApplicationController extends Controller
     protected function mergeApplicantJmbgIntoRequest(Request $request): void
     {
         $applicantType = $request->input('applicant_type');
+        if ($applicantType === 'fizicko_lice') {
+            if (filled($request->input('physical_person_jmbg'))) {
+                return;
+            }
+
+            if ($request->filled('application_id')) {
+                $existingApplication = Application::where('id', $request->application_id)
+                    ->where('user_id', $request->user()->id)
+                    ->first();
+
+                if ($existingApplication && filled($existingApplication->physical_person_jmbg)) {
+                    $request->merge(['physical_person_jmbg' => $existingApplication->physical_person_jmbg]);
+
+                    return;
+                }
+            }
+
+            $userJmb = app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
+            if (filled($userJmb)) {
+                $request->merge(['physical_person_jmbg' => trim((string) $userJmb)]);
+            }
+
+            return;
+        }
+
         if (!in_array($applicantType, ['preduzetnica', 'doo', 'ostalo'], true)) {
             return;
         }
