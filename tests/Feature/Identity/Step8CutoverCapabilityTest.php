@@ -5,6 +5,7 @@ namespace Tests\Feature\Identity;
 use App\Console\Commands\IdentityProductionReconcileCommand;
 use App\Enums\PaymentAvailabilityOutcome;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Identity\CanonicalIdentityWriteException;
 use App\Identity\CanonicalIdentityWriter;
 use App\Identity\Cutover\IdentityCutoverAttestation;
 use App\Identity\Runtime\IdentityMutationDeniedException;
@@ -170,7 +171,16 @@ class Step8CutoverCapabilityTest extends TestCase
     {
         config(['identity.canonical_read' => true, 'identity.canonical_write' => true, 'identity.identity_write_freeze' => true]);
 
-        $this->post('/register', $this->registrationPayload('rollback@example.com', '1234567890123'))
+        $thrown = false;
+        PlatformIdentity::creating(function () use (&$thrown): void {
+            if ($thrown) {
+                return;
+            }
+            $thrown = true;
+            throw new CanonicalIdentityWriteException('Canonical identity create failed.');
+        });
+
+        $this->post('/register', $this->registrationPayload('rollback@example.com', $this->validJmb(98)))
             ->assertRedirect();
 
         $this->assertFalse(User::query()->where('email', 'rollback@example.com')->exists());
@@ -973,20 +983,9 @@ class Step8CutoverCapabilityTest extends TestCase
      */
     private function registrationPayload(string $email, ?string $jmb = null): array
     {
-        return [
-            'user_type' => 'Fizičko lice',
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => $email,
-            'email_confirmation' => $email,
-            'password' => 'password',
-            'password_confirmation' => 'password',
-            'phone_full' => '+38267000001',
-            'address' => 'Njegoševa 12',
-            'city' => 'Kotor',
-            'residential_status' => 'resident',
-            'jmb' => $jmb ?? '0101990000000',
-        ];
+        return $this->registrationHttpPayload($email, [
+            'jmb' => $jmb ?? $this->validJmb(10),
+        ]);
     }
 
     private function openCompetition(): \App\Models\Competition

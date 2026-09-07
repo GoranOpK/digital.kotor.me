@@ -46,4 +46,47 @@ trait MakesCanonicalUsers
 
         return $prefix.$k;
     }
+
+    protected function validPib(int $seed): string
+    {
+        $base = str_pad((string) abs($seed % 10000000), 7, '0', STR_PAD_LEFT);
+        $product = 10;
+        for ($i = 0; $i < 7; $i++) {
+            $product = ($product + (int) $base[$i]) % 10;
+            if ($product === 0) {
+                $product = 10;
+            }
+            $product = ($product * 2) % 11;
+        }
+
+        return $base.((11 - $product) % 10);
+    }
+
+    protected function validCrps(int $mark, int $serial = 1): string
+    {
+        return $mark.str_pad((string) $serial, 7, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    protected function registrationHttpPayload(string $email, array $overrides = []): array
+    {
+        return array_merge([
+            'user_type' => UserType::PHYSICAL_PERSON,
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'email' => $email,
+            'email_confirmation' => $email,
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'phone_calling_code' => '+382',
+            'phone_national' => '67000001',
+            'address' => 'Njegoševa 12',
+            'city' => 'Podgorica',
+            'residential_status' => 'resident',
+            'jmb' => $this->validJmb(10),
+        ], $overrides);
+    }
 }

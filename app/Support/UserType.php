@@ -23,7 +23,11 @@ final class UserType
 
     public const NGO_ASSOCIATION = 'Nevladino udruženje';
 
+    public const NGO_FOUNDATION = 'Nevladina fondacija';
+
     public const SPORTS_ORGANIZATION = 'Sportska organizacija';
+
+    public const FOREIGN_BRANCH = 'Dio stranog privrednog društva';
 
     public const REGISTRATION_GROUP_BUSINESS = 'Registrovan privredni subjekt';
 
@@ -74,6 +78,7 @@ final class UserType
             self::GENERAL_PARTNERSHIP,
             self::LIMITED_PARTNERSHIP,
             self::NGO_ASSOCIATION,
+            self::NGO_FOUNDATION,
             self::SPORTS_ORGANIZATION,
         ];
     }
@@ -117,10 +122,32 @@ final class UserType
      */
     public static function registrationBusinessStorageValues(): array
     {
-        return array_values(array_filter(
-            self::canonicalStorageValues(),
-            fn (string $value): bool => $value !== self::PHYSICAL_PERSON
-        ));
+        return [
+            self::ENTREPRENEUR,
+            ...self::canonicalLegalEntityStorageValues(),
+        ];
+    }
+
+    public static function requiresCrps(?string $type): bool
+    {
+        return in_array($type, [
+            self::ENTREPRENEUR,
+            self::GENERAL_PARTNERSHIP,
+            self::LIMITED_PARTNERSHIP,
+            self::JOINT_STOCK_COMPANY,
+            self::LIMITED_LIABILITY_COMPANY,
+            self::FOREIGN_BRANCH,
+        ], true);
+    }
+
+    public static function isForeignBranch(?string $type): bool
+    {
+        return $type === self::FOREIGN_BRANCH;
+    }
+
+    public static function isNgoFoundation(?string $type): bool
+    {
+        return $type === self::NGO_FOUNDATION;
     }
 
     /**
@@ -188,7 +215,9 @@ final class UserType
             self::GENERAL_PARTNERSHIP => 'OD',
             self::LIMITED_PARTNERSHIP => 'KD',
             self::NGO_ASSOCIATION => 'NVO',
+            self::NGO_FOUNDATION => 'NVO_FONDACIJA',
             self::SPORTS_ORGANIZATION => 'SPORTSKA_ORGANIZACIJA',
+            self::FOREIGN_BRANCH => 'DSPD',
             default => null,
         };
     }
@@ -229,8 +258,11 @@ final class UserType
             self::PHYSICAL_PERSON => self::PHYSICAL_PERSON,
         ];
 
-        foreach (self::registrationBusinessOptions() as $value => $label) {
-            $options[$value] = $label;
+        foreach (self::canonicalStorageValues() as $value) {
+            if ($value === self::PHYSICAL_PERSON) {
+                continue;
+            }
+            $options[$value] = self::displayLabel($value);
         }
 
         if (is_string($current) && self::isRetainedLegacy($current) && ! isset($options[$current])) {

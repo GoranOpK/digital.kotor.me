@@ -59,8 +59,10 @@ Route::get('/newsletter/odjava-potvrda', [NewsletterPublicUnsubscribeController:
 // Rute za autentikaciju (login/register) - koristi Breeze, Fortify ili custom rješenje
 Route::get('/login', [HomeController::class, 'loginForm'])->name('login'); // Forma za login
 Route::post('/login', [HomeController::class, 'login']); // Slanje login podataka
-Route::get('/register', [HomeController::class, 'registerForm'])->name('register'); // Forma za registraciju
-Route::post('/register', [HomeController::class, 'register']); // Slanje podataka za registraciju
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [HomeController::class, 'registerForm'])->name('register'); // Forma za registraciju
+    Route::post('/register', [HomeController::class, 'register'])->middleware('throttle:registration'); // Slanje podataka za registraciju
+});
 
 // Grupe ruta dostupne samo prijavljenim korisnicima
 Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(function () {

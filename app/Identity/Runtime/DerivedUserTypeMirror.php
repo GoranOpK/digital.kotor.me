@@ -34,6 +34,10 @@ final class DerivedUserTypeMirror
             };
         }
 
+        if ($snapshot->subjectType === PlatformIdentity::SUBJECT_FOREIGN_BRANCH) {
+            return UserType::LEGACY_FOREIGN_BRANCH;
+        }
+
         return null;
     }
 

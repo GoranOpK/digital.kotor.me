@@ -3,21 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Identity\CanonicalIdentityWriteException;
+use App\Identity\CountryCatalog;
+use App\Identity\PhoneCallingCodeCatalog;
 use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationDeniedException;
+use App\Http\Requests\RegisterSubjectRequest;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\Notice;
 use App\Models\User;
-use App\Support\PhoneNumber;
-use App\Support\Pib;
 use App\Support\UserType;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class HomeController extends Controller
 {
@@ -151,311 +151,101 @@ class HomeController extends Controller
 
     public function registerForm()
     {
+        $countryOptions = [];
+        foreach (CountryCatalog::codes() as $code) {
+            $countryOptions[$code] = CountryCatalog::label($code) ?? $code;
+        }
+
         return view('auth.register', [
             'businessTypeOptions' => UserType::registrationBusinessOptions(),
+            'countryOptions' => $countryOptions,
+            'phonePickerEntries' => PhoneCallingCodeCatalog::pickerEntries(),
+            'crpsRequiredForms' => [
+                UserType::ENTREPRENEUR,
+                UserType::GENERAL_PARTNERSHIP,
+                UserType::LIMITED_PARTNERSHIP,
+                UserType::JOINT_STOCK_COMPANY,
+                UserType::LIMITED_LIABILITY_COMPANY,
+            ],
         ]);
     }
 
-    /**
-     * Validacija JMB (Jedinstvenog matičnog broja)
-     */
-    private function validateJMB($jmb)
+    public function register(RegisterSubjectRequest $request)
     {
-        if (! preg_match('/^[0-9]{13}$/', $jmb)) {
-            return false;
+        $validated = $request->validated();
+        $storedUserType = $request->storedUserType();
+        $jmb = $request->resolvedJmb();
+        $phone = $request->composedPhone();
+
+        if (isset($validated['first_name'])) {
+            $validated['first_name'] = mb_convert_case(mb_strtolower($validated['first_name'], 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         }
-
-        // Izdvajanje delova JMB formata: DDMMGGGRRBBBK
-        // Pozicije: 0-1 (DD), 2-3 (MM), 4-6 (GGG), 7-8 (RR), 9-11 (BBB), 12 (K)
-        $DD = (int) substr($jmb, 0, 2);      // Dan: pozicije 0-1
-        $MM = (int) substr($jmb, 2, 2);      // Mesec: pozicije 2-3
-        $GGG = (int) substr($jmb, 4, 3);     // Godina (3 cifre): pozicije 4-6
-        $RR = (int) substr($jmb, 7, 2);      // Region: pozicije 7-8
-        $BBB = (int) substr($jmb, 9, 3);     // Redni broj: pozicije 9-11
-        $K = (int) substr($jmb, 12, 1);      // Kontrolna cifra: pozicija 12
-
-        // Validacija dana (1-31)
-        if ($DD < 1 || $DD > 31) {
-            return false;
+        if (isset($validated['last_name'])) {
+            $validated['last_name'] = mb_convert_case(mb_strtolower($validated['last_name'], 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         }
-
-        // Validacija meseca (1-12)
-        if ($MM < 1 || $MM > 12) {
-            return false;
+        if (isset($validated['authorized_first_name'])) {
+            $validated['authorized_first_name'] = mb_convert_case(mb_strtolower($validated['authorized_first_name'], 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         }
-
-        // Validacija godine u JMB-u
-        // Format:
-        // - 900 <= GGG <= 999 → godina = 1900 + (GGG - 900) = 1000 + GGG (period 1900-1999)
-        // - 000 <= GGG <= [trenutna godina - 2000] → godina = 2000 + GGG (period 2000-trenutna godina)
-        $currentYear = (int) date('Y');
-        $currentYearLastTwo = $currentYear - 2000; // npr. 2025 -> 25
-
-        if ($GGG >= 900 && $GGG <= 999) {
-            // Period 1900-1999
-            $yearFull = 1000 + $GGG;
-            // Provera: godina mora biti između 1900 i 1999
-            if ($yearFull < 1900 || $yearFull > 1999) {
-                return false;
-            }
-        } elseif ($GGG >= 0 && $GGG <= $currentYearLastTwo) {
-            // Period 2000-trenutna godina
-            $yearFull = 2000 + $GGG;
-            // Provera: godina ne može biti veća od trenutne
-            if ($yearFull > $currentYear) {
-                return false;
-            }
-        } else {
-            // GGG je van validnog opsega
-            return false;
+        if (isset($validated['authorized_last_name'])) {
+            $validated['authorized_last_name'] = mb_convert_case(mb_strtolower($validated['authorized_last_name'], 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         }
-
-        // Validacija regiona (00-99)
-        if ($RR < 0 || $RR > 99) {
-            return false;
+        if (isset($validated['representative_first_name'])) {
+            $validated['representative_first_name'] = mb_convert_case(mb_strtolower($validated['representative_first_name'], 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         }
-
-        // Validacija BBB (000-999)
-        if ($BBB < 0 || $BBB > 999) {
-            return false;
-        }
-
-        // Validacija kontrolne cifre
-        $weights = [7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-        $sum = 0;
-        for ($i = 0; $i < 12; $i++) {
-            $sum += (int) $jmb[$i] * $weights[$i];
-        }
-        $m = $sum % 11;
-
-        if ($m === 0) {
-            $calculatedK = 0;
-        } elseif ($m === 1) {
-            return false; // JMB je neispravan
-        } else {
-            $calculatedK = 11 - $m;
-        }
-
-        return $calculatedK === $K;
-    }
-
-    public function register(Request $request)
-    {
-        [$street, $city] = \App\Support\KotorAddress::normalizeStreetAndCityInputs(
-            $request->input('address'),
-            $request->input('city')
-        );
-        $request->merge([
-            'address' => $street,
-            'city' => $city,
-        ]);
-
-        // Osnovne validacije
-        $rules = [
-            'user_type' => ['required', 'in:Fizičko lice,Registrovan privredni subjekt'],
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'email_confirmation' => ['required', 'same:email'],
-            'password' => ['required', 'string', 'confirmed', Password::defaults()],
-            'phone_full' => ['required', 'string', 'max:50'],
-            'address' => ['required', 'string', 'max:500'],
-            'city' => ['required', 'string', 'max:255'],
-        ];
-
-        $messages = [
-            'user_type.required' => 'Vrsta korisnika je obavezna.',
-            'user_type.in' => 'Odaberite validnu vrstu korisnika.',
-            'first_name.required' => 'Ime je obavezno.',
-            'last_name.required' => 'Prezime je obavezno.',
-            'email.required' => 'E-mail adresa je obavezna.',
-            'email.email' => 'Unesite validnu e-mail adresu.',
-            'email.unique' => 'E-mail adresa je već registrovana.',
-            'email_confirmation.required' => 'Potvrda e-mail adrese je obavezna.',
-            'email_confirmation.same' => 'E-mail adrese se ne poklapaju.',
-            'password.required' => 'Lozinka je obavezna.',
-            'password.confirmed' => 'Lozinke se ne poklapaju.',
-            'phone_full.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Ulica i broj (ili bb) je obavezna.',
-            'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
-            'city.required' => 'Grad je obavezan.',
-            'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',
-        ];
-
-        // Validacija u zavisnosti od tipa korisnika
-        if ($request->user_type === UserType::REGISTRATION_GROUP_BUSINESS) {
-            $rules['business_type'] = ['required', 'in:'.implode(',', UserType::registrationBusinessStorageValues())];
-            $messages['business_type.required'] = 'Odaberite tip privrednog subjekta.';
-            $messages['business_type.in'] = 'Odaberite podržanu kategoriju korisnika.';
-
-            if ($request->business_type && UserType::isLegalEntity($request->business_type)) {
-                $rules['company_name'] = ['required', 'string', 'max:255'];
-                $messages['company_name.required'] = 'Naziv privrednog subjekta je obavezan.';
-                $rules['pib'] = ['required', 'string', 'regex:'.Pib::REGEX, 'unique:users,pib'];
-                $messages['pib.required'] = 'PIB je obavezan.';
-                $messages['pib.regex'] = Pib::VALIDATION_MESSAGE;
-                $messages['pib.unique'] = 'PIB je već registrovan.';
-            }
-
-            if ($request->business_type === UserType::ENTREPRENEUR) {
-                $rules['residential_status'] = ['required', 'in:resident,non-resident'];
-                $messages['residential_status.required'] = 'Status prebivališta je obavezan.';
-            }
-        }
-
-        if ($request->user_type === UserType::PHYSICAL_PERSON) {
-            $rules['residential_status'] = ['required', 'in:resident,non-resident'];
-            $messages['residential_status.required'] = 'Status prebivališta je obavezan.';
-        }
-
-        // Validacija JMB/PIB/Passport u zavisnosti od residential_status
-        if ($request->residential_status === 'resident') {
-            if ($request->user_type === UserType::PHYSICAL_PERSON ||
-                ($request->user_type === UserType::REGISTRATION_GROUP_BUSINESS && $request->business_type === UserType::ENTREPRENEUR)) {
-                $rules['jmb'] = ['required', 'string', 'regex:/^[0-9]{13}$/'];
-                $messages['jmb.required'] = 'JMB je obavezan za rezidente.';
-                $messages['jmb.regex'] = 'JMB mora imati tačno 13 cifara.';
-            }
-        } elseif ($request->residential_status === 'non-resident') {
-            $rules['non_resident_id_type'] = ['required', 'in:jmb,passport'];
-            $messages['non_resident_id_type.required'] = 'Odaberite vrstu identifikacije.';
-
-            if ($request->non_resident_id_type === 'jmb') {
-                $rules['jmb_non_resident'] = ['required', 'string', 'regex:/^[0-9]{13}$/'];
-                $messages['jmb_non_resident.required'] = 'JMB je obavezan.';
-                $messages['jmb_non_resident.regex'] = 'JMB mora imati tačno 13 cifara.';
-            } elseif ($request->non_resident_id_type === 'passport') {
-                $rules['passport_number'] = ['required', 'string', 'regex:/^[A-Z0-9]+$/', 'min:3', 'unique:users,passport_number'];
-                $messages['passport_number.required'] = 'Broj pasoša je obavezan.';
-                $messages['passport_number.regex'] = 'Broj pasoša može sadržati samo velika slova i brojeve.';
-                $messages['passport_number.unique'] = 'Broj pasoša je već registrovan.';
-            }
-        }
-
-        $validated = $request->validate($rules, $messages);
-
-        if ($this->registrationRequiresKotorAddress($request)) {
-            if (! \App\Support\KotorAddress::isValidStreetLine($validated['address'])) {
-                return back()->withErrors(['address' => \App\Support\KotorAddress::streetLineValidationMessage()])->withInput();
-            }
-
-            if (\App\Support\KotorAddress::isOnlyLocality($validated['address'])) {
-                return back()->withErrors(['address' => \App\Support\KotorAddress::streetValidationMessage()])->withInput();
-            }
-
-            $fullAddress = \App\Support\KotorAddress::formatStreetAndCity(
-                $validated['address'],
-                $validated['city']
-            );
-            if (! \App\Support\KotorAddress::isInKotorMunicipality($fullAddress)) {
-                return back()->withErrors(['city' => \App\Support\KotorAddress::cityValidationMessage()])->withInput();
-            }
-        }
-
-        // Dodatna validacija JMB-a (kontrolna cifra)
-        $jmbToValidate = null;
-        if (isset($validated['jmb'])) {
-            $jmbToValidate = $validated['jmb'];
-        } elseif (isset($validated['jmb_non_resident'])) {
-            $jmbToValidate = $validated['jmb_non_resident'];
-        }
-
-        if ($jmbToValidate && ! $this->validateJMB($jmbToValidate)) {
-            return back()->withErrors(['jmb' => 'JMB je neispravan (kontrolna cifra ne odgovara ili format nije validan).'])->withInput();
-        }
-
-        // Provera da li korisnik sa istim JMB/PIB/passport već postoji (ali je deaktiviran)
-        if ($jmbToValidate) {
-            $existingUser = User::where('jmb', $jmbToValidate)
-                ->where('activation_status', 'deactivated')
-                ->first();
-            if ($existingUser) {
-                return back()->withErrors(['jmb' => 'Nalog sa ovim JMB-om već postoji, ali je deaktiviran. Molimo aktivirajte postojeći nalog.'])->withInput();
-            }
-
-            // Provera jedinstvenosti aktivnog JMB-a
-            if (User::where('jmb', $jmbToValidate)->where('activation_status', 'active')->exists()) {
-                return back()->withErrors(['jmb' => 'JMB je već registrovan.'])->withInput();
-            }
-        }
-
-        if (isset($validated['pib'])) {
-            $existingUser = User::where('pib', $validated['pib'])
-                ->where('activation_status', 'deactivated')
-                ->first();
-            if ($existingUser) {
-                return back()->withErrors(['pib' => 'Nalog sa ovim PIB-om već postoji, ali je deaktiviran. Molimo aktivirajte postojeći nalog.'])->withInput();
-            }
-        }
-
-        if (isset($validated['passport_number'])) {
-            $existingUser = User::where('passport_number', $validated['passport_number'])
-                ->where('activation_status', 'deactivated')
-                ->first();
-            if ($existingUser) {
-                return back()->withErrors(['passport_number' => 'Nalog sa ovim brojem pasoša već postoji, ali je deaktiviran. Molimo aktivirajte postojeći nalog.'])->withInput();
-            }
-        }
-
-        // Capitalize prvo slovo imena i prezimena
-        $validated['first_name'] = ucfirst(mb_strtolower($validated['first_name'], 'UTF-8'));
-        $validated['last_name'] = ucfirst(mb_strtolower($validated['last_name'], 'UTF-8'));
-
-        // Priprema podataka za kreiranje korisnika
-        // Podrazumevana rola je 3 (korisnik) - dodeljena će se kasnije ako treba
-        $storedUserType = $request->business_type ?? $validated['user_type'];
-        if ($storedUserType === UserType::REGISTRATION_GROUP_BUSINESS || ! UserType::isCanonical($storedUserType)) {
-            return back()->withErrors(['user_type' => 'Odaberite podržanu kategoriju korisnika.'])->withInput();
+        if (isset($validated['representative_last_name'])) {
+            $validated['representative_last_name'] = mb_convert_case(mb_strtolower($validated['representative_last_name'], 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
         }
 
         $userData = [
-            'name' => $validated['first_name'].' '.$validated['last_name'],
-            'user_type' => $storedUserType,
+            'name' => $request->accountDisplayName(),
+            'email' => strtolower($validated['email']),
+            'password' => Hash::make($validated['password']),
+            'role_id' => 3,
+            'activation_status' => 'active',
+            'phone' => $phone,
+            'address' => $validated['address'],
+            'city' => $validated['city'],
+            'first_name' => $validated['first_name'] ?? null,
+            'last_name' => $validated['last_name'] ?? null,
             'residential_status' => UserType::requiresResidentialStatus($storedUserType)
                 ? ($validated['residential_status'] ?? null)
                 : null,
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'email' => strtolower($validated['email']),
-            'phone' => PhoneNumber::normalize($validated['phone_full']),
-            'address' => $validated['address'],
-            'city' => $validated['city'],
-            'password' => Hash::make($validated['password']),
-            'role_id' => 3, // Podrazumevana rola: korisnik
-            'activation_status' => 'active',
         ];
 
-        // Dodavanje JMB/PIB/Passport
-        if ($jmbToValidate) {
-            $userData['jmb'] = $jmbToValidate;
-        }
-        if (isset($validated['company_name'])) {
-            $userData['company_name'] = trim($validated['company_name']);
-        }
-        if (isset($validated['pib'])) {
-            $userData['pib'] = $validated['pib'];
-        }
-        if (isset($validated['passport_number'])) {
-            $userData['passport_number'] = strtoupper($validated['passport_number']);
+        if (! UserType::isNgoFoundation($storedUserType)) {
+            $userData['user_type'] = UserType::isForeignBranch($storedUserType)
+                ? UserType::LEGACY_FOREIGN_BRANCH
+                : $storedUserType;
         }
 
         try {
             $user = app(CanonicalHttpIdentityService::class)->registerFromValidated(
                 $userData,
                 $validated,
-                $jmbToValidate,
+                $jmb,
                 $storedUserType,
             );
         } catch (IdentityMutationDeniedException $e) {
             abort(403, $e->getMessage());
         } catch (CanonicalIdentityWriteException $e) {
-            return back()->withErrors(['user_type' => 'Registracija identiteta nije uspjela.'])->withInput();
+            $message = $e->getMessage();
+            $field = 'user_type';
+            if (str_contains($message, 'JMB')) {
+                $field = 'jmb';
+            } elseif (str_contains($message, 'PIB')) {
+                $field = 'pib';
+            } elseif (str_contains($message, 'pasoš') || str_contains($message, 'paso')) {
+                $field = 'passport_number';
+            }
+
+            return back()->withErrors([
+                $field => $message === 'Canonical registration failed.' || $message === 'Canonical identity create failed.'
+                    ? 'Registracija identiteta nije uspjela.'
+                    : $message,
+            ])->withInput();
         }
 
-        // Slanje email verifikacije
         event(new Registered($user));
-
-        // Automatska prijava nakon registracije
         Auth::login($user);
 
         return redirect()->route('verification.notice')->with('status', 'registration-success');
@@ -569,20 +359,5 @@ class HomeController extends Controller
         $storagePercentage = min(round(($usedStorageMB / $maxStorageMB) * 100), 100);
 
         return view('dashboard', compact('applications', 'usedStorageMB', 'maxStorageMB', 'storagePercentage', 'isSuperAdmin'));
-    }
-
-    private function registrationRequiresKotorAddress(Request $request): bool
-    {
-        if ($request->residential_status === 'resident') {
-            return true;
-        }
-
-        if ($request->user_type === UserType::REGISTRATION_GROUP_BUSINESS
-            && $request->business_type
-            && UserType::isLegalEntity($request->business_type)) {
-            return true;
-        }
-
-        return false;
     }
 }

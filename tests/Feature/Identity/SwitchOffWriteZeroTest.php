@@ -33,20 +33,9 @@ class SwitchOffWriteZeroTest extends TestCase
 
     public function test_registration_does_not_write_canonical_identity(): void
     {
-        $this->post('/register', [
-            'user_type' => 'Fizičko lice',
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'step2.writezero@example.com',
-            'email_confirmation' => 'step2.writezero@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-            'phone_full' => '+38267000001',
-            'address' => 'Njegoševa 12',
-            'city' => 'Kotor',
-            'residential_status' => 'resident',
-            'jmb' => '0101990000000',
-        ])->assertRedirect();
+        $this->post('/register', $this->registrationHttpPayload('step2.writezero@example.com', [
+            'jmb' => $this->validJmb(3),
+        ]))->assertRedirect();
 
         $this->assertNotNull(User::query()->where('email', 'step2.writezero@example.com')->first());
         $this->assertCanonicalTablesEmpty();

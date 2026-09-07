@@ -47,6 +47,10 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        RateLimiter::for('registration', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
         // Event/listener registration for FT-004 uses Laravel auto-discovery
         // (App\Listeners\PublishOfficialContentNotice). Do not also Event::listen()
         // here — that would register the listener twice and publish duplicate Notices.

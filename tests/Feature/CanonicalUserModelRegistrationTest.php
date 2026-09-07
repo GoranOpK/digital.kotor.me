@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\LegalEntityIdentity;
+use App\Models\PhysicalPersonIdentity;
 use App\Models\User;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
@@ -28,7 +30,13 @@ class CanonicalUserModelRegistrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
         $this->seed(RoleSeeder::class);
+        config([
+            'identity.canonical_read' => true,
+            'identity.canonical_write' => true,
+            'identity.identity_write_freeze' => false,
+        ]);
     }
 
     public function test_registration_form_offers_exactly_the_canonical_eight_and_not_legacy(): void
@@ -37,6 +45,7 @@ class CanonicalUserModelRegistrationTest extends TestCase
 
         $this->assertStringContainsString('value="Fizičko lice"', $html);
         $this->assertStringContainsString('value="Registrovan privredni subjekt"', $html);
+        $this->assertStringContainsString('value="Dio stranog privrednog društva"', $html);
 
         foreach (UserType::registrationBusinessStorageValues() as $value) {
             $this->assertStringContainsString('value="'.$value.'"', $html);
@@ -49,107 +58,120 @@ class CanonicalUserModelRegistrationTest extends TestCase
 
     public function test_physical_person_resident_can_register(): void
     {
-        $this->post('/register', $this->physicalPayload([
-            'email' => 'fl.resident@example.com',
-            'email_confirmation' => 'fl.resident@example.com',
-            'residential_status' => 'resident',
+        $this->post('/register', $this->registrationHttpPayload('fl.resident@example.com', [
             'jmb' => $this->validJmb(1),
         ]))->assertRedirect(route('verification.notice', absolute: false));
 
         $user = User::query()->where('email', 'fl.resident@example.com')->firstOrFail();
-        $this->assertSame('resident', $user->residential_status);
         $this->assertSame(UserType::PHYSICAL_PERSON, $user->user_type);
+        $this->assertNull($user->residential_status);
+        $this->assertSame('resident', PhysicalPersonIdentity::query()->value('residential_status'));
     }
 
     public function test_physical_person_non_resident_can_register(): void
     {
-        $this->post('/register', $this->physicalPayload([
-            'email' => 'fl.nonresident@example.com',
-            'email_confirmation' => 'fl.nonresident@example.com',
+        $this->post('/register', $this->registrationHttpPayload('fl.nonresident@example.com', [
             'residential_status' => 'non-resident',
+            'id_document_type' => 'passport',
+            'jmb' => null,
+            'passport_number' => 'XY111111',
+            'residence_country_code' => 'DE',
             'address' => 'Main Street 1',
             'city' => 'Berlin',
-            'non_resident_id_type' => 'passport',
-            'passport_number' => 'XY111111',
         ]))->assertRedirect(route('verification.notice', absolute: false));
 
-        $this->assertSame(
-            'non-resident',
-            User::query()->where('email', 'fl.nonresident@example.com')->value('residential_status')
-        );
+        $this->assertSame('non_resident', PhysicalPersonIdentity::query()->value('residential_status'));
     }
 
-    public function test_entrepreneur_resident_can_register_without_pib(): void
+    public function test_entrepreneur_resident_requires_pib_and_crps(): void
     {
-        $this->post('/register', $this->businessPayload(UserType::ENTREPRENEUR, [
-            'email' => 'ent.resident@example.com',
-            'email_confirmation' => 'ent.resident@example.com',
-            'residential_status' => 'resident',
+        $this->post('/register', $this->registrationHttpPayload('ent.missing@example.com', [
+            'user_type' => UserType::REGISTRATION_GROUP_BUSINESS,
+            'business_type' => UserType::ENTREPRENEUR,
             'jmb' => $this->validJmb(2),
+        ]))->assertSessionHasErrors(['pib', 'crps_number', 'entrepreneur_business_name']);
+    }
+
+    public function test_entrepreneur_resident_can_register_with_mandatory_business_data(): void
+    {
+        $this->post('/register', $this->registrationHttpPayload('ent.resident@example.com', [
+            'user_type' => UserType::REGISTRATION_GROUP_BUSINESS,
+            'business_type' => UserType::ENTREPRENEUR,
+            'jmb' => $this->validJmb(2),
+            'entrepreneur_business_name' => 'Radnja Ana',
+            'pib' => $this->validPib(12),
+            'crps_number' => $this->validCrps(1, 2),
         ]))->assertRedirect(route('verification.notice', absolute: false));
 
         $entrepreneur = User::query()->where('email', 'ent.resident@example.com')->firstOrFail();
         $this->assertSame(UserType::ENTREPRENEUR, $entrepreneur->user_type);
-        $this->assertSame('resident', $entrepreneur->residential_status);
         $this->assertNull($entrepreneur->pib);
+        $fl = PhysicalPersonIdentity::query()->firstOrFail();
+        $this->assertTrue($fl->is_entrepreneur);
+        $this->assertSame($this->validPib(12), $fl->pib);
         $this->assertTrue($entrepreneur->isNaturalPerson());
         $this->assertFalse($entrepreneur->isLegalEntity());
     }
 
-    public function test_entrepreneur_non_resident_can_register(): void
-    {
-        $this->post('/register', $this->businessPayload(UserType::ENTREPRENEUR, [
-            'email' => 'ent.nonresident@example.com',
-            'email_confirmation' => 'ent.nonresident@example.com',
-            'residential_status' => 'non-resident',
-            'address' => 'Main Street 1',
-            'city' => 'Berlin',
-            'non_resident_id_type' => 'passport',
-            'passport_number' => 'XY222222',
-        ]))->assertRedirect(route('verification.notice', absolute: false));
-
-        $this->assertSame(
-            'non-resident',
-            User::query()->where('email', 'ent.nonresident@example.com')->value('residential_status')
-        );
-    }
-
     /**
-     * @return array<string, array{0: string, 1: string}>
+     * @return array<string, array{0: string, 1: int|null}>
      */
     public static function legalEntityProvider(): array
     {
         return [
-            'doo' => [UserType::LIMITED_LIABILITY_COMPANY, '11111111'],
-            'ad' => [UserType::JOINT_STOCK_COMPANY, '22222222'],
-            'od' => [UserType::GENERAL_PARTNERSHIP, '33333333'],
-            'kd' => [UserType::LIMITED_PARTNERSHIP, '44444444'],
-            'nvo' => [UserType::NGO_ASSOCIATION, '55555555'],
-            'sportska organizacija' => [UserType::SPORTS_ORGANIZATION, '66666666'],
+            'doo' => [UserType::LIMITED_LIABILITY_COMPANY, 5],
+            'ad' => [UserType::JOINT_STOCK_COMPANY, 4],
+            'od' => [UserType::GENERAL_PARTNERSHIP, 2],
+            'kd' => [UserType::LIMITED_PARTNERSHIP, 3],
+            'nvo' => [UserType::NGO_ASSOCIATION, null],
+            'fondacija' => [UserType::NGO_FOUNDATION, null],
+            'sportska organizacija' => [UserType::SPORTS_ORGANIZATION, null],
         ];
     }
 
     #[DataProvider('legalEntityProvider')]
     public function test_legal_entity_registration_does_not_require_or_persist_residential_status(
         string $businessType,
-        string $pib
+        ?int $crpsMark
     ): void {
-        $email = strtolower($pib).'@legal.example.com';
+        $email = strtolower(preg_replace('/[^a-z]+/i', '', $businessType)).'@legal.example.com';
+        $pib = $this->validPib(abs(crc32($businessType)) % 100000 + 20);
 
-        $this->post('/register', $this->businessPayload($businessType, [
-            'email' => $email,
-            'email_confirmation' => $email,
-            'company_name' => 'Subjekt '.$pib,
-            'pib' => $pib,
+        $payload = $this->registrationHttpPayload($email, [
+            'user_type' => UserType::REGISTRATION_GROUP_BUSINESS,
+            'business_type' => $businessType,
+            'first_name' => null,
+            'last_name' => null,
             'residential_status' => 'resident',
-        ]))->assertRedirect(route('verification.notice', absolute: false));
+            'jmb' => null,
+            'legal_name' => 'Subjekt '.$businessType,
+            'pib' => $pib,
+            'crps_number' => $crpsMark ? $this->validCrps($crpsMark, 8) : null,
+            'authorized_first_name' => 'Marko',
+            'authorized_last_name' => 'Marković',
+            'authorized_id_document_type' => 'jmb',
+            'authorized_jmb' => $this->validJmb(abs(crc32($businessType)) % 200 + 50),
+        ]);
+
+        $this->post('/register', $payload)->assertRedirect(route('verification.notice', absolute: false));
 
         $user = User::query()->where('email', $email)->firstOrFail();
-        $this->assertSame($businessType, $user->user_type);
+        if (UserType::isNgoFoundation($businessType)) {
+            $this->assertNull($user->user_type);
+        } else {
+            $this->assertSame($businessType, $user->user_type);
+            $this->assertTrue($user->isLegalEntity());
+        }
         $this->assertNull($user->residential_status);
-        $this->assertTrue($user->isLegalEntity());
+        $this->assertNull($user->pib);
         $this->assertFalse($user->isNaturalPerson());
-        $this->assertSame($pib, $user->pib);
+        $legal = LegalEntityIdentity::query()->firstOrFail();
+        $this->assertSame($pib, $legal->pib);
+        if ($crpsMark === null) {
+            $this->assertNull($legal->crps_number);
+        } else {
+            $this->assertSame($this->validCrps($crpsMark, 8), $legal->crps_number);
+        }
     }
 
     public function test_registration_rejects_legacy_values_as_new_writes(): void
@@ -157,57 +179,14 @@ class CanonicalUserModelRegistrationTest extends TestCase
         foreach (self::LEGACY_VALUES as $index => $legacy) {
             $email = 'legacy'.$index.'@example.com';
 
-            $this->post('/register', $this->businessPayload($legacy, [
-                'email' => $email,
-                'email_confirmation' => $email,
-                'company_name' => 'Legacy '.$index,
-                'pib' => (string) (70000000 + $index),
+            $this->post('/register', $this->registrationHttpPayload($email, [
+                'user_type' => UserType::REGISTRATION_GROUP_BUSINESS,
+                'business_type' => $legacy,
+                'legal_name' => 'Legacy '.$index,
+                'pib' => $this->validPib(700 + $index),
             ]))->assertSessionHasErrors('business_type');
 
             $this->assertFalse(User::query()->where('email', $email)->exists());
         }
-    }
-
-    /**
-     * @param  array<string, mixed>  $overrides
-     * @return array<string, mixed>
-     */
-    private function physicalPayload(array $overrides = []): array
-    {
-        return array_merge([
-            'user_type' => UserType::PHYSICAL_PERSON,
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'test.fl@example.com',
-            'email_confirmation' => 'test.fl@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-            'phone_full' => '+38267000001',
-            'address' => 'Njegoševa 12',
-            'city' => 'Kotor',
-            'residential_status' => 'resident',
-            'jmb' => $this->validJmb(10),
-        ], $overrides);
-    }
-
-    /**
-     * @param  array<string, mixed>  $overrides
-     * @return array<string, mixed>
-     */
-    private function businessPayload(string $businessType, array $overrides = []): array
-    {
-        return array_merge([
-            'user_type' => UserType::REGISTRATION_GROUP_BUSINESS,
-            'business_type' => $businessType,
-            'first_name' => 'Test',
-            'last_name' => 'User',
-            'email' => 'test.biz@example.com',
-            'email_confirmation' => 'test.biz@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-            'phone_full' => '+38267000001',
-            'address' => 'Njegoševa 12',
-            'city' => 'Kotor',
-        ], $overrides);
     }
 }

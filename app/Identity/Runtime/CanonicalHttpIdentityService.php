@@ -19,6 +19,7 @@ final class CanonicalHttpIdentityService
         private readonly RegistrationIdentityMapper $registrationMapper = new RegistrationIdentityMapper,
         private readonly ProfileIdentityMapper $profileMapper = new ProfileIdentityMapper,
         private readonly DerivedUserTypeMirror $mirror = new DerivedUserTypeMirror,
+        private readonly CanonicalIdentifierUniqueness $uniqueness = new CanonicalIdentifierUniqueness,
     ) {
     }
 
@@ -50,6 +51,7 @@ final class CanonicalHttpIdentityService
             return DB::transaction(function () use ($account, $userData, $validated, $jmb, $storedUserType) {
                 $user = User::create($account);
                 $snapshot = $this->registrationMapper->snapshot($user, $userData, $validated, $jmb, $storedUserType);
+                $this->uniqueness->assertAvailableForSnapshot($snapshot);
                 $this->writer->createForUser($user, $snapshot);
                 $this->mirror->sync($user, $snapshot);
 

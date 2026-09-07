@@ -56,4 +56,51 @@ class EmailVerificationTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
+    public function test_guest_cannot_verify_email_from_signed_link(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        $this->get($verificationUrl)->assertRedirect(route('login'));
+        $this->assertGuest();
+        $this->assertFalse($user->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_verification_link_does_not_switch_authenticated_user(): void
+    {
+        $target = User::factory()->unverified()->create();
+        $other = User::factory()->unverified()->create();
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $target->id, 'hash' => sha1($target->email)]
+        );
+
+        $this->actingAs($other)->get($verificationUrl)->assertForbidden();
+        $this->assertAuthenticatedAs($other);
+        $this->assertFalse($target->fresh()->hasVerifiedEmail());
+        $this->assertFalse($other->fresh()->hasVerifiedEmail());
+    }
+
+    public function test_already_verified_link_does_not_refresh_timestamp(): void
+    {
+        $verifiedAt = now()->subDay()->startOfSecond();
+        $user = User::factory()->create(['email_verified_at' => $verifiedAt]);
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)]
+        );
+
+        $this->actingAs($user)->get($verificationUrl)->assertRedirect(route('dashboard', absolute: false));
+        $this->assertTrue($user->fresh()->email_verified_at->equalTo($verifiedAt));
+    }
 }
