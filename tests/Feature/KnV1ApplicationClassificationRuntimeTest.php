@@ -22,25 +22,27 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    public function test_unregistered_fl_planned_preduzetnik_stores_preduzetnica_false_zapocinjanje(): void
+    public function test_unregistered_fl_default_stores_fizicko_lice_false_zapocinjanje(): void
     {
         $user = $this->makeKorisnik();
         $competition = $this->openCompetition();
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
-                'applicant_type' => 'preduzetnica',
+                'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
             ]))
             ->assertRedirect();
 
         $application = Application::query()->where('user_id', $user->id)->firstOrFail();
-        $this->assertSame('preduzetnica', $application->applicant_type);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
         $this->assertFalse($application->is_registered);
+        $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertSame(UserType::PHYSICAL_PERSON, $user->user_type);
         $this->assertSame('započinjanje', $application->business_stage);
     }
 
-    public function test_unregistered_fl_planned_doo_stores_doo_false_zapocinjanje(): void
+    public function test_unregistered_fl_planned_doo_stores_doo_false_zapocinjanje_and_keeps_fl_identity(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(21)]);
         $competition = $this->openCompetition();
@@ -56,6 +58,26 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertSame('doo', $application->applicant_type);
         $this->assertFalse($application->is_registered);
         $this->assertSame('započinjanje', $application->business_stage);
+        $user->refresh();
+        $this->assertSame(UserType::PHYSICAL_PERSON, $user->user_type);
+        $this->assertFalse($user->isEntrepreneur());
+    }
+
+    public function test_unregistered_fl_cannot_store_live_preduzetnica(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(43)]);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'preduzetnica',
+                'business_stage' => 'započinjanje',
+            ]))
+            ->assertRedirect();
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('fizicko_lice', $application->applicant_type);
+        $this->assertFalse($application->is_registered);
     }
 
     public function test_unregistered_fl_cannot_choose_razvoj(): void
@@ -66,13 +88,48 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->actingAs($user)
             ->from(route('applications.create', $competition))
             ->post(route('applications.store', $competition), $this->draftPayload([
-                'applicant_type' => 'preduzetnica',
+                'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'razvoj',
             ]))
             ->assertRedirect(route('applications.create', $competition))
             ->assertSessionHasErrors('business_stage');
 
         $this->assertSame(0, Application::query()->count());
+    }
+
+    public function test_unregistered_fl_planned_doo_cannot_choose_razvoj(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(44)]);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'doo',
+                'business_stage' => 'razvoj',
+            ]))
+            ->assertRedirect(route('applications.create', $competition))
+            ->assertSessionHasErrors('business_stage');
+
+        $this->assertSame(0, Application::query()->count());
+    }
+
+    public function test_unregistered_fl_cannot_forge_is_registered_true(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(45)]);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'fizicko_lice',
+                'business_stage' => 'započinjanje',
+                'is_registered' => '1',
+            ]))
+            ->assertRedirect();
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertFalse($application->is_registered);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
     }
 
     public function test_existing_entrepreneur_is_preduzetnica_and_registered(): void
@@ -95,6 +152,27 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertSame('preduzetnica', $application->applicant_type);
         $this->assertTrue($application->is_registered);
         $this->assertSame('razvoj', $application->business_stage);
+    }
+
+    public function test_existing_entrepreneur_forge_fizicko_lice_stays_locked_preduzetnica(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(33),
+            'jmb' => $this->validJmb(46),
+        ]);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'fizicko_lice',
+                'business_stage' => 'započinjanje',
+            ]))
+            ->assertRedirect();
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('preduzetnica', $application->applicant_type);
+        $this->assertTrue($application->is_registered);
     }
 
     public function test_existing_doo_is_doo_and_registered(): void
@@ -120,11 +198,35 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertTrue($application->is_registered);
     }
 
+    public function test_existing_doo_forge_fizicko_lice_stays_locked_doo(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(34),
+            'company_name' => 'Forge DOO',
+            'residential_status' => null,
+            'jmb' => $this->validJmb(47),
+        ]);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'applicant_type' => 'fizicko_lice',
+                'business_stage' => 'razvoj',
+            ]))
+            ->assertRedirect();
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('doo', $application->applicant_type);
+        $this->assertTrue($application->is_registered);
+        $this->assertSame('razvoj', $application->business_stage);
+    }
+
     public function test_document_catalog_supports_four_v1_flows(): void
     {
         $registrationDocs = ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun', 'statut', 'karton_potpisa'];
 
-        $a = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', false);
+        $a = Application::getRequiredDocumentsForType('fizicko_lice', 'započinjanje', false);
         $this->assertEmpty(array_intersect($registrationDocs, $a));
         $this->assertContains('licna_karta', $a);
 
@@ -139,6 +241,9 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $d = Application::getRequiredDocumentsForType('doo', 'razvoj', true);
         $this->assertContains('crps_resenje', $d);
         $this->assertContains('statut', $d);
+
+        $registeredPreduzetnicaZapocinjanje = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', true);
+        $this->assertContains('crps_resenje', $registeredPreduzetnicaZapocinjanje);
     }
 
     public function test_competition_show_unregistered_fl_cannot_choose_razvoj(): void
@@ -150,12 +255,13 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->get(route('competitions.show', $competition))
             ->assertOk()
             ->assertViewHas('applicantType', 'fizicko_lice')
+            ->assertViewHas('knFormApplicantType', 'fizicko_lice')
             ->assertViewHas('knAllowsRazvoj', false)
             ->assertViewHas('knIsRegisteredBusiness', false)
             ->assertSee('disabled', false);
     }
 
-    public function test_competition_show_unregistered_fl_can_choose_planned_form(): void
+    public function test_competition_show_unregistered_fl_can_choose_planned_doo(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(26)]);
         $competition = $this->openCompetition();
@@ -164,9 +270,12 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->get(route('competitions.show', $competition))
             ->assertOk()
             ->assertViewHas('knCanChoosePlannedForm', true)
-            ->assertSee('Planirani oblik poslovanja')
+            ->assertDontSee('Planirani oblik poslovanja')
+            ->assertDontSee('planirani oblik Preduzetnica')
+            ->assertSee('Fizičko lice (nema registrovanu djelatnost)')
+            ->assertSee('Planiram osnivanje DOO')
             ->assertSee('name="planned_form_preview"', false)
-            ->assertSee('value="preduzetnica"', false)
+            ->assertSee('value="fizicko_lice"', false)
             ->assertSee('value="doo"', false);
     }
 
@@ -174,18 +283,10 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(27)]);
         $competition = $this->openCompetition();
-        $application = Application::create([
-            'competition_id' => $competition->id,
-            'user_id' => $user->id,
-            'business_plan_name' => 'Plan',
-            'applicant_type' => 'preduzetnica',
-            'business_stage' => 'započinjanje',
-            'business_area' => 'Usluge',
-            'applicant_jmbg' => $user->jmb,
-            'accuracy_declaration' => true,
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'fizicko_lice',
             'is_registered' => false,
-            'status' => 'draft',
-        ]);
+        ]));
 
         $html = $this->actingAs($user)
             ->get(route('applications.business-plan.create', $application))
@@ -198,6 +299,47 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertStringContainsString('disabled', $html);
     }
 
+    public function test_obrazac_2_q3_planned_doo_is_ne(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(48)]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'doo',
+            'is_registered' => false,
+        ]));
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="0"', $html);
+        $this->assertStringContainsString('disabled', $html);
+    }
+
+    public function test_obrazac_2_q3_registered_preduzetnica_is_da(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(35),
+            'jmb' => $this->validJmb(49),
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'preduzetnica',
+            'is_registered' => true,
+            'registration_form' => 'Preduzetnik',
+        ]));
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="1"', $html);
+        $this->assertStringContainsString('disabled', $html);
+    }
+
     public function test_obrazac_2_rejects_contradictory_registered_business_answer(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(28)]);
@@ -206,7 +348,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'competition_id' => $competition->id,
             'user_id' => $user->id,
             'business_plan_name' => 'Plan',
-            'applicant_type' => 'preduzetnica',
+            'applicant_type' => 'fizicko_lice',
             'business_stage' => 'započinjanje',
             'is_registered' => false,
             'status' => 'draft',
@@ -282,19 +424,19 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
-                'applicant_type' => 'preduzetnica',
+                'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
             ]))
             ->assertRedirect();
 
         $application = Application::query()->where('user_id', $user->id)->firstOrFail();
         $this->assertFalse($application->is_registered);
-        $this->assertSame('preduzetnica', $application->applicant_type);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
 
         $this->actingAs($user)
             ->post(route('applications.store', $competition), $this->draftPayload([
                 'application_id' => $application->id,
-                'applicant_type' => 'preduzetnica',
+                'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'započinjanje',
                 'business_plan_name' => 'Ažurirani nacrt',
                 'is_registered' => '1',
@@ -306,7 +448,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertSame($application->id, Application::query()->where('user_id', $user->id)->value('id'));
         $this->assertSame('Ažurirani nacrt', $application->business_plan_name);
         $this->assertFalse($application->is_registered);
-        $this->assertSame('preduzetnica', $application->applicant_type);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
         $this->assertSame('započinjanje', $application->business_stage);
         $this->assertSame('draft', $application->status);
 
@@ -315,7 +457,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->from($createUrl)
             ->post(route('applications.store', $competition), $this->draftPayload([
                 'application_id' => $application->id,
-                'applicant_type' => 'preduzetnica',
+                'applicant_type' => 'fizicko_lice',
                 'business_stage' => 'razvoj',
                 'is_registered' => '1',
             ]))
@@ -325,18 +467,17 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertSame(1, Application::query()->where('user_id', $user->id)->count());
         $application->refresh();
         $this->assertFalse($application->is_registered);
-        $this->assertSame('preduzetnica', $application->applicant_type);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
         $this->assertSame('započinjanje', $application->business_stage);
     }
 
-    public function test_historical_fizicko_lice_draft_store_does_not_convert_snapshot(): void
-    {
-        $user = $this->makeKorisnik(['jmb' => $this->validJmb(42)]);
+    public function test_unregistered_fl_draft_can_switch_to_planned_doo_without_identity_change(): void
+    {        $user = $this->makeKorisnik(['jmb' => $this->validJmb(42)]);
         $competition = $this->openCompetition();
         $application = Application::create([
             'competition_id' => $competition->id,
             'user_id' => $user->id,
-            'business_plan_name' => 'Istorijski nacrt',
+            'business_plan_name' => 'Nacrt',
             'applicant_type' => 'fizicko_lice',
             'business_stage' => 'započinjanje',
             'business_area' => 'Usluge',
@@ -349,18 +490,17 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
                 'application_id' => $application->id,
                 'applicant_type' => 'doo',
                 'business_stage' => 'započinjanje',
-                'business_plan_name' => 'Istorijski nacrt ažuriran',
+                'business_plan_name' => 'Nacrt ažuriran',
                 'is_registered' => '1',
             ]))
             ->assertRedirect();
 
-        $this->assertSame(1, Application::query()->where('user_id', $user->id)->count());
         $application->refresh();
-        $this->assertSame('fizicko_lice', $application->applicant_type);
+        $this->assertSame('doo', $application->applicant_type);
         $this->assertFalse($application->is_registered);
         $this->assertSame('započinjanje', $application->business_stage);
-        $this->assertSame('draft', $application->status);
-        $this->assertSame('Istorijski nacrt ažuriran', $application->business_plan_name);
+        $user->refresh();
+        $this->assertSame(UserType::PHYSICAL_PERSON, $user->user_type);
     }
 
     public function test_registered_preduzetnica_zapocinjanje_keeps_registration_documents(): void
@@ -383,11 +523,37 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
+    private function completeObrazacAttributes(\App\Models\User $user, Competition $competition, array $overrides = []): array
+    {
+        return array_merge([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Plan',
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'accuracy_declaration' => true,
+            'status' => 'draft',
+            'physical_person_name' => $user->name,
+            'physical_person_jmbg' => $user->jmb,
+            'physical_person_phone' => $user->phone,
+            'physical_person_email' => $user->email,
+            'founder_name' => $user->name,
+            'director_name' => $user->name,
+            'company_seat' => 'Kotor',
+            'applicant_jmbg' => $user->jmb,
+        ], $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
     private function draftPayload(array $overrides = []): array
     {
         return array_merge([
             'save_as_draft' => '1',
-            'applicant_type' => 'preduzetnica',
+            'applicant_type' => 'fizicko_lice',
             'business_stage' => 'započinjanje',
             'business_plan_name' => 'Biznis plan',
             'business_area' => 'Usluge',

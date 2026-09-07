@@ -269,23 +269,23 @@ class ApplicationController extends Controller
         $this->mergeProfileAddressIntoRequest($request);
         $this->mergeApplicantJmbgIntoRequest($request);
 
-        $knContext = $this->knStoreContext($request, $competition, $user);
+        $knContext = $this->knStoreContext($user);
         $kn = $knContext['classification'];
-        $isHistoricalFizickoLice = $knContext['is_historical_fizicko_lice'];
         $resolvedIsRegistered = $knContext['is_registered'];
+        $requestedStage = $request->input('business_stage');
+        $resolvedApplicantType = $kn->resolveApplicantType($request->input('applicant_type'));
+        $resolvedBusinessStage = $kn->resolveBusinessStage($requestedStage);
 
-        if (! $isHistoricalFizickoLice) {
-            if (! $kn->isRegisteredBusiness && $request->input('business_stage') === KnApplicationClassification::STAGE_RAZVOJ) {
-                throw ValidationException::withMessages([
-                    'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
-                ]);
-            }
-
-            $request->merge([
-                'applicant_type' => $kn->resolveApplicantType($request->input('applicant_type')),
-                'business_stage' => $kn->resolveBusinessStage($request->input('business_stage')),
+        if (is_string($requestedStage) && $requestedStage !== '' && ! $kn->allowsStage($requestedStage)) {
+            throw ValidationException::withMessages([
+                'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
             ]);
         }
+
+        $request->merge([
+            'applicant_type' => $resolvedApplicantType,
+            'business_stage' => $resolvedBusinessStage,
+        ]);
 
         if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
             $profileAddressError = $this->profileAddressErrorForUser($request->user());
@@ -298,10 +298,8 @@ class ApplicationController extends Controller
             $request->merge(['registration_form' => 'Preduzetnik']);
         }
         
-        $liveApplicantTypes = $isHistoricalFizickoLice
-            ? 'preduzetnica,doo,fizicko_lice,ostalo'
-            : implode(',', $kn->allowedApplicantTypes ?: ['preduzetnica', 'doo']);
-        $liveStages = $isHistoricalFizickoLice || $kn->isRegisteredBusiness
+        $liveApplicantTypes = implode(',', $kn->allowedApplicantTypes ?: ['fizicko_lice', 'doo']);
+        $liveStages = $kn->isRegisteredBusiness
             ? 'započinjanje,razvoj'
             : 'započinjanje';
 
@@ -325,11 +323,7 @@ class ApplicationController extends Controller
 
         // Dodatna pravila za fizičko lice BEZ registrovane djelatnosti
         if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
-            // Ako je korisnik "Fizičko lice (Rezident)", business_stage je obavezno
-            $userType = app(CurrentIdentityResolver::class)->viewFor(auth()->user())->userType ?? '';
-            if ($userType === 'Fizičko lice' || $userType === 'Rezident') {
-                $rules['business_stage'] = 'required|in:započinjanje,razvoj';
-            }
+            $rules['business_stage'] = 'required|in:'.$liveStages;
         }
 
         // Dodatna polja za DOO i Ostalo (ista polja)
@@ -455,8 +449,8 @@ class ApplicationController extends Controller
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
             $updateData = [
                 'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
-                'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type,
-                'business_stage' => $request->filled('business_stage') ? $request->business_stage : $existingApplication->business_stage,
+                'applicant_type' => $resolvedApplicantType,
+                'business_stage' => $resolvedBusinessStage,
                 'founder_name' => $request->filled('founder_name') ? $request->founder_name : $existingApplication->founder_name,
                 'director_name' => $request->filled('director_name') ? $request->director_name : $existingApplication->director_name,
                 'company_seat' => $request->filled('company_seat') ? $request->company_seat : $existingApplication->company_seat,
@@ -492,8 +486,8 @@ class ApplicationController extends Controller
                     'competition_id' => $competition->id,
                     'user_id' => Auth::id(),
                     'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : null,
-                    'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : null,
-                    'business_stage' => $request->filled('business_stage') ? $request->business_stage : null,
+                    'applicant_type' => $resolvedApplicantType,
+                    'business_stage' => $resolvedBusinessStage,
                     'founder_name' => $request->filled('founder_name') ? $request->founder_name : null,
                     'director_name' => $request->filled('director_name') ? $request->director_name : null,
                     'company_seat' => $request->filled('company_seat') ? $request->company_seat : null,
@@ -1175,44 +1169,15 @@ class ApplicationController extends Controller
     }
 
     /**
-     * @return array{classification: KnApplicationClassification, is_historical_fizicko_lice: bool, is_registered: bool}
+     * @return array{classification: KnApplicationClassification, is_registered: bool}
      */
-    protected function knStoreContext(Request $request, Competition $competition, \App\Models\User $user): array
+    protected function knStoreContext(\App\Models\User $user): array
     {
         $identity = app(CurrentIdentityResolver::class)->viewFor($user);
         $classification = KnApplicationClassification::fromUserType($identity->userType);
 
-        $existing = null;
-        if ($request->filled('application_id')) {
-            $existing = Application::where('id', $request->application_id)
-                ->where('competition_id', $competition->id)
-                ->where('user_id', $user->id)
-                ->first();
-        }
-        if (! $existing) {
-            $existing = Application::where('competition_id', $competition->id)
-                ->where('user_id', $user->id)
-                ->first();
-        }
-
-        $isHistoricalFizickoLice = $existing !== null
-            && KnApplicationClassification::isHistoricalFizickoLice($existing->applicant_type);
-
-        if ($isHistoricalFizickoLice) {
-            $request->merge([
-                'applicant_type' => $existing->applicant_type,
-            ]);
-
-            return [
-                'classification' => $classification,
-                'is_historical_fizicko_lice' => true,
-                'is_registered' => (bool) $existing->is_registered,
-            ];
-        }
-
         return [
             'classification' => $classification,
-            'is_historical_fizicko_lice' => false,
             'is_registered' => $classification->isRegisteredBusiness,
         ];
     }

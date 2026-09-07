@@ -87,8 +87,8 @@ class IdentityShadowComparatorTest extends TestCase
         $this->assertSame('fizicko_lice', CompetitionApplicantType::fromUserType('Rezident'));
         $this->assertSame('preduzetnica', CompetitionApplicantType::fromUserType('Preduzetnik'));
         $this->assertSame('doo', CompetitionApplicantType::fromUserType('DOO'));
-        $this->assertSame('preduzetnica', ApplicationCreateApplicantTypeDefault::forUser(UserType::PHYSICAL_PERSON, 'resident'));
-        $this->assertNotSame(
+        $this->assertSame('fizicko_lice', ApplicationCreateApplicantTypeDefault::forUser(UserType::PHYSICAL_PERSON, 'resident'));
+        $this->assertSame(
             CompetitionApplicantType::fromUserType(UserType::PHYSICAL_PERSON),
             ApplicationCreateApplicantTypeDefault::forUser(UserType::PHYSICAL_PERSON, 'resident')
         );

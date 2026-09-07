@@ -497,23 +497,18 @@
                             $isFizickoLiceRezident = \App\Support\ApplicationCreateApplicantTypeDefault::isFizickoLiceRezident($userType, $residentialStatus);
                             $preferredApplicantType = $preferredApplicantType ?? null;
                             $knClassification = \App\Support\KnApplicationClassification::fromUserType($userType);
-                            $knIsHistoricalFizicko = isset($existingApplication) && $existingApplication && $existingApplication->applicant_type === 'fizicko_lice';
-                            $knIsRegistered = $knIsHistoricalFizicko
-                                ? (bool) $existingApplication->is_registered
-                                : $knClassification->isRegisteredBusiness;
-                            $knAllowsRazvoj = $knIsHistoricalFizicko || $knClassification->allowsStage('razvoj');
+                            $knIsRegistered = $knClassification->isRegisteredBusiness;
+                            $knAllowsRazvoj = $knClassification->allowsStage('razvoj');
+                            $knAllowsFizickoLice = $knClassification->allowsApplicantType('fizicko_lice');
                             $defaultType = \App\Support\ApplicationCreateApplicantTypeDefault::forUser(
                                 $userType,
                                 $residentialStatus,
-                                $knIsHistoricalFizicko ? 'fizicko_lice' : $preferredApplicantType
+                                $preferredApplicantType
                             );
-                            if ($knIsHistoricalFizicko) {
-                                $defaultType = 'fizicko_lice';
-                            }
                             $selectedApplicantType = old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType);
                         @endphp
                         <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
-                            <strong>Napomena:</strong> Ako nemate registrovan biznis, izaberite planirani oblik Preduzetnica (Obrazac 1a) ili DOO (Obrazac 1b). Taj izbor ne mijenja vaš identitet na Platformi. Postojeća Preduzetnica i postojeće DOO imaju zaključan oblik.
+                            <strong>Napomena:</strong> Ako nemate registrovanu djelatnost, podrazumijevani tok je Fizičko lice (Obrazac 1a). Možete umjesto toga izabrati „Planiram osnivanje DOO“ (Obrazac 1b). Taj izbor ne mijenja vaš identitet na Platformi. Postojeća Preduzetnica i postojeće DOO imaju zaključan oblik.
                         </div>
                         <div class="radio-group">
                             <div class="radio-option">
@@ -523,8 +518,8 @@
                                     name="applicant_type" 
                                     value="fizicko_lice"
                                     {{ $selectedApplicantType === 'fizicko_lice' ? 'checked' : '' }}
-                                    {{ $knIsHistoricalFizicko ? '' : 'disabled' }}
-                                    {{ $knIsHistoricalFizicko ? 'required' : '' }}
+                                    {{ $knAllowsFizickoLice ? '' : 'disabled' }}
+                                    {{ $knAllowsFizickoLice ? 'required' : '' }}
                                 >
                                 <label for="applicant_type_fizicko_lice">Fizičko lice (nema registrovanu djelatnost)</label>
                             </div>
@@ -535,7 +530,7 @@
                                     name="applicant_type" 
                                     value="preduzetnica"
                                     {{ $selectedApplicantType === 'preduzetnica' ? 'checked' : '' }}
-                                    {{ (! $knIsHistoricalFizicko && ! $knClassification->allowsApplicantType('preduzetnica')) ? 'disabled' : '' }}
+                                    {{ $knClassification->allowsApplicantType('preduzetnica') ? '' : 'disabled' }}
                                 >
                                 <label for="applicant_type_preduzetnica">Preduzetnica</label>
                             </div>
@@ -546,9 +541,9 @@
                                     name="applicant_type" 
                                     value="doo"
                                     {{ $selectedApplicantType === 'doo' ? 'checked' : '' }}
-                                    {{ (! $knIsHistoricalFizicko && ! $knClassification->allowsApplicantType('doo')) ? 'disabled' : '' }}
+                                    {{ $knClassification->allowsApplicantType('doo') ? '' : 'disabled' }}
                                 >
-                                <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
+                                <label for="applicant_type_doo">{{ !empty($knIsRegistered) ? 'DOO (Društvo sa ograničenom odgovornošću)' : 'Planiram osnivanje DOO' }}</label>
                             </div>
                             <div class="radio-option">
                                 <input 
@@ -557,7 +552,7 @@
                                     name="applicant_type" 
                                     value="ostalo"
                                     {{ $selectedApplicantType === 'ostalo' ? 'checked' : '' }}
-                                    {{ (! $knIsHistoricalFizicko && ! $knClassification->allowsApplicantType('ostalo')) ? 'disabled' : '' }}
+                                    {{ $knClassification->allowsApplicantType('ostalo') ? '' : 'disabled' }}
                                 >
                                 <label for="applicant_type_ostalo">Ostalo</label>
                             </div>
@@ -570,7 +565,7 @@
             </div>
 
             <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
-            <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: {{ (!empty($knIsRegistered) || !empty($knIsHistoricalFizicko)) ? 'none' : 'block' }}; margin-bottom: 24px;">
+            <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: {{ !empty($knIsRegistered) ? 'none' : 'block' }}; margin-bottom: 24px;">
                 <strong>Važno:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
             </div>
 

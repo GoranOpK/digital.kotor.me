@@ -125,7 +125,7 @@ class CompetitionsController extends Controller
         $previewApplicantType = $knFormApplicantType ?? $applicantType;
         $defaultDocuments = [];
         if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $previewApplicantType === 'doo' || $previewApplicantType === 'ostalo') {
-            $catalogType = $previewApplicantType === 'fizicko_lice' ? 'preduzetnica' : $previewApplicantType;
+            $catalogType = $previewApplicantType;
             $defaultDocuments = Application::getRequiredDocumentsForType(
                 $catalogType,
                 'započinjanje',

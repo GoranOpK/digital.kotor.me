@@ -8,13 +8,15 @@ namespace App\Support;
  */
 final class KnApplicationClassification
 {
+    public const FORM_FIZICKO_LICE = 'fizicko_lice';
+
     public const FORM_PREDUZETNICA = 'preduzetnica';
 
     public const FORM_DOO = 'doo';
 
     public const FORM_OSTALO = 'ostalo';
 
-    public const HISTORICAL_FIZICKO_LICE = 'fizicko_lice';
+    public const HISTORICAL_FIZICKO_LICE = self::FORM_FIZICKO_LICE;
 
     public const STAGE_ZAPOCINJANJE = 'započinjanje';
 
@@ -71,7 +73,7 @@ final class KnApplicationClassification
                 isOtherLegal: false,
                 isRegisteredBusiness: false,
                 canChoosePlannedForm: true,
-                allowedApplicantTypes: [self::FORM_PREDUZETNICA, self::FORM_DOO],
+                allowedApplicantTypes: [self::FORM_FIZICKO_LICE, self::FORM_DOO],
                 allowedBusinessStages: [self::STAGE_ZAPOCINJANJE],
                 lockedApplicantType: null,
             );
@@ -127,7 +129,7 @@ final class KnApplicationClassification
             return $this->lockedApplicantType;
         }
 
-        return $this->allowedApplicantTypes[0] ?? self::FORM_PREDUZETNICA;
+        return $this->allowedApplicantTypes[0] ?? self::FORM_FIZICKO_LICE;
     }
 
     public function allowsApplicantType(?string $type): bool
@@ -141,14 +143,11 @@ final class KnApplicationClassification
     }
 
     /**
-     * Live Obrazac 1 form for a new application. Historical fizicko_lice is not a live form.
+     * Live Obrazac 1 form for a new application.
+     * Unregistered FL default is fizicko_lice (1a). Requested doo is planned company founding (1b), not canonical DOO.
      */
     public function resolveApplicantType(?string $requested): string
     {
-        if ($requested === self::HISTORICAL_FIZICKO_LICE && $this->isUnregisteredPhysicalPerson) {
-            return self::FORM_PREDUZETNICA;
-        }
-
         if ($this->allowsApplicantType($requested)) {
             return $requested;
         }
@@ -182,6 +181,6 @@ final class KnApplicationClassification
 
     public static function isHistoricalFizickoLice(?string $applicantType): bool
     {
-        return $applicantType === self::HISTORICAL_FIZICKO_LICE;
+        return $applicantType === self::FORM_FIZICKO_LICE;
     }
 }

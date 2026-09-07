@@ -324,19 +324,19 @@
                     <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
                         @if(!empty($knCanChoosePlannedForm))
                         <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                            Planirani oblik poslovanja <span style="color: #dc2626;">*</span>
+                            Tip prijave <span style="color: #dc2626;">*</span>
                         </label>
                         <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px;">
                             <label style="display: flex; align-items: center; cursor: pointer;">
                                 <input 
                                     type="radio" 
                                     name="planned_form_preview" 
-                                    value="preduzetnica" 
-                                    id="planned_form_preduzetnik_preview"
-                                    {{ ($knFormApplicantType ?? 'preduzetnica') === 'preduzetnica' ? 'checked' : '' }}
+                                    value="fizicko_lice" 
+                                    id="planned_form_fizicko_lice_preview"
+                                    {{ ($knFormApplicantType ?? 'fizicko_lice') === 'fizicko_lice' ? 'checked' : '' }}
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>Preduzetnik</span>
+                                <span>Fizičko lice (nema registrovanu djelatnost)</span>
                             </label>
                             <label style="display: flex; align-items: center; cursor: pointer;">
                                 <input 
@@ -347,7 +347,7 @@
                                     {{ ($knFormApplicantType ?? '') === 'doo' ? 'checked' : '' }}
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>DOO</span>
+                                <span>Planiram osnivanje DOO</span>
                             </label>
                         </div>
                         @endif
@@ -364,7 +364,7 @@
                                     checked
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>{{ (($knFormApplicantType ?? $applicantType) === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis' }}</span>
+                                <span>{{ empty($knIsRegisteredBusiness) ? 'Započinjanje biznisa' : ((($knFormApplicantType ?? $applicantType) === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis') }}</span>
                             </label>
                             <label style="display: flex; align-items: center; cursor: pointer;{{ empty($knAllowsRazvoj) ? ' display: none;' : '' }}">
                                 <input 
@@ -718,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const applicantTypeFromBtn = selectedPlanned || applyBtn.getAttribute('data-applicant-type') || applicantType;
         const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
         const url = new URL(baseUrl, window.location.origin);
-        if (applicantTypeFromBtn && ['preduzetnica', 'doo', 'ostalo'].includes(applicantTypeFromBtn)) {
+        if (applicantTypeFromBtn && ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'].includes(applicantTypeFromBtn)) {
             url.searchParams.set('applicant_type', applicantTypeFromBtn);
         }
         if (selectedStage) {
