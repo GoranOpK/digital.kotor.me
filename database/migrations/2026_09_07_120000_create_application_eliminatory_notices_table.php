@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('application_id');
             $table->foreignId('eliminatory_check_id')->nullable();
-            $table->timestamp('sent_at');
-            $table->timestamp('portal_recorded_at');
+            $table->timestamp('sent_at')->useCurrent();
+            $table->timestamp('portal_recorded_at')->useCurrent();
             $table->timestamp('mail_sent_at')->nullable();
             $table->timestamp('mail_failed_at')->nullable();
             $table->json('reasons_snapshot')->nullable();

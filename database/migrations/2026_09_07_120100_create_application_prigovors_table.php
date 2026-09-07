@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('application_id');
             $table->text('obrazlozenje');
             $table->string('status', 32);
-            $table->timestamp('submitted_at');
+            $table->timestamp('submitted_at')->useCurrent();
             $table->foreignId('submitted_by_user_id')->nullable();
             $table->timestamp('decided_at')->nullable();
             $table->foreignId('decided_by_commission_member_id')->nullable();
