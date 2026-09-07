@@ -495,7 +495,9 @@
                 <tbody>
                     @foreach($application->evaluationScores as $score)
                         @php
-                            $memberScore = ($score->documents_complete === false) ? 0 : ($score->final_score ?? $score->calculateTotalScore());
+                            $memberScore = $application->isEliminatoryConfirmedFail()
+                                ? 0
+                                : ($score->final_score ?? $score->calculateTotalScore());
                         @endphp
                         <tr style="border-bottom: 1px solid #e5e7eb;">
                             <td style="padding: 12px;">{{ $score->commissionMember->name ?? 'N/A' }}</td>
@@ -507,6 +509,8 @@
             </table>
         </div>
         @endif
+
+        @include('evaluation.partials.prigovor_commission_block')
 
         <div style="text-align: center; margin-top: 24px;">
             @php

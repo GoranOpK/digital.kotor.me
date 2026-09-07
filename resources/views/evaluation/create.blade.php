@@ -504,8 +504,28 @@
                 </div>
             @endif
             
-            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
-                @csrf
+            @php
+                $eliminatoryCheck = $eliminatoryCheck ?? $application->eliminatoryCheck;
+                $scoringIsAllowed = $scoringIsAllowed ?? false;
+                $eliminatoryIsConfirmedFail = $eliminatoryIsConfirmedFail ?? false;
+                $eliminatoryIsConfirmed = $eliminatoryCheck && $eliminatoryCheck->confirmed_at;
+                $canEditEliminatory = $commissionMember
+                    && $commissionMember->position === 'predsjednik'
+                    && ! $eliminatoryIsConfirmed
+                    && ! $isApplicant
+                    && ! $isDeadlinePassed;
+                $criterionYes = function (string $key, $saved) {
+                    $old = old($key);
+                    if ($old !== null) {
+                        return $old === '1' || $old === 1 || $old === true || $old === 'true';
+                    }
+                    if ($saved === null) {
+                        return true;
+                    }
+
+                    return $saved === true || $saved === 1 || $saved === '1';
+                };
+            @endphp
 
                 <div class="print-document-header">
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
@@ -541,49 +561,123 @@
                     <input type="text" class="form-control form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
                 </div>
 
-                <!-- 3. Dostavljena su sva potrebna dokumenta? -->
+                <!-- 3. Eliminatorna provjera -->
                 <div class="form-section form-section-compact">
-                    <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
-                    
-                    @if($commissionMember && $commissionMember->position === 'predsjednik')
-                        {{-- Predsjednik može označiti --}}
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} @if($isRejected || $isApplicant) disabled @else required @endif>
-                                <span>a. Da</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} @if($isRejected || $isApplicant) disabled @else required @endif>
-                                <span>b. Ne*</span>
-                            </label>
-                        </div>
-                        @error('documents_complete')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                    @if($canEditEliminatory)
+                        <form method="POST" action="{{ route('evaluation.eliminatory.store', $application) }}" id="eliminatoryForm">
+                            @csrf
+                            <input type="hidden" name="confirmation_acknowledged" id="confirmation_acknowledged" value="0">
+
+                            <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="criterion_1" value="1" {{ $criterionYes('criterion_1', $eliminatoryCheck?->criterion_1) ? 'checked' : '' }} required>
+                                    <span>Da</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="criterion_1" value="0" {{ ! $criterionYes('criterion_1', $eliminatoryCheck?->criterion_1) ? 'checked' : '' }} required>
+                                    <span>Ne*</span>
+                                </label>
+                            </div>
+                            @error('criterion_1')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+
+                            <label class="form-label form-label-large" style="margin-top: 16px;">Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="criterion_2" value="1" {{ $criterionYes('criterion_2', $eliminatoryCheck?->criterion_2) ? 'checked' : '' }} required>
+                                    <span>Da</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="criterion_2" value="0" {{ ! $criterionYes('criterion_2', $eliminatoryCheck?->criterion_2) ? 'checked' : '' }} required>
+                                    <span>Ne*</span>
+                                </label>
+                            </div>
+                            @error('criterion_2')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+
+                            <label class="form-label form-label-large" style="margin-top: 16px;">Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="criterion_3" value="1" {{ $criterionYes('criterion_3', $eliminatoryCheck?->criterion_3) ? 'checked' : '' }} required>
+                                    <span>Da</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="criterion_3" value="0" {{ ! $criterionYes('criterion_3', $eliminatoryCheck?->criterion_3) ? 'checked' : '' }} required>
+                                    <span>Ne*</span>
+                                </label>
+                            </div>
+                            @error('criterion_3')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+
+                            <label class="form-label" style="margin-top: 16px;">Napomena</label>
+                            <textarea name="note" class="form-control" rows="4" placeholder="Napomena Obrasca 3">{{ old('note', $eliminatoryCheck?->note) }}</textarea>
+                            @error('note')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            @error('confirmation_acknowledged')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+
+                            <div class="no-print" style="margin-top: 16px;">
+                                <button type="submit" class="btn-primary">Sačuvaj</button>
+                                <button type="submit" class="btn-primary" formaction="{{ route('evaluation.eliminatory.confirm', $application) }}" onclick="return acknowledgeEliminatoryConfirm(this.form);" style="margin-left: 12px;">Potvrdi Obrazac 3</button>
+                            </div>
+                        </form>
                     @else
-                        {{-- Ostali članovi vide samo read-only prikaz --}}
-                        @php
-                            // Pronađi predsjednika komisije i njegovu ocjenu
-                            $chairmanMember = $allMembers->firstWhere('position', 'predsjednik');
-                            $chairmanScore = $chairmanMember ? $allScores->get($chairmanMember->id) : null;
-                            $documentsComplete = $chairmanScore ? $chairmanScore->documents_complete : null;
-                        @endphp
+                        <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
                         <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
-                            @if($documentsComplete !== null)
-                                <div style="margin-bottom: 8px;">
-                                    <strong style="color: #111827;">
-                                        {{ $documentsComplete ? 'a. Da' : 'b. Ne*' }}
-                                    </strong>
+                            <div style="margin-bottom: 12px;">
+                                <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_1) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_1) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
+                            </div>
+                            <div style="margin-bottom: 8px; font-weight: 600;">Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?</div>
+                            <div style="margin-bottom: 12px;">
+                                <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_2) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_2) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
+                            </div>
+                            <div style="margin-bottom: 8px; font-weight: 600;">Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?</div>
+                            <div style="margin-bottom: 12px;">
+                                <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_3) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_3) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
+                            </div>
+                            <div style="margin-bottom: 8px; font-weight: 600;">Napomena</div>
+                            <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $eliminatoryCheck?->note ?: '—' }}</div>
+                            <div>
+                                <strong>Rezultat:</strong>
+                                @if(! $eliminatoryCheck || ! $eliminatoryCheck->isConfirmed())
+                                    Nije potvrđeno
+                                @elseif($eliminatoryCheck->isConfirmedPass())
+                                    Ispunjava eliminatorne kriterijume
+                                @else
+                                    Ne ispunjava eliminatorne kriterijume
+                                @endif
+                            </div>
+                            @if($eliminatoryCheck && $eliminatoryCheck->isConfirmed())
+                                <div style="margin-top: 8px;">
+                                    Potvrdio: {{ $eliminatoryCheck->confirmed_by_name }}
                                 </div>
-                            @else
-                                <div style="color: #6b7280;">
-                                    <em>Nije označeno</em>
+                                <div>
+                                    Datum i vrijeme: {{ $eliminatoryCheck->confirmed_at?->format('d.m.Y. H:i') }}
                                 </div>
                             @endif
                         </div>
                     @endif
                 </div>
                 </div>
+
+            @if(! $scoringIsAllowed)
+                <div class="alert no-print" style="background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                    @if($eliminatoryIsConfirmedFail)
+                        {{ \App\Services\ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE }}
+                    @else
+                        {{ \App\Services\ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE }}
+                    @endif
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed || ! $scoringIsAllowed) onsubmit="event.preventDefault(); return false;" @endif>
+                @csrf
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section form-section-scores">
@@ -645,13 +739,8 @@
                                                     </span>
                                                 @else
                                                     {{-- Može unijeti ili mijenjati --}}
-                                                    {{-- Ako je predsjednik i documents_complete je "Ne", ne treba required --}}
                                                     @php
-                                                        $isDocumentsCompleteNo = false;
-                                                        if (isset($isChairman) && $isChairman) {
-                                                            $chairmanScore = $commissionMember ? $allScores->get($commissionMember->id) : null;
-                                                            $isDocumentsCompleteNo = $chairmanScore && $chairmanScore->documents_complete === false;
-                                                        }
+                                                        $scoreInputsLocked = ! $scoringIsAllowed || $isRejected || ($isApplicant ?? false);
                                                     @endphp
                                                     <input 
                                                         type="number" 
@@ -660,8 +749,8 @@
                                                         min="1" 
                                                         max="5" 
                                                         value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                        @if(!$isDocumentsCompleteNo && !$isRejected && !($isApplicant ?? false)) required @endif
-                                                        @if($isRejected || ($isApplicant ?? false)) disabled @endif
+                                                        @if(! $scoreInputsLocked) required @endif
+                                                        @if($scoreInputsLocked) disabled @endif
                                                         onchange="updateAverages()">
                                                 @endif
                                             @else
@@ -732,7 +821,7 @@
                                         $isChairmanMember = $member->position === 'predsjednik';
                                     @endphp
                                     <td style="text-align: center;">
-                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                        @if($isCurrentMember && $isChairmanMember && $scoringIsAllowed && !$isRejected && !($isApplicant ?? false))
                                             <input 
                                                 type="checkbox" 
                                                 name="bonus_info_day" 
@@ -764,7 +853,7 @@
                                         $isChairmanMember = $member->position === 'predsjednik';
                                     @endphp
                                     <td style="text-align: center;">
-                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                        @if($isCurrentMember && $isChairmanMember && $scoringIsAllowed && !$isRejected && !($isApplicant ?? false))
                                             <input 
                                                 type="checkbox" 
                                                 name="bonus_new_business" 
@@ -796,7 +885,7 @@
                                         $isChairmanMember = $member->position === 'predsjednik';
                                     @endphp
                                     <td style="text-align: center;">
-                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                        @if($isCurrentMember && $isChairmanMember && $scoringIsAllowed && !$isRejected && !($isApplicant ?? false))
                                             <input 
                                                 type="checkbox" 
                                                 name="bonus_zavod_nezaposleni" 
@@ -828,7 +917,7 @@
                                         $isChairmanMember = $member->position === 'predsjednik';
                                     @endphp
                                     <td style="text-align: center;">
-                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                        @if($isCurrentMember && $isChairmanMember && $scoringIsAllowed && !$isRejected && !($isApplicant ?? false))
                                             <input 
                                                 type="checkbox" 
                                                 name="bonus_green_innovative" 
@@ -997,7 +1086,7 @@
                                         class="form-control" 
                                         rows="6" 
                                         placeholder="Unesite dodatne napomene..."
-                                        @if($isRejected || $isApplicant) disabled @endif>{{ old('notes', $memberNote['notes']) }}</textarea>
+                                        @if($isRejected || $isApplicant || ! $scoringIsAllowed) disabled @endif>{{ old('notes', $memberNote['notes']) }}</textarea>
                                 @else
                                     {{-- Read-only prikaz za ostale članove --}}
                                     <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
@@ -1023,7 +1112,7 @@
                                 class="form-control" 
                                 rows="6" 
                                 placeholder="Unesite dodatne napomene..."
-                                @if($isRejected || $isApplicant) disabled @endif>{{ old('notes', $existingScore?->notes) }}</textarea>
+                                @if($isRejected || $isApplicant || ! $scoringIsAllowed) disabled @endif>{{ old('notes', $existingScore?->notes) }}</textarea>
                         </div>
                     @endif
                 </div>
@@ -1038,14 +1127,11 @@
                     @endphp
                     
                     @php
-                        // Da li je prijava odbijena zbog nepotpune dokumentacije (documents_complete = false od strane predsjednika)
-                        $chairmanMemberForPrint = $allMembers->firstWhere('position', 'predsjednik');
-                        $chairmanScoreForPrint = $chairmanMemberForPrint ? $allScores->get($chairmanMemberForPrint->id) : null;
-                        $rejectedForDocuments = $chairmanScoreForPrint && $chairmanScoreForPrint->documents_complete === false;
+                        $rejectedForDocuments = ! empty($eliminatoryIsConfirmedFail);
                         $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                         // Štampanje je dozvoljeno kada:
                         // - sve prijave na konkursu ocijene svi članovi (rang lista spremna), ILI
-                        // - prijava je odbijena zbog nepotpune dokumentacije
+                        // - prijava ne prolazi potvrđenu eliminatornu provjeru
                         $canPrintNow = $allMembersEvaluatedFlag || $rejectedForDocuments;
                     @endphp
 
@@ -1105,12 +1191,15 @@
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
-                        <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
+                        <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @endif
                 </div>
             </form>
         </div>
+
+        @include('evaluation.partials.prigovor_commission_block')
+
     </div>
 </div>
 
@@ -1120,42 +1209,29 @@
         // Za sada, prosječne ocjene se računaju na serveru
         // Možemo dodati JavaScript za real-time izračun ako je potrebno
     }
-    
-    const form = document.getElementById('evaluationForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            // Provjeri documents_complete
-            const documentsComplete = document.querySelector('input[name="documents_complete"]:checked');
-            if (documentsComplete) {
-                // Ako je documents_complete "Ne" (value="0"), ukloni required sa svih kriterijuma
-                if (documentsComplete.value === '0') {
-                    const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
-                    criterionInputs.forEach(function(input) {
-                        input.removeAttribute('required');
-                    });
-                }
+
+    function acknowledgeEliminatoryConfirm(form) {
+        const failMessage = @json(\App\Services\ApplicationEliminatoryCheckService::FAIL_CONFIRMATION_MESSAGE);
+        const anyNo = ['criterion_1', 'criterion_2', 'criterion_3'].some(function (name) {
+            const checked = form.querySelector('input[name="' + name + '"]:checked');
+            return checked && checked.value === '0';
+        });
+
+        const acknowledgement = form.querySelector('[name="confirmation_acknowledged"]');
+        if (acknowledgement) {
+            acknowledgement.value = '0';
+        }
+
+        if (anyNo) {
+            if (! window.confirm(failMessage)) {
+                return false;
             }
-        });
-        
-        // Takođe, dodaj event listener na radio button-e za documents_complete
-        const documentsCompleteRadios = document.querySelectorAll('input[name="documents_complete"]');
-        documentsCompleteRadios.forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                if (this.value === '0') {
-                    // Ako je označeno "Ne", ukloni required sa svih kriterijuma
-                    const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
-                    criterionInputs.forEach(function(input) {
-                        input.removeAttribute('required');
-                    });
-                } else {
-                    // Ako je označeno "Da", dodaj required na sve kriterijume
-                    const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
-                    criterionInputs.forEach(function(input) {
-                        input.setAttribute('required', 'required');
-                    });
-                }
-            });
-        });
+            if (acknowledgement) {
+                acknowledgement.value = '1';
+            }
+        }
+
+        return true;
     }
 </script>
 @endsection

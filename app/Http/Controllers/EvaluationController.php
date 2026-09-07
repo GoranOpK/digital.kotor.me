@@ -6,7 +6,8 @@ use App\Models\Application;
 use App\Models\EvaluationScore;
 use App\Models\CommissionMember;
 use App\Models\Commission;
-use App\Services\DocumentationRejectionEvaluationService;
+use App\Services\ApplicationEliminatoryCheckService;
+use App\Services\ApplicationPrigovorService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,11 @@ use Illuminate\View\View;
 
 class EvaluationController extends Controller
 {
+    public function __construct(
+        protected ApplicationEliminatoryCheckService $eliminatoryChecks,
+        protected ApplicationPrigovorService $prigovors,
+    ) {}
+
     /**
      * Aktivan član komisije za konkurs na koji se odnosi prijava.
      */
@@ -89,27 +95,15 @@ class EvaluationController extends Controller
         // Filtriranje po statusu ocjenjivanja
         if ($request->filled('filter')) {
             if ($request->filter === 'pending') {
-                // Prijave koje član komisije još nije ocjenio (submitted status)
                 $query->whereIn('status', ['submitted', 'evaluated']);
+                $query->whereEliminatoryScoringNotBlocked();
                 if (!empty($evaluatedApplicationIds)) {
                     $query->whereNotIn('id', $evaluatedApplicationIds);
                 }
-                // Ako nema ocjenjenih prijava, sve prijave su "pending"
             } elseif ($request->filter === 'evaluated') {
-                // Prijave koje je član komisije već ocjenio (ima EvaluationScore sa kriterijumima), PLUS
-                // odbijene zbog nedostajuće dokumentacije – vidljive SVIM članovima odmah (bez bodova u tabeli).
                 $query->where(function ($outer) use ($evaluatedApplicationIds) {
                     $outer->where(function ($q) use ($evaluatedApplicationIds) {
-                        $q->where(function ($inner) {
-                            $inner->whereIn('status', ['submitted', 'evaluated'])
-                                ->orWhere(function ($q2) {
-                                    $q2->where('status', 'rejected')
-                                        ->where(function ($q3) {
-                                            $q3->whereNull('rejection_reason')
-                                                ->orWhere('rejection_reason', 'not like', '%Nedostaju potrebna dokumenta%');
-                                        });
-                                });
-                        });
+                        $q->whereIn('status', ['submitted', 'evaluated', 'rejected']);
                         if (!empty($evaluatedApplicationIds)) {
                             $q->whereIn('id', $evaluatedApplicationIds);
                         } else {
@@ -117,8 +111,7 @@ class EvaluationController extends Controller
                         }
                     });
                     $outer->orWhere(function ($q) {
-                        $q->where('status', 'rejected')
-                            ->where('rejection_reason', 'like', '%Nedostaju potrebna dokumenta%');
+                        $q->whereEliminatoryScoringBlocked();
                     });
                 });
             } elseif ($request->filter === 'rejected') {
@@ -294,12 +287,21 @@ class EvaluationController extends Controller
         // u Competition::isRankingFormed(). Oslanjamo se direktno na taj metod.
         $competition = $application->competition;
         $canViewOtherMembersScores = $competition ? $competition->isRankingFormed() : false;
-        // Odbijene zbog dokumentacije: ostali članovi odmah vide stanje (predsjednikovo „Ne”), bez čekanja rang liste
-        if ($application->isRejectedForMissingDocuments()) {
+        if ($this->eliminatoryChecks->isConfirmedFail($application)) {
             $canViewOtherMembersScores = true;
         }
 
-        $application->load(['user', 'competition', 'businessPlan', 'documents']);
+        $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+
+        $eliminatoryCheck = $application->eliminatoryCheck;
+        $scoringIsAllowed = $this->eliminatoryChecks->scoringIsAllowed($application);
+        $eliminatoryIsConfirmedFail = $this->eliminatoryChecks->isConfirmedFail($application);
+        $eliminatoryNotice = $application->eliminatoryNotice;
+        $prigovor = $application->prigovor;
+        $canDecidePrigovor = $commissionMember
+            && $commissionMember->position === 'predsjednik'
+            && $commissionMember->status === 'active'
+            && $prigovor?->isPodnesen();
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
@@ -319,7 +321,13 @@ class EvaluationController extends Controller
             'totalMembers',
             'hasCompletedEvaluation',
             'isChairman',
-            'isApplicant'
+            'isApplicant',
+            'eliminatoryCheck',
+            'scoringIsAllowed',
+            'eliminatoryIsConfirmedFail',
+            'eliminatoryNotice',
+            'prigovor',
+            'canDecidePrigovor',
         ));
     }
 
@@ -353,58 +361,19 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
+            abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
+                ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
+                : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE);
+        }
+
         // Provjeri da li je prijava već odbijena - ako jeste, ne dozvoli izmjene
         if ($application->status === 'rejected') {
             return redirect()->route('evaluation.index', ['filter' => 'rejected'])
                 ->with('error', 'Prijava je već odbijena i ne može se editovati.');
         }
 
-        // PRIORITET: Provjeri documents_complete PRVO (ako je predsjednik) - prije bilo koje druge provjere
-        // Ovo mora biti prvo jer ako dokumentacija nije kompletna, prijava se odmah odbija
         $isChairman = $commissionMember->position === 'predsjednik';
-        
-        // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
-        // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
-        if ($isChairman) {
-            // Provjeri da li postoji documents_complete u requestu
-            if ($request->has('documents_complete')) {
-                // Validacija documents_complete - obavezno polje za predsjednika
-                // Koristimo try-catch da uhvatimo validacijske greške
-                try {
-                    $request->validate([
-                        'documents_complete' => 'required|boolean',
-                    ], [
-                        'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
-                    ]);
-                } catch (\Illuminate\Validation\ValidationException $e) {
-                    // Ako validacija ne prođe, vrati grešku
-                    \Log::info('=== VALIDATION ERROR ===', ['errors' => $e->errors()]);
-                    return redirect()->back()
-                        ->withErrors($e->errors())
-                        ->withInput();
-                }
-                
-                // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
-                $documentsComplete = $request->boolean('documents_complete');
-                
-                // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
-                // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
-                if (!$documentsComplete) {
-                    $chairmanNotes = $request->has('notes') && trim((string) $request->input('notes')) !== ''
-                        ? trim((string) $request->input('notes'))
-                        : null;
-
-                    DocumentationRejectionEvaluationService::rejectApplicationAndVoidScores(
-                        $application,
-                        $commissionMember,
-                        $chairmanNotes,
-                    );
-
-                    return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                        ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
-                }
-            }
-        }
 
         // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
         $existingScore = EvaluationScore::where('application_id', $application->id)
@@ -428,11 +397,7 @@ class EvaluationController extends Controller
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
         // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i bonus kriterijume
-        // VAŽNO: Ne uklanjaj documents_complete prije provjere na početku metode!
-        // Provjera documents_complete se izvršava na početku metode (linija 267), prije ovog bloka
         if ($commissionMember->position !== 'predsjednik') {
-            // Ako nije predsjednik, ukloni te podatke iz requesta
-            // ALI NE documents_complete - to se već provjerilo na početku
             $request->merge([
                 'commission_decision' => null,
                 'approved_amount' => null,
@@ -441,29 +406,16 @@ class EvaluationController extends Controller
                 'bonus_new_business' => null,
                 'bonus_zavod_nezaposleni' => null,
                 'bonus_green_innovative' => null,
-                // 'documents_complete' => null, // NE UKLANJAJ - već je provjereno na početku
             ]);
         }
 
         // Validacija - svaki kriterijum 1-5 poena (samo ako nije predsjednik koji mijenja samo sekciju 2)
         // Ako je predsjednik i već je ocjenio, ne validiraj kriterijume (može mijenjati samo sekciju 2)
         // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume (može mijenjati samo napomene)
-        // VAŽNO: Ako je documents_complete false (provjereno na početku), ova sekcija se ne bi trebala izvršiti
-        // ali dodajemo dodatnu provjeru kao sigurnost
         $rules = [];
         $messages = [];
-        
-        // Ako je predsjednik i documents_complete je false, preskoči validaciju kriterijuma
-        // (ovo je dodatna provjera, jer bi se već trebalo izvršiti redirect na liniji 316)
-        $shouldSkipCriteriaValidation = false;
-        if ($isChairman && $request->has('documents_complete')) {
-            $shouldSkipCriteriaValidation = !$request->boolean('documents_complete');
-        }
-        
-        // Ako je documents_complete false, ne validiraj kriterijume (prijava je već odbijena)
-        // Takođe, ako je predsjednik i već je ocjenio, ne validiraj kriterijume
-        // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume
-        if (!$shouldSkipCriteriaValidation && !($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
+
+        if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
             for ($i = 1; $i <= 10; $i++) {
                 $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
                 $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
@@ -490,16 +442,7 @@ class EvaluationController extends Controller
             $rules['decision_date'] = 'nullable|date';
         }
 
-        // Validacija se izvršava samo ako ima pravila (ako nema kriterijuma za validaciju, preskoči)
-        // DODATNA PROVJERA: Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
-        // (ovo je sigurnosna provjera, jer bi se već trebalo izvršiti redirect na liniji 310)
-        // PRIJE SVE VALIDACIJE - provjeri da li je documents_complete false
-        if ($isChairman && $request->has('documents_complete') && !$request->boolean('documents_complete')) {
-            // Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
-            // (ovo ne bi trebalo biti potrebno jer bi se već trebalo izvršiti redirect na liniji 310)
-            // ali dodajemo kao dodatnu sigurnost
-            $validated = $request->all();
-        } elseif (!empty($rules)) {
+        if (!empty($rules)) {
             try {
                 $validated = $request->validate($rules, $messages);
             } catch (\Illuminate\Validation\ValidationException $e) {
@@ -564,56 +507,26 @@ class EvaluationController extends Controller
 
         // Kreiraj ili ažuriraj ocjenu
         if ($isChairman && $allMembersEvaluated) {
-            // Ako je predsjednik i svi su ocjenili, ažuriraj samo documents_complete
             $existingScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
-            
-            if ($existingScore) {
-                $existingScore->update([
-                    'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
-                ]);
-            }
         } else {
-            // Normalno spremanje ocjene
-            // Za ostale članove, koristi documents_complete od predsjednika
-            $documentsCompleteValue = true; // Default vrijednost
-            if ($commissionMember->position === 'predsjednik') {
-                $documentsCompleteValue = $validated['documents_complete'] ?? ($existingScore->documents_complete ?? true);
-            } else {
-                // Pronađi ocjenu predsjednika komisije
-                $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
-                if ($chairmanMember) {
-                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
-                        ->where('commission_member_id', $chairmanMember->id)
-                        ->first();
-                    if ($chairmanScore && $chairmanScore->documents_complete !== null) {
-                        $documentsCompleteValue = $chairmanScore->documents_complete;
-                    }
-                }
-                // Ako predsjednik još nije ocjenio, koristi vrijednost iz existing score ako postoji
-                if ($documentsCompleteValue === true && $existingScore && $existingScore->documents_complete !== null) {
-                    $documentsCompleteValue = $existingScore->documents_complete;
-                }
-            }
-
             $evaluationScore = EvaluationScore::updateOrCreate(
                 [
                     'application_id' => $application->id,
                     'commission_member_id' => $commissionMember->id,
                 ],
                 [
-                    'documents_complete' => $documentsCompleteValue,
-                    'criterion_1' => $validated['criterion_1'] ?? $existingScore->criterion_1 ?? null,
-                    'criterion_2' => $validated['criterion_2'] ?? $existingScore->criterion_2 ?? null,
-                    'criterion_3' => $validated['criterion_3'] ?? $existingScore->criterion_3 ?? null,
-                    'criterion_4' => $validated['criterion_4'] ?? $existingScore->criterion_4 ?? null,
-                    'criterion_5' => $validated['criterion_5'] ?? $existingScore->criterion_5 ?? null,
-                    'criterion_6' => $validated['criterion_6'] ?? $existingScore->criterion_6 ?? null,
-                    'criterion_7' => $validated['criterion_7'] ?? $existingScore->criterion_7 ?? null,
-                    'criterion_8' => $validated['criterion_8'] ?? $existingScore->criterion_8 ?? null,
-                    'criterion_9' => $validated['criterion_9'] ?? $existingScore->criterion_9 ?? null,
-                    'criterion_10' => $validated['criterion_10'] ?? $existingScore->criterion_10 ?? null,
+                    'criterion_1' => $validated['criterion_1'] ?? $existingScore?->criterion_1 ?? null,
+                    'criterion_2' => $validated['criterion_2'] ?? $existingScore?->criterion_2 ?? null,
+                    'criterion_3' => $validated['criterion_3'] ?? $existingScore?->criterion_3 ?? null,
+                    'criterion_4' => $validated['criterion_4'] ?? $existingScore?->criterion_4 ?? null,
+                    'criterion_5' => $validated['criterion_5'] ?? $existingScore?->criterion_5 ?? null,
+                    'criterion_6' => $validated['criterion_6'] ?? $existingScore?->criterion_6 ?? null,
+                    'criterion_7' => $validated['criterion_7'] ?? $existingScore?->criterion_7 ?? null,
+                    'criterion_8' => $validated['criterion_8'] ?? $existingScore?->criterion_8 ?? null,
+                    'criterion_9' => $validated['criterion_9'] ?? $existingScore?->criterion_9 ?? null,
+                    'criterion_10' => $validated['criterion_10'] ?? $existingScore?->criterion_10 ?? null,
                     'final_score' => $totalScore,
                     'notes' => $validated['notes'] ?? null,
                     'justification' => $validated['justification'] ?? null,
@@ -623,7 +536,7 @@ class EvaluationController extends Controller
 
         // Kreiraj ili ažuriraj ocjenu
         if ($isChairman && $hasCompletedEvaluation) {
-            // Ako je predsjednik i već je ocjenio, ažuriraj samo documents_complete i notes (dok ne zaključi prijavu)
+            // Ako je predsjednik i već je ocjenio, ažuriraj samo notes (dok ne zaključi prijavu)
             $existingScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
@@ -632,31 +545,9 @@ class EvaluationController extends Controller
             $isDecisionMade = $application->commission_decision !== null;
             
             if ($existingScore && !$isDecisionMade) {
-                // Ako nije zaključio prijavu, može mijenjati documents_complete i notes
-                // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
-                // Koristimo $request->input() direktno jer $validated možda ne uključuje prazan string
                 $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScore->notes;
-                
-                // Provjeri da li je documents_complete postavljen na false
-                // Koristimo $request->boolean() jer Laravel automatski konvertuje "0" i "1" u boolean
-                $documentsCompleteValue = $request->has('documents_complete') 
-                    ? $request->boolean('documents_complete')
-                    : ($existingScore->documents_complete ?? true);
-                
-                // Ako je documents_complete false, automatski odbiti prijavu
-                if ($documentsCompleteValue === false) {
-                    DocumentationRejectionEvaluationService::rejectApplicationAndVoidScores(
-                        $application,
-                        $commissionMember,
-                        $notesValue === null || $notesValue === '' ? null : (string) $notesValue,
-                    );
 
-                    return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                        ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
-                }
-                
                 $existingScore->update([
-                    'documents_complete' => $documentsCompleteValue,
                     'notes' => $notesValue,
                 ]);
             }
@@ -665,47 +556,16 @@ class EvaluationController extends Controller
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('success', 'Izmjene su uspješno sačuvane.');
         } else {
-            // Normalno spremanje ocjene
-            // Za ostale članove, koristi documents_complete od predsjednika
-            $documentsCompleteValue = true; // Default vrijednost
-            if ($commissionMember->position === 'predsjednik') {
-                $documentsCompleteValue = $validated['documents_complete'] ?? true;
-            } else {
-                // Pronađi ocjenu predsjednika komisije
-                $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
-                if ($chairmanMember) {
-                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
-                        ->where('commission_member_id', $chairmanMember->id)
-                        ->first();
-                    if ($chairmanScore && $chairmanScore->documents_complete !== null) {
-                        $documentsCompleteValue = $chairmanScore->documents_complete;
-                    }
-                }
-            }
-
-            // Provjeri da li član već ocjenio i da li je prijava zaključena
-            // Koristimo postojeći $existingScore umjesto ponovnog traženja
             $isDecisionMadeForUpdate = $application->commission_decision !== null;
             
-            // Provjeri da li postoji postojeća ocjena za ovog člana
             $existingScoreForNotes = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
             
-            // Ako postoji existing score, koristi njegov documents_complete ako nije null
-            if ($existingScoreForNotes && $existingScoreForNotes->documents_complete !== null) {
-                $documentsCompleteValue = $existingScoreForNotes->documents_complete;
-            }
-            
             if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
-                // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
-                // Provjeri da li je notes poslan u request-u (čak i ako je null)
-                // Ako jeste poslan (čak i kao null), koristimo tu vrijednost (konvertujemo null u prazan string)
-                // Ako nije poslan, koristimo postojeću vrijednost
-                $notesValue = $existingScoreForNotes->notes; // Default: postojeća vrijednost
+                $notesValue = $existingScoreForNotes->notes;
                 
                 if ($request->has('notes')) {
-                    // Notes je poslan u request-u (može biti null ili prazan string)
                     $inputNotes = $request->input('notes');
                     $notesValue = $inputNotes !== null ? $inputNotes : '';
                 }
@@ -724,17 +584,16 @@ class EvaluationController extends Controller
                     'commission_member_id' => $commissionMember->id,
                 ],
                 [
-                    'documents_complete' => $documentsCompleteValue,
-                    'criterion_1' => $validated['criterion_1'] ?? $existingScoreForNotes->criterion_1 ?? null,
-                    'criterion_2' => $validated['criterion_2'] ?? $existingScoreForNotes->criterion_2 ?? null,
-                    'criterion_3' => $validated['criterion_3'] ?? $existingScoreForNotes->criterion_3 ?? null,
-                    'criterion_4' => $validated['criterion_4'] ?? $existingScoreForNotes->criterion_4 ?? null,
-                    'criterion_5' => $validated['criterion_5'] ?? $existingScoreForNotes->criterion_5 ?? null,
-                    'criterion_6' => $validated['criterion_6'] ?? $existingScoreForNotes->criterion_6 ?? null,
-                    'criterion_7' => $validated['criterion_7'] ?? $existingScoreForNotes->criterion_7 ?? null,
-                    'criterion_8' => $validated['criterion_8'] ?? $existingScoreForNotes->criterion_8 ?? null,
-                    'criterion_9' => $validated['criterion_9'] ?? $existingScoreForNotes->criterion_9 ?? null,
-                    'criterion_10' => $validated['criterion_10'] ?? $existingScoreForNotes->criterion_10 ?? null,
+                    'criterion_1' => $validated['criterion_1'] ?? $existingScoreForNotes?->criterion_1 ?? null,
+                    'criterion_2' => $validated['criterion_2'] ?? $existingScoreForNotes?->criterion_2 ?? null,
+                    'criterion_3' => $validated['criterion_3'] ?? $existingScoreForNotes?->criterion_3 ?? null,
+                    'criterion_4' => $validated['criterion_4'] ?? $existingScoreForNotes?->criterion_4 ?? null,
+                    'criterion_5' => $validated['criterion_5'] ?? $existingScoreForNotes?->criterion_5 ?? null,
+                    'criterion_6' => $validated['criterion_6'] ?? $existingScoreForNotes?->criterion_6 ?? null,
+                    'criterion_7' => $validated['criterion_7'] ?? $existingScoreForNotes?->criterion_7 ?? null,
+                    'criterion_8' => $validated['criterion_8'] ?? $existingScoreForNotes?->criterion_8 ?? null,
+                    'criterion_9' => $validated['criterion_9'] ?? $existingScoreForNotes?->criterion_9 ?? null,
+                    'criterion_10' => $validated['criterion_10'] ?? $existingScoreForNotes?->criterion_10 ?? null,
                     'final_score' => $totalScore,
                     'notes' => $validated['notes'] ?? null,
                     'justification' => $validated['justification'] ?? null,
@@ -780,7 +639,7 @@ class EvaluationController extends Controller
     {
         $application->refresh();
 
-        if ($application->isRejectedForMissingDocuments()) {
+        if ($application->isEliminatedFromScoring()) {
             return;
         }
 
@@ -936,7 +795,15 @@ class EvaluationController extends Controller
             });
         }
 
-        $application->load(['user', 'competition', 'businessPlan']);
+        $application->load(['user', 'competition', 'businessPlan', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+
+        $eliminatoryCheck = $application->eliminatoryCheck;
+        $eliminatoryNotice = $application->eliminatoryNotice;
+        $prigovor = $application->prigovor;
+        $canDecidePrigovor = $commissionMember
+            && $commissionMember->position === 'predsjednik'
+            && $commissionMember->status === 'active'
+            && $prigovor?->isPodnesen();
 
         return view('evaluation.show', compact(
             'application', 
@@ -947,7 +814,11 @@ class EvaluationController extends Controller
             'averageScores',
             'finalScore',
             'commission',
-            'canViewOtherMembersScores'
+            'canViewOtherMembersScores',
+            'eliminatoryCheck',
+            'eliminatoryNotice',
+            'prigovor',
+            'canDecidePrigovor',
         ));
     }
 
@@ -970,6 +841,12 @@ class EvaluationController extends Controller
         // Proveri da li je predsjednik
         if ($commissionMember->position !== 'predsjednik') {
             abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
+        }
+
+        if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
+            abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
+                ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
+                : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE);
         }
         
         // Provjeri da li je prošao rok od 45 dana za donošenje odluke
@@ -1059,6 +936,12 @@ class EvaluationController extends Controller
 
         $this->abortIfCommissionProcessingBlocked($application->competition);
 
+        if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
+            abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
+                ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
+                : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE);
+        }
+
         // Proveri da li je predsjednik već potpisao
         if (!$application->signed_by_chairman) {
             return back()->with('error', 'Predsjednik komisije mora prvo donijeti zaključak.');
@@ -1072,5 +955,108 @@ class EvaluationController extends Controller
         }
 
         return back()->with('success', 'Odluka je uspješno potpisana.');
+    }
+
+    public function storeEliminatory(Request $request, Application $application): RedirectResponse
+    {
+        $chairman = $this->chairmanForEliminatoryMutation($application);
+
+        $answers = $this->validatedEliminatoryAnswers($request, requireNoteIfFail: false);
+        $this->eliminatoryChecks->saveDraft($application, $chairman, $answers);
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', 'Eliminatorna provjera je sačuvana. Obrazac 3 još nije potvrđen.');
+    }
+
+    public function confirmEliminatory(Request $request, Application $application): RedirectResponse
+    {
+        $chairman = $this->chairmanForEliminatoryMutation($application);
+
+        $answers = $this->validatedEliminatoryAnswers($request, requireNoteIfFail: true);
+        $acknowledgement = $request->boolean('confirmation_acknowledged');
+
+        $this->eliminatoryChecks->confirm($application, $chairman, $answers, $acknowledgement);
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', 'Obrazac 3 je potvrđen.');
+    }
+
+    public function decidePrigovor(Request $request, Application $application): RedirectResponse
+    {
+        $chairman = $this->chairmanForEliminatoryMutation($application);
+
+        $validated = $request->validate([
+            'odluka' => 'required|in:prihvacen,odbijen',
+            'decision_note' => 'nullable|string|max:5000',
+        ]);
+
+        $this->prigovors->decide(
+            $application,
+            $chairman,
+            $validated['odluka'],
+            $validated['decision_note'] ?? null,
+        );
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', 'Odluka Komisije o Prigovoru je evidentirana.');
+    }
+
+    protected function chairmanForEliminatoryMutation(Application $application): CommissionMember
+    {
+        $user = Auth::user();
+        $competition = $application->competition;
+
+        if ($competition && ! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.');
+        }
+
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $commissionMember = $this->commissionMemberForApplication($application, $user->id);
+        if (! $commissionMember) {
+            abort(403, 'Niste član komisije.');
+        }
+
+        if ($application->status === 'draft') {
+            abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+        }
+
+        if ($commissionMember->position !== 'predsjednik' || $commissionMember->status !== 'active') {
+            abort(403, 'Samo predsjednik Komisije može uređivati Obrazac 3.');
+        }
+
+        return $commissionMember;
+    }
+
+    /**
+     * @return array{criterion_1: bool, criterion_2: bool, criterion_3: bool, note: ?string}
+     */
+    protected function validatedEliminatoryAnswers(Request $request, bool $requireNoteIfFail): array
+    {
+        $validated = $request->validate([
+            'criterion_1' => 'required|boolean',
+            'criterion_2' => 'required|boolean',
+            'criterion_3' => 'required|boolean',
+            'note' => 'nullable|string|max:5000',
+        ]);
+
+        $criterion1 = $request->boolean('criterion_1');
+        $criterion2 = $request->boolean('criterion_2');
+        $criterion3 = $request->boolean('criterion_3');
+        $note = isset($validated['note']) ? trim((string) $validated['note']) : '';
+        $note = $note === '' ? null : $note;
+
+        if ($requireNoteIfFail && (! $criterion1 || ! $criterion2 || ! $criterion3) && $note === null) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'note' => 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.',
+            ]);
+        }
+
+        return [
+            'criterion_1' => $criterion1,
+            'criterion_2' => $criterion2,
+            'criterion_3' => $criterion3,
+            'note' => $note,
+        ];
     }
 }

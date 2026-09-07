@@ -297,28 +297,17 @@ class HomeController extends Controller
                     ->toArray();
 
                 $applicationsQuery = Application::whereIn('competition_id', $competitionIdsForEvaluation)
-                    ->where(function ($q) {
-                        $q->whereIn('status', ['submitted', 'evaluated'])
-                            ->orWhere(function ($q2) {
-                                $q2->where('status', 'rejected')
-                                    ->where('rejection_reason', 'like', '%Nedostaju potrebna dokumenta%');
-                            });
-                    })
-                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember']);
+                    ->whereIn('status', ['submitted', 'evaluated'])
+                    ->whereEliminatoryScoringNotBlocked()
+                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember', 'eliminatoryCheck', 'prigovor']);
 
                 if (! empty($evaluatedApplicationIds)) {
-                    $applicationsQuery->where(function ($q) use ($evaluatedApplicationIds) {
-                        $q->whereNotIn('id', $evaluatedApplicationIds)
-                            ->orWhere(function ($q2) {
-                                $q2->where('status', 'rejected')
-                                    ->where('rejection_reason', 'like', '%Nedostaju potrebna dokumenta%');
-                            });
-                    });
+                    $applicationsQuery->whereNotIn('id', $evaluatedApplicationIds);
                 }
 
                 $applications = $applicationsQuery->latest()->get();
                 $applications->each(function ($app) use ($commissionMember) {
-                    if ($app->isRejectedForMissingDocuments()) {
+                    if ($app->isEliminatedFromScoring()) {
                         $app->is_evaluated_by_member = true;
 
                         return;

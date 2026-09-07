@@ -410,18 +410,46 @@
                     <input type="text" class="form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
                 </div>
 
-                <!-- 3. Dostavljena su sva potrebna dokumenta? -->
+                <!-- 3. Eliminatorna provjera -->
                 <div class="form-section form-section-compact">
+                    @php
+                        $eliminatoryCheck = $eliminatoryCheck ?? $application->eliminatoryCheck;
+                    @endphp
                     <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
-                <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
-                    <strong>{{ $evaluationScore->documents_complete ? 'a. Da' : 'b. Ne*' }}</strong>
-                    @if(!$evaluationScore->documents_complete)
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            *ukoliko je odgovor „Ne", odbiti aplikaciju
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
+                        <div style="margin-bottom: 12px;">
+                            <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_1) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_1) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
                         </div>
-                    @endif
+                        <div style="margin-bottom: 8px; font-weight: 600;">Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?</div>
+                        <div style="margin-bottom: 12px;">
+                            <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_2) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_2) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
+                        </div>
+                        <div style="margin-bottom: 8px; font-weight: 600;">Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?</div>
+                        <div style="margin-bottom: 12px;">
+                            <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_3) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_3) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
+                        </div>
+                        <div style="margin-bottom: 8px; font-weight: 600;">Napomena</div>
+                        <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $eliminatoryCheck?->note ?: '—' }}</div>
+                        <div>
+                            <strong>Rezultat:</strong>
+                            @if(! $eliminatoryCheck || ! $eliminatoryCheck->isConfirmed())
+                                Nije potvrđeno
+                            @elseif($eliminatoryCheck->isConfirmedPass())
+                                Ispunjava eliminatorne kriterijume
+                            @else
+                                Ne ispunjava eliminatorne kriterijume
+                            @endif
+                        </div>
+                        @if($eliminatoryCheck && $eliminatoryCheck->isConfirmed())
+                            <div style="margin-top: 8px;">
+                                Potvrdio: {{ $eliminatoryCheck->confirmed_by_name }}
+                            </div>
+                            <div>
+                                Datum i vrijeme: {{ $eliminatoryCheck->confirmed_at?->format('d.m.Y. H:i') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </div>
                 </div>
 
             <!-- 4. Ocjena biznis plana u brojkama -->
@@ -582,6 +610,9 @@
                 <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
             </div>
         </div>
+
+        @include('evaluation.partials.prigovor_commission_block')
+
     </div>
 </div>
 @endsection

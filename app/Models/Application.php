@@ -108,6 +108,21 @@ class Application extends Model
         return $this->hasMany(EvaluationScore::class);
     }
 
+    public function eliminatoryCheck()
+    {
+        return $this->hasOne(ApplicationEliminatoryCheck::class);
+    }
+
+    public function eliminatoryNotice()
+    {
+        return $this->hasOne(ApplicationEliminatoryNotice::class);
+    }
+
+    public function prigovor()
+    {
+        return $this->hasOne(ApplicationPrigovor::class);
+    }
+
     // Veza: aplikacija ima biznis plan
     public function businessPlan()
     {
@@ -210,20 +225,79 @@ class Application extends Model
      */
     public function getDisplayScore(): float
     {
-        if ($this->isRejectedForMissingDocuments()) {
+        if ($this->isEliminatedFromScoring()) {
             return 0;
         }
         return (float) ($this->final_score ?? $this->calculateFinalScore());
     }
 
     /**
-     * Prijava odbijena jer predsjednik komisije nije prihvatio dokumentaciju (bez bodovanja ostalih članova).
+     * Prijava ne prolazi potvrđenu eliminatornu provjeru Obrasca 3.
+     * Kanonski izvor: application_eliminatory_checks. Ne čita documents_complete.
      */
     public function isRejectedForMissingDocuments(): bool
     {
-        return $this->status === 'rejected'
-            && $this->rejection_reason
-            && str_contains($this->rejection_reason, 'Nedostaju potrebna dokumenta');
+        return $this->isEliminatoryConfirmedFail();
+    }
+
+    public function isEliminatoryConfirmedFail(): bool
+    {
+        return $this->eliminatoryCheck?->isConfirmedFail() === true;
+    }
+
+    public function isEliminatoryConfirmedPass(): bool
+    {
+        return $this->eliminatoryCheck?->isConfirmedPass() === true;
+    }
+
+    /**
+     * Prijava je izvan bodovanja zbog potvrđenog Ne* dok Prigovor nije prihvaćen
+     * tako da više ne postoji eliminatorni razlog.
+     */
+    public function isEliminatedFromScoring(): bool
+    {
+        if ($this->isEliminatoryConfirmedPass()) {
+            return false;
+        }
+
+        $this->loadMissing('prigovor');
+        if ($this->prigovor?->liftsEliminatoryBar() === true) {
+            return false;
+        }
+
+        return $this->isEliminatoryConfirmedFail();
+    }
+
+    public function scopeWhereEliminatoryScoringNotBlocked($query)
+    {
+        return $query->where(function ($outer) {
+            $outer->whereDoesntHave('eliminatoryCheck', function ($q) {
+                $q->whereNotNull('confirmed_at')
+                    ->where(function ($inner) {
+                        $inner->where('criterion_1', false)
+                            ->orWhere('criterion_2', false)
+                            ->orWhere('criterion_3', false);
+                    });
+            })->orWhereHas('prigovor', function ($q) {
+                $q->where('status', ApplicationPrigovor::STATUS_PRIHVACEN)
+                    ->where('eliminatory_reason_remaining', false);
+            });
+        });
+    }
+
+    public function scopeWhereEliminatoryScoringBlocked($query)
+    {
+        return $query->whereHas('eliminatoryCheck', function ($q) {
+            $q->whereNotNull('confirmed_at')
+                ->where(function ($inner) {
+                    $inner->where('criterion_1', false)
+                        ->orWhere('criterion_2', false)
+                        ->orWhere('criterion_3', false);
+                });
+        })->whereDoesntHave('prigovor', function ($q) {
+            $q->where('status', ApplicationPrigovor::STATUS_PRIHVACEN)
+                ->where('eliminatory_reason_remaining', false);
+        });
     }
 
     /**

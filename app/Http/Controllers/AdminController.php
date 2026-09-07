@@ -980,25 +980,17 @@ class AdminController extends Controller
         // Zamrzni rang pozicije u trenutku zatvaranja konkursa,
         // da arhiva uvijek prikaže isti poredak kao zaključena rang lista.
         $competition->load('commission');
-        $chairmanMember = $competition->commission
-            ? $competition->commission->activeMembers()->where('position', 'predsjednik')->first()
-            : null;
 
         $rankableApplications = $competition->applications()
-            ->with('evaluationScores')
+            ->with(['evaluationScores', 'eliminatoryCheck', 'prigovor'])
             ->get()
-            ->filter(function ($application) use ($chairmanMember) {
-                if ($application->evaluationScores->count() === 0) {
+            ->filter(function ($application) {
+                if ($application->isEliminatedFromScoring()) {
                     return false;
                 }
 
-                if ($chairmanMember) {
-                    $chairmanScore = $application->evaluationScores
-                        ->firstWhere('commission_member_id', $chairmanMember->id);
-
-                    if ($chairmanScore && $chairmanScore->documents_complete === false) {
-                        return false;
-                    }
+                if ($application->evaluationScores->count() === 0) {
+                    return false;
                 }
 
                 return $application->meetsMinimumScore();
@@ -1137,9 +1129,7 @@ class AdminController extends Controller
             }
         }
 
-        $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
-
-        $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
+        $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         return view('admin.applications.show', compact('application'));
     }
@@ -2041,7 +2031,7 @@ class AdminController extends Controller
 
         // Učitaj sve prijave za ovaj konkurs
         $allApplications = Application::where('competition_id', $competition->id)
-            ->with(['user', 'businessPlan', 'evaluationScores'])
+            ->with(['user', 'businessPlan', 'evaluationScores', 'eliminatoryCheck', 'prigovor'])
             ->get()
             ->map(function ($application) {
                 // Izračunaj konačnu ocjenu samo ako nije nikad snimljena
@@ -2057,34 +2047,19 @@ class AdminController extends Controller
                 return $application;
             });
 
-        // Pronađi predsjednika komisije
-        $commission = $competition->commission;
-        $chairmanMember = $commission ? $commission->activeMembers()->where('position', 'predsjednik')->first() : null;
-
-        // Prijave odbijene zbog nedostatka dokumenata (documents_complete = false) - NE prikazuju se u rang listi
-        $isRejectedForDocuments = function ($application) use ($chairmanMember) {
-            if (! $chairmanMember) {
-                return false;
-            }
-            $chairmanScore = EvaluationScore::where('application_id', $application->id)
-                ->where('commission_member_id', $chairmanMember->id)
-                ->first();
-
-            return $chairmanScore && $chairmanScore->documents_complete === false;
-        };
-
-        // Prijave koje se prikazuju u rang listi: imaju ocjene, NISU odbijene zbog dokumenata
         $visibleApplications = $allApplications
-            ->filter(function ($application) use ($isRejectedForDocuments) {
-                if (! $application->has_evaluations) {
+            ->filter(function ($application) {
+                if ($application->isEliminatedFromScoring()) {
                     return false;
                 }
-                if ($isRejectedForDocuments($application)) {
+                if (! $application->has_evaluations) {
                     return false;
                 }
 
                 return true;
             });
+
+        $commission = $competition->commission;
 
         $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
 

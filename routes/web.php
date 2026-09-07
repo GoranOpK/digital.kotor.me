@@ -29,6 +29,7 @@ use App\Http\Controllers\CulturalOrganizerCreationRequestController;
 use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\ApplicationPrigovorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterPublicUnsubscribeController;
 use App\Http\Controllers\NotificationController;
@@ -433,6 +434,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/competitions/{competition}/apply', [ApplicationController::class, 'create'])->name('applications.create'); // Prikaz forme za prijavu
     Route::post('/competitions/{competition}/apply', [ApplicationController::class, 'store'])->name('applications.store'); // Snimi prijavu
     Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show'); // Prikaz detalja prijave
+    Route::post('/applications/{application}/prigovor', [ApplicationPrigovorController::class, 'store'])->name('applications.prigovor.store');
     Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])->name('applications.destroy'); // Brisanje prijave
     Route::post('/applications/{application}/submit', [ApplicationController::class, 'submit'])->name('applications.final-submit'); // Konačno podnošenje prijave
     Route::post('/applications/{application}/upload', [ApplicationController::class, 'uploadDocument'])->name('applications.upload'); // Upload dokumenata
@@ -451,6 +453,9 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/', [EvaluationController::class, 'index'])->name('index');
             Route::post('/applications/{application}', [EvaluationController::class, 'store'])->name('store');
             Route::get('/applications/{application}/show', [EvaluationController::class, 'show'])->name('show');
+            Route::post('/applications/{application}/eliminatory', [EvaluationController::class, 'storeEliminatory'])->name('eliminatory.store');
+            Route::post('/applications/{application}/eliminatory/confirm', [EvaluationController::class, 'confirmEliminatory'])->name('eliminatory.confirm');
+            Route::post('/applications/{application}/prigovor/decide', [EvaluationController::class, 'decidePrigovor'])->name('prigovor.decide');
             // Rute za predsjednika komisije
             Route::post('/applications/{application}/decision', [EvaluationController::class, 'storeDecision'])->name('store-decision');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');

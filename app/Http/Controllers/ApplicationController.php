@@ -576,7 +576,7 @@ class ApplicationController extends Controller
             }
         }
 
-        $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
+        $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         // Provjeri da li je prijava spremna za podnošenje
         // Napomena: Dozvoljavamo prijavu čak i ako nisu sva dokumenta uploadovana
@@ -590,8 +590,10 @@ class ApplicationController extends Controller
 
         // Samo vlasnik može da mijenja (uploaduje/briše dokumente, podnosi prijavu, uređuje biznis plan)
         $canManage = $isOwner;
+        $canSubmitPrigovor = $isOwner
+            && app(\App\Services\ApplicationPrigovorService::class)->applicantCanSubmit($application, $user);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor'));
     }
 
     /**

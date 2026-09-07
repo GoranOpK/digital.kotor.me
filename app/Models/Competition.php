@@ -357,6 +357,7 @@ class Competition extends Model
 
         $applications = $this->applications()
             ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
+            ->with(['eliminatoryCheck', 'prigovor'])
             ->get();
 
         if ($applications->isEmpty()) {
@@ -364,20 +365,10 @@ class Competition extends Model
         }
 
         $activeMembersCount = $activeMemberIds->count();
-        $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
 
         foreach ($applications as $application) {
-            // Prijave odbijene zbog nedostatka dokumenata: predsjednik samo označi dokumentaciju,
-            // niti jedan član komisije ih ne ocjenjuje, preskačemo ih u provjeri
-            $chairmanScore = $chairmanMember
-                ? \App\Models\EvaluationScore::where('application_id', $application->id)
-                    ->where('commission_member_id', $chairmanMember->id)
-                    ->first()
-                : null;
-            $rejectedForDocuments = $chairmanScore && $chairmanScore->documents_complete === false;
-
-            if ($rejectedForDocuments) {
-                continue; // Ne treba da ih ocjenjuje nijedan član – preskačemo
+            if ($application->isEliminatedFromScoring()) {
+                continue;
             }
 
             // Sve ostale prijave: svi članovi moraju ocjeniti
@@ -414,15 +405,14 @@ class Competition extends Model
 
         $allApplications = $this->applications()
             ->whereIn('status', ['submitted', 'evaluated', 'rejected'])
-            ->with('evaluationScores')
+            ->with(['evaluationScores', 'eliminatoryCheck', 'prigovor'])
             ->get();
 
-        $rankingApplications = $allApplications->filter(function ($application) use ($chairmanMember) {
-            if ($application->evaluationScores->isEmpty() || !$application->meetsMinimumScore()) {
+        $rankingApplications = $allApplications->filter(function ($application) {
+            if ($application->isEliminatedFromScoring()) {
                 return false;
             }
-            $chairmanScore = $application->evaluationScores->firstWhere('commission_member_id', $chairmanMember->id);
-            if ($chairmanScore && $chairmanScore->documents_complete === false) {
+            if ($application->evaluationScores->isEmpty() || !$application->meetsMinimumScore()) {
                 return false;
             }
             return true;

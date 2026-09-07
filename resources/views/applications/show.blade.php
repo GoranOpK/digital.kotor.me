@@ -672,6 +672,8 @@
                 </div>
             </div>
 
+            @include('applications.partials.prigovor_applicant_block')
+
             <!-- 3. Dodaj dokument (treća sekcija u prvom redu) -->
             @if($showUpload)
             <div class="info-card">
