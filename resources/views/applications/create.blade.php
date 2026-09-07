@@ -491,21 +491,30 @@
                         <label class="form-label">
                             Tip podnosioca prijave <span class="required">*</span>
                         </label>
-                        <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
-                            <strong>Napomena:</strong> "Fizičko lice (nema registrovanu djelatnost)" se odnosi na osobe koje nemaju registrovanu djelatnost u skladu sa Zakonom o privrednim društvima. 
-                            "Preduzetnica" se odnosi na fizička lica koja imaju registrovanu djelatnost (preduzetnici).
-                        </div>
                         @php
                             $userType = $subjectIdentity->userType ?? '';
                             $residentialStatus = $subjectIdentity->residentialStatus ?? '';
                             $isFizickoLiceRezident = \App\Support\ApplicationCreateApplicantTypeDefault::isFizickoLiceRezident($userType, $residentialStatus);
                             $preferredApplicantType = $preferredApplicantType ?? null;
+                            $knClassification = \App\Support\KnApplicationClassification::fromUserType($userType);
+                            $knIsHistoricalFizicko = isset($existingApplication) && $existingApplication && $existingApplication->applicant_type === 'fizicko_lice';
+                            $knIsRegistered = $knIsHistoricalFizicko
+                                ? (bool) $existingApplication->is_registered
+                                : $knClassification->isRegisteredBusiness;
+                            $knAllowsRazvoj = $knIsHistoricalFizicko || $knClassification->allowsStage('razvoj');
                             $defaultType = \App\Support\ApplicationCreateApplicantTypeDefault::forUser(
                                 $userType,
                                 $residentialStatus,
-                                $preferredApplicantType
+                                $knIsHistoricalFizicko ? 'fizicko_lice' : $preferredApplicantType
                             );
+                            if ($knIsHistoricalFizicko) {
+                                $defaultType = 'fizicko_lice';
+                            }
+                            $selectedApplicantType = old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType);
                         @endphp
+                        <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
+                            <strong>Napomena:</strong> Ako nemate registrovan biznis, izaberite planirani oblik Preduzetnica (Obrazac 1a) ili DOO (Obrazac 1b). Taj izbor ne mijenja vaš identitet na Platformi. Postojeća Preduzetnica i postojeće DOO imaju zaključan oblik.
+                        </div>
                         <div class="radio-group">
                             <div class="radio-option">
                                 <input 
@@ -513,8 +522,9 @@
                                     id="applicant_type_fizicko_lice" 
                                     name="applicant_type" 
                                     value="fizicko_lice"
-                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'fizicko_lice' ? 'checked' : '' }}
-                                    required
+                                    {{ $selectedApplicantType === 'fizicko_lice' ? 'checked' : '' }}
+                                    {{ $knIsHistoricalFizicko ? '' : 'disabled' }}
+                                    {{ $knIsHistoricalFizicko ? 'required' : '' }}
                                 >
                                 <label for="applicant_type_fizicko_lice">Fizičko lice (nema registrovanu djelatnost)</label>
                             </div>
@@ -524,7 +534,8 @@
                                     id="applicant_type_preduzetnica" 
                                     name="applicant_type" 
                                     value="preduzetnica"
-                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'preduzetnica' ? 'checked' : '' }}
+                                    {{ $selectedApplicantType === 'preduzetnica' ? 'checked' : '' }}
+                                    {{ (! $knIsHistoricalFizicko && ! $knClassification->allowsApplicantType('preduzetnica')) ? 'disabled' : '' }}
                                 >
                                 <label for="applicant_type_preduzetnica">Preduzetnica</label>
                             </div>
@@ -534,7 +545,8 @@
                                     id="applicant_type_doo" 
                                     name="applicant_type" 
                                     value="doo"
-                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'doo' ? 'checked' : '' }}
+                                    {{ $selectedApplicantType === 'doo' ? 'checked' : '' }}
+                                    {{ (! $knIsHistoricalFizicko && ! $knClassification->allowsApplicantType('doo')) ? 'disabled' : '' }}
                                 >
                                 <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
                             </div>
@@ -544,7 +556,8 @@
                                     id="applicant_type_ostalo" 
                                     name="applicant_type" 
                                     value="ostalo"
-                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'ostalo' ? 'checked' : '' }}
+                                    {{ $selectedApplicantType === 'ostalo' ? 'checked' : '' }}
+                                    {{ (! $knIsHistoricalFizicko && ! $knClassification->allowsApplicantType('ostalo')) ? 'disabled' : '' }}
                                 >
                                 <label for="applicant_type_ostalo">Ostalo</label>
                             </div>
@@ -557,7 +570,7 @@
             </div>
 
             <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
-            <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: none; margin-bottom: 24px;">
+            <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: {{ (!empty($knIsRegistered) || !empty($knIsHistoricalFizicko)) ? 'none' : 'block' }}; margin-bottom: 24px;">
                 <strong>Važno:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
             </div>
 
@@ -582,7 +595,7 @@
                                     id="business_stage_zapocinjanje_fizicko" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? '') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? '' : 'započinjanje')) === 'započinjanje' ? 'checked' : '' }}
                                 >
                                 <label for="business_stage_zapocinjanje_fizicko">Preduzetnica koja započinje biznis</label>
                             </div>
@@ -592,7 +605,8 @@
                                     id="business_stage_razvoj_fizicko" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? '') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? '' : 'započinjanje')) === 'razvoj' ? 'checked' : '' }}
+                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
                                 >
                                 <label for="business_stage_razvoj_fizicko">Preduzetnica koja planira razvoj poslovanja</label>
                             </div>
@@ -713,13 +727,13 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            Oblik registracije <span class="required">*</span>
+                            Oblik registracije @if(!empty($knIsRegistered))<span class="required">*</span>@endif
                         </label>
                         <select 
                             name="registration_form" 
                             id="registration_form_1a"
                             class="form-control @error('registration_form') error @enderror"
-                            required
+                            {{ !empty($knIsRegistered) ? 'required' : '' }}
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
@@ -848,7 +862,7 @@
                                     id="business_stage_zapocinjanje_1a" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? null : 'započinjanje')) === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1a">Započinjanje poslovne djelatnosti</label>
@@ -861,6 +875,7 @@
                                     value="razvoj"
                                     {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
+                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
                                 >
                                 <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -981,13 +996,13 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            Oblik registracije <span class="required">*</span>
+                            Oblik registracije @if(!empty($knIsRegistered))<span class="required">*</span>@endif
                         </label>
                         <select 
                             name="registration_form" 
                             id="registration_form_1b"
                             class="form-control @error('registration_form') error @enderror"
-                            required
+                            {{ !empty($knIsRegistered) ? 'required' : '' }}
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
@@ -1164,7 +1179,7 @@
                                     id="business_stage_zapocinjanje_1b" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? null : 'započinjanje')) === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1b">Započinjanje poslovne djelatnosti</label>
@@ -1177,6 +1192,7 @@
                                     value="razvoj"
                                     {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
+                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
                                 >
                                 <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -1303,6 +1319,7 @@
                                     value="razvoj"
                                     {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
+                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
                                 >
                                 <label for="business_stage_razvoj_fizicko_old">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -1499,6 +1516,8 @@
 </script>
 <script>
     const isFizickoLiceRezident = @json($isFizickoLiceRezident);
+    const knIsRegistered = @json((bool) ($knIsRegistered ?? false));
+    const knAllowsRazvoj = @json((bool) ($knAllowsRazvoj ?? false));
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1606,7 +1625,7 @@
 
             // Resetuj napomenu
             if (fizickoLiceNotice) {
-                fizickoLiceNotice.style.display = 'none';
+                fizickoLiceNotice.style.display = (!knIsRegistered && selectedType) ? 'block' : 'none';
             }
 
             // Resetuj sekciju za izbor tipa prijave za Fizičko lice (Rezident)
@@ -1659,8 +1678,17 @@
                     businessStage1a.forEach(radio => {
                         radio.removeAttribute('disabled');
                         radio.setAttribute('required', 'required');
+                        if (!knAllowsRazvoj && radio.value === 'razvoj') {
+                            radio.setAttribute('disabled', 'disabled');
+                            radio.checked = false;
+                            radio.removeAttribute('required');
+                        }
                     });
-                    syncBusinessStageRadiosInSection(obrazac1a, savedBusinessStageValue);
+                    if (!knAllowsRazvoj) {
+                        syncBusinessStageRadiosInSection(obrazac1a, 'započinjanje');
+                    } else {
+                        syncBusinessStageRadiosInSection(obrazac1a, savedBusinessStageValue);
+                    }
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1686,8 +1714,17 @@
                     businessStage1b.forEach(radio => {
                         radio.removeAttribute('disabled');
                         radio.setAttribute('required', 'required');
+                        if (!knAllowsRazvoj && radio.value === 'razvoj') {
+                            radio.setAttribute('disabled', 'disabled');
+                            radio.checked = false;
+                            radio.removeAttribute('required');
+                        }
                     });
-                    syncBusinessStageRadiosInSection(obrazac1b, savedBusinessStageValue);
+                    if (!knAllowsRazvoj) {
+                        syncBusinessStageRadiosInSection(obrazac1b, 'započinjanje');
+                    } else {
+                        syncBusinessStageRadiosInSection(obrazac1b, savedBusinessStageValue);
+                    }
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1836,6 +1873,9 @@
         // Funkcija za automatsko postavljanje obrasca registracije
         // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication
         function setRegistrationForm() {
+            if (!knIsRegistered) {
+                return;
+            }
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
             const userRegistrationForm = '{{ $subjectIdentity->userType ?? "" }}';
             
@@ -1942,7 +1982,7 @@
                 if (!founderName || !founderName.value.trim()) return false;
                 if (!directorName || !directorName.value.trim()) return false;
                 if (!companySeat || !companySeat.value.trim()) return false;
-                if (!registrationForm || !registrationForm.value) return false;
+                if (knIsRegistered && (!registrationForm || !registrationForm.value)) return false;
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
@@ -1952,7 +1992,7 @@
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="preduzetnik_jmbg"]') : form.querySelector('input[name="preduzetnik_jmbg"]:not([disabled])');
                 const profileAddress = @json($userProfileAddress);
 
-                if (!registrationForm || !registrationForm.value) return false;
+                if (knIsRegistered && (!registrationForm || !registrationForm.value)) return false;
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
                 if (!profileAddress || !profileAddress.trim()) return false;
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;

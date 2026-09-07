@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Support\KnApplicationClassification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -76,6 +77,10 @@ class CompetitionsController extends Controller
         $userApplication = null;
         $userType = null;
         $applicantType = null;
+        $knIsRegisteredBusiness = false;
+        $knCanChoosePlannedForm = false;
+        $knFormApplicantType = null;
+        $knAllowsRazvoj = false;
         if (auth()->check()) {
             $user = auth()->user();
             $identity = app(CurrentIdentityResolver::class)->viewFor($user);
@@ -85,6 +90,13 @@ class CompetitionsController extends Controller
                 ->first();
 
             $applicantType = app(CurrentIdentityResolver::class)->applicantTypeFor($user);
+            $kn = KnApplicationClassification::fromUserType($userType);
+            $knIsRegisteredBusiness = $kn->isRegisteredBusiness;
+            $knCanChoosePlannedForm = $kn->canChoosePlannedForm && $identity->hasCurrentSubjectIdentity();
+            $knAllowsRazvoj = $kn->allowsStage(KnApplicationClassification::STAGE_RAZVOJ);
+            $knFormApplicantType = $identity->hasCurrentSubjectIdentity()
+                ? $kn->defaultFormApplicantType()
+                : null;
         }
 
         // Dokument labels za mapiranje
@@ -109,26 +121,25 @@ class CompetitionsController extends Controller
             'izvjestaj_registar_kase' => 'Izvještaj sa registra kase',
         ];
 
-        // Generiši početnu listu dokumenata (za preduzetnice i fizičko lice koje započinje, sa SVIM dokumentima)
-        // Za preduzetnice i fizičko lice koje započinje, prikazujemo sve dokumente sa napomenama za opcione
+        // Generiši početnu listu dokumenata prema V1 obliku Obrasca 1 i registrovanosti biznisa
+        $previewApplicantType = $knFormApplicantType ?? $applicantType;
         $defaultDocuments = [];
-        if ($applicantType === 'preduzetnica') {
-            // Uzmi sve dokumente (uključujući CRPS, PIB, PDV) - JavaScript će dodati napomene
-            $defaultDocuments = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', true);
-        } elseif ($applicantType === 'fizicko_lice') {
-            // Za fizičko lice (Rezident), uzmi sve dokumente kao za preduzetnicu koja započinje
-            $defaultDocuments = Application::getRequiredDocumentsForType('fizicko_lice', 'započinjanje', true);
-        } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
-            // Prikaži sve dokumente (sa opcionim napomenama) - JavaScript ažurira na osnovu izbora faze
-            $defaultDocuments = Application::getRequiredDocumentsForType($applicantType, 'započinjanje', true);
+        if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $previewApplicantType === 'doo' || $previewApplicantType === 'ostalo') {
+            $catalogType = $previewApplicantType === 'fizicko_lice' ? 'preduzetnica' : $previewApplicantType;
+            $defaultDocuments = Application::getRequiredDocumentsForType(
+                $catalogType,
+                'započinjanje',
+                $knIsRegisteredBusiness
+            );
         }
 
         // Mapiraj dokumente u ljudski čitljive nazive
-        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType) {
+        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType, $previewApplicantType) {
             $label = $documentLabels[$docType] ?? $docType;
+            $labelType = $previewApplicantType ?: $applicantType;
             
             // Za preduzetnice i fizičko lice, dodaj napomene za opcione dokumente i ažuriraj tekstove
-            if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
+            if ($labelType === 'preduzetnica' || $labelType === 'fizicko_lice') {
                 if ($docType === 'crps_resenje') {
                     $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pib_resenje') {
@@ -152,7 +163,7 @@ class CompetitionsController extends Controller
                 }
             }
             // Za DOO i Ostalo (započinjanje - početna lista) – tekstovi prema Odluci
-            elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+            elseif ($labelType === 'doo' || $labelType === 'ostalo') {
                 if ($docType === 'licna_karta') {
                     $label = 'Ovjerenu kopiju lične karte';
                 } elseif ($docType === 'crps_resenje') {
@@ -188,10 +199,10 @@ class CompetitionsController extends Controller
         }, $defaultDocuments);
 
         // Dodaj obavezne dokumente koje svi moraju imati
-        if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
+        if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)');
             array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
-        } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+        } elseif ($previewApplicantType === 'doo' || $previewApplicantType === 'ostalo' || $applicantType === 'doo' || $applicantType === 'ostalo') {
             array_unshift($requiredDocuments, 'Popunjenu formu za biznis plan (obrazac 2)');
             array_unshift($requiredDocuments, 'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)');
         } else {
@@ -211,7 +222,11 @@ class CompetitionsController extends Controller
             'userApplication',
             'userType',
             'applicantType',
-            'documentLabels'
+            'documentLabels',
+            'knIsRegisteredBusiness',
+            'knCanChoosePlannedForm',
+            'knFormApplicantType',
+            'knAllowsRazvoj'
         ));
     }
 }

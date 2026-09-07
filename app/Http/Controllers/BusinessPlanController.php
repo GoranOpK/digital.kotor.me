@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class BusinessPlanController extends Controller
@@ -253,8 +254,8 @@ class BusinessPlanController extends Controller
             $defaultData['applicant_address'] = $identityAddress;
         }
 
-        // Podaci o registrovanom biznisu - uzmi iz prijave (Obrazac 1a/1b)
-        $defaultData['has_registered_business'] = $application->is_registered ?? false;
+        // Podaci o registrovanom biznisu - ista činjenica kao u Prijavi (zaključana u Obrascu 2)
+        $defaultData['has_registered_business'] = (bool) ($application->is_registered ?? false);
         $defaultData['registration_form'] = $application->registration_form ?? '';
         $resolvedPib = $this->resolvePibFromApplication($application, $applicantUser);
         $defaultData['pib'] = $resolvedPib ?? '';
@@ -275,7 +276,7 @@ class BusinessPlanController extends Controller
                 'applicant_phone' => $businessPlan->applicant_phone ?? $defaultData['applicant_phone'],
                 'applicant_email' => $businessPlan->applicant_email ?? $defaultData['applicant_email'],
                 'applicant_address' => $businessPlan->applicant_address ?? $defaultData['applicant_address'],
-                'has_registered_business' => $businessPlan->has_registered_business ?? $defaultData['has_registered_business'],
+                'has_registered_business' => (bool) ($application->is_registered ?? false),
                 'registration_form' => $businessPlan->registration_form ?? $defaultData['registration_form'],
                 'pib' => filled($businessPlan->pib) ? $businessPlan->pib : $defaultData['pib'],
                 'vat_number' => $businessPlan->vat_number ?? $defaultData['vat_number'],
@@ -458,6 +459,14 @@ class BusinessPlanController extends Controller
                 'errors' => $e->errors(),
             ]);
             throw $e;
+        }
+
+        $lockedHasRegisteredBusiness = (bool) ($application->is_registered ?? false);
+        if ($request->has('has_registered_business')
+            && $request->boolean('has_registered_business') !== $lockedHasRegisteredBusiness) {
+            throw ValidationException::withMessages([
+                'has_registered_business' => 'Odgovor mora odgovarati registrovanosti biznisa iz Prijave.',
+            ]);
         }
 
         $this->bpLog('BP_STORE: validation ok', [
@@ -645,7 +654,7 @@ class BusinessPlanController extends Controller
         $payloadForSave = array_merge(
             $cleanedData,
             [
-                'has_registered_business' => $request->has('has_registered_business') ? (bool)$request->has_registered_business : null,
+                'has_registered_business' => (bool) ($application->is_registered ?? false),
                 'has_seasonal_workers' => $request->has('has_seasonal_workers') ? (bool)$request->has_seasonal_workers : null,
                 'finances_notice_confirmed' => $request->boolean('finances_notice_confirmed'),
             ]

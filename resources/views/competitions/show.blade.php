@@ -322,6 +322,35 @@
                     @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
                     <!-- Izbor faze biznisa -->
                     <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
+                        @if(!empty($knCanChoosePlannedForm))
+                        <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                            Planirani oblik poslovanja <span style="color: #dc2626;">*</span>
+                        </label>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input 
+                                    type="radio" 
+                                    name="planned_form_preview" 
+                                    value="preduzetnica" 
+                                    id="planned_form_preduzetnik_preview"
+                                    {{ ($knFormApplicantType ?? 'preduzetnica') === 'preduzetnica' ? 'checked' : '' }}
+                                    style="margin-right: 8px; cursor: pointer;"
+                                >
+                                <span>Preduzetnik</span>
+                            </label>
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input 
+                                    type="radio" 
+                                    name="planned_form_preview" 
+                                    value="doo" 
+                                    id="planned_form_doo_preview"
+                                    {{ ($knFormApplicantType ?? '') === 'doo' ? 'checked' : '' }}
+                                    style="margin-right: 8px; cursor: pointer;"
+                                >
+                                <span>DOO</span>
+                            </label>
+                        </div>
+                        @endif
                         <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
                             Faza biznisa <span style="color: #dc2626;">*</span>
                         </label>
@@ -335,17 +364,18 @@
                                     checked
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis' }}</span>
+                                <span>{{ (($knFormApplicantType ?? $applicantType) === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis' }}</span>
                             </label>
-                            <label style="display: flex; align-items: center; cursor: pointer;">
+                            <label style="display: flex; align-items: center; cursor: pointer;{{ empty($knAllowsRazvoj) ? ' display: none;' : '' }}">
                                 <input 
                                     type="radio" 
                                     name="business_stage_preview" 
                                     value="razvoj" 
                                     id="business_stage_razvoj_preview"
                                     style="margin-right: 8px; cursor: pointer;"
+                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
                                 >
-                                <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja' }}</span>
+                                <span>{{ (($knFormApplicantType ?? $applicantType) === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja' }}</span>
                             </label>
                         </div>
                     </div>
@@ -403,7 +433,7 @@
         @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
             @if($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
-                <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}" data-applicant-type="{{ $applicantType ?? '' }}">
+                <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}" data-applicant-type="{{ $knFormApplicantType ?? $applicantType ?? '' }}">
                     Prijavi se na konkurs
                 </a>
             @elseif($isOpen && auth()->check() && $isCommissionMemberForThisCompetition)
@@ -430,9 +460,12 @@
 @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const applicantType = @json($applicantType);
+    let applicantType = @json($knFormApplicantType ?? $applicantType);
+    const isRegisteredBusiness = @json((bool) ($knIsRegisteredBusiness ?? false));
+    const registrationDocs = @json(\App\Support\KnApplicationClassification::registrationConditionedDocumentTypes());
     const documentLabels = @json($documentLabels);
     const businessStageRadios = document.querySelectorAll('input[name="business_stage_preview"]');
+    const plannedFormRadios = document.querySelectorAll('input[name="planned_form_preview"]');
     const documentsList = document.getElementById('documents-list');
     
     // Mapa dokumenata po tipu prijave i fazi biznisa
@@ -486,9 +519,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectedStage) return;
         
         // Uzmi listu dokumenata
-        const docTypes = documentsMap[applicantType]?.[selectedStage]?.all || 
+        let docTypes = documentsMap[applicantType]?.[selectedStage]?.all || 
                         documentsMap[applicantType]?.[selectedStage]?.withoutRegistration || 
                         documentsMap[applicantType]?.[selectedStage]?.withRegistration || [];
+        if (!isRegisteredBusiness) {
+            docTypes = docTypes.filter(function (docType) {
+                return !registrationDocs.includes(docType);
+            });
+        }
         
         // Uzmi listu opcionih dokumenata
         const optionalDocs = documentsMap[applicantType]?.[selectedStage]?.optional || [];
@@ -658,6 +696,17 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', updateDocumentsList);
         radio.addEventListener('change', updateApplyLink);
     });
+    plannedFormRadios.forEach(radio => {
+        radio.addEventListener('change', function () {
+            applicantType = radio.value;
+            const applyBtn = document.getElementById('applyBtn');
+            if (applyBtn) {
+                applyBtn.setAttribute('data-applicant-type', applicantType);
+            }
+            updateDocumentsList();
+            updateApplyLink();
+        });
+    });
     
     // Ažuriraj link "Prijavi se" sa izabranim business_stage i applicant_type (prosljeđuje se kroz URL parametar)
     function updateApplyLink() {
@@ -665,10 +714,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!applyBtn) return;
         const baseUrl = applyBtn.getAttribute('data-base-url');
         if (!baseUrl) return;
-        const applicantTypeFromBtn = applyBtn.getAttribute('data-applicant-type');
+        const selectedPlanned = document.querySelector('input[name="planned_form_preview"]:checked')?.value;
+        const applicantTypeFromBtn = selectedPlanned || applyBtn.getAttribute('data-applicant-type') || applicantType;
         const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
         const url = new URL(baseUrl, window.location.origin);
-        if (applicantTypeFromBtn && ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'].includes(applicantTypeFromBtn)) {
+        if (applicantTypeFromBtn && ['preduzetnica', 'doo', 'ostalo'].includes(applicantTypeFromBtn)) {
             url.searchParams.set('applicant_type', applicantTypeFromBtn);
         }
         if (selectedStage) {

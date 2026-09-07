@@ -12,6 +12,7 @@ use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
 use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
+use App\Support\KnApplicationClassification;
 use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ApplicationController extends Controller
@@ -258,17 +260,32 @@ class ApplicationController extends Controller
         }
 
         // Validacija osnovnih podataka
-        // VAŽNO: applicant_type vrednosti:
-        // - 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti (nema registrovanu djelatnost u skladu sa Zakonom o privrednim društvima)
-        // - 'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik) - automatski ima registrovanu djelatnost
-        // - 'doo' = Društvo sa ograničenom odgovornošću - automatski ima registrovanu djelatnost
-        // - 'ostalo' = Ostali pravni subjekti - automatski ima registrovanu djelatnost
-        
+        // applicant_type je oblik Obrasca 1 (1a/1b), ne dokaz registrovanosti i ne kanonski identitet.
+        // is_registered se određuje iz kanonskog stanja korisnika, ne iz applicant_type.
+
         // Proveri da li je ovo draft ili finalno čuvanje
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
 
         $this->mergeProfileAddressIntoRequest($request);
         $this->mergeApplicantJmbgIntoRequest($request);
+
+        $knContext = $this->knStoreContext($request, $competition, $user);
+        $kn = $knContext['classification'];
+        $isHistoricalFizickoLice = $knContext['is_historical_fizicko_lice'];
+        $resolvedIsRegistered = $knContext['is_registered'];
+
+        if (! $isHistoricalFizickoLice) {
+            if (! $kn->isRegisteredBusiness && $request->input('business_stage') === KnApplicationClassification::STAGE_RAZVOJ) {
+                throw ValidationException::withMessages([
+                    'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
+                ]);
+            }
+
+            $request->merge([
+                'applicant_type' => $kn->resolveApplicantType($request->input('applicant_type')),
+                'business_stage' => $kn->resolveBusinessStage($request->input('business_stage')),
+            ]);
+        }
 
         if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
             $profileAddressError = $this->profileAddressErrorForUser($request->user());
@@ -277,14 +294,21 @@ class ApplicationController extends Controller
             }
         }
 
-        if (!$isDraft && $request->applicant_type === 'preduzetnica' && !$request->filled('registration_form')) {
+        if (!$isDraft && $resolvedIsRegistered && $request->applicant_type === 'preduzetnica' && !$request->filled('registration_form')) {
             $request->merge(['registration_form' => 'Preduzetnik']);
         }
         
+        $liveApplicantTypes = $isHistoricalFizickoLice
+            ? 'preduzetnica,doo,fizicko_lice,ostalo'
+            : implode(',', $kn->allowedApplicantTypes ?: ['preduzetnica', 'doo']);
+        $liveStages = $isHistoricalFizickoLice || $kn->isRegisteredBusiness
+            ? 'započinjanje,razvoj'
+            : 'započinjanje';
+
         $rules = [
             'business_plan_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
-            'applicant_type' => $isDraft ? 'nullable|in:preduzetnica,doo,fizicko_lice,ostalo' : 'required|in:preduzetnica,doo,fizicko_lice,ostalo',
-            'business_stage' => $isDraft ? 'nullable|in:započinjanje,razvoj' : 'required|in:započinjanje,razvoj',
+            'applicant_type' => $isDraft ? 'nullable|in:'.$liveApplicantTypes : 'required|in:'.$liveApplicantTypes,
+            'business_stage' => $isDraft ? 'nullable|in:'.$liveStages : 'required|in:'.$liveStages,
             'business_area' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'requested_amount' => 'nullable|numeric|min:0',
             'total_budget_needed' => 'nullable|numeric|min:0',
@@ -348,10 +372,10 @@ class ApplicationController extends Controller
         }
 
         // Polja za CRPS broj (opciono za sve tipove)
-        // Oblik registracije je obavezan za sve tipove osim fizičkog lica bez registrovane djelatnosti
-        if ($request->applicant_type !== 'fizicko_lice' && !$isDraft) {
+        // Oblik registracije je obavezan samo kada je biznis registrovan
+        if ($resolvedIsRegistered && !$isDraft) {
             $rules['registration_form'] = 'required|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
-        } elseif ($isDraft) {
+        } else {
             $rules['registration_form'] = 'nullable|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
         }
         $rules['crps_number'] = 'nullable|string|max:50';
@@ -452,7 +476,7 @@ class ApplicationController extends Controller
                 'pib' => $request->has('pib') ? ($request->pib ?: null) : $existingApplication->pib,
                 'crps_number' => $request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number,
                 'registration_form' => $request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form,
-                'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : $existingApplication->is_registered,
+                'is_registered' => $resolvedIsRegistered,
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
             ];
@@ -463,11 +487,7 @@ class ApplicationController extends Controller
             } else {
                 // Kreiraj novu prijavu
                 // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
-                // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
-                // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
-                // - 'preduzetnica' → is_registered = true (preduzetnik ima registrovanu djelatnost)
-                // - 'doo' → is_registered = true (DOO ima registrovanu djelatnost)
-                // - 'ostalo' → is_registered = true (ostali pravni subjekti imaju registrovanu djelatnost)
+                // is_registered je snapshot registrovanosti iz kanonskog identiteta, ne iz applicant_type.
                 $application = Application::create([
                     'competition_id' => $competition->id,
                     'user_id' => Auth::id(),
@@ -494,8 +514,7 @@ class ApplicationController extends Controller
                     'pib' => $request->filled('pib') ? $request->pib : null,
                     'crps_number' => $request->filled('crps_number') ? $request->crps_number : null,
                     'registration_form' => $request->filled('registration_form') ? $request->registration_form : null,
-                    // Automatsko postavljanje is_registered na osnovu tipa
-                    'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : false,
+                    'is_registered' => $resolvedIsRegistered,
                     'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                     'previous_support_declaration' => $request->has('previous_support_declaration'),
                     'status' => 'draft', // Draft dok se ne prilože svi dokumenti
@@ -1153,6 +1172,49 @@ class ApplicationController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @return array{classification: KnApplicationClassification, is_historical_fizicko_lice: bool, is_registered: bool}
+     */
+    protected function knStoreContext(Request $request, Competition $competition, \App\Models\User $user): array
+    {
+        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
+        $classification = KnApplicationClassification::fromUserType($identity->userType);
+
+        $existing = null;
+        if ($request->filled('application_id')) {
+            $existing = Application::where('id', $request->application_id)
+                ->where('competition_id', $competition->id)
+                ->where('user_id', $user->id)
+                ->first();
+        }
+        if (! $existing) {
+            $existing = Application::where('competition_id', $competition->id)
+                ->where('user_id', $user->id)
+                ->first();
+        }
+
+        $isHistoricalFizickoLice = $existing !== null
+            && KnApplicationClassification::isHistoricalFizickoLice($existing->applicant_type);
+
+        if ($isHistoricalFizickoLice) {
+            $request->merge([
+                'applicant_type' => $existing->applicant_type,
+            ]);
+
+            return [
+                'classification' => $classification,
+                'is_historical_fizicko_lice' => true,
+                'is_registered' => (bool) $existing->is_registered,
+            ];
+        }
+
+        return [
+            'classification' => $classification,
+            'is_historical_fizicko_lice' => false,
+            'is_registered' => $classification->isRegisteredBusiness,
+        ];
     }
 
     protected function applicationCreateUrl(Competition $competition, Application $application): string

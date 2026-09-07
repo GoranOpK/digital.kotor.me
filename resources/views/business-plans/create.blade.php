@@ -744,20 +744,21 @@
                         </label>
                         <div class="radio-group">
                             <div class="radio-option">
-                                <input type="radio" name="has_registered_business" value="1" id="has_business_yes" {{ old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <input type="radio" name="has_registered_business_display" value="1" id="has_business_yes" {{ (bool) ($application->is_registered ?? false) ? 'checked' : '' }} disabled>
                                 <label for="has_business_yes">Da</label>
                             </div>
                             <div class="radio-option">
-                                <input type="radio" name="has_registered_business" value="0" id="has_business_no" {{ old('has_registered_business') === '0' || (($businessPlan && !$businessPlan->has_registered_business) || (!isset($defaultData['has_registered_business']) || !$defaultData['has_registered_business'])) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <input type="radio" name="has_registered_business_display" value="0" id="has_business_no" {{ ! (bool) ($application->is_registered ?? false) ? 'checked' : '' }} disabled>
                                 <label for="has_business_no">Ne</label>
                             </div>
                         </div>
-                        <div id="napomenaNemaRegistraciju" class="info-box conditional-field {{ !old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'show' : '' }}">
+                        <input type="hidden" name="has_registered_business" value="{{ (bool) ($application->is_registered ?? false) ? '1' : '0' }}">
+                        <div id="napomenaNemaRegistraciju" class="info-box conditional-field {{ ! (bool) ($application->is_registered ?? false) ? 'show' : '' }}">
                             <strong>Napomena:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima ili na način definisan pravilima djelatnosti kojom namjerava da se bavi, najkasnije do dana potpisivanja ugovora.
                         </div>
                     </div>
 
-                    <div id="registeredBusinessFields" class="conditional-field {{ old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'show' : '' }}">
+                    <div id="registeredBusinessFields" class="conditional-field {{ (bool) ($application->is_registered ?? false) ? 'show' : '' }}">
                         <div class="form-group">
                             <label class="form-label">
                                 4. Podaci o registrovanoj djelatnosti:
@@ -1758,7 +1759,10 @@
 
 <script>
 function toggleRegisteredBusinessFields() {
-    const hasBusiness = document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
+    const locked = document.querySelector('input[name="has_registered_business"][type="hidden"]');
+    const hasBusiness = locked
+        ? locked.value === '1'
+        : document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
     const fields = document.getElementById('registeredBusinessFields');
     const napomena = document.getElementById('napomenaNemaRegistraciju');
     if (hasBusiness) {
@@ -2212,7 +2216,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function validatePibField() {
-        const hasBusiness = document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
+        const locked = document.querySelector('input[name="has_registered_business"][type="hidden"]');
+        const hasBusiness = locked
+            ? locked.value === '1'
+            : document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
         const pibField = bpForm ? bpForm.querySelector('input[name="pib"]') : null;
         if (!pibField || !hasBusiness) {
             return true;

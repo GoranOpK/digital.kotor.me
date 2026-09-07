@@ -6,6 +6,9 @@ namespace App\Support;
  * Live Obrazac 1a/1b create-form default applicant_type.
  * Authority: resources/views/applications/create.blade.php.
  * Distinct from CompetitionsController::show mapping.
+ *
+ * For new applications this is the Obrazac 1 form (preduzetnica/doo),
+ * not proof of registration and not a replacement for canonical identity.
  */
 final class ApplicationCreateApplicantTypeDefault
 {
@@ -17,6 +20,21 @@ final class ApplicationCreateApplicantTypeDefault
     public static function forUser(mixed $userType, mixed $residentialStatus, mixed $preferredApplicantType = null): string
     {
         $userType = $userType ?? '';
+        $kn = KnApplicationClassification::fromUserType(is_string($userType) ? $userType : null);
+
+        if ($preferredApplicantType === KnApplicationClassification::HISTORICAL_FIZICKO_LICE
+            && $kn->isUnregisteredPhysicalPerson) {
+            $preferredApplicantType = KnApplicationClassification::FORM_PREDUZETNICA;
+        }
+
+        if (is_string($preferredApplicantType) && $kn->allowsApplicantType($preferredApplicantType)) {
+            return $preferredApplicantType;
+        }
+
+        if ($kn->hasIdentity) {
+            return $kn->defaultFormApplicantType();
+        }
+
         $isFizickoLiceRezident = self::isFizickoLiceRezident($userType, $residentialStatus ?? '');
 
         if ($preferredApplicantType && in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {

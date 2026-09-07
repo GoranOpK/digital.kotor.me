@@ -422,8 +422,8 @@ class Application extends Model
             }
         }
 
-        // Proveri oblik registracije (obavezan za sve osim fizičkog lica)
-        if ($this->applicant_type !== 'fizicko_lice' && !$this->registration_form) {
+        // Proveri oblik registracije (obavezan samo kada je biznis registrovan)
+        if ($this->is_registered && !$this->registration_form) {
             return false;
         }
 
