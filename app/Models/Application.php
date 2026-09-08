@@ -25,6 +25,15 @@ class Application extends Model
         'physical_person_jmbg',
         'physical_person_phone',
         'physical_person_email',
+        'physical_person_address',
+        'preduzetnik_name',
+        'preduzetnik_phone',
+        'preduzetnik_email',
+        'preduzetnik_address',
+        'doo_name',
+        'doo_phone',
+        'doo_email',
+        'doo_address',
         'requested_amount',
         'total_budget_needed',
         'approved_amount',
@@ -386,6 +395,20 @@ class Application extends Model
     }
 
     /**
+     * Display-only reopen value. Existing Application snapshot wins, including NULL
+     * (shown empty). Profile is used only for a new Application with no snapshot row.
+     * Viewing the form does not persist this value.
+     */
+    public static function formSnapshotDisplay(?self $application, mixed $saved, ?string $profile): string
+    {
+        if ($application !== null) {
+            return (string) ($saved ?? '');
+        }
+
+        return (string) ($profile ?? '');
+    }
+
+    /**
      * Proverava da li je Obrazac 1a/1b kompletno popunjen
      * (sva obavezna polja + svi obavezni checkbox-ovi)
      */
@@ -401,16 +424,32 @@ class Application extends Model
 
         // Proveri polja specifična za tip podnosioca
         if ($this->applicant_type === 'fizicko_lice') {
-            if (!$this->physical_person_name || 
-                !$this->physical_person_jmbg || 
-                !$this->physical_person_phone || 
-                !$this->physical_person_email) {
+            if (!$this->physical_person_name ||
+                !$this->physical_person_jmbg ||
+                !$this->physical_person_phone ||
+                !$this->physical_person_email ||
+                !$this->physical_person_address) {
                 return false;
             }
-        } elseif ($this->is_registered && ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo')) {
-            if (!$this->founder_name ||
+        } elseif ($this->applicant_type === 'preduzetnica') {
+            if (!$this->preduzetnik_name ||
+                !$this->preduzetnik_phone ||
+                !$this->preduzetnik_email ||
+                !$this->preduzetnik_address) {
+                return false;
+            }
+        } elseif ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo') {
+            if (!$this->doo_name ||
+                !$this->doo_phone ||
+                !$this->doo_email ||
+                !$this->doo_address) {
+                return false;
+            }
+            if ($this->is_registered && (
+                !$this->founder_name ||
                 !$this->director_name ||
-                !$this->company_seat) {
+                !$this->company_seat
+            )) {
                 return false;
             }
         }
@@ -422,9 +461,14 @@ class Application extends Model
             }
         }
 
-        // Proveri oblik registracije (obavezan samo kada je biznis registrovan)
-        if ($this->is_registered && !$this->registration_form) {
-            return false;
+        // Oblik registracije, CRPS i PIB su obavezni samo kada je biznis registrovan
+        if ($this->is_registered) {
+            if (!$this->registration_form || !$this->crps_number || !$this->pib) {
+                return false;
+            }
+            if (!preg_match(\App\Support\Pib::REGEX, (string) $this->pib)) {
+                return false;
+            }
         }
 
         // Izjava o tačnosti je obavezna za sve tipove prijave
@@ -1048,6 +1092,15 @@ $documents = [
             'physical_person_jmbg' => 'JMBG (fizičko lice)',
             'physical_person_phone' => 'Telefon (fizičko lice)',
             'physical_person_email' => 'E-mail (fizičko lice)',
+            'physical_person_address' => 'Adresa (fizičko lice)',
+            'preduzetnik_name' => 'Ime i prezime (preduzetnica)',
+            'preduzetnik_phone' => 'Telefon (preduzetnica)',
+            'preduzetnik_email' => 'E-mail (preduzetnica)',
+            'preduzetnik_address' => 'Adresa (preduzetnica)',
+            'doo_name' => 'Ime i prezime nositeljke biznisa',
+            'doo_phone' => 'Telefon (1b)',
+            'doo_email' => 'E-mail (1b)',
+            'doo_address' => 'Adresa (1b)',
             'requested_amount' => 'Traženi iznos (€)',
             'total_budget_needed' => 'Potrebna sredstva (€)',
             'bank_account' => 'Žiro račun',

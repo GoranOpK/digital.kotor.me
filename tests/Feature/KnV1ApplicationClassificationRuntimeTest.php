@@ -379,6 +379,8 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'applicant_type' => 'preduzetnica',
             'is_registered' => true,
             'registration_form' => 'Preduzetnik',
+            'crps_number' => $this->validCrps(1, 35),
+            'pib' => $this->validPib(35),
         ]));
 
         $html = $this->actingAs($user)
@@ -733,6 +735,15 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'physical_person_jmbg' => $user->jmb,
             'physical_person_phone' => $user->phone,
             'physical_person_email' => $user->email,
+            'physical_person_address' => 'Njegoševa 12, Kotor',
+            'preduzetnik_name' => $user->name,
+            'preduzetnik_phone' => $user->phone,
+            'preduzetnik_email' => $user->email,
+            'preduzetnik_address' => 'Njegoševa 12, Kotor',
+            'doo_name' => $user->name,
+            'doo_phone' => $user->phone,
+            'doo_email' => $user->email,
+            'doo_address' => 'Njegoševa 12, Kotor',
             'founder_name' => $user->name,
             'director_name' => $user->name,
             'company_seat' => 'Kotor',

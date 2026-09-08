@@ -560,6 +560,9 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="company_seat"/', $html);
         $this->assertAdditionalDataSectionHidden($html);
         $this->assertFrontendUsesLockedRegistrationForm($html, $label);
+        $this->assertStringContainsString('name="doo_address"', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="crps_number"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="pib"/', $html);
 
         $applicantType = $form === 'doo' ? 'doo' : 'ostalo';
         $payload = $this->storePayloadWithoutStage([
@@ -568,6 +571,10 @@ class KnV1ApplicationStartContextTest extends TestCase
             'registration_form' => $label,
             'doo_jmbg' => $user->jmb,
             'accuracy_declaration' => '1',
+            'doo_name' => 'Sačuvana nositeljka',
+            'doo_phone' => '+38267111000',
+            'doo_email' => 'snapshot-1b@example.test',
+            'doo_address' => 'Stari grad 1, Kotor',
         ]);
         unset($payload['save_as_draft'], $payload['founder_name'], $payload['director_name'], $payload['company_seat'], $payload['crps_number'], $payload['pib']);
 
@@ -583,8 +590,11 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertSame('započinjanje', $application->business_stage);
         $this->assertNull($application->founder_name);
         $this->assertNull($application->director_name);
+        $this->assertNull($application->company_seat);
         $this->assertNull($application->crps_number);
         $this->assertNull($application->pib);
+        $this->assertSame('Sačuvana nositeljka', $application->doo_name);
+        $this->assertSame('Stari grad 1, Kotor', $application->doo_address);
         $this->assertTrue($application->isObrazacComplete());
     }
 
@@ -963,8 +973,229 @@ class KnV1ApplicationStartContextTest extends TestCase
             'applicant_type' => 'preduzetnica',
             'is_registered' => true,
             'registration_form' => 'Preduzetnik',
+            'crps_number' => $this->validCrps(1, 44),
+            'pib' => $this->validPib(144),
         ]));
         $this->assertQ3IsDa($entrepreneur, $registered);
+    }
+
+    public function test_fl_1a_address_is_application_snapshot(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(301)]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+        ]);
+
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertStringContainsString('name="physical_person_address"', $html);
+        $this->assertStringContainsString('Njegoševa 12, Kotor', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="crps_number"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="pib"/', $html);
+        $this->assertStringContainsString("if (!physicalPersonAddress || !physicalPersonAddress.value.trim()) return false;", $html);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'fizicko_lice',
+                'physical_person_name' => $user->name,
+                'physical_person_jmbg' => $user->jmb,
+                'physical_person_phone' => $user->phone,
+                'physical_person_email' => $user->email,
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('physical_person_address');
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertNull($application->physical_person_address);
+        $this->assertFalse($application->isObrazacComplete());
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'application_id' => $application->id,
+                'applicant_type' => 'fizicko_lice',
+                'physical_person_name' => $user->name,
+                'physical_person_jmbg' => $user->jmb,
+                'physical_person_phone' => $user->phone,
+                'physical_person_email' => $user->email,
+                'accuracy_declaration' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('physical_person_address');
+
+        $savedAddress = 'Stari grad 9, Kotor';
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'application_id' => $application->id,
+                'applicant_type' => 'fizicko_lice',
+                'physical_person_name' => $user->name,
+                'physical_person_jmbg' => $user->jmb,
+                'physical_person_phone' => $user->phone,
+                'physical_person_email' => $user->email,
+                'physical_person_address' => $savedAddress,
+                'accuracy_declaration' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('physical_person_address');
+
+        $application->refresh();
+        $this->assertSame($savedAddress, $application->physical_person_address);
+        $this->assertTrue($application->isObrazacComplete());
+
+        $user->update(['address' => 'Nova 99', 'city' => 'Kotor']);
+        $reopen = $this->reopenHtml($user, $competition, $application);
+        $this->assertStringContainsString($savedAddress, $reopen);
+        $this->assertStringNotContainsString('Nova 99, Kotor', $reopen);
+    }
+
+    public function test_registered_preduzetnik_contact_and_crps_pib_are_application_snapshot(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(302),
+            'jmb' => $this->validJmb(302),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertStringContainsString('name="crps_number"', $html);
+        $this->assertStringContainsString('name="pib"', $html);
+        $this->assertStringContainsString('value="'.$user->name.'"', $html);
+        $this->assertMatchesRegularExpression('/name="crps_number"[^>]*required/', $html);
+        $this->assertMatchesRegularExpression('/name="pib"[^>]*required/', $html);
+        $this->assertStringContainsString("if (knLockedIsRegistered && (!crpsNumber || !crpsNumber.value.trim())) return false;", $html);
+        $this->assertStringContainsString("if (knLockedIsRegistered && (!pib || !pib.value.trim())) return false;", $html);
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'preduzetnica',
+                'registration_form' => UserType::ENTREPRENEUR,
+                'preduzetnik_jmbg' => $user->jmb,
+                'preduzetnik_name' => 'Sačuvana Preduzetnica',
+                'preduzetnik_phone' => '+38267111222',
+                'preduzetnik_email' => 'saved-pred@example.test',
+                'preduzetnik_address' => 'Njegoševa 1, Kotor',
+                'accuracy_declaration' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors(['crps_number', 'pib']);
+
+        $crps = $this->validCrps(1, 32);
+        $pib = $this->validPib(312);
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'preduzetnica',
+                'registration_form' => UserType::ENTREPRENEUR,
+                'preduzetnik_jmbg' => $user->jmb,
+                'preduzetnik_name' => 'Sačuvana Preduzetnica',
+                'preduzetnik_phone' => '+38267111222',
+                'preduzetnik_email' => 'saved-pred@example.test',
+                'preduzetnik_address' => 'Njegoševa 1, Kotor',
+                'crps_number' => $crps,
+                'pib' => $pib,
+                'accuracy_declaration' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['crps_number', 'pib']);
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('Sačuvana Preduzetnica', $application->preduzetnik_name);
+        $this->assertSame($crps, $application->crps_number);
+        $this->assertSame($pib, $application->pib);
+        $this->assertTrue($application->isObrazacComplete());
+
+        $user->update(['name' => 'Novi Profil', 'phone' => '+38267999999', 'email' => 'new-pred@example.test']);
+        $reopen = $this->reopenHtml($user, $competition, $application);
+        $this->assertStringContainsString('Sačuvana Preduzetnica', $reopen);
+        $this->assertStringContainsString($crps, $reopen);
+        $this->assertStringNotContainsString('Novi Profil', $reopen);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('canonicalCompanyProvider')]
+    public function test_registered_company_snapshots_contact_address_seat_and_requires_crps_pib(string $userType, string $form, string $label): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => $userType,
+            'pib' => $this->validPib(330 + ord($form[0])),
+            'company_name' => 'Snapshot '.$form,
+            'residential_status' => null,
+            'jmb' => $this->validJmb(330 + ord($form[0])),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertStringContainsString('name="doo_address"', $html);
+        $this->assertStringContainsString('name="company_seat"', $html);
+        $this->assertStringContainsString('Njegoševa 12, Kotor', $html);
+        $this->assertDoesNotMatchRegularExpression(
+            '/name="company_seat"[^>]*value="Njegoševa 12, Kotor"/',
+            $html
+        );
+        $this->assertMatchesRegularExpression('/name="crps_number"[^>]*required/', $html);
+        $this->assertMatchesRegularExpression('/name="pib"[^>]*required/', $html);
+        $this->assertStringContainsString("if (!dooAddress || !dooAddress.value.trim()) return false;", $html);
+        $this->assertStringContainsString("if (!companySeat || !companySeat.value.trim()) return false;", $html);
+
+        $applicantType = $form === 'doo' ? 'doo' : 'ostalo';
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => $applicantType,
+                'registration_form' => $label,
+                'doo_jmbg' => $user->jmb,
+                'doo_name' => 'Nositeljka '.$form,
+                'doo_phone' => '+38267111333',
+                'doo_email' => $form.'-saved@example.test',
+                'doo_address' => 'Adresa prijave 5, Kotor',
+                'founder_name' => 'Osnivač '.$form,
+                'director_name' => 'Direktor '.$form,
+                'company_seat' => 'Sjedište 8, Kotor',
+                'accuracy_declaration' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors(['crps_number', 'pib']);
+
+        $crps = $this->validCrps(5, 40 + ord($form[0]));
+        $pib = $this->validPib(340 + ord($form[0]));
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => $applicantType,
+                'registration_form' => $label,
+                'doo_jmbg' => $user->jmb,
+                'doo_name' => 'Nositeljka '.$form,
+                'doo_phone' => '+38267111333',
+                'doo_email' => $form.'-saved@example.test',
+                'doo_address' => 'Adresa prijave 5, Kotor',
+                'founder_name' => 'Osnivač '.$form,
+                'director_name' => 'Direktor '.$form,
+                'company_seat' => 'Sjedište 8, Kotor',
+                'crps_number' => $crps,
+                'pib' => $pib,
+                'accuracy_declaration' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['crps_number', 'pib', 'company_seat', 'doo_address']);
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('Adresa prijave 5, Kotor', $application->doo_address);
+        $this->assertSame('Sjedište 8, Kotor', $application->company_seat);
+        $this->assertNotSame($application->doo_address, $application->company_seat);
+        $this->assertSame($crps, $application->crps_number);
+        $this->assertSame($pib, $application->pib);
+        $this->assertTrue($application->isObrazacComplete());
+
+        $user->update(['address' => 'Profilova 2', 'city' => 'Kotor', 'name' => 'Novi Naziv '.$form]);
+        $reopen = $this->reopenHtml($user, $competition, $application);
+        $this->assertStringContainsString('Adresa prijave 5, Kotor', $reopen);
+        $this->assertStringContainsString('Sjedište 8, Kotor', $reopen);
+        $this->assertStringContainsString('Nositeljka '.$form, $reopen);
+        $this->assertStringNotContainsString('Profilova 2, Kotor', $reopen);
     }
 
     /**
@@ -979,6 +1210,14 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertArrayHasKey('start_token', $query);
 
         return $query['start_token'];
+    }
+
+    private function reopenHtml(\App\Models\User $user, Competition $competition, Application $application): string
+    {
+        return $this->actingAs($user)
+            ->get(route('applications.create', $competition).'?application_id='.$application->id)
+            ->assertOk()
+            ->getContent();
     }
 
     private function createHtml(\App\Models\User $user, Competition $competition, string $token): string
@@ -1012,6 +1251,18 @@ class KnV1ApplicationStartContextTest extends TestCase
     {
         $payload = $this->draftPayload($overrides);
         unset($payload['business_stage']);
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function finalStorePayload(array $overrides = []): array
+    {
+        $payload = $this->storePayloadWithoutStage($overrides);
+        unset($payload['save_as_draft']);
 
         return $payload;
     }
@@ -1090,6 +1341,15 @@ class KnV1ApplicationStartContextTest extends TestCase
             'physical_person_jmbg' => $user->jmb,
             'physical_person_phone' => $user->phone,
             'physical_person_email' => $user->email,
+            'physical_person_address' => 'Njegoševa 12, Kotor',
+            'preduzetnik_name' => $user->name,
+            'preduzetnik_phone' => $user->phone,
+            'preduzetnik_email' => $user->email,
+            'preduzetnik_address' => 'Njegoševa 12, Kotor',
+            'doo_name' => $user->name,
+            'doo_phone' => $user->phone,
+            'doo_email' => $user->email,
+            'doo_address' => 'Njegoševa 12, Kotor',
             'founder_name' => $user->name,
             'director_name' => $user->name,
             'company_seat' => 'Kotor',

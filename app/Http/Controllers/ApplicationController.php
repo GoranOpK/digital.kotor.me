@@ -343,7 +343,6 @@ class ApplicationController extends Controller
             'registration_form' => $resolvedRegistrationForm ?? $request->input('registration_form'),
         ]);
 
-        $this->mergeProfileAddressIntoRequest($request);
         $this->mergeApplicantJmbgIntoRequest($request);
 
         if (! $resolvedIsRegistered) {
@@ -351,6 +350,11 @@ class ApplicationController extends Controller
                 'bank_account' => null,
                 'vat_number' => null,
                 'website' => null,
+                'crps_number' => null,
+                'pib' => null,
+                'company_seat' => null,
+                'founder_name' => null,
+                'director_name' => null,
             ]);
         }
 
@@ -380,7 +384,9 @@ class ApplicationController extends Controller
             'website' => 'nullable|url|max:255',
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
-            'pib' => 'nullable|string|regex:'.Pib::REGEX,
+            'pib' => ($resolvedIsRegistered && !$isDraft)
+                ? 'required|string|regex:'.Pib::REGEX
+                : 'nullable|string|regex:'.Pib::REGEX,
         ];
 
         // Izjava o tačnosti je obavezna za sve tipove prijave
@@ -412,10 +418,19 @@ class ApplicationController extends Controller
                 : 'required|string|regex:/^[0-9]{13}$/';
         }
 
-        if ($request->applicant_type === 'preduzetnica' && !$isDraft) {
-            // Adresa se povlači iz profila u mergeProfileAddressIntoRequest()
-        } elseif ($isDraft && $request->filled('preduzetnik_address')) {
-            $rules['preduzetnik_address'] = ['nullable', 'string', 'max:500', new KotorMunicipalityAddress()];
+        $contactRequired = $isDraft ? 'nullable' : 'required';
+        if ($request->applicant_type === 'preduzetnica') {
+            $rules['preduzetnik_name'] = $contactRequired.'|string|max:255';
+            $rules['preduzetnik_phone'] = $contactRequired.'|string|max:50';
+            $rules['preduzetnik_email'] = $contactRequired.'|email|max:255';
+            $rules['preduzetnik_address'] = $contactRequired.'|string|max:500';
+        }
+
+        if ($isCompanyForm) {
+            $rules['doo_name'] = $contactRequired.'|string|max:255';
+            $rules['doo_phone'] = $contactRequired.'|string|max:50';
+            $rules['doo_email'] = $contactRequired.'|email|max:255';
+            $rules['doo_address'] = $contactRequired.'|string|max:500';
         }
 
         // Dodatna polja za fizičko lice BEZ registrovane djelatnosti
@@ -425,29 +440,23 @@ class ApplicationController extends Controller
             $rules['physical_person_jmbg'] = 'required|string|regex:/^[0-9]{13}$/';
             $rules['physical_person_phone'] = 'required|string|max:50';
             $rules['physical_person_email'] = 'required|email|max:255';
+            $rules['physical_person_address'] = 'required|string|max:500';
         } elseif ($isDraft && $request->applicant_type === 'fizicko_lice') {
             // Za draft, ova polja su opciona
             $rules['physical_person_name'] = 'nullable|string|max:255';
             $rules['physical_person_jmbg'] = 'nullable|string|regex:/^[0-9]{13}$/';
             $rules['physical_person_phone'] = 'nullable|string|max:50';
             $rules['physical_person_email'] = 'nullable|email|max:255';
+            $rules['physical_person_address'] = 'nullable|string|max:500';
         }
 
-        // Polja za CRPS broj (opciono za sve tipove)
-        // Oblik registracije je obavezan samo kada je biznis registrovan
+        // Oblik registracije, CRPS i PIB su obavezni samo kada je biznis registrovan
         if ($resolvedIsRegistered && !$isDraft) {
             $rules['registration_form'] = 'required|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
+            $rules['crps_number'] = 'required|string|max:50';
         } else {
             $rules['registration_form'] = 'nullable|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
-        }
-        $rules['crps_number'] = 'nullable|string|max:50';
-
-        if (in_array($request->applicant_type, ['doo', 'ostalo'], true) && !$request->filled('company_seat') && $request->filled('doo_address')) {
-            $request->merge(['company_seat' => $request->doo_address]);
-        }
-
-        if (in_array($request->applicant_type, ['doo', 'ostalo'], true) && $request->filled('doo_address')) {
-            $rules['doo_address'] = ['nullable', 'string', 'max:255', new KotorMunicipalityAddress()];
+            $rules['crps_number'] = 'nullable|string|max:50';
         }
 
         try {
@@ -461,9 +470,18 @@ class ApplicationController extends Controller
             'founder_name.required' => 'Ime osnivača/ice je obavezno.',
             'director_name.required' => 'Ime izvršnog direktora/ice je obavezno.',
             'company_seat.required' => 'Sjedište društva je obavezno.',
-            'preduzetnik_address.required' => 'Adresa preduzetnice je obavezna.',
+            'preduzetnik_name.required' => 'Ime i prezime je obavezno.',
+            'preduzetnik_phone.required' => 'Kontakt telefon je obavezan.',
+            'preduzetnik_email.required' => 'E-mail je obavezan.',
+            'preduzetnik_address.required' => 'Adresa je obavezna.',
+            'doo_name.required' => 'Ime i prezime nositeljke biznisa je obavezno.',
+            'doo_phone.required' => 'Kontakt telefon je obavezan.',
+            'doo_email.required' => 'E-mail je obavezan.',
+            'doo_address.required' => 'Adresa je obavezna.',
             'registration_form.required' => 'Oblik registracije je obavezan.',
             'registration_form.in' => 'Izabrani oblik registracije nije validan.',
+            'crps_number.required' => 'Broj registracije u CRPS je obavezan.',
+            'pib.required' => 'PIB je obavezan.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
             'physical_person_name.required' => 'Ime i prezime je obavezno za fizičko lice.',
             'physical_person_jmbg.required' => 'JMBG je obavezan za fizičko lice.',
@@ -473,6 +491,7 @@ class ApplicationController extends Controller
             'physical_person_phone.required' => 'Kontakt telefon je obavezan za fizičko lice.',
             'physical_person_email.required' => 'E-mail je obavezan za fizičko lice.',
             'physical_person_email.email' => 'E-mail mora biti validan.',
+            'physical_person_address.required' => 'Adresa je obavezna za fizičko lice.',
         ]);
             \Log::info('Validation passed! Validated data: ' . json_encode($validated));
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -518,9 +537,15 @@ class ApplicationController extends Controller
                 'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
                 'applicant_type' => $resolvedApplicantType,
                 'business_stage' => $resolvedBusinessStage,
-                'founder_name' => $request->filled('founder_name') ? $request->founder_name : $existingApplication->founder_name,
-                'director_name' => $request->filled('director_name') ? $request->director_name : $existingApplication->director_name,
-                'company_seat' => $request->filled('company_seat') ? $request->company_seat : $existingApplication->company_seat,
+                'founder_name' => $resolvedIsRegistered
+                    ? ($request->filled('founder_name') ? $request->founder_name : $existingApplication->founder_name)
+                    : null,
+                'director_name' => $resolvedIsRegistered
+                    ? ($request->filled('director_name') ? $request->director_name : $existingApplication->director_name)
+                    : null,
+                'company_seat' => $resolvedIsRegistered
+                    ? ($request->filled('company_seat') ? $request->company_seat : $existingApplication->company_seat)
+                    : null,
                 'applicant_jmbg' => in_array($request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)
                     ? ($request->filled('applicant_jmbg') ? $request->applicant_jmbg : $existingApplication->applicant_jmbg)
                     : $existingApplication->applicant_jmbg,
@@ -528,14 +553,33 @@ class ApplicationController extends Controller
                 'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : $existingApplication->physical_person_jmbg,
                 'physical_person_phone' => $request->filled('physical_person_phone') ? \App\Support\PhoneNumber::normalize($request->physical_person_phone) : $existingApplication->physical_person_phone,
                 'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : $existingApplication->physical_person_email,
+                'physical_person_address' => $request->has('physical_person_address')
+                    ? ($request->filled('physical_person_address') ? $request->physical_person_address : null)
+                    : $existingApplication->physical_person_address,
+                'preduzetnik_name' => $request->filled('preduzetnik_name') ? $request->preduzetnik_name : $existingApplication->preduzetnik_name,
+                'preduzetnik_phone' => $request->filled('preduzetnik_phone') ? \App\Support\PhoneNumber::normalize($request->preduzetnik_phone) : $existingApplication->preduzetnik_phone,
+                'preduzetnik_email' => $request->filled('preduzetnik_email') ? $request->preduzetnik_email : $existingApplication->preduzetnik_email,
+                'preduzetnik_address' => $request->has('preduzetnik_address')
+                    ? ($request->filled('preduzetnik_address') ? $request->preduzetnik_address : null)
+                    : $existingApplication->preduzetnik_address,
+                'doo_name' => $request->filled('doo_name') ? $request->doo_name : $existingApplication->doo_name,
+                'doo_phone' => $request->filled('doo_phone') ? \App\Support\PhoneNumber::normalize($request->doo_phone) : $existingApplication->doo_phone,
+                'doo_email' => $request->filled('doo_email') ? $request->doo_email : $existingApplication->doo_email,
+                'doo_address' => $request->has('doo_address')
+                    ? ($request->filled('doo_address') ? $request->doo_address : null)
+                    : $existingApplication->doo_address,
                 'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : $existingApplication->requested_amount,
                 'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : $existingApplication->total_budget_needed,
                 'business_area' => $request->filled('business_area') ? $request->business_area : $existingApplication->business_area,
                 'website' => $request->filled('website') ? $request->website : $existingApplication->website,
                 'bank_account' => $request->filled('bank_account') ? $request->bank_account : $existingApplication->bank_account,
                 'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
-                'pib' => $request->has('pib') ? ($request->pib ?: null) : $existingApplication->pib,
-                'crps_number' => $request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number,
+                'pib' => $resolvedIsRegistered
+                    ? ($request->has('pib') ? ($request->pib ?: null) : $existingApplication->pib)
+                    : null,
+                'crps_number' => $resolvedIsRegistered
+                    ? ($request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number)
+                    : null,
                 'registration_form' => $resolvedRegistrationForm ?? ($request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form),
                 'is_registered' => $resolvedIsRegistered,
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
@@ -555,25 +599,33 @@ class ApplicationController extends Controller
                     'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : null,
                     'applicant_type' => $resolvedApplicantType,
                     'business_stage' => $resolvedBusinessStage,
-                    'founder_name' => $request->filled('founder_name') ? $request->founder_name : null,
-                    'director_name' => $request->filled('director_name') ? $request->director_name : null,
-                    'company_seat' => $request->filled('company_seat') ? $request->company_seat : null,
+                    'founder_name' => ($resolvedIsRegistered && $request->filled('founder_name')) ? $request->founder_name : null,
+                    'director_name' => ($resolvedIsRegistered && $request->filled('director_name')) ? $request->director_name : null,
+                    'company_seat' => ($resolvedIsRegistered && $request->filled('company_seat')) ? $request->company_seat : null,
                     'applicant_jmbg' => (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true) && $request->filled('applicant_jmbg'))
                         ? $request->applicant_jmbg
                         : null,
-                    // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
                     'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : null,
                     'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : null,
                     'physical_person_phone' => $request->filled('physical_person_phone') ? \App\Support\PhoneNumber::normalize($request->physical_person_phone) : null,
                     'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : null,
+                    'physical_person_address' => $request->filled('physical_person_address') ? $request->physical_person_address : null,
+                    'preduzetnik_name' => $request->filled('preduzetnik_name') ? $request->preduzetnik_name : null,
+                    'preduzetnik_phone' => $request->filled('preduzetnik_phone') ? \App\Support\PhoneNumber::normalize($request->preduzetnik_phone) : null,
+                    'preduzetnik_email' => $request->filled('preduzetnik_email') ? $request->preduzetnik_email : null,
+                    'preduzetnik_address' => $request->filled('preduzetnik_address') ? $request->preduzetnik_address : null,
+                    'doo_name' => $request->filled('doo_name') ? $request->doo_name : null,
+                    'doo_phone' => $request->filled('doo_phone') ? \App\Support\PhoneNumber::normalize($request->doo_phone) : null,
+                    'doo_email' => $request->filled('doo_email') ? $request->doo_email : null,
+                    'doo_address' => $request->filled('doo_address') ? $request->doo_address : null,
                     'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : null,
                     'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : null,
                     'business_area' => $request->filled('business_area') ? $request->business_area : null,
                     'website' => $request->filled('website') ? $request->website : null,
                     'bank_account' => $request->filled('bank_account') ? $request->bank_account : null,
                     'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
-                    'pib' => $request->filled('pib') ? $request->pib : null,
-                    'crps_number' => $request->filled('crps_number') ? $request->crps_number : null,
+                    'pib' => ($resolvedIsRegistered && $request->filled('pib')) ? $request->pib : null,
+                    'crps_number' => ($resolvedIsRegistered && $request->filled('crps_number')) ? $request->crps_number : null,
                     'registration_form' => $resolvedRegistrationForm ?? ($request->filled('registration_form') ? $request->registration_form : null),
                     'is_registered' => $resolvedIsRegistered,
                     'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
@@ -1155,31 +1207,6 @@ class ApplicationController extends Controller
         }
 
         return $name;
-    }
-
-    protected function mergeProfileAddressIntoRequest(Request $request): void
-    {
-        $applicantType = $request->input('applicant_type');
-        if (!$applicantType) {
-            return;
-        }
-
-        $identity = app(CurrentIdentityResolver::class)->viewFor($request->user());
-        $profileAddress = \App\Support\KotorAddress::formatStreetAndCity($identity->address, $identity->city);
-        if ($profileAddress === '') {
-            return;
-        }
-
-        if ($applicantType === 'preduzetnica') {
-            $request->merge(['preduzetnik_address' => $profileAddress]);
-        }
-
-        if (in_array($applicantType, ['doo', 'ostalo'], true)) {
-            $request->merge([
-                'doo_address' => $profileAddress,
-                'company_seat' => $profileAddress,
-            ]);
-        }
     }
 
     /**

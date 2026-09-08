@@ -387,6 +387,10 @@
                 $lockedRegistrationForm ?? ((isset($existingApplication) && $existingApplication) ? $existingApplication->registration_form : null)
             );
             $userProfileAddress = \App\Support\KotorAddress::formatStreetAndCity($subjectIdentity->address, $subjectIdentity->city);
+            $existingApplicationModel = (isset($existingApplication) && $existingApplication) ? $existingApplication : null;
+            $knSnap = function (mixed $saved, ?string $profile) use ($existingApplicationModel): string {
+                return \App\Models\Application::formSnapshotDisplay($existingApplicationModel, $saved, $profile);
+            };
         @endphp
         <div class="obrazac-zaglavlje">
             <div class="obrazac-zaglavlje-top">
@@ -626,7 +630,7 @@
                             type="text" 
                             name="preduzetnik_name" 
                             class="form-control @error('preduzetnik_name') error @enderror"
-                            value="{{ old('preduzetnik_name', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->name : auth()->user()->name) }}"
+                            value="{{ old('preduzetnik_name', $knSnap($existingApplicationModel?->preduzetnik_name, auth()->user()->name)) }}"
                             maxlength="255"
                         >
                         @error('preduzetnik_name')
@@ -661,7 +665,7 @@
                                 type="tel" 
                                 name="preduzetnik_phone" 
                                 class="form-control @error('preduzetnik_phone') error @enderror"
-                                value="{{ old('preduzetnik_phone', $subjectIdentity->phone) }}"
+                                value="{{ old('preduzetnik_phone', $knSnap($existingApplicationModel?->preduzetnik_phone, $subjectIdentity->phone)) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -676,17 +680,11 @@
                             <label class="form-label">Adresa:</label>
                             <input
                                 type="text"
+                                name="preduzetnik_address"
                                 class="form-control @error('preduzetnik_address') error @enderror"
-                                value="{{ old('preduzetnik_address', $userProfileAddress) }}"
+                                value="{{ old('preduzetnik_address', $knSnap($existingApplicationModel?->preduzetnik_address, $userProfileAddress)) }}"
                                 maxlength="500"
-                                readonly
-                                tabindex="-1"
                             >
-                            <input type="hidden" name="preduzetnik_address" value="{{ old('preduzetnik_address', $userProfileAddress) }}">
-                            <p class="address-from-profile-note">
-                                Adresa se povlači iz vašeg profila (ulica i grad iz registracije).
-                                <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
-                            </p>
                             @error('preduzetnik_address')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
@@ -698,7 +696,7 @@
                                 type="email" 
                                 name="preduzetnik_email" 
                                 class="form-control @error('preduzetnik_email') error @enderror"
-                                value="{{ old('preduzetnik_email', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->email : auth()->user()->email) }}"
+                                value="{{ old('preduzetnik_email', $knSnap($existingApplicationModel?->preduzetnik_email, auth()->user()->email)) }}"
                                 maxlength="255"
                             >
                             @error('preduzetnik_email')
@@ -763,6 +761,7 @@
                         @enderror
                     </div>
 
+                    @if(!empty($lockedIsRegistered))
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">*Broj registracije u CRPS:</label>
@@ -770,8 +769,9 @@
                                 type="text" 
                                 name="crps_number" 
                                 class="form-control @error('crps_number') error @enderror"
-                                value="{{ old('crps_number', isset($existingApplication) && $existingApplication ? $existingApplication->crps_number : '') }}"
+                                value="{{ old('crps_number', $existingApplicationModel?->crps_number) }}"
                                 maxlength="50"
+                                required
                             >
                             @error('crps_number')
                                 <div class="error-message">{{ $message }}</div>
@@ -784,20 +784,18 @@
                                 type="text" 
                                 name="pib" 
                                 class="form-control @error('pib') error @enderror"
-                                value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : $subjectIdentity->pib) }}"
+                                value="{{ old('pib', $existingApplicationModel !== null ? (string) ($existingApplicationModel->pib ?? '') : (string) ($subjectIdentity->pib ?? '')) }}"
                                 maxlength="8"
                                 pattern="[0-9]{8}"
                                 placeholder="8 cifara"
+                                required
                             >
                             @error('pib')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
-
-                    <div style="margin: 16px 0; padding: 12px; background: #f3f4f6; border-radius: 8px; font-size: 13px;">
-                        <p style="margin: 4px 0;"><strong>*</strong> Popunjavate samo ako imate registrovan biznis.</p>
-                    </div>
+                    @endif
 
                     <div class="form-group">
                         <label class="form-label">
@@ -865,7 +863,7 @@
                             type="text" 
                             name="doo_name" 
                             class="form-control @error('doo_name') error @enderror"
-                            value="{{ old('doo_name', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->name : auth()->user()->name) }}"
+                            value="{{ old('doo_name', $knSnap($existingApplicationModel?->doo_name, auth()->user()->name)) }}"
                             maxlength="255"
                         >
                         @error('doo_name')
@@ -900,7 +898,7 @@
                                 type="tel" 
                                 name="doo_phone" 
                                 class="form-control @error('doo_phone') error @enderror"
-                                value="{{ old('doo_phone', $subjectIdentity->phone) }}"
+                                value="{{ old('doo_phone', $knSnap($existingApplicationModel?->doo_phone, $subjectIdentity->phone)) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -915,17 +913,11 @@
                             <label class="form-label">Adresa:</label>
                             <input
                                 type="text"
+                                name="doo_address"
                                 class="form-control @error('doo_address') error @enderror"
-                                value="{{ old('doo_address', $userProfileAddress) }}"
+                                value="{{ old('doo_address', $knSnap($existingApplicationModel?->doo_address, $userProfileAddress)) }}"
                                 maxlength="500"
-                                readonly
-                                tabindex="-1"
                             >
-                            <input type="hidden" name="doo_address" value="{{ old('doo_address', $userProfileAddress) }}">
-                            <p class="address-from-profile-note">
-                                Adresa se povlači iz vašeg profila (ulica i grad iz registracije).
-                                <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
-                            </p>
                             @error('doo_address')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
@@ -937,7 +929,7 @@
                                 type="email" 
                                 name="doo_email" 
                                 class="form-control @error('doo_email') error @enderror"
-                                value="{{ old('doo_email', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->email : auth()->user()->email) }}"
+                                value="{{ old('doo_email', $knSnap($existingApplicationModel?->doo_email, auth()->user()->email)) }}"
                                 maxlength="255"
                             >
                             @error('doo_email')
@@ -1001,15 +993,16 @@
                     </div>
 
                     @if(!empty($lockedIsRegistered))
-                    <div class="form-group">
-                        <label class="form-label">*Broj registracije u CRPS:</label>
-                        <input 
-                            type="text" 
-                            name="crps_number" 
-                            class="form-control @error('crps_number') error @enderror"
-                            value="{{ old('crps_number', isset($existingApplication) && $existingApplication ? $existingApplication->crps_number : '') }}"
-                            maxlength="50"
-                        >
+                        <div class="form-group">
+                            <label class="form-label">*Broj registracije u CRPS:</label>
+                            <input
+                                type="text"
+                                name="crps_number"
+                                class="form-control @error('crps_number') error @enderror"
+                                value="{{ old('crps_number', $existingApplicationModel?->crps_number) }}"
+                                maxlength="50"
+                                required
+                            >
                         @error('crps_number')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -1051,17 +1044,12 @@
                         <label class="form-label">*Sjedište društva:</label>
                         <input
                             type="text"
+                            name="company_seat"
                             class="form-control @error('company_seat') error @enderror"
-                            value="{{ old('company_seat', $userProfileAddress) }}"
+                            value="{{ old('company_seat', $existingApplicationModel?->company_seat) }}"
                             maxlength="500"
-                            readonly
-                            tabindex="-1"
+                            required
                         >
-                        <input type="hidden" name="company_seat" value="{{ old('company_seat', $userProfileAddress) }}">
-                        <p class="address-from-profile-note">
-                            Sjedište se povlači iz vašeg profila (ulica i grad iz registracije).
-                            <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
-                        </p>
                         @error('company_seat')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -1073,18 +1061,15 @@
                             type="text" 
                             name="pib" 
                             class="form-control @error('pib') error @enderror"
-                            value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : $subjectIdentity->pib) }}"
+                            value="{{ old('pib', $existingApplicationModel !== null ? (string) ($existingApplicationModel->pib ?? '') : (string) ($subjectIdentity->pib ?? '')) }}"
                             maxlength="8"
                             pattern="[0-9]{8}"
                             placeholder="8 cifara"
+                            required
                         >
                         @error('pib')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
-                    </div>
-
-                    <div style="margin: 16px 0; padding: 12px; background: #f3f4f6; border-radius: 8px; font-size: 13px;">
-                        <p style="margin: 4px 0;"><strong>*</strong> Popunjavate samo ako imate registrovan biznis.</p>
                     </div>
                     @endif
 
@@ -1156,7 +1141,7 @@
                             type="text" 
                             name="physical_person_name" 
                             class="form-control @error('physical_person_name') error @enderror"
-                            value="{{ old('physical_person_name', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_name : auth()->user()->name) }}"
+                            value="{{ old('physical_person_name', $knSnap($existingApplicationModel?->physical_person_name, auth()->user()->name)) }}"
                             maxlength="255"
                         >
                         @error('physical_person_name')
@@ -1191,7 +1176,7 @@
                                 type="tel" 
                                 name="physical_person_phone" 
                                 class="form-control @error('physical_person_phone') error @enderror"
-                                value="{{ old('physical_person_phone', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_phone : $subjectIdentity->phone) }}"
+                                value="{{ old('physical_person_phone', $knSnap($existingApplicationModel?->physical_person_phone, $subjectIdentity->phone)) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -1208,13 +1193,27 @@
                                 type="email" 
                                 name="physical_person_email" 
                                 class="form-control @error('physical_person_email') error @enderror"
-                                value="{{ old('physical_person_email', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_email : auth()->user()->email) }}"
+                                value="{{ old('physical_person_email', $knSnap($existingApplicationModel?->physical_person_email, auth()->user()->email)) }}"
                                 maxlength="255"
                             >
                             @error('physical_person_email')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Adresa:</label>
+                        <input
+                            type="text"
+                            name="physical_person_address"
+                            class="form-control @error('physical_person_address') error @enderror"
+                            value="{{ old('physical_person_address', $knSnap($existingApplicationModel?->physical_person_address, $userProfileAddress)) }}"
+                            maxlength="500"
+                        >
+                        @error('physical_person_address')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
@@ -1419,7 +1418,7 @@
         const obrazac1a = document.getElementById('obrazac1a');
         const obrazac1b = document.getElementById('obrazac1b');
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
-        const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"], input[name="accuracy_declaration"]') : [];
+        const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"], input[name="physical_person_address"], input[name="accuracy_declaration"]') : [];
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const additionalDataSection = document.getElementById('additional-data-section');
         const savedBusinessStageValue = @json(old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)));
@@ -1874,25 +1873,39 @@
                 const physicalPersonJmbg = activeSection ? activeSection.querySelector('input[name="physical_person_jmbg"]') : form.querySelector('input[name="physical_person_jmbg"]:not([disabled])');
                 const physicalPersonPhone = activeSection ? activeSection.querySelector('input[name="physical_person_phone"]') : form.querySelector('input[name="physical_person_phone"]:not([disabled])');
                 const physicalPersonEmail = activeSection ? activeSection.querySelector('input[name="physical_person_email"]') : form.querySelector('input[name="physical_person_email"]:not([disabled])');
+                const physicalPersonAddress = activeSection ? activeSection.querySelector('input[name="physical_person_address"]') : form.querySelector('input[name="physical_person_address"]:not([disabled])');
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
 
                 if (!physicalPersonName || !physicalPersonName.value.trim()) return false;
                 if (!physicalPersonJmbg || !physicalPersonJmbg.value.trim()) return false;
                 if (!physicalPersonPhone || !physicalPersonPhone.value.trim()) return false;
                 if (!physicalPersonEmail || !physicalPersonEmail.value.trim()) return false;
+                if (!physicalPersonAddress || !physicalPersonAddress.value.trim()) return false;
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
             } else if (applicantTypeValue === 'doo' || applicantTypeValue === 'ostalo') {
                 // Traži polja samo u aktivnoj sekciji (Obrazac 1b)
                 const founderName = activeSection ? activeSection.querySelector('input[name="founder_name"]') : form.querySelector('input[name="founder_name"]:not([disabled])');
                 const directorName = activeSection ? activeSection.querySelector('input[name="director_name"]') : form.querySelector('input[name="director_name"]:not([disabled])');
                 const companySeat = activeSection ? activeSection.querySelector('input[name="company_seat"]') : form.querySelector('input[name="company_seat"]:not([disabled])');
+                const dooName = activeSection ? activeSection.querySelector('input[name="doo_name"]') : form.querySelector('input[name="doo_name"]:not([disabled])');
+                const dooPhone = activeSection ? activeSection.querySelector('input[name="doo_phone"]') : form.querySelector('input[name="doo_phone"]:not([disabled])');
+                const dooEmail = activeSection ? activeSection.querySelector('input[name="doo_email"]') : form.querySelector('input[name="doo_email"]:not([disabled])');
+                const dooAddress = activeSection ? activeSection.querySelector('input[name="doo_address"]') : form.querySelector('input[name="doo_address"]:not([disabled])');
+                const crpsNumber = activeSection ? activeSection.querySelector('input[name="crps_number"]') : form.querySelector('input[name="crps_number"]:not([disabled])');
+                const pib = activeSection ? activeSection.querySelector('input[name="pib"]') : form.querySelector('input[name="pib"]:not([disabled])');
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="doo_jmbg"]') : form.querySelector('input[name="doo_jmbg"]:not([disabled])');
 
+                if (!dooName || !dooName.value.trim()) return false;
+                if (!dooPhone || !dooPhone.value.trim()) return false;
+                if (!dooEmail || !dooEmail.value.trim()) return false;
+                if (!dooAddress || !dooAddress.value.trim()) return false;
                 if (knLockedIsRegistered) {
                     if (!founderName || !founderName.value.trim()) return false;
                     if (!directorName || !directorName.value.trim()) return false;
                     if (!companySeat || !companySeat.value.trim()) return false;
                     if (!hasLockedRegistrationForm()) return false;
+                    if (!crpsNumber || !crpsNumber.value.trim()) return false;
+                    if (!pib || !pib.value.trim()) return false;
                 }
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
@@ -1900,11 +1913,21 @@
             } else if (applicantTypeValue === 'preduzetnica') {
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="preduzetnik_jmbg"]') : form.querySelector('input[name="preduzetnik_jmbg"]:not([disabled])');
-                const profileAddress = @json($userProfileAddress);
+                const preduzetnikName = activeSection ? activeSection.querySelector('input[name="preduzetnik_name"]') : form.querySelector('input[name="preduzetnik_name"]:not([disabled])');
+                const preduzetnikPhone = activeSection ? activeSection.querySelector('input[name="preduzetnik_phone"]') : form.querySelector('input[name="preduzetnik_phone"]:not([disabled])');
+                const preduzetnikEmail = activeSection ? activeSection.querySelector('input[name="preduzetnik_email"]') : form.querySelector('input[name="preduzetnik_email"]:not([disabled])');
+                const preduzetnikAddress = activeSection ? activeSection.querySelector('input[name="preduzetnik_address"]') : form.querySelector('input[name="preduzetnik_address"]:not([disabled])');
+                const crpsNumber = activeSection ? activeSection.querySelector('input[name="crps_number"]') : form.querySelector('input[name="crps_number"]:not([disabled])');
+                const pib = activeSection ? activeSection.querySelector('input[name="pib"]') : form.querySelector('input[name="pib"]:not([disabled])');
 
+                if (!preduzetnikName || !preduzetnikName.value.trim()) return false;
+                if (!preduzetnikPhone || !preduzetnikPhone.value.trim()) return false;
+                if (!preduzetnikEmail || !preduzetnikEmail.value.trim()) return false;
+                if (!preduzetnikAddress || !preduzetnikAddress.value.trim()) return false;
                 if (knLockedIsRegistered && !hasLockedRegistrationForm()) return false;
+                if (knLockedIsRegistered && (!crpsNumber || !crpsNumber.value.trim())) return false;
+                if (knLockedIsRegistered && (!pib || !pib.value.trim())) return false;
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
-                if (!profileAddress || !profileAddress.trim()) return false;
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
             }
 

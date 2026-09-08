@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.4
+**Verzija:** 1.0.5
 **Datum:** 2026-09-08
 
 Povezani dokumenti:
@@ -59,6 +59,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.2 | 2026-09-07 | Controlled corrective prema `KN-BM-003` v1.0.11. §7.4–§7.8, §7.13, §7.19, §18.2.4: neregistrovano fizičko lice default `fizicko_lice` / Obrazac 1a; alternativa planiram osnivanje DOO (`doo` + `is_registered=false`) / 1b, bez promjene kanonskog identiteta. `fizicko_lice` je živi V1 `applicant_type`. Neregistrovani tokovi samo Započinjanje. Istorijski završeni snimci KEEP. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.3 | 2026-09-07 | Controlled corrective prema implementiranom toku: FL bez djelatnosti bira Preduzetnika (1a) ili privredno društvo OD/KD/AD/DOO (1b); izbor je zaključan; kanonski registrovani OD/KD/AD/DOO koriste 1b; `ostalo` nije novi V1 korisnički tip. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.4 | 2026-09-08 | Controlled corrective. §7.7 / §7.8: za `is_registered` = NE sekcija „Dodatni podaci“ (Broj računa, PDV broj, Website) nije primjenjiva i ne prikazuje se na Obrascu 1a ni 1b. Za `is_registered` = DA ostaje opciona prema postojećem V1 modelu. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.5 | 2026-09-08 | Controlled clarification. §7.5 / §7.7 / §7.8: sačuvani podaci Obrasca 1a/1b pripadaju Prijavi (snapshot). Registrovani podnosilac: CRPS i PIB su obavezni za Popunjen i konačno čuvanje i prikazuju se. Neregistrovani: CRPS i PIB se ne prikazuju i nijesu obavezni. Adresa i Sjedište društva su zasebni podaci Prijave; profilna adresa je samo početna vrijednost za Adresu, ne automatski Sjedište. **PO USVOJENO.** |
 
 Napomena:
 
@@ -1205,6 +1206,8 @@ Sačuvane vrijednosti Obrasca postaju podaci konkretne Prijave.
 
 Naknadne izmjene profila **ne** mijenjaju automatski već sačuvane podatke Prijave.
 
+CRPS, PIB, kontaktni podaci, Adresa i Sjedište društva, kada su sačuvani, pripadaju toj Prijavi. Nisu živi prikaz trenutnog profila.
+
 ## 7.6. Stanje popunjenosti Obrasca 1a / 1b
 
 Svaki Obrazac 1a / 1b ima poslovna stanja popunjenosti:
@@ -1254,13 +1257,20 @@ Izmjenjivost:
 * Oblast realizacije: izmjenjiva;
 * Faza biznisa: prenesena iz prethodnog izbora, zaključana.
 
-Nijesu bezuslovno obavezni:
+Nijesu bezuslovno obavezni dok registrovani biznis ne postoji.
 
-* Oblik registracije;
-* CRPS;
-* PIB.
+Ako je `is_registered` = DA:
 
-Ova polja zavise od toga da li registrovana djelatnost postoji.
+* Oblik registracije je zaključan i obavezan;
+* Broj registracije u CRPS se **prikazuje** i **obavezan** je za **Popunjen** i konačno čuvanje;
+* PIB se **prikazuje** i **obavezan** je za **Popunjen** i konačno čuvanje.
+
+Ako je `is_registered` = NE:
+
+* CRPS se **ne prikazuje** i **nije** obavezan;
+* PIB se **ne prikazuje** i **nije** obavezan.
+
+Nacrt smije ostati nepotpun. CRPS i PIB se **ne** zahtijevaju samo da bi se sačuvao Nacrt.
 
 Opcioni podaci trenutnog digitalnog Obrasca, **samo ako je** `is_registered` = DA:
 
@@ -1309,6 +1319,15 @@ Ako registrovani biznis postoji, postaju primjenjiva / obavezna:
 * Izvršni direktor/ica;
 * Sjedište društva;
 * PIB.
+
+CRPS i PIB se tada **prikazuju** i **obavezni** su za **Popunjen** i konačno čuvanje. Ako registrovani biznis ne postoji, CRPS i PIB se **ne prikazuju** i **nijesu** obavezni.
+
+**Adresa** i **Sjedište društva** nijesu ista stavka i **ne** tretiraju se automatski kao ista vrijednost.
+
+* Adresa = kontaktna adresa podnositeljke na konkretnoj Prijavi.
+* Sjedište društva = registrovano sjedište društva na konkretnoj Prijavi.
+
+Kanonski / profilni adresni podatak smije biti **početna** vrijednost samo za **Adresu**. **Ne** postaje automatski Sjedište društva. Sjedište je zaseban unos Prijave za registrovani 1b.
 
 Vrijednosti izvedene iz zaključanog identiteta ostaju zaključane gdje je to primjenjivo. Ostali konkretni podaci Prijave uređuju se prema §7.5.
 
@@ -4475,4 +4494,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.2**
+**Kraj dokumenta KN-FS-003 v1.0.5**
