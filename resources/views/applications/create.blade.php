@@ -512,6 +512,11 @@
                             $preferredApplicantType = $lockedApplicantType ?? $preferredApplicantType ?? null;
                             $knClassification = \App\Support\KnApplicationClassification::fromUserType($userType);
                             $knIsRegistered = $knClassification->isRegisteredBusiness;
+                            $lockedIsRegistered = (isset($existingApplication) && $existingApplication)
+                                ? (bool) $existingApplication->is_registered
+                                : (isset($startContext) && $startContext
+                                    ? (bool) $startContext->isRegistered
+                                    : (bool) $knIsRegistered);
                             $knAllowsRazvoj = $knClassification->allowsStage('razvoj');
                             $knAllowsFizickoLice = $knClassification->allowsApplicantType('fizicko_lice');
                             $defaultType = \App\Support\ApplicationCreateApplicantTypeDefault::forUser(
@@ -1383,7 +1388,8 @@
                 </div>
             </div>
 
-            <!-- Sekcija 3: Dodatni podaci (sakriva se za Fizičko lice - sredstva se ne mogu uplaćivati na lične žiro račune) -->
+            <!-- Sekcija 3: Dodatni podaci — samo za registrovanu prijavu (is_registered = DA) -->
+            @if(!empty($lockedIsRegistered))
             <div class="form-card no-print" id="additional-data-section">
                 <div class="form-section">
                     <h2>Dodatni podaci</h2>
@@ -1436,6 +1442,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
             <!-- Dugme za slanje -->
             @if(!$readOnly)
@@ -1530,6 +1537,7 @@
 <script>
     const isFizickoLiceRezident = @json($isFizickoLiceRezident);
     const knIsRegistered = @json((bool) ($knIsRegistered ?? false));
+    const knLockedIsRegistered = @json((bool) ($lockedIsRegistered ?? false));
     const knAllowsRazvoj = @json((bool) ($knAllowsRazvoj ?? false));
     const knLockedCommercialForm = @json($lockedCommercialForm ?? null);
 </script>
@@ -1819,19 +1827,20 @@
                 }
             }
 
-            // Sekcija 4 Dodatni podaci - sakriva se za Fizičko lice (sredstva se ne mogu uplaćivati na lične žiro račune)
+            // Dodatni podaci: autoritet je zaključani is_registered, ne applicant_type.
             if (additionalDataSection) {
-                if (selectedType === 'fizicko_lice') {
+                const additionalInputs = additionalDataSection.querySelectorAll('input[name="bank_account"], input[name="vat_number"], input[name="website"]');
+                if (!knLockedIsRegistered) {
                     additionalDataSection.style.display = 'none';
-                    // Očisti polja da se slučajno ne pošalju lični podaci
-                    const bankAccount = additionalDataSection.querySelector('input[name="bank_account"]');
-                    const vatNumber = additionalDataSection.querySelector('input[name="vat_number"]');
-                    const website = additionalDataSection.querySelector('input[name="website"]');
-                    if (bankAccount) bankAccount.value = '';
-                    if (vatNumber) vatNumber.value = '';
-                    if (website) website.value = '';
+                    additionalInputs.forEach((field) => {
+                        field.value = '';
+                        field.setAttribute('disabled', 'disabled');
+                    });
                 } else {
                     additionalDataSection.style.display = '';
+                    additionalInputs.forEach((field) => {
+                        field.removeAttribute('disabled');
+                    });
                 }
             }
 

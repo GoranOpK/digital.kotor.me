@@ -355,6 +355,14 @@ class ApplicationController extends Controller
         $this->mergeProfileAddressIntoRequest($request);
         $this->mergeApplicantJmbgIntoRequest($request);
 
+        if (! $resolvedIsRegistered) {
+            $request->merge([
+                'bank_account' => null,
+                'vat_number' => null,
+                'website' => null,
+            ]);
+        }
+
         if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
             $profileAddressError = $this->profileAddressErrorForUser($request->user());
             if ($profileAddressError !== null) {

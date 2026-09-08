@@ -39,6 +39,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertStringNotContainsString('id="applicant_type_ostalo"', $html);
         $this->assertStringContainsString('id="fizickoLiceFields"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije PREDUZETNIK)');
+        $this->assertAdditionalDataSectionHidden($html);
 
         $this->actingAs($user)
             ->from(route('applications.create', $competition))
@@ -86,6 +87,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         );
         $this->assertStringNotContainsString('id="applicant_type_ostalo"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije '.strtoupper($form).')');
+        $this->assertAdditionalDataSectionHidden($html);
 
         $other = $form === 'doo' ? 'ad' : 'doo';
         $otherLabel = $other === 'doo' ? UserType::LIMITED_LIABILITY_COMPANY : UserType::JOINT_STOCK_COMPANY;
@@ -218,6 +220,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertRadioDisabled($html, 'applicant_type_preduzetnica');
         $this->assertStringContainsString('id="obrazac1a"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije PREDUZETNIK)');
+        $this->assertAdditionalDataSectionVisible($html);
     }
 
     /**
@@ -256,6 +259,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         );
         $this->assertStringNotContainsString('id="applicant_type_ostalo"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije '.strtoupper($form).')');
+        $this->assertAdditionalDataSectionVisible($html);
     }
 
     public function test_two_start_context_tokens_stay_independent(): void
@@ -395,6 +399,81 @@ class KnV1ApplicationStartContextTest extends TestCase
             ->getContent();
 
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije AD)');
+        $this->assertAdditionalDataSectionHidden($html);
+    }
+
+    public function test_unregistered_1b_store_ignores_stale_additional_data(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(147)]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_PLANNED_COMPANY,
+            'planned_company_form' => 'ad',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'ostalo',
+                'registration_form' => UserType::JOINT_STOCK_COMPANY,
+                'website' => 'not-a-url',
+                'bank_account' => '510-123',
+                'vat_number' => 'ME123',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['website', 'bank_account', 'vat_number']);
+
+        $application = Application::query()->first();
+        $this->assertNotNull($application);
+        $this->assertFalse((bool) $application->is_registered);
+        $this->assertNull($application->website);
+        $this->assertNull($application->bank_account);
+        $this->assertNull($application->vat_number);
+    }
+
+    public function test_unregistered_draft_hides_additional_data_without_db_remediation(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(148)]);
+        $competition = $this->openCompetition();
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Nacrt neregistrovani 1b',
+            'applicant_type' => 'doo',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'is_registered' => false,
+            'status' => 'draft',
+            'website' => 'https://stari-sajt.example',
+            'bank_account' => '510-0000000000123-45',
+            'vat_number' => 'ME123456789',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertAdditionalDataSectionHidden($html);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'application_id' => $application->id,
+                'applicant_type' => 'doo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+                'website' => 'not-a-url',
+                'bank_account' => 'forged',
+                'vat_number' => 'forged',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['website', 'bank_account', 'vat_number']);
+
+        $application->refresh();
+        $this->assertSame('https://stari-sajt.example', $application->website);
+        $this->assertSame('510-0000000000123-45', $application->bank_account);
+        $this->assertSame('ME123456789', $application->vat_number);
+        $this->assertFalse((bool) $application->is_registered);
     }
 
     public function test_obrazac_2_q3_planned_paths_are_ne_and_registered_are_da(): void
@@ -535,6 +614,21 @@ class KnV1ApplicationStartContextTest extends TestCase
             '/id="obrazacRegistracijaHeader">'.preg_quote($heading, '/').'<\/span>/',
             $html
         );
+    }
+
+    private function assertAdditionalDataSectionHidden(string $html): void
+    {
+        $this->assertStringNotContainsString('id="additional-data-section"', $html);
+        $this->assertStringNotContainsString('<h2>Dodatni podaci</h2>', $html);
+    }
+
+    private function assertAdditionalDataSectionVisible(string $html): void
+    {
+        $this->assertStringContainsString('id="additional-data-section"', $html);
+        $this->assertStringContainsString('<h2>Dodatni podaci</h2>', $html);
+        $this->assertStringContainsString('name="bank_account"', $html);
+        $this->assertStringContainsString('name="vat_number"', $html);
+        $this->assertStringContainsString('name="website"', $html);
     }
 
     private function openCompetition(): Competition

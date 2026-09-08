@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.3
-**Datum:** 2026-09-07
+**Verzija:** 1.0.4
+**Datum:** 2026-09-08
 
 Povezani dokumenti:
 
@@ -58,6 +58,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.1 | 2026-09-07 | Controlled corrective prema `KN-BM-003` v1.0.10. Poglavlje 7 raslojava kanonski identitet, registrovanost biznisa, postojeći/planirani oblik i fazu. Neregistrovano fizičko lice bira planirani Preduzetnik (1a) ili DOO (1b) i samo Započinjanje. Obrazac 2 Q3 je ista zaključana činjenica. §7.19 čuva čitljivost istorijskih prijava. Katalog §7.13 KEEP uz jasno pokrivanje četiri toka. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.2 | 2026-09-07 | Controlled corrective prema `KN-BM-003` v1.0.11. §7.4–§7.8, §7.13, §7.19, §18.2.4: neregistrovano fizičko lice default `fizicko_lice` / Obrazac 1a; alternativa planiram osnivanje DOO (`doo` + `is_registered=false`) / 1b, bez promjene kanonskog identiteta. `fizicko_lice` je živi V1 `applicant_type`. Neregistrovani tokovi samo Započinjanje. Istorijski završeni snimci KEEP. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.3 | 2026-09-07 | Controlled corrective prema implementiranom toku: FL bez djelatnosti bira Preduzetnika (1a) ili privredno društvo OD/KD/AD/DOO (1b); izbor je zaključan; kanonski registrovani OD/KD/AD/DOO koriste 1b; `ostalo` nije novi V1 korisnički tip. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.4 | 2026-09-08 | Controlled corrective. §7.7 / §7.8: za `is_registered` = NE sekcija „Dodatni podaci“ (Broj računa, PDV broj, Website) nije primjenjiva i ne prikazuje se na Obrascu 1a ni 1b. Za `is_registered` = DA ostaje opciona prema postojećem V1 modelu. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 
 Napomena:
 
@@ -1261,11 +1262,13 @@ Nijesu bezuslovno obavezni:
 
 Ova polja zavise od toga da li registrovana djelatnost postoji.
 
-Opcioni podaci trenutnog digitalnog Obrasca:
+Opcioni podaci trenutnog digitalnog Obrasca, **samo ako je** `is_registered` = DA:
 
 * Broj računa;
 * PDV broj;
 * Website.
+
+Ako je `is_registered` = NE, sekcija „Dodatni podaci“ **nije primjenjiva** i **ne prikazuje se**. Isto pravilo važi za Obrazac 1a i Obrazac 1b.
 
 Kanonski identitet: izveden iz naloga; ne bira se ručno. To **ne** zabranjuje fizičkom licu bez registrovanog biznisa da umjesto podrazumijevanog Obrasca 1a izabere planirano osnivanje DOO i Obrazac 1b.
 
@@ -1309,11 +1312,13 @@ Ako registrovani biznis postoji, postaju primjenjiva / obavezna:
 
 Vrijednosti izvedene iz zaključanog identiteta ostaju zaključane gdje je to primjenjivo. Ostali konkretni podaci Prijave uređuju se prema §7.5.
 
-Opciono:
+Opciono, **samo ako je** `is_registered` = DA:
 
 * Broj računa;
 * PDV broj;
 * Website.
+
+Ako je `is_registered` = NE, sekcija „Dodatni podaci“ **nije primjenjiva** i **ne prikazuje se**.
 
 Ako registrovani biznis ne postoji, odsustvo polja registracije **ne** sprečava da Obrazac 1b postane **Popunjen**.
 
