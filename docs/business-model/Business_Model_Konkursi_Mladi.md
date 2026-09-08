@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.2
-**Datum:** 2026-09-03
+**Verzija:** 1.0.3
+**Datum:** 2026-09-08
 
 Povezani dokumenti:
 
@@ -55,6 +55,7 @@ Povezani dokumenti:
 | 1.0.0 | 2026-09-02 | USVOJEN — Završena i odobrena prva verzija poslovnog profila konkursa za podršku preduzetništvu mladih sa pravilima BM-ML-001–BM-ML-058. Detaljna razrada službenih akata i de minimis obrasca izričito je odložena van granice verzije 1.0.0 i biće predmet posebnog odobrenog PATCH-a ili nove verzije. |
 | 1.0.1 | 2026-09-02 | KN-PATCH-BM-009 — Status matrice sposobnosti u Poglavlju 2.5 usklađen sa usvojenim statusom Poglavlja 2 i dokumenta; poslovna pravila i sadržaj matrice nijesu mijenjani. |
 | 1.0.2 | 2026-09-03 | KN-PATCH-BM-010 — Usklađena granica V1 modula: zaključivanje ugovora, isplata sredstava, realizacija projekta, podnošenje i obrada obrazaca M4 i M4a, de minimis dokumentacija i praćenje ugovornih obaveza izričito su određeni kao procesi van V1; pravila BM-ML-056 i BM-ML-057 precizirana su kao poslovne granice bez uvođenja novih funkcionalnosti ili poslovnih oznaka. |
+| 1.0.3 | 2026-09-08 | KN-PATCH-BM-013 — Poslovni profil mladih usklađen sa zajedničkim katalogom statusa prijave draft, submitted, evaluated, approved i rejected. Sačuvani su posebni rezultati administrativne provjere i prigovora, pravo na prigovor prije konačnog odbijanja zbog nepotpunosti, odvojeni razlozi odbijanja i pravilo da arhiviranje Poziva ne mijenja status prijave. |
 
 Napomena:
 
@@ -872,15 +873,33 @@ Samo prijava koja je konačno podnesena u propisanom roku ulazi u administrativn
 
 ### BM-ML-020 — Osnovna stanja prijave
 
-Prijava ima dva osnovna stanja:
-- `U pripremi` — podnosilac uređuje prijavu, ali je još nije konačno podnio;
-- `Podnesena` — podnosilac je potvrdio konačno podnošenje i prijava je zaključana.
+Prijava ima pet tehničkih statusa. Poslovne oznake služe prikazu i ne uvode drugi katalog.
 
-Rezultat administrativne provjere `Potpuna` / `Nepotpuna`, stanja prigovora, individualno ocjenjivanje, rangiranje i konačni ishod vode se odvojeno i nijesu nova osnovna stanja prijave.
+| Tehnička vrijednost | Poslovna oznaka |
+|---------------------|-----------------|
+| `draft` | U pripremi |
+| `submitted` | Podnesena |
+| `evaluated` | Ocijenjena |
+| `approved` | Odobrena |
+| `rejected` | Odbijena |
 
-Prijava ne prelazi automatski iz `U pripremi` u `Podnesena`.
+`draft` nastaje kreiranjem prijave. Podnosilac uređuje prijavu dok je nije konačno podnio.
 
-**Izvor:** odobrena projektna odluka o životnom ciklusu prijave.
+`submitted` nastaje konačnim podnošenjem. Prijava je tada zaključana.
+
+`evaluated` nastaje kada su završene sve potrebne individualne ocjene konkretne prijave i obračunat rezultat. `evaluated` ne znači da je prijava podržana.
+
+`approved` nastaje potvrdom konačnog rezultata i raspodjele za podržanu prijavu, uz evidentirani iznos.
+
+`rejected` nastaje kada prijava više ne učestvuje u daljem postupku ili je konačno nepodržana. Uz `rejected` se obavezno evidentira tipiziran razlog.
+
+Nije dozvoljen povratak u `draft` nakon konačnog podnošenja. Promjena statusa ne otključava prijavu.
+
+Rezultat administrativne provjere `Potpuna` / `Nepotpuna`, prigovor i njegov ishod, eliminatorni razlog, bodovi, rang i odobreni iznos ostaju posebne poslovne činjenice. Pet statusa ne zamjenjuje te činjenice.
+
+Prijava ne prelazi automatski iz `draft` / `U pripremi` u `submitted` / `Podnesena`.
+
+**Izvor:** odobrena projektna odluka o životnom ciklusu prijave; `KN-PATCH-BM-013`.
 
 ## 8.3. Rad sa prijavom U pripremi
 
@@ -925,7 +944,7 @@ Tačan izgled upozorenja, ekrana ili modalnog prozora predstavlja funkcionalni d
 
 ### BM-ML-023 — Konačno podnošenje i zaključavanje
 
-Izričitom potvrdom podnosioca prijava prelazi iz `U pripremi` u `Podnesena`.
+Izričitom potvrdom podnosioca prijava prelazi iz `draft` / `U pripremi` u `submitted` / `Podnesena`.
 
 Konačno podnošenje stvara zaključani snimak prijave, obrazaca i prateće dokumentacije.
 
@@ -942,6 +961,8 @@ Nakon podnošenja nije dozvoljeno:
 
 Prigovor ne otključava prijavu i ne omogućava dopunu ili zamjenu dokumentacije.
 
+Promjena statusa prijave nakon konačnog podnošenja ne otključava prijavu.
+
 Podnesena prijava ostaje dostupna podnosiocu za pregled u granicama njegovog pristupa.
 
 **Izvor:** odobrena projektna odluka o zaključavanju; zajednička granica `BM-KN-015`.
@@ -950,7 +971,7 @@ Podnesena prijava ostaje dostupna podnosiocu za pregled u granicama njegovog pri
 
 ### BM-ML-024 — Prijava U pripremi nakon isteka roka
 
-Ako rok istekne prije konačnog podnošenja, prijava ostaje sačuvana u stanju `U pripremi`.
+Ako rok istekne prije konačnog podnošenja, prijava ostaje sačuvana u statusu `draft` / `U pripremi`.
 
 Podnosilac je može pregledati, ali je na završenom Pozivu više ne može:
 - mijenjati;
@@ -959,9 +980,9 @@ Podnosilac je može pregledati, ali je na završenom Pozivu više ne može:
 - konačno podnijeti.
 
 Takva prijava:
-- ne postaje `Podnesena`;
+- ne postaje `submitted` / `Podnesena`;
 - ne označava se kao `Nepotpuna`;
-- ne označava se kao odbijena;
+- ne prelazi automatski u `rejected`;
 - nije dostupna Komisiji;
 - ne ulazi u administrativnu provjeru;
 - ne prenosi se automatski na drugi Poziv.
@@ -1258,7 +1279,7 @@ Postupak za jedan Poziv obuhvata najmanje:
 
 Navedeni redosljed prikazuje širi poslovni životni ciklus nakon konkursa. U funkcionalnom obuhvatu V1 završavaju se faze do konačnog rezultata, evidentiranja raspodjele sredstava i arhiviranja konkursnog postupka. Ugovor, isplata sredstava, realizacija projekta, izvještavanje obrascima M4 i M4a i praćenje ugovornih obaveza odvijaju se van V1, u skladu sa Poglavljem 2.6 i pravilima `BM-ML-056` i `BM-ML-057`.
 
-Ova lista prikazuje poslovni redosljed. Ne uvodi zasebno osnovno stanje prijave za svaku fazu.
+Ova lista prikazuje poslovni redosljed. Ne uvodi zasebno osnovno stanje prijave za svaku fazu. Katalog statusa prijave uređuje `BM-ML-020`.
 
 ## 10.2. Objavljivanje i rok
 
@@ -1321,15 +1342,17 @@ Komisija utvrđuje rezultat:
 
 Predsjednik Komisije rezultat evidentira u listi M3 u ime Komisije, prema `BM-ML-002`.
 
-`Potpuna` i `Nepotpuna` predstavljaju rezultat administrativne provjere, a ne novo osnovno stanje prijave. Osnovno stanje ostaje `Podnesena`.
+`Potpuna` i `Nepotpuna` predstavljaju rezultat administrativne provjere, a ne status prijave. Pet statusa iz `BM-ML-020` ne zamjenjuje ovaj rezultat.
 
-Ako je rezultat `Potpuna`, prijava može nastaviti ka narednim fazama.
+Prijava ostaje `submitted` dok traje rok za prigovor ili dok postoji neriješen blagovremen prigovor. Samo evidentiranje `Nepotpuna` ne smije odmah postaviti `rejected`.
 
-Ako je rezultat `Nepotpuna`, prijava se ne razmatra dalje dok je otvoren rok za prigovor ili dok traje odlučivanje o podnesenom prigovoru.
+Ako je rezultat `Potpuna`, prijava može nastaviti ka narednim fazama i ostaje `submitted`.
+
+Ako je rezultat `Nepotpuna`, prijava se ne razmatra dalje dok je otvoren rok za prigovor ili dok traje odlučivanje o podnesenom prigovoru. Status i dalje ostaje `submitted`.
 
 Napomena „odbiti aplikaciju“ iz M3 ne ukida pravo na obavještavanje i prigovor iz člana 18.
 
-**Izvor:** Odluka, članovi 18 i 20; odobreno rješenje pitanja 11; `BM-ML-002` i `BM-ML-020`.
+**Izvor:** Odluka, članovi 18 i 20; odobreno rješenje pitanja 11; `BM-ML-002` i `BM-ML-020`; `KN-PATCH-BM-013`.
 
 ## 10.5. Prigovor
 
@@ -1359,16 +1382,21 @@ Prigovor može biti prihvaćen kada je podnosilac dokaz ili dokument blagovremen
 Ako je prigovor `Prihvaćen`:
 
 - administrativni rezultat postaje `Potpuna`;
+- prijava ostaje `submitted`;
 - prijava nastavlja dalji postupak.
 
 Ako je prigovor `Odbijen`:
 
 - rezultat ostaje `Nepotpuna`;
+- prijava prelazi u `rejected`;
+- evidentira se tipiziran razlog konačne nepotpunosti;
 - prijava se ne ocjenjuje i ne razmatra dalje.
 
-Ako prigovor nije podnesen u roku, rezultat `Nepotpuna` postaje konačan za administrativnu fazu i prijava se ne razmatra dalje.
+Ako prigovor nije podnesen u roku, rezultat `Nepotpuna` postaje konačan za administrativnu fazu, prijava prelazi u `rejected` uz razlog konačne nepotpunosti i ne razmatra se dalje.
 
-**Izvor:** Odluka, član 18; odobreno rješenje pitanja 11 iz Poglavlja 4; `BM-ML-023`.
+Tokom otvorenog prava na prigovor prijava nikada ne napušta `submitted`. Ne uvodi se prelaz `rejected` → `submitted`. Prigovor ne otključava prijavu.
+
+**Izvor:** Odluka, član 18; odobreno rješenje pitanja 11 iz Poglavlja 4; `BM-ML-023`; `KN-PATCH-BM-013`.
 
 ### BM-ML-037 — Konačnost ishoda prigovora
 
@@ -1620,11 +1648,17 @@ Poslovno razgraničenje:
 
 Prijava za koju je konačno utvrđen primjenjivi eliminatorni razlog ne ulazi u pozitivno ocjenjivanje.
 
-Osnovno stanje prijave ostaje `Podnesena`. Eliminatorni rezultat ne uvodi novo osnovno stanje `Eliminisana` ili `Odbijena`.
+Poslovno stanje `Eliminisana` ne uvodi se. Konačno utvrđen eliminatorni razlog dovodi do tehničkog statusa `rejected`. Eliminatorni razlog mora biti odvojeno evidentiran.
+
+Eliminatorni razlog 1 — konačna nepotpunost — prelazi u `rejected` tek nakon odbijenog prigovora ili isteka roka bez prigovora, prema `BM-ML-035`–`BM-ML-036`.
+
+Eliminatorni razlozi 2 i 3 mogu dovesti do `rejected` kada ih Komisija konačno utvrdi.
+
+Različiti eliminatorni razlozi ne smiju se svesti na isti neobrazloženi tekst.
 
 Platforma ne dodaje eliminatorni kriterijum koji nije propisan Odlukom.
 
-**Izvor:** Odluka, član 20; `BM-ML-015`, `BM-ML-018` i `BM-ML-035`–`BM-ML-037`.
+**Izvor:** Odluka, član 20; `BM-ML-015`, `BM-ML-018` i `BM-ML-035`–`BM-ML-037`; `KN-PATCH-BM-013`.
 
 ## 11.7. Konačna ocjena
 
@@ -1643,6 +1677,8 @@ Svaki kriterijum može imati prosječnu ocjenu od 1 do 5. Najveći zbir prosječ
 
 Prag podrške iznosi 30 bodova.
 
+Prijava koja je završila sve potrebne individualne ocjene prelazi iz `submitted` u `evaluated`. `evaluated` ne znači automatski da je prijava podržana.
+
 Biznis plan sa konačnom ocjenom:
 
 - manjom od 30 bodova — ne podržava se;
@@ -1655,9 +1691,19 @@ Dodjela zavisi i od:
 - primjenjivih finansijskih limita;
 - konačne odluke Komisije u skladu sa Odlukom.
 
+Status `approved` ili `rejected` određuje se tek pri potvrdi konačne rang-liste i evidentiranju raspodjele.
+
+Podržana prijava sa evidentiranim iznosom prelazi u `approved`.
+
+Prijava ispod praga prelazi u `rejected` pri potvrdi konačnog rezultata.
+
+Prijava koja ispunjava prag, ali nije podržana zbog nedovoljnih sredstava, prelazi u `rejected` uz poseban razlog.
+
+Bodovi i rang ostaju sačuvani i kada je konačni status `rejected`. Za prag i rang koristi se puna nezaokružena vrijednost.
+
 Za provjeru praga koristi se puna nezaokružena vrijednost prema `BM-ML-041`. Prikaz rezultata na dvije decimale ne smije promijeniti prolaznost.
 
-**Izvor:** Odluka, članovi 20–22; `BM-ML-038`, `BM-ML-041` i `BM-ML-042`.
+**Izvor:** Odluka, članovi 20–22; `BM-ML-038`, `BM-ML-041` i `BM-ML-042`; `KN-PATCH-BM-013`.
 
 ## 11.8. Preliminarna i konačna rang-lista
 
@@ -1781,7 +1827,9 @@ Platforma ne dozvoljava konačnu potvrdu raspodjele koja krši potvrđena finans
 
 Komisija raspodjeljuje sredstva prema konačnoj rang-listi do utroška raspoloživih sredstava.
 
-**Izvor:** Odluka, članovi 19 i 22; odobrena projektna odluka o unosu i kontroli iznosa.
+Konačna potvrda raspodjele, zajedno sa potvrdom konačne rang-liste, određuje status `approved` ili `rejected` prema `BM-ML-044`. Evidentiranje iznosa samo po sebi ne otključava prijavu.
+
+**Izvor:** Odluka, članovi 19 i 22; odobrena projektna odluka o unosu i kontroli iznosa; `KN-PATCH-BM-013`.
 
 ---
 
@@ -2109,6 +2157,8 @@ Dokumentacija zatvorenog i arhiviranog konkursnog postupka ostaje sačuvana u pl
 
 Arhiviranje ne predstavlja brisanje.
 
+Arhiviranje Poziva ne mijenja status prijave. Status prijave ostaje `draft`, `submitted`, `evaluated`, `approved` ili `rejected` prema `BM-ML-020`.
+
 Ne brišu se automatski:
 
 - prijava;
@@ -2311,7 +2361,7 @@ Ovo pravilo opisuje poslovnu odgovornost i razdvajanje čuvanja od objavljivanja
 
 Isti podnosilac može ponovo konkurisati na drugom Pozivu u istoj godišnjoj instanci.
 
-Za drugi Poziv podnosi se nova prijava.
+Za drugi Poziv podnosi se nova prijava. Nova prijava počinje u statusu `draft` / `U pripremi`. Status prethodne prijave ne prenosi se.
 
 Prijava iz prvog Poziva ne prenosi se automatski.
 
@@ -2368,7 +2418,7 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-017 | Neprihvatljivi troškovi i početak prihvatljivosti | 7.6 | Odluka, članovi 13 i 26; Poglavlje 4, pitanje 5 | USVOJENO |
 | BM-ML-018 | Ranije finansirani biznis planovi | 7.7 | Odluka, članovi 15 i 20 | USVOJENO |
 | BM-ML-019 | Elektronsko podnošenje prijave | 8.1 | Odluka, članovi 14, 16 i 17 | USVOJENO |
-| BM-ML-020 | Osnovna stanja prijave | 8.2 | Projektna odluka | USVOJENO |
+| BM-ML-020 | Osnovna stanja prijave | 8.2 | Projektna odluka; KN-PATCH-BM-013 | USVOJENO |
 | BM-ML-021 | Upravljanje prijavom U pripremi | 8.3 | Projektna odluka | USVOJENO |
 | BM-ML-022 | Kontrola prije podnošenja | 8.4 | Odluka, članovi 16–18; projektna odluka | USVOJENO |
 | BM-ML-023 | Konačno podnošenje i zaključavanje | 8.5 | Projektna odluka; BM-KN-015 | USVOJENO |
@@ -2383,16 +2433,16 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-032 | Dokaz o žiro računu | 9.7 | Odluka, članovi 4 i 14; Poglavlje 4, pitanje 12 | USVOJENO |
 | BM-ML-033 | Objavljivanje i rok za prijave | 10.2 | Odluka, članovi 6 i 14; projektna odluka | USVOJENO |
 | BM-ML-034 | Rokovi sjednica Komisije | 10.3 | Odluka, članovi 18 i 21; Poglavlje 4, pitanje 11 | USVOJENO |
-| BM-ML-035 | Rezultat administrativne provjere | 10.4 | Odluka, članovi 18 i 20; Poglavlje 4, pitanje 11 | USVOJENO |
-| BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | Odluka, član 18; Poglavlje 4, pitanje 11 | USVOJENO |
+| BM-ML-035 | Rezultat administrativne provjere | 10.4 | Odluka, članovi 18 i 20; Poglavlje 4, pitanje 11; KN-PATCH-BM-013 | USVOJENO |
+| BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | Odluka, član 18; Poglavlje 4, pitanje 11; KN-PATCH-BM-013 | USVOJENO |
 | BM-ML-037 | Konačnost ishoda prigovora | 10.5 | Projektna odluka | USVOJENO |
 | BM-ML-038 | Deset pozitivnih kriterijuma i skala | 11.1 | Odluka, članovi 20 i 21 | USVOJENO |
 | BM-ML-039 | Nacrt i završavanje individualnog ocjenjivanja | 11.2 | Odluka, članovi 7, 20 i 21; projektna odluka; Poglavlje 4.1, riješena zavisnost O-01 | USVOJENO |
 | BM-ML-040 | Tajnost i međusobni uvid | 11.3 | Odluka, član 21; projektna odluka | USVOJENO |
 | BM-ML-041 | Prosjek i preciznost obračuna | 11.4 | Odluka, član 21; projektna odluka | USVOJENO |
 | BM-ML-042 | Dodatni bodovi | 11.5 | Odluka, članovi 20 i 21; projektna odluka | USVOJENO |
-| BM-ML-043 | Eliminatorni kriterijumi | 11.6 | Odluka, član 20 | USVOJENO |
-| BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | Odluka, članovi 20–22 | USVOJENO |
+| BM-ML-043 | Eliminatorni kriterijumi | 11.6 | Odluka, član 20; KN-PATCH-BM-013 | USVOJENO |
+| BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | Odluka, članovi 20–22; KN-PATCH-BM-013 | USVOJENO |
 | BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | Odluka, članovi 21 i 22; projektna odluka | USVOJENO |
 | BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | Odluka, član 22; projektna odluka | USVOJENO |
 | BM-ML-047 | Procentualni limiti i njihovo preklapanje | 11.10 | Odluka, član 19; odobrena poslovna tumačenja | USVOJENO |
@@ -2410,4 +2460,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.2**
+**Kraj dokumenta KN-BM-002 v1.0.3**
