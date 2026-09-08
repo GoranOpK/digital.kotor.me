@@ -195,7 +195,7 @@ class CompetitionsController extends Controller
                 }
             }
             
-            $poLabels = \App\Models\Application::overlayRegisteredPreduzetnicaContextualLabels(
+            $poLabels = \App\Models\Application::overlayContextualDocumentLabels(
                 [],
                 $previewApplicantType ?: $applicantType,
                 'započinjanje',
@@ -209,7 +209,12 @@ class CompetitionsController extends Controller
         }, $defaultDocuments);
 
         // Dodaj obavezne dokumente koje svi moraju imati
-        if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
+        $previewType = $previewApplicantType ?: $applicantType;
+        if (\App\Models\Application::usesStartingCommercialCompanyLabels($previewType, 'započinjanje')) {
+            $formTitles = \App\Models\Application::startingCommercialCompanyFormTitles();
+            array_unshift($requiredDocuments, $formTitles['obrazac_2']);
+            array_unshift($requiredDocuments, $formTitles['obrazac_1b']);
+        } elseif ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)');
             array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
         } elseif ($previewApplicantType === 'doo' || $previewApplicantType === 'ostalo' || $applicantType === 'doo' || $applicantType === 'ostalo') {

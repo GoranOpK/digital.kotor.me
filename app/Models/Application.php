@@ -128,6 +128,128 @@ class Application extends Model
         );
     }
 
+    /**
+     * PO-adopted labels for registered commercial company / započinjanje (DOO/AD/OD/KD).
+     *
+     * @return array<string, string>
+     */
+    public static function registeredStartingCommercialCompanyDocumentLabels(): array
+    {
+        return [
+            'licna_karta' => 'Ovjerena kopija lične karte nositeljke biznisa',
+            'crps_resenje' => 'Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)',
+            'pib_resenje' => 'Rješenje o registraciji kod PJ Poreske uprave',
+            'pdv_resenje' => 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik',
+            'statut' => 'Važeći Statut društva',
+            'karton_potpisa' => 'Važeći karton deponovanih potpisa',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv podnositeljke prijave/nositeljke biznisa ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
+            'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
+            'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
+        ];
+    }
+
+    /**
+     * PO-adopted labels for unregistered planned commercial company / započinjanje.
+     *
+     * @return array<string, string>
+     */
+    public static function unregisteredStartingCommercialCompanyDocumentLabels(): array
+    {
+        return [
+            'licna_karta' => 'Ovjerena kopija lične karte nositeljke biznisa',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv podnositeljke prijave/nositeljke biznisa ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
+            'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
+            'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
+        ];
+    }
+
+    /**
+     * @return array{obrazac_1b: string, obrazac_2: string}
+     */
+    public static function startingCommercialCompanyFormTitles(): array
+    {
+        return [
+            'obrazac_1b' => 'Obrazac 1b – Prijava na konkurs',
+            'obrazac_2' => 'Obrazac 2 – Biznis plan',
+        ];
+    }
+
+    public static function usesStartingCommercialCompanyLabels(
+        ?string $applicantType,
+        ?string $businessStage
+    ): bool {
+        return in_array($applicantType, ['doo', 'ostalo'], true)
+            && $businessStage === 'započinjanje';
+    }
+
+    public static function usesRegisteredStartingCommercialCompanyLabels(
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): bool {
+        return self::usesStartingCommercialCompanyLabels($applicantType, $businessStage)
+            && (bool) $isRegistered;
+    }
+
+    public static function usesUnregisteredStartingCommercialCompanyLabels(
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): bool {
+        return self::usesStartingCommercialCompanyLabels($applicantType, $businessStage)
+            && ! (bool) $isRegistered;
+    }
+
+    /**
+     * @param  array<string, string>  $labels
+     * @return array<string, string>
+     */
+    public static function overlayStartingCommercialCompanyLabels(
+        array $labels,
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): array {
+        if (self::usesRegisteredStartingCommercialCompanyLabels($applicantType, $businessStage, $isRegistered)) {
+            return array_merge($labels, self::registeredStartingCommercialCompanyDocumentLabels());
+        }
+
+        if (self::usesUnregisteredStartingCommercialCompanyLabels($applicantType, $businessStage, $isRegistered)) {
+            return array_merge($labels, self::unregisteredStartingCommercialCompanyDocumentLabels());
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Contextual PO labels: Preduzetnica overlays, then company / započinjanje overlays.
+     *
+     * @param  array<string, string>  $labels
+     * @return array<string, string>
+     */
+    public static function overlayContextualDocumentLabels(
+        array $labels,
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): array {
+        return self::overlayStartingCommercialCompanyLabels(
+            self::overlayRegisteredPreduzetnicaContextualLabels(
+                $labels,
+                $applicantType,
+                $businessStage,
+                $isRegistered
+            ),
+            $applicantType,
+            $businessStage,
+            $isRegistered
+        );
+    }
+
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -825,7 +947,7 @@ class Application extends Model
         $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
         $documentLabels['ostalo'] = 'Ostalo';
 
-        return self::overlayRegisteredPreduzetnicaContextualLabels(
+        return self::overlayContextualDocumentLabels(
             $documentLabels,
             $this->applicant_type,
             $this->business_stage,

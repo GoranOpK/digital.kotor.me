@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'doo': {
             'započinjanje': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
-                optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
+                optional: ['potvrda_zavod_nezaposleni']
             },
             'razvoj': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
@@ -524,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'ostalo': {
             'započinjanje': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
-                optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
+                optional: ['potvrda_zavod_nezaposleni']
             },
             'razvoj': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
@@ -569,7 +569,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2)',
             ];
-        } else if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'doo' || applicantType === 'ostalo')) {
+        } else if (selectedStage === 'započinjanje' && (applicantType === 'doo' || applicantType === 'ostalo')) {
+            const formTitles = @json(\App\Models\Application::startingCommercialCompanyFormTitles());
+            allDocuments = [
+                formTitles.obrazac_1b,
+                formTitles.obrazac_2,
+            ];
+        } else if (selectedStage === 'razvoj' && (applicantType === 'doo' || applicantType === 'ostalo')) {
             allDocuments = [
                 'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)',
                 'Popunjena forma za biznis plan (obrazac 2)',
@@ -584,8 +590,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Dodaj dokumente sa napomenama za opcione
         const poLabels = @json(\App\Models\Application::registeredPreduzetnicaStartingBusinessDocumentLabels());
         const poDevelopmentLabels = @json(\App\Models\Application::registeredPreduzetnicaDevelopingBusinessDocumentLabels());
+        const poRegisteredCompanyStartLabels = @json(\App\Models\Application::registeredStartingCommercialCompanyDocumentLabels());
+        const poUnregisteredCompanyStartLabels = @json(\App\Models\Application::unregisteredStartingCommercialCompanyDocumentLabels());
         const registeredPreduzetnicaStart = isRegisteredBusiness && applicantType === 'preduzetnica' && selectedStage === 'započinjanje';
         const registeredPreduzetnicaDevelopment = isRegisteredBusiness && applicantType === 'preduzetnica' && selectedStage === 'razvoj';
+        const registeredCompanyStart = isRegisteredBusiness && (applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje';
+        const unregisteredCompanyStart = !isRegisteredBusiness && (applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje';
+        const poCompanyStartLabels = registeredCompanyStart
+            ? poRegisteredCompanyStartLabels
+            : (unregisteredCompanyStart ? poUnregisteredCompanyStartLabels : {});
 
         // Dodaj dokumente sa napomenama za opcione
         docTypes.forEach(docType => {
@@ -595,7 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Ako je dokument opcioni, dodaj napomenu
-            if (optionalDocs.includes(docType) && !(registeredPreduzetnicaStart && poLabels[docType]) && !(registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType])) {
+            if (optionalDocs.includes(docType) && !(registeredPreduzetnicaStart && poLabels[docType]) && !(registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType]) && !(poCompanyStartLabels[docType])) {
                 if (docType === 'crps_resenje') {
                     docLabel = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pib_resenje') {
@@ -723,6 +736,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType]) {
                 docLabel = poDevelopmentLabels[docType];
+            }
+
+            if (poCompanyStartLabels[docType]) {
+                docLabel = poCompanyStartLabels[docType];
             }
 
             allDocuments.push(docLabel);
