@@ -912,6 +912,275 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertContains('dokaz_ziro_racun', $application->getRequiredDocuments());
     }
 
+    public function test_registered_commercial_company_razvoj_catalog_and_po_labels_match_for_doo_ad_od_kd(): void
+    {
+        $expected = $this->registeredCompanyDevelopmentRequiredSet();
+        $poLabels = Application::registeredDevelopingCommercialCompanyDocumentLabels();
+        $dooRequired = null;
+        $cases = [
+            ['doo', UserType::LIMITED_LIABILITY_COMPANY],
+            ['ostalo', UserType::JOINT_STOCK_COMPANY],
+            ['ostalo', UserType::GENERAL_PARTNERSHIP],
+            ['ostalo', UserType::LIMITED_PARTNERSHIP],
+        ];
+
+        foreach ($cases as [$applicantType, $registrationForm]) {
+            $application = new Application([
+                'applicant_type' => $applicantType,
+                'business_stage' => 'razvoj',
+                'is_registered' => true,
+                'registration_form' => $registrationForm,
+            ]);
+            $required = $application->getRequiredDocuments();
+            $preview = Application::getRequiredDocumentsForType($applicantType, 'razvoj', true);
+            $strict = $application->getStrictlyRequiredDocuments();
+
+            $this->assertSame($expected, $required);
+            $this->assertSame($preview, $required);
+            $this->assertNotContains('dokaz_ziro_racun', $required);
+            $this->assertNotContains('dokaz_ziro_racun', $strict);
+            $this->assertNotContains('izvjestaj_registar_kase', $required);
+            $this->assertNotContains('izvjestaj_registar_kase', $strict);
+            $this->assertContains('godisnji_racuni', $strict);
+            $this->assertContains('ioppd_obrazac', $strict);
+            $this->assertContains('pdv_resenje', $strict);
+            $this->assertContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $required);
+            $this->assertNotContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $strict);
+            $this->assertSame(
+                [Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI],
+                Application::getConditionallyRequiredDocumentTypes()
+            );
+
+            $labels = $application->getDocumentLabelsMap();
+            foreach ($poLabels as $documentType => $label) {
+                $this->assertSame($label, $labels[$documentType]);
+            }
+
+            $this->assertSame('IOPPD obrazac za posljednji mjesec', $labels['ioppd_obrazac']);
+            $this->assertStringNotContainsString('nema zaposlenih', $labels['ioppd_obrazac']);
+            $this->assertStringContainsString('bilans stanja', $labels['godisnji_racuni']);
+            $this->assertStringContainsString('bilans uspjeha', $labels['godisnji_racuni']);
+            $this->assertStringContainsString('analitika kupaca', $labels['godisnji_racuni']);
+            $this->assertStringContainsString('dobavljača', $labels['godisnji_racuni']);
+            $this->assertStringContainsString('periodični izvještaj fiskalne kase', $labels['godisnji_racuni']);
+            $this->assertStringNotContainsString('registar kase', $labels['godisnji_racuni']);
+
+            foreach ([
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'potvrda_upc_porezi',
+            ] as $documentType) {
+                $this->assertStringContainsString('nositeljke biznisa', $labels[$documentType]);
+                $this->assertStringContainsString('društva', $labels[$documentType]);
+            }
+
+            if ($applicantType === 'doo') {
+                $dooRequired = $required;
+            } else {
+                $this->assertSame($dooRequired, $required);
+            }
+        }
+
+        $this->assertSame(
+            Application::getRequiredDocumentsForType('doo', 'razvoj', true),
+            Application::getRequiredDocumentsForType('ostalo', 'razvoj', true)
+        );
+    }
+
+    public function test_registered_doo_razvoj_application_and_admin_show_use_company_development_po_labels(): void
+    {
+        $user = $this->makeKorisnik([
+            'jmb' => $this->validJmb(111),
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(111),
+            'company_name' => 'PO Razvoj DOO',
+            'residential_status' => null,
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'doo',
+            'business_stage' => 'razvoj',
+            'is_registered' => true,
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(111),
+            'crps_number' => $this->validCrps(1, 111),
+        ]));
+
+        $poLabels = Application::registeredDevelopingCommercialCompanyDocumentLabels();
+        $formTitles = Application::developingCommercialCompanyFormTitles();
+
+        $applicantHtml = $this->actingAs($user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertCompanyDevelopmentSurfaceContainsPoLabels($applicantHtml, $poLabels);
+        $this->assertStringContainsString('value="godisnji_racuni"', $applicantHtml);
+        $this->assertStringContainsString('value="ioppd_obrazac"', $applicantHtml);
+        $this->assertStringContainsString('value="pdv_resenje"', $applicantHtml);
+        $this->assertStringContainsString('value="statut"', $applicantHtml);
+        $this->assertStringNotContainsString('value="dokaz_ziro_racun"', $applicantHtml);
+        $this->assertStringNotContainsString('value="izvjestaj_registar_kase"', $applicantHtml);
+        $this->assertStringNotContainsString('nema zaposlenih', $applicantHtml);
+        $this->assertStringNotContainsString('Rješenje o registraciji PJ Uprave prihoda i carina', $applicantHtml);
+        $this->assertStringContainsString('(Opciono — za dodatne bodove)', $applicantHtml);
+
+        $commission = Commission::create([
+            'name' => 'Komisija razvoj '.uniqid(),
+            'year' => (int) now()->year,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'status' => 'active',
+        ]);
+        $competition->update([
+            'commission_id' => $commission->id,
+            'status' => 'closed',
+        ]);
+        $application->update([
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        $commissioner = $this->makeKorisnik([
+            'jmb' => $this->validJmb(112),
+            'email' => 'komisija.razvoj@example.com',
+            'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
+        ]);
+        CommissionMember::create([
+            'commission_id' => $commission->id,
+            'user_id' => $commissioner->id,
+            'name' => $commissioner->name,
+            'position' => 'predsjednik',
+            'member_type' => 'opstina',
+            'status' => 'active',
+        ]);
+
+        $adminHtml = $this->actingAs($commissioner)
+            ->get(route('admin.applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertCompanyDevelopmentSurfaceContainsPoLabels($adminHtml, $poLabels);
+        $this->assertStringNotContainsString('nema zaposlenih', $adminHtml);
+        $this->assertStringContainsString('Opciono (za dodatne bodove)', $adminHtml);
+        $this->assertSame($formTitles['obrazac_1b'], 'Obrazac 1b – Prijava na konkurs');
+        $this->assertSame($formTitles['obrazac_2'], 'Obrazac 2 – Biznis plan');
+    }
+
+    public function test_registered_ad_razvoj_application_show_uses_same_company_development_po_labels(): void
+    {
+        $user = $this->makeKorisnik([
+            'jmb' => $this->validJmb(113),
+            'user_type' => UserType::JOINT_STOCK_COMPANY,
+            'pib' => $this->validPib(113),
+            'company_name' => 'PO Razvoj AD',
+            'residential_status' => null,
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'ostalo',
+            'business_stage' => 'razvoj',
+            'is_registered' => true,
+            'registration_form' => UserType::JOINT_STOCK_COMPANY,
+            'pib' => $this->validPib(113),
+            'crps_number' => $this->validCrps(1, 113),
+        ]));
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertCompanyDevelopmentSurfaceContainsPoLabels(
+            $html,
+            Application::registeredDevelopingCommercialCompanyDocumentLabels()
+        );
+        $this->assertStringContainsString('value="godisnji_racuni"', $html);
+        $this->assertStringNotContainsString('value="dokaz_ziro_racun"', $html);
+    }
+
+    public function test_competition_show_registered_doo_embeds_developing_company_po_labels(): void
+    {
+        $user = $this->makeKorisnik([
+            'jmb' => $this->validJmb(114),
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(114),
+            'company_name' => 'Preview Razvoj DOO',
+            'residential_status' => null,
+        ]);
+        $competition = $this->openCompetition();
+
+        $html = $this->actingAs($user)
+            ->get(route('competitions.show', $competition))
+            ->assertOk()
+            ->assertViewHas('knFormApplicantType', 'doo')
+            ->assertViewHas('knIsRegisteredBusiness', true)
+            ->getContent();
+
+        $this->assertStringContainsString('Obrazac 1b – Prijava na konkurs', $html);
+        $this->assertStringContainsString('Obrazac 2 – Biznis plan', $html);
+        $this->assertStringContainsString('registeredCompanyDevelopment', $html);
+        $this->assertStringContainsString('poRegisteredCompanyDevelopmentLabels', $html);
+        foreach (Application::registeredDevelopingCommercialCompanyDocumentLabels() as $label) {
+            $this->assertStringContainsString($this->bladeJsonEncodedString($label), $html);
+        }
+
+        $this->assertSame(
+            "['potvrda_zavod_nezaposleni']",
+            $this->jsOptionalListAfterApplicantStage($html, 'doo', 'razvoj')
+        );
+        $this->assertSame(
+            "['potvrda_zavod_nezaposleni']",
+            $this->jsOptionalListAfterApplicantStage($html, 'ostalo', 'razvoj')
+        );
+        $this->assertStringNotContainsString("'pdv_resenje'", $this->jsOptionalListAfterApplicantStage($html, 'doo', 'razvoj'));
+        $this->assertStringContainsString('potvrda_zavod_nezaposleni', $this->jsOptionalListAfterApplicantStage($html, 'doo', 'razvoj'));
+    }
+
+    public function test_registered_commercial_company_zapocinjanje_is_not_replaced_by_development_overlay(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'doo',
+            'business_stage' => 'započinjanje',
+            'is_registered' => true,
+        ]);
+
+        $labels = $application->getDocumentLabelsMap();
+        $this->assertSame(
+            Application::registeredStartingCommercialCompanyDocumentLabels()['potvrda_neosudjivanost'],
+            $labels['potvrda_neosudjivanost']
+        );
+        $this->assertNotSame(
+            Application::registeredDevelopingCommercialCompanyDocumentLabels()['potvrda_neosudjivanost'],
+            $labels['potvrda_neosudjivanost']
+        );
+        $this->assertNotContains('godisnji_racuni', $application->getRequiredDocuments());
+        $this->assertNotContains('ioppd_obrazac', $application->getRequiredDocuments());
+    }
+
+    public function test_registered_preduzetnica_razvoj_is_not_replaced_by_company_development_overlay(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'razvoj',
+            'is_registered' => true,
+        ]);
+
+        $labels = $application->getDocumentLabelsMap();
+        $this->assertSame(
+            Application::registeredPreduzetnicaDevelopingBusinessDocumentLabels()['ioppd_obrazac'],
+            $labels['ioppd_obrazac']
+        );
+        $this->assertStringContainsString('nema zaposlenih', $labels['ioppd_obrazac']);
+        $this->assertNotSame(
+            Application::registeredDevelopingCommercialCompanyDocumentLabels()['ioppd_obrazac'],
+            $labels['ioppd_obrazac']
+        );
+        $this->assertContains('dokaz_ziro_racun', $application->getRequiredDocuments());
+        $this->assertNotContains('godisnji_racuni', $application->getRequiredDocuments());
+    }
+
     public function test_competition_show_unregistered_fl_locks_stage_to_start(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(25)]);
@@ -1331,6 +1600,52 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->getContent();
 
         $this->assertInputHasValue($html, 'doo_jmbg', $canonicalJmb);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function registeredCompanyDevelopmentRequiredSet(): array
+    {
+        return [
+            'licna_karta',
+            'crps_resenje',
+            'pib_resenje',
+            'pdv_resenje',
+            'statut',
+            'karton_potpisa',
+            'godisnji_racuni',
+            'potvrda_neosudjivanost',
+            'uvjerenje_opstina_porezi',
+            'uvjerenje_opstina_nepokretnost',
+            'potvrda_upc_porezi',
+            'ioppd_obrazac',
+            'potvrda_zavod_nezaposleni',
+            'predracuni_nabavka',
+        ];
+    }
+
+    /**
+     * @param  array<string, string>  $poLabels
+     */
+    private function assertCompanyDevelopmentSurfaceContainsPoLabels(string $html, array $poLabels): void
+    {
+        foreach ($poLabels as $label) {
+            $this->assertStringContainsString($label, $html);
+        }
+    }
+
+    private function jsOptionalListAfterApplicantStage(string $html, string $applicantType, string $stage): string
+    {
+        $pattern = '/\''.preg_quote($applicantType, '/').'\':\s*\{[\s\S]*?\''.preg_quote($stage, '/').'\':\s*\{[\s\S]*?optional:\s*(\[[^\]]+\])/';
+        $this->assertSame(1, preg_match($pattern, $html, $matches), "Missing JS optional list for {$applicantType}/{$stage}");
+
+        return $matches[1];
+    }
+
+    private function bladeJsonEncodedString(string $value): string
+    {
+        return trim(json_encode($value, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT), '"');
     }
 
     /**

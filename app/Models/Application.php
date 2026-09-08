@@ -226,7 +226,74 @@ class Application extends Model
     }
 
     /**
-     * Contextual PO labels: Preduzetnica overlays, then company / započinjanje overlays.
+     * PO-adopted labels for registered commercial company / razvoj (DOO/AD/OD/KD).
+     *
+     * @return array<string, string>
+     */
+    public static function registeredDevelopingCommercialCompanyDocumentLabels(): array
+    {
+        return [
+            'licna_karta' => 'Ovjerena kopija lične karte nositeljke biznisa',
+            'crps_resenje' => 'Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)',
+            'pib_resenje' => 'Rješenje o registraciji kod PJ Poreske uprave',
+            'pdv_resenje' => 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik',
+            'statut' => 'Važeći Statut društva',
+            'karton_potpisa' => 'Važeći karton deponovanih potpisa',
+            'godisnji_racuni' => 'Kompletan set godišnjih računa za prethodnu godinu: bilans stanja, bilans uspjeha, analitika kupaca i dobavljača; ukoliko društvo nema analitiku kupaca jer posluje isključivo sa fizičkim licima i naplatu vrši neposredno preko fiskalne kase, dostavlja periodični izvještaj fiskalne kase',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv nositeljke biznisa i društva ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime nositeljke biznisa i društva, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime nositeljke biznisa i društva, ne starije od 30 dana',
+            'potvrda_upc_porezi' => 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa na ime nositeljke biznisa i društva, ne starija od 30 dana',
+            'ioppd_obrazac' => 'IOPPD obrazac za posljednji mjesec',
+            'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
+            'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
+        ];
+    }
+
+    /**
+     * @return array{obrazac_1b: string, obrazac_2: string}
+     */
+    public static function developingCommercialCompanyFormTitles(): array
+    {
+        return self::startingCommercialCompanyFormTitles();
+    }
+
+    public static function usesDevelopingCommercialCompanyLabels(
+        ?string $applicantType,
+        ?string $businessStage
+    ): bool {
+        return in_array($applicantType, ['doo', 'ostalo'], true)
+            && $businessStage === 'razvoj';
+    }
+
+    public static function usesRegisteredDevelopingCommercialCompanyLabels(
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): bool {
+        return self::usesDevelopingCommercialCompanyLabels($applicantType, $businessStage)
+            && (bool) $isRegistered;
+    }
+
+    /**
+     * @param  array<string, string>  $labels
+     * @return array<string, string>
+     */
+    public static function overlayDevelopingCommercialCompanyLabels(
+        array $labels,
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): array {
+        if (!self::usesRegisteredDevelopingCommercialCompanyLabels($applicantType, $businessStage, $isRegistered)) {
+            return $labels;
+        }
+
+        return array_merge($labels, self::registeredDevelopingCommercialCompanyDocumentLabels());
+    }
+
+    /**
+     * Contextual PO labels: Preduzetnica overlays, then company start, then company / razvoj.
      *
      * @param  array<string, string>  $labels
      * @return array<string, string>
@@ -237,9 +304,14 @@ class Application extends Model
         ?string $businessStage,
         mixed $isRegistered
     ): array {
-        return self::overlayStartingCommercialCompanyLabels(
-            self::overlayRegisteredPreduzetnicaContextualLabels(
-                $labels,
+        return self::overlayDevelopingCommercialCompanyLabels(
+            self::overlayStartingCommercialCompanyLabels(
+                self::overlayRegisteredPreduzetnicaContextualLabels(
+                    $labels,
+                    $applicantType,
+                    $businessStage,
+                    $isRegistered
+                ),
                 $applicantType,
                 $businessStage,
                 $isRegistered

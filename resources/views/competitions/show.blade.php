@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             'razvoj': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
-                optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
+                optional: ['potvrda_zavod_nezaposleni']
             }
         },
         'ostalo': {
@@ -528,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             'razvoj': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
-                optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
+                optional: ['potvrda_zavod_nezaposleni']
             }
         },
         'fizicko_lice': {
@@ -576,9 +576,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 formTitles.obrazac_2,
             ];
         } else if (selectedStage === 'razvoj' && (applicantType === 'doo' || applicantType === 'ostalo')) {
+            const formTitles = @json(\App\Models\Application::developingCommercialCompanyFormTitles());
             allDocuments = [
-                'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)',
-                'Popunjena forma za biznis plan (obrazac 2)',
+                formTitles.obrazac_1b,
+                formTitles.obrazac_2,
             ];
         } else {
             allDocuments = [
@@ -592,13 +593,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const poDevelopmentLabels = @json(\App\Models\Application::registeredPreduzetnicaDevelopingBusinessDocumentLabels());
         const poRegisteredCompanyStartLabels = @json(\App\Models\Application::registeredStartingCommercialCompanyDocumentLabels());
         const poUnregisteredCompanyStartLabels = @json(\App\Models\Application::unregisteredStartingCommercialCompanyDocumentLabels());
+        const poRegisteredCompanyDevelopmentLabels = @json(\App\Models\Application::registeredDevelopingCommercialCompanyDocumentLabels());
         const registeredPreduzetnicaStart = isRegisteredBusiness && applicantType === 'preduzetnica' && selectedStage === 'započinjanje';
         const registeredPreduzetnicaDevelopment = isRegisteredBusiness && applicantType === 'preduzetnica' && selectedStage === 'razvoj';
         const registeredCompanyStart = isRegisteredBusiness && (applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje';
         const unregisteredCompanyStart = !isRegisteredBusiness && (applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje';
+        const registeredCompanyDevelopment = isRegisteredBusiness && (applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'razvoj';
         const poCompanyStartLabels = registeredCompanyStart
             ? poRegisteredCompanyStartLabels
             : (unregisteredCompanyStart ? poUnregisteredCompanyStartLabels : {});
+        const poCompanyDevelopmentLabels = registeredCompanyDevelopment
+            ? poRegisteredCompanyDevelopmentLabels
+            : {};
 
         // Dodaj dokumente sa napomenama za opcione
         docTypes.forEach(docType => {
@@ -608,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Ako je dokument opcioni, dodaj napomenu
-            if (optionalDocs.includes(docType) && !(registeredPreduzetnicaStart && poLabels[docType]) && !(registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType]) && !(poCompanyStartLabels[docType])) {
+            if (optionalDocs.includes(docType) && !(registeredPreduzetnicaStart && poLabels[docType]) && !(registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType]) && !(poCompanyStartLabels[docType]) && !(poCompanyDevelopmentLabels[docType])) {
                 if (docType === 'crps_resenje') {
                     docLabel = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pib_resenje') {
@@ -740,6 +746,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (poCompanyStartLabels[docType]) {
                 docLabel = poCompanyStartLabels[docType];
+            }
+
+            if (poCompanyDevelopmentLabels[docType]) {
+                docLabel = poCompanyDevelopmentLabels[docType];
             }
 
             allDocuments.push(docLabel);
