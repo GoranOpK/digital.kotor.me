@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Identity\CanonicalIdentityWriter;
 use App\Models\Application;
+use App\Models\Commission;
+use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\PhysicalPersonIdentity;
+use App\Models\Role;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -430,7 +433,197 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertStringContainsString('value="uvjerenje_opstina_nepokretnost"', $html);
     }
 
-    public function test_competition_show_unregistered_fl_cannot_choose_razvoj(): void
+    public function test_registered_preduzetnica_razvoj_keeps_single_ioppd_slot_and_po_labels(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'razvoj',
+            'is_registered' => true,
+        ]);
+
+        $required = $application->getRequiredDocuments();
+        $preview = Application::getRequiredDocumentsForType('preduzetnica', 'razvoj', true);
+        $strict = $application->getStrictlyRequiredDocuments();
+        $labels = $application->getDocumentLabelsMap();
+        $poLabels = Application::registeredPreduzetnicaDevelopingBusinessDocumentLabels();
+
+        $this->assertSame($preview, $required);
+        $this->assertContains('ioppd_obrazac', $required);
+        $this->assertContains('ioppd_obrazac', $strict);
+        $this->assertSame(1, count(array_filter($required, fn ($type) => $type === 'ioppd_obrazac')));
+        $this->assertNotContains('potvrda_nema_zaposlenih', $required);
+        $this->assertNotContains('potvrda_nema_zaposlenih', $strict);
+
+        foreach ([
+            'licna_karta',
+            'crps_resenje',
+            'pib_resenje',
+            'pdv_resenje',
+            'potvrda_neosudjivanost',
+            'uvjerenje_opstina_porezi',
+            'uvjerenje_opstina_nepokretnost',
+            'potvrda_upc_porezi',
+            'ioppd_obrazac',
+            'dokaz_ziro_racun',
+            'predracuni_nabavka',
+        ] as $documentType) {
+            $this->assertContains($documentType, $required);
+            $this->assertContains($documentType, $strict);
+        }
+
+        $this->assertContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $required);
+        $this->assertNotContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $strict);
+
+        foreach ($poLabels as $documentType => $label) {
+            $this->assertSame($label, $labels[$documentType]);
+        }
+
+        $this->assertStringContainsString('IOPPD', $labels['ioppd_obrazac']);
+        $this->assertStringContainsString('nema zaposlenih', $labels['ioppd_obrazac']);
+        $this->assertStringContainsString('PDV obveznik', $labels['pdv_resenje']);
+        $this->assertStringContainsString('nije PDV obveznik', $labels['pdv_resenje']);
+
+        $fizickoLiceRazvoj = new Application([
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'razvoj',
+            'is_registered' => false,
+        ]);
+        $this->assertNotSame(
+            $poLabels['ioppd_obrazac'],
+            $fizickoLiceRazvoj->getDocumentLabelsMap()['ioppd_obrazac']
+        );
+        $this->assertNotSame(
+            $poLabels['pdv_resenje'],
+            $fizickoLiceRazvoj->getDocumentLabelsMap()['pdv_resenje']
+        );
+    }
+
+    public function test_registered_preduzetnica_razvoj_application_and_admin_show_use_po_labels(): void
+    {
+        $user = $this->makeKorisnik([
+            'jmb' => $this->validJmb(93),
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(93),
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'razvoj',
+            'is_registered' => true,
+            'registration_form' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(93),
+            'crps_number' => $this->validCrps(1, 93),
+        ]));
+
+        $poIoppd = 'IOPPD obrazac za posljednji mjesec ili potvrda Poreske uprave da preduzetnica nema zaposlenih';
+        $poPdv = 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik';
+
+        $applicantHtml = $this->actingAs($user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="ioppd_obrazac"', $applicantHtml);
+        $this->assertStringNotContainsString('value="potvrda_nema_zaposlenih"', $applicantHtml);
+        $this->assertStringContainsString($poIoppd, $applicantHtml);
+        $this->assertStringContainsString($poPdv, $applicantHtml);
+        $this->assertStringContainsString('Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)', $applicantHtml);
+        $this->assertStringContainsString('Rješenje o registraciji kod PJ Poreske uprave', $applicantHtml);
+        $this->assertStringContainsString('Dokaz o broju poslovnog žiro računa', $applicantHtml);
+        $this->assertStringContainsString('Potvrda Osnovnog suda da se protiv preduzetnice ne vodi krivični postupak', $applicantHtml);
+        $this->assertStringContainsString('Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime preduzetnice, ne starije od 30 dana', $applicantHtml);
+        $this->assertStringContainsString('Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice, ne starije od 30 dana', $applicantHtml);
+        $this->assertStringContainsString('Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa na ime preduzetnice, ne starija od 30 dana', $applicantHtml);
+        $this->assertStringContainsString('Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci', $applicantHtml);
+        $this->assertStringContainsString('(Opciono — za dodatne bodove)', $applicantHtml);
+        $this->assertStringContainsString('Predračuni za planiranu nabavku', $applicantHtml);
+
+        $commission = Commission::create([
+            'name' => 'Komisija razvoj '.uniqid(),
+            'year' => (int) now()->year,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+            'status' => 'active',
+        ]);
+        $competition->update([
+            'commission_id' => $commission->id,
+            'status' => 'closed',
+        ]);
+        $application->update([
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        $commissioner = $this->makeKorisnik([
+            'jmb' => $this->validJmb(94),
+            'email' => 'komisija.razvoj@example.com',
+            'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
+        ]);
+        CommissionMember::create([
+            'commission_id' => $commission->id,
+            'user_id' => $commissioner->id,
+            'name' => $commissioner->name,
+            'position' => 'predsjednik',
+            'member_type' => 'opstina',
+            'status' => 'active',
+        ]);
+
+        $adminHtml = $this->actingAs($commissioner)
+            ->get(route('admin.applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString($poIoppd, $adminHtml);
+        $this->assertStringContainsString($poPdv, $adminHtml);
+        $this->assertStringContainsString('Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci', $adminHtml);
+        $this->assertStringContainsString('Opciono (za dodatne bodove)', $adminHtml);
+        $this->assertStringNotContainsString('value="potvrda_nema_zaposlenih"', $adminHtml);
+    }
+
+    public function test_competition_show_registered_preduzetnica_embeds_razvoj_po_labels(): void
+    {
+        $user = $this->makeKorisnik([
+            'jmb' => $this->validJmb(95),
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(95),
+        ]);
+        $competition = $this->openCompetition();
+
+        $html = $this->actingAs($user)
+            ->get(route('competitions.show', $competition))
+            ->assertOk()
+            ->assertViewHas('knFormApplicantType', 'preduzetnica')
+            ->assertViewHas('knIsRegisteredBusiness', true)
+            ->assertViewHas('knAllowsRazvoj', true)
+            ->getContent();
+
+        $this->assertStringContainsString('IOPPD obrazac za posljednji mjesec ili potvrda Poreske uprave da preduzetnica nema zaposlenih', $html);
+        $this->assertStringContainsString('Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik', $html);
+        $this->assertStringContainsString('registeredPreduzetnicaDevelopment', $html);
+    }
+
+    public function test_registered_preduzetnica_zapocinjanje_labels_are_not_replaced_by_razvoj_overlay(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'is_registered' => true,
+        ]);
+
+        $labels = $application->getDocumentLabelsMap();
+
+        $this->assertSame(
+            Application::registeredPreduzetnicaStartingBusinessDocumentLabels()['pdv_resenje'],
+            $labels['pdv_resenje']
+        );
+        $this->assertNotContains('ioppd_obrazac', $application->getRequiredDocuments());
+        $this->assertNotSame(
+            Application::registeredPreduzetnicaDevelopingBusinessDocumentLabels()['ioppd_obrazac'],
+            $labels['ioppd_obrazac'] ?? null
+        );
+    }
+
+    public function test_competition_show_unregistered_fl_locks_stage_to_start(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(25)]);
         $competition = $this->openCompetition();

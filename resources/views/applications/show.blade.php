@@ -786,7 +786,7 @@
                                         $documentLabels['potvrda_upc_porezi'] = 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza';
                                         $documentLabels['ioppd_obrazac'] = 'Obrazac IOPPD';
                                     }
-                                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+                                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaContextualLabels(
                                         $documentLabels,
                                         $application->applicant_type,
                                         $application->business_stage,
@@ -1012,7 +1012,7 @@
                             : 'Dokaz o broju poslovnog žiro računa preduzetnice');
                     $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
                     $documentLabels['ostalo'] = 'Ostalo';
-                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaContextualLabels(
                         $documentLabels,
                         $application->applicant_type,
                         $application->business_stage,

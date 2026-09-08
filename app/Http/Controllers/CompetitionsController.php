@@ -195,15 +195,14 @@ class CompetitionsController extends Controller
                 }
             }
             
-            if (\App\Models\Application::usesRegisteredPreduzetnicaStartingBusinessLabels(
+            $poLabels = \App\Models\Application::overlayRegisteredPreduzetnicaContextualLabels(
+                [],
                 $previewApplicantType ?: $applicantType,
                 'započinjanje',
                 $knIsRegisteredBusiness
-            )) {
-                $poLabels = \App\Models\Application::registeredPreduzetnicaStartingBusinessDocumentLabels();
-                if (isset($poLabels[$docType])) {
-                    $label = $poLabels[$docType];
-                }
+            );
+            if (isset($poLabels[$docType])) {
+                $label = $poLabels[$docType];
             }
 
             return $label;

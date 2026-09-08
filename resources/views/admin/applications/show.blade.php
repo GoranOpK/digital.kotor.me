@@ -409,7 +409,7 @@
                         'predracuni_nabavka' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku',
                         'ostalo' => 'Ostalo',
                     ];
-                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaContextualLabels(
                         $documentLabels,
                         $application->applicant_type,
                         $application->business_stage,

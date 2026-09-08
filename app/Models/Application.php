@@ -54,6 +54,80 @@ class Application extends Model
         return array_merge($labels, self::registeredPreduzetnicaStartingBusinessDocumentLabels());
     }
 
+    /**
+     * PO-adopted labels for registered Preduzetnica / razvoj.
+     * Other flows keep existing wording. Internal keys stay unchanged.
+     *
+     * @return array<string, string>
+     */
+    public static function registeredPreduzetnicaDevelopingBusinessDocumentLabels(): array
+    {
+        return [
+            'licna_karta' => 'Ovjerena kopija lične karte',
+            'crps_resenje' => 'Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)',
+            'pib_resenje' => 'Rješenje o registraciji kod PJ Poreske uprave',
+            'pdv_resenje' => 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv preduzetnice ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime preduzetnice, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice, ne starije od 30 dana',
+            'potvrda_upc_porezi' => 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa na ime preduzetnice, ne starija od 30 dana',
+            'ioppd_obrazac' => 'IOPPD obrazac za posljednji mjesec ili potvrda Poreske uprave da preduzetnica nema zaposlenih',
+            'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa',
+            'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
+            'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
+        ];
+    }
+
+    public static function usesRegisteredPreduzetnicaDevelopingBusinessLabels(
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): bool {
+        return $applicantType === 'preduzetnica'
+            && $businessStage === 'razvoj'
+            && (bool) $isRegistered;
+    }
+
+    /**
+     * @param  array<string, string>  $labels
+     * @return array<string, string>
+     */
+    public static function overlayRegisteredPreduzetnicaDevelopingBusinessLabels(
+        array $labels,
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): array {
+        if (!self::usesRegisteredPreduzetnicaDevelopingBusinessLabels($applicantType, $businessStage, $isRegistered)) {
+            return $labels;
+        }
+
+        return array_merge($labels, self::registeredPreduzetnicaDevelopingBusinessDocumentLabels());
+    }
+
+    /**
+     * @param  array<string, string>  $labels
+     * @return array<string, string>
+     */
+    public static function overlayRegisteredPreduzetnicaContextualLabels(
+        array $labels,
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): array {
+        return self::overlayRegisteredPreduzetnicaDevelopingBusinessLabels(
+            self::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+                $labels,
+                $applicantType,
+                $businessStage,
+                $isRegistered
+            ),
+            $applicantType,
+            $businessStage,
+            $isRegistered
+        );
+    }
+
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -751,7 +825,7 @@ class Application extends Model
         $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
         $documentLabels['ostalo'] = 'Ostalo';
 
-        return self::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+        return self::overlayRegisteredPreduzetnicaContextualLabels(
             $documentLabels,
             $this->applicant_type,
             $this->business_stage,

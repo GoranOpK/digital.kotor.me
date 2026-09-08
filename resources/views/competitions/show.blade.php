@@ -583,7 +583,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Dodaj dokumente sa napomenama za opcione
         const poLabels = @json(\App\Models\Application::registeredPreduzetnicaStartingBusinessDocumentLabels());
+        const poDevelopmentLabels = @json(\App\Models\Application::registeredPreduzetnicaDevelopingBusinessDocumentLabels());
         const registeredPreduzetnicaStart = isRegisteredBusiness && applicantType === 'preduzetnica' && selectedStage === 'započinjanje';
+        const registeredPreduzetnicaDevelopment = isRegisteredBusiness && applicantType === 'preduzetnica' && selectedStage === 'razvoj';
 
         // Dodaj dokumente sa napomenama za opcione
         docTypes.forEach(docType => {
@@ -593,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Ako je dokument opcioni, dodaj napomenu
-            if (optionalDocs.includes(docType) && !(registeredPreduzetnicaStart && poLabels[docType])) {
+            if (optionalDocs.includes(docType) && !(registeredPreduzetnicaStart && poLabels[docType]) && !(registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType])) {
                 if (docType === 'crps_resenje') {
                     docLabel = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pib_resenje') {
@@ -719,6 +721,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            if (registeredPreduzetnicaDevelopment && poDevelopmentLabels[docType]) {
+                docLabel = poDevelopmentLabels[docType];
+            }
+
             allDocuments.push(docLabel);
         });
         
