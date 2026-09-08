@@ -43,7 +43,7 @@ final class KnApplicationStartContextFactory
                 commercialForm: null,
                 registrationForm: 'Preduzetnik',
                 targetForm: KnApplicationStartContext::TARGET_1A,
-                stageLocked: false,
+                stageLocked: true,
             );
         }
 
@@ -59,7 +59,7 @@ final class KnApplicationStartContextFactory
                 commercialForm: $commercial,
                 registrationForm: KnCommercialCompanyForm::registrationFormLabel($commercial),
                 targetForm: KnApplicationStartContext::TARGET_1B,
-                stageLocked: false,
+                stageLocked: true,
             );
         }
 
@@ -73,7 +73,7 @@ final class KnApplicationStartContextFactory
             commercialForm: null,
             registrationForm: is_string($identity->userType) && $identity->userType !== '' ? $identity->userType : null,
             targetForm: KnApplicationStartContext::TARGET_1B,
-            stageLocked: false,
+            stageLocked: true,
         );
     }
 
@@ -110,7 +110,7 @@ final class KnApplicationStartContextFactory
             commercialForm: $commercial,
             registrationForm: $registrationForm,
             targetForm: $targetForm,
-            stageLocked: ! $kn->isRegisteredBusiness,
+            stageLocked: true,
         );
     }
 

@@ -463,6 +463,13 @@
 
         <form method="POST" action="{{ $readOnly ? '#' : route('applications.store', $competition) }}" id="applicationForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
+            @php
+                $lockedBusinessStage = (isset($existingApplication) && $existingApplication && is_string($existingApplication->business_stage) && $existingApplication->business_stage !== '')
+                    ? $existingApplication->business_stage
+                    : ((isset($startContext) && $startContext)
+                        ? $startContext->businessStage
+                        : ($preselectedBusinessStage ?? null));
+            @endphp
             @if(!empty($startContextToken))
                 <input type="hidden" name="start_context_token" value="{{ $startContextToken }}">
             @endif
@@ -471,6 +478,9 @@
             @endif
             @if(!empty($lockedRegistrationForm))
                 <input type="hidden" name="registration_form" id="kn_locked_registration_form" value="{{ $lockedRegistrationForm }}">
+            @endif
+            @if(!$readOnly && !empty($lockedBusinessStage))
+                <input type="hidden" name="business_stage" id="kn_locked_business_stage" value="{{ $lockedBusinessStage }}" data-kn-locked="1">
             @endif
             @if(isset($existingApplication) && $existingApplication && !$readOnly)
                 <input type="hidden" name="application_id" value="{{ $existingApplication->id }}">
@@ -589,44 +599,6 @@
                 $userType = $subjectIdentity->userType ?? '';
                 $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
             @endphp
-            <div class="form-card conditional-field no-print" id="fizickoLiceBusinessStage" style="display: none;">
-                <div class="form-section">
-                    <div class="form-group">
-                        <label class="form-label">
-                            Tip prijave <span class="required">*</span>
-                        </label>
-                        <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
-                            <strong>Napomena:</strong> Molimo vas da izaberete da li se prijavljujete kao Preduzetnica koja započinje biznis ili Preduzetnica koja planira razvoj poslovanja. Na osnovu vašeg izbora, biće određen spisak obaveznih dokumenata.
-                        </div>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_zapocinjanje_fizicko" 
-                                    name="business_stage" 
-                                    value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? '' : 'započinjanje')) === 'započinjanje' ? 'checked' : '' }}
-                                >
-                                <label for="business_stage_zapocinjanje_fizicko">Preduzetnica koja započinje biznis</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_razvoj_fizicko" 
-                                    name="business_stage" 
-                                    value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? '' : 'započinjanje')) === 'razvoj' ? 'checked' : '' }}
-                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
-                                >
-                                <label for="business_stage_razvoj_fizicko">Preduzetnica koja planira razvoj poslovanja</label>
-                            </div>
-                        </div>
-                        @error('business_stage')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
 
             <!-- Obrazac 1a: Za Preduzetnice (PREDUZETNIK) -->
             <div class="form-card conditional-field" id="obrazac1a">
@@ -861,40 +833,6 @@
                             </label>
                         </div>
                         @error('accuracy_declaration')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Faza biznisa <span class="required">*</span>
-                        </label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_zapocinjanje_1a" 
-                                    name="business_stage" 
-                                    value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? null : 'započinjanje')) === 'započinjanje' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="business_stage_zapocinjanje_1a">Započinjanje poslovne djelatnosti</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_razvoj_1a" 
-                                    name="business_stage" 
-                                    value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
-                                    data-required="true"
-                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
-                                >
-                                <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
-                            </div>
-                        </div>
-                        @error('business_stage')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
@@ -1185,46 +1123,11 @@
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Faza biznisa <span class="required">*</span>
-                        </label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_zapocinjanje_1b" 
-                                    name="business_stage" 
-                                    value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? ($knAllowsRazvoj ? null : 'započinjanje')) === 'započinjanje' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="business_stage_zapocinjanje_1b">Započinjanje poslovne djelatnosti</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_razvoj_1b" 
-                                    name="business_stage" 
-                                    value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
-                                    data-required="true"
-                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
-                                >
-                                <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
-                            </div>
-                        </div>
-                        @error('business_stage')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
                 </div>
             </div>
 
             <!-- Sekcija za Fizičko lice (nema registrovanu djelatnost) -->
             <div class="form-card conditional-field" id="fizickoLiceFields">
-                <input type="hidden" name="business_stage" value="započinjanje" id="fizickoLiceBusinessStageHidden" disabled>
                 <div class="form-section">
                     <div class="form-group">
                         <label class="form-label">
@@ -1311,42 +1214,6 @@
                             @enderror
                         </div>
                     </div>
-
-                    @if(!$isFizickoLiceRezident)
-                    <div class="form-group">
-                        <label class="form-label">
-                            Faza biznisa <span class="required">*</span>
-                        </label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_zapocinjanje_fizicko_old" 
-                                    name="business_stage" 
-                                    value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'započinjanje' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="business_stage_zapocinjanje_fizicko_old">Započinjanje poslovne djelatnosti</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_razvoj_fizicko_old" 
-                                    name="business_stage" 
-                                    value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
-                                    data-required="true"
-                                    {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
-                                >
-                                <label for="business_stage_razvoj_fizicko_old">Razvoj postojeće poslovne djelatnosti</label>
-                            </div>
-                        </div>
-                        @error('business_stage')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    @endif
 
                     <div class="form-group">
                         <div class="checkbox-group">
@@ -1540,6 +1407,7 @@
     const knLockedIsRegistered = @json((bool) ($lockedIsRegistered ?? false));
     const knAllowsRazvoj = @json((bool) ($knAllowsRazvoj ?? false));
     const knLockedCommercialForm = @json($lockedCommercialForm ?? null);
+    const knLockedBusinessStage = @json($lockedBusinessStage ?? null);
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1573,29 +1441,23 @@
         }
 
         function prepareBusinessStageForSubmit(form) {
-            const hiddenFizicko = document.getElementById('fizickoLiceBusinessStageHidden');
-            const activeSection = document.querySelector('.conditional-field.show');
-            let value = '';
-
-            if (hiddenFizicko && !hiddenFizicko.disabled) {
-                value = hiddenFizicko.value;
-            } else if (activeSection) {
-                const checkedInActive = activeSection.querySelector('input[name="business_stage"]:checked');
-                if (checkedInActive) {
-                    value = checkedInActive.value;
-                }
-            }
-
-            if (!value) {
-                const enabledChecked = form.querySelector('input[name="business_stage"][type="radio"]:checked:not([disabled])');
-                if (enabledChecked) {
-                    value = enabledChecked.value;
-                }
-            }
+            const value = (typeof knLockedBusinessStage === 'string' && knLockedBusinessStage !== '')
+                ? knLockedBusinessStage
+                : (document.getElementById('kn_locked_business_stage')?.value || '');
 
             form.querySelectorAll('input[name="business_stage"]').forEach((el) => {
+                if (el.id === 'kn_locked_business_stage' || el.hasAttribute('data-kn-locked')) {
+                    el.value = value;
+                    el.removeAttribute('disabled');
+                    return;
+                }
                 el.setAttribute('disabled', 'disabled');
             });
+
+            const locked = document.getElementById('kn_locked_business_stage');
+            if (locked) {
+                return;
+            }
 
             let hidden = form.querySelector('#business_stage_submitted');
             if (!hidden) {
@@ -1991,14 +1853,11 @@
             // Osnovna obavezna polja - traži samo u aktivnoj sekciji
             const activeSection = document.querySelector('.conditional-field.show');
             const businessPlanName = activeSection ? activeSection.querySelector('input[name="business_plan_name"]') : form.querySelector('input[name="business_plan_name"]:not([disabled])');
-            const businessStage = activeSection
-                ? activeSection.querySelector('input[name="business_stage"][type="radio"]:checked')
-                : form.querySelector('input[name="business_stage"][type="radio"]:checked:not([disabled])');
             const businessArea = activeSection ? activeSection.querySelector('input[name="business_area"]') : form.querySelector('input[name="business_area"]:not([disabled])');
 
             // Proveri osnovna polja
             if (!businessPlanName || !businessPlanName.value.trim()) return false;
-            if (!businessStage || !businessStage.value) return false;
+            if (!knLockedBusinessStage) return false;
             if (!businessArea || !businessArea.value.trim()) return false;
 
             // Proveri polja specifična za tip podnosioca

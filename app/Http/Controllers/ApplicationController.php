@@ -332,18 +332,9 @@ class ApplicationController extends Controller
                 'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
             ]);
         }
-        if ($startContext->stageLocked
-            && $this->requestHasPresentValue($request, 'business_stage')
-            && $request->input('business_stage') !== $startContext->businessStage) {
-            throw ValidationException::withMessages([
-                'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
-            ]);
-        }
 
         $resolvedApplicantType = $startContext->applicantType;
-        $resolvedBusinessStage = $startContext->stageLocked
-            ? $startContext->businessStage
-            : $kn->resolveBusinessStage(is_string($requestedStage) && $requestedStage !== '' ? $requestedStage : $startContext->businessStage);
+        $resolvedBusinessStage = $startContext->businessStage;
         $resolvedRegistrationForm = $startContext->registrationForm;
 
         $request->merge([
@@ -1453,6 +1444,11 @@ class ApplicationController extends Controller
         if ($this->requestHasPresentValue($request, 'applicant_type')
             && $request->input('applicant_type') !== $context->applicantType) {
             $messages['applicant_type'] = 'Tip prijave se ne može mijenjati.';
+        }
+
+        if ($this->requestHasPresentValue($request, 'business_stage')
+            && $request->input('business_stage') !== $context->businessStage) {
+            $messages['business_stage'] = 'Faza biznisa se ne može mijenjati.';
         }
 
         if ($context->registrationForm !== null

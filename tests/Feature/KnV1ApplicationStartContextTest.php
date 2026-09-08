@@ -476,6 +476,380 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertFalse((bool) $application->is_registered);
     }
 
+    public function test_fl_future_entrepreneur_create_has_no_editable_stage_and_stores_zapocinjanje(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(160)]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+        ]);
+        $this->assertStartContextLockedStage($token, 'započinjanje');
+
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertNoEditableBusinessStageChoice($html);
+        $this->assertLockedBusinessStageValue($html, 'započinjanje');
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->storePayloadWithoutStage([
+                'start_context_token' => $token,
+                'applicant_type' => 'fizicko_lice',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('business_stage');
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertSame('fizicko_lice', $application->applicant_type);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('plannedCompanyProvider')]
+    public function test_fl_planned_company_create_has_no_editable_stage_and_stores_zapocinjanje(string $form, string $label): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(170 + ord($form[0]))]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_PLANNED_COMPANY,
+            'planned_company_form' => $form,
+        ]);
+        $this->assertStartContextLockedStage($token, 'započinjanje');
+
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertNoEditableBusinessStageChoice($html);
+        $this->assertLockedBusinessStageValue($html, 'započinjanje');
+        $this->assertStringContainsString('id="obrazac1b"', $html);
+
+        $applicantType = $form === 'doo' ? 'doo' : 'ostalo';
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->storePayloadWithoutStage([
+                'start_context_token' => $token,
+                'applicant_type' => $applicantType,
+                'registration_form' => $label,
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('business_stage');
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertSame($applicantType, $application->applicant_type);
+        $this->assertSame($label, $application->registration_form);
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function lockedShowStageProvider(): array
+    {
+        return [
+            'zapocinjanje' => ['započinjanje'],
+            'razvoj' => ['razvoj'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('lockedShowStageProvider')]
+    public function test_canonical_entrepreneur_create_locks_show_stage(string $stage): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(180 + strlen($stage)),
+            'jmb' => $this->validJmb(180 + strlen($stage)),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => $stage]);
+        $this->assertStartContextLockedStage($token, $stage);
+
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertNoEditableBusinessStageChoice($html);
+        $this->assertLockedBusinessStageValue($html, $stage);
+        $this->assertStringContainsString('id="obrazac1a"', $html);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->storePayloadWithoutStage([
+                'start_context_token' => $token,
+                'applicant_type' => 'preduzetnica',
+                'registration_form' => 'Preduzetnik',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('business_stage');
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($stage, $application->business_stage);
+        $this->assertSame('preduzetnica', $application->applicant_type);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('lockedShowStageProvider')]
+    public function test_canonical_doo_create_locks_show_stage(string $stage): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(190 + strlen($stage)),
+            'company_name' => 'Stage DOO',
+            'residential_status' => null,
+            'jmb' => $this->validJmb(190 + strlen($stage)),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => $stage]);
+        $this->assertStartContextLockedStage($token, $stage);
+
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertNoEditableBusinessStageChoice($html);
+        $this->assertLockedBusinessStageValue($html, $stage);
+        $this->assertStringContainsString('id="obrazac1b"', $html);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->storePayloadWithoutStage([
+                'start_context_token' => $token,
+                'applicant_type' => 'doo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('business_stage');
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($stage, $application->business_stage);
+        $this->assertSame('doo', $application->applicant_type);
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string, 2: string}>
+     */
+    public static function canonicalAdOdKdProvider(): array
+    {
+        return [
+            'ad' => [UserType::JOINT_STOCK_COMPANY, 'ad', UserType::JOINT_STOCK_COMPANY],
+            'od' => [UserType::GENERAL_PARTNERSHIP, 'od', UserType::GENERAL_PARTNERSHIP],
+            'kd' => [UserType::LIMITED_PARTNERSHIP, 'kd', UserType::LIMITED_PARTNERSHIP],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('canonicalAdOdKdProvider')]
+    public function test_canonical_ad_od_kd_create_locks_both_show_stages(string $userType, string $form, string $label): void
+    {
+        foreach (['započinjanje', 'razvoj'] as $index => $stage) {
+            $user = $this->makeKorisnik([
+                'email' => $form.'-'.$index.'@stage.test',
+                'user_type' => $userType,
+                'pib' => $this->validPib(200 + ord($form[0]) + $index),
+                'company_name' => 'Test '.$form,
+                'residential_status' => null,
+                'jmb' => $this->validJmb(200 + ord($form[0]) + $index),
+            ]);
+            $competition = $this->openCompetition();
+            $token = $this->issueStartToken($user, $competition, ['business_stage' => $stage]);
+            $this->assertStartContextLockedStage($token, $stage);
+
+            $html = $this->createHtml($user, $competition, $token);
+            $this->assertNoEditableBusinessStageChoice($html);
+            $this->assertLockedBusinessStageValue($html, $stage);
+            $this->assertStringContainsString('id="obrazac1b"', $html);
+
+            $this->actingAs($user)
+                ->post(route('applications.store', $competition), $this->storePayloadWithoutStage([
+                    'start_context_token' => $token,
+                    'applicant_type' => 'ostalo',
+                    'registration_form' => $label,
+                ]))
+                ->assertRedirect()
+                ->assertSessionDoesntHaveErrors('business_stage');
+
+            $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+            $this->assertSame($stage, $application->business_stage);
+            $this->assertSame('ostalo', $application->applicant_type);
+            $this->assertSame($label, $application->registration_form);
+        }
+    }
+
+    public function test_forged_store_cannot_change_context_zapocinjanje_to_razvoj(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(210),
+            'jmb' => $this->validJmb(210),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'preduzetnica',
+                'registration_form' => 'Preduzetnik',
+                'business_stage' => 'razvoj',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_stage');
+
+        $this->assertSame(0, Application::query()->count());
+    }
+
+    public function test_forged_store_cannot_change_context_razvoj_to_zapocinjanje(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(211),
+            'company_name' => 'Forge stage DOO',
+            'residential_status' => null,
+            'jmb' => $this->validJmb(211),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'razvoj']);
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'doo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+                'business_stage' => 'započinjanje',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_stage');
+
+        $this->assertSame(0, Application::query()->count());
+    }
+
+    public function test_unregistered_forged_razvoj_is_still_rejected(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(212)]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'fizicko_lice',
+                'business_stage' => 'razvoj',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_stage');
+
+        $this->assertSame(0, Application::query()->count());
+    }
+
+    public function test_existing_draft_zapocinjanje_cannot_switch_to_razvoj(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(213),
+            'jmb' => $this->validJmb(213),
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Nacrt započinjanje',
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'registration_form' => 'Preduzetnik',
+            'is_registered' => true,
+            'status' => 'draft',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertNoEditableBusinessStageChoice($html);
+        $this->assertLockedBusinessStageValue($html, 'započinjanje');
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'application_id' => $application->id,
+                'applicant_type' => 'preduzetnica',
+                'registration_form' => 'Preduzetnik',
+                'business_stage' => 'razvoj',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_stage');
+
+        $application->refresh();
+        $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertSame('draft', $application->status);
+    }
+
+    public function test_existing_draft_razvoj_cannot_switch_to_zapocinjanje(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(214),
+            'company_name' => 'Draft razvoj DOO',
+            'residential_status' => null,
+            'jmb' => $this->validJmb(214),
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Nacrt razvoj',
+            'applicant_type' => 'doo',
+            'business_stage' => 'razvoj',
+            'business_area' => 'Usluge',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'is_registered' => true,
+            'status' => 'draft',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertNoEditableBusinessStageChoice($html);
+        $this->assertLockedBusinessStageValue($html, 'razvoj');
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->storePayloadWithoutStage([
+                'application_id' => $application->id,
+                'applicant_type' => 'doo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors('business_stage');
+
+        $application->refresh();
+        $this->assertSame('razvoj', $application->business_stage);
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->draftPayload([
+                'application_id' => $application->id,
+                'applicant_type' => 'doo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+                'business_stage' => 'započinjanje',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_stage');
+
+        $application->refresh();
+        $this->assertSame('razvoj', $application->business_stage);
+        $this->assertSame('draft', $application->status);
+        $this->assertSame('Biznis plan', $application->business_plan_name);
+    }
+
+    public function test_competition_show_keeps_stage_choice_for_canonical_registered(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(215),
+            'jmb' => $this->validJmb(215),
+        ]);
+        $competition = $this->openCompetition();
+
+        $this->actingAs($user)
+            ->get(route('competitions.show', $competition))
+            ->assertOk()
+            ->assertSee('name="business_stage_preview"', false)
+            ->assertSee('id="business_stage_zapocinjanje_preview"', false)
+            ->assertSee('id="business_stage_razvoj_preview"', false)
+            ->assertSee('Preduzetnica koja započinje biznis', false)
+            ->assertSee('Preduzetnica koja planira razvoj poslovanja', false);
+    }
+
     public function test_obrazac_2_q3_planned_paths_are_ne_and_registered_are_da(): void
     {
         $fl = $this->makeKorisnik(['jmb' => $this->validJmb(143)]);
@@ -544,6 +918,52 @@ class KnV1ApplicationStartContextTest extends TestCase
             'business_plan_name' => 'Biznis plan',
             'business_area' => 'Usluge',
         ], $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function storePayloadWithoutStage(array $overrides = []): array
+    {
+        $payload = $this->draftPayload($overrides);
+        unset($payload['business_stage']);
+
+        return $payload;
+    }
+
+    private function assertNoEditableBusinessStageChoice(string $html): void
+    {
+        $this->assertDoesNotMatchRegularExpression(
+            '/<input[^>]*type="radio"[^>]*name="business_stage"/i',
+            $html
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<input[^>]*name="business_stage"[^>]*type="radio"/i',
+            $html
+        );
+        $this->assertStringNotContainsString('id="business_stage_zapocinjanje_1a"', $html);
+        $this->assertStringNotContainsString('id="business_stage_zapocinjanje_1b"', $html);
+        $this->assertStringNotContainsString('id="business_stage_razvoj_1a"', $html);
+        $this->assertStringNotContainsString('id="business_stage_razvoj_1b"', $html);
+        $this->assertStringNotContainsString('id="business_stage_zapocinjanje_fizicko"', $html);
+        $this->assertStringNotContainsString('id="business_stage_zapocinjanje_fizicko_old"', $html);
+    }
+
+    private function assertLockedBusinessStageValue(string $html, string $stage): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/id="kn_locked_business_stage"[^>]*value="'.preg_quote($stage, '/').'"/',
+            $html
+        );
+    }
+
+    private function assertStartContextLockedStage(string $token, string $stage): void
+    {
+        $context = app(KnApplicationStartContextStore::class)->get($token);
+        $this->assertNotNull($context);
+        $this->assertTrue($context->stageLocked);
+        $this->assertSame($stage, $context->businessStage);
     }
 
     /**
