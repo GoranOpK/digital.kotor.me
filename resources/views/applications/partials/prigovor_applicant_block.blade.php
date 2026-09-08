@@ -55,6 +55,9 @@
     <h2>Obavještenje i Prigovor</h2>
 
     @if($notice)
+        @if($canSubmitPrigovor)
+            <p><strong>Eliminatorno odbijena — rok za Prigovor</strong></p>
+        @endif
         <p>Vaša prijava je odbijena po eliminatornoj provjeri Obrasca 3.</p>
         @if(!empty($notice->reasons_snapshot))
             <p><strong>Utvrđeni eliminatorni razlozi:</strong></p>
@@ -77,6 +80,9 @@
 
     @if($prigovor)
         <p><strong>Stanje Vašeg Prigovora:</strong> {{ $prigovor->statusLabel() }}</p>
+        @if($prigovor->submitted_at)
+            <p>Podnesen: {{ $prigovor->submitted_at->format('d.m.Y. H:i') }}</p>
+        @endif
         <p><strong>Vaše obrazloženje:</strong></p>
         <p style="white-space: pre-wrap;">{{ $prigovor->obrazlozenje }}</p>
         @if($prigovor->isFinished())
@@ -87,10 +93,26 @@
                 @endif
             </p>
             @if($prigovor->decision_note)
+                <p><strong>Obrazloženje odluke:</strong></p>
                 <p style="white-space: pre-wrap;">{{ $prigovor->decision_note }}</p>
             @endif
+            @if($prigovor->isAccepted() && $prigovor->liftsEliminatoryBar())
+                <p>Eliminatorna prepreka je otklonjena. Prijava može nastaviti u individualno bodovanje.</p>
+            @elseif($prigovor->isAccepted())
+                <p>Prigovor je Prihvaćen, ali ostaje najmanje jedan eliminatorni razlog. Prijava ne nastavlja u bodovanje.</p>
+                @if(count($prigovor->remainingReasonLabels()) > 0)
+                    <p><strong>Eliminatorni razlozi koji ostaju:</strong></p>
+                    <ul>
+                        @foreach($prigovor->remainingReasonLabels() as $reason)
+                            <li>{{ $reason }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+            @elseif($prigovor->isRejected())
+                <p>Prigovor je Odbijen. Eliminatorna odluka ostaje. Individualno bodovanje nije dostupno.</p>
+            @endif
         @else
-            <p>Komisija odlučuje o Prigovoru u roku od 7 dana od prijema (do {{ $prigovor->komisijaDeadlineAt()->format('d.m.Y. H:i') }}).</p>
+            <p>Komisija odlučuje o Prigovoru. Čeka se odluka. Rok Komisije: 7 dana od prijema (do {{ $prigovor->komisijaDeadlineAt()->format('d.m.Y. H:i') }}).</p>
         @endif
     @elseif($canSubmitPrigovor)
         <form method="POST" action="{{ route('applications.prigovor.store', $application) }}">

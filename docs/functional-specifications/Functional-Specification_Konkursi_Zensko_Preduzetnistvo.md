@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.5
+**Verzija:** 1.0.6
 **Datum:** 2026-09-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.12; **PO USVOJENO** za izbor OD/KD/AD/DOO)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.13; **PO USVOJENO** za odluku po Prigovoru)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -60,6 +60,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.3 | 2026-09-07 | Controlled corrective prema implementiranom toku: FL bez djelatnosti bira Preduzetnika (1a) ili privredno društvo OD/KD/AD/DOO (1b); izbor je zaključan; kanonski registrovani OD/KD/AD/DOO koriste 1b; `ostalo` nije novi V1 korisnički tip. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.4 | 2026-09-08 | Controlled corrective. §7.7 / §7.8: za `is_registered` = NE sekcija „Dodatni podaci“ (Broj računa, PDV broj, Website) nije primjenjiva i ne prikazuje se na Obrascu 1a ni 1b. Za `is_registered` = DA ostaje opciona prema postojećem V1 modelu. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.5 | 2026-09-08 | Controlled clarification. §7.5 / §7.7 / §7.8: sačuvani podaci Obrasca 1a/1b pripadaju Prijavi (snapshot). Registrovani podnosilac: CRPS i PIB su obavezni za Popunjen i konačno čuvanje i prikazuju se. Neregistrovani: CRPS i PIB se ne prikazuju i nijesu obavezni. Adresa i Sjedište društva su zasebni podaci Prijave; profilna adresa je samo početna vrijednost za Adresu, ne automatski Sjedište. **PO USVOJENO.** |
+| 1.0.6 | 2026-09-08 | Controlled corrective. §10.4 / §11.8 / §18.4.2: obavezno obrazloženje odluke o Prigovoru; Prihvaćen može ostaviti preostali eliminatorni razlog; per-criterion Otklonjen/Ostaje samo za originalne Ne, bez izmjene Obrasca 3; scoring OPEN samo ako nijedan razlog ne ostaje; email obavještenje o odluci, Platforma je autoritet (`decided_at`). |
 
 Napomena:
 
@@ -2072,6 +2073,10 @@ Prigovor **ne** smije omogućiti:
 
 Komisija odlučuje o Prigovoru u roku od **7 dana** od prijema.
 
+Odluku na Platformi evidentira aktivni predsjednik Komisije konkretnog Konkursa. **Obrazloženje odluke je obavezno.**
+
+**Prihvaćen** ne znači automatski da su svi eliminatorni razlozi otklonjeni. Za svaki originalni kriterijum koji je na potvrđenom Obrascu 3 bio **Ne\*** predsjednik evidentira **Otklonjen** ili **Ostaje**. Originalni **Da** se ne unosi kao ishod Prigovora. Obrazac 3 ostaje istorijski zapis i **ne** mijenja se.
+
 Stanja / rezultati postupka Prigovora:
 
 * **Podnesen**;
@@ -2090,7 +2095,9 @@ Ako je Prigovor **Odbijen**, ili ako nakon odluke Komisije i dalje postoji elimi
 * Prijava ostaje eliminisana;
 * bodovanje se ne omogućava.
 
-Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*.
+Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*. Per-criterion ishod **Otklonjen** / **Ostaje** je trag jednog Prigovora.
+
+Podnositeljka prima **email obavještenje** da je odluka donesena. Autoritativni zapis odluke je Platforma (`decided_at`, obrazloženje, preostali razlozi). Email nije kanal predaje ni izmjene Prigovora.
 
 **Prihvaćen** i **Odbijen** su konačni ishodi tog Prigovora.
 
@@ -2263,7 +2270,9 @@ Ako nakon odluke Komisije i dalje postoji eliminatorni razlog:
 * Prijava ostaje eliminisana;
 * bodovanje se ne omogućava.
 
-Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*.
+Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*. Per-criterion ishod **Otklonjen** / **Ostaje** evidentira se samo za originalne **Ne\*** i **ne** mijenja Obrazac 3.
+
+Odluka zahtijeva obavezno obrazloženje. Podnositeljka prima email obavještenje o donesenoj odluci; autoritativni zapis ostaje na Platformi.
 
 ## 11.9. Evidencija i zaključavanje nakon odbijanja
 
@@ -3908,6 +3917,8 @@ Ako Komisija prihvati Prigovor i nakon odluke više ne postoji eliminatorni razl
 
 Ako Komisija odbije Prigovor, ili ako nakon odluke i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava.
 
+Odluka zahtijeva obavezno obrazloženje. Za **Prihvaćen** predsjednik evidentira **Otklonjen** / **Ostaje** samo za originalne **Ne\***, bez izmjene Obrasca 3. Podnositeljka prima email obavještenje; autoritativni zapis je Platforma.
+
 Ako blagovremeni Prigovor nije podnesen, odbijanje po eliminatornoj provjeri postaje konačno za ovu fazu.
 
 Nakon ishoda **Prihvaćen** ili **Odbijen** Platforma **ne** vraća Prigovor u **Podnesen**, **ne** omogućava ponovno odlučivanje o istom Prigovoru i **ne** omogućava privilegovani reopen.
@@ -4494,4 +4505,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.5**
+**Kraj dokumenta KN-FS-003 v1.0.6**

@@ -3,6 +3,15 @@
     $eliminatoryNotice = $eliminatoryNotice ?? ($application->eliminatoryNotice ?? null);
     $prigovor = $prigovor ?? ($application->prigovor ?? null);
     $canDecidePrigovor = $canDecidePrigovor ?? false;
+    $eliminatoryCheck = $application->eliminatoryCheck ?? null;
+    $originalFailNumbers = [];
+    if ($eliminatoryCheck) {
+        foreach ([1, 2, 3] as $n) {
+            if ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->{"criterion_{$n}"})) {
+                $originalFailNumbers[] = $n;
+            }
+        }
+    }
 @endphp
 
 @if($eliminatoryNotice || $prigovor)
@@ -53,6 +62,11 @@
         cursor: pointer;
         font-size: 14px;
     }
+    .kn-prigovor-outcome {
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #e5e7eb;
+    }
 </style>
 
 <div class="kn-prigovor-card no-print">
@@ -92,31 +106,122 @@
                 @endif
             </p>
             @if($prigovor->decision_note)
+                <p><strong>Obrazloženje odluke:</strong></p>
                 <p style="white-space: pre-wrap;">{{ $prigovor->decision_note }}</p>
             @endif
+            @if($prigovor->isAccepted())
+                @if($eliminatoryCheck)
+                    <p>Ishod Prigovora po originalnim razlozima Ne (Obrazac 3 ostaje istorijski nepromijenjen):</p>
+                    <ul>
+                        @foreach($originalFailNumbers as $n)
+                            <li>
+                                {{ \App\Models\ApplicationEliminatoryCheck::CRITERION_LABELS[$n] }}
+                                — {{ $prigovor->criterionOutcomeLabel($n) ?? '—' }}
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+                @if($prigovor->liftsEliminatoryBar())
+                    <p>Nijedan eliminatorni razlog ne ostaje. Individualno bodovanje je dostupno.</p>
+                @else
+                    <p>Najmanje jedan eliminatorni razlog ostaje. Individualno bodovanje nije dostupno.</p>
+                @endif
+            @else
+                <p>Prigovor je odbijen. Originalna eliminatorna odluka ostaje. Individualno bodovanje nije dostupno.</p>
+            @endif
         @elseif($canDecidePrigovor)
-            <form method="POST" action="{{ route('evaluation.prigovor.decide', $application) }}">
+            <form method="POST" action="{{ route('evaluation.prigovor.decide', $application) }}" id="kn-prigovor-decide-form">
                 @csrf
                 <label for="kn-prigovor-odluka"><strong>Odluka Komisije</strong></label>
                 <div class="kn-prigovor-actions">
                     <label>
-                        <input type="radio" name="odluka" value="prihvacen" required>
+                        <input type="radio" name="odluka" value="prihvacen" required
+                            {{ old('odluka') === 'prihvacen' ? 'checked' : '' }}>
                         Prihvaćen
                     </label>
                     <label>
-                        <input type="radio" name="odluka" value="odbijen" required>
+                        <input type="radio" name="odluka" value="odbijen" required
+                            {{ old('odluka') === 'odbijen' ? 'checked' : '' }}>
                         Odbijen
                     </label>
                 </div>
-                <label for="kn-prigovor-decision-note">Napomena odluke (nije obavezna)</label>
-                <textarea id="kn-prigovor-decision-note" name="decision_note" class="kn-prigovor-textarea">{{ old('decision_note') }}</textarea>
                 @error('odluka')
+                    <p style="color: #ef4444;">{{ $message }}</p>
+                @enderror
+
+                <div id="kn-prigovor-outcomes" style="{{ old('odluka') === 'prihvacen' ? '' : 'display: none;' }}">
+                    <p>
+                        Ako je Prigovor Prihvaćen, za svaki originalni razlog Ne evidentirajte da li je
+                        <strong>Otklonjen</strong> ili <strong>Ostaje</strong>.
+                        Time se ne mijenja Obrazac 3; Obrazac 3 ostaje istorijski zapis prvobitne provjere.
+                    </p>
+                    @foreach($originalFailNumbers as $n)
+                        <div class="kn-prigovor-outcome">
+                            <p><strong>{{ \App\Models\ApplicationEliminatoryCheck::CRITERION_LABELS[$n] }}</strong></p>
+                            <div class="kn-prigovor-actions">
+                                <label>
+                                    <input type="radio"
+                                        name="criterion_outcomes[{{ $n }}]"
+                                        value="otklonjen"
+                                        class="kn-prigovor-outcome-input"
+                                        {{ old('criterion_outcomes.'.$n) === 'otklonjen' ? 'checked' : '' }}>
+                                    Otklonjen
+                                </label>
+                                <label>
+                                    <input type="radio"
+                                        name="criterion_outcomes[{{ $n }}]"
+                                        value="ostaje"
+                                        class="kn-prigovor-outcome-input"
+                                        {{ old('criterion_outcomes.'.$n) === 'ostaje' ? 'checked' : '' }}>
+                                    Ostaje
+                                </label>
+                            </div>
+                            @error('criterion_outcomes.'.$n)
+                                <p style="color: #ef4444;">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endforeach
+                </div>
+
+                <label for="kn-prigovor-decision-note"><strong>Obrazloženje odluke</strong></label>
+                <textarea id="kn-prigovor-decision-note" name="decision_note" class="kn-prigovor-textarea" required>{{ old('decision_note') }}</textarea>
+                @error('decision_note')
                     <p style="color: #ef4444;">{{ $message }}</p>
                 @enderror
                 <div class="kn-prigovor-actions">
                     <button type="submit" class="kn-prigovor-btn">Evidentiraj odluku Komisije</button>
                 </div>
             </form>
+            <script>
+                (function () {
+                    const form = document.getElementById('kn-prigovor-decide-form');
+                    if (!form) {
+                        return;
+                    }
+                    const outcomes = document.getElementById('kn-prigovor-outcomes');
+                    const outcomeInputs = form.querySelectorAll('.kn-prigovor-outcome-input');
+
+                    function syncOutcomes() {
+                        const accepted = form.querySelector('input[name="odluka"]:checked');
+                        const show = accepted && accepted.value === 'prihvacen';
+                        if (outcomes) {
+                            outcomes.style.display = show ? '' : 'none';
+                        }
+                        outcomeInputs.forEach(function (input) {
+                            if (show) {
+                                input.setAttribute('required', 'required');
+                            } else {
+                                input.removeAttribute('required');
+                            }
+                        });
+                    }
+
+                    form.querySelectorAll('input[name="odluka"]').forEach(function (input) {
+                        input.addEventListener('change', syncOutcomes);
+                    });
+                    syncOutcomes();
+                })();
+            </script>
         @endif
     @elseif($eliminatoryNotice && $eliminatoryNotice->prigovorWindowIsOpen())
         <p>Prigovor još nije podnesen. Rok je otvoren.</p>

@@ -14,6 +14,10 @@ class ApplicationPrigovor extends Model
 
     public const STATUS_ODBIJEN = 'odbijen';
 
+    public const OUTCOME_OTKLONJEN = 'otklonjen';
+
+    public const OUTCOME_OSTAJE = 'ostaje';
+
     public const KOMISIJA_DECISION_DAYS = 7;
 
     protected $fillable = [
@@ -28,6 +32,9 @@ class ApplicationPrigovor extends Model
         'decided_by_name',
         'decision_note',
         'eliminatory_reason_remaining',
+        'criterion_1_remaining',
+        'criterion_2_remaining',
+        'criterion_3_remaining',
     ];
 
     protected function casts(): array
@@ -36,6 +43,7 @@ class ApplicationPrigovor extends Model
             'submitted_at' => 'datetime',
             'decided_at' => 'datetime',
             'eliminatory_reason_remaining' => 'boolean',
+            // criterion_*_remaining stay uncast so NULL (original Da) is not coerced to false.
         ];
     }
 
@@ -87,6 +95,41 @@ class ApplicationPrigovor extends Model
     public function liftsEliminatoryBar(): bool
     {
         return $this->isAccepted() && $this->eliminatory_reason_remaining === false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function remainingReasonLabels(): array
+    {
+        $labels = [];
+        foreach (ApplicationEliminatoryCheck::CRITERION_LABELS as $number => $label) {
+            if ($this->criterionRemainingIsTrue($number)) {
+                $labels[] = $label;
+            }
+        }
+
+        return $labels;
+    }
+
+    public function criterionOutcomeLabel(int $number): ?string
+    {
+        $remaining = $this->{"criterion_{$number}_remaining"};
+        if ($remaining === null || $remaining === '') {
+            return null;
+        }
+        if ($this->criterionRemainingIsTrue($number)) {
+            return 'Ostaje';
+        }
+
+        return 'Otklonjen';
+    }
+
+    public function criterionRemainingIsTrue(int $number): bool
+    {
+        $value = $this->{"criterion_{$number}_remaining"};
+
+        return $value === true || $value === 1 || $value === '1';
     }
 
     public function statusLabel(): string

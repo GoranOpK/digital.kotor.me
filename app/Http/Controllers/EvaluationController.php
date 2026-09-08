@@ -987,14 +987,19 @@ class EvaluationController extends Controller
 
         $validated = $request->validate([
             'odluka' => 'required|in:prihvacen,odbijen',
-            'decision_note' => 'nullable|string|max:5000',
+            'decision_note' => 'required|string|max:5000',
+            'criterion_outcomes' => 'nullable|array',
+            'criterion_outcomes.1' => 'nullable|in:otklonjen,ostaje',
+            'criterion_outcomes.2' => 'nullable|in:otklonjen,ostaje',
+            'criterion_outcomes.3' => 'nullable|in:otklonjen,ostaje',
         ]);
 
         $this->prigovors->decide(
             $application,
             $chairman,
             $validated['odluka'],
-            $validated['decision_note'] ?? null,
+            $validated['decision_note'],
+            $validated['criterion_outcomes'] ?? [],
         );
 
         return redirect()->route('evaluation.create', $application)

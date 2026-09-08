@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\ApplicationEliminatoryRejectionMail;
+use App\Mail\ApplicationPrigovorDecisionMail;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryNotice;
 use App\Models\ApplicationPrigovor;
@@ -161,6 +162,7 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Obavještenje i Prigovor', $html);
+        $this->assertStringContainsString('Eliminatorno odbijena — rok za Prigovor', $html);
         $this->assertStringContainsString('Podnesi Prigovor', $html);
         $this->assertStringContainsString('name="obrazlozenje"', $html);
         $this->assertStringNotContainsString('name="document"', $html);
@@ -176,6 +178,14 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame(ApplicationPrigovor::STATUS_PODNESEN, $prigovor->status);
         $this->assertSame($applicant->id, $prigovor->submitted_by_user_id);
         $this->assertSame('submitted', $application->fresh()->status);
+
+        $submittedHtml = $this->actingAs($applicant)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Podnesen', $submittedHtml);
+        $this->assertStringContainsString($prigovor->submitted_at->format('d.m.Y. H:i'), $submittedHtml);
+        $this->assertStringContainsString('Čeka se odluka', $submittedHtml);
 
         $this->actingAs($applicant)
             ->post(route('applications.prigovor.store', $application), [
@@ -234,9 +244,17 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
             ])
             ->assertRedirect();
 
+        $original = [
+            (bool) $application->fresh()->eliminatoryCheck->criterion_1,
+            (bool) $application->fresh()->eliminatoryCheck->criterion_2,
+            (bool) $application->fresh()->eliminatoryCheck->criterion_3,
+        ];
+
         $this->actingAs($president->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Kriterijum 2 je otklonjen jer je dokument bio dostavljen.',
+                'criterion_outcomes' => [2 => 'otklonjen'],
             ])
             ->assertRedirect(route('evaluation.create', $application));
 
@@ -245,12 +263,21 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         $prigovor = $application->prigovor;
 
         $this->assertTrue($check->isConfirmedFail());
+        $this->assertSame($original, [
+            (bool) $check->criterion_1,
+            (bool) $check->criterion_2,
+            (bool) $check->criterion_3,
+        ]);
         $this->assertFalse((bool) $check->criterion_2);
         $this->assertTrue($prigovor->isAccepted());
         $this->assertFalse($prigovor->eliminatory_reason_remaining);
+        $this->assertNull($prigovor->criterion_1_remaining);
+        $this->assertFalse((bool) $prigovor->criterion_2_remaining);
+        $this->assertNull($prigovor->criterion_3_remaining);
         $this->assertSame('submitted', $application->status);
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
         $this->assertFalse($application->isEliminatedFromScoring());
+        Mail::assertSent(ApplicationPrigovorDecisionMail::class);
 
         $this->actingAs($president->user)
             ->post(route('evaluation.store', $application), $this->scorePayload())
@@ -259,6 +286,7 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->actingAs($president->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => 'Pokušaj ponovne odluke.',
             ])
             ->assertForbidden();
     }
@@ -286,6 +314,10 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
             ->assertRedirect();
 
         $this->assertTrue($application->fresh()->prigovor->isRejected());
+        $this->assertTrue($application->fresh()->prigovor->eliminatory_reason_remaining);
+        $this->assertNull($application->fresh()->prigovor->criterion_1_remaining);
+        $this->assertNull($application->fresh()->prigovor->criterion_2_remaining);
+        $this->assertNull($application->fresh()->prigovor->criterion_3_remaining);
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
         $this->assertTrue($application->fresh()->isEliminatedFromScoring());
 
@@ -296,6 +328,8 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->actingAs($president->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Pokušaj ponovne odluke.',
+                'criterion_outcomes' => [2 => 'otklonjen'],
             ])
             ->assertForbidden();
     }
@@ -314,6 +348,274 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
             ->post(route('evaluation.prigovor.decide', $application), [
                 'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
             ]);
+
+        $this->assertTrue($application->fresh()->prigovor->isPodnesen());
+    }
+
+    public function test_decision_note_is_required_including_whitespace(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application);
+        $this->submitApplicantPrigovor($application);
+
+        $this->actingAs($president->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => '',
+            ])
+            ->assertSessionHasErrors('decision_note');
+
+        $this->actingAs($president->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => '   ',
+            ])
+            ->assertSessionHasErrors('decision_note');
+
+        $this->assertTrue($application->fresh()->prigovor->isPodnesen());
+    }
+
+    public function test_accepted_single_original_ne_otklonjen_opens_scoring(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application, [
+            'criterion_1' => '0',
+            'criterion_2' => '1',
+            'criterion_3' => '1',
+            'note' => 'Ne prolazi kriterijum 1',
+        ]);
+        $this->submitApplicantPrigovor($application);
+
+        $original = $this->criterionSnapshot($application);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Prvi razlog je otklonjen.',
+                'criterion_outcomes' => [1 => 'otklonjen'],
+            ])
+            ->assertRedirect();
+
+        $application->refresh();
+        $this->assertSame($original, $this->criterionSnapshot($application));
+        $this->assertFalse($application->prigovor->eliminatory_reason_remaining);
+        $this->assertFalse((bool) $application->prigovor->criterion_1_remaining);
+        $this->assertNull($application->prigovor->criterion_2_remaining);
+        $this->assertNull($application->prigovor->criterion_3_remaining);
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+    }
+
+    public function test_accepted_with_remaining_reason_keeps_scoring_closed(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application, [
+            'criterion_1' => '0',
+            'criterion_2' => '0',
+            'criterion_3' => '1',
+            'note' => 'Ne prolaze kriterijumi 1 i 2',
+        ]);
+        $this->submitApplicantPrigovor($application);
+        $original = $this->criterionSnapshot($application);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Prvi razlog otklonjen, drugi ostaje.',
+                'criterion_outcomes' => [
+                    1 => 'otklonjen',
+                    2 => 'ostaje',
+                ],
+            ])
+            ->assertRedirect();
+
+        $application->refresh();
+        $this->assertSame($original, $this->criterionSnapshot($application));
+        $this->assertTrue($application->prigovor->isAccepted());
+        $this->assertTrue($application->prigovor->eliminatory_reason_remaining);
+        $this->assertFalse((bool) $application->prigovor->criterion_1_remaining);
+        $this->assertTrue((bool) $application->prigovor->criterion_2_remaining);
+        $this->assertNull($application->prigovor->criterion_3_remaining);
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Prihvaćen', $html);
+        $this->assertStringContainsString('Prvi razlog otklonjen, drugi ostaje.', $html);
+        $this->assertStringContainsString('ne nastavlja u bodovanje', $html);
+        $this->assertStringContainsString('Eliminatorni razlozi koji ostaju', $html);
+        $this->assertStringContainsString(
+            'Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem',
+            $html,
+        );
+    }
+
+    public function test_accepted_all_original_ne_otklonjen_opens_scoring(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application, [
+            'criterion_1' => '0',
+            'criterion_2' => '0',
+            'criterion_3' => '0',
+            'note' => 'Ne prolaze sva tri',
+        ]);
+        $this->submitApplicantPrigovor($application);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Sva tri razloga su otklonjena.',
+                'criterion_outcomes' => [
+                    1 => 'otklonjen',
+                    2 => 'otklonjen',
+                    3 => 'otklonjen',
+                ],
+            ])
+            ->assertRedirect();
+
+        $application->refresh();
+        $this->assertFalse((bool) $application->eliminatoryCheck->criterion_1);
+        $this->assertFalse((bool) $application->eliminatoryCheck->criterion_2);
+        $this->assertFalse((bool) $application->eliminatoryCheck->criterion_3);
+        $this->assertFalse($application->prigovor->eliminatory_reason_remaining);
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Prihvaćen', $html);
+        $this->assertStringContainsString('Sva tri razloga su otklonjena.', $html);
+        $this->assertStringContainsString('može nastaviti u individualno bodovanje', $html);
+    }
+
+    public function test_original_da_outcome_is_rejected_and_missing_ne_outcome_fails(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application);
+        $this->submitApplicantPrigovor($application);
+
+        $this->actingAs($president->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Pokušaj ishoda na originalni Da.',
+                'criterion_outcomes' => [
+                    1 => 'ostaje',
+                    2 => 'otklonjen',
+                ],
+            ])
+            ->assertSessionHasErrors('criterion_outcomes.1');
+
+        $this->actingAs($president->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Nedostaje ishod za originalni Ne.',
+            ])
+            ->assertSessionHasErrors('criterion_outcomes.2');
+
+        $this->assertTrue($application->fresh()->prigovor->isPodnesen());
+    }
+
+    public function test_rejected_prigovor_shows_decision_note_to_applicant(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application);
+        $this->submitApplicantPrigovor($application);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => 'Dokument i dalje nedostaje.',
+            ])
+            ->assertRedirect();
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Odbijen', $html);
+        $this->assertStringContainsString('Dokument i dalje nedostaje.', $html);
+        $this->assertStringContainsString('Eliminatorna odluka ostaje', $html);
+        $this->assertStringContainsString($application->fresh()->prigovor->decided_at->format('d.m.Y. H:i'), $html);
+        Mail::assertSent(ApplicationPrigovorDecisionMail::class);
+    }
+
+    public function test_decision_mail_failure_keeps_persisted_decision(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application);
+        $this->submitApplicantPrigovor($application);
+
+        Mail::swap(new class
+        {
+            public function to($users)
+            {
+                throw new \RuntimeException('smtp failure');
+            }
+        });
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => 'Odluka ostaje važeća i ako mail padne.',
+            ])
+            ->assertRedirect();
+
+        $prigovor = $application->fresh()->prigovor;
+        $this->assertTrue($prigovor->isRejected());
+        $this->assertNotNull($prigovor->decided_at);
+        $this->assertSame('Odluka ostaje važeća i ako mail padne.', $prigovor->decision_note);
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
+    }
+
+    public function test_decision_after_seven_days_is_still_allowed(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application);
+        $this->submitApplicantPrigovor($application);
+
+        $html = $this->actingAs($president->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Rok Komisije za odluku', $html);
+        $this->assertStringContainsString('7 dana od prijema', $html);
+
+        $this->travel(7)->days();
+        $this->travel(1)->seconds();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => 'Odluka nakon isteka prikaznog roka Komisije.',
+            ])
+            ->assertRedirect(route('evaluation.create', $application));
+
+        $this->assertTrue($application->fresh()->prigovor->isRejected());
+    }
+
+    public function test_chairman_of_other_commission_cannot_decide_prigovor(): void
+    {
+        [$application, $president] = $this->submittedApplicationWithCommission();
+        $this->confirmFail($president, $application);
+        $this->submitApplicantPrigovor($application);
+
+        $otherCommission = $this->createCommissionWithMembers(5, true);
+        $otherPresident = $otherCommission->activeMembers()->where('position', 'predsjednik')->firstOrFail();
+
+        $this->actingAs($otherPresident->user)
+            ->post(route('evaluation.prigovor.decide', $application), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => 'Predsjednik druge komisije.',
+                'criterion_outcomes' => [2 => 'otklonjen'],
+            ])
+            ->assertForbidden();
 
         $this->assertTrue($application->fresh()->prigovor->isPodnesen());
     }
@@ -390,22 +692,45 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         return [$application, $president];
     }
 
-    private function confirmFail(CommissionMember $president, Application $application): void
+    private function confirmFail(CommissionMember $president, Application $application, array $overrides = []): void
     {
         $this->actingAs($president->user)
-            ->post(route('evaluation.eliminatory.confirm', $application), $this->failPayload())
+            ->post(route('evaluation.eliminatory.confirm', $application), $this->failPayload($overrides))
             ->assertRedirect();
     }
 
-    private function failPayload(): array
+    private function submitApplicantPrigovor(Application $application, string $obrazlozenje = 'Molim preispitivanje.'): void
     {
-        return $this->eliminatoryPayload([
+        $this->actingAs($application->user)
+            ->post(route('applications.prigovor.store', $application), [
+                'obrazlozenje' => $obrazlozenje,
+            ])
+            ->assertRedirect();
+    }
+
+    /**
+     * @return array{0: bool, 1: bool, 2: bool}
+     */
+    private function criterionSnapshot(Application $application): array
+    {
+        $check = $application->fresh()->eliminatoryCheck;
+
+        return [
+            (bool) $check->criterion_1,
+            (bool) $check->criterion_2,
+            (bool) $check->criterion_3,
+        ];
+    }
+
+    private function failPayload(array $overrides = []): array
+    {
+        return $this->eliminatoryPayload(array_merge([
             'criterion_1' => '1',
             'criterion_2' => '0',
             'criterion_3' => '1',
             'note' => 'Ne prolazi kriterijum 2',
             'confirmation_acknowledged' => '1',
-        ]);
+        ], $overrides));
     }
 
     private function eliminatoryPayload(array $overrides = []): array

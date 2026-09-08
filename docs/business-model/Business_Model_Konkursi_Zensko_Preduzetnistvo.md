@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.12
-**Datum:** 2026-09-07
+**Verzija:** 1.0.13
+**Datum:** 2026-09-08
 
 Povezani dokumenti:
 
@@ -41,6 +41,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.10 | 2026-09-07 | Controlled corrective. Poglavlje 7 dopunjeno V1 raslojavanjem: kanonski identitet; registrovanost biznisa; postojeći ili planirani oblik poslovanja / Obrazac 1; faza biznisa. Neregistrovano fizičko lice bira planirani Preduzetnik (1a) ili DOO (1b) i pripada samo fazi Započinjanje. Postojeća Preduzetnica i postojeće DOO biraju Započinjanje ili Razvoj prema jednogodišnjem kriterijumu kao deklaraciju; Komisija provjerava. Obrazac 2 koristi istu činjenicu registrovanosti. §4.1 KEEP uz pokazivač na §7.2. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.11 | 2026-09-07 | Controlled corrective. §7.2: kanonski identitet i konkursni oblik prijave nijesu ista stvar. Neregistrovano fizičko lice ima podrazumijevani tok fizičko lice / Obrazac 1a; alternativa je planiram osnivanje DOO / Obrazac 1b, uz encoding `doo` + registrovanost NE, bez promjene kanonskog identiteta. `fizicko_lice` je živi V1 oblik prijave, nije samo istorijska vrijednost. Neregistrovani tokovi imaju samo Započinjanje. Postojeća Preduzetnica i postojeće DOO imaju obje faze. Istorijski završeni snimci se ne konvertuju. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.12 | 2026-09-07 | Controlled corrective. §7.2: neregistrovano fizičko lice bira planiranu registraciju kao Preduzetnik (Obrazac 1a) ili planirano osnivanje privrednog društva OD / KD / AD / DOO (Obrazac 1b). Izbor je jednokratan i zaključan za Prijavu. Kanonski registrovani OD / KD / AD / DOO koriste Obrazac 1b. `ostalo` nije novi V1 korisnički tip. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.13 | 2026-09-08 | Controlled corrective. §9.2: odluka Komisije o Prigovoru zahtijeva obavezno obrazloženje; Prihvaćen ne znači automatski da su svi eliminatorni razlozi otklonjeni; za svaki originalni Ne Predsjednik evidentira Otklonjen / Ostaje bez izmjene Obrasca 3; scoring se otvara samo ako nijedan razlog ne ostaje; Podnositeljka prima email obavještenje o donesenoj odluci, a autoritativni zapis ostaje na Platformi. |
 
 Napomena:
 
@@ -569,13 +570,19 @@ Komisija, putem registrovanog mail-a Podnositeljke na digitalnom servisu Opštin
 
 Koristi se formulacija Odluke: **3 dana**. Ne dodaje se „radna“.
 
-Komisija donosi odluku o prihvatanju ili odbijanju Prigovora u roku od **7 dana** od prijema istoga (čl. 17).
+Komisija donosi odluku o prihvatanju ili odbijanju Prigovora u roku od **7 dana** od prijema istoga (čl. 17). Istek tog roka **ne** uvodi automatski platformski ishod.
+
+Odluku u ime Komisije na Platformi evidentira aktivni predsjednik Komisije konkretnog Konkursa. Obrazloženje odluke je **obavezno**.
+
+**Prihvaćen** ne znači automatski da više nema eliminatornih razloga. Za svaki originalni kriterijum koji je na Obrascu 3 bio **Ne\*** predsjednik evidentira da je razlog **Otklonjen** ili da **Ostaje**. Originalni **Da** se ne preispituje na taj način. Obrazac 3 ostaje istorijski zapis prvobitne eliminatorne provjere i **ne** mijenja se odlukom o Prigovoru.
 
 Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja konkursni postupak i omogućava se individualno bodovanje.
 
 Ako nakon odluke Komisije i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava.
 
-Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*.
+Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*. Per-criterion ishod **Otklonjen** / **Ostaje** je trag odluke o jednom Prigovoru, ne novi postupak.
+
+Podnositeljka prima **email obavještenje** da je odluka po Prigovoru donesena. Autoritativni zapis odluke, obrazloženje i posljedica za bodovanje ostaju na Platformi. Email nije kanal za podnošenje ni izmjenu Prigovora.
 
 ---
 
@@ -1058,4 +1065,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.11**
+**Kraj dokumenta KN-BM-003 v1.0.13**
