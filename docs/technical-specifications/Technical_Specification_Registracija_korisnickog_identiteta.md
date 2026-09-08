@@ -6,13 +6,13 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.7
-**Datum:** 2026-09-07
+**Verzija:** 1.0.8
+**Datum:** 2026-09-08
 
 Povezani dokumenti:
 
-* Poslovni model (SSOT): **DK-BM-002** v1.0.4 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
-* Funkcionalna specifikacija (SSOT): **DK-FS-002** v1.0.4 USVOJENO — `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md`
+* Poslovni model (SSOT): **DK-BM-002** v1.0.5 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
+* Funkcionalna specifikacija (SSOT): **DK-FS-002** v1.0.5 USVOJENO — `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md`
 * Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 * Dokumentacioni standard: **DK-DS-001** — `docs/reference/Digital-Kotor-Documentation-Standard.md`
 * Metodologija TS: `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
@@ -66,6 +66,7 @@ Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **n
 | 1.0.5 | 2026-09-07 | Nenormativna evidencija registration correctiva. Implementacija usvojenog V1 registration ugovora na kanonskom GET/POST `/register` putu = **PO USVOJENO**. Evidencija ostaje IMPLEMENTATION / CORRECTIVE. **Nije** production accepted. **Nije** REG-14 / new-user E2E. D1–D15 nijesu reotvorene. D16 nije kreiran. Step 9 ostaje OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.6 | 2026-09-07 | Nenormativna evidencija produkcionog new-user E2E (REG-14). Real production registration → e-mail verifikacija → login → profile/dashboard = PASS. Read-only kanonska persistencija za `users.id` 68 = PASS. **REG-14 = PASS**. Registration corrective = **PRODUCTION VERIFIED**. D1–D15 nijesu reotvorene. D16 nije kreiran. Step 9 ostaje OPEN. G9-1 i G9-3 ostaju OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.7 | 2026-09-07 | Nenormativni D15 Step 9 closeout. PO odluka C1 = **PO USVOJENO**: REG-14 real production usage je dovoljan dokaz za G9-1 i G9-3. G9-1 … G9-10 = PASS. **STEP 9 = CLOSED / PO USVOJENO**. Stabilizacija = COMPLETE. Bez fiksnog trajanja, bez kvote korisnika, bez kvote Vrsta subjekta. Level B **nije** Step 9 kapija. Step 10–14 **nijesu** pokrenuti. Mirror KEEP. Fallback KEEP. R1 ACTIVE. D1–D15 nijesu reotvorene. D16 nije kreiran. BM/FS KEEP. DK-RG-001 KEEP. |
+| 1.0.8 | 2026-09-08 | Implementacija PO-usvojenog profile lifecycle Fizičko lice ⇄ Preduzetnik (`DK-BM-002` v1.0.5 §11.4; `DK-FS-002` v1.0.5 §16.4). Isti `updateLiveGraph` put; `is_entrepreneur` writable; entrepreneur polja se upisuju kada je rezultujuće stanje Preduzetnik i zadržavaju se kada nije; bez subject-type prelaza; bez migracije/šeme; registracija/KN/EP/Obrazac 3 netaknuti. D1–D15 nijesu reotvorene. Step 10 **nije** pokrenut. DK-RG-001 KEEP. |
 
 Napomena:
 
@@ -91,9 +92,9 @@ DK-TS-002:
 
 Tehničke odluke 1–15 su CLOSED / PO USVOJENO. Trenutno nema otvorenih tehničkih odluka.
 
-Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.4.
+Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.5.
 
-Jedini izvor zahtijevanog posmatranog ponašanja je **DK-FS-002** v1.0.4.
+Jedini izvor zahtijevanog posmatranog ponašanja je **DK-FS-002** v1.0.5.
 
 Ako se TS i FS razlikuju, **FS pobjedjuje** za funkcionalno ponašanje. Ako se FS i BM razlikuju, **BM pobjedjuje**.
 
@@ -146,7 +147,7 @@ Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u
 # Pravila upravljanja dokumentom
 
 1. DK-TS-002 pripada platformskom sloju `DK-*` (registracija i korisnički identitet).
-2. Tehnički sadržaj mora ostati usklađen sa `DK-BM-002` v1.0.4 i `DK-FS-002` v1.0.4.
+2. Tehnički sadržaj mora ostati usklađen sa `DK-BM-002` v1.0.5 i `DK-FS-002` v1.0.5.
 3. Nova poslovna i funkcionalna pravila se ne uvode kroz DK-TS-002.
 4. `OPEN BUSINESS QUESTIONS` i `OPEN FS DECISIONS` ostaju **NONE**. Tehničke dileme žive samo kao `OPEN TECHNICAL DECISIONS`.
 5. AS-IS baseline se ne pretvara automatski u ciljno rješenje.
@@ -3556,6 +3557,8 @@ Kada je odgovor **Da**, Fizičko lice ostaje Fizičko lice, a poslovni naziv Pre
 
 Kada je odgovor **Ne**, preduzetnički podaci nisu obavezni. CRPS **nije** primjenjiv.
 
+Isto pitanje, na postojećem profilu Fizičkog lica, smije promijeniti `physical_person_identities.is_entrepreneur` u oba smjera. To **nije** `subject_type` prelaz. Write path ostaje `ProfileController::update` → `CanonicalHttpIdentityService::updateProfileIdentity` → `ProfileIdentityMapper` → `CanonicalIdentityWriter::updateLiveGraph` → `DerivedUserTypeMirror::sync`. Kada je rezultujuće stanje Preduzetnik, mapper prima Poslovno ime, PIB i CRPS registracioni broj iz zahtjeva. Kada nije, mapper **zadržava** već sačuvane `entrepreneur_business_name`, `pib` i `crps_number`. Mirror klasifikuje samo prema `is_entrepreneur`, ne prema prisustvu zadržanih polja. Writer i dalje odbija `physical_person` ↔ `legal_entity`.
+
 Treća vrijednost se **ne** uvodi.
 
 U aktivnom toku Fizičkog lica, uključujući Preduzetnika, obavezni su i ime i prezime.
@@ -3716,6 +3719,8 @@ Nevalidan aktivni obavezan podatak sprečava uspješan završetak odgovarajućeg
 Postojeći korisnik se **ne** registruje ponovo. Nedostajući podatak dopunjava se na postojećem profilu. Nepotpunost profila sama po sebi **nije** globalna blokada naloga (`DK-BM-002` §11, §16; `DK-FS-002` §16).
 
 Validacija dopune primjenjuje usvojena pravila podatka koji se stvarno dopunjava. Dopuna **nije** obavezno ponovno popunjavanje kompletne registracije. Newly active **nije** isto što i missing. Već razriješen kanonski podatak se REUSE-uje. Puna revalidacija nepovezanih polja se **ne** uvodi.
+
+Izmjena preduzetničkog statusa na postojećem profilu (`DK-BM-002` §11.4; `DK-FS-002` §16.4) koristi isti live-update put. false → true zahtijeva registracionu validaciju Preduzetnika (`ValidPib`, `ValidCrps` mark 1, obavezno poslovno ime). true → false ne null-uje entrepreneur kolone. Reaktivacija prefill-uje zadržane kanonske vrijednosti i ponovo validira. `users.pib` / `users.company_name` se namjerno **ne** proširuju kao dual-write; mirror i dalje piše samo izvedeni `users.user_type`.
 
 Mehanizam dopune usvojen je odlukom 10 (Poglavlje 6.25). Kanonske poruke: Poglavlje 6.24.
 
@@ -4330,4 +4335,4 @@ Ova evidencija **nije** nova numerisana tehnička odluka. Odluka 15 ostaje CLOSE
 
 ---
 
-**Kraj dokumenta DK-TS-002 v1.0.7**
+**Kraj dokumenta DK-TS-002 v1.0.8**

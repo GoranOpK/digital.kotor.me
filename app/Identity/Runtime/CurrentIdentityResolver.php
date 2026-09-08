@@ -119,6 +119,7 @@ final class CurrentIdentityResolver
             pib: $user->pib,
             companyName: $user->company_name,
             passportNumber: $user->passport_number,
+            crpsNumber: null,
         );
     }
 
@@ -132,6 +133,7 @@ final class CurrentIdentityResolver
         $pib = null;
         $company = null;
         $passport = null;
+        $crpsNumber = null;
         $address = $snapshot->streetAndNumber;
         $city = $snapshot->city;
 
@@ -143,6 +145,7 @@ final class CurrentIdentityResolver
             $pib = $fl->pib;
             $company = $fl->entrepreneurBusinessName;
             $passport = $fl->passportNumber;
+            $crpsNumber = $fl->crpsNumber;
             $residential = $fl->residentialStatus === PhysicalPersonIdentity::RESIDENTIAL_NON_RESIDENT
                 ? 'non-resident'
                 : ($fl->residentialStatus === PhysicalPersonIdentity::RESIDENTIAL_RESIDENT ? 'resident' : $fl->residentialStatus);
@@ -154,6 +157,7 @@ final class CurrentIdentityResolver
             $pib = $pl->pib;
             $company = $pl->legalName;
             $passport = $pl->authorizedPerson?->passportNumber;
+            $crpsNumber = $pl->crpsNumber;
         } elseif ($snapshot->foreignBranch !== null) {
             $fb = $snapshot->foreignBranch;
             $firstName = $fb->representative?->firstName;
@@ -162,6 +166,7 @@ final class CurrentIdentityResolver
             $pib = $fb->pib;
             $company = $fb->foreignCompanyName;
             $passport = $fb->representative?->passportNumber;
+            $crpsNumber = $fb->crpsNumber;
         }
 
         return new SubjectIdentityView(
@@ -178,6 +183,7 @@ final class CurrentIdentityResolver
             pib: $pib,
             companyName: $company,
             passportNumber: $passport,
+            crpsNumber: $crpsNumber,
         );
     }
 
@@ -197,6 +203,7 @@ final class CurrentIdentityResolver
             pib: null,
             companyName: null,
             passportNumber: null,
+            crpsNumber: null,
         );
     }
 }

@@ -168,6 +168,23 @@ final class UserType
      */
     public static function allowedProfileWriteValues(?string $current): array
     {
+        if (self::isNaturalPerson($current)) {
+            return self::naturalPersonStorageValues();
+        }
+
+        if (self::isLegalEntity($current) || self::isRetainedLegacy($current)) {
+            $allowed = array_values(array_filter(
+                self::allowedNewWriteValues(),
+                fn (string $value): bool => self::isLegalEntity($value)
+            ));
+
+            if (is_string($current) && $current !== '' && ! in_array($current, $allowed, true)) {
+                $allowed[] = $current;
+            }
+
+            return array_values(array_unique($allowed));
+        }
+
         $allowed = self::allowedNewWriteValues();
 
         if (is_string($current) && $current !== '' && self::isRetainedLegacy($current)) {
@@ -272,19 +289,17 @@ final class UserType
      */
     public static function profileSelectOptions(?string $current): array
     {
-        $options = [
-            self::PHYSICAL_PERSON => self::PHYSICAL_PERSON,
-        ];
-
-        foreach (self::canonicalStorageValues() as $value) {
-            if ($value === self::PHYSICAL_PERSON) {
-                continue;
-            }
-            $options[$value] = self::displayLabel($value);
+        if (self::isNaturalPerson($current)) {
+            return [
+                self::PHYSICAL_PERSON => self::PHYSICAL_PERSON,
+            ];
         }
 
-        if (is_string($current) && self::isRetainedLegacy($current) && ! isset($options[$current])) {
-            $options[$current] = $current.' (naslijeđena kategorija)';
+        $options = [];
+        foreach (self::allowedProfileWriteValues($current) as $value) {
+            $options[$value] = self::isRetainedLegacy($value)
+                ? $value.' (naslijeđena kategorija)'
+                : self::displayLabel($value);
         }
 
         return $options;

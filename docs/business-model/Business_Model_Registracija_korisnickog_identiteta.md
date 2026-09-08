@@ -6,8 +6,8 @@
 **Naziv:** Poslovni model registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.4
-**Datum:** 2026-09-05
+**Verzija:** 1.0.5
+**Datum:** 2026-09-08
 
 Povezani dokumenti:
 
@@ -31,6 +31,7 @@ Dokumenti `DK-UC-002`, `DK-FS-002` i `DK-TS-002` **nisu** kreirani ovim korakom.
 | 1.0.2 | 2026-09-05 | PO preciziranje domena pravila 1:1: odnosi se na nalog koji predstavlja registrovani platformski subjekt; interni/staff nalog nije automatski registrovani identitet. Poglavlje 3. Status dokumenta ostaje USVOJENO. |
 | 1.0.3 | 2026-09-05 | PO corrective: CRPS registracioni broj obavezan za Preduzetnika i pravne oblike OD, KD, AD i DOO, uz zadržani DSPD; PIB i CRPS eksplicitno razdvojeni; V1 ne prikuplja CRPS ni dodatni matični/registarski identifikator za Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju. Status dokumenta ostaje USVOJENO. |
 | 1.0.4 | 2026-09-05 | Status/reference corrective: `DK-FS-002` je već usklađen sa pravilima o CRPS registracionom broju; usklađenost nije otvorena BM stavka. Poslovna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
+| 1.0.5 | 2026-09-08 | PO-usvojeni lifecycle na Izmjena korisničkog profila: Fizičko lice ⇄ Preduzetnik na istom identitetu Fizičkog lica. `is_entrepreneur` je autoritet trenutne klasifikacije. false→true zahtijeva Poslovno ime, PIB i Broj registracije u CRPS. true→false zadržava te podatke, ali ih čini neaktivnim. Reaktivacija koristi zadržane vrijednosti nakon pregleda/izmjene. Nije dozvoljen prelaz Fizičko lice ↔ Pravno lice. Postojeći modulski snapshoti se ne reklasifikuju. Status dokumenta ostaje USVOJENO. |
 
 Napomena:
 
@@ -242,6 +243,8 @@ Vrijednosti, ovim redosljedom:
 Odgovor **Da** znači da se na Fizičko lice primjenjuju dodatna pravila Preduzetnika iz poglavlja 7.
 
 Odgovor **Ne** znači da se primjenjuje skup podataka iz poglavlja 6.4.
+
+Isto pitanje, sa istim značenjem, primjenjuje se i na **Izmjena korisničkog profila** za postojeći identitet Fizičkog lica. To **nije** izbor nove Vrste subjekta i **nije** kreiranje drugog identiteta. Poglavlje 11.4.
 
 ## 6.2 Status rezidentnosti
 
@@ -568,6 +571,45 @@ Nepotpunost postojećeg profila sama po sebi ne predstavlja globalnu blokadu kor
 
 Ne zahtijeva se ponovna registracija.
 
+## 11.4 Izmjena preduzetničkog statusa na postojećem profilu
+
+Preduzetnik ostaje Fizičko lice. Nije nova pravna priroda i nije zaseban platformski identitet.
+
+Na **Izmjena korisničkog profila** postojeći korisnik čiji je kanonski identitet Fizičko lice smije izmijeniti trenutni preduzetnički status u oba smjera:
+
+1. Fizičko lice → Preduzetnik
+2. Preduzetnik → Fizičko lice
+
+U oba slučaja ostaju isti:
+
+- korisnički nalog;
+- korijen kanonskog identiteta;
+- identitet Fizičkog lica.
+
+Ne kreira se novi nalog. Ne kreira se drugi identitet Fizičkog lica. Nije dozvoljen prelaz Fizičko lice ↔ Pravno lice, niti prelaz u Dio stranog privrednog društva.
+
+Trenutna klasifikacija Preduzetnika je poslovno stanje **registrovan kao preduzetnik**. Prisustvo zadržanih poslovnih podataka samo po sebi **ne** čini korisnika trenutnim Preduzetnikom.
+
+**Fizičko lice → Preduzetnik** zahtijeva validne:
+
+- Poslovno ime / Naziv preduzetnika;
+- PIB;
+- Broj registracije u CRPS.
+
+Postojeći Preduzetnik smije mijenjati ta tri podatka. Polja se ne zaključavaju nakon prvog unosa.
+
+**Preduzetnik → Fizičko lice** prestaje da klasifikuje korisnika kao trenutnog Preduzetnika, ali **ne briše** već unijete:
+
+- Poslovno ime / Naziv preduzetnika;
+- PIB;
+- Broj registracije u CRPS.
+
+Ti podaci ostaju zadržani kao neaktivni/istorijski podaci profila.
+
+Ako se isti korisnik ponovo izjasni kao Preduzetnik, zadržane vrijednosti se ponovo prikazuju radi pregleda i izmjene. Ponovna aktivacija mora proći istu validaciju Preduzetnika. Postojanje zadržanih podataka **nije** dokaz da su i dalje validni.
+
+Ovaj lifecycle **ne** mijenja postojeće konkursne, e-Plaćanje ni druge modulski snapshot zapise. Nova upotreba funkcije čita trenutni kanonski identitet; već sačuvani transakcioni/modulski zapisi se ne reklasifikuju automatski.
+
 ---
 
 # 12. Granica prema Konkursima
@@ -735,4 +777,4 @@ Buduće FS / TS / migration rješenje mora poštovati poglavlje 11 i poglavlje 1
 
 ---
 
-**Kraj dokumenta DK-BM-002 v1.0.4**
+**Kraj dokumenta DK-BM-002 v1.0.5**

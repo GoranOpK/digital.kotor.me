@@ -88,9 +88,18 @@ class UserTypeSemanticsTest extends TestCase
         $this->assertContains($current, $allowed);
         $this->assertContains(UserType::NGO_ASSOCIATION, $allowed);
         $this->assertNotContains(UserType::LEGACY_INSTITUTION_BUNDLE, $allowed);
+        $this->assertNotContains(UserType::PHYSICAL_PERSON, $allowed);
+        $this->assertNotContains(UserType::ENTREPRENEUR, $allowed);
         $this->assertSame(
-            UserType::canonicalStorageValues(),
+            array_values(array_filter(
+                UserType::canonicalStorageValues(),
+                fn (string $value): bool => UserType::isLegalEntity($value)
+            )),
             UserType::allowedProfileWriteValues(UserType::LIMITED_LIABILITY_COMPANY)
+        );
+        $this->assertSame(
+            UserType::naturalPersonStorageValues(),
+            UserType::allowedProfileWriteValues(UserType::PHYSICAL_PERSON)
         );
     }
 }

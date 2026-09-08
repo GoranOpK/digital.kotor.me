@@ -231,6 +231,7 @@ class Step8CutoverCapabilityTest extends TestCase
         $this->assertSame('Ana', $user->fresh()->first_name);
 
         $this->actingAs($user)
+            ->from(route('profile.edit'))
             ->put(route('profile.update'), [
                 'first_name' => 'Petar',
                 'last_name' => 'Petrović',
@@ -242,7 +243,12 @@ class Step8CutoverCapabilityTest extends TestCase
                 'company_name' => 'Primjer DOO',
                 'pib' => '12345672',
             ])
-            ->assertForbidden();
+            ->assertSessionHasErrors('user_type');
+
+        $this->assertSame(
+            PlatformIdentity::SUBJECT_PHYSICAL_PERSON,
+            PlatformIdentity::query()->where('user_id', $user->id)->value('subject_type')
+        );
     }
 
     public function test_kn_missing_canonical_identity_fails_closed_not_ostalo(): void
@@ -709,9 +715,10 @@ class Step8CutoverCapabilityTest extends TestCase
 
         $this->assertStringContainsString('id="physicalPersonFields"', $html);
         $this->assertStringContainsString('id="residentialStatusGroup"', $html);
+        $this->assertStringContainsString('Da li ste registrovani kao preduzetnik?', $html);
+        $this->assertStringContainsString('value="Fizičko lice"', $html);
         $this->assertStringNotContainsString('Stale DOO', $html);
-        $this->assertMatchesRegularExpression('/value="Fizičko lice"\s+selected/', $html);
-        $this->assertDoesNotMatchRegularExpression('/value="Društvo sa ograničenom odgovornošću"\s+selected/', $html);
+        $this->assertStringNotContainsString('value="'.UserType::LIMITED_LIABILITY_COMPANY.'"', $html);
     }
 
     public function test_profile_read_on_missing_subject_does_not_use_collects_business_identity_fallback(): void

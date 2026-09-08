@@ -80,10 +80,33 @@ final class ProfileIdentityMapper
         $passport = $request->has('passport_number')
             ? ($request->input('passport_number') ? strtoupper((string) $request->input('passport_number')) : null)
             : $fl->passportNumber;
-        $isEntrepreneur = $incomingType === UserType::ENTREPRENEUR;
+        $isEntrepreneur = $this->requestWantsEntrepreneur($request, $incomingType);
         $documentType = $jmb
             ? PhysicalPersonIdentity::DOCUMENT_JMB
             : ($passport ? PhysicalPersonIdentity::DOCUMENT_PASSPORT : $fl->idDocumentType);
+
+        $businessName = $fl->entrepreneurBusinessName;
+        $pib = $fl->pib;
+        $crpsNumber = $fl->crpsNumber;
+
+        if ($isEntrepreneur) {
+            if ($request->exists('entrepreneur_business_name') || $request->exists('company_name')) {
+                $incomingName = $request->filled('entrepreneur_business_name')
+                    ? $request->input('entrepreneur_business_name')
+                    : $request->input('company_name');
+                $businessName = is_string($incomingName) && trim($incomingName) !== ''
+                    ? trim($incomingName)
+                    : $fl->entrepreneurBusinessName;
+            }
+            if ($request->exists('pib')) {
+                $incomingPib = $request->input('pib');
+                $pib = is_string($incomingPib) && $incomingPib !== '' ? $incomingPib : $fl->pib;
+            }
+            if ($request->exists('crps_number')) {
+                $incomingCrps = $request->input('crps_number');
+                $crpsNumber = is_string($incomingCrps) && $incomingCrps !== '' ? $incomingCrps : $fl->crpsNumber;
+            }
+        }
 
         return new IdentitySnapshot(
             userId: (int) $user->id,
@@ -103,11 +126,9 @@ final class ProfileIdentityMapper
                 passportNumber: $passport,
                 residenceCountryCode: $fl->residenceCountryCode,
                 isEntrepreneur: $isEntrepreneur,
-                entrepreneurBusinessName: $isEntrepreneur
-                    ? ($request->filled('company_name') ? trim((string) $request->input('company_name')) : $fl->entrepreneurBusinessName)
-                    : null,
-                pib: $request->has('pib') ? ($request->input('pib') ?: null) : $fl->pib,
-                crpsNumber: $fl->crpsNumber,
+                entrepreneurBusinessName: $businessName,
+                pib: $pib,
+                crpsNumber: $crpsNumber,
             ),
         );
     }
@@ -225,5 +246,31 @@ final class ProfileIdentityMapper
         throw new IdentityMutationDeniedException(
             'Ova grana identiteta ne može se mijenjati sa administratorske forme.'
         );
+    }
+
+    private function requestWantsEntrepreneur(Request $request, string $incomingType): bool
+    {
+        if ($request->exists('registers_as_entrepreneur')) {
+            return $this->affirmativeEntrepreneurChoice($request->input('registers_as_entrepreneur'));
+        }
+
+        return $incomingType === UserType::ENTREPRENEUR;
+    }
+
+    private function affirmativeEntrepreneurChoice(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        if (! is_string($value)) {
+            return false;
+        }
+
+        return in_array(strtolower(trim($value)), ['1', 'da', 'yes', 'true'], true);
     }
 }

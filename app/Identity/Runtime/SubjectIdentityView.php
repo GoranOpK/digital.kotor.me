@@ -18,6 +18,7 @@ final readonly class SubjectIdentityView
         public ?string $pib,
         public ?string $companyName,
         public ?string $passportNumber,
+        public ?string $crpsNumber = null,
     ) {
     }
 

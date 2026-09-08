@@ -8,6 +8,7 @@ use App\Models\ForeignBranchIdentity;
 use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Application-level identifier uniqueness against canonical tables,
@@ -43,13 +44,20 @@ final class CanonicalIdentifierUniqueness
         }
 
         $users = User::query()->where('pib', $pib);
+        $physical = PhysicalPersonIdentity::query()->where('pib', $pib);
+        $legal = LegalEntityIdentity::query()->where('pib', $pib);
+        $foreign = ForeignBranchIdentity::query()->where('pib', $pib);
+
         if ($exceptUserId !== null) {
             $users->where('id', '!=', $exceptUserId);
+            $this->excludeOnlyCurrentUserCanonicalOwner($physical, $exceptUserId);
+            $this->excludeOnlyCurrentUserCanonicalOwner($legal, $exceptUserId);
+            $this->excludeOnlyCurrentUserCanonicalOwner($foreign, $exceptUserId);
         }
 
-        return PhysicalPersonIdentity::query()->where('pib', $pib)->exists()
-            || LegalEntityIdentity::query()->where('pib', $pib)->exists()
-            || ForeignBranchIdentity::query()->where('pib', $pib)->exists()
+        return $physical->exists()
+            || $legal->exists()
+            || $foreign->exists()
             || $users->exists();
     }
 
@@ -89,5 +97,20 @@ final class CanonicalIdentifierUniqueness
         if ($this->physicalPassportTaken($passport, $exceptUserId)) {
             throw new CanonicalIdentityWriteException('Broj pasoša je već registrovan.');
         }
+    }
+
+    /**
+     * Update-path self-exclusion: ignore only a canonical PIB owned by
+     * $exceptUserId. Orphan rows (no platform identity) and other users
+     * remain taken.
+     */
+    private function excludeOnlyCurrentUserCanonicalOwner(Builder $query, int $exceptUserId): void
+    {
+        $query->where(function ($inner) use ($exceptUserId): void {
+            $inner->whereDoesntHave('platformIdentity')
+                ->orWhereHas('platformIdentity', function ($owner) use ($exceptUserId): void {
+                    $owner->where('user_id', '!=', $exceptUserId);
+                });
+        });
     }
 }

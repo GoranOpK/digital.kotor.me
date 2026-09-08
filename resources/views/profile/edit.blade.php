@@ -213,8 +213,35 @@
                                     || \App\Support\UserType::isLegalEntity($subjectIdentity->userType)
                                 ))
                             : $user->collectsBusinessIdentity();
+                        $isNaturalPersonIdentity = \App\Support\UserType::isNaturalPerson($subjectIdentity->userType);
+                        $isLegalEntityIdentity = \App\Support\UserType::isLegalEntity($subjectIdentity->userType);
                     @endphp
                     @if($identityFormBranch)
+                    @if($isNaturalPersonIdentity)
+                    <div class="form-group">
+                        <label class="form-label">Vrsta subjekta</label>
+                        <input type="text" class="form-control" value="Fizičko lice" readonly>
+                        <input type="hidden" name="user_type" id="user_type" value="{{ \App\Support\UserType::PHYSICAL_PERSON }}">
+                    </div>
+
+                    @php
+                        $oldEntrepreneur = old('registers_as_entrepreneur');
+                        $isEntrepreneur = $oldEntrepreneur !== null
+                            ? in_array((string) $oldEntrepreneur, ['1', 'da', 'yes', 'true'], true)
+                            : \App\Support\UserType::isEntrepreneur($subjectIdentity->userType);
+                    @endphp
+
+                    <div class="form-group" id="entrepreneurStatusGroup">
+                        <label for="registers_as_entrepreneur" class="form-label">Da li ste registrovani kao preduzetnik? <span class="required">*</span></label>
+                        <select name="registers_as_entrepreneur" id="registers_as_entrepreneur" class="form-control" required onchange="toggleEntrepreneurFields()">
+                            <option value="1" {{ $isEntrepreneur ? 'selected' : '' }}>Da</option>
+                            <option value="0" {{ ! $isEntrepreneur ? 'selected' : '' }}>Ne</option>
+                        </select>
+                        @error('registers_as_entrepreneur')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    @else
                     <div class="form-group">
                     <label for="user_type" class="form-label">Tip korisnika <span class="required">*</span></label>
                     <select name="user_type" id="user_type" class="form-control" required onchange="toggleUserTypeFields()">
@@ -228,12 +255,15 @@
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
+                    @endif
 
                 @php
                     $selectedType = old('user_type', $subjectIdentity->userType);
-                    $isNaturalPerson = \App\Support\UserType::isNaturalPerson($selectedType);
-                    $isEntrepreneur = \App\Support\UserType::isEntrepreneur($selectedType);
-                    $isLegalEntity = \App\Support\UserType::isLegalEntity($selectedType);
+                    $isNaturalPerson = $isNaturalPersonIdentity || \App\Support\UserType::isNaturalPerson($selectedType);
+                    $isLegalEntity = $isLegalEntityIdentity || \App\Support\UserType::isLegalEntity($selectedType);
+                    if (! isset($isEntrepreneur)) {
+                        $isEntrepreneur = false;
+                    }
                 @endphp
 
                 <div class="form-group" id="residentialStatusGroup" style="{{ $isNaturalPerson ? '' : 'display: none;' }}">
@@ -264,12 +294,58 @@
                     </div>
                 </div>
 
-                <div id="companyNameFields" class="{{ ($isEntrepreneur || $isLegalEntity) ? '' : 'conditional-field' }}" style="{{ ($isEntrepreneur || $isLegalEntity) ? '' : 'display: none;' }}">
+                @if($isNaturalPersonIdentity)
+                <div id="entrepreneurFields" class="{{ $isEntrepreneur ? '' : 'conditional-field' }}" style="{{ $isEntrepreneur ? '' : 'display: none;' }}">
                     <div class="form-group">
-                        <label for="company_name" class="form-label" id="companyNameLabel">{{ $isLegalEntity ? 'Naziv privrednog subjekta' : 'Poslovno ime' }} @if($isLegalEntity)<span class="required">*</span>@endif</label>
+                        <label for="entrepreneur_business_name" class="form-label">Poslovno ime <span class="required">*</span></label>
+                        <input type="text" name="entrepreneur_business_name" id="entrepreneur_business_name" class="form-control"
+                               value="{{ old('entrepreneur_business_name', $subjectIdentity->companyName) }}"
+                               maxlength="255"
+                               @if($isEntrepreneur) required @endif>
+                        @error('entrepreneur_business_name')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="entrepreneur_pib" class="form-label">PIB <span class="required">*</span></label>
+                        <input type="text" name="pib" id="entrepreneur_pib" class="form-control"
+                               value="{{ old('pib', $subjectIdentity->pib) }}"
+                               maxlength="8"
+                               inputmode="numeric"
+                               pattern="[0-9]{8}"
+                               placeholder="8 cifara"
+                               @if($isEntrepreneur) required @endif>
+                        @error('pib')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Poreski identifikacioni broj (8 cifara)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="crps_number" class="form-label">Broj registracije u CRPS <span class="required">*</span></label>
+                        <input type="text" name="crps_number" id="crps_number" class="form-control"
+                               value="{{ old('crps_number', $subjectIdentity->crpsNumber) }}"
+                               maxlength="8"
+                               inputmode="numeric"
+                               pattern="[0-9]{8}"
+                               placeholder="8 cifara"
+                               @if($isEntrepreneur) required @endif>
+                        @error('crps_number')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                @endif
+
+                @if($isLegalEntityIdentity)
+                <div id="companyNameFields" class="{{ $isLegalEntity ? '' : 'conditional-field' }}" style="{{ $isLegalEntity ? '' : 'display: none;' }}">
+                    <div class="form-group">
+                        <label for="company_name" class="form-label" id="companyNameLabel">Naziv privrednog subjekta <span class="required">*</span></label>
                         <input type="text" name="company_name" id="company_name" class="form-control"
                                value="{{ old('company_name', $subjectIdentity->companyName) }}"
-                               maxlength="255">
+                               maxlength="255"
+                               @if($isLegalEntity) required @endif>
                         @error('company_name')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
@@ -283,7 +359,8 @@
                                value="{{ old('pib', $subjectIdentity->pib) }}" 
                                maxlength="8"
                                pattern="[0-9]{8}"
-                               placeholder="8 cifara">
+                               placeholder="8 cifara"
+                               @if($isLegalEntity) required @endif>
                         @error('pib')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
@@ -292,6 +369,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
                 <!-- Polje za passport (opciono za nerezidente fizička lica / preduzetnike) -->
                 <div id="passportFields" class="{{ ($isNaturalPerson && old('residential_status', $subjectIdentity->residentialStatus) !== 'resident') ? '' : 'conditional-field' }}" style="{{ ($isNaturalPerson && old('residential_status', $subjectIdentity->residentialStatus) !== 'resident') ? '' : 'display: none;' }}">
@@ -362,17 +440,43 @@
 
 <script>
 const naturalPersonTypes = @json(\App\Support\UserType::naturalPersonStorageValues());
-const entrepreneurType = @json(\App\Support\UserType::ENTREPRENEUR);
 const legalEntityTypes = @json(\App\Support\UserType::allLegalEntityStorageValues());
+
+function setRequired(el, required) {
+    if (!el) {
+        return;
+    }
+    if (required) {
+        el.setAttribute('required', 'required');
+    } else {
+        el.removeAttribute('required');
+    }
+}
+
+function toggleEntrepreneurFields() {
+    const entrepreneurSelect = document.getElementById('registers_as_entrepreneur');
+    if (!entrepreneurSelect) {
+        return;
+    }
+    const isEntrepreneur = entrepreneurSelect.value === '1';
+    const entrepreneurFields = document.getElementById('entrepreneurFields');
+    if (entrepreneurFields) {
+        entrepreneurFields.style.display = isEntrepreneur ? 'block' : 'none';
+    }
+    setRequired(document.getElementById('entrepreneur_business_name'), isEntrepreneur);
+    setRequired(document.getElementById('entrepreneur_pib'), isEntrepreneur);
+    setRequired(document.getElementById('crps_number'), isEntrepreneur);
+}
 
 function toggleUserTypeFields() {
     const userTypeSelect = document.getElementById('user_type');
-    if (!userTypeSelect) {
+    if (!userTypeSelect || userTypeSelect.tagName !== 'SELECT') {
+        toggleEntrepreneurFields();
+        togglePassportField();
         return;
     }
     const userType = userTypeSelect.value;
     const isNatural = naturalPersonTypes.includes(userType);
-    const isEntrepreneur = userType === entrepreneurType;
     const isLegal = legalEntityTypes.includes(userType);
 
     const physicalPersonFields = document.getElementById('physicalPersonFields');
@@ -382,55 +486,25 @@ function toggleUserTypeFields() {
     const jmbInput = document.getElementById('jmb');
     const pibInput = document.getElementById('pib');
     const companyNameInput = document.getElementById('company_name');
-    const companyNameLabel = document.getElementById('companyNameLabel');
 
     if (physicalPersonFields) {
         physicalPersonFields.style.display = isNatural ? 'block' : 'none';
     }
     if (companyNameFields) {
-        companyNameFields.style.display = (isEntrepreneur || isLegal) ? 'block' : 'none';
+        companyNameFields.style.display = isLegal ? 'block' : 'none';
     }
     if (legalEntityFields) {
         legalEntityFields.style.display = isLegal ? 'block' : 'none';
     }
     if (residentialGroup) {
         residentialGroup.style.display = isNatural ? 'block' : 'none';
-        const residentialSelect = document.getElementById('residential_status');
-        if (residentialSelect) {
-            if (isNatural) {
-                residentialSelect.setAttribute('required', 'required');
-            } else {
-                residentialSelect.removeAttribute('required');
-            }
-        }
+        setRequired(document.getElementById('residential_status'), isNatural);
     }
-    if (jmbInput) {
-        if (isNatural) {
-            jmbInput.setAttribute('required', 'required');
-        } else {
-            jmbInput.removeAttribute('required');
-        }
-    }
-    if (pibInput) {
-        if (isLegal) {
-            pibInput.setAttribute('required', 'required');
-        } else {
-            pibInput.removeAttribute('required');
-        }
-    }
-    if (companyNameInput) {
-        if (isLegal) {
-            companyNameInput.setAttribute('required', 'required');
-        } else {
-            companyNameInput.removeAttribute('required');
-        }
-    }
-    if (companyNameLabel) {
-        companyNameLabel.innerHTML = isLegal
-            ? 'Naziv privrednog subjekta <span class="required">*</span>'
-            : 'Poslovno ime';
-    }
+    setRequired(jmbInput, isNatural);
+    setRequired(pibInput, isLegal);
+    setRequired(companyNameInput, isLegal);
 
+    toggleEntrepreneurFields();
     togglePassportField();
 }
 

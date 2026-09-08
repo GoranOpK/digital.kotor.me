@@ -6,13 +6,13 @@
 **Naziv:** Funkcionalna specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.4
-**Datum:** 2026-09-05
+**Verzija:** 1.0.5
+**Datum:** 2026-09-08
 
 Povezani dokumenti:
 
-* Poslovni model (SSOT): **DK-BM-002** v1.0.3 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
-* Tehnička specifikacija: **DK-TS-002** v1.0.0 USVOJENO — `docs/technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md`
+* Poslovni model (SSOT): **DK-BM-002** v1.0.5 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
+* Tehnička specifikacija: **DK-TS-002** v1.0.8 USVOJENO — `docs/technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md`
 * Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 * Dokumentacioni standard: **DK-DS-001** — `docs/reference/Digital-Kotor-Documentation-Standard.md`
 
@@ -59,6 +59,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.2 | 2026-09-05 | Izvedeno iz DK-BM-002 v1.0.2: pravilo 1:1 odnosi se na nalog registrovanog platformskog subjekta; interni/staff nalog ne zahtijeva FL/PL/DSPD samo zbog postojanja naloga. Poglavlja 5, 16, 17 i 18. Status dokumenta ostaje USVOJENO. |
 | 1.0.3 | 2026-09-05 | Usklađivanje sa DK-BM-002 v1.0.3: CRPS registracioni broj obavezan za Preduzetnika i pravne oblike OD, KD, AD i DOO; CRPS nije DSPD-only; V1 ne prikuplja CRPS ni dodatni matični/registarski identifikator za Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju; format CRPS-a ostaje za DK-TS-002 Decision 8. Status dokumenta ostaje USVOJENO. |
 | 1.0.4 | 2026-09-05 | Status/reference corrective: referenca/status `DK-TS-002` usklađena na v1.0.0 USVOJENO; uklonjena zastarjela temporalna referenca. Funkcionalna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
+| 1.0.5 | 2026-09-08 | PO-usvojeni profile lifecycle Fizičko lice ⇄ Preduzetnik (`DK-BM-002` v1.0.5 §11.4). Izmjena korisničkog profila: Da/Ne za preduzetnički status; false→true zahtijeva Poslovno ime, PIB i Broj registracije u CRPS; postojeći Preduzetnik smije mijenjati ta polja; true→false zadržava podatke kao neaktivne; reaktivacija prikazuje zadržane vrijednosti uz ponovnu validaciju; nije FL↔PL. Modulski snapshoti se ne reklasifikuju. Status dokumenta ostaje USVOJENO. |
 
 Napomena:
 
@@ -78,7 +79,7 @@ Dokument odgovara na pitanje:
 
 Dokument **ne** odgovara kako se to ponašanje tehnički implementira.
 
-Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.3.
+Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.5.
 
 ---
 
@@ -114,9 +115,9 @@ To pripada `DK-TS-002`.
 
 | Izvor | Uloga |
 |-------|--------|
-| `DK-BM-002` v1.0.3 | Jedini SSOT poslovnih pravila. |
+| `DK-BM-002` v1.0.5 | Jedini SSOT poslovnih pravila. |
 | Ovaj dokument | Zahtijevano funkcionalno ponašanje Platforme. |
-| `DK-TS-002` v1.0.0 | Tehnička specifikacija / tehnička realizacija. USVOJENO. |
+| `DK-TS-002` v1.0.8 | Tehnička specifikacija / tehnička realizacija. USVOJENO. |
 | `DK-UC-002` | Nije kreiran. Nije pretpostavka ovog FS-a. |
 
 Ako se FS i BM razlikuju, **BM pobjedjuje**.
@@ -566,6 +567,36 @@ Ovaj FS **ne** mapira koje konkretne KK / KN / EP funkcije zahtijevaju koje polj
 
 Ovaj FS **ne** određuje kako postojeći Preduzetnici i pravna lica oblika OD, KD, AD i DOO dobijaju nedostajući CRPS registracioni broj. To pripada `DK-TS-002` (Decision 10 / Decision 14). Ovaj alignment **ne** uvodi poseban completion flow ni backfill za CRPS.
 
+## 16.4 Izmjena preduzetničkog statusa na postojećem profilu
+
+Ovo poglavlje razrađuje `DK-BM-002` §11.4. Ne mijenja registraciju.
+
+Za nalog čiji je kanonski identitet Fizičko lice, **Izmjena korisničkog profila** prikazuje pitanje:
+
+**Da li ste registrovani kao preduzetnik?**
+
+Vrijednosti, ovim redoslijedom: Da, Ne.
+
+Preduzetnik **nije** stavka Vrste subjekta. Kontrola **ne** nudi prelaz u Pravno lice niti u Dio stranog privrednog društva.
+
+Kada je odgovor **Da** (rezultujuće stanje = Preduzetnik):
+
+- prikazuju se i obavezni su Poslovno ime, PIB i Broj registracije u CRPS;
+- primjenjuje se ista kanonska validacija tih polja kao pri registraciji Preduzetnika;
+- postojeći Preduzetnik smije mijenjati ta polja; nisu zaključana.
+
+Kada je odgovor **Ne** (rezultujuće stanje = obično Fizičko lice):
+
+- preduzetnička polja nisu obavezna u tom zahtjevu;
+- već sačuvani Poslovno ime, PIB i Broj registracije u CRPS **ostaju sačuvani**;
+- ti podaci **ne** čine korisnika trenutnim Preduzetnikom.
+
+Ako korisnik ponovo izabere **Da**, Platforma prikazuje zadržane vrijednosti radi pregleda i izmjene. Spremanje ponovo zahtijeva validan unos Preduzetnika.
+
+Nevalidan unos zadržava izabrani odgovor Da/Ne i unijete vrijednosti, i drži odgovarajuća preduzetnička polja vidljivim.
+
+Ovaj tok **ne** kreira drugi identitet, **ne** mijenja Vrstu subjekta u Pravno lice i **ne** reklasifikuje već sačuvane KN / EP / druge modulski snapshot zapise.
+
 ---
 
 # 17. Funkcionalne zabrane
@@ -640,6 +671,10 @@ Format: Ako / Kada / Onda.
 20. Ako je Fizičko lice i nije Preduzetnik, onda se CRPS registracioni broj ne prikazuje, ne unosi i ne zahtijeva.
 21. Ako je Pravni oblik Ortačko društvo (OD), Komanditno društvo (KD), Akcionarsko društvo (AD) ili Društvo sa ograničenom odgovornošću (DOO), onda se CRPS registracioni broj prikazuje i obavezan je, kao zasebno polje od PIB-a.
 22. Ako je Pravni oblik Nevladino udruženje, Nevladina fondacija ili Sportska organizacija, onda se CRPS registracioni broj ne prikazuje i ne zahtijeva, a dodatni matični ili registarski identifikator se u V1 ne prikuplja.
+23. Ako postojeće Fizičko lice na Izmjena korisničkog profila izabere da je registrovano kao Preduzetnik, onda ostaje isti identitet Fizičkog lica, a Poslovno ime, PIB i Broj registracije u CRPS su obavezni i validiraju se kanonskim pravilima Preduzetnika.
+24. Ako postojeći Preduzetnik na Izmjena korisničkog profila izabere da više nije Preduzetnik, onda prestaje da bude trenutni Preduzetnik, a Poslovno ime, PIB i Broj registracije u CRPS ostaju sačuvani.
+25. Ako bivši Preduzetnik ponovo izabere da je Preduzetnik, onda vidi zadržane poslovne podatke radi pregleda i izmjene, i mora ih validno sačuvati.
+26. Ako Fizičko lice pokuša da se sa profila pretvori u Pravno lice, onda Platforma to ne prihvata.
 
 ---
 
@@ -702,4 +737,4 @@ Ova matrica evidentira sljedivost `DK-FS-002` prema `DK-BM-002` v1.0.3. Ne uvodi
 
 ---
 
-**Kraj dokumenta DK-FS-002 v1.0.4**
+**Kraj dokumenta DK-FS-002 v1.0.5**

@@ -21,7 +21,7 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    public function test_entrepreneur_profile_follows_natural_person_semantics_without_required_pib(): void
+    public function test_entrepreneur_profile_requires_business_name_pib_and_crps(): void
     {
         $user = $this->makeKorisnik([
             'user_type' => UserType::ENTREPRENEUR,
@@ -38,7 +38,30 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
 
         $this->assertStringContainsString('id="physicalPersonFields"', $html);
         $this->assertStringContainsString('id="residentialStatusGroup"', $html);
+        $this->assertStringContainsString('Da li ste registrovani kao preduzetnik?', $html);
         $this->assertStringContainsString('Poslovno ime', $html);
+        $this->assertStringContainsString('Broj registracije u CRPS', $html);
+        $this->assertStringNotContainsString('value="'.UserType::LIMITED_LIABILITY_COMPANY.'"', $html);
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('profile.update'), [
+                'first_name' => 'Petar',
+                'last_name' => 'Preduzetnik',
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'city' => $user->city,
+                'user_type' => UserType::PHYSICAL_PERSON,
+                'registers_as_entrepreneur' => '1',
+                'residential_status' => 'resident',
+                'jmb' => $user->jmb,
+                'entrepreneur_business_name' => 'Radnja Petar',
+            ])
+            ->assertSessionHasErrors(['pib', 'crps_number']);
+
+        $pib = $this->validPib(24);
+        $crps = $this->validCrps(1, 24);
 
         $this->actingAs($user)
             ->put(route('profile.update'), [
@@ -48,10 +71,13 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
                 'phone' => $user->phone,
                 'address' => $user->address,
                 'city' => $user->city,
-                'user_type' => UserType::ENTREPRENEUR,
+                'user_type' => UserType::PHYSICAL_PERSON,
+                'registers_as_entrepreneur' => '1',
                 'residential_status' => 'resident',
                 'jmb' => $user->jmb,
-                'company_name' => 'Radnja Petar',
+                'entrepreneur_business_name' => 'Radnja Petar',
+                'pib' => $pib,
+                'crps_number' => $crps,
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('dashboard'));
@@ -60,8 +86,7 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
         $this->assertTrue($user->isNaturalPerson());
         $this->assertTrue($user->isEntrepreneur());
         $this->assertFalse($user->isLegalEntity());
-        $this->assertNull($user->pib);
-        $this->assertSame('Radnja Petar', $user->company_name);
+        $this->assertSame($pib, $user->pib);
         $this->assertSame('resident', $user->residential_status);
     }
 
