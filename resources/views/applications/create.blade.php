@@ -1410,6 +1410,7 @@
     const knAllowsRazvoj = @json((bool) ($knAllowsRazvoj ?? false));
     const knLockedCommercialForm = @json($lockedCommercialForm ?? null);
     const knLockedBusinessStage = @json($lockedBusinessStage ?? null);
+    const knLockedRegistrationForm = @json($lockedRegistrationForm ?? null);
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1843,6 +1844,10 @@
             });
         });
 
+        function hasLockedRegistrationForm() {
+            return typeof knLockedRegistrationForm === 'string' && knLockedRegistrationForm.trim() !== '';
+        }
+
         // Funkcija za proveru da li su sva obavezna polja popunjena
         function checkIfObrazacComplete() {
             const form = document.getElementById('applicationForm');
@@ -1881,25 +1886,23 @@
                 const founderName = activeSection ? activeSection.querySelector('input[name="founder_name"]') : form.querySelector('input[name="founder_name"]:not([disabled])');
                 const directorName = activeSection ? activeSection.querySelector('input[name="director_name"]') : form.querySelector('input[name="director_name"]:not([disabled])');
                 const companySeat = activeSection ? activeSection.querySelector('input[name="company_seat"]') : form.querySelector('input[name="company_seat"]:not([disabled])');
-                const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="doo_jmbg"]') : form.querySelector('input[name="doo_jmbg"]:not([disabled])');
 
                 if (knLockedIsRegistered) {
                     if (!founderName || !founderName.value.trim()) return false;
                     if (!directorName || !directorName.value.trim()) return false;
                     if (!companySeat || !companySeat.value.trim()) return false;
+                    if (!hasLockedRegistrationForm()) return false;
                 }
-                if (knIsRegistered && (!registrationForm || !registrationForm.value)) return false;
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
             } else if (applicantTypeValue === 'preduzetnica') {
-                const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="preduzetnik_jmbg"]') : form.querySelector('input[name="preduzetnik_jmbg"]:not([disabled])');
                 const profileAddress = @json($userProfileAddress);
 
-                if (knIsRegistered && (!registrationForm || !registrationForm.value)) return false;
+                if (knLockedIsRegistered && !hasLockedRegistrationForm()) return false;
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
                 if (!profileAddress || !profileAddress.trim()) return false;
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;

@@ -40,6 +40,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertStringContainsString('id="fizickoLiceFields"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije PREDUZETNIK)');
         $this->assertAdditionalDataSectionHidden($html);
+        $this->assertFrontendUsesLockedRegistrationForm($html, UserType::ENTREPRENEUR);
 
         $this->actingAs($user)
             ->from(route('applications.create', $competition))
@@ -88,6 +89,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertStringNotContainsString('id="applicant_type_ostalo"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije '.strtoupper($form).')');
         $this->assertAdditionalDataSectionHidden($html);
+        $this->assertFrontendUsesLockedRegistrationForm($html, $label);
 
         $other = $form === 'doo' ? 'ad' : 'doo';
         $otherLabel = $other === 'doo' ? UserType::LIMITED_LIABILITY_COMPANY : UserType::JOINT_STOCK_COMPANY;
@@ -221,6 +223,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertStringContainsString('id="obrazac1a"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije PREDUZETNIK)');
         $this->assertAdditionalDataSectionVisible($html);
+        $this->assertFrontendUsesLockedRegistrationForm($html, UserType::ENTREPRENEUR);
     }
 
     /**
@@ -265,6 +268,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertStringContainsString('name="company_seat"', $html);
         $this->assertStringContainsString('name="crps_number"', $html);
         $this->assertStringContainsString('name="pib"', $html);
+        $this->assertFrontendUsesLockedRegistrationForm($html, $label);
     }
 
     public function test_two_start_context_tokens_stay_independent(): void
@@ -555,6 +559,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="director_name"/', $html);
         $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="company_seat"/', $html);
         $this->assertAdditionalDataSectionHidden($html);
+        $this->assertFrontendUsesLockedRegistrationForm($html, $label);
 
         $applicantType = $form === 'doo' ? 'doo' : 'ostalo';
         $payload = $this->storePayloadWithoutStage([
@@ -1033,6 +1038,27 @@ class KnV1ApplicationStartContextTest extends TestCase
     {
         $this->assertMatchesRegularExpression(
             '/id="kn_locked_business_stage"[^>]*value="'.preg_quote($stage, '/').'"/',
+            $html
+        );
+    }
+
+    /**
+     * Server-rendered JS contract for locked registration_form completeness.
+     * PHP Feature tests do not execute browser JS; "Sačuvaj i nastavi" visibility
+     * remains a manual production smoke after required fields are filled.
+     */
+    private function assertFrontendUsesLockedRegistrationForm(string $html, string $form): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/id="kn_locked_registration_form"[^>]*value="'.preg_quote($form, '/').'"/',
+            $html
+        );
+        $this->assertStringContainsString('const knLockedRegistrationForm = '.json_encode($form), $html);
+        $this->assertStringContainsString('function hasLockedRegistrationForm()', $html);
+        $this->assertStringContainsString('if (knLockedIsRegistered && !hasLockedRegistrationForm()) return false;', $html);
+        $this->assertStringContainsString('if (!hasLockedRegistrationForm()) return false;', $html);
+        $this->assertStringNotContainsString(
+            "form.querySelector('select[name=\"registration_form\"]:not([disabled])')",
             $html
         );
     }
