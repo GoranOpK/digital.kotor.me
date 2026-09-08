@@ -293,6 +293,141 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
 
         $registeredPreduzetnicaZapocinjanje = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', true);
         $this->assertContains('crps_resenje', $registeredPreduzetnicaZapocinjanje);
+        $this->assertContains('uvjerenje_opstina_nepokretnost', $a);
+    }
+
+    public function test_unregistered_fl_zapocinjanje_instance_requires_property_tax_not_registration_docs(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'is_registered' => false,
+        ]);
+
+        $required = $application->getRequiredDocuments();
+        $strict = $application->getStrictlyRequiredDocuments();
+        $preview = Application::getRequiredDocumentsForType('fizicko_lice', 'započinjanje', false);
+
+        $this->assertSame($preview, $required);
+        $this->assertContains('uvjerenje_opstina_nepokretnost', $required);
+        $this->assertContains('uvjerenje_opstina_nepokretnost', $strict);
+        $this->assertContains('licna_karta', $strict);
+        $this->assertContains('potvrda_neosudjivanost', $strict);
+        $this->assertContains('uvjerenje_opstina_porezi', $strict);
+        $this->assertContains('predracuni_nabavka', $strict);
+
+        foreach (['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun'] as $documentType) {
+            $this->assertNotContains($documentType, $required);
+            $this->assertNotContains($documentType, $strict);
+        }
+
+        $this->assertContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $required);
+        $this->assertNotContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $strict);
+    }
+
+    public function test_registered_preduzetnica_zapocinjanje_instance_keeps_full_document_set(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'is_registered' => true,
+        ]);
+
+        $required = $application->getRequiredDocuments();
+        $preview = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', true);
+
+        $this->assertSame($preview, $required);
+        foreach ([
+            'licna_karta',
+            'crps_resenje',
+            'pib_resenje',
+            'pdv_resenje',
+            'potvrda_neosudjivanost',
+            'uvjerenje_opstina_porezi',
+            'uvjerenje_opstina_nepokretnost',
+            'dokaz_ziro_racun',
+            'predracuni_nabavka',
+        ] as $documentType) {
+            $this->assertContains($documentType, $required);
+            $this->assertContains($documentType, $application->getStrictlyRequiredDocuments());
+        }
+
+        $this->assertContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $required);
+        $this->assertNotContains(Application::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $application->getStrictlyRequiredDocuments());
+    }
+
+    public function test_registered_preduzetnica_zapocinjanje_labels_drop_conditional_registration_wording(): void
+    {
+        $application = new Application([
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'is_registered' => true,
+        ]);
+
+        $labels = $application->getDocumentLabelsMap();
+        $poLabels = Application::registeredPreduzetnicaStartingBusinessDocumentLabels();
+
+        foreach ($poLabels as $documentType => $label) {
+            $this->assertSame($label, $labels[$documentType]);
+            $this->assertStringNotContainsString('ukoliko ima registrovanu djelatnost', $labels[$documentType]);
+        }
+
+        $this->assertStringContainsString('PDV obveznik', $labels['pdv_resenje']);
+        $this->assertStringContainsString('nije PDV obveznik', $labels['pdv_resenje']);
+    }
+
+    public function test_unregistered_fl_application_show_lists_property_tax_and_hides_registration_docs(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(91)]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'is_registered' => false,
+        ]));
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="uvjerenje_opstina_nepokretnost"', $html);
+        $this->assertStringContainsString('Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost', $html);
+        $this->assertStringNotContainsString('value="crps_resenje"', $html);
+        $this->assertStringNotContainsString('value="pib_resenje"', $html);
+        $this->assertStringNotContainsString('value="pdv_resenje"', $html);
+        $this->assertStringNotContainsString('value="dokaz_ziro_racun"', $html);
+    }
+
+    public function test_registered_preduzetnica_application_show_uses_po_registration_document_labels(): void
+    {
+        $user = $this->makeKorisnik([
+            'jmb' => $this->validJmb(92),
+            'user_type' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(92),
+        ]);
+        $competition = $this->openCompetition();
+        $application = Application::create($this->completeObrazacAttributes($user, $competition, [
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'is_registered' => true,
+            'registration_form' => UserType::ENTREPRENEUR,
+            'pib' => $this->validPib(92),
+            'crps_number' => $this->validCrps(1, 92),
+        ]));
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('ukoliko ima registrovanu djelatnost', $html);
+        $this->assertStringContainsString('Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)', $html);
+        $this->assertStringContainsString('Rješenje o registraciji kod PJ Poreske uprave', $html);
+        $this->assertStringContainsString('Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik', $html);
+        $this->assertStringContainsString('Dokaz o broju poslovnog žiro računa', $html);
+        $this->assertStringContainsString('value="crps_resenje"', $html);
+        $this->assertStringContainsString('value="uvjerenje_opstina_nepokretnost"', $html);
     }
 
     public function test_competition_show_unregistered_fl_cannot_choose_razvoj(): void

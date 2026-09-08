@@ -409,6 +409,12 @@
                         'predracuni_nabavka' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku',
                         'ostalo' => 'Ostalo',
                     ];
+                    $documentLabels = \App\Models\Application::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+                        $documentLabels,
+                        $application->applicant_type,
+                        $application->business_stage,
+                        $application->is_registered
+                    );
                     
                     // Za članove komisije prikaži tabelu sa svim potrebnim dokumentima
                     if ($userRole === 'komisija') {

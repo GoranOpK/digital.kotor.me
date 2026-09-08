@@ -134,7 +134,7 @@ class CompetitionsController extends Controller
         }
 
         // Mapiraj dokumente u ljudski čitljive nazive
-        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType, $previewApplicantType) {
+        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType, $previewApplicantType, $knIsRegisteredBusiness) {
             $label = $documentLabels[$docType] ?? $docType;
             $labelType = $previewApplicantType ?: $applicantType;
             
@@ -195,6 +195,17 @@ class CompetitionsController extends Controller
                 }
             }
             
+            if (\App\Models\Application::usesRegisteredPreduzetnicaStartingBusinessLabels(
+                $previewApplicantType ?: $applicantType,
+                'započinjanje',
+                $knIsRegisteredBusiness
+            )) {
+                $poLabels = \App\Models\Application::registeredPreduzetnicaStartingBusinessDocumentLabels();
+                if (isset($poLabels[$docType])) {
+                    $label = $poLabels[$docType];
+                }
+            }
+
             return $label;
         }, $defaultDocuments);
 

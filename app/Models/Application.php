@@ -11,6 +11,49 @@ class Application extends Model
 
     public const DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI = 'potvrda_zavod_nezaposleni';
 
+    /**
+     * PO-adopted labels for registered Preduzetnica / započinjanje.
+     * Other flows keep existing conditional wording.
+     *
+     * @return array<string, string>
+     */
+    public static function registeredPreduzetnicaStartingBusinessDocumentLabels(): array
+    {
+        return [
+            'crps_resenje' => 'Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)',
+            'pib_resenje' => 'Rješenje o registraciji kod PJ Poreske uprave',
+            'pdv_resenje' => 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik',
+            'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa',
+        ];
+    }
+
+    public static function usesRegisteredPreduzetnicaStartingBusinessLabels(
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): bool {
+        return $applicantType === 'preduzetnica'
+            && $businessStage === 'započinjanje'
+            && (bool) $isRegistered;
+    }
+
+    /**
+     * @param  array<string, string>  $labels
+     * @return array<string, string>
+     */
+    public static function overlayRegisteredPreduzetnicaStartingBusinessLabels(
+        array $labels,
+        ?string $applicantType,
+        ?string $businessStage,
+        mixed $isRegistered
+    ): array {
+        if (!self::usesRegisteredPreduzetnicaStartingBusinessLabels($applicantType, $businessStage, $isRegistered)) {
+            return $labels;
+        }
+
+        return array_merge($labels, self::registeredPreduzetnicaStartingBusinessDocumentLabels());
+    }
+
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -708,7 +751,12 @@ class Application extends Model
         $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
         $documentLabels['ostalo'] = 'Ostalo';
 
-        return $documentLabels;
+        return self::overlayRegisteredPreduzetnicaStartingBusinessLabels(
+            $documentLabels,
+            $this->applicant_type,
+            $this->business_stage,
+            $this->is_registered
+        );
     }
 
     private static function insertZavodNezaposleniDocument(array $documents, string $applicantType, ?string $businessStage): array
@@ -862,16 +910,17 @@ class Application extends Model
             // Fizičko lice rezident - prijava kao Preduzetnica koja započinje/razvija - ista lista kao preduzetnica
             if ($this->business_stage) {
                 if ($this->business_stage === 'započinjanje') {
-$documents = [
-                'licna_karta',
-                'crps_resenje',
-                'pib_resenje',
-                'pdv_resenje',
-                'potvrda_neosudjivanost',
-                'uvjerenje_opstina_porezi',
-                'dokaz_ziro_racun',
-                'predracuni_nabavka',
-            ];
+                    $documents = [
+                        'licna_karta',
+                        'crps_resenje',
+                        'pib_resenje',
+                        'pdv_resenje',
+                        'potvrda_neosudjivanost',
+                        'uvjerenje_opstina_porezi',
+                        'uvjerenje_opstina_nepokretnost',
+                        'dokaz_ziro_racun',
+                        'predracuni_nabavka',
+                    ];
                     if (!$isRegistered) {
                         $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
                     }
