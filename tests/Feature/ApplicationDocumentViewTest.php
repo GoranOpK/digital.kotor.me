@@ -151,18 +151,81 @@ class ApplicationDocumentViewTest extends TestCase
         $response->assertNotFound();
     }
 
+    public function test_unrelated_user_cannot_view_another_users_document(): void
+    {
+        [$owner, $application, $document] = $this->createApplicationWithDocument([
+            'status' => 'submitted',
+            'deadline_passed' => true,
+            'owner_role' => 'korisnik',
+        ]);
+
+        $otherUser = $this->userWithRole('korisnik');
+
+        $response = $this->actingAs($otherUser)->get(route('applications.document.view', [
+            'application' => $application,
+            'document' => $document,
+        ]));
+
+        $response->assertForbidden();
+    }
+
+    public function test_konkurs_admin_cannot_view_document_while_competition_is_published(): void
+    {
+        [$owner, $application, $document] = $this->createApplicationWithDocument([
+            'status' => 'submitted',
+            'deadline_passed' => true,
+            'owner_role' => 'korisnik',
+            'competition_status' => 'published',
+        ]);
+
+        $konkursAdmin = $this->userWithRole('konkurs_admin');
+
+        $this->actingAs($konkursAdmin)
+            ->get(route('admin.applications.show', $application))
+            ->assertOk();
+
+        $this->actingAs($konkursAdmin)
+            ->get(route('applications.document.view', [
+                'application' => $application,
+                'document' => $document,
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_konkurs_admin_can_view_document_when_competition_is_closed(): void
+    {
+        [$owner, $application, $document] = $this->createApplicationWithDocument([
+            'status' => 'submitted',
+            'deadline_passed' => true,
+            'owner_role' => 'korisnik',
+            'competition_status' => 'closed',
+        ]);
+
+        $konkursAdmin = $this->userWithRole('konkurs_admin');
+
+        $this->actingAs($konkursAdmin)
+            ->get(route('applications.document.view', [
+                'application' => $application,
+                'document' => $document,
+            ]))
+            ->assertOk();
+    }
+
+    private function userWithRole(string $roleName): User
+    {
+        return User::factory()->create([
+            'role_id' => Role::where('name', $roleName)->firstOrFail()->id,
+            'activation_status' => 'active',
+        ]);
+    }
+
     /**
-     * @param  array{status: string, deadline_passed: bool, with_commission_member?: bool}  $options
+     * @param  array{status: string, deadline_passed: bool, with_commission_member?: bool, owner_role?: string, competition_status?: string}  $options
      * @return array{0: User, 1: Application, 2: ApplicationDocument, 3?: User, 4?: Commission}
      */
     private function createApplicationWithDocument(array $options): array
     {
-        $applicantRole = Role::where('name', 'konkurs_admin')->firstOrFail();
-
-        $owner = User::factory()->create([
-            'role_id' => $applicantRole->id,
-            'activation_status' => 'active',
-        ]);
+        $owner = $this->userWithRole($options['owner_role'] ?? 'konkurs_admin');
 
         $commission = Commission::create([
             'name' => 'Test komisija '.uniqid(),
@@ -186,7 +249,7 @@ class ApplicationDocumentViewTest extends TestCase
             'start_date' => $startDate,
             'end_date' => $endDate,
             'type' => 'zensko',
-            'status' => 'published',
+            'status' => $options['competition_status'] ?? 'published',
             'year' => (int) now()->year,
             'deadline_days' => 20,
             'published_at' => now()->subDays(30),

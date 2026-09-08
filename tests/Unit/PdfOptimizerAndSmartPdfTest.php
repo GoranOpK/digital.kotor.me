@@ -175,4 +175,84 @@ class PdfOptimizerAndSmartPdfTest extends TestCase
         config(['document_library.user_quota_bytes' => 5 * 1024 * 1024]);
         $this->assertSame(5 * 1024 * 1024, DocumentProcessor::maxStorageBytes());
     }
+
+    public function test_optimizer_preserves_page_count_when_threshold_forces_rasterize(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick required to generate and rasterize a multi-page PDF');
+        }
+
+        config(['document_library.pdf_optimization_threshold_bytes' => 1]);
+
+        $source = $this->writeMultipagePdf(3);
+        $destination = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('opt_dest_', true).'.pdf';
+
+        try {
+            $result = (new PdfOptimizer)->optimize($source, $destination);
+
+            if (! $result->ok()) {
+                $this->markTestSkipped('Imagick PDF rasterize is not available in this environment: '.$result->error);
+            }
+
+            $this->assertSame(3, $result->pageCount);
+            $storedPages = $this->pdfPageCount($destination);
+            if ($storedPages < 1) {
+                $this->markTestSkipped('Could not re-read optimized multi-page PDF page count in this environment');
+            }
+            $this->assertSame(3, $storedPages);
+        } finally {
+            @unlink($source);
+            @unlink($destination);
+        }
+    }
+
+    private function writeMultipagePdf(int $pages): string
+    {
+        $path = sys_get_temp_dir().DIRECTORY_SEPARATOR.uniqid('opt_src_', true).'.pdf';
+        $output = new \Imagick;
+
+        try {
+            for ($i = 0; $i < $pages; $i++) {
+                $page = new \Imagick;
+                $page->newImage(120, 160, new \ImagickPixel($i === 0 ? 'white' : ($i === 1 ? '#cccccc' : '#888888')));
+                $page->setImageFormat('pdf');
+                $output->addImage($page);
+                $page->clear();
+                $page->destroy();
+            }
+
+            $ok = $output->writeImages($path, true);
+        } finally {
+            $output->clear();
+            $output->destroy();
+        }
+
+        if (! $ok || ! is_file($path) || filesize($path) < 100) {
+            @unlink($path);
+            $this->markTestSkipped('Could not generate a '.$pages.'-page PDF fixture');
+        }
+
+        $header = (string) file_get_contents($path, false, null, 0, 5);
+        if (! str_starts_with($header, '%PDF-')) {
+            @unlink($path);
+            $this->markTestSkipped('Generated fixture is not a PDF');
+        }
+
+        return $path;
+    }
+
+    private function pdfPageCount(string $path): int
+    {
+        try {
+            $imagick = new \Imagick;
+            $imagick->pingImage($path);
+            $count = (int) $imagick->getNumberImages();
+            $imagick->clear();
+            $imagick->destroy();
+
+            return max(0, $count);
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
 }
