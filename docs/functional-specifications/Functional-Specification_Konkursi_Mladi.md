@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.1
+**Verzija:** 1.0.2
 **Datum:** 2026-09-08
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v0.1.45** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (U IZRADI)
+* Registar oznaka: **KN-RG-001 v1.0.13** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v1.0.1** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN)
-* Poslovni profil mladih: **KN-BM-002 v1.0.3** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.4** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v0.1.22** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (U IZRADI) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
@@ -40,6 +40,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.7 | 2026-09-07 | Popunjena Poglavlja 24–28 objedinjenim zabranama, granicom V1, indeksom prihvatnih kriterijuma, matricom sljedivosti i odloženim temama; dokument ostaje U IZRADI. |
 | 1.0.0 | 2026-09-07 | USVOJEN — Završena i odobrena prva funkcionalna specifikacija profila konkursa za podršku preduzetništvu mladih. Funkcionalno su razrađena Poglavlja 1–28, poslovna pravila BM-ML-001–BM-ML-058 i granica V1. Detalji de minimis dokumentacije i službenih akata ostaju izričito odloženi van granice verzije 1.0.0. |
 | 1.0.1 | 2026-09-08 | KN-PATCH-FS-007 — Funkcionalni tok prijave mladih usklađen sa zajedničkim katalogom statusa draft, submitted, evaluated, approved i rejected. Potpunost, prigovor, eliminatorni razlozi, ocjene, bodovi, rang, raspodjela i arhiviranje ostaju odvojene funkcionalne činjenice; rejected zbog nepotpunosti nastaje tek nakon odbijenog prigovora ili isteka roka bez prigovora. |
+| 1.0.2 | 2026-09-08 | KN-PATCH-FS-008 — Usklađeni izbor namjere, pravnog oblika, poslovne faze, obrazaca M1a/M1b i četiri dokumentaciona paketa. Privredno društvo obuhvata DOO, AD, OD i KD. Neregistrovano fizičko lice bira namjeru; registrovani preduzetnik ili društvo bira fazu koju Komisija provjerava. Nepodržani identitet se ne svrstava u `ostalo`. |
 
 Napomena:
 
@@ -172,7 +173,7 @@ Dokument se odnosi na **V1**.
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.2.
+Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.4.
 
 Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.1.
 
@@ -315,9 +316,9 @@ Kada se `KN-FS-001` kreira, `KN-FS-002` će se kontrolisano uskladiti ako bude p
 |----|-------|---------|--------|-------------------|
 | DK-DS-001 | Digital Kotor Documentation Standard v1 | 1.0.0 | USVOJENO | Document ID, tipovi, statusi, sljedivost, folderi |
 | METHODOLOGY.md | Metodologija dokumentacije | 1.0 | AKTIVAN | FS se piše prema BM, ne prema kodu; BM → FS → TS |
-| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 0.1.45 | U IZRADI | kanonski Document ID i evidencija ovog dokumenta |
+| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.13 | USVOJENO | kanonski Document ID i evidencija ovog dokumenta |
 | KN-BM-001 | Zajednički poslovni model modula Konkursi | 1.0.1 | USVOJEN | zajednička pravila `BM-KN-001`–`BM-KN-015` |
-| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.2 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
+| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.4 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
 | KN-BM-003 | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | 1.0.7 | USVOJEN | samo uporedni BM; nije izvor pravila mladih |
 | KN-FS-001 | Zajedničke funkcionalnosti modula Konkursi | — | planiran; fajl nije kreiran | planirani zajednički FS; ne ovlašćuje izmišljanje zajedničkih pravila |
 | KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 0.1.22 | U IZRADI | samo strukturni/uporedni FS |
@@ -1461,9 +1462,9 @@ Prijava se može kreirati samo:
 * **dok rok traje**;
 * od **prijavljenog podnosioca**;
 * u okviru konkretne godišnje instance i konkretnog Poziva (`BM-ML-019`; `BM-ML-033`);
-* sa **već utvrđenim** pravnim oblikom i poslovnom kategorijom započinjanje/razvoj (odluka F-06).
+* kada je identitet podržan za ovaj profil i kada su namjera, pravni oblik i poslovna faza utvrđeni prema odluci F-06 i `BM-ML-009`–`BM-ML-010`.
 
-Ako nema dovoljno potvrđenih podataka za utvrđivanje pravnog oblika ili kategorije, Platforma **ne** pretpostavlja vrijednost, **ne** prikazuje proizvoljan obrazac ni paket i **ne** dozvoljava konačno podnošenje. Prikazuje se jasno obavještenje da kategoriju nije moguće utvrditi. Postupak izmjene korisničkog naloga **nije** određen ovim poglavljem.
+Ako identitet nije podržan, ili ako namjera, pravni oblik ili poslovna faza nijesu utvrđeni, Platforma **ne** pretpostavlja vrijednost, **ne** svrstava identitet u youth kategoriju `ostalo`, **ne** prikazuje proizvoljan obrazac ni paket i **ne** dozvoljava kreiranje ni konačno podnošenje. Prikazuje se jasna poruka. Postupak izmjene korisničkog naloga **nije** određen ovim poglavljem.
 
 Prijava pripada tačno jednom Pozivu. Nacrt **nije** podnesena prijava i **nije** dostupan Komisiji (`BM-ML-021`).
 
@@ -1494,20 +1495,53 @@ Dok je prijava `U pripremi` i rok traje, podnosilac može (`BM-ML-021`):
 * obrisati nacrt;
 * pokrenuti konačno podnošenje.
 
+Namjera neregistrovanog fizičkog lica, tip prijave, poslovna faza i M1 obrazac čuvaju se uz nacrt i ostaju zaključani. Pri ponovnom otvaranju nacrta Platforma može ponovo pročitati aktuelni `is_registered` iz korisničkog identiteta. Prikaz dodatnih podataka prilagođava se aktuelnom statusu registracije. Namjera, tip prijave, poslovna faza i M1 obrazac **ne** mijenjaju se automatski. **Ne** uvodi se automatsko brisanje nacrta niti obavezno kreiranje novog nacrta. Ako živi `is_registered` i sačuvani tok naprave kombinaciju za koju nije određena posebna validacija, prikaz prati aktuelni status registracije, a zaključane činjenice ostaju nepromijenjene.
+
 ## 7.5. Kategorije podnosilaca
 
 Funkcionalno se razdvajaju (`BM-ML-009`; `BM-ML-010`; odluka F-06):
 
-* pravni oblik: fizičko lice koje tek planira registraciju; registrovani preduzetnik; DOO;
-* poslovna kategorija: započinjanje poslovanja; razvoj poslovanja.
+* pravni oblik: neregistrovano fizičko lice; registrovani preduzetnik; registrovano privredno društvo (DOO, AD, OD ili KD);
+* namjera neregistrovanog fizičkog lica: planirana registracija kao preduzetnik ili planirano osnivanje privrednog društva;
+* poslovna faza: započinjanje poslovanja; razvoj poslovanja.
 
-Peta pravna kategorija **nije** uvedena. Fizičko lice koje tek planira registraciju koristi dokumentacioni paket za započinjanje preduzetnika (`BM-ML-029`).
+Youth kategorija `ostalo` **nije** zamjena za privredno društvo. Nevladino udruženje, nevladina fondacija, sportska organizacija i dio stranog privrednog društva **ne** klasifikuju se automatski kao privredno društvo podobno za ovaj profil.
 
-**Pravni oblik** preuzima se sa potvrđenog korisničkog naloga. Podnosilac ga **ne** bira unutar prijave.
+### A. Neregistrovano fizičko lice
 
-**Poslovna kategorija** započinjanje/razvoj utvrđuje se prije kreiranja odnosno prikaza prijavnog obrasca i dokumentacionog paketa, prema potvrđenim podacima povezanim sa nalogom i prijavom i prema stanju u trenutku raspisivanja Javnog konkursa (`BM-ML-010`). Podnosilac je **ne** mijenja proizvoljno u započetoj prijavi.
+Prije kreiranja prijave bira namjeru:
 
-Kategorija određuje odgovarajući dokumentacioni paket. **Ne** uvodi se automatska integracija sa CRPS-om ni drugim spoljnim registrom. **Ne** izmišlja se algoritam pribavljanja podataka koji nije potvrđen.
+* planira registraciju kao preduzetnik → **M1a** i paket za započinjanje preduzetnika;
+* planira osnivanje privrednog društva → **M1b** i paket za društvo koje započinje poslovanje. Platforma zaključava M1b i fazu **započinjanje**. PIB, CRPS broj, registrovano sjedište, formalni osnivač i formalni izvršni direktor **ne** prikazuju se i **ne** zahtijevaju. Ostala primjenjiva M1b polja ostaju. Status kompletnosti **ne** smije biti negativan samo zbog podataka koji nastaju registracijom. Platforma **ne** predstavlja planirano društvo kao već registrovano. Provjera pred ugovor ostaje van V1 (`BM-ML-011`).
+
+Namjera se čuva uz prijavu. Poslovna faza je **započinjanje**. Poseban peti paket se **ne** uvodi (`BM-ML-029`; `BM-ML-011`).
+
+### B. Registrovani preduzetnik
+
+Pravni oblik preuzima se iz korisničkog identiteta. Korisnik ga **ne** može krivotvoriti ni proizvoljno promijeniti. Obrazac je **M1a**. Podnosilac bira započinjanje ili razvoj. Komisija provjerava da li izabrana faza odgovara Odluci i priloženoj dokumentaciji.
+
+### C. Registrovano privredno društvo
+
+Pravni oblik preuzima se iz korisničkog identiteta. Obuhvat je DOO, AD, OD i KD. Obrazac je **M1b**. Podnosilac bira započinjanje ili razvoj. Komisija provjerava izbor. Odgovarajući blok podataka registrovanog društva (PIB, CRPS, sjedište, osnivač, izvršni direktor i nosilac) **ostaje obavezan**.
+
+### D. Nepodržani identitet
+
+Platforma **ne** svrstava identitet proizvoljno u `ostalo`, **ne** prikazuje proizvoljan obrazac ni paket i **blokira** kreiranje i podnošenje za ovaj profil, uz jasnu poruku.
+
+**Registrovani pravni oblik** preuzima se sa potvrđenog korisničkog naloga. Podnosilac ga **ne** bira unutar prijave i **ne** može ga promijeniti u nacrtu.
+
+**Poslovna faza** u V1:
+
+* neregistrovano fizičko lice automatski pripada započinjanju;
+* registrovani preduzetnik ili privredno društvo bira započinjanje ili razvoj **prije** kreiranja prijave;
+* izbor se čuva uz prijavu;
+* Platforma **ne** računa automatski starost biznisa;
+* **ne** uvodi se CRPS integracija niti novo obavezno identity polje datuma registracije;
+* **ne** izjednačava se „trenutak raspisivanja“ sa datumom objavljivanja ako izvor to izričito ne određuje;
+* **ne** uvodi se obračun 365 dana, vremenska zona ni dodatna formula;
+* ručni izbor korisnika **nije** konačna pravna odluka Komisije.
+
+Poslovna faza određuje odgovarajući dokumentacioni paket. Nakon kreiranja prijave podnosilac **ne** mijenja namjeru, pravni oblik, obrazac ni fazu proizvoljno u započetoj prijavi.
 
 Kategorija utiče na obrazac M1, dokumentacioni paket i finansijska ograničenja, ali **ne** mijenja osnovni identitet podnosioca.
 
@@ -1517,17 +1551,19 @@ Kategorija utiče na obrazac M1, dokumentacioni paket i finansijska ograničenja
 * privredno društvo mora imati sjedište na teritoriji opštine Kotor;
 * podnosilac, odnosno nosilac biznisa kada se prijavljuje društvo, mora pripadati starosnoj grupi 18–30 godina, prema `BM-ML-009`.
 
-Ovi uslovi se evidentiraju. Platforma **ne** donosi automatsku pravnu odluku o podobnosti.
+Platforma evidentira prebivalište odnosno sjedište, adresu i grad. Može prikazati upozorenje kada podatak nedostaje ili ukazuje da nije Kotor. Platforma **ne** odbija prijavu automatski samo na osnovu adrese. Komisija prema dokumentaciji odlučuje o ispunjenosti teritorijalnog uslova.
 
-### DOO, nosilac i ovlašćeno lice
+### Privredno društvo, nosilac i ovlašćeno lice
 
-Kod prijave društva razlikuju se (`BM-ML-012`; `BM-ML-013`):
+Kod prijave **registrovanog** društva razlikuju se (`BM-ML-012`; `BM-ML-013`):
 
-* **DOO** kao formalni podnosilac;
-* **nosilac biznisa** — osnivač ili jedan od osnivača i istovremeno izvršni direktor; preko njega se provjeravaju lični uslovi, uključujući starost;
-* **ovlašćeno lice** koje u ime DOO popunjava i podnosi prijavu.
+* **privredno društvo** (DOO, AD, OD ili KD) kao formalni podnosilac;
+* **osnivač**, **izvršni direktor** i **nosilac biznisa**, koji se evidentiraju u M1b odnosno prijavi; nosilac mora biti osnivač ili jedan od osnivača i istovremeno izvršni direktor; preko njega se provjeravaju lični uslovi, uključujući starost;
+* **ovlašćeno lice** koje u ime društva popunjava i podnosi prijavu.
 
-Nosilac i ovlašćeno lice **mogu** biti ista osoba, ali se to **ne pretpostavlja**. Uloge se vode odvojeno.
+Ovlašćeno lice korisničkog naloga **nije** automatski nosilac biznisa. Nosilac i ovlašćeno lice **mogu** biti ista osoba, ali se to **ne pretpostavlja**. Uloge se vode odvojeno. Platforma kontroliše popunjenost, ali **ne** donosi konačni pravni zaključak. Komisija iz dokumentacije provjerava `BM-ML-012`. **Ne** uvodi se nova identity uloga niti CRPS integracija u V1.
+
+Kod neregistrovanog fizičkog lica koje planira društvo, M1b **ne** prikazuje i **ne** zahtijeva PIB, CRPS, registrovano sjedište, formalnog osnivača ni formalnog izvršnog direktora. Pravilo o nosiocu ostaje poslovni uslov Odluke; formalni podaci se zahtijevaju kada društvo već postoji kao registrovani podnosilac.
 
 Ovaj dokument **ne** uvodi obavezno punomoćje ni elektronski potpis, jer BM to nije odredio.
 
@@ -1544,35 +1580,33 @@ Na drugom Pozivu (`BM-ML-014`; `BM-ML-052`):
 
 Platforma **ne** uvodi dugme ni funkciju automatskog kopiranja prethodne prijave.
 
-## 7.7. Pravni oblik i poslovna kategorija — odluka F-06
+## 7.7. Pravni oblik, namjera i poslovna faza — odluka F-06
 
-Odobreno pravilo F-06 zatvara raniju nedoumicu o ručnoj promjeni kategorije u nacrtu. Promjena pravnog oblika ili poslovne kategorije unutar prijave **nije** dozvoljena.
+Odobreno pravilo F-06 zatvara raniju nedoumicu da korisnik nikada ne bira poslovnu fazu i da se obrazac određuje samo kao M1a ili samo kao M1b za DOO. Funkcionalni princip ženskog toka primjenjuje se ovdje, uz pravila mladih iz `KN-BM-002`.
 
-**Pravni oblik:**
+**Prije kreiranja prijave:**
 
-* preuzima se sa potvrđenog korisničkog naloga;
-* podnosilac ga **ne** bira unutar prijave;
-* podnosilac ga **ne** može promijeniti u nacrtu prijave;
-* fizičko lice koje planira registraciju i registrovani preduzetnik koriste **M1a**;
-* DOO koristi **M1b**;
-* Platforma automatski prikazuje odgovarajući obrazac;
+* neregistrovano fizičko lice bira namjeru: budući preduzetnik ili planirano privredno društvo;
+* registrovani preduzetnik ili privredno društvo bira poslovnu fazu započinjanje ili razvoj;
+* registrovani pravni oblik preuzima se iz identiteta i **ne** krivotvori se.
+
+**Nakon kreiranja prijave:**
+
+* namjera, tip prijave, poslovna faza i obrazac čuvaju se uz nacrt;
+* podnosilac ih **ne** mijenja unutar prijave;
+* **ne** uvodi se funkcija promjene kategorije sa brisanjem, skrivanjem ili prenosom prethodnih podataka;
+* pri ponovnom otvaranju nacrta aktuelni `is_registered` može se ponovo pročitati; prikaz dodatnih podataka prati taj status; namjera, tip prijave, poslovna faza i M1 obrazac se **ne** mijenjaju automatski; paket se **ne** mijenja automatski.
+
+**Obrazac:**
+
+* neregistrovano fizičko lice koje planira registraciju kao preduzetnik i registrovani preduzetnik koriste **M1a**;
+* neregistrovano fizičko lice koje planira osnivanje privrednog društva i registrovano privredno društvo (DOO, AD, OD ili KD) koriste **M1b**;
+* Platforma prikazuje odgovarajući obrazac;
 * podnosilac **ne** može ručno prebacivati M1a i M1b.
 
-**Poslovna kategorija** (započinjanje ili razvoj):
-
-* utvrđuje se **prije** kreiranja odnosno prikaza prijavnog obrasca i dokumentacionog paketa;
-* koristi potvrđene podatke povezane sa korisničkim nalogom i prijavom;
-* podnosilac je **ne** mijenja proizvoljno u započetoj prijavi;
-* određuje odgovarajući dokumentacioni paket;
-* **ne** uvodi se automatska integracija sa CRPS-om ili drugim spoljnim registrom;
-* **ne** izmišlja se algoritam pribavljanja podataka koji nije potvrđen;
-* ako nema dovoljno potvrđenih podataka, Platforma **ne** pretpostavlja kategoriju niti prikazuje proizvoljan paket.
-
-Prijava se kreira sa već utvrđenim pravnim oblikom i kategorijom. Za drugu kategoriju **nije** dozvoljeno prebacivanje postojeće prijave.
+Za drugi Poziv namjera, oblik i faza se **ponovo** utvrđuju. Prebacivanje postojeće prijave u drugu kategoriju **nije** dozvoljeno.
 
 Ako se osnovni potvrđeni podaci korisničkog naloga moraju ispraviti, to **nije** promjena kategorije unutar prijave i **ne** razrađuje se ovim korakom. Postupak izmjene korisničkog naloga **nije** određen.
-
-**Ne** uvodi se funkcija promjene kategorije sa brisanjem, skrivanjem ili prenosom prethodnih podataka, jer promjena kategorije unutar nacrta nije dozvoljena.
 
 Izvor: `BM-ML-009`; `BM-ML-010`; `BM-ML-025`; `BM-ML-029`; odluka F-06.
 
@@ -1582,12 +1616,12 @@ Osnovni statusi ovog poglavlja su `draft` / `U pripremi` i `submitted` / `Podnes
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prijava | — | kreiranje | prijavljen podnosilac; Poziv objavljen; rok traje; nema postojeće prijave istog podnosioca na tom Pozivu; potvrđen pravni oblik naloga; utvrđena kategorija započinjanje/razvoj | `draft` / U pripremi; prikazani odgovarajući M1 obrazac i dokumentacioni paket | podnosilac / sistem | `BM-ML-019`; `BM-ML-014`; `BM-ML-020`; `BM-ML-025`; F-06 |
-| Prijava | — | kreiranje ili prikaz obrasca i paketa | potrebni potvrđeni podaci nijesu dostupni; kategorija se ne može utvrditi | nema proizvoljnog paketa ni obrasca; konačno podnošenje nije dozvoljeno; obavještenje da kategoriju nije moguće utvrditi | sistem | `BM-ML-009`; `BM-ML-010`; F-06 |
-| Prijava | `draft` | uređivanje nacrta | rok traje; vlasnik prijave | ostaje `draft`; pravni oblik, M1 i kategorija se ne mijenjaju | podnosilac | `BM-ML-021`; F-06 |
+| Prijava | — | kreiranje | prijavljen podnosilac; Poziv objavljen; rok traje; nema postojeće prijave istog podnosioca na tom Pozivu; podržan identitet; namjera, pravni oblik i poslovna faza utvrđeni | `draft` / U pripremi; prikazani odgovarajući M1 obrazac i dokumentacioni paket | podnosilac / sistem | `BM-ML-019`; `BM-ML-014`; `BM-ML-020`; `BM-ML-025`; F-06 |
+| Prijava | — | kreiranje ili prikaz obrasca i paketa | identitet nije podržan, ili namjera, oblik ili faza nijesu utvrđeni | nema proizvoljnog paketa ni obrasca; nema svrstavanja u `ostalo`; kreiranje i konačno podnošenje nijesu dozvoljeni; jasna poruka | sistem | `BM-ML-009`; `BM-ML-010`; F-06 |
+| Prijava | `draft` | uređivanje nacrta | rok traje; vlasnik prijave | ostaje `draft`; namjera, tip, M1 i poslovna faza ostaju zaključani; `is_registered` se može ponovo pročitati; prikaz dodatnih podataka prati aktuelni status | podnosilac | `BM-ML-021`; F-06 |
 | Prijava | `draft` | brisanje nacrta | rok traje; vlasnik prijave | nacrt obrisan | podnosilac | `BM-ML-021` |
-| Prijava | `draft` | pokušaj ručne promjene pravnog oblika ili kategorije | prijava već kreirana | funkcija nije dostupna; promjena nije dozvoljena | podnosilac / sistem | F-06; `BM-ML-025` |
-| Prijava | `draft` | nova prijava na drugom Pozivu | drugi Poziv objavljen; rok drugog Poziva traje | nova prijava `draft`; bez prenosa; oblik i kategorija se ponovo utvrđuju, bez prebacivanja stare prijave | podnosilac | `BM-ML-052`; `BM-ML-014`; F-06 |
+| Prijava | `draft` | pokušaj ručne promjene pravnog oblika, namjere, obrasca ili faze | prijava već kreirana | funkcija nije dostupna; promjena nije dozvoljena | podnosilac / sistem | F-06; `BM-ML-025` |
+| Prijava | `draft` | nova prijava na drugom Pozivu | drugi Poziv objavljen; rok drugog Poziva traje | nova prijava `draft`; bez prenosa; namjera, oblik i faza se ponovo utvrđuju, bez prebacivanja stare prijave | podnosilac | `BM-ML-052`; `BM-ML-014`; F-06 |
 
 ## 7.9. Prihvatni kriterijumi — prijava
 
@@ -1617,7 +1651,7 @@ Izvor: `BM-ML-004`; `BM-ML-005`; `BM-ML-021`.
 
 **Kada:** vlasnik mijenja podatke, obrasce ili priloge.
 
-**Onda:** Platforma dozvoljava izmjenu podataka prikazanog obrasca i priloga. Pravni oblik, M1 obrazac i kategorija započinjanje/razvoj se **ne** mijenjaju. Komisija **ne** vidi nacrt.
+**Onda:** Platforma dozvoljava izmjenu podataka prikazanog obrasca i priloga. Namjera, tip prijave, M1 obrazac i poslovna faza ostaju zaključani. Aktuelni `is_registered` može se ponovo pročitati. Prikaz dodatnih podataka prati taj status. Tip, namjera, faza, M1 obrazac i paket se **ne** mijenjaju automatski. Komisija **ne** vidi nacrt.
 
 Izvor: `BM-ML-021`.
 
@@ -1641,23 +1675,23 @@ Izvor: `BM-ML-021`.
 
 Izvor: `BM-ML-052`; `BM-ML-014`.
 
-### 7.9.6 — Zabrana ručne promjene pravnog oblika i kategorije
+### 7.9.6 — Zabrana ručne promjene pravnog oblika, namjere i faze
 
-**Ako:** je prijava kreirana sa utvrđenim pravnim oblikom i kategorijom započinjanje/razvoj.
+**Ako:** je prijava kreirana sa utvrđenom namjerom, pravnim oblikom, obrascem i poslovnom fazom.
 
 **Kada:** podnosilac uređuje prijavu.
 
-**Onda:** ne postoji funkcija ručne promjene pravnog oblika, M1 obrasca ili kategorije. Nema brisanja, skrivanja ni prenosa podataka zbog promjene kategorije.
+**Onda:** ne postoji funkcija ručne promjene pravnog oblika, namjere, M1 obrasca ili poslovne faze. Nema brisanja, skrivanja ni prenosa podataka zbog takve promjene.
 
 Izvor: odluka F-06; `BM-ML-025`; `BM-ML-029`.
 
-### 7.9.7 — Nedovoljni podaci za utvrđivanje kategorije
+### 7.9.7 — Nepodržani identitet ili nedovoljni podaci
 
-**Ako:** nema dovoljno potvrđenih podataka za određivanje pravnog oblika ili kategorije započinjanje/razvoj.
+**Ako:** identitet nije podržan za ovaj profil (uključujući NVO, sportsku organizaciju ili stranu poslovnu jedinicu), ili namjera, pravni oblik ili poslovna faza nijesu utvrđeni.
 
 **Kada:** se prijava kreira ili provjerava prije podnošenja.
 
-**Onda:** Platforma **ne** pretpostavlja vrijednost, **ne** prikazuje proizvoljan paket i **ne** dozvoljava konačno podnošenje dok kategorija nije utvrđena. Prikazuje se jasno obavještenje da kategoriju nije moguće utvrditi. Postupak ispravke naloga **nije** određen.
+**Onda:** Platforma **ne** pretpostavlja vrijednost, **ne** svrstava identitet u `ostalo`, **ne** prikazuje proizvoljan obrazac ni paket i **ne** dozvoljava kreiranje ni konačno podnošenje. Prikazuje se jasna poruka. Postupak ispravke naloga **nije** određen.
 
 Izvor: `BM-ML-009`; `BM-ML-010`; odluka F-06.
 
@@ -1675,16 +1709,18 @@ M3, M4 i M4a **nisu** dio početne prijave u ovom poglavlju.
 
 ## 8.1. Izbor M1a ili M1b
 
-Platforma određuje obrazac iz **pravnog oblika korisničkog naloga** (`BM-ML-025`; odluka F-06). Nema ručnog selektora M1a/M1b.
+Platforma određuje obrazac prema namjeri neregistrovanog fizičkog lica ili prema registrovanom pravnom obliku (`BM-ML-025`; odluka F-06). Nema ručnog selektora M1a/M1b.
 
-* fizičko lice koje tek planira registraciju i registrovani preduzetnik → **M1a**;
-* DOO → **M1b**.
+* neregistrovano fizičko lice koje planira registraciju kao preduzetnik → **M1a**;
+* registrovani preduzetnik → **M1a**;
+* neregistrovano fizičko lice koje planira osnivanje privrednog društva → **M1b**;
+* registrovano privredno društvo (DOO, AD, OD ili KD) → **M1b**.
 
 Pogrešan obrazac **nije** moguće ručno izabrati. Obrazac se **ne** mijenja tokom uređivanja prijave.
 
-Kod M1b formalni podnosilac je DOO; nosilac biznisa i ovlašćeno lice vode se prema §7.5.
+Kod planiranog društva M1b je obrazac namjere neregistrovanog fizičkog lica. PIB, CRPS, registrovano sjedište, formalni osnivač i formalni izvršni direktor **ne** prikazuju se i **ne** zahtijevaju. Ostala primjenjiva M1b polja ostaju. Kod registrovanog društva formalni podnosilac je privredno društvo; nosilac biznisa, ovlašćeno lice i blok podataka registrovanog društva vode se prema §7.5.
 
-Promjena kategorije unutar nacrta **nije** dozvoljena. **Ne** uvodi se ponašanje brisanja, skrivanja ili prenosa podataka zbog takve promjene.
+Promjena namjere, pravnog oblika ili poslovne faze unutar nacrta **nije** dozvoljena. **Ne** uvodi se ponašanje brisanja, skrivanja ili prenosa podataka zbog takve promjene.
 
 ## 8.2. Oblast i djelatnost
 
@@ -1715,7 +1751,11 @@ Oblast i djelatnost su potvrđene u `BM-ML-026`.
 
 Ostala obavezna polja M1a/M1b **ne** izmišljaju se u ovom dokumentu. `KN-FS-002` zadržava strukturu izvornog obrasca iz priloga Odluke. Potpuni katalog polja mora biti prenesen iz tog potvrđenog priloga, bez izmišljanja novih polja.
 
-Prazna obavezna polja izvornog obrasca **blokiraju** konačno podnošenje (`BM-ML-022`).
+Prazna obavezna polja izvornog obrasca **blokiraju** konačno podnošenje (`BM-ML-022`), osim registracionih podataka društva koji u V1 nijesu obavezni za planirano društvo.
+
+Za neregistrovano fizičko lice koje planira društvo, nedostatak PIB-a, CRPS broja, registrovanog sjedišta, formalnog osnivača i formalnog izvršnog direktora **ne** blokira podnošenje i **ne** čini M1b nepopunjenim. Za registrovano društvo ti podaci **ostaju obavezni**.
+
+Sekcija dodatnih podataka (broj računa, PDV broj, website) prikazuje se prema aktuelnom `is_registered`, ne prema `applicant_type`. Ako je `is_registered` = NE, sekcija **nije** primjenjiva i **ne prikazuje se**.
 
 ## 8.4. Obrazac M2
 
@@ -1762,8 +1802,8 @@ Odnos ukupne vrijednosti i traženog iznosa **provjerava Komisija**. Platforma *
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prijava | — | prikaz M1a/M1b | potvrđeni pravni oblik naloga je fizičko lice ili preduzetnik | prikazuje se M1a; nema ručnog izbora M1b | sistem | `BM-ML-025`; F-06 |
-| Prijava | — | prikaz M1a/M1b | potvrđeni pravni oblik naloga je DOO | prikazuje se M1b; nema ručnog izbora M1a | sistem | `BM-ML-025`; F-06 |
+| Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira preduzetnika, ili registrovani preduzetnik | prikazuje se M1a; nema ručnog izbora M1b | sistem | `BM-ML-025`; F-06 |
+| Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira društvo, ili registrovano privredno društvo (DOO, AD, OD ili KD) | prikazuje se M1b; nema ručnog izbora M1a | sistem | `BM-ML-025`; F-06 |
 | M2 tačka 7 | U pripremi | izbor odgovora | tačno jedan odgovor | izbor evidentiran | podnosilac | `BM-ML-027` |
 | M2 tačka 7 | U pripremi | izbor `Drugo` | tekst objašnjenja unesen | objašnjenje evidentirano | podnosilac | `BM-ML-027` |
 | M2 tačka 22 | U pripremi | dodavanje ili uklanjanje stavke | rok traje | tabela ažurirana; zbir preračunat | podnosilac | `BM-ML-028` |
@@ -1772,7 +1812,7 @@ Odnos ukupne vrijednosti i traženog iznosa **provjerava Komisija**. Platforma *
 
 ### 8.6.1 — Izbor M1a
 
-**Ako:** potvrđeni pravni oblik naloga predstavlja fizičko lice ili preduzetnika.
+**Ako:** neregistrovano fizičko lice planira registraciju kao preduzetnik, ili je potvrđeni pravni oblik naloga registrovani preduzetnik.
 
 **Kada:** se kreira prijava.
 
@@ -1782,11 +1822,11 @@ Izvor: `BM-ML-025`; odluka F-06.
 
 ### 8.6.2 — Izbor M1b
 
-**Ako:** potvrđeni pravni oblik naloga predstavlja DOO.
+**Ako:** neregistrovano fizičko lice planira osnivanje privrednog društva, ili je potvrđeni pravni oblik naloga privredno društvo (DOO, AD, OD ili KD).
 
 **Kada:** se kreira prijava.
 
-**Onda:** Platforma prikazuje **M1b** i **ne** omogućava ručni izbor M1a.
+**Onda:** Platforma prikazuje **M1b** i **ne** omogućava ručni izbor M1a. Ako je riječ o planiranom društvu, blok podataka registrovanog društva **nije** vidljiv niti obavezan. Ako je riječ o registrovanom društvu, taj blok **ostaje obavezan**.
 
 Izvor: `BM-ML-025`; odluka F-06.
 
@@ -1866,7 +1906,7 @@ Izvor: `BM-ML-028`.
 
 Status poglavlja: USVOJENO
 
-Prateća dokumentacija određuje se prema **prethodno utvrđenom** pravnom obliku i kategoriji započinjanje/razvoj (`BM-ML-029`; odluka F-06).
+Prateća dokumentacija određuje se prema **prethodno utvrđenoj** namjeri, pravnom obliku i poslovnoj fazi započinjanje/razvoj (`BM-ML-029`; odluka F-06).
 
 Podnosilac **ne** bira paket. Paket se **ne** mijenja ručno. Platforma **ne** kombinuje dokumente iz različitih paketa i **ne** uvodi funkciju automatskog prenosa priloga u drugi paket.
 
@@ -1880,7 +1920,7 @@ Nedostatak obaveznog pratećeg dokumenta pri podnošenju obrađuje se prema `BM-
 
 Izvorni naziv: *Preduzetnici koje započinju biznis (čiji biznisi nisu stariji od godinu dana u trenutku raspisivanja konkursa ili tek planiraju otpočinjanje).*
 
-Ovaj paket koristi registrovani preduzetnik koji započinje poslovanje i fizičko lice koje tek planira registraciju. Poseban peti paket se **ne** uvodi (`BM-ML-029`; `BM-ML-011`).
+Ovaj paket koristi registrovani preduzetnik koji započinje poslovanje i fizičko lice koje planira registraciju kao preduzetnik. Fizičko lice koje planira osnivanje privrednog društva **ne** koristi ovaj paket, nego paket 3. Poseban peti paket se **ne** uvodi (`BM-ML-029`; `BM-ML-011`).
 
 | # | Naziv dokumenta | Kada je obavezan | Uslovna obaveznost | Ograničenje starosti | Na koga se odnosi | BM izvor |
 |---|-----------------|------------------|--------------------|----------------------|-------------------|----------|
@@ -1920,10 +1960,12 @@ Izvorni naziv: *Preduzetnici koje planiraju razvoj poslovanja.*
 
 Izvorni naziv: *Društva koja započinju biznis (čiji biznisi nisu stariji od godinu dana u trenutku raspisivanja konkursa ili tek planiraju otpočinjanje).*
 
+Ovaj paket koristi registrovano privredno društvo koje započinje poslovanje i fizičko lice koje planira osnivanje privrednog društva. Za planirano društvo uslovna CRPS i poreska dokumentacija ostaju uslovna „ukoliko ima registrovanu djelatnost“; njihov nedostatak uz početnu prijavu **ne** čini M1b nepopunjenim.
+
 | # | Naziv dokumenta | Kada je obavezan | Uslovna obaveznost | Ograničenje starosti | Na koga se odnosi | BM izvor |
 |---|-----------------|------------------|--------------------|----------------------|-------------------|----------|
-| 1 | Prijava na konkurs (obrazac M1b) | obavezna forma | — | — | DOO | `BM-ML-029`; `BM-ML-025` |
-| 2 | Forma za biznis plan (obrazac M2) | obavezna forma | — | — | DOO | `BM-ML-029` |
+| 1 | Prijava na konkurs (obrazac M1b) | obavezna forma | — | — | privredno društvo | `BM-ML-029`; `BM-ML-025` |
+| 2 | Forma za biznis plan (obrazac M2) | obavezna forma | — | — | privredno društvo | `BM-ML-029` |
 | 3 | Ovjerena kopija lične karte nosioca biznisa | obavezna za potpunost | — | — | nosilac biznisa | `BM-ML-029` |
 | 4 | Rješenje o upisu u CRPS | uslovno | ukoliko ima registrovanu djelatnost | — | društvo | `BM-ML-029` |
 | 5 | Rješenje o registraciji PJ Poreske uprave | uslovno | ukoliko ima registrovanu djelatnost | — | društvo | `BM-ML-029` |
@@ -1941,8 +1983,8 @@ Izvorni naziv: *Društva koja planiraju razvoj poslovanja.*
 
 | # | Naziv dokumenta | Kada je obavezan | Uslovna obaveznost | Ograničenje starosti | Na koga se odnosi | BM izvor |
 |---|-----------------|------------------|--------------------|----------------------|-------------------|----------|
-| 1 | Prijava na konkurs (obrazac M1b) | obavezna forma | — | — | DOO | `BM-ML-029` |
-| 2 | Forma za biznis plan (obrazac M2) | obavezna forma | — | — | DOO | `BM-ML-029` |
+| 1 | Prijava na konkurs (obrazac M1b) | obavezna forma | — | — | privredno društvo | `BM-ML-029` |
+| 2 | Forma za biznis plan (obrazac M2) | obavezna forma | — | — | privredno društvo | `BM-ML-029` |
 | 3 | Ovjerena kopija lične karte nosioca biznisa | obavezna za potpunost | — | — | nosilac biznisa | `BM-ML-029` |
 | 4 | Rješenje o upisu u CRPS | obavezno za potpunost | — | — | društvo | `BM-ML-029` |
 | 5 | Rješenje o registraciji PJ Poreske uprave | obavezno za potpunost | — | — | društvo | `BM-ML-029` |
@@ -1954,16 +1996,16 @@ Izvorni naziv: *Društva koja planiraju razvoj poslovanja.*
 | 11 | Uvjerenje lokalne uprave o urednom izmirivanju poreza po osnovu prireza, članskog doprinosa, lokalnih komunalnih taksi i naknada | obavezno za potpunost | — | ne starije od 30 dana | nosilac biznisa i društvo | `BM-ML-029` |
 | 12 | Uvjerenje lokalne uprave o urednom izmirivanju poreza na nepokretnost | obavezno za potpunost | — | ne starije od 30 dana | nosilac biznisa i društvo | `BM-ML-029` |
 | 13 | Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa | obavezna za potpunost | — | ne starija od 30 dana | nosilac biznisa i društvo | `BM-ML-029` |
-| 14 | IOPPD za posljednji mjesec uplate ili potvrda Poreske uprave da DOO nema zaposlenih | obavezno za potpunost | **jedno od ta dva**, ne oba; vidi §9.5 | — | društvo | `BM-ML-031`; `BM-ML-029` |
+| 14 | IOPPD za posljednji mjesec uplate ili potvrda Poreske uprave da društvo nema zaposlenih | obavezno za potpunost | **jedno od ta dva**, ne oba; vidi §9.5 | — | društvo | `BM-ML-031`; `BM-ML-029` |
 | 15 | Predračuni za planiranu nabavku | obavezni za potpunost | — | — | društvo | `BM-ML-029` |
 
-Izvorni član 14 u stavci 14 paketa društva u razvoju navodi IOPPD. Funkcionalno se primjenjuje `BM-ML-031`: DOO sa zaposlenima dostavlja IOPPD; DOO bez zaposlenih dostavlja potvrdu Poreske uprave da nema zaposlenih. Izvorni zapis se ne „ispravlja“ u katalogu; primjenjuje se odobreno pravilo.
+Izvorni član 14 u stavci 14 paketa društva u razvoju navodi IOPPD. Funkcionalno se primjenjuje `BM-ML-031`: društvo sa zaposlenima dostavlja IOPPD; društvo bez zaposlenih dostavlja potvrdu Poreske uprave da nema zaposlenih. Izvorni zapis se ne „ispravlja“ u katalogu; primjenjuje se odobreno pravilo.
 
 Rok starosti potvrde da nema zaposlenih **nije** uveden, jer BM to nije potvrdio.
 
-## 9.5. IOPPD ili potvrda za DOO u razvoju
+## 9.5. IOPPD ili potvrda za društvo u razvoju
 
-Za DOO u razvoju zahtijeva se **jedan** odgovarajući dokaz (`BM-ML-031`):
+Za društvo u razvoju zahtijeva se **jedan** odgovarajući dokaz (`BM-ML-031`):
 
 * ako ima zaposlene — IOPPD za posljednji mjesec uplate poreza i doprinosa, ovjeren od Poreske uprave;
 * ako nema zaposlene — potvrdu Poreske uprave da nema zaposlenih.
@@ -1993,7 +2035,7 @@ Dok je prijava `U pripremi` i rok traje, dozvoljeno je dodavanje, uklanjanje i z
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prilog | U pripremi | prikaz dokumentacionog paketa | pravni oblik i kategorija započinjanje/razvoj utvrđeni | prikazuje se odgovarajući paket; podnosilac ne bira paket | sistem | `BM-ML-029`; F-06 |
+| Prilog | U pripremi | prikaz dokumentacionog paketa | namjera, pravni oblik i poslovna faza utvrđeni | prikazuje se odgovarajući paket; podnosilac ne bira paket | sistem | `BM-ML-029`; F-06 |
 | Prilog | U pripremi | dodavanje | rok traje; tip iz odgovarajućeg paketa | prilog evidentiran na tom tipu | podnosilac | `BM-ML-030`; `BM-ML-029` |
 | Prilog | U pripremi | zamjena | rok traje; postoji prilog tog tipa | stari uklonjen; novi evidentiran | podnosilac | `BM-ML-030` |
 | Prilog | U pripremi | uklanjanje | rok traje | tip ostaje prazan | podnosilac | `BM-ML-030` |
@@ -2002,7 +2044,7 @@ Dok je prijava `U pripremi` i rok traje, dozvoljeno je dodavanje, uklanjanje i z
 
 ### 9.9.1 — Četiri dokumentaciona paketa
 
-**Ako:** su pravni oblik i kategorija započinjanje/razvoj utvrđeni.
+**Ako:** su namjera, pravni oblik i poslovna faza započinjanje/razvoj utvrđeni.
 
 **Kada:** se otvori dio za dokumentaciju.
 
@@ -2012,7 +2054,7 @@ Izvor: `BM-ML-029`; odluka F-06.
 
 ### 9.9.2 — IOPPD ili potvrda
 
-**Ako:** kategorija je DOO u razvoju i nije priložen ni IOPPD ni potvrda da nema zaposlenih.
+**Ako:** kategorija je društvo u razvoju i nije priložen ni IOPPD ni potvrda da nema zaposlenih.
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
@@ -2072,16 +2114,21 @@ Prije podnošenja Platforma razdvaja (`BM-ML-022`):
 * prazna obavezna polja M1a/M1b, uključujući oblast i djelatnost;
 * prazna obavezna polja M2;
 * nije utvrđen pravni oblik;
-* nije utvrđena kategorija započinjanje/razvoj;
-* prikazani M1 ne odgovara pravnom obliku naloga;
-* prikazani dokumentacioni paket ne odgovara pravnom obliku i kategoriji;
+* nije utvrđena namjera neregistrovanog fizičkog lica, kada je potrebna;
+* nije utvrđena poslovna faza započinjanje/razvoj;
+* prikazani M1 ne odgovara namjeri ili registrovanom pravnom obliku;
+* prikazani dokumentacioni paket ne odgovara namjeri, pravnom obliku i poslovnoj fazi;
 * tačka 7 bez tačno jednog odgovora;
 * `Drugo` bez objašnjenja;
 * prazna tabela tačke 22 ili bez najmanje jedne stavke;
 * pokušaj podnošenja nakon roka;
 * već postojeća `Podnesena` prijava istog podnosioca na istom Pozivu.
 
-Ako potrebni potvrđeni podaci nijesu dostupni, Platforma **ne** popunjava kategoriju pretpostavkom, prikazuje jasno obavještenje da kategoriju nije moguće utvrditi i **ne** dozvoljava konačno podnošenje. Postupak ispravke naloga **nije** određen.
+Nedostatak PIB-a, CRPS broja, registrovanog sjedišta ili formalnih podataka o osnivaču i izvršnom direktoru **ne** blokira podnošenje planiranog društva. Za registrovano društvo prazan blok tih podataka **blokira** konačno podnošenje.
+
+Ako identitet nije podržan ili potrebni potvrđeni podaci nijesu dostupni, Platforma **ne** popunjava fazu pretpostavkom, **ne** svrstava identitet u `ostalo`, prikazuje jasnu poruku i **ne** dozvoljava konačno podnošenje. Postupak ispravke naloga **nije** određen.
+
+Nedostajući ili ne-kotorski teritorijalni podatak može izazvati **upozorenje**. **Ne** blokira podnošenje samo na osnovu adrese.
 
 ### B. Upozoravaju, ne blokiraju
 
@@ -2126,7 +2173,7 @@ Nakon toga prijava se **ne** može:
 
 Prigovor **ne** otključava prijavu i **ne** omogućava dopunu ni zamjenu dokumentacije.
 
-`Podnesena` prijava ostaje dostupna podnosiocu za pregled.
+`Podnesena` prijava ostaje dostupna podnosiocu za pregled. Promjena korisničkog naloga **ne** mijenja podnesenu prijavu.
 
 ## 10.3. Istek roka za nacrt
 
@@ -2145,7 +2192,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7, ili tabela 22, ili nije utvrđen pravni oblik ili kategorija, ili M1 ili paket ne odgovaraju utvrđenim podacima | blokirano; prikazuje šta nedostaje; kategorija se ne popunjava pretpostavkom | sistem | `BM-ML-022`; F-06 |
+| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7, ili tabela 22, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prikazuje šta nedostaje; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora | sistem | `BM-ML-022`; F-06 |
 | Prijava | `draft` | provjera prije podnošenja | nedostaju prateći dokumenti paketa, osim žiro računa | upozorenje i lista; podnošenje ostaje moguće | sistem | `BM-ML-022`; `BM-ML-032` |
 | Prijava | `draft` | konačna potvrda | blokirajući uslovi nijesu ispunjeni; rok traje; nema Podnesene na istom Pozivu | `draft` → `submitted`; zaključano | podnosilac | `BM-ML-023`; `BM-KN-015` |
 | Prijava | `submitted` | pokušaj izmjene, dopune, brisanja, povlačenja ili ponovnog podnošenja | — | zabranjeno | svi | `BM-ML-023` |
@@ -2156,11 +2203,11 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 ### 10.5.1 — Obavezna polja koja blokiraju
 
-**Ako:** nije utvrđen pravni oblik ili kategorija započinjanje/razvoj, prikazani M1 ne odgovara pravnom obliku, prikazani paket ne odgovara utvrđenim podacima, prazna su obavezna polja M1 ili M2, tačka 7 nema jedan odgovor, `Drugo` nema tekst, ili tabela 22 nema najmanje jednu stavku.
+**Ako:** nije utvrđen pravni oblik, namjera ili poslovna faza, prikazani M1 ne odgovara namjeri ili registrovanom obliku, prikazani paket ne odgovara utvrđenim podacima, prazna su obavezna polja M1 ili M2, tačka 7 nema jedan odgovor, `Drugo` nema tekst, ili tabela 22 nema najmanje jednu stavku.
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
-**Onda:** Platforma blokira podnošenje i prikazuje šta treba popuniti odnosno utvrditi. Kategorija se **ne** popunjava pretpostavkom.
+**Onda:** Platforma blokira podnošenje i prikazuje šta treba popuniti odnosno utvrditi. Faza se **ne** popunjava pretpostavkom. Teritorijalni podatak **ne** blokira podnošenje sam po sebi. Nedostatak PIB-a i CRPS-a **ne** blokira planirano društvo. Registrovano društvo **mora** popuniti blok podataka društva.
 
 Izvor: `BM-ML-022`; `BM-ML-025`; `BM-ML-026`; `BM-ML-027`; `BM-ML-028`; `BM-ML-009`; `BM-ML-010`; odluka F-06.
 
@@ -2190,7 +2237,7 @@ Izvor: `BM-ML-022`; `BM-ML-023`.
 
 **Kada:** potvrda uspije.
 
-**Onda:** status postaje `submitted` / `Podnesena`. Evidentira se trenutak podnošenja. Podaci, obrasci, prilozi i tabela nabavki se zaključavaju.
+**Onda:** status postaje `submitted` / `Podnesena`. Evidentira se trenutak podnošenja. Podaci, obrasci, prilozi i tabela nabavki se zaključavaju. Naknadna promjena naloga ili ponovno čitanje `is_registered` **ne** mijenja podnesenu prijavu.
 
 Izvor: `BM-ML-023`.
 
@@ -3979,6 +4026,8 @@ Za drugi Poziv:
 * kreira **novu** prijavu;
 * ništa se iz prve prijave **ne** prenosi automatski;
 * pravni oblik se ponovo uzima sa potvrđenog naloga;
+* neregistrovano fizičko lice ponovo bira namjeru;
+* registrovani preduzetnik ili društvo ponovo bira poslovnu fazu;
 * Platforma određuje odgovarajući M1a ili M1b;
 * ponovo određuje dokumentacioni paket;
 * M2 se ponovo popunjava;
@@ -4120,7 +4169,7 @@ Izvor: `BM-ML-033`; `BM-ML-051`.
 
 **Kada:** se otvara nova prijava.
 
-**Onda:** ništa se iz prve prijave ne prenosi automatski. Nova prijava počinje kao `draft`. Pravni oblik se ponovo uzima sa potvrđenog naloga. M1a ili M1b, dokumentacioni paket, M2, tabela nabavki i prilozi popunjavaju se i prilažu ponovo. Ranije učešće samo po sebi nije zabrana. Najviše jedna konačno podnesena prijava po pojedinačnom Pozivu.
+**Onda:** ništa se iz prve prijave ne prenosi automatski. Nova prijava počinje kao `draft`. Pravni oblik se ponovo uzima sa potvrđenog naloga. Namjera i poslovna faza se ponovo utvrđuju. M1a ili M1b, dokumentacioni paket, M2, tabela nabavki i prilozi popunjavaju se i prilažu ponovo. Ranije učešće samo po sebi nije zabrana. Najviše jedna konačno podnesena prijava po pojedinačnom Pozivu.
 
 Izvor: `BM-ML-014`; `BM-ML-052`.
 
@@ -4402,12 +4451,14 @@ Izvori: Poglavlja 5, 6 i 22; `BM-ML-033`; `BM-ML-049`–`BM-ML-053`; F-02.
 
 Platforma **ne** smije:
 
-* dozvoliti proizvoljan izbor pravnog oblika;
-* dozvoliti ručni izbor M1a/M1b suprotno obliku naloga;
+* dozvoliti proizvoljan izbor registrovanog pravnog oblika;
+* dozvoliti ručni izbor M1a/M1b suprotno namjeri ili registrovanom obliku;
+* svrstati nepodržani identitet u youth kategoriju `ostalo`;
 * prikazati proizvoljan dokumentacioni paket;
-* dozvoliti konačno podnošenje bez utvrđenog oblika i kategorije;
+* dozvoliti konačno podnošenje bez utvrđenog oblika, namjere kada je potrebna i poslovne faze;
 * automatski pretvoriti nacrt u `submitted`;
 * dozvoliti izmjenu, dopunu, brisanje ili povlačenje prijave nakon `submitted`;
+* dozvoliti da promjena naloga izmijeni podnesenu prijavu;
 * dozvoliti ponovno podnošenje na istom Pozivu;
 * pretvoriti M3 `Nepotpuna` odmah u `rejected`;
 * vratiti `rejected` u `submitted`;
@@ -4416,7 +4467,13 @@ Platforma **ne** smije:
 * otključati prijavu promjenom statusa;
 * nedostajući prilog tretirati kao sistemsku konačnu odluku Komisije;
 * zahtijevati dokaz o žiro računu kao obavezan prilog početne prijave;
-* automatski prenijeti prijavu i priloge na drugi Poziv.
+* automatski prenijeti prijavu i priloge na drugi Poziv;
+* odbiti prijavu automatski samo na osnovu teritorijalnog podatka;
+* uvesti CRPS integraciju ili automatski obračun starosti biznisa;
+* zahtijevati PIB, CRPS, registrovano sjedište, formalnog osnivača ili formalnog izvršnog direktora za planirano društvo;
+* tretirati planirano društvo kao već registrovano;
+* automatski promijeniti namjeru, tip prijave, poslovnu fazu, M1 obrazac ili paket zbog ponovnog čitanja `is_registered`;
+* izmijeniti podnesenu prijavu ponovnim čitanjem identiteta.
 
 Izvori: Poglavlja 7–10 i 22; `BM-ML-014`; `BM-ML-019`–`BM-ML-032`; `BM-ML-052`; F-06.
 
@@ -4705,13 +4762,13 @@ Ukupno redova ovog indeksa: **134**. Nema preskakanja i nema duplikata.
 | 6.8.12 | Kanali | Objava na digitalnom servisu | Nema automatske objave na drugim kanalima | 6 | `BM-ML-033` |
 | 7.9.1 | Prijava | Poziv nije objavljen | Platforma blokira kreiranje odnosno započinjanje prijave | 7 | `BM-ML-019` |
 | 7.9.2 | Prijava | Podnosilac otvara prijavu | Vidi samo svoju | 7 | `BM-ML-054` |
-| 7.9.3 | Nacrt | Rok traje | Uređivanje dozvoljeno | 7 | `BM-ML-021` |
+| 7.9.3 | Nacrt | Rok traje | Uređivanje dozvoljeno; živi `is_registered`; zaključani tip, namjera, faza i obrazac | 7 | `BM-ML-021` |
 | 7.9.4 | Nacrt | Rok traje | Brisanje nacrta dozvoljeno | 7 | `BM-ML-021` |
 | 7.9.5 | Drugi Poziv | Isti podnosilac | Nova prijava bez prenosa | 7 | `BM-ML-014`; `BM-ML-052` |
-| 7.9.6 | Kategorija | Pokušaj ručne promjene oblika ili kategorije | Zabranjeno | 7 | F-06; `BM-ML-009`; `BM-ML-025` |
-| 7.9.7 | Kategorija | Nedovoljni podaci | Nema proizvoljnog paketa; podnošenje zabranjeno | 7 | F-06 |
-| 8.6.1 | M1a | Pravni oblik fizičko lice ili preduzetnik | Prikazuje se M1a | 8 | `BM-ML-025` |
-| 8.6.2 | M1b | Pravni oblik DOO | Prikazuje se M1b | 8 | `BM-ML-025` |
+| 7.9.6 | Kategorija | Pokušaj ručne promjene oblika, namjere, obrasca ili faze | Zabranjeno | 7 | F-06; `BM-ML-009`; `BM-ML-025` |
+| 7.9.7 | Kategorija | Nepodržani identitet ili nedovoljni podaci | Nema proizvoljnog paketa ni `ostalo`; kreiranje i podnošenje zabranjeni | 7 | F-06 |
+| 8.6.1 | M1a | Budući ili registrovani preduzetnik | Prikazuje se M1a | 8 | `BM-ML-025` |
+| 8.6.2 | M1b | Planirano ili registrovano privredno društvo | Prikazuje se M1b; blok registrovanog društva samo ako je društvo registrovano | 8 | `BM-ML-025` |
 | 8.6.3 | M1 | Unos oblasti | Obavezno slobodno tekstualno polje | 8 | `BM-ML-026` |
 | 8.6.4 | M1 | Unos djelatnosti | Obavezno odvojeno polje; nema šifrarnika | 8 | `BM-ML-026` |
 | 8.6.5 | M2 t.7 | Izbor odgovora | Tačno jedan odgovor | 8 | `BM-ML-027` |
@@ -4720,11 +4777,11 @@ Ukupno redova ovog indeksa: **134**. Nema preskakanja i nema duplikata.
 | 8.6.8 | M2 t.22 | Više stavki | Zbir računa Platforma | 8 | `BM-ML-028` |
 | 8.6.9 | M2 t.22 | Prazna tabela | Podnošenje blokirano | 8 | `BM-ML-028` |
 | 9.9.1 | Dokumenti | Utvrđena kategorija | Tačno odgovarajući od četiri paketa | 9 | `BM-ML-029` |
-| 9.9.2 | Dokumenti | DOO u razvoju | IOPPD ili potvrda, ne oba | 9 | `BM-ML-031` |
+| 9.9.2 | Dokumenti | Društvo u razvoju | IOPPD ili potvrda, ne oba | 9 | `BM-ML-031` |
 | 9.9.3 | Dokumenti | Nema dokaza o žiro računu | Nije obavezno; prijava nije nepotpuna samo zbog toga | 9 | `BM-ML-032` |
 | 9.9.4 | Dokumenti | Tip priloga | Jedan dokument po tipu | 9 | `BM-ML-030` |
 | 9.9.5 | Dokumenti | Nacrt; rok traje | Zamjena dokumenta dozvoljena | 9 | `BM-ML-030` |
-| 10.5.1 | Podnošenje | Nedostaju obavezna polja | Podnošenje blokirano | 10 | `BM-ML-022` |
+| 10.5.1 | Podnošenje | Nedostaju obavezna polja | Podnošenje blokirano; PIB i CRPS ne blokiraju planirano društvo | 10 | `BM-ML-022` |
 | 10.5.2 | Podnošenje | Nedostaju dokumenti | Upozorenje; nije konačna odluka Komisije | 10 | `BM-ML-022` |
 | 10.5.3 | Podnošenje | Izričita potvrda u roku | Status `submitted` / Podnesena | 10 | `BM-ML-023` |
 | 10.5.4 | Zaključavanje | Prijava Podnesena | Izmjena, brisanje, povlačenje i ponovno podnošenje zabranjeni | 10 | `BM-ML-023` |
@@ -5075,11 +5132,11 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-006 | Zabrana učešća povezanog člana Komisije | 6.3 | §18.5 | 18.7.5 | Komisija utvrđuje; nije 4. kriterijum; nema automatskog odbijanja | U V1 |
 | BM-ML-007 | Mandat i formalna zamjena člana Komisije | 6.3 | §3.7; §16.4 | 16.8.5 | Zamjena sa tragom; bez spajanja djelimičnih ocjena | U V1 |
 | BM-ML-008 | Izjave članova Komisije | 6.3 | §25.3 | 25.6.3 | Poslovna obaveza je evidentirana, bez posebnog V1 toka potpisivanja | Poslovna granica; nema V1 ekrana |
-| BM-ML-009 | Kategorije podnosilaca i teritorijalni uslov | 7.1 | §7.5 | 7.9.6; 7.9.7 | Pravni oblik i kategorija sa naloga; nema proizvoljnog izbora | U V1 |
-| BM-ML-010 | Započinjanje i razvoj biznisa | 7.1 | §7.5 | 7.9.6; 7.9.7 | Kategorija utvrđena prije paketa i obrasca | U V1 |
+| BM-ML-009 | Kategorije podnosilaca i teritorijalni uslov | 7.1 | §7.5 | 7.9.6; 7.9.7 | FL, preduzetnik i društvo DOO/AD/OD/KD; namjera; upozorenje za teritoriju; nema `ostalo` | U V1 |
+| BM-ML-010 | Započinjanje i razvoj biznisa | 7.1 | §7.5; §7.7 | 7.9.6; 7.9.7 | Odluka ostaje pravilo; V1 izbor registrovanog; Komisija provjerava | U V1 |
 | BM-ML-011 | Naknadna registracija fizičkog lica | 7.2 | §1.3; §7; §25.3 | 1.5.1; 9.9.3; 25.6.1 | Smije podnijeti prijavu; operativna provjera pred ugovor van V1 | Poslovna granica; u V1 samo početna prijava |
-| BM-ML-012 | Nosilac biznisa u društvu | 7.3 | §7.5 | 7.9.6 | Nosilac se vodi odvojeno od DOO | U V1 |
-| BM-ML-013 | Formalni podnosilac DOO i ovlašćeno lice | 7.3 | §7.5; §8.1 | 8.6.2 | M1b za DOO; ovlašćeno lice odvojeno | U V1 |
+| BM-ML-012 | Nosilac biznisa u društvu | 7.3 | §7.5 | 7.9.6; 8.6.2 | Nosilac ostaje pravilo Odluke; formalni blok društva obavezan samo za registrovano društvo | U V1 |
+| BM-ML-013 | Formalni podnosilac društva i ovlašćeno lice | 7.3 | §7.5; §8.1 | 8.6.2 | M1b za planirano ili registrovano društvo; registrovano društvo ostaje formalni podnosilac | U V1 |
 | BM-ML-014 | Jedan biznis plan po Pozivu | 7.4 | §7.3; §22.5 | 7.9.5; 22.7.10; 26.2.21 | Najviše jedna konačno podnesena prijava po Pozivu | U V1 |
 | BM-ML-015 | Prioritetne oblasti | 7.5 | §18.1 | 18.7.1 | Treći eliminatorni razlog; Komisija utvrđuje | U V1 |
 | BM-ML-016 | Prihvatljivi troškovi | 7.6 | §8.4; §25.3 | 8.6.8; 8.6.9 | Unos nabavki u M2; Komisija provjerava; Platforma ne odlučuje o opravdanosti | U V1 unos; bez auto-kataloga |
@@ -5087,17 +5144,17 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-018 | Ranije finansirani biznis planovi | 7.7 | §1.3; §18.1 | 18.7.1; 25.6.1 | Eliminatorni razlog 2; bez V1 modula M4/M4a tekućeg projekta | U V1 kao razlog; modul izvještaja van V1 |
 | BM-ML-019 | Elektronsko podnošenje prijave | 8.1 | §7.1; §10 | 7.9.1; 10.5.3 | Prijava samo preko digitalnog servisa u roku | U V1 |
 | BM-ML-020 | Osnovna stanja prijave | 8.2 | §4.2; §10 | 4.11.1; 26.2.1 | Pet statusa: draft, submitted, evaluated, approved, rejected | U V1 |
-| BM-ML-021 | Upravljanje prijavom U pripremi | 8.3 | §7.4 | 7.9.3; 7.9.4 | Uređivanje i brisanje nacrta dok rok traje | U V1 |
-| BM-ML-022 | Kontrola prije podnošenja | 8.4 | §10.1 | 10.5.1; 10.5.2 | Blokada obaveznih polja; upozorenje za dokumente | U V1 |
-| BM-ML-023 | Konačno podnošenje i zaključavanje | 8.5 | §10.2 | 10.5.3; 10.5.4; 10.5.5 | Izričita potvrda; nema izmjene ni povlačenja | U V1 |
+| BM-ML-021 | Upravljanje prijavom U pripremi | 8.3 | §7.4 | 7.9.3; 7.9.4 | Uređivanje nacrta; živi `is_registered`; tip, namjera, faza i obrazac ostaju zaključani | U V1 |
+| BM-ML-022 | Kontrola prije podnošenja | 8.4 | §10.1 | 10.5.1; 10.5.2 | Blokada obaveznih polja; planirano društvo bez PIB/CRPS bloka; upozorenje za dokumente | U V1 |
+| BM-ML-023 | Konačno podnošenje i zaključavanje | 8.5 | §10.2 | 10.5.3; 10.5.4; 10.5.5 | Izričita potvrda; podnesena ostaje zaključana i nakon izmjene naloga | U V1 |
 | BM-ML-024 | Prijava U pripremi nakon isteka roka | 8.6 | §6.7; §12 | 6.8.11; 12.5.2 | Ostaje U pripremi, samo pregled | U V1 |
-| BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | §8.1 | 8.6.1; 8.6.2 | Obrazac prema obliku naloga; nema ručnog izbora | U V1 |
+| BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | §8.1 | 8.6.1; 8.6.2 | M1a za preduzetnika; M1b za planirano ili registrovano društvo; nema ručnog selektora | U V1 |
 | BM-ML-026 | Obavezni podaci oblast i djelatnost | 9.3 | §8.2 | 8.6.3; 8.6.4 | Dva odvojena obavezna polja; nema šifrarnika | U V1 |
 | BM-ML-027 | Jednostruki izbor u tački 7 obrasca M2 | 9.4 | §8.3 | 8.6.5; 8.6.6 | Tačno jedan odgovor; Drugo zahtijeva tekst | U V1 |
 | BM-ML-028 | Tabela nabavki u tački 22 obrasca M2 | 9.4 | §8.4 | 8.6.7; 8.6.8; 8.6.9 | Obavezna tabela; zbir računa Platforma | U V1 |
 | BM-ML-029 | Katalog dokumentacije prema kategoriji podnosioca | 9.5 | §9 | 9.9.1 | Četiri paketa; nema proizvoljnog paketa | U V1 |
 | BM-ML-030 | Jedan dokument po tipu priloga | 9.6 | §9 | 9.9.4; 9.9.5 | Jedan dokument; zamjena samo u nacrtu | U V1 |
-| BM-ML-031 | IOPPD ili potvrda Poreske uprave za DOO u razvoju | 9.7 | §9 | 9.9.2 | Jedan odgovarajući dokaz, ne oba | U V1 |
+| BM-ML-031 | IOPPD ili potvrda Poreske uprave za društvo u razvoju | 9.7 | §9 | 9.9.2 | Jedan odgovarajući dokaz, ne oba | U V1 |
 | BM-ML-032 | Dokaz o žiro računu | 9.7 | §9; §1.3; §25.3 | 9.9.3; 25.6.1 | Nije obavezan uz početnu prijavu; provjera pred ugovor van V1 | U V1 opciono; operativna provjera van V1 |
 | BM-ML-033 | Objavljivanje i rok za prijave | 10.2 | §6 | 6.8.1–6.8.12 | Ručna objava; 20 dana; 23:59:59; bez pomjeranja | U V1 |
 | BM-ML-034 | Rokovi sjednica Komisije | 10.3 | §4.10; §13.2; §14.3; §15.1; §20 | 4.11.6; 4.11.7; 14.6.9; 15.7.1 | Platforma evidentira; ne zakazuje umjesto Komisije; treća sjednica najkasnije sedam dana; nema automatskog produženja roka druge sjednice | U V1 evidencija |
@@ -5235,4 +5292,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.1**
+**Kraj dokumenta KN-FS-002 v1.0.2**

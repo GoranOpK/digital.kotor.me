@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.3
+**Verzija:** 1.0.4
 **Datum:** 2026-09-08
 
 Povezani dokumenti:
@@ -56,6 +56,7 @@ Povezani dokumenti:
 | 1.0.1 | 2026-09-02 | KN-PATCH-BM-009 — Status matrice sposobnosti u Poglavlju 2.5 usklađen sa usvojenim statusom Poglavlja 2 i dokumenta; poslovna pravila i sadržaj matrice nijesu mijenjani. |
 | 1.0.2 | 2026-09-03 | KN-PATCH-BM-010 — Usklađena granica V1 modula: zaključivanje ugovora, isplata sredstava, realizacija projekta, podnošenje i obrada obrazaca M4 i M4a, de minimis dokumentacija i praćenje ugovornih obaveza izričito su određeni kao procesi van V1; pravila BM-ML-056 i BM-ML-057 precizirana su kao poslovne granice bez uvođenja novih funkcionalnosti ili poslovnih oznaka. |
 | 1.0.3 | 2026-09-08 | KN-PATCH-BM-013 — Poslovni profil mladih usklađen sa zajedničkim katalogom statusa prijave draft, submitted, evaluated, approved i rejected. Sačuvani su posebni rezultati administrativne provjere i prigovora, pravo na prigovor prije konačnog odbijanja zbog nepotpunosti, odvojeni razlozi odbijanja i pravilo da arhiviranje Poziva ne mijenja status prijave. |
+| 1.0.4 | 2026-09-08 | KN-PATCH-BM-014 — Usklađeni pravni oblici, namjera neregistrovanog fizičkog lica, M1a/M1b i dokumentacioni paketi. Privredno društvo obuhvata DOO, AD, OD i KD. Poslovna faza ostaje objektivno pravilo Odluke; u V1 neregistrovano fizičko lice pripada započinjanju, a registrovani preduzetnik ili društvo bira fazu koju Komisija provjerava. Nema CRPS integracije ni automatskog obračuna starosti. |
 
 Napomena:
 
@@ -689,27 +690,50 @@ Status poglavlja: USVOJENO
 Pravo učešća, uz ispunjavanje ostalih uslova Odluke i konkretnog Javnog konkursa, mogu imati:
 - fizičko lice koje tek planira da registruje biznis;
 - registrovani preduzetnik;
-- privredno društvo, odnosno DOO.
+- privredno društvo: društvo sa ograničenom odgovornošću (DOO), akcionarsko društvo (AD), ortačko društvo (OD) ili komanditno društvo (KD).
+
+Odluka koristi pojam „društvo“. Profil mladih nije ograničen samo na DOO zbog uže formulacije obrasca M1b.
+
+Neregistrovano fizičko lice prije kreiranja prijave bira namjeru:
+- planira registraciju kao preduzetnik;
+- planira osnivanje privrednog društva.
+
+Namjera se čuva uz prijavu i određuje obrazac i dokumentacioni paket. Registrovani pravni oblik preuzima se iz korisničkog identiteta. Korisnik ne može u prijavi krivotvoriti ni proizvoljno promijeniti postojeći registrovani pravni oblik.
+
+Nevladino udruženje, nevladina fondacija, sportska organizacija i dio stranog privrednog društva ne klasifikuju se automatski kao privredno društvo podobno za ovaj profil. Ne uvodi se youth kategorija `ostalo` kao zamjena za privredno društvo.
 
 Fizičko lice i preduzetnik moraju imati prebivalište na teritoriji opštine Kotor, a privredno društvo mora imati sjedište na teritoriji opštine Kotor.
 
 Podnosilac, odnosno nosilac biznisa kada se prijavljuje društvo, mora pripadati starosnoj grupi mladih od 18 do 30 godina, prema uslovima iz članova 4 i 5 Odluke.
 
+Platforma evidentira prebivalište odnosno sjedište, adresu i grad. Može prikazati upozorenje kada podatak nedostaje ili ukazuje da nije Kotor. Platforma ne odbija prijavu automatski samo na osnovu adrese. Komisija prema dokumentaciji odlučuje o ispunjenosti teritorijalnog uslova.
+
 Ovo pravilo ne ukida dodatne uslove podobnosti, dokumentaciju, prioritetne oblasti ni eliminatorne kriterijume.
 
-**Izvor:** Odluka, članovi 4 i 5.
+**Izvor:** Odluka, članovi 4 i 5; `KN-PATCH-BM-014`.
 
 ### BM-ML-010 — Započinjanje i razvoj biznisa
 
 Za potrebe ovog profila razlikuju se:
 - započinjanje biznisa — fizičko lice koje tek planira registraciju ili biznis koji u trenutku raspisivanja Javnog konkursa nije stariji od jedne godine;
-- razvoj biznisa — registrovani biznis koji je u trenutku raspisivanja Javnog konkursa stariji od godinu dana.
+- razvoj biznisa — registrovani biznis koji je u trenutku raspisivanja Javnog konkursa stariji od jedne godine.
 
-Pripadnost kategoriji utvrđuje se prema stanju u trenutku raspisivanja Javnog konkursa, kako je propisano članom 4 Odluke.
+Tačno jedna godina pripada kategoriji započinjanja.
+
+Pripadnost kategoriji utvrđuje se prema stanju u trenutku raspisivanja Javnog konkursa, kako je propisano članom 4 Odluke. „Trenutak raspisivanja“ se ne izjednačava sa datumom objavljivanja ako izvor to izričito ne određuje. Ne uvodi se obračun 365 dana, vremenska zona ni dodatna formula.
+
+U V1 se koristi isti funkcionalni princip kao kod ženskog preduzetništva:
+- neregistrovano fizičko lice automatski pripada započinjanju;
+- registrovani preduzetnik ili privredno društvo bira započinjanje ili razvoj;
+- izbor se čuva uz prijavu kao poslovna faza;
+- Platforma u V1 ne računa automatski starost biznisa;
+- ne uvodi se CRPS integracija niti novo obavezno identity polje datuma registracije;
+- Komisija provjerava da li izabrana faza odgovara Odluci i priloženoj dokumentaciji;
+- ručni izbor korisnika nije konačna pravna odluka Komisije.
 
 Kategorija utiče na dokumentaciju, uslove prijave i primjenjiva finansijska ograničenja, ali ne mijenja osnovni identitet podnosioca.
 
-**Izvor:** Odluka, član 4.
+**Izvor:** Odluka, član 4; `KN-PATCH-BM-014`.
 
 ## 7.2. Fizičko lice koje tek registruje biznis
 
@@ -733,24 +757,28 @@ Kada je podnosilac privredno društvo, nosilac biznisa mora biti:
 - osnivač ili jedan od osnivača društva;
 - istovremeno izvršni direktor društva.
 
-Nosilac biznisa je fizičko lice preko kojeg se provjeravaju lični uslovi konkursa za mlade, uključujući starosni i drugi primjenjivi uslov.
+Nosilac biznisa je fizičko lice preko kojeg se provjeravaju lični uslovi konkursa za mlade, uključujući starosni i drugi primjenjivi uslov. Ovo pravilo ostaje. Formalni podaci društva u V1 zahtijevaju se tek kada društvo već postoji kao registrovani podnosilac.
 
-Društvo ostaje formalni podnosilac prijave.
+Neregistrovano fizičko lice koje planira osnivanje privrednog društva koristi M1b, istim prikazom kao kod ženskog preduzetništva. Društvo još nije registrovano. U V1 se ne prikazuju niti zahtijevaju PIB društva, CRPS broj, registrovano sjedište društva, formalni podaci o osnivaču ni formalni podaci o izvršnom direktoru. Ostala primjenjiva polja M1b ostaju dostupna. Platforma ne predstavlja planirano društvo kao već registrovano. Formalni podnosilac početne prijave ostaje to fizičko lice. Stvarna registracija i provjera uslova koji moraju postojati prije ugovora ostaju van V1, prema `BM-ML-011`.
 
-**Izvor:** Odluka, član 4.
+Registrovano privredno društvo (DOO, AD, OD ili KD) koristi M1b. Odgovarajući podaci društva, osnivača, izvršnog direktora, nosioca, sjedišta, PIB-a i CRPS-a ostaju obavezni. Društvo ostaje formalni podnosilac prijave. Ovlašćeno lice korisničkog naloga nije automatski nosilac biznisa. Platforma kontroliše popunjenost. Komisija iz dokumentacije provjerava da li je nosilac osnivač ili jedan od osnivača i istovremeno izvršni direktor. Ne uvodi se nova identity uloga niti CRPS integracija u V1.
 
-### BM-ML-013 — Formalni podnosilac DOO i ovlašćeno lice
+**Izvor:** Odluka, član 4; `KN-PATCH-BM-014`.
 
-Kod prijave društva razlikuju se:
-- DOO kao formalni podnosilac;
+### BM-ML-013 — Formalni podnosilac društva i ovlašćeno lice
+
+Kod prijave registrovanog društva razlikuju se:
+- privredno društvo (DOO, AD, OD ili KD) kao formalni podnosilac;
 - nosilac biznisa kao lice koje ispunjava propisane uslove;
-- ovlašćeno lice koje u ime DOO popunjava, potpisuje i podnosi prijavu.
+- ovlašćeno lice koje u ime društva popunjava, potpisuje i podnosi prijavu.
+
+Kod neregistrovanog fizičkog lica koje koristi M1b zbog planiranog osnivanja, registrovano društvo još nije formalni podnosilac. Uloge osnivača, izvršnog direktora i nosioca ostaju poslovna pravila Odluke, ali se njihovi formalni registracioni podaci u V1 ne prikazuju i ne zahtijevaju.
 
 Ovlašćeno lice i nosilac biznisa mogu biti isto lice, ali platforma ne pretpostavlja da moraju biti isto lice i njihove uloge vodi odvojeno.
 
 Ovlašćeno lice mora imati odgovarajuće ovlašćenje da postupa u ime društva. Ovo pravilo samo po sebi ne uvodi novi obavezni dokument punomoćja ako ga Odluka ili Javni konkurs nijesu propisali.
 
-**Izvor:** Odluka, članovi 4 i 16; odobreno rješenje pitanja 14 iz Poglavlja 4.
+**Izvor:** Odluka, članovi 4 i 16; odobreno rješenje pitanja 14 iz Poglavlja 4; `KN-PATCH-BM-014`.
 
 ## 7.4. Ograničenje broja biznis planova
 
@@ -915,13 +943,17 @@ Dok rok za podnošenje traje, podnosilac može svoju prijavu u stanju `U priprem
 
 Prijava `U pripremi` nije dostupna Komisiji i ne ulazi u administrativnu provjeru, ocjenjivanje niti rangiranje.
 
-**Izvor:** odobrena projektna odluka.
+Namjera neregistrovanog fizičkog lica, tip prijave, poslovna faza i M1 obrazac čuvaju se uz nacrt i ostaju zaključani. Pri ponovnom otvaranju nacrta Platforma može ponovo pročitati aktuelni `is_registered` iz korisničkog identiteta. Prikaz dodatnih podataka prilagođava se aktuelnom statusu registracije. Namjera, tip prijave, poslovna faza i M1 obrazac ne mijenjaju se automatski. Ne uvodi se automatsko brisanje nacrta niti obavezno kreiranje novog nacrta. Ako živi `is_registered` i sačuvani tok naprave kombinaciju za koju nije određena posebna validacija, prikaz prati aktuelni status registracije, a zaključane činjenice ostaju nepromijenjene. Prije podnošenja primjenjuju se kontrole usklađenosti iz `BM-ML-022`.
+
+**Izvor:** odobrena projektna odluka; `KN-PATCH-BM-014`.
 
 ## 8.4. Kontrola i potvrda prije podnošenja
 
 ### BM-ML-022 — Kontrola prije podnošenja
 
 Prije konačnog podnošenja odgovarajući obrazac M1a ili M1b i obrazac M2 moraju imati popunjena obavezna polja.
+
+Za neregistrovano fizičko lice koje planira osnivanje privrednog društva, nedostatak PIB-a, CRPS broja, registrovanog sjedišta i formalnih podataka o osnivaču i izvršnom direktoru ne blokira konačno podnošenje i ne čini obrazac nepopunjenim. Za registrovano privredno društvo ti podaci ostaju obavezni prema `BM-ML-012`.
 
 Ako obavezno polje nije popunjeno, platforma ne dozvoljava konačno podnošenje i prikazuje šta treba popuniti.
 
@@ -946,7 +978,7 @@ Tačan izgled upozorenja, ekrana ili modalnog prozora predstavlja funkcionalni d
 
 Izričitom potvrdom podnosioca prijava prelazi iz `draft` / `U pripremi` u `submitted` / `Podnesena`.
 
-Konačno podnošenje stvara zaključani snimak prijave, obrazaca i prateće dokumentacije.
+Konačno podnošenje stvara zaključani snimak prijave, obrazaca i prateće dokumentacije. Podnesena prijava ostaje zaključana. Promjena korisničkog naloga ne mijenja podnesenu prijavu.
 
 Nakon podnošenja nije dozvoljeno:
 - mijenjanje podataka;
@@ -1003,8 +1035,8 @@ Za profil podrške preduzetništvu mladih koriste se sljedeće zvanične oznake:
 
 | Oznaka | Poslovna namjena |
 |--------|------------------|
-| M1a | Prijavni obrazac za fizičko lice koje tek planira registraciju i za registrovanog preduzetnika |
-| M1b | Prijavni obrazac za privredno društvo — DOO |
+| M1a | Prijavni obrazac za neregistrovano fizičko lice koje planira registraciju kao preduzetnik i za registrovanog preduzetnika |
+| M1b | Prijavni obrazac za neregistrovano fizičko lice koje planira osnivanje privrednog društva i za registrovano privredno društvo (DOO, AD, OD ili KD) |
 | M2 | Forma za biznis plan |
 | M3 | Lista za ocjenjivanje biznis plana |
 | M4 | Izvještaj o realizaciji biznis plana |
@@ -1020,19 +1052,22 @@ Ovaj katalog ne dobija zasebnu oznaku `BM-ML-*` jer objedinjuje identitet obraza
 
 ### BM-ML-025 — Izbor obrasca M1a ili M1b
 
-Odgovarajući prijavni obrazac određuje se prema kategoriji podnosioca:
+Odgovarajući prijavni obrazac određuje se prema namjeri neregistrovanog fizičkog lica ili prema registrovanom pravnom obliku:
 
-- fizičko lice koje tek planira da registruje biznis koristi M1a;
+- neregistrovano fizičko lice koje planira registraciju kao preduzetnik koristi M1a;
+- neregistrovano fizičko lice koje planira osnivanje privrednog društva koristi M1b;
 - registrovani preduzetnik koristi M1a;
-- privredno društvo, odnosno DOO, koristi M1b.
+- registrovano privredno društvo (DOO, AD, OD ili KD) koristi M1b.
 
-Podnosilac ne bira proizvoljno između M1a i M1b. Platforma prikazuje obrazac koji odgovara evidentiranoj kategoriji podnosioca.
+Podnosilac ne bira proizvoljno između M1a i M1b nakon što su namjera ili registrovani oblik utvrđeni. Platforma prikazuje obrazac koji odgovara toj činjenici. Registrovani pravni oblik se ne krivotvori u prijavi.
+
+Kod planiranog društva M1b je obrazac namjere neregistrovanog fizičkog lica, istim prikazom kao kod ženskog preduzetništva, a ne dokaz da je društvo već registrovano. Kod registrovanog društva M1b je prijava tog društva. Prikaz i obaveznost registracionih podataka vode se prema `BM-ML-012`.
 
 Zapisi „1Ma“ i „1Mb“ iz člana 16 predstavljaju grešku u pisanju i odnose se na M1a i M1b.
 
-Kod M1b formalni podnosilac je DOO, dok se nosilac biznisa i ovlašćeno lice vode prema `BM-ML-012` i `BM-ML-013`.
+Kod registrovanog društva formalni podnosilac je privredno društvo, dok se nosilac biznisa i ovlašćeno lice vode prema `BM-ML-012` i `BM-ML-013`.
 
-**Izvor:** Odluka, članovi 14 i 16; odobrena rješenja pitanja 7 i 14 iz Poglavlja 4.
+**Izvor:** Odluka, članovi 14 i 16; odobrena rješenja pitanja 7 i 14 iz Poglavlja 4; `KN-PATCH-BM-014`.
 
 ## 9.3. Oblast i djelatnost
 
@@ -1122,7 +1157,9 @@ Prateća dokumentacija određuje se prema pravnom obliku podnosioca i tome da li
 
 Član 14 propisuje četiri odvojena paketa. Liste se prenose vjerno, izvornim redoslijedom, nazivima, oznakama, uslovima, alternativama i ograničenjima. Dokument koji nije naveden u konkretnom paketu ne dodaje se. Dokument iz jednog paketa ne preuzima se u drugi. Izvorni zapis se ne ispravlja pretpostavkom.
 
-Fizičko lice koje tek planira registraciju član 14 obuhvata nazivom paketa za započinjanje poslovanja preduzetnika: „Preduzetnici koje započinju biznis (čiji biznisi nisu stariji od godinu dana u trenutku raspisivanja konkursa ili tek planiraju otpočinjanje)“. Poseban peti paket se ne uvodi. Takvo fizičko lice koristi ovaj paket, a naknadna registracija, poreska evidencija i žiro račun vode se prema `BM-ML-011`.
+Fizičko lice koje planira registraciju kao preduzetnik koristi paket za započinjanje poslovanja preduzetnika. Fizičko lice koje planira osnivanje privrednog društva koristi paket za društvo koje započinje poslovanje. Poseban peti paket se ne uvodi. Naknadna registracija, poreska evidencija i žiro račun vode se prema `BM-ML-011`.
+
+Paketi koriste termine „preduzetnik“ i „privredno društvo“. Ne ograničavaju se neopravdano samo na DOO.
 
 #### 1. Preduzetnik koji započinje poslovanje
 
@@ -1199,7 +1236,7 @@ Platforma prikazuje katalog koji odgovara evidentiranoj kategoriji podnosioca. D
 
 Dokumenti označeni kao obavezni predstavljaju poslovne uslove provjere potpunosti. Njihov nedostatak pri elektronskom podnošenju obrađuje se prema `BM-ML-022`: platforma upozorava, ali konačnu potpunost utvrđuje Komisija.
 
-**Izvor:** Odluka, član 14; `BM-ML-009`–`BM-ML-013`.
+**Izvor:** Odluka, član 14; `BM-ML-009`–`BM-ML-013`; `KN-PATCH-BM-014`.
 
 ## 9.6. Upravljanje dokumentima
 
@@ -1225,22 +1262,22 @@ Poslovni model ne određuje da li podnosilac objedinjuje fajlove prije učitavan
 
 ## 9.7. Posebna pravila za IOPPD i žiro račun
 
-### BM-ML-031 — IOPPD ili potvrda Poreske uprave za DOO u razvoju
+### BM-ML-031 — IOPPD ili potvrda Poreske uprave za društvo u razvoju
 
-DOO u razvoju dostavlja jedan odgovarajući dokaz:
+Privredno društvo u razvoju dostavlja jedan odgovarajući dokaz:
 
 - ako ima zaposlene — IOPPD za poslijednji mjesec uplate poreza i doprinosa za zaposlene, ovjeren od strane Poreske uprave, kao dokaz o broju zaposlenih (IOPPD Obrazac);
 - ako nema zaposlene — potvrdu Poreske uprave da nema zaposlenih.
 
 Ne zahtijevaju se oba dokumenta istovremeno.
 
-Potvrda Poreske uprave predstavlja zamjenski dokument samo kada DOO nema zaposlene i zbog toga nema odgovarajući IOPPD.
+Potvrda Poreske uprave predstavlja zamjenski dokument samo kada društvo nema zaposlene i zbog toga nema odgovarajući IOPPD.
 
 Ne uvodi se rok starosti potvrde niti automatsko elektronsko pribavljanje dok takvo pravilo nije potvrđeno izvorom.
 
-Nedostatak oba odgovarajuća dokaza čini dokumentaciju nepotpunom kada se ovo pravilo primjenjuje na DOO u razvoju, ali platforma pri podnošenju postupa prema upozorenju iz `BM-ML-022`.
+Nedostatak oba odgovarajuća dokaza čini dokumentaciju nepotpunom kada se ovo pravilo primjenjuje na društvo u razvoju, ali platforma pri podnošenju postupa prema upozorenju iz `BM-ML-022`.
 
-**Izvor:** Odluka, član 14; odobreno rješenje pitanja 13 iz Poglavlja 4.
+**Izvor:** Odluka, član 14; odobreno rješenje pitanja 13 iz Poglavlja 4; `KN-PATCH-BM-014`.
 
 ### BM-ML-032 — Dokaz o žiro računu
 
@@ -2407,11 +2444,11 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-006 | Zabrana učešća povezanog člana Komisije | 6.3 | Odluka, član 7 | USVOJENO |
 | BM-ML-007 | Mandat i formalna zamjena člana Komisije | 6.3 | Odluka, članovi 7–11; Poglavlje 4.1, riješena zavisnost O-01; projektna odluka | USVOJENO |
 | BM-ML-008 | Izjave članova Komisije | 6.3 | Odluka, član 7 | USVOJENO |
-| BM-ML-009 | Kategorije podnosilaca i teritorijalni uslov | 7.1 | Odluka, članovi 4 i 5 | USVOJENO |
-| BM-ML-010 | Započinjanje i razvoj biznisa | 7.1 | Odluka, član 4 | USVOJENO |
+| BM-ML-009 | Kategorije podnosilaca i teritorijalni uslov | 7.1 | Odluka, članovi 4 i 5; KN-PATCH-BM-014 | USVOJENO |
+| BM-ML-010 | Započinjanje i razvoj biznisa | 7.1 | Odluka, član 4; KN-PATCH-BM-014 | USVOJENO |
 | BM-ML-011 | Naknadna registracija fizičkog lica | 7.2 | Odluka, član 4; Poglavlje 4, pitanje 12 | USVOJENO |
-| BM-ML-012 | Nosilac biznisa u društvu | 7.3 | Odluka, član 4 | USVOJENO |
-| BM-ML-013 | Formalni podnosilac DOO i ovlašćeno lice | 7.3 | Odluka, članovi 4 i 16; Poglavlje 4, pitanje 14 | USVOJENO |
+| BM-ML-012 | Nosilac biznisa u društvu | 7.3 | Odluka, član 4; KN-PATCH-BM-014 | USVOJENO |
+| BM-ML-013 | Formalni podnosilac društva i ovlašćeno lice | 7.3 | Odluka, članovi 4 i 16; Poglavlje 4, pitanje 14; KN-PATCH-BM-014 | USVOJENO |
 | BM-ML-014 | Jedan biznis plan po Pozivu | 7.4 | Odluka, član 19; Poglavlje 4, pitanje 18 | USVOJENO |
 | BM-ML-015 | Prioritetne oblasti | 7.5 | Odluka, član 12 i član 20 | USVOJENO |
 | BM-ML-016 | Prihvatljivi troškovi | 7.6 | Odluka, član 13 | USVOJENO |
@@ -2419,17 +2456,17 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-018 | Ranije finansirani biznis planovi | 7.7 | Odluka, članovi 15 i 20 | USVOJENO |
 | BM-ML-019 | Elektronsko podnošenje prijave | 8.1 | Odluka, članovi 14, 16 i 17 | USVOJENO |
 | BM-ML-020 | Osnovna stanja prijave | 8.2 | Projektna odluka; KN-PATCH-BM-013 | USVOJENO |
-| BM-ML-021 | Upravljanje prijavom U pripremi | 8.3 | Projektna odluka | USVOJENO |
+| BM-ML-021 | Upravljanje prijavom U pripremi | 8.3 | Projektna odluka; KN-PATCH-BM-014 | USVOJENO |
 | BM-ML-022 | Kontrola prije podnošenja | 8.4 | Odluka, članovi 16–18; projektna odluka | USVOJENO |
 | BM-ML-023 | Konačno podnošenje i zaključavanje | 8.5 | Projektna odluka; BM-KN-015 | USVOJENO |
 | BM-ML-024 | Prijava U pripremi nakon isteka roka | 8.6 | Projektna odluka | USVOJENO |
-| BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | Odluka, članovi 14 i 16; Poglavlje 4, pitanja 7 i 14 | USVOJENO |
+| BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | Odluka, članovi 14 i 16; Poglavlje 4, pitanja 7 i 14; KN-PATCH-BM-014 | USVOJENO |
 | BM-ML-026 | Obavezni podaci oblast i djelatnost | 9.3 | Odluka, član 16; Poglavlje 4, pitanje 15 | USVOJENO |
 | BM-ML-027 | Jednostruki izbor u tački 7 obrasca M2 | 9.4 | Prilog, M2, tačka 7; Poglavlje 4, pitanje 17 | USVOJENO |
 | BM-ML-028 | Tabela nabavki u tački 22 obrasca M2 | 9.4 | Prilog, M2, tačka 22; Poglavlje 4, pitanje 16 | USVOJENO |
-| BM-ML-029 | Katalog dokumentacije prema kategoriji podnosioca | 9.5 | Odluka, član 14 | USVOJENO |
+| BM-ML-029 | Katalog dokumentacije prema kategoriji podnosioca | 9.5 | Odluka, član 14; KN-PATCH-BM-014 | USVOJENO |
 | BM-ML-030 | Jedan dokument po tipu priloga | 9.6 | Projektna odluka | USVOJENO |
-| BM-ML-031 | IOPPD ili potvrda Poreske uprave za DOO u razvoju | 9.7 | Odluka, član 14; Poglavlje 4, pitanje 13 | USVOJENO |
+| BM-ML-031 | IOPPD ili potvrda Poreske uprave za društvo u razvoju | 9.7 | Odluka, član 14; Poglavlje 4, pitanje 13; KN-PATCH-BM-014 | USVOJENO |
 | BM-ML-032 | Dokaz o žiro računu | 9.7 | Odluka, članovi 4 i 14; Poglavlje 4, pitanje 12 | USVOJENO |
 | BM-ML-033 | Objavljivanje i rok za prijave | 10.2 | Odluka, članovi 6 i 14; projektna odluka | USVOJENO |
 | BM-ML-034 | Rokovi sjednica Komisije | 10.3 | Odluka, članovi 18 i 21; Poglavlje 4, pitanje 11 | USVOJENO |
@@ -2460,4 +2497,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.3**
+**Kraj dokumenta KN-BM-002 v1.0.4**
