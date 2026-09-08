@@ -393,13 +393,14 @@ class ApplicationController extends Controller
             $rules['business_stage'] = 'required|in:'.$liveStages;
         }
 
-        // Dodatna polja za DOO i Ostalo (ista polja)
-        if (($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') && !$isDraft) {
+        // Company-block (osnivač / direktor / sjedište) je obavezan samo za registrovani 1b.
+        // KN-FS-003 §7.8: neregistrovani 1b može biti Popunjen bez podataka koji postoje tek nakon registracije.
+        $isCompanyForm = $request->applicant_type === 'doo' || $request->applicant_type === 'ostalo';
+        if ($isCompanyForm && $resolvedIsRegistered && !$isDraft) {
             $rules['founder_name'] = 'required|string|max:255';
             $rules['director_name'] = 'required|string|max:255';
             $rules['company_seat'] = ['required', 'string', 'max:255', new KotorMunicipalityAddress()];
-        } elseif ($isDraft) {
-            // Za draft, ova polja su opciona
+        } elseif ($isCompanyForm || $isDraft) {
             $rules['founder_name'] = 'nullable|string|max:255';
             $rules['director_name'] = 'nullable|string|max:255';
             $rules['company_seat'] = ['nullable', 'string', 'max:255', new KotorMunicipalityAddress()];

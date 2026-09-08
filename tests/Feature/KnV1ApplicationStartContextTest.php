@@ -260,6 +260,11 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertStringNotContainsString('id="applicant_type_ostalo"', $html);
         $this->assertObrazacRegistracijaHeading($html, '(za oblik registracije '.strtoupper($form).')');
         $this->assertAdditionalDataSectionVisible($html);
+        $this->assertStringContainsString('name="founder_name"', $html);
+        $this->assertStringContainsString('name="director_name"', $html);
+        $this->assertStringContainsString('name="company_seat"', $html);
+        $this->assertStringContainsString('name="crps_number"', $html);
+        $this->assertStringContainsString('name="pib"', $html);
     }
 
     public function test_two_start_context_tokens_stay_independent(): void
@@ -532,6 +537,80 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->assertSame('započinjanje', $application->business_stage);
         $this->assertSame($applicantType, $application->applicant_type);
         $this->assertSame($label, $application->registration_form);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('plannedCompanyProvider')]
+    public function test_unregistered_planned_company_is_complete_without_registration_block(string $form, string $label): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(220 + ord($form[0]))]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_PLANNED_COMPANY,
+            'planned_company_form' => $form,
+        ]);
+
+        $html = $this->createHtml($user, $competition, $token);
+        $this->assertStringContainsString('id="obrazac1b"', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="founder_name"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="director_name"/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<input[^>]*name="company_seat"/', $html);
+        $this->assertAdditionalDataSectionHidden($html);
+
+        $applicantType = $form === 'doo' ? 'doo' : 'ostalo';
+        $payload = $this->storePayloadWithoutStage([
+            'start_context_token' => $token,
+            'applicant_type' => $applicantType,
+            'registration_form' => $label,
+            'doo_jmbg' => $user->jmb,
+            'accuracy_declaration' => '1',
+        ]);
+        unset($payload['save_as_draft'], $payload['founder_name'], $payload['director_name'], $payload['company_seat'], $payload['crps_number'], $payload['pib']);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $payload)
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['founder_name', 'director_name', 'company_seat', 'crps_number', 'pib']);
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertFalse((bool) $application->is_registered);
+        $this->assertSame($applicantType, $application->applicant_type);
+        $this->assertSame($label, $application->registration_form);
+        $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertNull($application->founder_name);
+        $this->assertNull($application->director_name);
+        $this->assertNull($application->crps_number);
+        $this->assertNull($application->pib);
+        $this->assertTrue($application->isObrazacComplete());
+    }
+
+    public function test_registered_doo_still_requires_company_block_to_be_complete(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(221),
+            'company_name' => 'Registered block DOO',
+            'residential_status' => null,
+            'jmb' => $this->validJmb(221),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+
+        $payload = $this->storePayloadWithoutStage([
+            'start_context_token' => $token,
+            'applicant_type' => 'doo',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'doo_jmbg' => $user->jmb,
+            'accuracy_declaration' => '1',
+        ]);
+        unset($payload['save_as_draft'], $payload['founder_name'], $payload['director_name']);
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $payload)
+            ->assertRedirect()
+            ->assertSessionHasErrors(['founder_name', 'director_name']);
+
+        $this->assertSame(0, Application::query()->where('user_id', $user->id)->count());
     }
 
     /**

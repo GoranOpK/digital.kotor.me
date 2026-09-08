@@ -1000,6 +1000,7 @@
                         @enderror
                     </div>
 
+                    @if(!empty($lockedIsRegistered))
                     <div class="form-group">
                         <label class="form-label">*Broj registracije u CRPS:</label>
                         <input 
@@ -1085,6 +1086,7 @@
                     <div style="margin: 16px 0; padding: 12px; background: #f3f4f6; border-radius: 8px; font-size: 13px;">
                         <p style="margin: 4px 0;"><strong>*</strong> Popunjavate samo ako imate registrovan biznis.</p>
                     </div>
+                    @endif
 
                     <div class="form-group">
                         <label class="form-label">
@@ -1882,9 +1884,11 @@
                 const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="doo_jmbg"]') : form.querySelector('input[name="doo_jmbg"]:not([disabled])');
 
-                if (!founderName || !founderName.value.trim()) return false;
-                if (!directorName || !directorName.value.trim()) return false;
-                if (!companySeat || !companySeat.value.trim()) return false;
+                if (knLockedIsRegistered) {
+                    if (!founderName || !founderName.value.trim()) return false;
+                    if (!directorName || !directorName.value.trim()) return false;
+                    if (!companySeat || !companySeat.value.trim()) return false;
+                }
                 if (knIsRegistered && (!registrationForm || !registrationForm.value)) return false;
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');

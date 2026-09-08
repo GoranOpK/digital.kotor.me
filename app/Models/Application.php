@@ -407,9 +407,9 @@ class Application extends Model
                 !$this->physical_person_email) {
                 return false;
             }
-        } elseif ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo') {
-            if (!$this->founder_name || 
-                !$this->director_name || 
+        } elseif ($this->is_registered && ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo')) {
+            if (!$this->founder_name ||
+                !$this->director_name ||
                 !$this->company_seat) {
                 return false;
             }
