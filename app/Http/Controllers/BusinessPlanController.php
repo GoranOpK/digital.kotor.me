@@ -9,6 +9,7 @@ use App\Support\PhoneNumber;
 use App\Support\Pib;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Support\KotorAddress;
+use App\Support\SensitiveIdentifierLogSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,9 +22,15 @@ class BusinessPlanController extends Controller
     /**
      * Pouzdano logovanje za debug čuvanja biznis plana.
      * Piše u laravel.log, channel business_plan i direktno u fajl (fallback).
+     * JMB/JMBG values are redacted before every sink.
      */
     protected function bpLog(string $message, array $context = [], string $level = 'info'): void
     {
+        $context = SensitiveIdentifierLogSanitizer::redact($context);
+        if (! is_array($context)) {
+            $context = [];
+        }
+
         try {
             Log::channel('business_plan')->{$level}($message, $context);
         } catch (\Throwable $e) {
