@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use App\Models\EvaluationScore;
 use App\Models\CommissionMember;
-use App\Models\Commission;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
+use App\Services\CanonicalIndividualScoringService;
+use App\Support\CommissionCanonicalSeat;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +20,7 @@ class EvaluationController extends Controller
     public function __construct(
         protected ApplicationEliminatoryCheckService $eliminatoryChecks,
         protected ApplicationPrigovorService $prigovors,
+        protected CanonicalIndividualScoringService $canonicalScoring,
     ) {}
 
     /**
@@ -88,7 +90,7 @@ class EvaluationController extends Controller
 
         // Prijave koje član komisije još nije ocjenio
         $evaluatedApplicationIds = EvaluationScore::where('commission_member_id', $commissionMember->id)
-            ->whereNotNull('criterion_1')
+            ->whereCompletedFinal()
             ->pluck('application_id')
             ->toArray();
 
@@ -134,13 +136,11 @@ class EvaluationController extends Controller
         // prikaži samo za konkurse koji imaju formiranu rang listu (isRankingFormed)
         // i koji nijesu arhivirani (status nije 'closed' ili 'completed')
         $competitionsWithAllEvaluated = $competitions
-            ->filter(fn ($c) => $c->isRankingFormed() && !in_array($c->status, ['closed', 'completed']))
+            ->filter(fn ($c) => $c->isIndividualScoringCycleComplete() && !in_array($c->status, ['closed', 'completed']))
             ->values();
 
-        // Kontrola vidljivosti konačne ocjene u listi prijava:
-        // konačna ocjena je vidljiva tek kada je rang lista formirana za čitav konkurs
         $canViewFinalScoresByCompetition = $competitions
-            ->mapWithKeys(fn ($c) => [$c->id => $c->isRankingFormed()])
+            ->mapWithKeys(fn ($c) => [$c->id => $c->isIndividualScoringCycleComplete()])
             ->toArray();
 
         $isChairman = $commissionMember->position === 'predsjednik';
@@ -237,25 +237,15 @@ class EvaluationController extends Controller
         }
         
         // Član je završio ocjenjivanje kada su uneseni svi kriterijumi (ne samo prazan red nakon odbijanja zbog dokumentacije)
-        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+        $hasCompletedEvaluation = $this->canonicalScoring->isFinalCompleted($existingScore);
 
-        // Provjeri da li su svi članovi komisije ocjenili prijavu (samo zapisi sa popunjenim kriterijumima)
-        $totalMembers = $commission->activeMembers()->count();
-        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-            ->whereNotNull('criterion_1')
-            ->pluck('commission_member_id')
-            ->unique()
-            ->count();
-        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+        $totalMembers = count(CommissionCanonicalSeat::SEATS);
+        $completedBySeat = $this->canonicalScoring->completedEvaluationsBySeat($application);
+        $evaluatedMemberIds = count($completedBySeat);
+        $allMembersEvaluated = $this->canonicalScoring->applicationHasFiveCanonicalSeats($application);
         
-        // Provjeri da li je predsjednik zaključio prijavu
         $isDecisionMade = $application->commission_decision !== null;
         
-        // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (predsjednik može pristupiti bilo kada)
-        // ILI ako su svi članovi ocjenili (tada svi članovi mogu vidjeti formu u read-only modu)
-        // ILI ako nije zaključena prijava (tada članovi mogu mijenjati napomene)
-        // Podnosilac prijave uvijek vidi formu u read-only modu
         $isChairman = $commissionMember && $commissionMember->position === 'predsjednik';
         
         if ($commissionMember && $hasCompletedEvaluation && !$isChairman && !$allMembersEvaluated && $isDecisionMade) {
@@ -263,33 +253,17 @@ class EvaluationController extends Controller
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
 
-        // Izračunaj prosječne ocjene za svaki kriterijum (samo za članove koji su završili ocjenjivanje)
-        $averageScores = [];
-        for ($i = 1; $i <= 10; $i++) {
-            // Uzmi samo ocjene članova koji su završili ocjenjivanje (imaju sve kriterijume popunjene)
-            $scores = $allScores->filter(function($score) {
-                return $score->criterion_1 !== null; // Ako ima criterion_1, znači da je završio ocjenjivanje
-            })->pluck("criterion_{$i}")->filter()->values();
-            
-            if ($scores->count() > 0) {
-                $averageScores[$i] = round($scores->sum() / $scores->count(), 2);
-            } else {
-                $averageScores[$i] = null;
-            }
-        }
-
-        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena, BEZ dodatnih bodova;
-        // dodatni bodovi se vizuelno dodaju u tabeli preko getBonusScore())
-        $finalScore = array_sum(array_filter($averageScores));
-
-        // Ocjene ostalih članova i zbirne ocjene (prosjeci, konačna) vidljive su tek kada su
-        // SVE prijave na ovom konkursu ocijenjene od SVIH članova - logika je centralizovana
-        // u Competition::isRankingFormed(). Oslanjamo se direktno na taj metod.
         $competition = $application->competition;
-        $canViewOtherMembersScores = $competition ? $competition->isRankingFormed() : false;
-        if ($this->eliminatoryChecks->isConfirmedFail($application)) {
-            $canViewOtherMembersScores = true;
+        $canViewOtherMembersScores = $competition ? $competition->isIndividualScoringCycleComplete() : false;
+        if (! $canViewOtherMembersScores && $commissionMember) {
+            $allScores = $allScores->only([$commissionMember->id]);
         }
+
+        $aggregate = $canViewOtherMembersScores
+            ? $this->canonicalScoring->aggregateApplication($application)
+            : null;
+        $averageScores = $aggregate['criterion_averages'] ?? [];
+        $finalScore = $aggregate['base_score'] ?? 0;
 
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
@@ -374,30 +348,15 @@ class EvaluationController extends Controller
         }
 
         $isChairman = $commissionMember->position === 'predsjednik';
-
-        // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
         $existingScore = EvaluationScore::where('application_id', $application->id)
             ->where('commission_member_id', $commissionMember->id)
             ->first();
-        
-        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
-        
-        // Provjeri da li je prijava zaključena
-        $isDecisionMade = $application->commission_decision !== null;
-        
-        // Provjeri da li su svi članovi komisije ocjenili prijavu
-        $commission = $commissionMember->commission;
-        $totalMembers = $commission->activeMembers()->count();
-        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-            ->whereNotNull('criterion_1')
-            ->pluck('commission_member_id')
-            ->unique()
-            ->count();
-        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
-        
-        // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i bonus kriterijume
-        if ($commissionMember->position !== 'predsjednik') {
+        $alreadyFinal = $this->canonicalScoring->isFinalCompleted($existingScore);
+        $cycleCompleteBefore = $competition
+            ? $this->canonicalScoring->isIndividualScoringCycleComplete($competition)
+            : false;
+
+        if (!$isChairman) {
             $request->merge([
                 'commission_decision' => null,
                 'approved_amount' => null,
@@ -409,312 +368,84 @@ class EvaluationController extends Controller
             ]);
         }
 
-        // Validacija - svaki kriterijum 1-5 poena (samo ako nije predsjednik koji mijenja samo sekciju 2)
-        // Ako je predsjednik i već je ocjenio, ne validiraj kriterijume (može mijenjati samo sekciju 2)
-        // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume (može mijenjati samo napomene)
-        $rules = [];
-        $messages = [];
+        if ($alreadyFinal) {
+            if ($request->filled('notes') && trim((string) $request->input('notes')) !== trim((string) ($existingScore->notes ?? ''))) {
+                abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
+            }
 
-        if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
             for ($i = 1; $i <= 10; $i++) {
-                $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
-                $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
-                $messages["criterion_{$i}.min"] = "Kriterijum {$i} mora biti najmanje 1 poen.";
-                $messages["criterion_{$i}.max"] = "Kriterijum {$i} može biti najviše 5 poena.";
-            }
-        }
-
-        $rules['notes'] = 'nullable|string|max:5000';
-        // Obrazloženje unosi samo predsjednik komisije
-        if ($commissionMember->position === 'predsjednik') {
-            $rules['justification'] = 'nullable|string|max:5000';
-        } else {
-            // Za ostale članove zanemari eventualno poslato obrazloženje
-            $request->merge([
-                'justification' => null,
-            ]);
-        }
-        
-        // Ako je predsjednik i svi članovi su ocjenili, može unijeti zaključak i iznos
-        if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated) {
-            $rules['commission_decision'] = 'nullable|in:podrzava_potpuno,odbija';
-            $rules['approved_amount'] = 'nullable|numeric|min:0';
-            $rules['decision_date'] = 'nullable|date';
-        }
-
-        if (!empty($rules)) {
-            try {
-                $validated = $request->validate($rules, $messages);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                // Ako validacija ne prođe, vrati grešku
-                return redirect()->back()
-                    ->withErrors($e->errors())
-                    ->withInput();
-            }
-        } else {
-            $validated = $request->all();
-        }
-
-        // Izračunaj zbir ocjena (samo ako nije predsjednik koji mijenja samo sekciju 2 ili član koji mijenja samo napomene)
-        $totalScore = 0;
-        if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
-            for ($i = 1; $i <= 10; $i++) {
-                $totalScore += $validated["criterion_{$i}"] ?? 0;
-            }
-        } else {
-            // Ako je predsjednik ili član koji već ocjenio, koristi postojeću ocjenu
-            $existingScore = EvaluationScore::where('application_id', $application->id)
-                ->where('commission_member_id', $commissionMember->id)
-                ->first();
-            if ($existingScore) {
-                $totalScore = $existingScore->final_score ?? 0;
-            }
-        }
-
-        // Provjeri da li član već ocjenio i da li je prijava zaključena
-        // Koristimo postojeći $existingScore umjesto ponovnog traženja
-        $isDecisionMadeForUpdate = $application->commission_decision !== null;
-        
-        if ($existingScore && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
-            // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
-            // Provjeri da li je notes poslan u request-u (čak i ako je null)
-            // Ako jeste poslan (čak i kao null), koristimo tu vrijednost (konvertujemo null u prazan string)
-            // Ako nije poslan, koristimo postojeću vrijednost
-            $notesValue = $existingScore->notes; // Default: postojeća vrijednost
-            
-            if ($request->has('notes')) {
-                // Notes je poslan u request-u (može biti null ili prazan string)
-                $inputNotes = $request->input('notes');
-                $notesValue = $inputNotes !== null ? $inputNotes : '';
-            }
-            
-            $existingScore->update([
-                'notes' => $notesValue,
-            ]);
-            
-            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                ->with('success', 'Napomene su uspješno ažurirane.');
-        }
-
-        // Sačuvaj dodatne kriterijume (bonus bodovi) – označava ih samo predsjednik
-        if ($commissionMember->position === 'predsjednik') {
-            $application->bonus_info_day = $request->boolean('bonus_info_day');
-            $application->bonus_new_business = $request->boolean('bonus_new_business');
-            $application->bonus_zavod_nezaposleni = $request->boolean('bonus_zavod_nezaposleni');
-            $application->bonus_green_innovative = $request->boolean('bonus_green_innovative');
-            $application->save();
-        }
-
-        // Kreiraj ili ažuriraj ocjenu
-        if ($isChairman && $allMembersEvaluated) {
-            $existingScore = EvaluationScore::where('application_id', $application->id)
-                ->where('commission_member_id', $commissionMember->id)
-                ->first();
-        } else {
-            $evaluationScore = EvaluationScore::updateOrCreate(
-                [
-                    'application_id' => $application->id,
-                    'commission_member_id' => $commissionMember->id,
-                ],
-                [
-                    'criterion_1' => $validated['criterion_1'] ?? $existingScore?->criterion_1 ?? null,
-                    'criterion_2' => $validated['criterion_2'] ?? $existingScore?->criterion_2 ?? null,
-                    'criterion_3' => $validated['criterion_3'] ?? $existingScore?->criterion_3 ?? null,
-                    'criterion_4' => $validated['criterion_4'] ?? $existingScore?->criterion_4 ?? null,
-                    'criterion_5' => $validated['criterion_5'] ?? $existingScore?->criterion_5 ?? null,
-                    'criterion_6' => $validated['criterion_6'] ?? $existingScore?->criterion_6 ?? null,
-                    'criterion_7' => $validated['criterion_7'] ?? $existingScore?->criterion_7 ?? null,
-                    'criterion_8' => $validated['criterion_8'] ?? $existingScore?->criterion_8 ?? null,
-                    'criterion_9' => $validated['criterion_9'] ?? $existingScore?->criterion_9 ?? null,
-                    'criterion_10' => $validated['criterion_10'] ?? $existingScore?->criterion_10 ?? null,
-                    'final_score' => $totalScore,
-                    'notes' => $validated['notes'] ?? null,
-                    'justification' => $validated['justification'] ?? null,
-                ]
-            );
-        }
-
-        // Kreiraj ili ažuriraj ocjenu
-        if ($isChairman && $hasCompletedEvaluation) {
-            // Ako je predsjednik i već je ocjenio, ažuriraj samo notes (dok ne zaključi prijavu)
-            $existingScore = EvaluationScore::where('application_id', $application->id)
-                ->where('commission_member_id', $commissionMember->id)
-                ->first();
-            
-            // Provjeri da li je predsjednik zaključio prijavu
-            $isDecisionMade = $application->commission_decision !== null;
-            
-            if ($existingScore && !$isDecisionMade) {
-                $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScore->notes;
-
-                $existingScore->update([
-                    'notes' => $notesValue,
-                ]);
-            }
-            
-            // Redirectuj na listu sa porukom
-            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                ->with('success', 'Izmjene su uspješno sačuvane.');
-        } else {
-            $isDecisionMadeForUpdate = $application->commission_decision !== null;
-            
-            $existingScoreForNotes = EvaluationScore::where('application_id', $application->id)
-                ->where('commission_member_id', $commissionMember->id)
-                ->first();
-            
-            if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
-                $notesValue = $existingScoreForNotes->notes;
-                
-                if ($request->has('notes')) {
-                    $inputNotes = $request->input('notes');
-                    $notesValue = $inputNotes !== null ? $inputNotes : '';
+                if ($request->has("criterion_{$i}") && (int) $request->input("criterion_{$i}") !== (int) $existingScore->{"criterion_{$i}"}) {
+                    abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
                 }
-                
-                $existingScoreForNotes->update([
-                    'notes' => $notesValue,
-                ]);
-                
+            }
+
+            if ($isChairman) {
+                $this->canonicalScoring->saveChairmanBonusWhileCycleOpen(
+                    $application,
+                    $this->chairmanBonusFlagsFromRequest($request),
+                    $cycleCompleteBefore,
+                );
+                if ($competition) {
+                    $this->canonicalScoring->persistApplicationAggregatesIfCycleComplete($competition);
+                }
+
                 return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                    ->with('success', 'Napomene su uspješno ažurirane.');
+                    ->with('success', 'Izmjene su uspješno sačuvane.');
             }
 
-            $evaluationScore = EvaluationScore::updateOrCreate(
-                [
-                    'application_id' => $application->id,
-                    'commission_member_id' => $commissionMember->id,
-                ],
-                [
-                    'criterion_1' => $validated['criterion_1'] ?? $existingScoreForNotes?->criterion_1 ?? null,
-                    'criterion_2' => $validated['criterion_2'] ?? $existingScoreForNotes?->criterion_2 ?? null,
-                    'criterion_3' => $validated['criterion_3'] ?? $existingScoreForNotes?->criterion_3 ?? null,
-                    'criterion_4' => $validated['criterion_4'] ?? $existingScoreForNotes?->criterion_4 ?? null,
-                    'criterion_5' => $validated['criterion_5'] ?? $existingScoreForNotes?->criterion_5 ?? null,
-                    'criterion_6' => $validated['criterion_6'] ?? $existingScoreForNotes?->criterion_6 ?? null,
-                    'criterion_7' => $validated['criterion_7'] ?? $existingScoreForNotes?->criterion_7 ?? null,
-                    'criterion_8' => $validated['criterion_8'] ?? $existingScoreForNotes?->criterion_8 ?? null,
-                    'criterion_9' => $validated['criterion_9'] ?? $existingScoreForNotes?->criterion_9 ?? null,
-                    'criterion_10' => $validated['criterion_10'] ?? $existingScoreForNotes?->criterion_10 ?? null,
-                    'final_score' => $totalScore,
-                    'notes' => $validated['notes'] ?? null,
-                    'justification' => $validated['justification'] ?? null,
-                ]
-            );
-            
-            // Ažuriraj prosječnu ocjenu prijave (prosjek svih članova komisije)
-            $this->updateApplicationScores($application);
-
-            // Ako je predsjednik i svi članovi su ocjenili, može ažurirati zaključak komisije i iznos odobrenih sredstava
-            if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated && isset($validated['commission_decision'])) {
-                $updateData = [
-                    'commission_decision' => $validated['commission_decision'],
-                    'approved_amount' => $validated['approved_amount'] ?? null,
-                    'commission_decision_date' => $validated['decision_date'] ?? now(),
-                ];
-                
-                // Ako je zaključak "odbija", postavi status na rejected
-                // Napomena: Obrazloženje se unosi samo u rang listi kroz storeDecision metodu
-                if ($validated['commission_decision'] === 'odbija') {
-                    $updateData['status'] = 'rejected';
-                    // Ako postoji obrazloženje u requestu, postavi ga kao razlog odbijanja
-                    if (isset($validated['commission_justification']) && !empty($validated['commission_justification'])) {
-                        $updateData['rejection_reason'] = $validated['commission_justification'];
-                    }
-                } elseif ($validated['commission_decision'] === 'podrzava_potpuno') {
-                    $updateData['status'] = 'approved';
-                }
-                
-                $application->update($updateData);
-            }
-
-            // Redirektuj sa filterom "evaluated" da se odmah vidi ocjenjena prijava
-            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                ->with('success', 'Ocjena je uspješno sačuvana.');
+            abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
         }
+
+        $rules = [];
+        $messages = [
+            'scoring_confirmed.accepted' => CanonicalIndividualScoringService::CONFIRMATION_REQUIRED_MESSAGE,
+        ];
+        for ($i = 1; $i <= 10; $i++) {
+            $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
+            $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
+            $messages["criterion_{$i}.min"] = "Kriterijum {$i} mora biti najmanje 1 poen.";
+            $messages["criterion_{$i}.max"] = "Kriterijum {$i} može biti najviše 5 poena.";
+        }
+        $rules['notes'] = 'nullable|string|max:5000';
+        $rules['scoring_confirmed'] = 'accepted';
+
+        $validated = $request->validate($rules, $messages);
+
+        $this->canonicalScoring->recordFinalScore(
+            $application,
+            $commissionMember,
+            $validated,
+            $validated['notes'] ?? null,
+            $request->boolean('scoring_confirmed'),
+        );
+
+        if ($isChairman) {
+            $this->canonicalScoring->saveChairmanBonusWhileCycleOpen(
+                $application,
+                $this->chairmanBonusFlagsFromRequest($request),
+                $cycleCompleteBefore,
+            );
+        }
+
+        if ($competition) {
+            $this->canonicalScoring->persistApplicationAggregatesIfCycleComplete($competition->fresh());
+        }
+
+        return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+            ->with('success', 'Ocjena je uspješno sačuvana.');
     }
 
     /**
-     * Ažurira prosječne ocjene prijave na osnovu ocjena svih članova komisije
+     * @return array<string, bool>
      */
-    private function updateApplicationScores(Application $application): void
+    protected function chairmanBonusFlagsFromRequest(Request $request): array
     {
-        $application->refresh();
-
-        if ($application->isEliminatedFromScoring()) {
-            return;
+        $flags = [];
+        foreach (CanonicalIndividualScoringService::BONUS_FLAG_KEYS as $key) {
+            $flags[$key] = $request->boolean($key);
         }
 
-        $scores = EvaluationScore::where('application_id', $application->id)->get();
-
-        if ($scores->isEmpty()) {
-            return;
-        }
-
-        // Provjeri da li su svi članovi komisije ocjenili prijavu
-        $competition = $application->competition;
-        if (!$competition || !$competition->commission_id) {
-            return;
-        }
-        
-        $commission = Commission::find($competition->commission_id);
-        if (!$commission) {
-            return;
-        }
-        
-        $activeMemberIds = $commission->activeMembers()->pluck('id');
-        $totalMembers = $activeMemberIds->count();
-        
-        // Provjeri da li su svi članovi ocijenili (imaju sve kriterijume popunjene)
-        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $activeMemberIds)
-            ->whereNotNull('criterion_1') // Ako ima criterion_1, znači da je završio ocjenjivanje
-            ->pluck('commission_member_id')
-            ->unique()
-            ->count();
-        
-        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
-
-        // Izračunaj prosjek za svaki kriterijum (samo za članove koji su završili ocjenjivanje)
-        $averages = [];
-        for ($i = 1; $i <= 10; $i++) {
-            $criterionScores = $scores->whereNotNull("criterion_{$i}")->pluck("criterion_{$i}")->toArray();
-            if (!empty($criterionScores)) {
-                $averages[$i] = round(array_sum($criterionScores) / count($criterionScores), 2);
-            } else {
-                $averages[$i] = 0;
-            }
-        }
-
-        // Izračunaj konačnu ocjenu (zbir prosjeka + eventualni bonus bodovi)
-        $finalScore = round(array_sum($averages) + $application->getBonusScore(), 2);
-
-        // Ažuriraj final_score i evaluated_at
-        $updateData = [
-            'final_score' => $finalScore,
-            'evaluated_at' => now(),
-        ];
-
-        // Ako su svi članovi ocijenili i ocjena je ispod 30, odbiti prijavu
-        // Ako nisu svi ocijenili, ne odbijati prijavu (ostavi status 'evaluated' ili 'submitted')
-        if ($allMembersEvaluated) {
-            if ($finalScore < 30) {
-                $updateData['status'] = 'rejected';
-                $updateData['rejection_reason'] = 'Ukupna ocjena ispod 30 bodova (minimum za podršku).';
-            } else {
-                // Ako je ocjena 30 ili više, postavi status na 'evaluated'
-                $updateData['status'] = 'evaluated';
-            }
-        } else {
-            // Ako nisu svi ocijenili, ne mijenjaj status (ostavi postojeći)
-            // Samo ažuriraj final_score i evaluated_at
-        }
-
-        // Ažuriraj prijavu
-        $application->update($updateData);
-
-        // Ažuriraj prosjek u svim ocjenama (za prikaz)
-        foreach ($scores as $score) {
-            $score->update(['average_score' => $finalScore]);
-        }
+        return $flags;
     }
 
     /**
@@ -723,7 +454,7 @@ class EvaluationController extends Controller
     public function show(Application $application): View|\Illuminate\Http\RedirectResponse
     {
         $user = Auth::user();
-        
+
         $commissionMember = $this->commissionMemberForApplication($application, $user->id);
 
         if (!$commissionMember) {
@@ -761,39 +492,18 @@ class EvaluationController extends Controller
             ->get()
             ->keyBy('commission_member_id');
 
-        // Izračunaj prosječne ocjene za svaki kriterijum
-        $averageScores = [];
-        for ($i = 1; $i <= 10; $i++) {
-            $scores = $allScores->pluck("criterion_{$i}")->filter()->values();
-            if ($scores->count() > 0) {
-                $averageScores[$i] = round($scores->sum() / $scores->count(), 2);
-            } else {
-                $averageScores[$i] = null;
-            }
+        $canViewOtherMembersScores = $application->competition
+            ? $application->competition->isIndividualScoringCycleComplete()
+            : false;
+        if (! $canViewOtherMembersScores && $commissionMember) {
+            $allScores = $allScores->only([$commissionMember->id]);
         }
 
-        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
-        $finalScore = array_sum(array_filter($averageScores));
-
-        // Ocjene ostalih članova vidljive su tek kada su SVE prijave na ovom konkursu ocijenjene od SVIH članova
-        $competition = $application->competition;
-        $applicationIdsOnCompetition = Application::where('competition_id', $competition->id)
-            ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
-            ->pluck('id');
-        $activeMemberIds = $commission->activeMembers()->pluck('id');
-        $totalMembers = $activeMemberIds->count();
-        $canViewOtherMembersScores = true;
-        if ($applicationIdsOnCompetition->isNotEmpty() && $totalMembers > 0) {
-            $evaluatedPerApplication = EvaluationScore::whereIn('application_id', $applicationIdsOnCompetition)
-                ->whereIn('commission_member_id', $activeMemberIds)
-                ->whereNotNull('criterion_1')
-                ->selectRaw('application_id, count(distinct commission_member_id) as cnt')
-                ->groupBy('application_id')
-                ->pluck('cnt', 'application_id');
-            $canViewOtherMembersScores = $applicationIdsOnCompetition->every(function ($appId) use ($evaluatedPerApplication, $totalMembers) {
-                return ($evaluatedPerApplication->get($appId, 0)) >= $totalMembers;
-            });
-        }
+        $aggregate = $canViewOtherMembersScores
+            ? $this->canonicalScoring->aggregateApplication($application)
+            : null;
+        $averageScores = $aggregate['criterion_averages'] ?? [];
+        $finalScore = $aggregate['base_score'] ?? 0;
 
         $application->load(['user', 'competition', 'businessPlan', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
@@ -806,8 +516,8 @@ class EvaluationController extends Controller
             && $prigovor?->isPodnesen();
 
         return view('evaluation.show', compact(
-            'application', 
-            'commissionMember', 
+            'application',
+            'commissionMember',
             'evaluationScore',
             'allMembers',
             'allScores',
@@ -841,6 +551,11 @@ class EvaluationController extends Controller
         // Proveri da li je predsjednik
         if ($commissionMember->position !== 'predsjednik') {
             abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
+        }
+
+        $competition = $application->competition;
+        if ($competition && ! $competition->isIndividualScoringCycleComplete()) {
+            abort(403, CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
         }
 
         if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
@@ -935,6 +650,11 @@ class EvaluationController extends Controller
         }
 
         $this->abortIfCommissionProcessingBlocked($application->competition);
+
+        $competition = $application->competition;
+        if ($competition && ! $competition->isIndividualScoringCycleComplete()) {
+            abort(403, CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        }
 
         if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
             abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
@@ -1063,5 +783,15 @@ class EvaluationController extends Controller
             'criterion_3' => $criterion3,
             'note' => $note,
         ];
+    }
+
+    public function score(): never
+    {
+        abort(404);
+    }
+
+    public function comment(): never
+    {
+        abort(404);
     }
 }

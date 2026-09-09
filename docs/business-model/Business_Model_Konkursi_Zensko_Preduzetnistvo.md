@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.13
-**Datum:** 2026-09-08
+**Verzija:** 1.0.15
+**Datum:** 2026-09-09
 
 Povezani dokumenti:
 
@@ -42,6 +42,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.11 | 2026-09-07 | Controlled corrective. §7.2: kanonski identitet i konkursni oblik prijave nijesu ista stvar. Neregistrovano fizičko lice ima podrazumijevani tok fizičko lice / Obrazac 1a; alternativa je planiram osnivanje DOO / Obrazac 1b, uz encoding `doo` + registrovanost NE, bez promjene kanonskog identiteta. `fizicko_lice` je živi V1 oblik prijave, nije samo istorijska vrijednost. Neregistrovani tokovi imaju samo Započinjanje. Postojeća Preduzetnica i postojeće DOO imaju obje faze. Istorijski završeni snimci se ne konvertuju. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.12 | 2026-09-07 | Controlled corrective. §7.2: neregistrovano fizičko lice bira planiranu registraciju kao Preduzetnik (Obrazac 1a) ili planirano osnivanje privrednog društva OD / KD / AD / DOO (Obrazac 1b). Izbor je jednokratan i zaključan za Prijavu. Kanonski registrovani OD / KD / AD / DOO koriste Obrazac 1b. `ostalo` nije novi V1 korisnički tip. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.13 | 2026-09-08 | Controlled corrective. §9.2: odluka Komisije o Prigovoru zahtijeva obavezno obrazloženje; Prihvaćen ne znači automatski da su svi eliminatorni razlozi otklonjeni; za svaki originalni Ne Predsjednik evidentira Otklonjen / Ostaje bez izmjene Obrasca 3; scoring se otvara samo ako nijedan razlog ne ostaje; Podnositeljka prima email obavještenje o donesenoj odluci, a autoritativni zapis ostaje na Platformi. |
+| 1.0.14 | 2026-09-09 | Controlled corrective. **PO-IB-01…05 PO USVOJENO.** Nema nacrta individualnog bodovanja; unos je jednokratna konačna ocjena uz eksplicitnu potvrdu i trajnu nepromjenjivost. Bodovanje se vodi po pet kanonskih mjesta Komisije; zamjena ne stvara šesti glas. Prosjek kriterijuma uvijek / 5. Tajnost i prag od 30 bodova tek po završetku cjelokupnog ciklusa, ne pri 5/5 jedne Prijave. |
+| 1.0.15 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** dodatni bodovi smiju se unositi i mijenjati samo dok je cjelokupan ciklus individualnog bodovanja još otvoren. U trenutku kada svih pet kanonskih mjesta završi bodovanje svih prijava u ciklusu, dodatni bodovi se trajno zaključavaju **prije** otključavanja zbirnih rezultata i rang-liste. Nema naknadne izmjene ni postupka ponovnog otvaranja. |
 
 Napomena:
 
@@ -672,17 +674,27 @@ Status poglavlja: USVOJENO
 
 Obrazac 3 / lista za ocjenjivanje koristi se **od prve sjednice**. Eliminatorna provjera na Obrascu 3 prethodi individualnom bodovanju (Poglavlje 10).
 
-Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri eliminatorna kriterijuma, unos bodova **nije** dozvoljen nijednom članu Komisije, uključujući nacrt.
+Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri eliminatorna kriterijuma, unos bodova **nije** dozvoljen nijednom članu Komisije.
 
-Nakon potvrđenog **Da / Da / Da** član Komisije može unositi i čuvati **nacrt** sopstvenih ocjena za pozitivne kriterijume za koje već raspolaže potrebnim osnovom. Nacrt nije obavezan prije usmenog obrazloženja. Član **nije** dužan ocjenjivati prije usmenog.
+**Nema nacrta individualnog bodovanja.** Nakon potvrđenog **Da / Da / Da** član Komisije unosi sve ocjene odjednom kao **konačnu** individualnu ocjenu. Član **nije** dužan ocjenjivati prije usmenog obrazloženja.
 
 Kriterijum 10 (usmeno obrazloženje) ocjenjuje se **tek nakon** sprovedenog usmenog obrazloženja biznis plana (čl. 20).
 
 Individualno ocjenjivanje **ne može biti završeno** prije nego što su ocijenjena svih 10 pozitivnih kriterijuma.
 
-Svaki od pet članova Komisije, uključujući predsjednika, ocjenjuje svaki od deset pozitivnih kriterijuma za svaki relevantni biznis plan.
+Bodovna ovlašćenja vezuju se za **pet kanonskih mjesta Komisije**, a ne za trenutni broj aktivnih članova:
 
-Predsjednik ima **istu težinu** kao ostali članovi pri individualnom ocjenjivanju.
+1. predsjednik;
+2. prvi redovni član / opština;
+3. drugi redovni član / opština;
+4. član / udruženje;
+5. član / žene mreža.
+
+Svaka Prijava može imati najviše **jednu** konačnu ocjenu po kanonskom mjestu. Zamjenski član koristi mjesto koje zamjenjuje. Zamjena **ne** stvara šesti glas.
+
+Svako od pet kanonskih mjesta ocjenjuje svaki od deset pozitivnih kriterijuma za svaki relevantni biznis plan.
+
+Predsjednik ima **istu težinu** kao ostala kanonska mjesta pri individualnom ocjenjivanju.
 
 ## 12.1. Pozitivni kriterijumi
 
@@ -707,17 +719,17 @@ Za ocjenu biznis plana prema pozitivnim kriterijumima koristi se skala od **1 do
 
 Dok ocjenjivanje traje, članovi Komisije imaju uvid samo u svoje ocjene (čl. 20).
 
-Dok svih 5 članova ne završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje, član vidi samo svoje individualne ocjene. Isto važi za predsjednika Komisije.
+Dok svih **pet kanonskih mjesta** ne završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje, **niko** preko Platforme ne vidi tuđe individualne ocjene, prosjeke, zbirne rezultate ni rang-listu. Isto važi za predsjednika Komisije, Administratora konkursa, Administratora platforme i Super administratora.
+
+Činjenica da je pet mjesta završilo jednu konkretnu Prijavu **ne** otkriva rezultate i **ne** prestaje tajnost ciklusa.
 
 Naknadni uvid u ocjene drugih članova **ne** otključava sopstvene ocjene.
 
 ## 12.4. Nepromjenjivost nakon završavanja
 
-Čuvanje **nacrta** omogućava nastavak rada i izmjene. Nacrt **nije** konačna individualna ocjena. Obično čuvanje nacrta **nije** okidač nepromjenjivosti.
+**Nema nacrta** individualne ocjene. Član unosi svih 10 ocjena (cijeli brojevi 1–5) i prije predaje mora eksplicitno potvrditi da je ocjena **konačna**.
 
-Član eksplicitno **završava** individualno ocjenjivanje. Završavanje zahtijeva potvrdu i moguće je tek kada su unesene ocjene za svih 10 pozitivnih kriterijuma.
-
-Tek nakon potvrđenog završavanja ocjene postaju nepromjenjive. Ne mogu se izmijeniti, obrisati, poništiti niti zamijeniti drugom ocjenom.
+Tek nakon te potvrde ocjene i pripadajuće napomene postaju trajno nepromjenjive. Ne mogu se izmijeniti, obrisati, poništiti niti zamijeniti drugom ocjenom, ni od strane predsjednika, Administratora konkursa, Administratora platforme ni Super administratora.
 
 Nema, nakon završavanja:
 
@@ -725,19 +737,28 @@ Nema, nakon završavanja:
 * brisanja;
 * poništavanja;
 * ponovnog ocjenjivanja;
-* zamjene drugom ocjenom.
+* zamjene drugom ocjenom;
+* postupka ispravke / ponovnog otvaranja.
 
-Ovo je usvojeno poslovno pravilo profila. Odluka 027/26 nema odredbu u direktnom konfliktu sa njim.
+Ovo je usvojeno poslovno pravilo profila (`PO-IB-01`). Odluka 027/26 nema odredbu u direktnom konfliktu sa njim.
 
 ## 12.5. Završetak ocjenjivanja i proračun
 
-Ocjenjivanje je završeno kada svih 5 članova završi individualno ocjenjivanje svih biznis planova koji su ušli u pozitivno ocjenjivanje.
+Ciklus individualnog bodovanja je završen kada svih **pet kanonskih mjesta** ima po jednu konačnu ocjenu za **svaki** biznis plan koji je ušao u pozitivno ocjenjivanje. Potpunost **nije** broj trenutno aktivnih članova.
 
-Prosječna ocjena po svakom kriterijumu predstavlja zbir bodova svih članova Komisije podijeljen brojem članova Komisije (čl. 20).
+Za svaki kriterijum:
 
-Na zbir prosječnih ocjena dodaju se dodatni bodovi (čl. 19 i čl. 20).
+prosječna ocjena = (ocjena mjesta 1 + mjesta 2 + mjesta 3 + mjesta 4 + mjesta 5) / **5**
 
-Konačna ocjena biznis plana predstavlja zbir prosječnih ocjena po svih 10 kriterijuma i dodatnih bodova (čl. 20).
+Djelilac je **uvijek 5**. Ne dijeli se brojem trenutno aktivnih članova ni brojem pronađenih redova.
+
+Osnovna ocjena = zbir 10 kriterijumskih prosjeka.
+
+Konačna ocjena = osnovna ocjena + primjenjivi dodatni bodovi.
+
+Maksimum ostaje **50 + 8 = 58**.
+
+Zbirni rezultat Prijave **ne** formira se dok svih pet kanonskih mjesta nema konačnu ocjenu za tu Prijavu. **Ne** formira se rang-lista niti se primjenjuje prag od 30 bodova samo zato što je peta ocjena stigla za jednu Prijavu. Prag i rang-lista pripadaju fazi rezultata **nakon** završetka cjelokupnog ciklusa (`PO-IB-03`, `PO-IB-05`).
 
 ## 12.6. Dodatni bodovi
 
@@ -753,6 +774,22 @@ Dodatni bodovi prema čl. 19:
 Maksimalno dodatnih bodova = **8**.  
 Maksimalna konačna ocjena = **58**.
 
+Dodatni bodovi smiju se unositi i mijenjati **samo dok je cjelokupan ciklus individualnog bodovanja još otvoren**.
+
+Kada svih pet kanonskih mjesta ima konačnu ocjenu za sve Prijave koje su ušle u pozitivno ocjenjivanje:
+
+1. dodatni bodovi postaju trajno zaključani;
+2. to zaključavanje nastaje **prije** otključavanja zbirnih rezultata, agregata i rang-liste;
+3. nakon toga ih **ne** mogu mijenjati Predsjednik, ostali članovi Komisije, Administrator konkursa, Administrator platforme ni Super administrator;
+4. **ne** uvodi se postupak ponovnog otvaranja ni ispravke;
+5. vidljivost rezultata **nikada** ne smije prethoditi konačnosti dodatnih bodova.
+
+Svrha je sprečavanje manipulacije: niko ne smije vidjeti rezultate ili rang-listu pa zatim izmijeniti dodatne bodove tako da se promijene konačna ocjena ili poredak.
+
+Ako posljednji upis koji zatvara globalni ciklus sadrži i ovlašćeni unos dodatnih bodova Predsjednika, ti bodovi se evidentiraju **prije** zbirne finalizacije, pa se tek tada zaključavaju dodatni bodovi, formiraju agregati fiksnim djelilacem / 5 i otključavaju rezultati.
+
+**PO USVOJENO.** Ne uvodi se nova oznaka `PO-IB-*`.
+
 ## 12.7. Zamjena člana Komisije
 
 Odluka 027/26 uređuje imenovanje zamjenskog odnosno novog člana (čl. 6–10). Imenovanje ostaje prema Poglavlju 4.5.
@@ -763,7 +800,7 @@ Sve radnje i individualne ocjene koje je prethodni član Komisije **završio** p
 
 Završena individualna ocjena prethodnog člana ostaje važeća individualna ocjena **tog prethodnog člana**. **Ne** postaje ocjena zamjenskog člana. Zamjenski član je **ne** može retroaktivno mijenjati.
 
-Zamjenski član Komisije preuzima ulogu od trenutka zamjene i nastavlja postupak **samo** za radnje i individualna ocjenjivanja koja do trenutka zamjene nijesu završena.
+Zamjenski član Komisije preuzima **isto kanonsko mjesto** od trenutka zamjene i nastavlja postupak **samo** za Prijave na kojima to mjesto još nema konačnu ocjenu. Ako je prethodnik već završio ocjenu konkretne Prijave, zamjena **ne** smije ponovo ocjenjivati tu Prijavu. Neaktivnost prethodnika nakon završene ocjene **ne** poništava istorijsku konačnu ocjenu tog mjesta.
 
 Sama zamjena člana **ne** utiče na već završene ocjene drugih članova Komisije, već završene radnje Komisije ni istoriju postupka.
 
@@ -779,7 +816,7 @@ Preliminarna i konačna rang-lista **nijesu** dva fizički odvojena poslovna obj
 
 ## 13.1. Preliminarna rang-lista
 
-Kada svi članovi ocjene sve biznis planove, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20).
+Kada svih pet kanonskih mjesta ocjeni sve biznis planove koji su ušli u pozitivno ocjenjivanje, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20).
 
 Preliminarna rang-lista **ne** smije nastajati samo otvaranjem stranice. Nastaje završetkom ocjenjivanja.
 
@@ -1065,4 +1102,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.13**
+**Kraj dokumenta KN-BM-003 v1.0.14**

@@ -503,7 +503,7 @@
                                     </td>
                                 @endforeach
                                 <td class="average-col">
-                                    @if($canViewOtherMembersScores ?? true)
+                                    @if($canViewOtherMembersScores ?? false)
                                         {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
                                     @else
                                         —
@@ -530,7 +530,7 @@
                                 @php
                                     $bonusScore = $application->getBonusScore();
                                 @endphp
-                                @if($canViewOtherMembersScores ?? true)
+                                @if($canViewOtherMembersScores ?? false)
                                     <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
                                 @else
                                     <strong>—</strong>

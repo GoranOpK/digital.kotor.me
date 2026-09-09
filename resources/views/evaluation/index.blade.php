@@ -228,29 +228,21 @@
                         @php
                             $isEvaluated = \App\Models\EvaluationScore::where('application_id', $application->id)
                                 ->where('commission_member_id', $commissionMember->id)
-                                ->whereNotNull('criterion_1')
+                                ->whereCompletedFinal()
                                 ->exists();
-                            
-                            // Provjeri da li su svi članovi komisije ocjenili prijavu
-                            $commission = $commissionMember->commission;
-                            $totalMembers = $commission->activeMembers()->count();
-                            
-                            // Broj različitih članova koji su ocjenili prijavu
-                            $evaluatedMemberIds = \App\Models\EvaluationScore::where('application_id', $application->id)
-                                ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-                                ->whereNotNull('criterion_1')
-                                ->pluck('commission_member_id')
-                                ->unique()
-                                ->count();
-                            
-                            $allEvaluated = $evaluatedMemberIds >= $totalMembers;
-                            
-                            // Odredi status za prikaz
+
+                            $canViewFinalScores = isset($canViewFinalScoresByCompetition[$application->competition_id])
+                                ? $canViewFinalScoresByCompetition[$application->competition_id]
+                                : false;
+
                             if ($application->status === 'rejected') {
                                 $displayStatus = 'Odbijena prijava';
                                 $statusClass = 'status-rejected';
-                            } elseif ($allEvaluated) {
+                            } elseif ($canViewFinalScores && app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application)) {
                                 $displayStatus = 'Ocijenjena prijava';
+                                $statusClass = 'status-evaluated';
+                            } elseif ($isEvaluated) {
+                                $displayStatus = 'Vaša ocjena je unesena';
                                 $statusClass = 'status-evaluated';
                             } else {
                                 $displayStatus = 'U ocjenjivanju';
@@ -273,15 +265,9 @@
                                 @endif
                             </td>
                             <td>
-                                @php
-                                    // Konačna ocjena vidljiva tek kada je rang lista formirana za cijeli konkurs
-                                    $canViewFinalScores = isset($canViewFinalScoresByCompetition[$application->competition_id])
-                                        ? $canViewFinalScoresByCompetition[$application->competition_id]
-                                        : false;
-                                @endphp
-                                @if($application->status === 'rejected')
+                                @if($application->status === 'rejected' && $application->isEliminatedFromScoring())
                                     {{ number_format($application->getDisplayScore(), 2) }} / 58
-                                @elseif($canViewFinalScores && $allEvaluated && $application->final_score)
+                                @elseif($canViewFinalScores && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 58
                                 @else
                                     Ocjenjivanje u toku
@@ -298,8 +284,8 @@
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #dc2626; color: #fff;">
                                             Pregledaj
                                         </a>
-                                    @elseif($allEvaluated)
-                                        {{-- Kada su svi članovi ocjenili, svi članovi komisije vide "Ocjenjena prijava" --}}
+                                    @elseif($canViewFinalScores)
+                                        {{-- Rang lista je formirana — svi članovi vide ocijenjenu prijavu --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm evaluated" style="background: #10b981; color: #fff;">
                                             Ocijenjena prijava
                                         </a>

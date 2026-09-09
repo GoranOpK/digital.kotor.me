@@ -468,37 +468,35 @@ class Application extends Model
     }
 
     /**
-     * Izračunava prosječnu ocjenu po kriterijumu (zbir ocjena svih članova / broj članova)
+     * Prosječna ocjena kriterijuma = zbir pet kanonskih mjesta / 5.
+     * Ne formira se dok nijesu završena sva mjesta 1–5.
      */
     public function calculateAverageScorePerCriterion(int $criterionNumber): float
     {
-        $scores = $this->evaluationScores()
-            ->whereNotNull("criterion_{$criterionNumber}")
-            ->pluck("criterion_{$criterionNumber}")
-            ->toArray();
+        $aggregate = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->aggregateApplication($this);
 
-        if (empty($scores)) {
+        if ($aggregate === null) {
             return 0;
         }
 
-        return round(array_sum($scores) / count($scores), 2);
+        return (float) ($aggregate['criterion_averages'][$criterionNumber] ?? 0);
     }
 
     /**
-     * Izračunava konačnu ocjenu (zbir prosječnih ocjena po svim kriterijumima)
+     * Konačna ocjena prijave = zbir 10 kriterijumskih prosjeka + bonus.
+     * Ne formira se dok nijesu završena sva kanonska mjesta 1–5.
      */
     public function calculateFinalScore(): float
     {
-        $totalScore = 0;
-        
-        for ($i = 1; $i <= 10; $i++) {
-            $totalScore += $this->calculateAverageScorePerCriterion($i);
+        $aggregate = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->aggregateApplication($this);
+
+        if ($aggregate === null) {
+            return 0;
         }
 
-        // Dodaj dodatne bodove prema Odluci (obuka + žig „Ženski biznis“)
-        $totalScore += $this->getBonusScore();
-
-        return round($totalScore, 2);
+        return (float) $aggregate['final_score'];
     }
 
     /**

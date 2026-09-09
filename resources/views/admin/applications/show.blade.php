@@ -126,7 +126,7 @@
                         $isCommissionMember = $userRole === 'komisija';
                         $competition = $application->competition;
                         // Članovi komisije vide zbirne ocjene (konačna ocjena, ocjene komisije) tek kada je za cijeli konkurs formirana rang lista
-                        $canSeeAggregatesForCommission = !$isCommissionMember || ($competition && $competition->isRankingFormed());
+                        $canSeeAggregatesForCommission = $competition && $competition->isIndividualScoringCycleComplete();
                     @endphp
                     @if($isCommissionMember || $userRole === 'superadmin')
                         {{-- Detaljni prikaz statusa za članove komisije --}}
@@ -245,7 +245,7 @@
                                 <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 58</span>
                             </div>
                             @endif
-                            @if($application->ranking_position)
+                            @if($canSeeAggregatesForCommission && $application->ranking_position)
                             <div class="info-item">
                                 <span class="info-label">Pozicija na rang listi</span>
                                 <span class="info-value">#{{ $application->ranking_position }}</span>
@@ -281,7 +281,7 @@
                                 <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 58</span>
                             </div>
                             @endif
-                            @if($application->ranking_position)
+                            @if($canSeeAggregatesForCommission && $application->ranking_position)
                             <div class="info-item">
                                 <span class="info-label">Pozicija na rang listi</span>
                                 <span class="info-value">#{{ $application->ranking_position }}</span>
@@ -485,7 +485,7 @@
             $isCommissionMember = $userRole === 'komisija';
             $competition = $application->competition;
             // Članovi komisije vide detaljne ocjene i napomene tek kada je rang lista formirana (sve prijave ocijenjene)
-            $canSeeAggregatesForCommission = !$isCommissionMember || ($competition && $competition->isRankingFormed());
+            $canSeeAggregatesForCommission = $competition && $competition->isIndividualScoringCycleComplete();
         @endphp
         @if($canSeeAggregatesForCommission && $application->evaluationScores->count() > 0)
         <div class="info-card">

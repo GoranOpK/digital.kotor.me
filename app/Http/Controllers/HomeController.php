@@ -292,14 +292,14 @@ class HomeController extends Controller
 
                 // Pronađi prijave za konkurse gdje je rok istekao – samo prijave koje član JOŠ NIJE ocjenio
                 $evaluatedApplicationIds = \App\Models\EvaluationScore::where('commission_member_id', $commissionMember->id)
-                    ->whereNotNull('criterion_1')
+                    ->whereCompletedFinal()
                     ->pluck('application_id')
                     ->toArray();
 
                 $applicationsQuery = Application::whereIn('competition_id', $competitionIdsForEvaluation)
                     ->whereIn('status', ['submitted', 'evaluated'])
                     ->whereEliminatoryScoringNotBlocked()
-                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember', 'eliminatoryCheck', 'prigovor']);
+                    ->with(['competition', 'user', 'businessPlan', 'eliminatoryCheck', 'prigovor']);
 
                 if (! empty($evaluatedApplicationIds)) {
                     $applicationsQuery->whereNotIn('id', $evaluatedApplicationIds);
@@ -314,7 +314,7 @@ class HomeController extends Controller
                     }
                     $app->is_evaluated_by_member = \App\Models\EvaluationScore::where('application_id', $app->id)
                         ->where('commission_member_id', $commissionMember->id)
-                        ->whereNotNull('criterion_1')
+                        ->whereCompletedFinal()
                         ->exists();
                 });
 

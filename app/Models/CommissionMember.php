@@ -20,6 +20,7 @@ class CommissionMember extends Model
         'organization',
         'is_substitute',
         'replaces_member_number',
+        'canonical_seat_no',
         'confidentiality_declaration',
         'conflict_of_interest_declaration',
         'declarations_signed_at',
@@ -30,6 +31,7 @@ class CommissionMember extends Model
         'declarations_signed_at' => 'datetime',
         'is_substitute' => 'boolean',
         'replaces_member_number' => 'integer',
+        'canonical_seat_no' => 'integer',
     ];
 
     /**

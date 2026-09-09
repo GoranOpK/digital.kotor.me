@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\RichText;
+use App\Services\CanonicalIndividualScoringService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -335,56 +336,21 @@ class Competition extends Model
     }
 
     /**
-     * Provjerava da li je rang lista formirana - rok za prijave je istekao
-     * i svi članovi komisije su ocjenili sve prijave
+     * Ciklus individualnog bodovanja je završen kada svih pet kanonskih mjesta
+     * ima konačnu ocjenu za svaku prijavu koja smije ući u bodovanje.
+     */
+    public function isIndividualScoringCycleComplete(): bool
+    {
+        return app(CanonicalIndividualScoringService::class)
+            ->isIndividualScoringCycleComplete($this);
+    }
+
+    /**
+     * Rang lista je formirana tek po završetku cjelokupnog ciklusa individualnog bodovanja.
      */
     public function isRankingFormed(): bool
     {
-        // Rang lista se ne formira prije isteka roka za prijave (osim ako je konkurs već zatvoren)
-        if ($this->status !== 'closed' && !$this->isApplicationDeadlinePassed()) {
-            return false;
-        }
-
-        $commission = $this->commission;
-        if (!$commission) {
-            return false;
-        }
-
-        $activeMemberIds = $commission->activeMembers()->pluck('id');
-        if ($activeMemberIds->isEmpty()) {
-            return false;
-        }
-
-        $applications = $this->applications()
-            ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
-            ->with(['eliminatoryCheck', 'prigovor'])
-            ->get();
-
-        if ($applications->isEmpty()) {
-            return false;
-        }
-
-        $activeMembersCount = $activeMemberIds->count();
-
-        foreach ($applications as $application) {
-            if ($application->isEliminatedFromScoring()) {
-                continue;
-            }
-
-            // Sve ostale prijave: svi članovi moraju ocjeniti
-            $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $application->id)
-                ->whereIn('commission_member_id', $activeMemberIds)
-                ->whereNotNull('criterion_1')
-                ->pluck('commission_member_id')
-                ->unique()
-                ->count();
-
-            if ($evaluatedCount < $activeMembersCount) {
-                return false;
-            }
-        }
-
-        return true;
+        return $this->isIndividualScoringCycleComplete();
     }
 
     /**

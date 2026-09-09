@@ -1364,6 +1364,8 @@ class AdminController extends Controller
             $createdMembers++;
         }
 
+        \App\Support\CommissionCanonicalSeat::persistForCommission($commission->fresh('members'));
+
         // Dodijeli komisiju izabranim konkursima
         if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             Competition::whereIn('id', $validated['competition_ids'])
@@ -1705,6 +1707,8 @@ class AdminController extends Controller
             ]);
         });
 
+        \App\Support\CommissionCanonicalSeat::persistForCommission($commission->fresh('members'));
+
         // Pošalji e-mail o imenovanju u komisiju
         $targetUser = $member->user;
         if ($targetUser && $targetUser->email) {
@@ -2025,24 +2029,18 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if ($competition->isCommissionProcessingBlocked()) {
-            abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        if (! $competition->isIndividualScoringCycleComplete()) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
         }
 
-        // Učitaj sve prijave za ovaj konkurs
+        // Učitaj sve prijave za ovaj konkurs. GET je isključivo čitanje:
+        // ne upisuje final_score niti ranking_position.
         $allApplications = Application::where('competition_id', $competition->id)
             ->with(['user', 'businessPlan', 'evaluationScores', 'eliminatoryCheck', 'prigovor'])
             ->get()
             ->map(function ($application) {
-                // Izračunaj konačnu ocjenu samo ako nije nikad snimljena
-                // (0 je validna vrijednost i ne treba ponovo računati).
-                if ($application->final_score === null) {
-                    $application->final_score = $application->calculateFinalScore();
-                    $application->save();
-                }
-                // Dodaj informacije o ocjenjivanju
-                $application->has_evaluations = $application->evaluationScores()->count() > 0;
-                $application->evaluation_count = $application->evaluationScores()->count();
+                $application->has_evaluations = $application->evaluationScores->count() > 0;
+                $application->evaluation_count = $application->evaluationScores->count();
 
                 return $application;
             });
@@ -2063,8 +2061,8 @@ class AdminController extends Controller
 
         $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
 
-        // Aktivan konkurs: rangiranje po ocjeni i upis pozicija.
-        // Arhiva: čuva se isti poredak koji je već zaključen (ranking_position).
+        // GET samo čita već finalizovane vrijednosti. Upis ranking_position
+        // i applications.final_score nije dio ovog requesta.
         if ($isArchivedCompetition) {
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())
@@ -2100,27 +2098,31 @@ class AdminController extends Controller
                 })
                 ->values();
         } else {
-            // Iznad crte: 30+ bodova, sortirano po ocjeni
+            // Iznad crte: 30+ bodova, poredak iz ciklusa finalizacije (bez upisa na GET)
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())
-                ->sortByDesc('final_score')
+                ->sort(function ($a, $b) {
+                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
+                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
+
+                    if ($aPos !== $bPos) {
+                        return $aPos <=> $bPos;
+                    }
+
+                    $aScore = (float) ($a->final_score ?? 0);
+                    $bScore = (float) ($b->final_score ?? 0);
+                    if ($aScore !== $bScore) {
+                        return $bScore <=> $aScore;
+                    }
+
+                    return $a->id <=> $b->id;
+                })
                 ->values();
 
-            // Ispod crte: ispod 30 bodova, sortirano po ocjeni
             $belowLineApplications = $visibleApplications
                 ->filter(fn ($app) => ! $app->meetsMinimumScore())
                 ->sortByDesc('final_score')
                 ->values();
-
-            // Dodaj poziciju na rang listi samo za prijave iznad crte (30+ bodova)
-            $position = 1;
-            foreach ($applications as $application) {
-                DB::table('applications')
-                    ->where('id', $application->id)
-                    ->update(['ranking_position' => $position]);
-                $application->ranking_position = $position;
-                $position++;
-            }
         }
 
         // Izračunaj ukupan budžet i preostali budžet
@@ -2165,6 +2167,10 @@ class AdminController extends Controller
 
         if ($competition->isCommissionProcessingBlocked()) {
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+
+        if (! $competition->isIndividualScoringCycleComplete()) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
         }
 
         // Prikupi odabrane dobitnike iz forme
@@ -2250,6 +2256,10 @@ class AdminController extends Controller
 
         if ($competition->isCommissionProcessingBlocked()) {
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+
+        if (! $competition->isIndividualScoringCycleComplete()) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
         }
 
         $documentData = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)

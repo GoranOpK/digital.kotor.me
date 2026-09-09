@@ -676,8 +676,9 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed || ! $scoringIsAllowed) onsubmit="event.preventDefault(); return false;" @endif>
+            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" data-needs-final-confirm="{{ ($scoringIsAllowed && !($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false)) ? '1' : '0' }}" @if($isRejected || $isApplicant || $isDeadlinePassed || ! $scoringIsAllowed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
+                <input type="hidden" name="scoring_confirmed" value="0">
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section form-section-scores">
@@ -773,10 +774,7 @@
                             <td class="average-col" id="avg_{{ $num }}">
                                 @php
                                     // Prosječne ocjene vidljive tek kada SVI članovi ocijene SVE prijave na konkursu
-                                    $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
-                                    $canViewAggregates = $allMembersEvaluatedFlag
-                                        && isset($canViewOtherMembersScores)
-                                        && $canViewOtherMembersScores;
+                                    $canViewAggregates = isset($canViewOtherMembersScores) && $canViewOtherMembersScores;
                                 @endphp
                                 @if($canViewAggregates && isset($averageScores[$num]))
                                     {{ number_format($averageScores[$num], 2) }}
@@ -949,7 +947,6 @@
                                                 $memberScore = $allScores->get($member->id);
                                                 $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
                                                 $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-                                                $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                             @endphp
                                         @if($isCurrentMember)
                                             {{-- Trenutni član UVIJEK vidi svoju konačnu ocjenu (bez dodatnih bodova – oni su zajednički) --}}
@@ -968,11 +965,8 @@
                                     @php
                                         // Konačna prosječna ocjena (sa bonus bodovima) vidljiva tek kada
                                         // SVI članovi ocijene SVE prijave na konkursu
-                                        $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                         $bonusScore = $application->getBonusScore();
-                                        $canViewAggregates = $allMembersEvaluatedFlag
-                                            && isset($canViewOtherMembersScores)
-                                            && $canViewOtherMembersScores;
+                                        $canViewAggregates = isset($canViewOtherMembersScores) && $canViewOtherMembersScores;
                                     @endphp
                                     @if($canViewAggregates && $finalScore > 0)
                                         <strong>{{ number_format($finalScore + $bonusScore, 2) }}</strong>
@@ -1046,7 +1040,7 @@
                         $isDecisionMade = $application->commission_decision !== null;
                         
                         // Trenutni član može unijeti napomene dok predsjednik ne zaključi prijavu
-                        $canEditNotes = !$isDecisionMade;
+                        $canEditNotes = !($hasCompletedEvaluation ?? false);
                     @endphp
                     
                     @php
@@ -1061,7 +1055,7 @@
 
                         // Tuđe napomene vidljive tek kada svi članovi završe ocjenjivanje
                         // Trenutni član UVIJEK vidi svoju napomenu
-                        if (!($allMembersEvaluated ?? false)) {
+                        if (!($canViewOtherMembersScores ?? false)) {
                             $membersWithNotes = array_filter($membersWithNotes, function($note) use ($commissionMember) {
                                 return $commissionMember && $note['member']->id === $commissionMember->id;
                             });
@@ -1122,7 +1116,7 @@
                     @php
                         // Provjeri da li trenutni član može editovati napomene
                         $isDecisionMade = $application->commission_decision !== null;
-                        $canEditNotesValue = !$isDecisionMade;
+                        $canEditNotesValue = !($hasCompletedEvaluation ?? false);
                         $isRejected = $application->status === 'rejected';
                     @endphp
                     
@@ -1132,7 +1126,7 @@
                         // Štampanje je dozvoljeno kada:
                         // - sve prijave na konkursu ocijene svi članovi (rang lista spremna), ILI
                         // - prijava ne prolazi potvrđenu eliminatornu provjeru
-                        $canPrintNow = $allMembersEvaluatedFlag || $rejectedForDocuments;
+                        $canPrintNow = ($canViewOtherMembersScores ?? false) || $rejectedForDocuments;
                     @endphp
 
                     @if($isRejected)
@@ -1174,7 +1168,7 @@
                         @endif
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
-                    @elseif($hasCompletedEvaluation && $allMembersEvaluated)
+                    @elseif($hasCompletedEvaluation && ($canViewOtherMembersScores ?? false))
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
@@ -1183,12 +1177,13 @@
                             Nazad na listu
                         </a>
                     @elseif($hasCompletedEvaluation)
-                        {{-- Član je završio ocjenjivanje (prije ostalih) - vidi svoje ocjene, dugme Ocjene --}}
+                        {{-- Član je završio ocjenjivanje — ocjene su nepromjenjive --}}
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         @endif
-                        <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocjene</button>
-                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                        <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                            Nazad na listu
+                        </a>
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
@@ -1233,5 +1228,24 @@
 
         return true;
     }
+
+    document.getElementById('evaluationForm')?.addEventListener('submit', function (event) {
+        if (this.dataset.needsFinalConfirm !== '1') {
+            return;
+        }
+
+        const confirmed = this.querySelector('[name="scoring_confirmed"]');
+        if (!window.confirm('Ovim potvrđujete unesene ocjene i napomenu. Nakon potvrde individualno bodovanje ove prijave više nije moguće mijenjati. Da li želite da završite bodovanje?')) {
+            event.preventDefault();
+            if (confirmed) {
+                confirmed.value = '0';
+            }
+            return;
+        }
+
+        if (confirmed) {
+            confirmed.value = '1';
+        }
+    });
 </script>
 @endsection

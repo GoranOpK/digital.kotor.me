@@ -6,7 +6,7 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.15
+**Verzija:** 1.0.16
 **Datum:** 2026-09-09
 
 ---
@@ -119,10 +119,10 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 | Oznaka | Dokument | Putanja | Uloga | Status u izvornom zaglavlju |
 |--------|----------|---------|-------|------------------------------|
 | **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.5) |
-| **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.13) |
+| **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.15) |
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
 | **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.3) |
-| **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.6) |
+| **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.8) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
 
@@ -226,7 +226,8 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | 1.0.13 | 2026-09-08 | Administrativno usklađivanje pokazivača: KN-BM-003 v1.0.13 i KN-FS-003 v1.0.6 (Prigovor corrective: obavezno obrazloženje odluke, per-criterion ishod originalnih Ne, decision email, Platforma authority). Katalog skraćenica KEEP. Bez novih Document ID-eva. |
 | 1.0.14 | 2026-09-09 | Evidentirani KN-PATCH-BM-014 za KN-BM-002 v1.0.4 i KN-PATCH-FS-008 za KN-FS-002 v1.0.2 radi proširenja pojma društva na DOO, AD, OD i KD i usklađivanja izbora namjere, poslovne faze, obrasca i dokumentacionog paketa. |
 | 1.0.15 | 2026-09-09 | Evidentirani KN-PATCH-BM-015 za KN-BM-002 v1.0.5 i KN-PATCH-FS-009 za KN-FS-002 v1.0.3 radi M3 sa tri eliminatorna kriterijuma, prigovora na svaki aktivirani kriterijum, objedinjenog obavještenja i pojedinačnih ishoda. |
+| 1.0.16 | 2026-09-09 | Administrativno usklađivanje pokazivača: KN-BM-003 v1.0.15 i KN-FS-003 v1.0.8 (scoring corrective PO-IB-01…05 i zaključavanje dodatnih bodova prije otključavanja rezultata). Sačuvani pokazivači KN-BM-002 v1.0.5 / KN-FS-002 v1.0.3 i changelog 1.0.14–1.0.15. Katalog skraćenica KEEP. Bez novih Document ID-eva. KN-TS-001 ostaje NACRT. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.15**
+**Kraj dokumenta KN-RG-001 v1.0.16**

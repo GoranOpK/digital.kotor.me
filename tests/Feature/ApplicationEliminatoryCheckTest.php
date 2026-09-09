@@ -489,9 +489,7 @@ class ApplicationEliminatoryCheckTest extends TestCase
 
     private function scorePayload(array $overrides = []): array
     {
-        $payload = [
-            'notes' => null,
-        ];
+        $payload = ['notes' => null, 'scoring_confirmed' => '1'];
         for ($i = 1; $i <= 10; $i++) {
             $payload["criterion_{$i}"] = 5;
         }

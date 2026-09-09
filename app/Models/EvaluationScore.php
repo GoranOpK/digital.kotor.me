@@ -13,6 +13,8 @@ class EvaluationScore extends Model
     protected $fillable = [
         'application_id',
         'commission_member_id',
+        'canonical_seat_no',
+        'completed_at',
         'documents_complete',
         'criterion_1',
         'criterion_2',
@@ -44,6 +46,8 @@ class EvaluationScore extends Model
         'criterion_10' => 'integer',
         'average_score' => 'decimal:2',
         'final_score' => 'decimal:2',
+        'canonical_seat_no' => 'integer',
+        'completed_at' => 'datetime',
     ];
 
     /**
@@ -63,11 +67,23 @@ class EvaluationScore extends Model
     }
 
     /**
-     * Član je završio unos svih kriterijuma (Obrazac 3).
+     * Član je završio unos svih kriterijuma (konačna individualna ocjena).
      */
     public function hasCompletedCriteria(): bool
     {
-        return $this->criterion_1 !== null;
+        return app(\App\Services\CanonicalIndividualScoringService::class)->isFinalCompleted($this);
+    }
+
+    public function scopeWhereCompletedFinal($query)
+    {
+        return $query->where(function ($inner) {
+            $inner->whereNotNull('completed_at')
+                ->orWhere(function ($all) {
+                    for ($i = 1; $i <= 10; $i++) {
+                        $all->whereNotNull("criterion_{$i}");
+                    }
+                });
+        });
     }
 
     /**

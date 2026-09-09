@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.6
-**Datum:** 2026-09-08
+**Verzija:** 1.0.8
+**Datum:** 2026-09-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.13; **PO USVOJENO** za odluku po Prigovoru)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.15; **PO USVOJENO** za PO-IB-01…05 i za zaključavanje dodatnih bodova prije otključavanja rezultata)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -61,6 +61,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.4 | 2026-09-08 | Controlled corrective. §7.7 / §7.8: za `is_registered` = NE sekcija „Dodatni podaci“ (Broj računa, PDV broj, Website) nije primjenjiva i ne prikazuje se na Obrascu 1a ni 1b. Za `is_registered` = DA ostaje opciona prema postojećem V1 modelu. **PO USVOJENO.** **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.5 | 2026-09-08 | Controlled clarification. §7.5 / §7.7 / §7.8: sačuvani podaci Obrasca 1a/1b pripadaju Prijavi (snapshot). Registrovani podnosilac: CRPS i PIB su obavezni za Popunjen i konačno čuvanje i prikazuju se. Neregistrovani: CRPS i PIB se ne prikazuju i nijesu obavezni. Adresa i Sjedište društva su zasebni podaci Prijave; profilna adresa je samo početna vrijednost za Adresu, ne automatski Sjedište. **PO USVOJENO.** |
 | 1.0.6 | 2026-09-08 | Controlled corrective. §10.4 / §11.8 / §18.4.2: obavezno obrazloženje odluke o Prigovoru; Prihvaćen može ostaviti preostali eliminatorni razlog; per-criterion Otklonjen/Ostaje samo za originalne Ne, bez izmjene Obrasca 3; scoring OPEN samo ako nijedan razlog ne ostaje; email obavještenje o odluci, Platforma je autoritet (`decided_at`). |
+| 1.0.7 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.14 / **PO-IB-01…05 PO USVOJENO**. Nema nacrta individualnog bodovanja; eksplicitna potvrda konačne ocjene; pet kanonskih mjesta; fiksni djelilac /5; tajnost i prag 30 tek po završetku cjelokupnog ciklusa. |
+| 1.0.8 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.15. **PO USVOJENO:** dodatni bodovi se zaključavaju u trenutku završetka cjelokupnog ciklusa individualnog bodovanja, **prije** otključavanja zbirnih rezultata i rang-liste. Nema izmjene nakon toga ni postupka ponovnog otvaranja. |
 
 Napomena:
 
@@ -567,21 +569,17 @@ Ne uvodi se:
 
 Funkcionalna razrada: Poglavlje 11.
 
-## 4.7. Obrazac 3 i radni nacrt ocjena
+## 4.7. Obrazac 3 i konačno individualno bodovanje
 
 Obrazac 3 / lista za ocjenjivanje dostupna je Komisiji već od prve sjednice.
 
 Dostupnost Obrasca 3 **nije** isto što i završeno ocjenjivanje i **nije** isto što i otvoren unos bodova.
 
-Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri eliminatorna kriterijuma, član Komisije **ne** može unositi niti čuvati nacrt ocjena.
+Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri eliminatorna kriterijuma, član Komisije **ne** može unositi individualne ocjene.
 
-Nakon potvrđenog **Da / Da / Da** član Komisije može unositi i čuvati **nacrt** sopstvenih ocjena za pozitivne kriterijume za koje raspolaže potrebnim osnovom.
+Nakon potvrđenog **Da / Da / Da** član Komisije unosi **konačnu** individualnu ocjenu: svih 10 kriterijuma, cijeli brojevi 1–5, uz eksplicitnu potvrdu da je ocjena konačna.
 
-Nacrt:
-
-* može se ponovo otvoriti;
-* može se mijenjati;
-* **nije** konačno završena individualna ocjena.
+**Nema nacrta** individualne ocjene. Nema čuvanja djelimičnog unosa radi kasnije izmjene.
 
 Kriterijum 10 — usmeno obrazloženje — ocjenjuje se nakon sprovedenog usmenog obrazloženja biznis plana.
 
@@ -599,9 +597,9 @@ Nakon potvrđenog završavanja:
 * ne mogu se uređivati;
 * ne mogu se brisati, resetovati ni zamijeniti.
 
-Obično čuvanje nacrta **nije** okidač nepromjenjivosti.
+Obično čuvanje **nije** dostupno: postoji samo konačna predaja uz potvrdu.
 
-Zamjena člana Komisije nema retroaktivno dejstvo (`KN-BM-003` §12.7; ovaj dokument §17.3). Završena individualna ocjena ostaje nepromjenjiva i ostaje vezana za člana koji ju je završio.
+Zamjena člana Komisije nema retroaktivno dejstvo (`KN-BM-003` §12.7; ovaj dokument §17.3). Završena individualna ocjena ostaje nepromjenjiva i ostaje vezana za kanonsko mjesto na kojem je završena.
 
 ## 4.9. Završetak ukupnog ocjenjivanja i vidljivost rezultata
 
@@ -609,9 +607,10 @@ Dok ukupno ocjenjivanje traje:
 
 * svaki član vidi samo svoje individualne ocjene;
 * predsjednik **nema** privilegovan uvid;
+* Administrator konkursa, Administrator platforme i Super administrator **nemaju** uvid u tuđe ocjene, prosjeke, zbirne rezultate ni rang-listu;
 * činjenica da je član završio svoje ocjenjivanje ne otkriva rezultate drugih.
 
-Ukupno ocjenjivanje je završeno kada **svi** članovi Komisije završe individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje.
+Ukupno ocjenjivanje je završeno kada **svih pet kanonskih mjesta Komisije** završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje. Potpunost **nije** broj trenutno aktivnih članova.
 
 Tada istovremeno:
 
@@ -2437,19 +2436,17 @@ Kriterijum 10 je kriterijum usmenog obrazloženja. Poslovni redoslijed unosa ure
 
 Ne uvode se dodatni bodovi, prag od 30 bodova, prosjeci, konačna ocjena Prijave ni rang-lista.
 
-## 13.3. Nacrt individualne ocjene
+## 13.3. Nema nacrta individualne ocjene
 
-Dok član **nije** odabrao **Završi ocjenjivanje**, njegovo individualno ocjenjivanje ostaje **nacrt**.
+**Nema nacrta** individualnog bodovanja.
 
-Nacrt se odnosi na **cjelokupno** individualno ocjenjivanje člana, ne samo na kriterijume 1–9.
+Član unosi svih **10** ocjena odjednom. Svaka ocjena mora biti cijeli broj **1–5**.
 
-Dok ocjena ostaje nacrt, član može unositi i mijenjati sopstvene ocjene kriterijuma.
+Prije konačne predaje Platforma zahtijeva **eksplicitnu potvrdu** da je ocjena konačna.
 
-Ocjene unesene kao nacrt **nijesu** konačne.
+Dok predaja nije potvrđena, ocjena **nije** sačuvana kao konačna. Nema čuvanja djelimičnog unosa radi kasnije izmjene.
 
-Član može sačuvati nacrt i kasnije nastaviti uređivanje.
-
-Granica izmjenjivosti je eksplicitna radnja **Završi ocjenjivanje**, **ne** kriterijum 10.
+Granica nepromjenjivosti je ta potvrđena konačna predaja, **ne** samo popunjenost kriterijuma 10.
 
 Kriterijum 10, prema poslovnom postupku Poglavlja 12, ocjenjuje se nakon što je usmeno obrazloženje sprovedeno.
 
@@ -2459,15 +2456,15 @@ Platforma **ne** kontroliše tehnički kada se unosi ocjena kriterijuma 10. Ne u
 
 Individualno ocjenjivanje može se završiti **samo** kada su unesene ocjene za svih 10 kriterijuma.
 
-Član eksplicitno bira **Završi ocjenjivanje**.
+Član eksplicitno potvrđuje da je individualna ocjena **konačna**.
 
 Platforma zahtijeva **potvrdu** te radnje.
 
 Nakon potvrde, individualno ocjenjivanje postaje **konačno**.
 
-Ocjene kriterijuma se nakon završavanja **ne** mogu mijenjati.
+Ocjene kriterijuma i Ostale napomene se nakon završavanja **ne** mogu mijenjati.
 
-Ne uvodi se automatsko završavanje samo zato što su sva polja popunjena. Ne uvodi se ponovno otvaranje, ovlašćenje predsjednika da mijenja tuđu ocjenu, ovlašćenje Administratora konkursa da mijenja ocjene, ni uređivanje završenih ocjena.
+Ne uvodi se automatsko završavanje samo zato što su sva polja popunjena. Ne uvodi se ponovno otvaranje, ovlašćenje predsjednika da mijenja tuđu ocjenu, ovlašćenje Administratora konkursa, Administratora platforme ili Super administratora da mijenja ocjene, ni uređivanje završenih ocjena.
 
 ## 13.5. Tajnost individualnog ocjenjivanja
 
@@ -2475,11 +2472,11 @@ Dok je cjelokupan ciklus individualnog ocjenjivanja **otvoren**, svaki član Kom
 
 Predsjednik Komisije **nema** privilegovan uvid u individualne ocjene drugih članova dok taj ciklus traje.
 
-Administrator konkursa **ne** dobija pristup individualnim ocjenama članova Komisije dok je ciklus individualnog ocjenjivanja otvoren.
+Administrator konkursa, Administrator platforme i Super administrator **ne** dobijaju pristup individualnim ocjenama, prosjecima, zbirnim rezultatima ni rang-listi dok je ciklus individualnog ocjenjivanja otvoren.
 
 Podnositeljka **ne** dobija pristup individualnim ocjenama članova Komisije u ovom poglavlju.
 
-Individualne ocjene drugih članova postaju dostupne Komisiji **tek** kada svi članovi Komisije završe individualno ocjenjivanje **svih** Prijava koje su ušle u ciklus individualnog ocjenjivanja.
+Individualne ocjene drugih članova postaju dostupne Komisiji **tek** kada svih **pet kanonskih mjesta** završi individualno ocjenjivanje **svih** Prijava koje su ušle u ciklus individualnog ocjenjivanja.
 
 Ovo poglavlje **ne** određuje kasniju javnu objavu ni pristup Podnositeljke rezultatima.
 
@@ -2508,9 +2505,8 @@ Ne uvode se napomene po pojedinačnom kriterijumu.
 Poglavlje 13 obuhvata:
 
 * individualne ocjene kriterijuma;
-* nacrt;
-* izmjenjivost prije završavanja;
-* eksplicitno završavanje;
+* odsustvo nacrta;
+* eksplicitnu potvrdu konačne predaje;
 * nepromjenjivost nakon završavanja;
 * tajnost;
 * opcione Ostale napomene.
@@ -2540,7 +2536,7 @@ Ovo poglavlje određuje zbirne rezultate, dodatne bodove, konačnu ocjenu, prag 
 
 Poglavlje **ne** rješava Poglavlje 11. Koristi rezultat prethodnih faza, bez njihovog ponovnog definisanja.
 
-Poglavlja 12 i 13 ostaju usvojena. Ovo poglavlje **ne** mijenja individualno ocjenjivanje, nacrt, završavanje, nepromjenjivost individualnih ocjena ni tajnost dok ciklus traje.
+Poglavlja 12 i 13 ostaju usvojena. Ovo poglavlje **ne** mijenja individualno ocjenjivanje, odsustvo nacrta, završavanje, nepromjenjivost individualnih ocjena ni tajnost dok ciklus traje.
 
 Ne određuje predlog Odluke, predlaganje Sekretarijatu, zatvaranje Konkursa, arhivu, konačnu Odluku ni objavu. Ti tokovi pripadaju Poglavlju 15.
 
@@ -2568,7 +2564,7 @@ Za svaki od 10 kriterijuma ocjenjivanja:
 
 prosječna ocjena kriterijuma = zbir konačnih individualnih ocjena svih pet članova Komisije / 5
 
-U proračun ulaze ocjene **svih pet** članova.
+U proračun ulaze ocjene **svih pet kanonskih mjesta**. Djelilac je **uvijek 5**. Ne dijeli se brojem trenutno aktivnih članova.
 
 Kriterijumi imaju **istu težinu**. Ne uvodi se ponderisanje kriterijuma.
 
@@ -2601,8 +2597,15 @@ Ne uvodi se novi tok dokaza, novo stanje Prijave, automatski motor podobnosti ni
 
 Razlikuje se:
 
-* **unos** — Predsjednik može evidentirati osnov i prije globalnog završetka ocjenjivanja;
-* **konačna vidljivost zbirnih rezultata i rang-liste** — ostaje uređena granicom tajnosti Poglavlja 13 i §14.1 / §14.6.
+* **unos** — Predsjednik može evidentirati osnov i prije globalnog završetka ocjenjivanja, i smije ga mijenjati **samo dok je globalni ciklus još otvoren**;
+* **zaključavanje dodatnih bodova** — nastaje u trenutku završetka cjelokupnog ciklusa, **prije** otključavanja zbirnih rezultata i rang-liste;
+* **konačna vidljivost zbirnih rezultata i rang-liste** — ostaje uređena granicom tajnosti Poglavlja 13 i §14.1 / §14.6, i **ne** smije prethoditi konačnosti dodatnih bodova.
+
+Nakon zaključavanja dodatni bodovi **ne** mogu se mijenjati preko Platforme od strane Predsjednika, ostalih članova Komisije, Administratora konkursa, Administratora platforme ni Super administratora. **Ne** uvodi se postupak ponovnog otvaranja ni ispravke.
+
+Ako posljednji ovlašćeni upis koji zatvara globalni ciklus sadrži i dodatne bodove Predsjednika, Platforma ih evidentira **prije** zbirne finalizacije.
+
+**PO USVOJENO** (`KN-BM-003` §12.6).
 
 ## 14.4. Konačna ocjena
 
@@ -2618,7 +2621,7 @@ Matematički, konačna ocjena konkretne Prijave može biti izračunljiva kada su
 
 To **ne** završava globalni ciklus ocjenjivanja, **ne** prestaje tajnost ciklusa i **ne** formira preliminarnu rang-listu ranije.
 
-Dok preliminarna rang-lista **nije** formirana, ako Predsjednik ispravi evidentirani osnov dodatnih bodova, Platforma **automatski** preračunava izvedenu konačnu ocjenu.
+Dok je globalni ciklus individualnog ocjenjivanja **još otvoren**, ako Predsjednik ispravi evidentirani osnov dodatnih bodova, Platforma **automatski** preračunava izvedenu konačnu ocjenu. Nakon završetka cjelokupnog ciklusa dodatni bodovi su zaključani i konačna ocjena se formira od zaključanih dodatnih bodova; rang-lista postaje vidljiva tek tada.
 
 Individualne ocjene ostaju zaključane prema Poglavlju 13.
 
@@ -3410,9 +3413,9 @@ Dok traje individualno ocjenjivanje, svaki član Komisije vidi **samo sopstvene*
 
 Predsjednik Komisije **nema** privilegovan pristup individualnim ocjenama drugih članova.
 
-Tajnost traje do završetka **kompletnog** ciklusa individualnog ocjenjivanja: dok svih pet članova Komisije ne završe ocjenjivanje svih Prijava koje pripadaju tom ciklusu.
+Tajnost traje do završetka **kompletnog** ciklusa individualnog ocjenjivanja: dok svih pet **kanonskih mjesta** Komisije ne završe ocjenjivanje svih Prijava koje pripadaju tom ciklusu.
 
-Radnja **„Završi ocjenjivanje“** može se izvršiti samo kada su unesene važeće ocjene za svih **10** kriterijuma, u rasponu **1–5**.
+Konačna predaja individualne ocjene može se izvršiti samo kada su unesene važeće ocjene za svih **10** kriterijuma, u rasponu **1–5**, uz eksplicitnu potvrdu.
 
 **Ostale napomene** su opcione i **ne** blokiraju završavanje ocjenjivanja.
 
@@ -3420,7 +3423,7 @@ Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri eliminatorna kriteriju
 
 **Ne** uvodi se tehnički gate kojim bi Platforma provjeravala završetak usmenog obrazloženja Biznis plana za kriterijum 10.
 
-Nakon radnje **„Završi ocjenjivanje“** individualna ocjena postaje zaključana. **Ne** može se izmijeniti, ponovo otvoriti niti vratiti u nacrt, uključujući kroz privilegovanu administrativnu ulogu.
+Nakon potvrđene konačne predaje individualna ocjena postaje zaključana. **Ne** može se izmijeniti, ponovo otvoriti niti vratiti u izmjenjivo stanje, uključujući kroz privilegovanu administrativnu ulogu.
 
 Zbirni rezultati mogu nastati **tek** nakon završetka kompletnog ciklusa individualnog ocjenjivanja.
 
@@ -3745,11 +3748,11 @@ Sve radnje i individualne ocjene koje je prethodni član Komisije završio prije
 
 Završena individualna ocjena prethodnog člana ostaje važeća individualna ocjena **tog prethodnog člana**. **Ne** postaje ocjena zamjenskog člana. Zamjenski član je **ne** može retroaktivno mijenjati.
 
-Završeno individualno ocjenjivanje konkretne Prijave, prema Poglavljima 4.8 i 13.4, nastaje tek eksplicitnom radnjom **Završi ocjenjivanje**. **Nacrt** nije završena individualna ocjena.
+Završeno individualno ocjenjivanje konkretne Prijave, prema Poglavljima 4.8 i 13.4, nastaje tek eksplicitnom potvrđenom konačnom predajom. **Nacrt ne postoji.**
 
-Zamjenski član Komisije preuzima ulogu od trenutka zamjene i nastavlja postupak **samo** za radnje i individualna ocjenjivanja koja do trenutka zamjene nijesu završena.
+Zamjenski član Komisije preuzima **isto kanonsko mjesto** od trenutka zamjene i nastavlja postupak **samo** za Prijave na kojima to mjesto još nema konačnu ocjenu.
 
-Ako prethodni član **nije** završio individualno ocjenjivanje konkretne Prijave, zamjenski član nastavlja tu nezavršenu obavezu kao sopstveno naknadno ocjenjivanje. To **nije** prenos završene ocjene. Zamjenski član **ne** nasljeđuje nacrt prethodnog člana kao svoju završenu ocjenu.
+Ako prethodni član **nije** završio individualno ocjenjivanje konkretne Prijave, zamjenski član nastavlja tu nezavršenu obavezu kao sopstveno naknadno ocjenjivanje. To **nije** prenos završene ocjene. Zamjenski član **ne** nasljeđuje unos prethodnog člana kao svoju završenu ocjenu.
 
 Sama zamjena člana **ne** utiče na već završene ocjene drugih članova Komisije, već završene radnje Komisije ni istoriju postupka.
 
@@ -3935,9 +3938,9 @@ Ovaj kriterijum **ne** uvodi novo ponašanje Platforme vezano za istek roka Komi
 
 **Kada:** vrši individualno ocjenjivanje.
 
-**Onda:** Platforma omogućava unos i čuvanje njegove ocjene za svih **10** kriterijuma, pri čemu svaka ocjena mora biti cijeli broj od **1** do **5**.
+**Onda:** Platforma omogućava unos njegove **konačne** ocjene za svih **10** kriterijuma, pri čemu svaka ocjena mora biti cijeli broj od **1** do **5**.
 
-Dok individualno ocjenjivanje nije završeno, član može mijenjati svoje ocjene i **Ostale napomene**.
+Nema nacrta. Nema čuvanja djelimičnog unosa radi kasnije izmjene.
 
 Platforma **ne** zahtijeva tehničku potvrdu održanog usmenog obrazloženja kao preduslov za ocjenjivanje kriterijuma 10.
 
@@ -3945,9 +3948,9 @@ Platforma **ne** zahtijeva tehničku potvrdu održanog usmenog obrazloženja kao
 
 **Ako:** član Komisije ocjenjuje konkretnu Prijavu.
 
-**Kada:** pokuša izvršiti **„Završi ocjenjivanje“**.
+**Kada:** pokuša predati konačnu individualnu ocjenu.
 
-**Onda:** Platforma smije završiti individualno ocjenjivanje samo ako postoje važeće ocjene od **1** do **5** za svih **10** kriterijuma.
+**Onda:** Platforma smije završiti individualno ocjenjivanje samo ako postoje važeće ocjene od **1** do **5** za svih **10** kriterijuma **i** ako je data eksplicitna potvrda da je ocjena konačna.
 
 Nedostajuća **Ostala napomena** **ne** blokira završavanje ocjenjivanja.
 
@@ -3961,15 +3964,15 @@ Nedostajuća **Ostala napomena** **ne** blokira završavanje ocjenjivanja.
 
 Predsjednik Komisije **nema** privilegovan pristup ocjenama drugih članova.
 
-Administrator konkursa i Podnositeljka **nemaju** pristup individualnim ocjenama.
+Administrator konkursa, Administrator platforme, Super administrator i Podnositeljka **nemaju** pristup tuđim individualnim ocjenama, prosjecima, zbirnim rezultatima ni rang-listi.
 
-Ocjene i **Ostale napomene** drugih članova postaju dostupne Komisiji **tek** kada svih pet članova završi individualno ocjenjivanje svih Prijava uključenih u ciklus.
+Ocjene i **Ostale napomene** drugih članova postaju dostupne Komisiji **tek** kada svih pet **kanonskih mjesta** završi individualno ocjenjivanje svih Prijava uključenih u ciklus.
 
 ### 18.5.4 — Nepovratnost završene individualne ocjene
 
-**Ako:** član Komisije izvrši **„Završi ocjenjivanje“** za konkretnu Prijavu.
+**Ako:** član Komisije preda **konačnu** individualnu ocjenu za konkretnu Prijavu.
 
-**Kada:** on ili drugi korisnik pokuša izmijeniti ocjene ili **Ostale napomene**, vratiti ocjenjivanje u nacrt ili ga ponovo otvoriti.
+**Kada:** on ili drugi korisnik pokuša izmijeniti ocjene ili **Ostale napomene**, ili ponovo otvoriti bodovanje.
 
 **Onda:** Platforma odbija radnju i čuva završenu individualnu ocjenu neizmijenjenom.
 
@@ -3981,13 +3984,13 @@ Ovaj kriterijum **ne** definiše ponašanje pri zamjeni člana Komisije nakon za
 
 ### 18.6.1 — Formiranje zbirnih rezultata
 
-**Ako:** individualno ocjenjivanje još nije završeno za svih pet članova Komisije i sve Prijave uključene u ciklus.
+**Ako:** individualno ocjenjivanje još nije završeno za svih pet **kanonskih mjesta** Komisije i sve Prijave uključene u ciklus.
 
 **Kada:** Platforma provjerava da li može formirati zbirne rezultate.
 
 **Onda:** zbirni rezultati **ne** smiju biti formirani niti dostupni Komisiji.
 
-Kada svih pet članova završi individualno ocjenjivanje svih Prijava u ciklusu, Platforma formira zbirne rezultate i čini ih dostupnim Komisiji u skladu sa Poglavljem 14.
+Kada svih pet kanonskih mjesta završi individualno ocjenjivanje svih Prijava u ciklusu, Platforma formira zbirne rezultate i čini ih dostupnim Komisiji u skladu sa Poglavljem 14.
 
 ### 18.6.2 — Konačna ocjena i prag za podršku
 
@@ -3995,7 +3998,7 @@ Kada svih pet članova završi individualno ocjenjivanje svih Prijava u ciklusu,
 
 **Kada:** Platforma formira rezultat konkretne Prijave.
 
-**Onda:** izračunava prosječne ocjene, primjenjuje evidentirane dodatne bodove i formira konačnu ocjenu prema pravilima Poglavlja 14.
+**Onda:** prvo zaključava dodatne bodove, zatim izračunava prosječne ocjene, primjenjuje **zaključane** dodatne bodove i formira konačnu ocjenu prema pravilima Poglavlja 14. Zbirni rezultati i rang-lista postaju dostupni tek nakon te konačnosti dodatnih bodova.
 
 Prijava sa konačnom ocjenom manjom od **30** bodova ostaje na rang-listi ispod odgovarajuće granice i **ne** može biti označena kao **Podržava**.
 
@@ -4505,4 +4508,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.6**
+**Kraj dokumenta KN-FS-003 v1.0.7**

@@ -205,7 +205,7 @@ class CompetitionCommissionTimingTest extends TestCase
         $this->assertFalse($competition->isCommissionProcessingBlocked());
 
         $this->actingAs($president->user)->get(route('evaluation.create', $application))->assertOk();
-        $this->actingAs($president->user)->get(route('admin.competitions.ranking', $competition))->assertOk();
+        $this->actingAs($president->user)->get(route('admin.competitions.ranking', $competition))->assertForbidden();
     }
 
     public function test_replacement_member_may_be_added_after_deadline_with_existing_traceability(): void
