@@ -68,7 +68,7 @@ class BusinessPlanController extends Controller
     /**
      * Prikaz forme za popunjavanje biznis plana (Obrazac 2)
      */
-    public function create(Application $application): View
+    public function create(Application $application): View|RedirectResponse
     {
         $this->bpLog('BP_CREATE: entered create()', [
             'application_id' => $application->id,
@@ -125,17 +125,16 @@ class BusinessPlanController extends Controller
             }
         }
 
-        // Proveri da li je Obrazac 1a/1b kompletno popunjen
-        if (!$application->isObrazacComplete()) {
+        // Completeness gate: uslov za POČETAK novog Obrazca 2, ne za pregled već sačuvanog plana
+        // (istorijske prijave mogu pasti na današnji isObrazacComplete() zbog kasnijih JMBG/PIB pravila).
+        $businessPlan = $application->businessPlan;
+        if (!$businessPlan && !$application->isObrazacComplete()) {
             $url = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
 
             return redirect()->to($url)
                 ->withErrors(['error' => 'Molimo popunite kompletan Obrazac 1a ili 1b (sva obavezna polja i potvrdite sve obavezne izjave) pre nego što nastavite na biznis plan.'])
                 ->withInput();
         }
-
-        // Proveri da li već postoji biznis plan
-        $businessPlan = $application->businessPlan;
 
         $this->bpLog('BP_CREATE: open form', [
             'application_id' => $application->id,
