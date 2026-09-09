@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.2
-**Datum:** 2026-09-08
+**Verzija:** 1.0.3
+**Datum:** 2026-09-09
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.13** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.14** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v1.0.1** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN)
-* Poslovni profil mladih: **KN-BM-002 v1.0.4** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.5** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v0.1.22** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (U IZRADI) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
@@ -41,6 +41,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.0 | 2026-09-07 | USVOJEN — Završena i odobrena prva funkcionalna specifikacija profila konkursa za podršku preduzetništvu mladih. Funkcionalno su razrađena Poglavlja 1–28, poslovna pravila BM-ML-001–BM-ML-058 i granica V1. Detalji de minimis dokumentacije i službenih akata ostaju izričito odloženi van granice verzije 1.0.0. |
 | 1.0.1 | 2026-09-08 | KN-PATCH-FS-007 — Funkcionalni tok prijave mladih usklađen sa zajedničkim katalogom statusa draft, submitted, evaluated, approved i rejected. Potpunost, prigovor, eliminatorni razlozi, ocjene, bodovi, rang, raspodjela i arhiviranje ostaju odvojene funkcionalne činjenice; rejected zbog nepotpunosti nastaje tek nakon odbijenog prigovora ili isteka roka bez prigovora. |
 | 1.0.2 | 2026-09-08 | KN-PATCH-FS-008 — Usklađeni izbor namjere, pravnog oblika, poslovne faze, obrazaca M1a/M1b i četiri dokumentaciona paketa. Privredno društvo obuhvata DOO, AD, OD i KD. Neregistrovano fizičko lice bira namjeru; registrovani preduzetnik ili društvo bira fazu koju Komisija provjerava. Nepodržani identitet se ne svrstava u `ostalo`. |
+| 1.0.3 | 2026-09-09 | KN-PATCH-FS-009 — Elektronski M3 prikazuje sva tri eliminatorna kriterijuma kao odvojene stavke. Jedno objedinjeno obavještenje, jedan prigovor na aktivirane kriterijume, odluka po kriterijumu i `rejected` tek nakon konačnosti makar jednog razloga. |
 
 Napomena:
 
@@ -76,7 +77,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Konkurs za podršku predu
 | 10. Podnošenje i zaključavanje | USVOJENO — uneseno u v0.1.2 |
 | 11. Privatnost i pregled dokumenata | USVOJENO — uneseno u v0.1.3 |
 | 12. Istek roka i pristup Komisije | USVOJENO — uneseno u v0.1.3 |
-| 13. Prva sjednica, M3 i administrativna provjera | USVOJENO — uneseno u v0.1.3 |
+| 13. Prva sjednica, M3 i tri eliminatorna kriterijuma | USVOJENO — uneseno u v0.1.3 |
 | 14. Obavještenja i prigovori | USVOJENO — uneseno u v0.1.3 |
 | 15. Usmeno obrazloženje | USVOJENO — uneseno u v0.1.4 |
 | 16. Individualno ocjenjivanje | USVOJENO — uneseno u v0.1.4 |
@@ -140,7 +141,7 @@ Matrica sljedivosti `KN-BM-002` → `KN-FS-002` nalazi se u Poglavlju 27.
 10. Podnošenje i zaključavanje
 11. Privatnost i pregled dokumenata
 12. Istek roka i pristup Komisije
-13. Prva sjednica, M3 i administrativna provjera
+13. Prva sjednica, M3 i tri eliminatorna kriterijuma
 14. Obavještenja i prigovori
 15. Usmeno obrazloženje
 16. Individualno ocjenjivanje
@@ -173,7 +174,7 @@ Dokument se odnosi na **V1**.
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.4.
+Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.5.
 
 Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.1.
 
@@ -398,7 +399,7 @@ Administrativna provjera može početi kada su sva tri mjesta Komisije formalno 
 * **nije** potrebno da sva tri člana budu prisutna;
 * dovoljan je kvorum od najmanje dva prisutna člana (`BM-ML-002`);
 * bez najmanje dva prisutna člana sjednica i administrativna provjera se blokiraju odnosno odlažu;
-* predsjednik rezultat `Potpuna` / `Nepotpuna` evidentira u M3 (`BM-ML-035`).
+* predsjednik rezultat rada Komisije, uključujući sva tri eliminatorna kriterijuma, evidentira u M3 (`BM-ML-035`).
 
 Prva sjednica **ne** zahtijeva prisustvo sva tri člana.
 
@@ -406,7 +407,7 @@ Prva sjednica **ne** zahtijeva prisustvo sva tri člana.
 
 Sva tri člana potrebna su za (`BM-ML-003`):
 
-* odlučivanje o prigovoru;
+* odlučivanje o prigovoru, uključujući odluku o svakom osporenom kriterijumu;
 * intervju odnosno usmeno obrazloženje;
 * konačno individualno ocjenjivanje;
 * druge punovažne odluke određene poslovnim modelom.
@@ -513,7 +514,7 @@ Sva ograničenja iz §3.5 važe i za predsjednika.
 
 Dodatne Platform radnje predsjednik izvršava **u ime Komisije**, sažeto:
 
-* evidentira rezultat administrativne provjere `Potpuna` / `Nepotpuna` (`BM-ML-035`);
+* evidentira rezultat tri eliminatorna kriterijuma na M3 (`BM-ML-035`);
 * evidentira dodatne bodove kada su ispunjeni uslovi (`BM-ML-042`);
 * evidentira iznose raspodjele (`BM-ML-048`);
 * ručno zaključuje i arhivira Poziv kada su ispunjeni uslovi odluke F-05.
@@ -587,8 +588,8 @@ Vrijednosti se odnose na redovnu interakciju sa Platformom u ovom profilu. `USL`
 | Čuvanje i objava Poziva | NE | DA | NE | NE | NE | NE | NE — ne objavljuje automatski |
 | Objava Poziva bez kompletirane Komisije | NE | DA — dozvoljeno; sistem upozorava | NE | NE | NE | NE | upozorenje, ne blokada objave |
 | Povezivanje tri člana i predsjednika | NE | DA | NE | NE | NE | NE | — |
-| Administrativna provjera / M3 | NE | NE — ne sprovodi provjeru | USL — učestvuje ako je prisutan; evidentira Potpuna/Nepotpuna u M3 | USL — učestvuje ako je prisutan | USL — učestvuje ako ima važeće ovlašćenje | NE | blokira početak ako Komisija nije formalno kompletirana ili ako nije evidentiran kvorum od najmanje dva prisutna člana; ne utvrđuje potpunost |
-| Podnošenje prigovora | USL — svoja Nepotpuna | NE | NE | NE | NE | NE | — |
+| Administrativna / eliminatorna provjera / M3 | NE | NE — ne sprovodi provjeru i ne mijenja M3 | USL — učestvuje ako je prisutan; evidentira sva tri kriterijuma u M3 | USL — učestvuje ako je prisutan | USL — učestvuje ako ima važeće ovlašćenje | NE | blokira početak ako Komisija nije formalno kompletirana ili ako nije evidentiran kvorum od najmanje dva prisutna člana; ne utvrđuje ispunjenost kriterijuma |
+| Podnošenje prigovora | USL — svoja prijava sa najmanje jednim aktiviranim kriterijumom | NE | NE | NE | NE | NE | — |
 | Odluka o prigovoru | NE | NE | USL — u ime Komisije | USL — sva tri člana | USL | NE | NE |
 | Individualno ocjenjivanje | NE | NE | USL — samo svoje ocjene | USL — samo svoje | USL — svoje mjesto, bez spajanja ocjena | NE | NE — ne ocjenjuje |
 | Uvid u tuđe individualne ocjene prije kraja ciklusa | NE | NE | NE | NE | NE | NE | — |
@@ -678,7 +679,7 @@ Izvor: `BM-ML-002`.
 
 **Kada:** predsjednik pokrene administrativnu provjeru.
 
-**Onda:** Platforma dozvoljava evidentiranje rezultata `Potpuna` / `Nepotpuna` u M3.
+**Onda:** Platforma dozvoljava predsjedniku da u M3 evidentira sva tri eliminatorna kriterijuma.
 
 Izvor: `BM-ML-001`; `BM-ML-002`; `BM-ML-035`; odluka F-02.
 
@@ -705,7 +706,7 @@ Ovo poglavlje određuje **kada** koje funkcije na Platformi jesu ili nijesu dost
 Razlikuju se najmanje pet slojeva:
 
 1. **status prijave**;
-2. **rezultat administrativne provjere**;
+2. **rezultat M3 za tri eliminatorna kriterijuma**;
 3. **stanje prigovora**;
 4. **stanje individualnog ocjenjivanja i ciklusa**;
 5. **rangiranje, raspodjela i arhiviranje**.
@@ -749,22 +750,25 @@ Nakon isteka roka prijava `draft` / `U pripremi` ostaje `draft`, sačuvana i sam
 
 `submitted` nastaje eksplicitnim podnošenjem. Nakon toga: uređivanje NE, brisanje NE, povlačenje NE, ponovno podnošenje na istom Pozivu NE (`BM-ML-023`). Nije dozvoljen povratak u `draft`. Prijava ostaje zaključana u svim statusima nakon `submitted`. Promjena statusa **ne** otključava prijavu.
 
-## 4.3. Rezultat administrativne provjere
+## 4.3. Rezultat M3 i tri eliminatorna kriterijuma
 
-Rezultat administrativne provjere **nije** status prijave.
+Rezultat M3 **nije** status prijave.
 
-Vrijednosti:
+Elektronski M3 prikazuje **tačno tri** eliminatorna kriterijuma kao tri odvojene stavke (`BM-ML-035`):
 
-* **Potpuna**;
-* **Nepotpuna**.
+1. prijava je nepotpuna;
+2. korisnik koji je ranije dobio sredstva nije dostavio obavezne izvještaje M4 i M4a za ranije finansirani biznis plan;
+3. biznis plan nije povezan sa prioritetnim oblastima konkursa.
 
-Prijava ostaje `submitted` (`BM-ML-035`). Samo evidentiranje `Nepotpuna` **ne** smije odmah postaviti `rejected`.
+Za prvi kriterijum Komisija evidentira `Potpuna` ili `Nepotpuna`. `Nepotpuna` znači da je prvi razlog aktiviran. Za drugi i treći kriterijum Komisija evidentira rezultat provjere i da li je razlog aktiviran.
 
-Sistemska provjera dokumentacije je pomoćna. Sistem **ne** donosi konačnu odluku o potpunosti.
+Prijava ostaje `submitted` (`BM-ML-035`). Aktiviranje bilo kojeg kriterijuma, uključujući `Nepotpuna`, **ne** smije odmah postaviti `rejected`.
 
-Administrativna provjera može početi kada su sva tri mjesta Komisije formalno popunjena i kada su na sjednici prisutna najmanje dva člana.
+Sistemska provjera je pomoćna. Sistem **ne** donosi konačnu odluku o ispunjenosti kriterijuma. Platforma **ne** odlučuje da li je kriterijum ispunjen.
 
-Prva sjednica i administrativna provjera **ne** zahtijevaju prisustvo sva tri člana. Ako nijesu formalno popunjena sva tri mjesta, početak je blokiran (`BM-ML-001`; F-02). Bez kvoruma od najmanje dva prisutna člana sjednica i administrativna provjera se blokiraju odnosno odlažu (`BM-ML-002`). Predsjednik rezultat evidentira u M3 (`BM-ML-035`).
+Administrativna i eliminatorna provjera na M3 može početi kada su sva tri mjesta Komisije formalno popunjena i kada su na sjednici prisutna najmanje dva člana.
+
+Prva sjednica **ne** zahtijeva prisustvo sva tri člana. Ako nijesu formalno popunjena sva tri mjesta, početak je blokiran (`BM-ML-001`; F-02). Bez kvoruma od najmanje dva prisutna člana sjednica i M3 provjera se blokiraju odnosno odlažu (`BM-ML-002`). Predsjednik rezultat evidentira u M3 (`BM-ML-035`).
 
 ## 4.4. Stanja prigovora
 
@@ -776,7 +780,7 @@ Prigovor je zaseban tok (`BM-ML-036`; `BM-ML-037`):
 
 `Prihvaćen` i `Odbijen` su konačni ishodi konkretnog prigovora na Platformi. Nije dozvoljeno vraćanje u `Podnesen` ni ponovno odlučivanje o istom prigovoru.
 
-Prihvaćen: administrativni rezultat postaje `Potpuna`; prijava ostaje `submitted`. Odbijen prigovor ili istek roka bez prigovora: rezultat ostaje `Nepotpuna`, prijava prelazi u `rejected` uz tipiziran razlog konačne nepotpunosti i ne ocjenjuje se dalje. Tokom otvorenog prava na prigovor prijava **nikada** ne napušta `submitted`. Ne uvodi se prelaz `rejected` → `submitted`.
+Prihvaćen na konkretan kriterijum uklanja aktivaciju tog razloga. Odbijen prigovor na konkretan kriterijum čini taj razlog konačno aktivnim. Ako nakon odluke nijedan razlog nije konačno aktivan, prijava ostaje `submitted`. Ako makar jedan razlog ostane konačno aktivan, ili ako rok istekne bez prigovora, prijava prelazi u `rejected` uz sve konačne aktivne razloge. Tokom otvorenog prava na prigovor prijava **nikada** ne napušta `submitted`. Ne uvodi se prelaz `rejected` → `submitted`.
 
 ## 4.5. Individualno ocjenjivanje i ciklus
 
@@ -878,12 +882,11 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Sjednica Komisije | rok za prijave istekao | prva sjednica | najkasnije sedam dana od isteka roka; Platforma ne zakazuje | poslovni rok; Platforma ne vodi sjednicu kao objekat | Komisija | `BM-ML-034` |
 | Sjednica Komisije | prva sjednica održana | druga sjednica i usmena obrazloženja | najkasnije sedam dana od prve sjednice; svi blagovremeni prigovori riješeni | nije dozvoljena dok postoji blagovremen neriješen prigovor; rok se ne produžava automatski | Komisija | `BM-ML-034` |
 | Sjednica Komisije | druga sjednica i usmena održani | treća sjednica | najkasnije sedam dana od druge sjednice i usmenih intervjua; Platforma ne zakazuje | poslovni rok evidentiran | Komisija | `BM-ML-034` |
-| Admin. rezultat | (nema) | evidentiranje u M3 | `submitted`; rok istekao; formalno kompletna Komisija; kvorum najmanje dva prisutna člana | Potpuna ili Nepotpuna; status ostaje `submitted`; `Nepotpuna` ne postavlja odmah `rejected` | predsjednik u ime Komisije | `BM-ML-002`; `BM-ML-035` |
-| Prigovor | — | podnošenje | rezultat Nepotpuna; rok 3 dana; digitalni servis | Podnesen; prijava ostaje `submitted` | podnosilac | `BM-ML-036` |
-| Prigovor | Podnesen | odluka Komisije | sva tri člana | Prihvaćen → rezultat Potpuna; prijava ostaje `submitted` / Odbijen → ostaje Nepotpuna; prijava `rejected` uz razlog konačne nepotpunosti | Komisija | `BM-ML-003`; `BM-ML-036`; `BM-ML-037` |
-| Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje | — | zabranjeno; nema `rejected` → `submitted` | svi | `BM-ML-037` |
-| Admin. rezultat | Nepotpuna | istek 3 dana bez prigovora | obavještenje poslato | Nepotpuna konačna; prijava `rejected` uz razlog konačne nepotpunosti | sistem | `BM-ML-036` |
-| Prijava | `submitted` | konačni eliminator 2 ili 3 | odluka Komisije | `rejected` uz odvojen eliminatorni razlog | predsjednik u ime Komisije | `BM-ML-043` |
+| Admin. rezultat / M3 | (nema) | evidentiranje u M3 | `submitted`; rok istekao; formalno kompletna Komisija; kvorum najmanje dva prisutna člana | sva tri kriterijuma evidentirana odvojeno; status ostaje `submitted`; aktiviranje bilo kojeg kriterijuma ne postavlja odmah `rejected` | predsjednik u ime Komisije | `BM-ML-002`; `BM-ML-035` |
+| Prigovor | — | podnošenje | najmanje jedan aktiviran kriterijum; rok 3 dana; digitalni servis; obrazloženje po osporenom kriterijumu | Podnesen; prijava ostaje `submitted`; neaktivirani kriterijumi se ne mogu osporavati | podnosilac | `BM-ML-036` |
+| Prigovor | Podnesen | odluka Komisije | sva tri člana; odluka po svakom osporenom kriterijumu | ako nijedan razlog nije konačno aktivan → `submitted`; ako makar jedan ostane konačno aktivan → `rejected` uz sve konačne aktivne razloge | Komisija | `BM-ML-003`; `BM-ML-036`; `BM-ML-037` |
+| Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje | — | zabranjeno; nema `rejected` → `submitted`; isti ciklus se ne ponavlja | svi | `BM-ML-037` |
+| Admin. rezultat / M3 | najmanje jedan aktiviran kriterijum | istek 3 dana bez prigovora | obavještenje poslato | svi prethodno aktivirani kriterijumi konačni; prijava `rejected` uz sve aktivne razloge | sistem | `BM-ML-036` |
 | Individualna ocjena | — | unos nacrta | prijava ide u ocjenjivanje; važeći član | nacrt | član ili zamjenski član | `BM-ML-039` |
 | Individualna ocjena | nacrt | Završi ocjenjivanje | unesena svih 10 kriterijuma; evidentirano završeno usmeno obrazloženje te prijave | zaključana | isto lice | `BM-ML-039`; Poglavlje 16 |
 | Prijava | `submitted` | završene tri kompletne ocjene i obračun | prijava u ocjenjivanju | `evaluated` | sistem | `BM-ML-039`; `BM-ML-044` |
@@ -908,13 +911,13 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 
 Izvor: `BM-ML-020`; `BM-ML-023`; `BM-ML-043`; `KN-PATCH-FS-007`.
 
-### 4.11.2 — Odvojeni rezultat Potpuna / Nepotpuna
+### 4.11.2 — Odvojeni rezultati tri eliminatorna kriterijuma
 
-**Ako:** za prijavu u statusu `submitted` predsjednik evidentira rezultat administrativne provjere.
+**Ako:** za prijavu u statusu `submitted` predsjednik evidentira M3.
 
 **Kada:** evidentiranje uspije.
 
-**Onda:** Platforma upisuje **Potpuna** ili **Nepotpuna** kao odvojeni rezultat. Status ostaje `submitted`. `Nepotpuna` **ne** postavlja odmah `rejected` i ne mijenja zaključani sadržaj.
+**Onda:** Platforma prikazuje i čuva tri odvojene stavke, a ne samo zbirno `Potpuna` / `Nepotpuna`. Status ostaje `submitted`. Aktiviranje bilo kojeg kriterijuma **ne** postavlja odmah `rejected` i ne mijenja zaključani sadržaj.
 
 Izvor: `BM-ML-035`.
 
@@ -2196,7 +2199,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 | Prijava | `draft` | provjera prije podnošenja | nedostaju prateći dokumenti paketa, osim žiro računa | upozorenje i lista; podnošenje ostaje moguće | sistem | `BM-ML-022`; `BM-ML-032` |
 | Prijava | `draft` | konačna potvrda | blokirajući uslovi nijesu ispunjeni; rok traje; nema Podnesene na istom Pozivu | `draft` → `submitted`; zaključano | podnosilac | `BM-ML-023`; `BM-KN-015` |
 | Prijava | `submitted` | pokušaj izmjene, dopune, brisanja, povlačenja ili ponovnog podnošenja | — | zabranjeno | svi | `BM-ML-023` |
-| Prijava | `submitted` | prigovor | rezultat Nepotpuna | prigovor ne otključava prijavu; status ostaje `submitted` | podnosilac | `BM-ML-023`; `BM-ML-036` |
+| Prijava | `submitted` | prigovor | najmanje jedan aktivirani eliminatorni kriterijum; objedinjeno obavještenje poslato; rok od tri dana traje | jedan prigovor preko digitalnog servisa; može obuhvatiti jedan, više ili sve aktivirane kriterijume; neaktivirani se ne mogu osporavati; prijava ostaje zaključana; status ostaje `submitted` | podnosilac | `BM-ML-023`; `BM-ML-036` |
 | Prijava | `draft` | istek roka | nije podnesena | ostaje `draft`; samo pregled; nije `rejected` | sistem | `BM-ML-024` |
 
 ## 10.5. Prihvatni kriterijumi — podnošenje
@@ -2495,13 +2498,13 @@ Izvor: `BM-ML-002`; F-02.
 
 ---
 
-# 13. Prva sjednica, M3 i administrativna provjera
+# 13. Prva sjednica, M3 i tri eliminatorna kriterijuma
 
 Status poglavlja: USVOJENO
 
-Ovo poglavlje određuje prvu sjednicu, elektronski M3 i rezultat administrativne provjere (`BM-ML-001`; `BM-ML-002`; `BM-ML-003`; `BM-ML-035`).
+Ovo poglavlje određuje prvu sjednicu, elektronski M3 i tri eliminatorna kriterijuma (`BM-ML-001`; `BM-ML-002`; `BM-ML-003`; `BM-ML-035`).
 
-Načelo da Komisija utvrđuje potpunost, da je sistemska provjera pomoćna, da Administrator ne sprovodi provjeru i da `Potpuna` / `Nepotpuna` nijesu osnovna stanja prijave usklađeno je sa `KN-FS-003` Poglavljem 10.2. Sastav, kvorum i M3 slijede pravila mladih: **tačno tri člana**.
+Načelo da Komisija utvrđuje rezultat, da je sistemska provjera pomoćna, da Administrator ne sprovodi provjeru i da rezultati M3 nijesu osnovna stanja prijave usklađeno je sa `KN-FS-003` Poglavljem 10.2. Sastav, kvorum, kriterijumi i M3 slijede pravila mladih: **tačno tri člana** i **tačno tri eliminatorna kriterijuma** Odluke za mlade. Ne preuzimaju se ženski kriterijumi, Komisija od pet članova ni ženski model kvoruma.
 
 Ne uvodi se javni tok službenih akata. Tehnički mehanizam evidencije prisustva **nije** određen ovim poglavljem.
 
@@ -2510,6 +2513,8 @@ Ne uvodi se javni tok službenih akata. Tehnički mehanizam evidencije prisustva
 Komisija ima **tačno tri člana**. Predsjednik je **jedan od ta tri člana** (`BM-ML-001`).
 
 Elektronski M3 prikazuje i koristi **samo tri člana**. Višak mjesta i potpisa iz izvornog obrasca M3 **ne** koristi se i **ne** uvodi dodatne članove.
+
+Elektronski M3 prikazuje **tačno tri eliminatorna kriterijuma** kao tri odvojene stavke, a ne samo jedno zbirno polje `Potpuna` / `Nepotpuna`.
 
 ## 13.2. Prva sjednica i kvorum
 
@@ -2521,24 +2526,27 @@ Prva sjednica **ne** zahtijeva prisustvo sva tri člana. Sva tri člana potrebna
 
 Komisija prvu sjednicu poslovno zakazuje najkasnije sedam dana od isteka roka (`BM-ML-034`). Platforma **ne** vodi sjednicu kao poseban poslovni objekat i **ne** određuje termin umjesto Komisije.
 
-## 13.3. Administrativna provjera
+## 13.3. M3 i tri eliminatorna kriterijuma
 
 U provjeru ulaze samo prijave u stanju `Podnesena`.
 
-Sistemske provjere dokumentacije su **pomoćne**. Sistem može evidentirati nedostajuće dokumente, ali **ne** donosi konačnu odluku o potpunosti (`BM-ML-035`).
+Sistemske provjere su **pomoćne**. Sistem može evidentirati nedostajuće dokumente ili druge nalaze, ali **ne** donosi konačnu odluku o ispunjenosti kriterijuma (`BM-ML-035`). Platforma **ne** odlučuje da li je kriterijum ispunjen.
 
-Konačan rezultat potpunosti određuje **Komisija**. Predsjednik u ime Komisije evidentira u M3:
+Predsjednik u ime Komisije evidentira u M3 tačno tri odvojene stavke:
 
-* `Potpuna`; ili
-* `Nepotpuna`.
+1. prijava je nepotpuna — rezultat `Potpuna` ili `Nepotpuna`; `Nepotpuna` aktivira prvi razlog;
+2. ranije finansirani korisnik nije dostavio obavezne izvještaje M4 i M4a;
+3. biznis plan nije povezan sa prioritetnim oblastima.
 
-To **nije** status prijave. Prijava ostaje `submitted`. `Nepotpuna` **ne** postavlja odmah `rejected`.
+To **nije** status prijave. Prijava ostaje `submitted`. Aktiviranje bilo kojeg kriterijuma **ne** postavlja odmah `rejected`.
 
 Napomena „odbiti aplikaciju“ iz izvornog M3 **ne** ukida pravo na obavještenje i prigovor.
 
-Ako je rezultat `Potpuna`, prijava može nastaviti. Ako je `Nepotpuna`, ne ide dalje dok je otvoren rok za prigovor ili dok traje odlučivanje o podnesenom prigovoru.
+Ako nijedan kriterijum nije aktiviran, prigovorni tok se ne otvara i prijava može nastaviti. Ako je aktiviran najmanje jedan kriterijum, prijava ne ide dalje dok je otvoren rok za prigovor ili dok traje odlučivanje o podnesenom prigovoru.
 
-Administrator **ne** provjerava potpunost i **nema** pristup razlozima nepotpunosti (`BM-ML-004`).
+Za svaki kriterijum odvojeno se evidentira najmanje: rezultat provjere; da li je razlog aktiviran; obrazloženje; relevantni član odnosno sastav Komisije; datum i vrijeme; status konačnosti; veza sa prigovorom i odlukom po prigovoru kada postoje; konačni tipizirani razlog odbijanja kada postoji.
+
+Administrator **ne** provjerava kriterijume, **ne** mijenja M3 i **nema** pristup razlozima (`BM-ML-004`).
 
 Za odlučivanje o prigovoru potrebna su **sva tri člana** (`BM-ML-003`). Detalj: Poglavlje 14.
 
@@ -2548,11 +2556,11 @@ Za odlučivanje o prigovoru potrebna su **sva tri člana** (`BM-ML-003`). Detalj
 |---------|-------------------|----------------|-------|----------|-------|------------|
 | Sjednica | Komisija formalno kompletna | početak prve sjednice / administrativne provjere | prisutna manje od dva člana | blokirano odnosno sjednica se odlaže | sistem | `BM-ML-002` |
 | Sjednica | Komisija formalno kompletna | početak prve sjednice / administrativne provjere | prisutna najmanje dva člana | provjera može početi; evidentiraju se stvarno prisutni | predsjednik / prisutni članovi | `BM-ML-002`; F-02 |
-| M3 | `submitted`; rok istekao | evidentiranje rezultata | kvorum; predsjednik u ime Komisije | Potpuna ili Nepotpuna; status ostaje `submitted`; `Nepotpuna` ne postavlja odmah `rejected` | predsjednik | `BM-ML-035`; `BM-ML-002` |
+| M3 | `submitted`; rok istekao | evidentiranje rezultata | kvorum; predsjednik u ime Komisije | tri odvojene stavke; status ostaje `submitted`; aktiviranje ne postavlja odmah `rejected` | predsjednik | `BM-ML-035`; `BM-ML-002` |
 | M3 | elektronski prikaz | korišćenje mjesta Komisije | BM-ML-001 | prikazuju se samo tri člana; višak izvornog obrasca se ne koristi | sistem | `BM-ML-001` |
 | Admin. rezultat | (nema) | sistemska pomoćna provjera | nedostaju prilozi | lista nedostataka; nije konačna odluka | sistem | `BM-ML-035`; `BM-ML-022` |
 
-## 13.5. Prihvatni kriterijumi — M3 i potpunost
+## 13.5. Prihvatni kriterijumi — M3 i tri eliminatorna kriterijuma
 
 ### 13.5.1 — Tri člana u M3
 
@@ -2574,13 +2582,13 @@ Izvor: `BM-ML-001`.
 
 Izvor: `BM-ML-002`.
 
-### 13.5.3 — Predsjednik evidentira rezultat
+### 13.5.3 — Predsjednik evidentira tri kriterijuma
 
 **Ako:** je kvorum ispunjen i prijava je `Podnesena`.
 
 **Kada:** predsjednik evidentira rezultat u M3.
 
-**Onda:** upisuje se `Potpuna` ili `Nepotpuna`. Status ostaje `submitted`. `Nepotpuna` ne postavlja odmah `rejected`.
+**Onda:** upisuju se tri odvojene stavke. Status ostaje `submitted`. Aktiviranje bilo kojeg kriterijuma ne postavlja odmah `rejected`.
 
 Izvor: `BM-ML-035`; `BM-ML-002`.
 
@@ -2588,9 +2596,9 @@ Izvor: `BM-ML-035`; `BM-ML-002`.
 
 **Ako:** sistem evidentira nedostajuće dokumente.
 
-**Kada:** Komisija utvrđuje potpunost.
+**Kada:** Komisija utvrđuje ispunjenost kriterijuma.
 
-**Onda:** sistemski nalaz **nije** konačna odluka. Konačan rezultat određuje Komisija.
+**Onda:** sistemski nalaz **nije** konačna odluka. Konačan rezultat određuje Komisija. Platforma ne odlučuje da li je kriterijum ispunjen.
 
 Izvor: `BM-ML-035`.
 
@@ -2598,7 +2606,7 @@ Izvor: `BM-ML-035`.
 
 **Ako:** korisnik je Administrator Konkursa.
 
-**Kada:** pokuša evidentirati Potpuna/Nepotpuna ili otvoriti razloge nepotpunosti.
+**Kada:** pokuša evidentirati M3, mijenjati M3 ili otvoriti razloge.
 
 **Onda:** Platforma **ne** omogućava tu radnju ni uvid u razloge.
 
@@ -2610,9 +2618,39 @@ Izvor: `BM-ML-004`; `BM-ML-035`.
 
 **Kada:** Komisija evidentira ishod.
 
-**Onda:** u odlučivanju učestvuju sva tri člana. Kvorum od dva člana **nije** dovoljan za prigovor.
+**Onda:** u odlučivanju učestvuju sva tri člana. Kvorum od dva člana **nije** dovoljan za prigovor. Odluka se evidentira po svakom osporenom kriterijumu.
 
 Izvor: `BM-ML-003`.
+
+### 13.5.7 — M3 prikazuje tačno tri kriterijuma
+
+**Ako:** se otvori elektronski M3.
+
+**Kada:** Platforma prikazuje eliminatornu provjeru.
+
+**Onda:** prikazuju se tačno tri odvojene stavke iz `BM-ML-035`. Ne uvodi se četvrti kriterijum. Zbirno polje `Potpuna` / `Nepotpuna` **nije** jedini prikaz.
+
+Izvor: `BM-ML-035`; `BM-ML-043`.
+
+### 13.5.8 — Odvojeno evidentiranje po kriterijumu
+
+**Ako:** predsjednik evidentira M3.
+
+**Kada:** se čuva rezultat.
+
+**Onda:** za svaki kriterijum odvojeno ostaju rezultat, da li je razlog aktiviran, obrazloženje, sastav, datum i vrijeme, status konačnosti, veza sa prigovorom i odlukom kada postoje, te konačni tipizirani razlog kada postoji. Svi pojedinačni razlozi ostaju u revizijskom tragu.
+
+Izvor: `BM-ML-035`; `BM-ML-043`.
+
+### 13.5.9 — Aktiviranje ne postavlja rejected
+
+**Ako:** je aktiviran jedan ili više kriterijuma.
+
+**Kada:** predsjednik završi početni M3 nalaz.
+
+**Onda:** prijava ostaje `submitted`. `rejected` ne nastaje samo zbog početnog M3 nalaza.
+
+Izvor: `BM-ML-035`; `BM-ML-020`.
 
 ---
 
@@ -2620,32 +2658,39 @@ Izvor: `BM-ML-003`.
 
 Status poglavlja: USVOJENO
 
-Ovo poglavlje određuje obavještenje o `Nepotpuna` i tok prigovora (`BM-ML-023`; `BM-ML-034`; `BM-ML-036`; `BM-ML-037`; `BM-ML-003`).
+Ovo poglavlje određuje objedinjeno obavještenje o aktiviranim eliminatornim kriterijumima i tok jednog prigovora (`BM-ML-023`; `BM-ML-034`; `BM-ML-036`; `BM-ML-037`; `BM-ML-003`).
 
-Obrazac toka prigovora usklađen je sa `KN-FS-003` Poglavljem 10.4–10.5, uz obavezni registrovani e-mail propisan za mlade. **Kanal obavještavanja i kanal podnošenja prigovora nijesu isti.**
+Obrazac toka prigovora usklađen je sa `KN-FS-003` Poglavljem 10.4–10.5, uz obavezni registrovani e-mail, youth kriterijume, Komisiju od tri člana i youth rokove. **Kanal obavještavanja i kanal podnošenja prigovora nijesu isti.** Ne preuzimaju se ženski eliminatorni kriterijumi, Komisija od pet članova ni ženski rokovi.
 
-Obavještenje o `Nepotpuna` šalje se na registrovanu e-mail adresu podnosioca na digitalnom servisu Opštine Kotor. Prigovor se podnosi **isključivo** preko odgovarajuće funkcije digitalnog servisa. Obični spoljni e-mail **nije** zabranjen kanal za slanje obavještenja; on **nije** važeći kanal za podnošenje prigovora.
+Obavještenje se šalje na registrovanu e-mail adresu podnosioca na digitalnom servisu Opštine Kotor. Prigovor se podnosi **isključivo** preko odgovarajuće funkcije digitalnog servisa. Obični spoljni e-mail **nije** zabranjen kanal za slanje obavještenja; on **nije** važeći kanal za podnošenje prigovora.
 
 Ne uvodi se širi e-mail lifecycle, status isporuke, automatsko ponovno slanje, automatsko produženje ni ponovno računanje roka. Neuspjela isporuka **ne** mijenja automatski odluku Komisije ni rok. Ne uvodi se javni tok službenih akata.
 
-## 14.1. Obavještenje o Nepotpuna
+## 14.1. Objedinjeno obavještenje
 
-Kada predsjednik Komisije evidentira rezultat `Nepotpuna`, Platforma šalje obavještenje na **registrovanu e-mail adresu** podnosioca prijave na digitalnom servisu Opštine Kotor (`BM-ML-036`).
+Ako nijedan od tri kriterijuma nije aktiviran, prigovorni tok se **ne** otvara i obavještenje se ne šalje.
 
-Obavještenje obuhvata:
+Ako je aktiviran najmanje jedan kriterijum, Platforma priprema **jedno** objedinjeno obavještenje, bez obzira da li je aktiviran jedan ili više razloga (`BM-ML-036`).
 
-* rezultat administrativne provjere;
-* evidentirane razloge nepotpunosti;
-* pravo na prigovor;
-* primjenjivi rok.
+Obavještenje:
+
+* navodi svaki aktivirani kriterijum posebno;
+* za svaki navodi obrazloženje Komisije;
+* navodi pravo na prigovor;
+* navodi rok od tri dana;
+* navodi da se prigovor podnosi kroz digitalni servis;
+* šalje se na **registrovanu e-mail adresu** podnosioca;
+* **nije** javno.
 
 Rok od tri dana počinje od **evidentiranog trenutka slanja** obavještenja, a **ne** od trenutka kada je podnosilac otvorio ili pročitao poruku.
 
-Podnosilac vidi evidentirane razloge i informacije potrebne za prigovor. Administrator **nema** pristup razlozima (`BM-ML-004`).
+Podnosilac vidi aktivirane razloge i informacije potrebne za prigovor. Administrator **nema** pristup razlozima (`BM-ML-004`).
 
 Prijava ostaje **zaključana**. Prigovor **nije** dopuna (`BM-ML-023`; `BM-ML-036`).
 
 ## 14.2. Podnošenje prigovora
+
+Za jednu prijavu i jedan ciklus eliminatorne provjere podnosilac podnosi **jedan** prigovor.
 
 Prigovor se podnosi **isključivo preko odgovarajuće funkcije digitalnog servisa**:
 
@@ -2656,61 +2701,66 @@ Prigovor se podnosi **isključivo preko odgovarajuće funkcije digitalnog servis
 
 Odgovor na primljeni e-mail ili prigovor poslat običnim spoljnim e-mailom **ne** predstavlja pravilno podnesen prigovor. Obični e-mail **nije** važeći kanal za podnošenje prigovora.
 
-Prigovor sadrži tekst obrazloženja.
+Prigovor može osporiti samo aktivirane kriterijume: jedan, više ili sve aktivirane. **Ne** smije osporavati kriterijum koji nije aktiviran. Za svaki osporeni kriterijum podnosilac unosi obrazloženje.
 
-Prigovor **može** ukazati na dokument koji je već blagovremeno predat uz prijavu. **Ne** omogućava:
+Prigovor **može** ukazati da je relevantna činjenica ili dokument već postojao u blagovremeno podnesenoj prijavi. **Ne** omogućava:
 
 * izmjenu M1a/M1b ili M2;
+* izmjenu podataka prijave;
 * dodavanje novog dokumenta;
 * zamjenu ili uklanjanje postojećeg priloga;
-* naknadnu dopunu prijave.
+* naknadnu dopunu prijave;
+* otključavanje prijave.
 
 ## 14.3. Odlučivanje Komisije
 
-Komisija provjerava da li je sporni dokument postojao u podnesenoj prijavi **prije isteka roka**.
+Komisija provjerava sadržaj koji je postojao **prije isteka roka** Poziva.
 
-O prigovoru učestvuju i odlučuju **sva tri člana** (`BM-ML-003`).
+O prigovoru učestvuju i odlučuju **sva tri člana** (`BM-ML-003`). Komisija odlučuje o **svakom osporenom kriterijumu odvojeno**.
 
-Predsjednik evidentira rezultat `Prihvaćen` ili `Odbijen` i obrazloženje. Čuvaju se datum, vrijeme i učesnici.
+Za svaki osporeni kriterijum evidentira se najmanje `Prihvaćen` ili `Odbijen`, obrazloženje, datum i vrijeme i članovi koji su odlučivali. Ne uvodi se automatska odluka Platforme.
+
+Ako je prigovor djelimično prihvaćen, svaki kriterijum zadržava svoj pojedinačni ishod.
 
 Komisija odlučuje u roku od sedam dana od prijema (`BM-ML-036`).
 
-Druga sjednica **ne** održava se dok postoji blagovremen neriješen prigovor (`BM-ML-034`). Svi blagovremeni prigovori moraju biti riješeni prije druge sjednice. Platforma **ne** produžava automatski rok druge sjednice. Ovaj dokument **ne** uvodi pravilo za slučaj u kojem se propisani rokovi objektivno ne mogu istovremeno ispuniti. Platforma **ne** zakazuje sjednice automatski.
+Druga sjednica **ne** održava se dok postoji bilo koji blagovremen neriješen prigovor (`BM-ML-034`). Svi blagovremeni prigovori moraju biti riješeni prije druge sjednice. Platforma **ne** produžava automatski rok druge sjednice. Ovaj dokument **ne** uvodi pravilo za slučaj u kojem se propisani rokovi objektivno ne mogu istovremeno ispuniti. Platforma **ne** zakazuje sjednice automatski.
 
 ## 14.4. Ishod i obavještenje
 
-Podnosilac dobija obavještenje o ishodu na **registrovanu e-mail adresu** na digitalnom servisu, istim kanalom obavještavanja kao kod `Nepotpuna`. Ne uvodi se širi e-mail lifecycle, status isporuke ni automatsko ponovno slanje. Neuspjela isporuka **ne** mijenja automatski ishod ni rok.
+Podnosilac dobija obavještenje o ishodu na **registrovanu e-mail adresu** na digitalnom servisu, istim kanalom obavještavanja. Ne uvodi se širi e-mail lifecycle, status isporuke ni automatsko ponovno slanje. Neuspjela isporuka **ne** mijenja automatski ishod ni rok.
 
-* `Prihvaćen` → administrativni rezultat postaje `Potpuna`; prijava ostaje `submitted` i nastavlja postupak;
-* `Odbijen` → ostaje `Nepotpuna`; prijava prelazi u `rejected` uz tipiziran razlog konačne nepotpunosti i ne ide u ocjenjivanje.
+* Ako nijedan eliminatorni razlog više nije konačno aktivan → prijava ostaje `submitted` i nastavlja postupak ocjenjivanja.
+* Ako makar jedan razlog ostane konačno aktivan → prijava prelazi u `rejected`; čuvaju se svi konačni aktivni razlozi; odbijanje se ne svodi na jednu slobodnu opštu napomenu.
 
-Ako rok od tri dana istekne bez prigovora, `Nepotpuna` postaje konačna za administrativnu fazu i prijava prelazi u `rejected` uz razlog konačne nepotpunosti.
+Ako rok od tri dana istekne bez prigovora, svi prethodno aktivirani kriterijumi postaju konačni i prijava prelazi u `rejected` uz sve aktivne razloge.
 
-Završeni ishod **ne** može se ponovo otvoriti (`BM-ML-037`). Predsjednik i Administrator **ne** mogu produžiti ili ponovo otvoriti rok.
+Završeni ishod **ne** može se ponovo otvoriti (`BM-ML-037`). Predsjednik i Administrator **ne** mogu produžiti ili ponovo otvoriti rok. Isti prigovorni ciklus se **ne** ponavlja. Ne uvodi se prelaz `rejected` → `submitted`.
 
-Prigovor ostaje odvojen objekat. Stanja prigovora ostaju `Podnesen`, `Prihvaćen` i `Odbijen`. Ne uvodi se prelaz `rejected` → `submitted`.
+Prigovor ostaje odvojen objekat. Stanja prigovora ostaju `Podnesen`, `Prihvaćen` i `Odbijen`.
 
 ## 14.5. Funkcionalni prelazi — obavještenja i prigovori
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Obavještenje | rezultat Nepotpuna | slanje | evidentiranje u M3 | slanje na registrovanu e-mail adresu podnosioca na digitalnom servisu; rok 3 dana od evidentiranog slanja | sistem | `BM-ML-036` |
-| Prigovor | — | podnošenje | Nepotpuna; rok 3 dana od slanja; samo funkcija digitalnog servisa; tekst obrazloženja | Podnesen; prijava ostaje zaključana | podnosilac | `BM-ML-036`; `BM-ML-023` |
+| Obavještenje | nijedan kriterijum nije aktiviran | slanje | M3 bez aktivnog razloga | prigovorni tok se ne otvara; obavještenje se ne šalje | sistem | `BM-ML-036` |
+| Obavještenje | najmanje jedan aktiviran kriterijum | slanje | evidentiranje u M3 | jedno objedinjeno obavještenje na registrovanu e-mail adresu; svaki aktivirani razlog posebno; rok 3 dana od evidentiranog slanja; nije javno | sistem | `BM-ML-036` |
+| Prigovor | — | podnošenje | najmanje jedan aktiviran razlog; rok 3 dana od slanja; samo funkcija digitalnog servisa; obrazloženje po osporenom kriterijumu | Podnesen; prijava ostaje zaključana; neaktivirani se ne mogu osporavati | podnosilac | `BM-ML-036`; `BM-ML-023` |
 | Prigovor | — | pokušaj podnošenja odgovorom na e-mail ili običnim spoljnim e-mailom | — | nije pravilno podnesen prigovor | podnosilac | `BM-ML-036` |
-| Prigovor | Podnesen | odluka | sva tri člana; provjera da li je dokument bio u podnesenoj prijavi prije isteka | Prihvaćen → Potpuna; prijava ostaje `submitted` / Odbijen → ostaje Nepotpuna; prijava `rejected` uz razlog konačne nepotpunosti; čuvaju se vrijeme i učesnici | Komisija / predsjednik | `BM-ML-003`; `BM-ML-036` |
-| Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje ili produženje roka | — | zabranjeno; nema `rejected` → `submitted` | predsjednik / Administrator / svi | `BM-ML-037` |
-| Admin. rezultat | Nepotpuna | istek 3 dana bez prigovora | obavještenje poslato | Nepotpuna konačna; prijava `rejected` uz razlog konačne nepotpunosti; ne ide u ocjenjivanje | sistem | `BM-ML-036` |
-| Druga sjednica | — | pokušaj održavanja | postoji blagovremen neriješen prigovor | nije dozvoljeno | Komisija | `BM-ML-034` |
+| Prigovor | Podnesen | odluka | sva tri člana; odluka po svakom osporenom kriterijumu; provjera sadržaja koji je postojao prije isteka roka | pojedinačni ishodi; ako nijedan razlog nije konačno aktivan → `submitted`; ako makar jedan ostane → `rejected` uz sve konačne aktivne razloge | Komisija / predsjednik | `BM-ML-003`; `BM-ML-036`; `BM-ML-037` |
+| Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje ili produženje roka | — | zabranjeno; nema `rejected` → `submitted`; isti ciklus se ne ponavlja | predsjednik / Administrator / svi | `BM-ML-037` |
+| Admin. rezultat / M3 | najmanje jedan aktiviran kriterijum | istek 3 dana bez prigovora | obavještenje poslato | svi prethodno aktivirani kriterijumi konačni; prijava `rejected` uz sve aktivne razloge | sistem | `BM-ML-036` |
+| Druga sjednica | — | pokušaj održavanja | postoji bilo koji blagovremen neriješen prigovor | nije dozvoljeno | Komisija | `BM-ML-034` |
 
 ## 14.6. Prihvatni kriterijumi — prigovor
 
 ### 14.6.1 — Obavještenje na registrovanu e-mail adresu
 
-**Ako:** predsjednik evidentira `Nepotpuna`.
+**Ako:** je aktiviran najmanje jedan eliminatorni kriterijum.
 
 **Kada:** se šalje obavještenje.
 
-**Onda:** Platforma šalje obavještenje na registrovanu e-mail adresu podnosioca na digitalnom servisu Opštine Kotor, sa rezultatom, razlozima, pravom na prigovor i rokom. Administrator razloge **ne** vidi. Ne uvodi se status isporuke ni automatsko ponovno slanje. Neuspjela isporuka **ne** mijenja automatski odluku Komisije ni rok.
+**Onda:** Platforma šalje jedno objedinjeno obavještenje na registrovanu e-mail adresu podnosioca, sa svakim aktiviranim razlogom, obrazloženjem, pravom na prigovor, rokom od tri dana i napomenom da se prigovor podnosi kroz digitalni servis. Obavještenje nije javno. Administrator razloge **ne** vidi. Ne uvodi se status isporuke ni automatsko ponovno slanje. Neuspjela isporuka **ne** mijenja automatski odluku Komisije ni rok.
 
 Izvor: `BM-ML-036`; `BM-ML-004`.
 
@@ -2730,7 +2780,7 @@ Izvor: `BM-ML-036`.
 
 **Kada:** sistem prima samo podnošenje preko funkcije digitalnog servisa.
 
-**Onda:** obični e-mail **nije** važeći kanal za podnošenje prigovora. Odgovor na primljeni e-mail **nije** pravilno podnesen prigovor. Prigovor preko funkcije digitalnog servisa zahtijeva tekst obrazloženja.
+**Onda:** obični e-mail **nije** važeći kanal za podnošenje prigovora. Odgovor na primljeni e-mail **nije** pravilno podnesen prigovor. Prigovor preko funkcije digitalnog servisa zahtijeva obrazloženje za svaki osporeni kriterijum.
 
 Izvor: `BM-ML-036`.
 
@@ -2740,7 +2790,7 @@ Izvor: `BM-ML-036`.
 
 **Kada:** podnosilac pokuša dodati, zamijeniti ili dopuniti prilog.
 
-**Onda:** Platforma blokira izmjenu. Prigovor ne omogućava izmjenu M1a/M1b ili M2, dodavanje novog dokumenta, zamjenu ili uklanjanje postojećeg priloga ni naknadnu dopunu prijave. Prigovor može samo ukazati na već blagovremeno predati dokument.
+**Onda:** Platforma blokira izmjenu. Prigovor ne omogućava izmjenu M1a/M1b ili M2, izmjenu podataka prijave, dodavanje novog dokumenta, zamjenu ili uklanjanje postojećeg priloga ni otključavanje prijave. Prigovor može samo ukazati na činjenicu ili dokument koji je već postojao prije isteka roka.
 
 Izvor: `BM-ML-036`; `BM-ML-023`.
 
@@ -2750,17 +2800,17 @@ Izvor: `BM-ML-036`; `BM-ML-023`.
 
 **Kada:** Komisija odlučuje.
 
-**Onda:** Komisija provjerava da li je dokument postojao u podnesenoj prijavi prije isteka roka. U odlučivanju učestvuju sva tri člana. Predsjednik evidentira `Prihvaćen` ili `Odbijen` i obrazloženje, sa datumom, vremenom i učesnicima.
+**Onda:** Komisija provjerava sadržaj koji je postojao u podnesenoj prijavi prije isteka roka. U odlučivanju učestvuju sva tri člana. Odluka se evidentira po svakom osporenom kriterijumu, sa obrazloženjem, datumom, vremenom i članovima koji su odlučivali.
 
 Izvor: `BM-ML-036`; `BM-ML-003`.
 
 ### 14.6.6 — Ishod Prihvaćen ili Odbijen
 
-**Ako:** prigovor je `Prihvaćen`.
+**Ako:** Komisija odluči o prigovoru.
 
-**Kada:** ishod se evidentira.
+**Kada:** ishodi po kriterijumima se evidentiraju.
 
-**Onda:** rezultat postaje `Potpuna` i prijava ostaje `submitted` i nastavlja. Ako je `Odbijen`, ostaje `Nepotpuna`, prijava prelazi u `rejected` uz tipiziran razlog konačne nepotpunosti i ne ide u ocjenjivanje. Podnosilac dobija obavještenje na registrovanu e-mail adresu na digitalnom servisu.
+**Onda:** ako nijedan razlog nije konačno aktivan, prijava ostaje `submitted` i nastavlja. Ako makar jedan razlog ostane konačno aktivan, prijava prelazi u `rejected` uz sve konačne aktivne razloge i ne ide u ocjenjivanje. Podnosilac dobija obavještenje na registrovanu e-mail adresu na digitalnom servisu.
 
 Izvor: `BM-ML-036`.
 
@@ -2770,7 +2820,7 @@ Izvor: `BM-ML-036`.
 
 **Kada:** rok istekne.
 
-**Onda:** `Nepotpuna` postaje konačna. Prijava prelazi u `rejected` uz tipiziran razlog konačne nepotpunosti i ne razmatra se dalje.
+**Onda:** svi prethodno aktivirani kriterijumi postaju konačni. Prijava prelazi u `rejected` uz sve aktivne razloge i ne razmatra se dalje.
 
 Izvor: `BM-ML-036`.
 
@@ -2786,7 +2836,7 @@ Izvor: `BM-ML-037`.
 
 ### 14.6.9 — Druga sjednica čeka prigovor
 
-**Ako:** postoji blagovremen neriješen prigovor.
+**Ako:** postoji bilo koji blagovremen neriješen prigovor.
 
 **Kada:** se pokuša održati druga sjednica.
 
@@ -2800,9 +2850,49 @@ Izvor: `BM-ML-034`.
 
 **Kada:** Platforma određuje status prijave.
 
-**Onda:** prigovor ostaje odvojen objekat. Tokom otvorenog prava na prigovor prijava ostaje `submitted`. `rejected` zbog nepotpunosti nastaje tek nakon odbijenog prigovora ili isteka roka. Nema prelaza `rejected` → `submitted`.
+**Onda:** prigovor ostaje odvojen objekat. Tokom otvorenog prava na prigovor prijava ostaje `submitted`. `rejected` nastaje tek kada je makar jedan razlog konačno aktivan. Nema prelaza `rejected` → `submitted`.
 
 Izvor: `BM-ML-020`; `BM-ML-037`.
+
+### 14.6.11 — Jedno objedinjeno obavještenje
+
+**Ako:** je aktivirano više eliminatornih kriterijuma.
+
+**Kada:** Platforma priprema obavještenje.
+
+**Onda:** šalje se jedno objedinjeno obavještenje. Svaki aktivirani razlog naveden je posebno. Ne otvara se poseban prigovorni tok po kriterijumu.
+
+Izvor: `BM-ML-036`.
+
+### 14.6.12 — Osporavanje samo aktiviranih razloga
+
+**Ako:** podnosilac podnosi prigovor.
+
+**Kada:** bira kriterijume koje osporava.
+
+**Onda:** može osporiti jedan, više ili sve aktivirane kriterijume. Platforma **ne** omogućava osporavanje kriterijuma koji nije aktiviran.
+
+Izvor: `BM-ML-036`.
+
+### 14.6.13 — Odluka po kriterijumu
+
+**Ako:** Komisija odlučuje o prigovoru.
+
+**Kada:** evidentira ishod.
+
+**Onda:** za svaki osporeni kriterijum evidentira se `Prihvaćen` ili `Odbijen`, obrazloženje, datum i vrijeme i članovi koji su odlučivali. Ne uvodi se automatska odluka Platforme.
+
+Izvor: `BM-ML-037`; `BM-ML-003`.
+
+### 14.6.14 — Djelimično prihvatanje
+
+**Ako:** je prigovor prihvaćen samo za neke osporene kriterijume.
+
+**Kada:** se utvrđuje konačni ishod prijave.
+
+**Onda:** svaki kriterijum zadržava svoj pojedinačni ishod. Ako nijedan razlog nije konačno aktivan, prijava ostaje `submitted`. Ako makar jedan razlog ostane konačno aktivan, prijava prelazi u `rejected` uz sve konačne aktivne razloge.
+
+Izvor: `BM-ML-036`; `BM-ML-037`.
 
 ---
 
@@ -2818,7 +2908,7 @@ Ne uvodi se videokonferencijska integracija, kalendarska integracija, SMS ni dru
 
 ## 15.1. Zakazivanje
 
-Predsjednik Komisije, za prijave sa administrativnim rezultatom `Potpuna`, na Platformi:
+Predsjednik Komisije, za prijave za koje nijedan eliminatorni razlog nije konačno aktivan, na Platformi:
 
 * određuje datum i vrijeme usmenog obrazloženja;
 * evidentira mjesto ili način održavanja kao poslovni podatak, bez tehničke integracije;
@@ -3013,7 +3103,7 @@ Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Izvorni zapi
 
 **Ne** uvode se ponderi. Opciona napomena **ne** donosi bodove.
 
-U ocjenjivanje ulaze samo prijave koje su do tog trenutka ispunile uslove za nastavak, uključujući konačan administrativni rezultat `Potpuna`.
+U ocjenjivanje ulaze samo prijave za koje nijedan eliminatorni razlog nije konačno aktivan i za koje ne traje rok ni neriješen blagovremen prigovor.
 
 ## 16.2. Nacrt
 
@@ -3359,51 +3449,53 @@ Status poglavlja: USVOJENO
 
 Ovo poglavlje određuje tri eliminatorna razloga iz člana 20 Odluke (`BM-ML-015`; `BM-ML-018`; `BM-ML-035`–`BM-ML-037`; `BM-ML-043`) i posebnu provjeru podobnosti prema `BM-ML-006`.
 
-Član 20 sadrži tačno tri eliminatorna kriterijuma; četvrti eliminatorni kriterijum nije uveden. Ne uvodi se poslovno stanje `Eliminisana`. Konačno utvrđen eliminatorni razlog dovodi do `rejected` uz odvojen razlog. Ne uvodi se V1 modul za upload, obradu ili odobravanje obrazaca M4/M4a tekućeg projekta.
+Član 20 sadrži tačno tri eliminatorna kriterijuma; četvrti eliminatorni kriterijum nije uveden. Ne uvodi se poslovno stanje `Eliminisana`. Konačno aktivan eliminatorni razlog dovodi do `rejected` uz odvojene razloge. Ne uvodi se V1 modul za upload, obradu ili odobravanje obrazaca M4/M4a tekućeg projekta. M4/M4a se u ovom poglavlju pominju samo kao postojeći eliminatorni kriterijum za ranije finansiranog korisnika.
 
 ## 18.1. Tri eliminatorna razloga
 
-Postoje **tačno tri** eliminatorna razloga:
+Postoje **tačno tri** eliminatorna razloga, sva tri na elektronskom M3:
 
-1. nedostatak formalnih uslova, odnosno konačno utvrđena nepotpuna dokumentacija (`BM-ML-035`–`BM-ML-037`; `BM-ML-043`);
-2. prethodno finansirani biznis plan za koji nijesu dostavljeni M4, M4a i propisani prateći dokumenti (`BM-ML-018`);
+1. prijava je nepotpuna (`BM-ML-035`–`BM-ML-037`; `BM-ML-043`);
+2. korisnik koji je ranije dobio sredstva nije dostavio obavezne izvještaje M4 i M4a za ranije finansirani biznis plan (`BM-ML-018`);
 3. biznis plan nije povezan sa prioritetnim oblastima iz člana 12 Odluke (`BM-ML-015`).
 
 Platforma **ne** dodaje eliminatorni razlog koji nije propisan Odlukom.
 
-## 18.2. Nepotpuna dokumentacija i prigovor
+## 18.2. M3, obavještenje i prigovor za sva tri razloga
 
-Rezultat `Nepotpuna` **ne** smije odmah preskočiti pravo na prigovor. Tok prigovora ostaje Poglavlje 14.
+Sva tri razloga evidentiraju se na M3 kao odvojene stavke. Aktiviranje bilo kojeg razloga **ne** smije odmah preskočiti pravo na prigovor. Tok prigovora ostaje Poglavlje 14.
 
-Dok traje rok za prigovor ili postoji neriješen blagovremen prigovor, prijava **ne** ulazi u ocjenjivanje.
+Dok traje rok za prigovor ili postoji bilo koji neriješen blagovremen prigovor, prijava **ne** ulazi u ocjenjivanje i ostaje `submitted`.
 
-* Prihvaćen prigovor uklanja eliminatornu posljedicu nepotpunosti. Prijava nastavlja kao `Potpuna` i ostaje `submitted`.
-* Odbijen prigovor ili istek roka bez prigovora čini `Nepotpuna` konačnim. Prijava prelazi u `rejected` uz razlog konačne nepotpunosti i **ne** ulazi u pozitivno ocjenjivanje.
+* Ako nakon odluke nijedan razlog nije konačno aktivan, prijava ostaje `submitted` i nastavlja.
+* Ako makar jedan razlog ostane konačno aktivan, ili ako rok istekne bez prigovora, prijava prelazi u `rejected` uz sve konačne aktivne razloge i **ne** ulazi u pozitivno ocjenjivanje.
 
 Ne uvodi se druga paralelna elektronska provjera istog razloga.
 
 ## 18.3. M4/M4a i prioritetne oblasti
 
-Komisija provjerava:
+Drugi i treći kriterijum evidentiraju se na M3 zajedno sa prvim. Komisija provjerava:
 
 * da li je za ranije finansirani ili djelimično finansirani biznis plan izvršeno propisano izvještavanje M4/M4a i pratećim dokumentima (`BM-ML-018`);
 * da li je biznis plan povezan sa najmanje jednom prioritetnom oblasti iz člana 12 (`BM-ML-015`).
 
 Ova provjera odnosi se na **ranije** ispunjene obaveze, a ne na izvještavanje o projektu koji tek bude podržan. Upload, obrada i odobravanje M4/M4a tekućeg projekta ostaju **van V1**.
 
-Sistemska provjera može biti samo **pomoćna**. Platforma **ne** donosi samostalno konačnu odluku o eliminaciji. Administrator **ne** odlučuje o eliminatornim razlozima.
+Sistemska provjera može biti samo **pomoćna**. Platforma **ne** donosi samostalno konačnu odluku o eliminaciji. Administrator **ne** odlučuje o eliminatornim razlozima i **ne** mijenja M3.
 
-Konačni eliminatorni razlog evidentira **predsjednik** na osnovu odluke Komisije. Evidentiraju se razlog, odgovorno lice, datum i vrijeme.
+Predsjednik evidentira rezultat rada Komisije na M3. Za svaki kriterijum ostaju odvojeni rezultat, aktivacija, obrazloženje, sastav, vrijeme, konačnost i veza sa prigovorom.
 
 ## 18.4. Dejstvo eliminatornog rezultata
 
-Eliminatorni rezultat **nije** novo poslovno ime statusa prijave. Poslovno stanje `Eliminisana` ne uvodi se. Konačno utvrđen eliminatorni razlog dovodi do `rejected` uz odvojen razlog.
+Eliminatorni rezultat **nije** novo poslovno ime statusa prijave. Poslovno stanje `Eliminisana` ne uvodi se. Konačno aktivan eliminatorni razlog dovodi do `rejected` uz odvojene razloge. Odbijanje se ne svodi na jednu slobodnu opštu napomenu.
 
-Prijava sa konačno utvrđenim primjenjivim eliminatornim razlogom:
+Prijava sa makar jednim konačno aktivnim eliminatornim razlogom:
 
 * **ne** dobija pozitivne ocjene;
 * **ne** ulazi u rang-listu podrške;
-* dobija `rejected` tek kada je razlog konačan: za razlog 1 nakon odbijenog prigovora ili isteka roka; za razloge 2 i 3 kada ih Komisija konačno utvrdi.
+* dobija `rejected` tek kada je makar jedan razlog konačan, nakon odluke o prigovoru ili isteka roka bez prigovora.
+
+Početni M3 nalaz **ne** postavlja `rejected`.
 
 ## 18.5. Povezani član Komisije — BM-ML-006
 
@@ -3423,13 +3515,12 @@ Ako je nepodobnost konačno utvrđena, prijava **ne** ulazi u pozitivno ocjenjiv
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Admin. rezultat | Nepotpuna | pokušaj ocjenjivanja | rok za prigovor traje ili prigovor neriješen | ocjenjivanje zabranjeno | sistem | `BM-ML-035`; `BM-ML-036` |
-| Admin. rezultat | Nepotpuna | prigovor Prihvaćen | Poglavlje 14 | Potpuna; prijava ostaje `submitted`; nastavlja postupak | Komisija | `BM-ML-036` |
-| Admin. rezultat | Nepotpuna | prigovor Odbijen ili istek 3 dana | — | Nepotpuna konačna; prijava `rejected` uz razlog konačne nepotpunosti; ne ulazi u ocjenjivanje | sistem / Komisija | `BM-ML-036`; `BM-ML-043` |
-| Eliminatorni razlog 2 ili 3 | `submitted` | odluka Komisije | M4/M4a ili prioritetne oblasti | razlog odvojeno evidentiran; `rejected`; nema pozitivnih ocjena ni ranga podrške | predsjednik u ime Komisije | `BM-ML-018`; `BM-ML-015`; `BM-ML-043` |
+| M3 | najmanje jedan aktiviran razlog | pokušaj ocjenjivanja | rok za prigovor traje ili prigovor neriješen | ocjenjivanje zabranjeno; status ostaje `submitted` | sistem | `BM-ML-035`; `BM-ML-036` |
+| M3 | najmanje jedan aktiviran razlog | prigovor riješen | nijedan razlog nije konačno aktivan | prijava ostaje `submitted`; nastavlja postupak | Komisija | `BM-ML-036` |
+| M3 | najmanje jedan aktiviran razlog | prigovor riješen ili istek 3 dana | makar jedan razlog konačno aktivan | prijava `rejected` uz sve konačne aktivne razloge; ne ulazi u ocjenjivanje | sistem / Komisija | `BM-ML-036`; `BM-ML-043` |
 | Eliminatorni razlog | — | automatska odluka Platforme ili Administratora | — | zabranjeno | sistem / Administrator | `BM-ML-043` |
 | Podobnost | `submitted` | provjera BM-ML-006 | Komisija utvrdi povezanost | nepodobnost evidentirana; nije 4. kriterijum čl. 20 | Komisija | `BM-ML-006` |
-| Prijava | konačni eliminatorni razlog | status prijave | razlog 1 nakon prigovora ili isteka; razlozi 2 i 3 po odluci Komisije | `rejected` uz odvojen razlog; nema stanja Eliminisana | sistem | `BM-ML-043`; `BM-ML-020` |
+| Prijava | konačni eliminatorni razlog | status prijave | makar jedan razlog konačno aktivan | `rejected` uz sve konačne aktivne razloge; nema stanja Eliminisana | sistem | `BM-ML-043`; `BM-ML-020` |
 
 ## 18.7. Prihvatni kriterijumi — eliminatorni razlozi
 
@@ -3445,11 +3536,11 @@ Izvor: `BM-ML-043`.
 
 ### 18.7.2 — Prigovor prije ocjenjivanja
 
-**Ako:** je rezultat `Nepotpuna` i rok za prigovor traje ili postoji neriješen blagovremen prigovor.
+**Ako:** je aktiviran najmanje jedan eliminatorni razlog i rok za prigovor traje ili postoji neriješen blagovremen prigovor.
 
 **Kada:** se pokuša pozitivno ocjenjivanje.
 
-**Onda:** Platforma blokira ocjenjivanje.
+**Onda:** Platforma blokira ocjenjivanje. Prijava ostaje `submitted`.
 
 Izvor: `BM-ML-036`; `BM-ML-043`.
 
@@ -3469,7 +3560,7 @@ Izvor: `BM-ML-043`; `BM-ML-035`.
 
 **Kada:** Platforma određuje status prijave.
 
-**Onda:** prijava prelazi u `rejected` uz odvojen eliminatorni razlog. Poslovno stanje `Eliminisana` se ne uvodi. Prijava ne dobija pozitivne ocjene i ne ulazi u rang-listu podrške.
+**Onda:** prijava prelazi u `rejected` uz sve konačne aktivne razloge. Poslovno stanje `Eliminisana` se ne uvodi. Prijava ne dobija pozitivne ocjene i ne ulazi u rang-listu podrške. `rejected` ne nastaje samo zbog početnog M3 nalaza.
 
 Izvor: `BM-ML-043`; `BM-ML-020`.
 
@@ -3482,6 +3573,16 @@ Izvor: `BM-ML-043`; `BM-ML-020`.
 **Onda:** to **nije** četvrti eliminatorni kriterijum iz člana 20. Platforma **ne** blokira automatski podnošenje i **ne** utvrđuje povezanost sama.
 
 Izvor: `BM-ML-006`.
+
+### 18.7.6 — Tri kriterijuma na M3 i pravo na prigovor
+
+**Ako:** se otvori elektronski M3 ili se aktivira eliminatorni razlog.
+
+**Kada:** Komisija evidentira rezultat ili podnosilac ostvaruje pravo na prigovor.
+
+**Onda:** M3 prikazuje tačno tri kriterijuma. Pravo na prigovor postoji za svaki aktivirani kriterijum. Bodovanje je dozvoljeno tek kada nijedan razlog nije konačno aktivan.
+
+Izvor: `BM-ML-035`; `BM-ML-036`; `BM-ML-043`.
 
 ---
 
@@ -3622,7 +3723,8 @@ Platforma je priprema **automatski** tek kada su ispunjeni svi sljedeći uslovi:
 * postoje tačno tri kompletne ocjene po prijavi u ciklusu;
 * dodatni bodovi su potvrđeni;
 * konačne ocjene su izračunate;
-* nema neriješenih uslova koji blokiraju rangiranje, uključujući neriješen blagovremen prigovor.
+* nema neriješenih uslova koji blokiraju rangiranje, uključujući bilo koji neriješen blagovremen prigovor;
+* nema prijave u ciklusu sa konačno aktivnim eliminatornim razlogom.
 
 Preliminarna lista:
 
@@ -4499,8 +4601,10 @@ Platforma **ne** smije:
 * koristiti više od tri mjesta u elektronskom M3;
 * započeti administrativnu provjeru bez formalno popunjena tri mjesta;
 * dozvoliti prvu sjednicu sa manje od dva prisutna člana;
-* sistemsku provjeru proglasiti konačnom odlukom o potpunosti;
-* dozvoliti administratoru da odlučuje o potpunosti;
+* sistemsku provjeru proglasiti konačnom odlukom o ispunjenosti kriterijuma;
+* dozvoliti administratoru da odlučuje o kriterijumima ili mijenja M3;
+* svesti M3 na jedno zbirno polje `Potpuna` / `Nepotpuna`;
+* postaviti `rejected` samo zbog početnog M3 nalaza;
 * dozvoliti odlučivanje o prigovoru bez sva tri člana;
 * automatski utvrditi povezanost podnosioca i člana Komisije;
 * automatski odbiti prijavu prema `BM-ML-006`.
@@ -4516,9 +4620,11 @@ Platforma **ne** smije:
 * dozvoliti podnošenje prigovora izvan funkcije digitalnog servisa;
 * prigovor koristiti za dodavanje ili zamjenu dokumentacije;
 * otključati prijavu zbog prigovora;
+* osporiti kriterijum koji nije aktiviran;
 * ponovo otvoriti prihvaćen ili odbijen prigovor;
+* ponoviti isti prigovorni ciklus;
 * automatski produžiti rok;
-* održati drugu sjednicu dok postoji blagovremen neriješen prigovor.
+* održati drugu sjednicu dok postoji bilo koji blagovremen neriješen prigovor.
 
 Izvori: Poglavlja 10 i 14; `BM-ML-023`; `BM-ML-034`; `BM-ML-036`; `BM-ML-037`.
 
@@ -4737,7 +4843,7 @@ Kriterijumi Poglavlja 1, 3 i 4 ostaju u tim poglavljima. Završni kontrolni krit
 
 ## 26.1. Indeks kriterijuma Poglavlja 5–23
 
-Ukupno redova ovog indeksa: **134**. Nema preskakanja i nema duplikata.
+Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 
 | Oznaka | Oblast | Sažetak uslova | Očekivani rezultat | Poglavlje | Izvor |
 |--------|--------|----------------|--------------------|-----------|-------|
@@ -4800,20 +4906,27 @@ Ukupno redova ovog indeksa: **134**. Nema preskakanja i nema duplikata.
 | 12.5.5 | Kvorum | Manje od dva prisutna | Provjera blokirana odnosno odložena | 12 | `BM-ML-002` |
 | 13.5.1 | M3 | Prikaz članova | Tačno tri mjesta; predsjednik je jedan od tri | 13 | `BM-ML-001` |
 | 13.5.2 | Prva sjednica | Formalno kompletna Komisija | Kvorum najmanje dva | 13 | `BM-ML-002` |
-| 13.5.3 | M3 | Evidentiranje rezultata | Predsjednik upisuje Potpuna/Nepotpuna; status ostaje `submitted` | 13 | `BM-ML-035` |
+| 13.5.3 | M3 | Evidentiranje rezultata | Predsjednik upisuje tri odvojene stavke; status ostaje `submitted` | 13 | `BM-ML-035` |
 | 13.5.4 | M3 | Sistemska provjera | Nije konačna odluka Komisije | 13 | `BM-ML-035` |
-| 13.5.5 | M3 | Administrator | Ne odlučuje o potpunosti | 13 | `BM-ML-004` |
-| 13.5.6 | Prigovor | Odluka Komisije | Potrebna sva tri člana | 13 | `BM-ML-003` |
-| 14.6.1 | Obavještenje | Rezultat Nepotpuna | Šalje se na registrovanu e-mail adresu | 14 | `BM-ML-036` |
+| 13.5.5 | M3 | Administrator | Ne odlučuje o kriterijumima i ne mijenja M3 | 13 | `BM-ML-004` |
+| 13.5.6 | Prigovor | Odluka Komisije | Potrebna sva tri člana; odluka po kriterijumu | 13 | `BM-ML-003` |
+| 13.5.7 | M3 | Prikaz kriterijuma | Tačno tri odvojene stavke | 13 | `BM-ML-035` |
+| 13.5.8 | M3 | Evidencija po kriterijumu | Odvojeni rezultat, aktivacija, obrazloženje i trag | 13 | `BM-ML-035` |
+| 13.5.9 | M3 | Početni nalaz | Ne postavlja odmah `rejected` | 13 | `BM-ML-035`; `BM-ML-020` |
+| 14.6.1 | Obavještenje | Najmanje jedan aktiviran razlog | Jedno objedinjeno obavještenje na registrovanu e-mail adresu | 14 | `BM-ML-036` |
 | 14.6.2 | Rok prigovora | Računanje roka | Od slanja, ne od otvaranja | 14 | `BM-ML-036` |
 | 14.6.3 | Prigovor | Kanal podnošenja | Samo funkcija digitalnog servisa | 14 | `BM-ML-036` |
 | 14.6.4 | Prigovor | Pokušaj nove dokumentacije | Zabranjeno; prijava se ne otključava | 14 | `BM-ML-036` |
-| 14.6.5 | Prigovor | Ispitivanje | Da li je dokument bio u podnesenoj prijavi | 14 | `BM-ML-036` |
-| 14.6.6 | Prigovor | Odluka | Prihvaćen ili Odbijen | 14 | `BM-ML-036`; `BM-ML-037` |
-| 14.6.7 | Prigovor | Istek bez podnošenja | Nepotpuna konačna; prijava `rejected` uz razlog | 14 | `BM-ML-036` |
+| 14.6.5 | Prigovor | Ispitivanje | Sadržaj koji je postojao prije isteka roka | 14 | `BM-ML-036` |
+| 14.6.6 | Prigovor | Odluka | Ishod po kriterijumu; `submitted` ili `rejected` | 14 | `BM-ML-036`; `BM-ML-037` |
+| 14.6.7 | Prigovor | Istek bez podnošenja | Svi aktivni razlozi konačni; prijava `rejected` | 14 | `BM-ML-036` |
 | 14.6.8 | Prigovor | Prihvaćen ili Odbijen | Ponovno otvaranje zabranjeno | 14 | `BM-ML-037` |
-| 14.6.9 | Druga sjednica | Neriješen blagovremen prigovor | Sjednica nije dozvoljena | 14 | `BM-ML-034` |
+| 14.6.9 | Druga sjednica | Bilo koji neriješen blagovremen prigovor | Sjednica nije dozvoljena | 14 | `BM-ML-034` |
 | 14.6.10 | Status | Ishod prigovora | Prigovor odvojen; `submitted` dok traje pravo; zatim `rejected` | 14 | `BM-ML-020` |
+| 14.6.11 | Obavještenje | Više aktivnih razloga | Jedno objedinjeno obavještenje | 14 | `BM-ML-036` |
+| 14.6.12 | Prigovor | Izbor kriterijuma | Može osporiti samo aktivirane | 14 | `BM-ML-036` |
+| 14.6.13 | Prigovor | Odluka Komisije | Evidentira se po kriterijumu | 14 | `BM-ML-037` |
+| 14.6.14 | Prigovor | Djelimično prihvatanje | Pojedinačni ishodi; `rejected` ako ostane makar jedan razlog | 14 | `BM-ML-036`; `BM-ML-037` |
 | 15.7.1 | Usmeno | Zakazivanje | Termin i obavještenje evidentirani | 15 | `BM-ML-034` |
 | 15.7.2 | Usmeno | Promjena termina | Nije automatska; razlog evidentiran | 15 | `BM-ML-034` |
 | 15.7.3 | Usmeno | Evidencija održavanja | Sva tri člana obavezna | 15 | `BM-ML-003` |
@@ -4835,10 +4948,11 @@ Ukupno redova ovog indeksa: **134**. Nema preskakanja i nema duplikata.
 | 17.7.5 | Dodatni bodovi | Potvrda predsjednika | Zaključano; nema bod Zavoda | 17 | `BM-ML-042` |
 | 17.7.6 | Rezultat | Redoslijed | Dodatni bodovi nakon zbira prosjeka | 17 | `BM-ML-044` |
 | 18.7.1 | Eliminacija | Unos razloga | Tačno tri razloga; četvrti nije uveden | 18 | `BM-ML-043` |
-| 18.7.2 | Eliminacija | Nepotpuna ili neriješen prigovor | Ocjenjivanje blokirano | 18 | `BM-ML-036`; `BM-ML-043` |
+| 18.7.2 | Eliminacija | Aktiviran razlog ili neriješen prigovor | Ocjenjivanje blokirano; ostaje `submitted` | 18 | `BM-ML-036`; `BM-ML-043` |
 | 18.7.3 | Eliminacija | Sistemska pomoć | Nije konačna odluka Komisije | 18 | `BM-ML-043` |
-| 18.7.4 | Status | Konačni razlog | `rejected` uz odvojen razlog; nema Eliminisana | 18 | `BM-ML-020` |
+| 18.7.4 | Status | Konačni razlog | `rejected` uz sve konačne aktivne razloge; nema Eliminisana | 18 | `BM-ML-020` |
 | 18.7.5 | Podobnost | Povezanost sa članom | Nije četvrti kriterijum; nema automatskog odbijanja | 18 | `BM-ML-006` |
+| 18.7.6 | M3 | Tri kriterijuma | Prikaz tri stavke; prigovor na svaki aktivirani; bodovanje tek bez konačnog razloga | 18 | `BM-ML-035`; `BM-ML-036` |
 | 19.6.1 | Obračun | Tri kompletne ocjene | Formula; maksimum 56 | 19 | `BM-ML-041`; `BM-ML-044` |
 | 19.6.2 | Obračun | Nedostaje treća ocjena | Nema konačnog rezultata | 19 | `BM-ML-003` |
 | 19.6.3 | Prag | Puna ocjena | Prag 30; ispod praga nije `approved`; konačni `rejected` pri potvrdi | 19 | `BM-ML-044` |
@@ -4876,7 +4990,7 @@ Ukupno redova ovog indeksa: **134**. Nema preskakanja i nema duplikata.
 | 23.8.9 | Arhiva | Čitanje arhive | Nije brisanje ni javnost | 23 | `BM-ML-054`; `BM-ML-058` |
 | 23.8.10 | V1 | Arhiviranje | Ne zavisi od ugovora/M4; ne kreira drugi Poziv | 23 | F-05; `KN-PATCH-BM-010` |
 
-Brojanje indeksa: 5.9 (7) + 6.8 (12) + 7.9 (7) + 8.6 (9) + 9.9 (5) + 10.5 (7) + 11.5 (5) + 12.5 (5) + 13.5 (6) + 14.6 (10) + 15.7 (6) + 16.8 (8) + 17.7 (6) + 18.7 (5) + 19.6 (4) + 20.7 (6) + 21.8 (6) + 22.7 (10) + 23.8 (10) = **134**.
+Brojanje indeksa: 5.9 (7) + 6.8 (12) + 7.9 (7) + 8.6 (9) + 9.9 (5) + 10.5 (7) + 11.5 (5) + 12.5 (5) + 13.5 (9) + 14.6 (14) + 15.7 (6) + 16.8 (8) + 17.7 (6) + 18.7 (6) + 19.6 (4) + 20.7 (6) + 21.8 (6) + 22.7 (10) + 23.8 (10) = **142**.
 
 ## 26.2. Završni kontrolni kriterijumi
 
@@ -4888,7 +5002,7 @@ Ovi kriterijumi **ne** uvode nova pravila. Provjeravaju objedinjene zabrane i gr
 
 **Kada:** Platforma određuje status.
 
-**Onda:** vrijednost je `draft`, `submitted`, `evaluated`, `approved` ili `rejected`. `Nepotpuna` ne postavlja odmah `rejected`. Tokom otvorenog prava na prigovor prijava ostaje `submitted`. Nema prelaza `rejected` → `submitted`. Nepodneseni nacrt nakon isteka roka ostaje `draft`. `evaluated` nastaje tek nakon tri kompletne ocjene i obračuna. `approved` i konačni `rejected` rezultata nastaju pri potvrdi rang-liste i raspodjele. Potpunost i prigovor ostaju odvojeni. Arhiviranje Poziva ne mijenja status prijave.
+**Onda:** vrijednost je `draft`, `submitted`, `evaluated`, `approved` ili `rejected`. Aktiviranje eliminatornog razloga ne postavlja odmah `rejected`. Tokom otvorenog prava na prigovor prijava ostaje `submitted`. Nema prelaza `rejected` → `submitted`. Nepodneseni nacrt nakon isteka roka ostaje `draft`. `evaluated` nastaje tek nakon tri kompletne ocjene i obračuna. `approved` i konačni `rejected` rezultata nastaju pri potvrdi rang-liste i raspodjele. Rezultati M3 i prigovor ostaju odvojeni. Arhiviranje Poziva ne mijenja status prijave.
 
 Izvor: 4.11.1; 14.6.10; 18.7.4; `BM-ML-020`; `KN-PATCH-FS-007`.
 
@@ -4954,7 +5068,7 @@ Izvor: 13.5.6; 15.7.3; 16.8.4; `BM-ML-003`.
 
 ### 26.2.8 — E-mail obavještenje i prigovor preko digitalnog servisa
 
-**Ako:** je rezultat `Nepotpuna` ili se podnosi prigovor.
+**Ako:** je aktiviran najmanje jedan eliminatorni razlog ili se podnosi prigovor.
 
 **Kada:** se bira kanal.
 
@@ -5038,7 +5152,7 @@ Izvor: 17.7.1–17.7.5; `BM-ML-042`.
 
 **Kada:** predsjednik upisuje razlog.
 
-**Onda:** dozvoljena su tačno tri razloga. Četvrti eliminatorni kriterijum nije uveden.
+**Onda:** dozvoljena su tačno tri razloga na M3. Četvrti eliminatorni kriterijum nije uveden. Pravo na prigovor postoji za svaki aktivirani razlog. `rejected` nastaje tek kada je makar jedan razlog konačno aktivan.
 
 Izvor: 18.7.1; `BM-ML-043`.
 
@@ -5158,15 +5272,15 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-032 | Dokaz o žiro računu | 9.7 | §9; §1.3; §25.3 | 9.9.3; 25.6.1 | Nije obavezan uz početnu prijavu; provjera pred ugovor van V1 | U V1 opciono; operativna provjera van V1 |
 | BM-ML-033 | Objavljivanje i rok za prijave | 10.2 | §6 | 6.8.1–6.8.12 | Ručna objava; 20 dana; 23:59:59; bez pomjeranja | U V1 |
 | BM-ML-034 | Rokovi sjednica Komisije | 10.3 | §4.10; §13.2; §14.3; §15.1; §20 | 4.11.6; 4.11.7; 14.6.9; 15.7.1 | Platforma evidentira; ne zakazuje umjesto Komisije; treća sjednica najkasnije sedam dana; nema automatskog produženja roka druge sjednice | U V1 evidencija |
-| BM-ML-035 | Rezultat administrativne provjere | 10.4 | §13 | 13.5.3; 13.5.4; 4.11.2 | Potpuna/Nepotpuna odvojeno; status ostaje submitted dok traje prigovor | U V1 |
-| BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | §14 | 14.6.1–14.6.7; 26.2.8; 26.2.9 | E-mail obavještenje; prigovor samo na servisu; rejected tek nakon odbijanja ili isteka | U V1 |
-| BM-ML-037 | Konačnost ishoda prigovora | 10.5 | §14 | 14.6.8 | Prihvaćen/Odbijen se ne otvara ponovo | U V1 |
+| BM-ML-035 | M3 i tri eliminatorna kriterijuma | 10.4 | §13 | 13.5.3; 13.5.7; 13.5.8; 4.11.2 | Tri odvojene stavke na M3; status ostaje submitted dok traje prigovor | U V1 |
+| BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | §14 | 14.6.1–14.6.14; 26.2.8; 26.2.9 | Objedinjeno e-mail obavještenje; jedan prigovor na aktivirane; rejected tek nakon konačnosti | U V1 |
+| BM-ML-037 | Konačnost ishoda prigovora | 10.5 | §14 | 14.6.8; 14.6.13; 14.6.14 | Ishod po kriterijumu; Prihvaćen/Odbijen se ne otvara ponovo | U V1 |
 | BM-ML-038 | Deset pozitivnih kriterijuma i skala | 11.1 | §16.1 | 16.8.1 | Skala 1–5; deset kriterijuma | U V1 |
 | BM-ML-039 | Nacrt i završavanje individualnog ocjenjivanja | 11.2 | §16 | 16.8.2; 16.8.3; 26.2.10; 26.2.11 | Nacrt prije usmenog; završavanje tek nakon usmenog | U V1 |
 | BM-ML-040 | Tajnost i međusobni uvid | 11.3 | §16.5 | 16.8.6; 16.8.7 | Uvid tek nakon cijelog ciklusa; samo čitanje | U V1 |
 | BM-ML-041 | Prosjek i preciznost obračuna | 11.4 | §16.6; §19 | 16.8.8; 19.6.1; 26.2.14 | Puna nezaokružena vrijednost za prag i rang | U V1 |
 | BM-ML-042 | Dodatni bodovi | 11.5 | §17 | 17.7.1–17.7.6; 26.2.15 | +1/+2/+3; maksimum 6; nema boda Zavoda | U V1 |
-| BM-ML-043 | Eliminatorni kriterijumi | 11.6 | §18 | 18.7.1–18.7.4; 26.2.16 | Tačno tri razloga; nema stanja Eliminisana; konačni razlog daje rejected | U V1 |
+| BM-ML-043 | Eliminatorni kriterijumi | 11.6 | §18 | 18.7.1–18.7.6; 26.2.16 | Tačno tri razloga na M3; nema stanja Eliminisana; konačni razlog daje rejected | U V1 |
 | BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | §19 | 19.6.1; 19.6.3; 26.2.13 | Maksimum 56; prag 30; evaluated pa approved/rejected pri potvrdi | U V1 |
 | BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | §20 | 20.7.1; 20.7.2; 20.7.6 | Jedan objekat, dvije faze; bez ručne izmjene ranga | U V1 |
 | BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | §20 | 20.7.4; 20.7.5; 26.2.17 | 1, 2, 2, 4; član 22; bez tehničkog tie-breaka | U V1 |
@@ -5292,4 +5406,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.2**
+**Kraj dokumenta KN-FS-002 v1.0.3**
