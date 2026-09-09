@@ -1392,6 +1392,7 @@ class Application extends Model
 
     /**
      * Tekst podataka iz obrasca 1a/1b za e-mail spiska kandidata (jedna prijava).
+     * JMB/JMBG se namjerno ne uključuje: ostaje na Obrascu i Platformi.
      */
     public function getObrazacTextForEmail(): string
     {
@@ -1404,7 +1405,6 @@ class Application extends Model
             'director_name' => 'Ime i prezime direktora',
             'company_seat' => 'Sjedište',
             'physical_person_name' => 'Ime i prezime (fizičko lice)',
-            'physical_person_jmbg' => 'JMBG (fizičko lice)',
             'physical_person_phone' => 'Telefon (fizičko lice)',
             'physical_person_email' => 'E-mail (fizičko lice)',
             'physical_person_address' => 'Adresa (fizičko lice)',

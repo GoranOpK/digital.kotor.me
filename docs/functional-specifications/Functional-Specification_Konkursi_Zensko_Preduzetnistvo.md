@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.8
+**Verzija:** 1.0.9
 **Datum:** 2026-09-09
 
 Povezani dokumenti:
@@ -63,6 +63,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.6 | 2026-09-08 | Controlled corrective. §10.4 / §11.8 / §18.4.2: obavezno obrazloženje odluke o Prigovoru; Prihvaćen može ostaviti preostali eliminatorni razlog; per-criterion Otklonjen/Ostaje samo za originalne Ne, bez izmjene Obrasca 3; scoring OPEN samo ako nijedan razlog ne ostaje; email obavještenje o odluci, Platforma je autoritet (`decided_at`). |
 | 1.0.7 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.14 / **PO-IB-01…05 PO USVOJENO**. Nema nacrta individualnog bodovanja; eksplicitna potvrda konačne ocjene; pet kanonskih mjesta; fiksni djelilac /5; tajnost i prag 30 tek po završetku cjelokupnog ciklusa. |
 | 1.0.8 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.15. **PO USVOJENO:** dodatni bodovi se zaključavaju u trenutku završetka cjelokupnog ciklusa individualnog bodovanja, **prije** otključavanja zbirnih rezultata i rang-liste. Nema izmjene nakon toga ni postupka ponovnog otvaranja. |
+| 1.0.9 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** JMB/JMBG ostaje dio odgovarajućeg Obrasca i evidencije Prijave i dostupan je ovlašćenim akterima kroz Platformu; **ne** uključuje se u e-mail spiska kandidata. §8.5. Ne širi se na ostale PII ni ostale outbound poruke. |
 
 Napomena:
 
@@ -1815,6 +1816,16 @@ Nije dovoljno sakriti stavku navigacije, dugme, tabelu ili vezu u korisničkom i
 Poznavanje ili pogađanje identifikatora Prijave, identifikatora dokumenta, rute ili URL-a **ne** smije zaobići usvojena pravila pristupa.
 
 Ovo poglavlje određuje obavezno ponašanje, ne tehnički mehanizam sprovođenja.
+
+## 8.5. JMB/JMBG i e-mail spiska kandidata
+
+JMB/JMBG ostaje sastavni dio odgovarajućeg Obrasca i evidencije Prijave.
+
+Ovlašćeni akteri mu pristupaju kroz Platformu, u skladu sa pravima pristupa iz ovog poglavlja i Poglavlja 9.
+
+JMB/JMBG se **ne** uključuje u e-mail spiska kandidata.
+
+Ova odredba **ne** mijenja ostala polja tog e-maila i **ne** proširuje se na druge outbound poruke.
 
 ---
 
@@ -4508,4 +4519,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.7**
+**Kraj dokumenta KN-FS-003 v1.0.9**
