@@ -1,6 +1,6 @@
 # Environment varijable
 
-**Posljednje ažuriranje:** 2026-09-06
+**Posljednje ažuriranje:** 2026-09-10
 **Izvor u kodu:** `.env.example`, `config/*.php`, direktni `env()` pozivi
 
 ---
@@ -29,6 +29,59 @@ Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. P
 | `IDENTITY_EP_IDENTITY_FLOWS` | `false` | Durable disable live EP identity tokova; admin DB toggle ne može bypass |
 
 **R1 ACTIVE.** Ne vraćati `canonical_read`/`canonical_write` na `false` kao recovery shortcut. EP hard gate ostaje OPEN; live EP identity tokovi ostaju disabled. Detalj: `DK-TS-002` v1.0.1 §14.1.
+
+---
+
+## JMB/JMBG enkripcija (Faza B1 / B2)
+
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Servis se **ne** poziva iz postojećih JMB read/write tokova. Boot aplikacije **ne** zahtijeva ključ; poziv bez ključa pada eksplicitno.
+
+| Varijabla | Default (example) | Namjena |
+|-----------|-------------------|---------|
+| `JMB_ENCRYPTION_KEY` | prazno | Aktivni 32-bajtni ključ za AES-256-GCM, format `base64:...`. Samo ovaj ključ se koristi za `encrypt()`. Ne koristiti `APP_KEY`. |
+| `JMB_ENCRYPTION_KEY_ID` | `v1` | Aktivni `key_id` u zapisu `jmb:<key_id>:<payload>`. |
+| `JMB_ENCRYPTION_PREVIOUS_KEYS` | prazno | Decrypt-only keyring. JSON objekat `{"<key_id>":"base64:..."}`. Prazno dok nema rotacije. |
+
+Rotacija v1 → v2 (samo config; B2 ne radi re-encrypt spremljenih redova):
+
+1. Novi aktivni ključ: `JMB_ENCRYPTION_KEY` + `JMB_ENCRYPTION_KEY_ID=v2`.
+2. Stari ključ ostaje decrypt-only: `JMB_ENCRYPTION_PREVIOUS_KEYS={"v1":"<stari JMB_ENCRYPTION_KEY>"}`.
+3. `decrypt()` bira tačno `key_id` iz envelope-a. Nema fallback na drugi ključ.
+
+Generisanje ključa:
+
+```text
+php -r "echo 'base64:'.base64_encode(random_bytes(32)), PHP_EOL;"
+```
+
+### Faza B2 — `jmb:backfill-encrypted`
+
+Kopira postojeći plaintext JMB/JMBG u paralelne `*_encrypted` kolone. **Ne** mijenja plaintext. **Ne** uvodi dual-write ni encrypted-first read. Pokretanje na produkciji je **odvojena PO-odobrena akcija**, nije dio deploya ni crona.
+
+```text
+php artisan jmb:backfill-encrypted --dry-run
+php artisan jmb:backfill-encrypted --dry-run --scope=users --chunk=100
+php artisan jmb:backfill-encrypted --scope=applications.physical_person_jmbg
+```
+
+| Opcija | Ponašanje |
+|--------|-----------|
+| (bez opcija) | Svih 7 mappinga, upis u encrypted kolone |
+| `--dry-run` | Čitanje + encrypt/decrypt validacija u memoriji; **nula** DB upisa |
+| `--scope=` | Jedan mapping. Dozvoljeno: `users`, `physical_person_identities`, `legal_entity_authorized_persons`, `foreign_branch_representatives`, `applications.physical_person_jmbg`, `applications.applicant_jmbg`, `business_plans`. Nepoznat scope = greška. |
+| `--chunk=` | Broj redova po batch-u. Default `100`, min `1`, max `500`. |
+
+Algoritam po redu: `null`/prazan plaintext → `skipped_no_plaintext` (bez upisa); plaintext + NULL target → encrypt + in-memory decrypt, upis samo ako je round-trip tačan (`encrypted` / `would_encrypt`); postojeći target koji se dekriptuje na isti plaintext → `already_valid` (bez rewrite); mismatch ili nečitljiv target → **stop na prvoj grešci**, target se ne prepisuje, exit ≠ 0.
+
+Izlaz (samo agregati): `scope`, `table`, `scanned`, `encrypted` ili `would_encrypt`, `already_valid`, `skipped_no_plaintext`, `errors`. Na grešci: `table` + `id` + `reason`. Nikad plaintext, ciphertext ili ključ.
+
+Idempotentnost: drugi apply ne mijenja already-valid ciphertext.
+
+Transakcije: nema jedne velike transakcije preko 7 tabela. Svaki uspješan encrypted upis se commit-uje zasebno. Retry nastavlja preko `already_valid`.
+
+Konkurentnost: B2 je prije Phase C dual-write. Promjena plaintext JMB tokom backfill-a može ostaviti zastarjelu encrypted kopiju. Nema lockinga. Produkcijski run mora biti pod kontrolisanim uslovom koji odobri PO.
+
+Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failure.
 
 ---
 

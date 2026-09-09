@@ -238,6 +238,7 @@ Na produkciji se Newsletter **ne** oslanja na `php artisan schedule:run`. Invoke
 | `document:fingerprint-check` | Pixel/binarni fingerprint duplikata (`DocumentImageFingerprint`); izolovani probe |
 | `document:fingerprint-check --compare` | Poredi `storage/app/document-fingerprint-input/capture01.png` i `capture05.png` |
 | `path:show` | Ispis `base_path()` |
+| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski run je odvojena PO-odobrena akcija. Prvo `--dry-run`. Detalji: [environment-variables.md](environment-variables.md#faza-b2--jmbbackfill-encrypted) |
 
 ### PDF dijagnostika na Plesku (bez SSH)
 
