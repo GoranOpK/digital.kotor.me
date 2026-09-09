@@ -15,6 +15,7 @@ use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
 use App\Support\Pib;
+use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Services\KnApplicationStartContextFactory;
 use App\Services\KnApplicationStartContextStore;
 use Illuminate\Http\Request;
@@ -493,7 +494,13 @@ class ApplicationController extends Controller
             'physical_person_email.email' => 'E-mail mora biti validan.',
             'physical_person_address.required' => 'Adresa je obavezna za fizičko lice.',
         ]);
-            \Log::info('Validation passed! Validated data: ' . json_encode($validated));
+            $safeValidated = SensitiveIdentifierLogSanitizer::redact($validated);
+            if (! is_array($safeValidated)) {
+                $safeValidated = [];
+            }
+            Log::info(
+                'Validation passed! Validated data: '.json_encode($safeValidated, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            );
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         }
