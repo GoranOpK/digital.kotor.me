@@ -113,6 +113,7 @@ class IdentityShadowComparatorTest extends TestCase
         $this->assertContains('not_in_canonical_contract', $leftover->reasonCodes);
 
         $user->pib = null;
+        $user->jmb_encrypted = null;
         $user->jmb = $this->validJmb($this->jmbSerial++);
         $this->assertSame(IdentityShadowStatus::MISMATCH, $comparator->compare($user, $snapshot)->status);
         $this->assertContains('prefill_dto', $comparator->compare($user, $snapshot)->reasonCodes);

@@ -4,6 +4,7 @@ namespace App\Identity;
 
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
+use App\Security\JmbEncryptedReadService;
 
 /**
  * Deterministic Step 4 identity graph fingerprint.
@@ -51,7 +52,7 @@ final class IdentityCanonicalGraphFingerprint
             'last_name' => $fl->last_name,
             'residential_status' => $fl->residential_status,
             'id_document_type' => $fl->id_document_type,
-            'jmb' => $fl->jmb,
+            'jmb' => self::logicalPhysicalPersonJmb($fl),
             'passport_number' => self::outerTrim($fl->passport_number),
             'residence_country_code' => self::outerTrim($fl->residence_country_code),
             'is_entrepreneur' => $fl->is_entrepreneur === true,
@@ -61,6 +62,17 @@ final class IdentityCanonicalGraphFingerprint
             'street_and_number' => $fl->street_and_number,
             'city' => $fl->city,
         ];
+    }
+
+    private static function logicalPhysicalPersonJmb(PhysicalPersonIdentity $fl): ?string
+    {
+        return app(JmbEncryptedReadService::class)->readValue(
+            $fl->jmb_encrypted,
+            $fl->jmb,
+            'physical_person_identities',
+            $fl->id,
+            'jmb/jmb_encrypted',
+        );
     }
 
     public static function outerTrim(mixed $value): ?string

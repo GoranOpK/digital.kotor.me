@@ -10,6 +10,7 @@ use App\Models\LegalEntityAuthorizedPerson;
 use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
+use App\Security\JmbEncryptedReadService;
 use Illuminate\Support\Collection;
 
 /**
@@ -97,7 +98,13 @@ class IdentityShadowCanonicalLoader
                 streetAndNumber: (string) $fl->street_and_number,
                 city: (string) $fl->city,
                 idDocumentType: $fl->id_document_type,
-                jmb: $fl->jmb,
+                jmb: app(JmbEncryptedReadService::class)->readValue(
+                    $fl->jmb_encrypted,
+                    $fl->jmb,
+                    'physical_person_identities',
+                    $fl->id,
+                    'jmb/jmb_encrypted',
+                ),
                 passportNumber: $fl->passport_number,
                 residenceCountryCode: $fl->residence_country_code,
                 isEntrepreneur: (bool) $fl->is_entrepreneur,

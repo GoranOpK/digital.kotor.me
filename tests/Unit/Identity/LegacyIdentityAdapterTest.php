@@ -5,9 +5,11 @@ namespace Tests\Unit\Identity;
 use App\Identity\LegacyIdentityAdapter;
 use App\Models\Role;
 use App\Models\User;
+use App\Security\JmbEncryptedReadException;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Support\MakesCanonicalUsers;
 use Tests\TestCase;
 
@@ -45,6 +47,7 @@ class LegacyIdentityAdapterTest extends TestCase
         $this->assertSame('Jedno Ime', $snapshot->legacyFacts?->companyName);
         $this->assertSame($user->phone, $snapshot->legacyFacts?->phone);
         $this->assertSame($user->address, $snapshot->streetAndNumber);
+        $this->assertNull($snapshot->legacyFacts?->jmb);
     }
 
     public function test_staff_without_user_type_has_no_registered_subject_snapshot(): void
@@ -79,5 +82,36 @@ class LegacyIdentityAdapterTest extends TestCase
         $this->assertNull($snapshot->subjectType);
         $this->assertSame(UserType::PHYSICAL_PERSON, $snapshot->legacyFacts?->userType);
         $this->assertSame('resident', $snapshot->legacyFacts?->residentialStatus);
+    }
+
+    public function test_jmb_value_is_encrypted_first_and_does_not_use_desynced_plaintext(): void
+    {
+        $encrypted = $this->validJmb(41);
+        $plaintext = $this->validJmb(42);
+        $user = $this->makeKorisnik([
+            'jmb' => $encrypted,
+            'email' => 'legacy-jmb-read@example.test',
+        ]);
+        DB::table('users')->where('id', $user->id)->update(['jmb' => $plaintext]);
+
+        $snapshot = (new LegacyIdentityAdapter)->forUser($user->fresh());
+
+        $this->assertSame($encrypted, $snapshot?->legacyFacts?->jmb);
+        $this->assertNotSame($plaintext, $snapshot?->legacyFacts?->jmb);
+    }
+
+    public function test_decrypt_failure_does_not_fall_back_to_plaintext(): void
+    {
+        $jmb = $this->validJmb(43);
+        $user = $this->makeKorisnik([
+            'jmb' => $jmb,
+            'email' => 'legacy-jmb-fail@example.test',
+        ]);
+        DB::table('users')->where('id', $user->id)->update([
+            'jmb_encrypted' => 'jmb:v1:tampered',
+        ]);
+
+        $this->expectException(JmbEncryptedReadException::class);
+        (new LegacyIdentityAdapter)->forUser($user->fresh());
     }
 }

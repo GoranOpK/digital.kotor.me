@@ -52,6 +52,8 @@ final class DashboardDisplayComparator
      */
     private function displayDtoFromLegacy(User $user): array
     {
+        $jmb = IdentityShadowCanonicalFacts::leftoverUserJmb($user);
+
         return [
             'user_type_label' => $this->userTypeLabel(
                 $user->user_type,
@@ -60,8 +62,8 @@ final class DashboardDisplayComparator
             'phone_display' => $user->phone ?? 'N/A',
             'address_display' => $user->address ?? 'N/A',
             'city_display' => $user->city ?? 'N/A',
-            'jmb_shown' => (bool) $user->jmb,
-            'jmb' => $user->jmb,
+            'jmb_shown' => (bool) $jmb,
+            'jmb' => $jmb,
         ];
     }
 

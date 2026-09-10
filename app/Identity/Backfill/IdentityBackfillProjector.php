@@ -9,6 +9,8 @@ use App\Identity\Validation\JmbIdentifierValidator;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
 use App\Models\User;
+use App\Security\JmbEncryptedReadException;
+use App\Security\JmbEncryptedReadService;
 
 /**
  * Deterministic users → canonical Step 4 snapshot. Create-input only.
@@ -55,7 +57,7 @@ class IdentityBackfillProjector
         $lastName = $this->outerTrim($user->last_name);
         $street = $this->outerTrim($user->address);
         $city = $this->outerTrim($user->city);
-        $jmb = $this->outerTrim($user->jmb);
+        $jmb = $this->logicalUserJmb($user);
         $phone = $this->outerTrim($user->phone);
 
         if ($firstName === null || $lastName === null || $street === null || $city === null || $jmb === null) {
@@ -89,6 +91,21 @@ class IdentityBackfillProjector
                 crpsNumber: null,
             ),
         );
+    }
+
+    private function logicalUserJmb(User $user): ?string
+    {
+        try {
+            return $this->outerTrim(app(JmbEncryptedReadService::class)->readValue(
+                $user->jmb_encrypted,
+                $user->jmb,
+                'users',
+                $user->id,
+                'jmb/jmb_encrypted',
+            ));
+        } catch (JmbEncryptedReadException) {
+            return null;
+        }
     }
 
     private function outerTrim(mixed $value): ?string

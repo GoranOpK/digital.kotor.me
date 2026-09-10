@@ -24,7 +24,7 @@ final class ProfileDisplayComparator
             'city' => $user->city,
             'user_type' => $user->user_type,
             'residential_status' => $user->residential_status,
-            'jmb' => $user->jmb,
+            'jmb' => IdentityShadowCanonicalFacts::leftoverUserJmb($user),
         ];
         $canonicalDto = [
             'first_name' => $fl?->firstName,

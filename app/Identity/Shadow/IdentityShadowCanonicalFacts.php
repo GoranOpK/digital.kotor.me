@@ -5,6 +5,9 @@ namespace App\Identity\Shadow;
 use App\Identity\IdentitySnapshot;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
+use App\Models\User;
+use App\Security\JmbEncryptedReadException;
+use App\Security\JmbEncryptedReadService;
 use App\Support\UserType;
 
 /**
@@ -43,5 +46,20 @@ final class IdentityShadowCanonicalFacts
         }
 
         return $fl->residentialStatus;
+    }
+
+    public static function leftoverUserJmb(User $user): ?string
+    {
+        try {
+            return app(JmbEncryptedReadService::class)->readValue(
+                $user->jmb_encrypted,
+                $user->jmb,
+                'users',
+                $user->id,
+                'jmb/jmb_encrypted',
+            );
+        } catch (JmbEncryptedReadException) {
+            return null;
+        }
     }
 }
