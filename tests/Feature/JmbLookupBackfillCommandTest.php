@@ -197,15 +197,15 @@ class JmbLookupBackfillCommandTest extends TestCase
     public function test_invalid_plaintext_fails_without_write(): void
     {
         $id = $this->insertUser(null);
-        DB::table('users')->where('id', $id)->update(['jmb' => '123']);
+        DB::table('users')->where('id', $id)->update(['jmb' => '12x']);
 
         $result = $this->runCommand(['--scope' => 'users']);
 
         $this->assertSame(1, $result['exit']);
         $this->assertStringContainsString('reason=invalid_plaintext', $result['output']);
         $this->assertNull($this->raw('users', $id)->jmb_lookup);
-        $this->assertSame('123', $this->raw('users', $id)->jmb);
-        $this->assertStringNotContainsString('123', $result['output']);
+        $this->assertSame('12x', $this->raw('users', $id)->jmb);
+        $this->assertStringNotContainsString('12x', $result['output']);
     }
 
     public function test_users_digest_collision_fails_without_overwrite(): void
