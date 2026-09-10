@@ -4,6 +4,7 @@ namespace App\Identity\Runtime;
 
 use App\Identity\PhoneCallingCodeCatalog;
 use App\Models\User;
+use App\Security\JmbEncryptedReadService;
 use App\Support\UserType;
 
 final class ExistingSubjectIdentityPrefill
@@ -45,11 +46,12 @@ final class ExistingSubjectIdentityPrefill
         }
 
         $residential = $this->text($user->residential_status);
+        $jmb = $this->jmbForUser($user);
         $idDocumentType = '';
-        if ($residential === 'resident' && $this->text($user->jmb) !== '') {
+        if ($residential === 'resident' && $jmb !== '') {
             $idDocumentType = 'jmb';
         } elseif ($residential === 'non-resident') {
-            if ($this->text($user->jmb) !== '') {
+            if ($jmb !== '') {
                 $idDocumentType = 'jmb';
             } elseif ($this->text($user->passport_number) !== '') {
                 $idDocumentType = 'passport';
@@ -65,7 +67,7 @@ final class ExistingSubjectIdentityPrefill
             'last_name' => $this->text($user->last_name),
             'residential_status' => $residential,
             'id_document_type' => $idDocumentType,
-            'jmb' => $this->text($user->jmb),
+            'jmb' => $jmb,
             'passport_number' => $this->text($user->passport_number),
             'residence_country_code' => '',
             'entrepreneur_business_name' => $this->text($user->company_name),
@@ -90,6 +92,19 @@ final class ExistingSubjectIdentityPrefill
             UserType::LIMITED_LIABILITY_COMPANY, UserType::ENTREPRENEUR => $user->user_type,
             default => null,
         };
+    }
+
+    private function jmbForUser(User $user): string
+    {
+        $value = app(JmbEncryptedReadService::class)->readValue(
+            $user->jmb_encrypted,
+            $user->jmb,
+            'users',
+            $user->id,
+            'jmb/jmb_encrypted',
+        );
+
+        return $this->text($value);
     }
 
     private function text(mixed $value): string

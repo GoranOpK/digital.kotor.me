@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Security\JmbEncryptedReadException;
+use App\Security\JmbEncryptedReadService;
 
 class Application extends Model
 {
@@ -682,26 +684,92 @@ class Application extends Model
     public function resolvedApplicantJmbg(): ?string
     {
         if ($this->applicant_type === 'fizicko_lice') {
-            return filled($this->physical_person_jmbg) ? $this->physical_person_jmbg : null;
+            return $this->hasPhysicalPersonJmbgSnapshot()
+                ? $this->physicalPersonJmbgForRead()
+                : null;
         }
 
         if (!in_array($this->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
             return null;
         }
 
-        if (filled($this->applicant_jmbg)) {
-            return $this->applicant_jmbg;
+        if ($this->hasApplicantJmbgSnapshot()) {
+            return $this->applicantJmbgForRead();
         }
 
-        $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
+        return $this->liveApplicantJmbg(
+            $this->relationLoaded('user') ? $this->user : $this->user()->first()
+        );
+    }
+
+    public function physicalPersonJmbgForRead(): ?string
+    {
+        return app(JmbEncryptedReadService::class)->readValue(
+            $this->physical_person_jmbg_encrypted,
+            $this->physical_person_jmbg,
+            'applications',
+            $this->getKey(),
+            'physical_person_jmbg/physical_person_jmbg_encrypted',
+        );
+    }
+
+    public function applicantJmbgForRead(): ?string
+    {
+        return app(JmbEncryptedReadService::class)->readValue(
+            $this->applicant_jmbg_encrypted,
+            $this->applicant_jmbg,
+            'applications',
+            $this->getKey(),
+            'applicant_jmbg/applicant_jmbg_encrypted',
+        );
+    }
+
+    public function hasPhysicalPersonJmbgSnapshot(): bool
+    {
+        return JmbEncryptedReadService::pairIsPresent(
+            $this->physical_person_jmbg_encrypted,
+            $this->physical_person_jmbg,
+        );
+    }
+
+    public function hasApplicantJmbgSnapshot(): bool
+    {
+        return JmbEncryptedReadService::pairIsPresent(
+            $this->applicant_jmbg_encrypted,
+            $this->applicant_jmbg,
+        );
+    }
+
+    private function physicalPersonJmbgIsUsable(): bool
+    {
+        try {
+            return filled($this->physicalPersonJmbgForRead());
+        } catch (JmbEncryptedReadException) {
+            return false;
+        }
+    }
+
+    private function liveApplicantJmbg(?User $user): ?string
+    {
+        if (! $user) {
+            return null;
+        }
 
         if (config('identity.canonical_read')) {
-            $jmb = $user ? app(\App\Identity\Runtime\CurrentIdentityResolver::class)->viewFor($user)->jmb : null;
+            $jmb = app(\App\Identity\Runtime\CurrentIdentityResolver::class)->viewFor($user)->jmb;
 
             return filled($jmb) ? $jmb : null;
         }
 
-        return filled($user?->jmb) ? $user->jmb : null;
+        $jmb = app(JmbEncryptedReadService::class)->readValue(
+            $user->jmb_encrypted,
+            $user->jmb,
+            'users',
+            $user->id,
+            'jmb/jmb_encrypted',
+        );
+
+        return filled($jmb) ? $jmb : null;
     }
 
     /**
@@ -735,7 +803,7 @@ class Application extends Model
         // Proveri polja specifična za tip podnosioca
         if ($this->applicant_type === 'fizicko_lice') {
             if (!$this->physical_person_name ||
-                !$this->physical_person_jmbg ||
+                !$this->physicalPersonJmbgIsUsable() ||
                 !$this->physical_person_phone ||
                 !$this->physical_person_email ||
                 !$this->physical_person_address) {
@@ -765,7 +833,11 @@ class Application extends Model
         }
 
         if (in_array($this->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
-            $jmbg = $this->resolvedApplicantJmbg();
+            try {
+                $jmbg = $this->resolvedApplicantJmbg();
+            } catch (JmbEncryptedReadException) {
+                return false;
+            }
             if (!$jmbg || !preg_match('/^[0-9]{13}$/', (string) $jmbg)) {
                 return false;
             }

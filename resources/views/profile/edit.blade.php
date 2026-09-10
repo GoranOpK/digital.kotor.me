@@ -280,6 +280,10 @@
                 <div id="physicalPersonFields" class="{{ $isNaturalPerson ? '' : 'conditional-field' }}" style="{{ $isNaturalPerson ? '' : 'display: none;' }}">
                     <div class="form-group">
                         <label for="jmb" class="form-label">JMB @if(old('residential_status', $subjectIdentity->residentialStatus) === 'resident')<span class="required">*</span>@endif</label>
+                        @if($subjectIdentity->access === \App\Identity\Runtime\IdentityAccess::INVALID)
+                            <input type="text" id="jmb" class="form-control" value="" disabled>
+                            <div class="form-error">{{ \App\Security\JmbEncryptedReadException::USER_MESSAGE }}</div>
+                        @else
                         <input type="text" name="jmb" id="jmb" class="form-control" 
                                value="{{ old('jmb', $subjectIdentity->jmb) }}" 
                                maxlength="13" 
@@ -288,6 +292,7 @@
                         @error('jmb')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
+                        @endif
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
                             Jedinstveni matični broj (13 cifara)
                         </div>

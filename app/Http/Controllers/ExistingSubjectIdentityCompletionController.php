@@ -12,6 +12,7 @@ use App\Identity\Runtime\ExistingSubjectIdentityPrefill;
 use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityMutationDeniedException;
 use App\Identity\Runtime\IdentityUseGateException;
+use App\Security\JmbEncryptedReadException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -49,9 +50,15 @@ class ExistingSubjectIdentityCompletionController extends Controller
             'reason_code' => 'form',
         ]);
 
+        try {
+            $prefillData = $prefill->forUser($user, $result->branch);
+        } catch (JmbEncryptedReadException $e) {
+            abort(403, JmbEncryptedReadException::USER_MESSAGE);
+        }
+
         return view('identity.completion', [
             'branch' => $result->branch,
-            'prefill' => $prefill->forUser($user, $result->branch),
+            'prefill' => $prefillData,
             'callingCodes' => PhoneCallingCodeCatalog::pickerEntries(),
             'countryEntries' => CountryCatalog::entries(),
         ]);

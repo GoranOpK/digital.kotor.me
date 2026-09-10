@@ -707,7 +707,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">JMBG:</label>
-                                <input type="text" name="applicant_jmbg" class="form-control @error('applicant_jmbg') error @enderror" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? ($defaultData['applicant_jmbg'] ?? '')) }}" required>
+                                <input type="text" name="applicant_jmbg" class="form-control @error('applicant_jmbg') error @enderror" value="{{ old('applicant_jmbg', $defaultData['applicant_jmbg'] ?? '') }}" required>
                                 @error('applicant_jmbg')
                                     <div class="error-message">{{ $message }}</div>
                                 @enderror

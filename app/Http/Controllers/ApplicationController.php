@@ -12,6 +12,7 @@ use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
 use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
+use App\Security\JmbEncryptedReadException;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
 use App\Support\Pib;
@@ -344,7 +345,11 @@ class ApplicationController extends Controller
             'registration_form' => $resolvedRegistrationForm ?? $request->input('registration_form'),
         ]);
 
-        $this->mergeApplicantJmbgIntoRequest($request);
+        try {
+            $this->mergeApplicantJmbgIntoRequest($request);
+        } catch (JmbEncryptedReadException $e) {
+            return back()->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE])->withInput();
+        }
 
         if (! $resolvedIsRegistered) {
             $request->merge([
@@ -1232,8 +1237,8 @@ class ApplicationController extends Controller
                     ->where('user_id', $request->user()->id)
                     ->first();
 
-                if ($existingApplication && filled($existingApplication->physical_person_jmbg)) {
-                    $request->merge(['physical_person_jmbg' => $existingApplication->physical_person_jmbg]);
+                if ($existingApplication && $existingApplication->hasPhysicalPersonJmbgSnapshot()) {
+                    $request->merge(['physical_person_jmbg' => $existingApplication->physicalPersonJmbgForRead()]);
 
                     return;
                 }
@@ -1266,8 +1271,8 @@ class ApplicationController extends Controller
                 ->where('user_id', $request->user()->id)
                 ->first();
 
-            if ($existingApplication && filled($existingApplication->applicant_jmbg)) {
-                $request->merge(['applicant_jmbg' => $existingApplication->applicant_jmbg]);
+            if ($existingApplication && $existingApplication->hasApplicantJmbgSnapshot()) {
+                $request->merge(['applicant_jmbg' => $existingApplication->applicantJmbgForRead()]);
 
                 return;
             }
@@ -1337,6 +1342,22 @@ class ApplicationController extends Controller
             return $presentation;
         }
 
+        $physicalPersonJmbgForForm = null;
+        $applicantJmbgForForm = null;
+        try {
+            if ($existingApplication) {
+                if ($existingApplication->hasPhysicalPersonJmbgSnapshot()) {
+                    $physicalPersonJmbgForForm = $existingApplication->physicalPersonJmbgForRead();
+                }
+                if ($existingApplication->hasApplicantJmbgSnapshot()) {
+                    $applicantJmbgForForm = $existingApplication->applicantJmbgForRead();
+                }
+            }
+        } catch (JmbEncryptedReadException $e) {
+            return redirect()->route('competitions.show', $competition)
+                ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
+        }
+
         $preferredApplicantType = $presentation['preferredApplicantType'];
         $preselectedBusinessStage = $presentation['preselectedBusinessStage'];
         $startContextToken = $presentation['startContextToken'];
@@ -1352,6 +1373,8 @@ class ApplicationController extends Controller
             'user',
             'userDocuments',
             'existingApplication',
+            'physicalPersonJmbgForForm',
+            'applicantJmbgForForm',
             'readOnly',
             'preselectedBusinessStage',
             'preferredApplicantType',

@@ -4,6 +4,7 @@ namespace App\Identity;
 
 use App\Models\PlatformIdentity;
 use App\Models\User;
+use App\Security\JmbEncryptedReadService;
 
 /**
  * Canonical aggregate reader capability. Not rollout-gated.
@@ -70,7 +71,7 @@ final class CanonicalIdentityReader
                 streetAndNumber: $fl->street_and_number,
                 city: $fl->city,
                 idDocumentType: $fl->id_document_type,
-                jmb: $fl->jmb,
+                jmb: $this->readStoredJmb($fl->jmb_encrypted, $fl->jmb, 'physical_person_identities', $fl->id),
                 passportNumber: $fl->passport_number,
                 residenceCountryCode: $fl->residence_country_code,
                 isEntrepreneur: (bool) $fl->is_entrepreneur,
@@ -106,7 +107,7 @@ final class CanonicalIdentityReader
                     $person->first_name,
                     $person->last_name,
                     $person->id_document_type,
-                    $person->jmb,
+                    $this->readStoredJmb($person->jmb_encrypted, $person->jmb, 'legal_entity_authorized_persons', $person->id),
                     $person->passport_number,
                     $person->passport_issuing_country_code,
                 ),
@@ -141,7 +142,7 @@ final class CanonicalIdentityReader
                     $person->first_name,
                     $person->last_name,
                     $person->id_document_type,
-                    $person->jmb,
+                    $this->readStoredJmb($person->jmb_encrypted, $person->jmb, 'foreign_branch_representatives', $person->id),
                     $person->passport_number,
                     $person->passport_issuing_country_code,
                 ),
@@ -166,6 +167,17 @@ final class CanonicalIdentityReader
             jmb: $jmb,
             passportNumber: $passportNumber,
             passportIssuingCountryCode: $passportIssuingCountryCode,
+        );
+    }
+
+    private function readStoredJmb(?string $encrypted, ?string $plaintext, string $table, int|string|null $id): ?string
+    {
+        return app(JmbEncryptedReadService::class)->readValue(
+            $encrypted,
+            $plaintext,
+            $table,
+            $id,
+            'jmb/jmb_encrypted',
         );
     }
 }

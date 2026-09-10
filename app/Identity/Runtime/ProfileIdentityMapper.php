@@ -4,6 +4,7 @@ namespace App\Identity\Runtime;
 
 use App\Identity\CanonicalIdentityReadException;
 use App\Identity\CanonicalIdentityReader;
+use App\Security\JmbEncryptedReadException;
 use App\Identity\IdentitySnapshot;
 use App\Identity\LegalEntitySnapshot;
 use App\Identity\PersonInRoleSnapshot;
@@ -26,6 +27,11 @@ final class ProfileIdentityMapper
     {
         try {
             $current = $this->reader->forUser($user);
+        } catch (JmbEncryptedReadException $e) {
+            throw new IdentityUseGateException(
+                IdentityAccess::INVALID,
+                JmbEncryptedReadException::USER_MESSAGE
+            );
         } catch (CanonicalIdentityReadException $e) {
             throw new IdentityUseGateException(
                 IdentityAccess::MISSING,
@@ -178,6 +184,11 @@ final class ProfileIdentityMapper
     {
         try {
             $current = $this->reader->forUser($user);
+        } catch (JmbEncryptedReadException $e) {
+            throw new IdentityUseGateException(
+                IdentityAccess::INVALID,
+                JmbEncryptedReadException::USER_MESSAGE
+            );
         } catch (CanonicalIdentityReadException $e) {
             throw new IdentityUseGateException(
                 IdentityAccess::ACCOUNT_ONLY,

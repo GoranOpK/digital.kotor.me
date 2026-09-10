@@ -9,6 +9,8 @@ use App\Identity\IdentitySnapshot;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
 use App\Models\User;
+use App\Security\JmbEncryptedReadException;
+use App\Security\JmbEncryptedReadService;
 
 /**
  * Runtime identity presentation. Legacy-authoritative while canonical_read is OFF.
@@ -36,6 +38,8 @@ final class CurrentIdentityResolver
         if ($user->isStaffAccount()) {
             try {
                 return $this->fromCanonicalSnapshot($this->reader->forUser($user));
+            } catch (JmbEncryptedReadException) {
+                return $this->empty(IdentityAccess::INVALID, false);
             } catch (CanonicalIdentityReadException) {
                 return $this->empty(IdentityAccess::ACCOUNT_ONLY, false);
             }
@@ -43,6 +47,8 @@ final class CurrentIdentityResolver
 
         try {
             return $this->fromCanonicalSnapshot($this->reader->forUser($user));
+        } catch (JmbEncryptedReadException) {
+            return $this->empty(IdentityAccess::INVALID, true);
         } catch (CanonicalIdentityReadException) {
             return $this->empty(IdentityAccess::MISSING, true);
         }
@@ -103,6 +109,18 @@ final class CurrentIdentityResolver
     {
         $isSubject = ! $user->isStaffAccount() && $user->user_type !== null;
 
+        try {
+            $jmb = app(JmbEncryptedReadService::class)->readValue(
+                $user->jmb_encrypted,
+                $user->jmb,
+                'users',
+                $user->id,
+                'jmb/jmb_encrypted',
+            );
+        } catch (JmbEncryptedReadException) {
+            return $this->empty(IdentityAccess::INVALID, $isSubject);
+        }
+
         return new SubjectIdentityView(
             access: $isSubject || $user->user_type !== null ? IdentityAccess::CURRENT : (
                 $user->isStaffAccount() ? IdentityAccess::ACCOUNT_ONLY : IdentityAccess::MISSING
@@ -115,7 +133,7 @@ final class CurrentIdentityResolver
             phone: $user->phone,
             address: $user->address,
             city: $user->city,
-            jmb: $user->jmb,
+            jmb: $jmb,
             pib: $user->pib,
             companyName: $user->company_name,
             passportNumber: $user->passport_number,

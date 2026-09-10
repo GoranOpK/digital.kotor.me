@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Security\JmbEncryptedReadException;
+use App\Security\JmbEncryptedReadService;
 
 class BusinessPlan extends Model
 {
@@ -214,6 +216,25 @@ class BusinessPlan extends Model
         return $fromFunding > 0 ? $fromFunding : null;
     }
 
+    public function applicantJmbgForRead(): ?string
+    {
+        return app(JmbEncryptedReadService::class)->readValue(
+            $this->applicant_jmbg_encrypted,
+            $this->applicant_jmbg,
+            'business_plans',
+            $this->getKey(),
+            'applicant_jmbg/applicant_jmbg_encrypted',
+        );
+    }
+
+    public function hasApplicantJmbgSnapshot(): bool
+    {
+        return JmbEncryptedReadService::pairIsPresent(
+            $this->applicant_jmbg_encrypted,
+            $this->applicant_jmbg,
+        );
+    }
+
     /**
      * Provjerava da li je biznis plan kompletan (ima sva obavezna polja popunjena)
      * Obavezna polja su: business_idea_name, applicant_name, applicant_jmbg, applicant_address, applicant_phone, applicant_email, summary
@@ -231,6 +252,18 @@ class BusinessPlan extends Model
         ];
 
         foreach ($requiredFields as $field) {
+            if ($field === 'applicant_jmbg') {
+                try {
+                    if (! filled($this->applicantJmbgForRead())) {
+                        return false;
+                    }
+                } catch (JmbEncryptedReadException) {
+                    return false;
+                }
+
+                continue;
+            }
+
             if (empty($this->$field)) {
                 return false;
             }

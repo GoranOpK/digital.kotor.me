@@ -8,6 +8,7 @@ use App\Rules\KotorMunicipalityAddress;
 use App\Support\PhoneNumber;
 use App\Support\Pib;
 use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Security\JmbEncryptedReadException;
 use App\Support\KotorAddress;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use Illuminate\Http\Request;
@@ -235,29 +236,32 @@ class BusinessPlanController extends Controller
             ? \App\Support\KotorAddress::formatStreetAndCity($identity->address, $identity->city)
             : '';
         $defaultData = [];
-        
-        // Podaci o podnosiocu - uzmi iz prijave ili korisničkog profila podnosioca
-        if ($application->applicant_type === 'fizicko_lice') {
-            // Za fizičko lice, podaci su u prijavi
-            $defaultData['applicant_name'] = $application->physical_person_name ?? $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $identity->jmb ?? '';
-            $defaultData['applicant_phone'] = PhoneNumber::normalize($application->physical_person_phone ?? $identity->phone ?? '');
-            $defaultData['applicant_email'] = $application->physical_person_email ?? $applicantUser->email ?? '';
-            $defaultData['applicant_address'] = $identityAddress;
-        } elseif ($application->applicant_type === 'preduzetnica') {
-            // Za preduzetnicu, podaci su u korisničkom profilu
-            $defaultData['applicant_name'] = $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
-            $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
-            $defaultData['applicant_email'] = $applicantUser->email ?? '';
-            $defaultData['applicant_address'] = $identityAddress;
-        } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
-            // Za DOO/Ostalo, podaci su u korisničkom profilu
-            $defaultData['applicant_name'] = $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
-            $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
-            $defaultData['applicant_email'] = $applicantUser->email ?? '';
-            $defaultData['applicant_address'] = $identityAddress;
+
+        try {
+            if ($application->applicant_type === 'fizicko_lice') {
+                $defaultData['applicant_name'] = $application->physical_person_name ?? $applicantUser->name ?? '';
+                $defaultData['applicant_jmbg'] = $application->hasPhysicalPersonJmbgSnapshot()
+                    ? (string) ($application->physicalPersonJmbgForRead() ?? '')
+                    : (string) ($identity->jmb ?? '');
+                $defaultData['applicant_phone'] = PhoneNumber::normalize($application->physical_person_phone ?? $identity->phone ?? '');
+                $defaultData['applicant_email'] = $application->physical_person_email ?? $applicantUser->email ?? '';
+                $defaultData['applicant_address'] = $identityAddress;
+            } elseif ($application->applicant_type === 'preduzetnica') {
+                $defaultData['applicant_name'] = $applicantUser->name ?? '';
+                $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
+                $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
+                $defaultData['applicant_email'] = $applicantUser->email ?? '';
+                $defaultData['applicant_address'] = $identityAddress;
+            } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
+                $defaultData['applicant_name'] = $applicantUser->name ?? '';
+                $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
+                $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
+                $defaultData['applicant_email'] = $applicantUser->email ?? '';
+                $defaultData['applicant_address'] = $identityAddress;
+            }
+        } catch (JmbEncryptedReadException $e) {
+            return redirect()->route('applications.show', $application)
+                ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
         }
 
         // Podaci o registrovanom biznisu - ista činjenica kao u Prijavi (zaključana u Obrascu 2)
@@ -275,10 +279,20 @@ class BusinessPlanController extends Controller
 
         // Ako već postoji biznis plan, koristi njegove podatke, inače koristi default podatke
         if ($businessPlan) {
-            // Ako biznis plan već ima podatke, koristi ih
+            try {
+                $planApplicantJmbg = $businessPlan->hasApplicantJmbgSnapshot()
+                    ? $businessPlan->applicantJmbgForRead()
+                    : null;
+            } catch (JmbEncryptedReadException $e) {
+                return redirect()->route('applications.show', $application)
+                    ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
+            }
+
             $defaultData = array_merge($defaultData, [
                 'applicant_name' => $businessPlan->applicant_name ?? $defaultData['applicant_name'],
-                'applicant_jmbg' => filled($businessPlan->applicant_jmbg) ? $businessPlan->applicant_jmbg : $defaultData['applicant_jmbg'],
+                'applicant_jmbg' => $businessPlan->hasApplicantJmbgSnapshot()
+                    ? (string) $planApplicantJmbg
+                    : ($defaultData['applicant_jmbg'] ?? ''),
                 'applicant_phone' => $businessPlan->applicant_phone ?? $defaultData['applicant_phone'],
                 'applicant_email' => $businessPlan->applicant_email ?? $defaultData['applicant_email'],
                 'applicant_address' => $businessPlan->applicant_address ?? $defaultData['applicant_address'],

@@ -645,7 +645,7 @@
                                 type="text" 
                                 name="preduzetnik_jmbg" 
                                 class="form-control @error('preduzetnik_jmbg') error @enderror @error('applicant_jmbg') error @enderror"
-                                value="{{ old('preduzetnik_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? $subjectIdentity->jmb) }}"
+                                value="{{ old('preduzetnik_jmbg', ($applicantJmbgForForm ?? null) ?? $subjectIdentity->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
@@ -878,7 +878,7 @@
                                 type="text" 
                                 name="doo_jmbg" 
                                 class="form-control @error('doo_jmbg') error @enderror @error('applicant_jmbg') error @enderror"
-                                value="{{ old('doo_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? $subjectIdentity->jmb) }}"
+                                value="{{ old('doo_jmbg', ($applicantJmbgForForm ?? null) ?? $subjectIdentity->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
@@ -1157,7 +1157,7 @@
                             type="text" 
                             name="physical_person_jmbg" 
                             class="form-control @error('physical_person_jmbg') error @enderror"
-                                value="{{ old('physical_person_jmbg', (isset($existingApplication) && $existingApplication && filled($existingApplication->physical_person_jmbg) ? $existingApplication->physical_person_jmbg : null) ?? $subjectIdentity->jmb) }}"
+                                value="{{ old('physical_person_jmbg', ($physicalPersonJmbgForForm ?? null) ?? $subjectIdentity->jmb) }}"
                             maxlength="13"
                             pattern="[0-9]{13}"
                             placeholder="13 cifara"
@@ -1768,7 +1768,7 @@
                             });
                         }
                     }
-                    const existingApplicantJmbg = '{{ isset($existingApplication) && $existingApplication && $existingApplication->applicant_jmbg ? addslashes($existingApplication->applicant_jmbg) : '' }}';
+                    const existingApplicantJmbg = '{{ !empty($applicantJmbgForForm) ? addslashes($applicantJmbgForForm) : '' }}';
                     if (existingApplicantJmbg) {
                         const jmbgField = activeSection.querySelector('input[name="preduzetnik_jmbg"], input[name="doo_jmbg"]');
                         if (jmbgField) {
