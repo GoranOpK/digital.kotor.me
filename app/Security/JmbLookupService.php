@@ -104,4 +104,9 @@ final class JmbLookupService
 
         return $decoded;
     }
+
+    public function assertConfigured(): void
+    {
+        $this->rawKey();
+    }
 }
