@@ -34,5 +34,6 @@
         <env name="JMB_ENCRYPTION_KEY_ID" value="v1"/>
         <env name="JMB_LOOKUP_KEY" value="base64:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="/>
         <env name="JMB_LOOKUP_KEY_ID" value="v1"/>
+        <env name="JMB_PLAINTEXT_RETIREMENT_ENABLED" value="false"/>
     </php>
 </phpunit>

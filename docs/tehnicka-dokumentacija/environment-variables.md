@@ -123,6 +123,14 @@ Ovo je sinhronizacija kolone na persist putanji. Runtime JMB uniqueness/equality
 - `jmbTaken()` poredi digest na `users.jmb_lookup` i `physical_person_identities.jmb_lookup`. Nema SQL equality na plaintext `jmb`. Nedostajući/neispravan lookup ključ fail-closed, bez plaintext fallbacka.
 - Isti trenutni subjekt u legacy `users` + kanonskom FL redu nije lažno odbijen. Drugi subjekt sa istim digestom jeste.
 
+### JMB plaintext retirement write-contract
+
+Nije uključeno. Default `false`. Ne null-uje postojeće plaintext redove. Kad je `false`, persist i dalje piše plaintext + encrypted (+ lookup gdje je to pravilo). Kad je `true`, logički JMB ide u encrypted/lookup, plaintext se sprema kao NULL, a NULL plaintext **nije** logički clear.
+
+| Varijabla | Default | Namjena |
+|-----------|---------|---------|
+| `JMB_PLAINTEXT_RETIREMENT_ENABLED` | `false` | Write-contract za budući plaintext retirement. Ne uključivati dok ne bude posebno odobren retirement korak. |
+
 ---
 
 ## Baza

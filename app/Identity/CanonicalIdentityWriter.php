@@ -12,6 +12,7 @@ use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
 use App\Models\User;
+use App\Security\JmbDualWrite;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -122,7 +123,7 @@ final class CanonicalIdentityWriter
                 $fl->last_name = $person->lastName;
                 $fl->residential_status = $person->residentialStatus;
                 $fl->id_document_type = $person->idDocumentType;
-                $fl->jmb = $person->jmb;
+                JmbDualWrite::assignLogical($fl, 'jmb', $person->jmb);
                 $fl->passport_number = $person->passportNumber;
                 $fl->residence_country_code = $person->residenceCountryCode;
                 $fl->is_entrepreneur = $person->isEntrepreneur;
@@ -213,7 +214,7 @@ final class CanonicalIdentityWriter
         $fl->last_name = $person->lastName;
         $fl->residential_status = $person->residentialStatus;
         $fl->id_document_type = $person->idDocumentType;
-        $fl->jmb = $person->jmb;
+        JmbDualWrite::assignLogical($fl, 'jmb', $person->jmb);
         $fl->passport_number = $person->passportNumber;
         $fl->residence_country_code = $person->residenceCountryCode;
         $fl->is_entrepreneur = $person->isEntrepreneur;
@@ -266,7 +267,7 @@ final class CanonicalIdentityWriter
         $authorized->first_name = $person->firstName;
         $authorized->last_name = $person->lastName;
         $authorized->id_document_type = $person->idDocumentType;
-        $authorized->jmb = $person->jmb;
+        JmbDualWrite::assignLogical($authorized, 'jmb', $person->jmb);
         $authorized->passport_number = $person->passportNumber;
         $authorized->passport_issuing_country_code = $person->passportIssuingCountryCode;
         $authorized->save();
@@ -502,13 +503,12 @@ final class CanonicalIdentityWriter
     private function insertPhysicalPerson(PlatformIdentity $platform, IdentitySnapshot $snapshot): void
     {
         $fl = $snapshot->physicalPerson;
-        PhysicalPersonIdentity::query()->create([
+        $identity = new PhysicalPersonIdentity([
             'platform_identity_id' => $platform->id,
             'first_name' => $fl->firstName,
             'last_name' => $fl->lastName,
             'residential_status' => $fl->residentialStatus,
             'id_document_type' => $fl->idDocumentType,
-            'jmb' => $fl->jmb,
             'passport_number' => $fl->passportNumber,
             'residence_country_code' => $fl->residenceCountryCode,
             'is_entrepreneur' => $fl->isEntrepreneur,
@@ -518,6 +518,8 @@ final class CanonicalIdentityWriter
             'street_and_number' => $fl->streetAndNumber,
             'city' => $fl->city,
         ]);
+        JmbDualWrite::assignLogical($identity, 'jmb', $fl->jmb);
+        $identity->save();
     }
 
     private function insertLegalEntity(PlatformIdentity $platform, IdentitySnapshot $snapshot): void
@@ -534,15 +536,16 @@ final class CanonicalIdentityWriter
         ]);
 
         $person = $pl->authorizedPerson;
-        LegalEntityAuthorizedPerson::query()->create([
+        $authorized = new LegalEntityAuthorizedPerson([
             'legal_entity_identity_id' => $legalEntity->id,
             'first_name' => $person->firstName,
             'last_name' => $person->lastName,
             'id_document_type' => $person->idDocumentType,
-            'jmb' => $person->jmb,
             'passport_number' => $person->passportNumber,
             'passport_issuing_country_code' => $person->passportIssuingCountryCode,
         ]);
+        JmbDualWrite::assignLogical($authorized, 'jmb', $person->jmb);
+        $authorized->save();
     }
 
     private function insertForeignBranch(PlatformIdentity $platform, IdentitySnapshot $snapshot): void
@@ -559,14 +562,15 @@ final class CanonicalIdentityWriter
         ]);
 
         $person = $dspd->representative;
-        ForeignBranchRepresentative::query()->create([
+        $representative = new ForeignBranchRepresentative([
             'foreign_branch_identity_id' => $branch->id,
             'first_name' => $person->firstName,
             'last_name' => $person->lastName,
             'id_document_type' => $person->idDocumentType,
-            'jmb' => $person->jmb,
             'passport_number' => $person->passportNumber,
             'passport_issuing_country_code' => $person->passportIssuingCountryCode,
         ]);
+        JmbDualWrite::assignLogical($representative, 'jmb', $person->jmb);
+        $representative->save();
     }
 }

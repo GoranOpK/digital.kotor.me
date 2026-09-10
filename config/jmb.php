@@ -37,4 +37,15 @@ return [
         'chunk_default' => 100,
         'chunk_max' => 500,
     ],
+
+    /*
+    | Plaintext retirement write-contract. Default false = current production:
+    | plaintext remains populated; encrypted/lookup still synchronize.
+    | When true: new logical JMB persists encrypted (+ lookup where required)
+    | and plaintext is stored NULL. Null plaintext is not a logical clear.
+    | Do not enable in production until a separately approved retirement step.
+    */
+    'plaintext_retirement' => [
+        'enabled' => filter_var(env('JMB_PLAINTEXT_RETIREMENT_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+    ],
 ];

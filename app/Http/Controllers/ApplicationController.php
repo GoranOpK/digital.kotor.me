@@ -12,6 +12,7 @@ use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
 use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
+use App\Security\JmbDualWrite;
 use App\Security\JmbEncryptedReadException;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
@@ -345,6 +346,11 @@ class ApplicationController extends Controller
             'registration_form' => $resolvedRegistrationForm ?? $request->input('registration_form'),
         ]);
 
+        $physicalJmbgFromForm = $request->filled('physical_person_jmbg');
+        $applicantJmbgFromForm = $request->filled('applicant_jmbg')
+            || $request->filled('preduzetnik_jmbg')
+            || $request->filled('doo_jmbg');
+
         try {
             $this->mergeApplicantJmbgIntoRequest($request);
         } catch (JmbEncryptedReadException $e) {
@@ -558,11 +564,7 @@ class ApplicationController extends Controller
                 'company_seat' => $resolvedIsRegistered
                     ? ($request->filled('company_seat') ? $request->company_seat : $existingApplication->company_seat)
                     : null,
-                'applicant_jmbg' => in_array($request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)
-                    ? ($request->filled('applicant_jmbg') ? $request->applicant_jmbg : $existingApplication->applicant_jmbg)
-                    : $existingApplication->applicant_jmbg,
                 'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : $existingApplication->physical_person_name,
-                'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : $existingApplication->physical_person_jmbg,
                 'physical_person_phone' => $request->filled('physical_person_phone') ? \App\Support\PhoneNumber::normalize($request->physical_person_phone) : $existingApplication->physical_person_phone,
                 'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : $existingApplication->physical_person_email,
                 'physical_person_address' => $request->has('physical_person_address')
@@ -597,7 +599,22 @@ class ApplicationController extends Controller
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
             ];
-            
+
+            if ($physicalJmbgFromForm) {
+                JmbDualWrite::assignLogical(
+                    $existingApplication,
+                    'physical_person_jmbg',
+                    $request->filled('physical_person_jmbg') ? (string) $request->physical_person_jmbg : null
+                );
+            }
+            if ($applicantJmbgFromForm) {
+                JmbDualWrite::assignLogical(
+                    $existingApplication,
+                    'applicant_jmbg',
+                    $request->filled('applicant_jmbg') ? (string) $request->applicant_jmbg : null
+                );
+            }
+
             $existingApplication->update($updateData);
 
                 $application = $existingApplication;
@@ -605,7 +622,7 @@ class ApplicationController extends Controller
                 // Kreiraj novu prijavu
                 // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
                 // is_registered je snapshot registrovanosti iz kanonskog identiteta, ne iz applicant_type.
-                $application = Application::create([
+                $application = new Application([
                     'competition_id' => $competition->id,
                     'user_id' => Auth::id(),
                     'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : null,
@@ -614,11 +631,7 @@ class ApplicationController extends Controller
                     'founder_name' => ($resolvedIsRegistered && $request->filled('founder_name')) ? $request->founder_name : null,
                     'director_name' => ($resolvedIsRegistered && $request->filled('director_name')) ? $request->director_name : null,
                     'company_seat' => ($resolvedIsRegistered && $request->filled('company_seat')) ? $request->company_seat : null,
-                    'applicant_jmbg' => (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true) && $request->filled('applicant_jmbg'))
-                        ? $request->applicant_jmbg
-                        : null,
                     'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : null,
-                    'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : null,
                     'physical_person_phone' => $request->filled('physical_person_phone') ? \App\Support\PhoneNumber::normalize($request->physical_person_phone) : null,
                     'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : null,
                     'physical_person_address' => $request->filled('physical_person_address') ? $request->physical_person_address : null,
@@ -644,6 +657,13 @@ class ApplicationController extends Controller
                     'previous_support_declaration' => $request->has('previous_support_declaration'),
                     'status' => 'draft', // Draft dok se ne prilože svi dokumenti
                 ]);
+                if ($request->filled('physical_person_jmbg')) {
+                    JmbDualWrite::assignLogical($application, 'physical_person_jmbg', (string) $request->physical_person_jmbg);
+                }
+                if (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true) && $request->filled('applicant_jmbg')) {
+                    JmbDualWrite::assignLogical($application, 'applicant_jmbg', (string) $request->applicant_jmbg);
+                }
+                $application->save();
             }
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Greška pri čuvanju prijave: ' . $e->getMessage()])->withInput();

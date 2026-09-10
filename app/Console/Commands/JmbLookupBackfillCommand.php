@@ -20,6 +20,12 @@ class JmbLookupBackfillCommand extends Command
 
     public function handle(JmbLookupBackfillService $backfill): int
     {
+        if ((bool) config('jmb.plaintext_retirement.enabled', false)) {
+            $this->error('JMB plaintext lookup backfill is refused while plaintext retirement is enabled.');
+
+            return self::FAILURE;
+        }
+
         try {
             $lookup = app(JmbLookupService::class);
             $lookup->assertConfigured();

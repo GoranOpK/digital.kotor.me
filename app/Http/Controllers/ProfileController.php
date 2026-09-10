@@ -8,6 +8,7 @@ use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationDeniedException;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\PhoneNumber;
+use App\Security\JmbDualWrite;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,7 +75,7 @@ class ProfileController extends Controller
         }
 
         if ($request->has('jmb')) {
-            $user->jmb = $request->jmb ?: null;
+            JmbDualWrite::assignLogical($user, 'jmb', $request->jmb ?: null);
         }
 
         if ($request->has('pib')) {

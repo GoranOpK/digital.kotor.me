@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
  * Encrypted-first VALUE read for stored JMB/JMBG pairs (Faza D).
  *
  * Does not inspect plaintext when ciphertext is present.
+ * Temporary plaintext fallback only when ciphertext is absent and
+ * plaintext retirement is disabled.
  * Does not log JMB, ciphertext, encryption keys, or APP_KEY.
  */
 final class JmbEncryptedReadService
@@ -45,7 +47,7 @@ final class JmbEncryptedReadService
             return $decrypted;
         }
 
-        if ($plaintext === null) {
+        if ($plaintext === null || (bool) config('jmb.plaintext_retirement.enabled', false)) {
             return null;
         }
 

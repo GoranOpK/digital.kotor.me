@@ -8,6 +8,7 @@ use App\Rules\KotorMunicipalityAddress;
 use App\Support\PhoneNumber;
 use App\Support\Pib;
 use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Security\JmbDualWrite;
 use App\Security\JmbEncryptedReadException;
 use App\Support\KotorAddress;
 use App\Support\SensitiveIdentifierLogSanitizer;
@@ -705,11 +706,20 @@ class BusinessPlanController extends Controller
             'fillable_diff' => array_values(array_diff(array_keys($payloadForSave), (new BusinessPlan())->getFillable())),
         ]);
 
-        // Kreiraj ili ažuriraj biznis plan
-        $businessPlan = BusinessPlan::updateOrCreate(
-            ['application_id' => $application->id],
-            $payloadForSave
-        );
+        $logicalApplicantJmbg = $payloadForSave['applicant_jmbg'] ?? null;
+        $suppliedApplicantJmbg = array_key_exists('applicant_jmbg', $payloadForSave);
+        unset($payloadForSave['applicant_jmbg']);
+
+        $businessPlan = BusinessPlan::firstOrNew(['application_id' => $application->id]);
+        $businessPlan->fill($payloadForSave);
+        if ($suppliedApplicantJmbg) {
+            JmbDualWrite::assignLogical(
+                $businessPlan,
+                'applicant_jmbg',
+                is_string($logicalApplicantJmbg) ? $logicalApplicantJmbg : null
+            );
+        }
+        $businessPlan->save();
 
         $businessPlan->refresh();
 

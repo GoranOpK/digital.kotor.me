@@ -12,6 +12,10 @@ use App\Support\UserType;
 
 /**
  * Read-only deterministic identity census. Queries and classifies only.
+ *
+ * JMB field status measures leftover users.jmb plaintext. It does not
+ * retarget to ciphertext. NULL leftover plaintext is leftover-empty,
+ * including when plaintext retirement stores logical JMB encrypted-only.
  */
 final class IdentityCensusService
 {

@@ -20,6 +20,12 @@ class JmbEncryptedBackfillCommand extends Command
 
     public function handle(JmbEncryptedBackfillService $backfill): int
     {
+        if ((bool) config('jmb.plaintext_retirement.enabled', false)) {
+            $this->error('JMB plaintext encrypted backfill is refused while plaintext retirement is enabled.');
+
+            return self::FAILURE;
+        }
+
         try {
             $encryption = app(JmbEncryptionService::class);
         } catch (JmbEncryptionException $e) {
