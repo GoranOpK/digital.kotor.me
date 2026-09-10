@@ -14,7 +14,7 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 |----------------|------------|--------|---------------|
 | **Platforma** | Autentikacija i registracija | **Produkcija** | [authentication-and-registration.md](authentication-and-registration.md) |
 | **Platforma** | Korisnički identitet (DK-TS-002 D15 Step 8) | **Produkcija — kanonski autoritet / R1 ACTIVE** (Step 8 CLOSED / PRODUCTION PASS; kasnije D15 faze OPEN) | [DK-TS-002 §14.1](../technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md) |
-| **Platforma** | JMB/JMBG enkripcija (A/B1/B2/C1) | **A/B1/B2 produkcija** (B2: 71 encrypted, verifikovano). **C1 na main, nije deployovan.** Faza D nije pokrenuta. Plaintext autoritativan. | [jmb-encryption.md](jmb-encryption.md) |
+| **Platforma** | JMB/JMBG enkripcija (A/B1/B2/C) | **A/B1/B2/C produkcija.** B2: 71 encrypted, verifikovano. Faza C deployovana; `users.jmb` kontrolisana verifikacija = PASS. Faza D nije pokrenuta. Plaintext autoritativan. | [jmb-encryption.md](jmb-encryption.md) |
 | **Platforma** | Biblioteka dokumenata + MEGA | **Produkcija** | [document-library-and-mega.md](document-library-and-mega.md) |
 | **Kalendar kulture** | Pregled, admin, newsletter | **Produkcija** | [cultural-calendar.md](cultural-calendar.md) |
 | **Podrška ženskom preduzetništvu** | Prijave (1a/1b, biznis plan) | **Produkcija** | [application-lifecycle.md](application-lifecycle.md) |
@@ -48,7 +48,7 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 |----------|---------|
 | [roles-and-permissions.md](roles-and-permissions.md) | Uloge, middleware, matrica pristupa |
 | [authentication-and-registration.md](authentication-and-registration.md) | Login, registracija, verifikacija |
-| [jmb-encryption.md](jmb-encryption.md) | JMB/JMBG enkripcija, produkcijski B2 zapis, C1/rollback status |
+| [jmb-encryption.md](jmb-encryption.md) | JMB/JMBG enkripcija, produkcijski B2/C zapisi, rollback/plaintext status |
 
 ### Moduli
 

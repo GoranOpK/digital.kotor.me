@@ -3,12 +3,14 @@
 **Posljednje ažuriranje:** 2026-09-10
 **Sloj:** platforma (DK REFERENCE / OPERATIONS). **Nije** BM/FS/TS paket. **Nema** novi Document ID.
 **Izvor u kodu:** `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `App\Models\SynchronizesJmbEncryption`, `app/Console/Commands/JmbEncryptedBackfillCommand.php`, migracija `2026_09_09_190000_add_jmb_encrypted_parallel_columns.php`
-**Env ugovor:** [environment-variables.md](environment-variables.md#jmbjmbg-enkripcija-faza-b1--b2--c1)
+**Env ugovor:** [environment-variables.md](environment-variables.md#jmbjmbg-enkripcija-faza-b1--b2--c)
 **Komanda:** [deployment-and-cron.md](deployment-and-cron.md)
 
 Ovaj dokument je kanonski zapis **šta je implementirano**, **šta je izvršeno na produkciji** i **šta još nije**. Služi rekonstrukciji bez chat istorije.
 
-Dokument **ne** sadrži: stvarne JMB/JMBG vrijednosti, ciphertext, `JMB_ENCRYPTION_KEY`, `JMB_ENCRYPTION_PREVIOUS_KEYS` ni `APP_KEY`.
+Dokument **ne** sadrži: stvarne JMB/JMBG vrijednosti, ciphertext, `JMB_ENCRYPTION_KEY`, `JMB_ENCRYPTION_PREVIOUS_KEYS`, `APP_KEY`, niti identitet test-korisnika.
+
+Kanonski redoslijed faza: **A → B1 → B2 → C → D → kasnije faze samo uz posebno PO odobrenje**. Faza C2 **ne postoji**. Ranija dokumentacija je dual-write fazu privremeno označavala kao „C1“; kanonski naziv je **Faza C**. Implementacija (`JmbDualWrite`, `SynchronizesJmbEncryption`) i git istorija se **ne** preimenuje. Commit `3d71cbf77a62ae3ed5d673b4009c49b7580b983a` ostaje neizmijenjen.
 
 ---
 
@@ -16,15 +18,15 @@ Dokument **ne** sadrži: stvarne JMB/JMBG vrijednosti, ciphertext, `JMB_ENCRYPTI
 
 | Dimenzija (DK-DS-001 §12) | Stanje |
 |---------------------------|--------|
-| Faza A — paralelne kolone | **PRODUCTION ACCEPTED** — migracija izvršena na produkciji |
-| Faza B1 — encryption service | **PRODUCTION ACCEPTED** — kod deployovan |
+| Faza A — paralelne kolone | **PRODUCTION ACCEPTED** |
+| Faza B1 — encryption service | **PRODUCTION ACCEPTED** |
 | Faza B2 — backfill | **PRODUCTION ACCEPTED** — apply + verifikacija 2026-09-10 |
-| Faza C1 — Eloquent dual-write | **IMPLEMENTATION COMPLETE** na `origin/main`; **NOT DEPLOYED** na produkciju |
+| Faza C — Eloquent dual-write | **IMPLEMENTATION COMPLETE**; **DEPLOYED TO PRODUCTION**; **PRODUCTION VERIFIED** za kontrolisanu `users.jmb` aplikacionu putanju |
 | Faza D — encrypted-first read | **NOT STARTED** |
 | Plaintext JMB/JMBG | **postoji** i ostaje autoritativan za read i uniqueness |
 | Uklanjanje plaintexta | **zabranjeno** dok PO posebno ne odluči |
 
-`origin/main` HEAD u trenutku ovog closeout-a: `3d71cbf77a62ae3ed5d673b4009c49b7580b983a` (`feat(security): add JMB dual-write synchronization`).
+Implementacioni commit Faze C: `3d71cbf77a62ae3ed5d673b4009c49b7580b983a` (`feat(security): add JMB dual-write synchronization`). SHA i poruka su imutabilni.
 
 ---
 
@@ -59,7 +61,7 @@ Rotacija:
 
 `null` i prazan string se **ne** enkriptuju; encrypted kolona tada ostaje SQL `NULL`.
 
-Boot aplikacije **ne** zahtijeva JMB ključ. Poziv `encrypt()` / `decrypt()` nad ne-praznom vrijednošću bez ispravnog ključa pada eksplicitno. C1 dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG (**nakon** C1 deploya).
+Boot aplikacije **ne** zahtijeva JMB ključ. Poziv `encrypt()` / `decrypt()` nad ne-praznom vrijednošću bez ispravnog ključa pada eksplicitno. Faza C dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
 
 ---
 
@@ -187,17 +189,15 @@ Ovo potvrđuje produkcijski round-trip i B2 idempotentnost za svih **71** encryp
 
 ---
 
-## 8. Faza C1 — application dual-write
+## 8. Faza C — application dual-write
 
-**Kod na main:** `3d71cbf77a62ae3ed5d673b4009c49b7580b983a` — `feat(security): add JMB dual-write synchronization`
+**Kod na main:** `3d71cbf77a62ae3ed5d673b4009c49b7580b983a` — `feat(security): add JMB dual-write synchronization` (imutabilno; poruka commita se ne mijenja).
 
-PO status: **usvojeno**. Git status: **commitovano i gurnuto** na `origin/main`.
+PO status: **usvojeno**. Git: commitovano i gurnuto na `origin/main`.
 
-**Produkcijski status u trenutku ovog closeout-a: C1 NIJE deployovan na produkciju.**
+**Produkcijski status:** Faza C je **deployovana na produkciju**. Kontrolisana verifikacija `users.jmb` aplikacione putanje = **PASS** (2026-09-10, §8.1). To **nije** dokaz da je svaka Faza C write putanja ručno testirana na produkciji; ostale putanje pokriva automatska regresija.
 
-Ne tretirati C1 kao `PRODUCTION ACTIVE`. Produkcijski runtime i dalje **nema** application dual-write dok se ovaj commit ne deployuje.
-
-Usvojeno ponašanje koda (važi na `main`; na produkciji tek nakon deploya):
+Usvojeno ponašanje koda (neizmijenjeno; ranije dokumentovano pod privremenom oznakom „C1“):
 
 - dual-write na Eloquent `saving` preko `SynchronizesJmbEncryption` → `JmbDualWrite::syncModel()`;
 - svih šest vlasničkih modela: `User`, `PhysicalPersonIdentity`, `LegalEntityAuthorizedPerson`, `ForeignBranchRepresentative`, `Application`, `BusinessPlan`;
@@ -207,35 +207,59 @@ Usvojeno ponašanje koda (važi na `main`; na produkciji tek nakon deploya):
 - neuspjeh enkripcije **sprečava** persist novog/izmijenjenog plaintext JMB-a (isti `save()`, ista transakcija);
 - read ostaje plaintext;
 - uniqueness/equality ostaje plaintext;
-- ručni / direct SQL (phpMyAdmin, raw query) **zaobilazi** C1 i operativno je **zabranjen** za izmjene JMB/JMBG kolona.
+- ručni / direct SQL (phpMyAdmin, raw query) **zaobilazi** Fazu C i operativno je **zabranjen** za izmjene JMB/JMBG kolona.
 
-Encrypted-first read je Faza D, **nije** C1. C1 **ne** uklanja plaintext.
+Encrypted-first read je Faza D, **nije** Faza C. Faza C **ne** uklanja plaintext.
+
+### 8.1 Produkcijska verifikacija Faze C — 2026-09-10 (`users.jmb`)
+
+Ovo je **stvarni produkcijski zapis**, ne plan. Identitet test-korisnika, JMB vrijednost, ciphertext i ključevi **nisu** dokumentovani.
+
+1. Deploy završen preko Plesk Laravel Toolkit.
+2. `php artisan about` na produkciji: Environment=`production`, Laravel 12.29.0, PHP 8.3.33, Debug OFF; aplikacija operativna.
+3. Kontrolisani test: JMB postojećeg korisnika izmijenjen kroz regularni aplikacioni tok profila; snimanje uspjelo.
+4. Read-only provjera (bez apply-a):
+
+```text
+php artisan jmb:backfill-encrypted --dry-run --scope=users --chunk=100
+```
+
+Rezultat (`users`):
+
+| scanned | would_encrypt | already_valid | skipped_no_plaintext | errors |
+|--------:|--------------:|--------------:|---------------------:|-------:|
+| 51 | 0 | 22 | 29 | 0 |
+
+Zaključak:
+
+- Faza C `users.jmb` dual-write produkcijska verifikacija = **PASS**;
+- remediation / backfill apply **nije** potreban;
+- `would_encrypt=0` i `already_valid=22` znače da encrypted kopija prati plaintext na toj putanji, bez novih rupa u `users` scope-u;
+- **ne** tvrdi se da je svaka Faza C write putanja ručno produkcijski testirana.
 
 ---
 
 ## 9. Trenutni security / rollback status
 
-Važeće na produkciji **sada** (C1 još nije deployovan):
+Važeće na produkciji **sada** (Faza C je deployovana):
 
-- encrypted kopije postoje za **71** istorijsku ne-praznu vrijednost koju je obradio B2;
+- encrypted kopije postoje za istorijske ne-prazne vrijednosti koje je obradio B2 (71) i za naknadne Eloquent upise koje pokriva Faza C;
 - plaintext kolone i dalje postoje;
 - aplikacioni read i dalje zavisi od plaintexta;
 - uniqueness i equality i dalje rade nad plaintextom;
 - zato plaintext **ne smije** biti uklonjen;
-- trenutni rollback i dalje počiva na **sačuvanom plaintextu** plus **čuvanju JMB encryption ključeva** (gubitak ključa čini 71 ciphertext nečitljivim, ali read i dalje ide preko plaintexta);
+- trenutni rollback i dalje počiva na **sačuvanom plaintextu** plus **čuvanju JMB encryption ključeva** (gubitak ključa čini ciphertext nečitljivim, ali read i dalje ide preko plaintexta);
 - Faza D / encrypted-first read **nije** pokrenuta;
-- povlačenje plaintext kolona zahtijeva **posebnu kasniju PO odluku**, nije implikacija B2 ni C1.
-
-Nakon eventualnog C1 deploya, rollback i dalje **ne** smije uklanjati plaintext dok Faza D i PO odluka to eksplicitno ne zatvore.
+- povlačenje plaintext kolona zahtijeva **posebnu kasniju PO odluku**, nije implikacija B2 ni Faze C.
 
 ---
 
-## 10. Šta ovaj closeout ne radi
+## 10. Šta ovaj zapis ne radi
 
 - ne pokreće Fazu D;
 - ne uklanja plaintext;
 - ne mijenja produkcijski `.env`;
-- ne nalaže ponovni B2 run;
-- ne nalaže C1 deploy (to je odvojena operacija).
+- ne nalaže ponovni B2 apply;
+- ne preimenuje PHP klase, testove ni git istoriju.
 
-Ponovni produkcijski `jmb:backfill-encrypted` apply nije potreban za već validnih 71 vrijednost. Novi run samo uz PO kontrolu (npr. nakon C1 deploya, za redove koje dual-write nije pokrio jer su upisani van Eloquent-a).
+Ponovni produkcijski `jmb:backfill-encrypted` apply nije potreban za already-valid ciphertext. Novi apply samo uz PO kontrolu (npr. redovi upisani van Eloquent-a, koji zaobilaze Fazu C).

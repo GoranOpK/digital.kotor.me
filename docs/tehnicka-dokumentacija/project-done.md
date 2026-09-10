@@ -6,14 +6,24 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 
 ---
 
-## 2026-09-10 — JMB/JMBG enkripcija B1/B2/C1 documentation closeout
+## 2026-09-10 — JMB Faza C produkcijski deploy i terminološki corrective
+
+- Kanonski naziv dual-write faze: **Faza C** (nema Faze C2; ranija oznaka „C1“ u dokumentaciji je povučena)
+- Implementacija neizmijenjena: `3d71cbf` `feat(security): add JMB dual-write synchronization` (git istorija se ne prepisuje)
+- Deploy preko Plesk Laravel Toolkit; `php artisan about` = production, Laravel 12.29.0, PHP 8.3.33, Debug OFF
+- Kontrolisana `users.jmb` putanja: save OK; dry-run `--scope=users` → scanned 51, would_encrypt 0, already_valid 22, skipped_no_plaintext 29, errors 0 = **PASS**
+- Nije tvrđeno da je svaka C write putanja ručno produkcijski testirana
+- Faza D nije pokrenuta; plaintext ostaje autoritativan
+- Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP.
+
+## 2026-09-10 — JMB/JMBG enkripcija B1/B2/C documentation closeout
 
 - A: 7 nullable `TEXT` `*_encrypted` kolona; plaintext nedirnut; produkcijska migracija OK (`66ffa35`)
 - B1: `JmbEncryptionService` + keyring; deployovano (`06cf729`, sa B2)
 - B2 produkcija 2026-09-10: dry-run 0 grešaka; apply = **71 encrypted**, 0 errors; drugi run = **71 already_valid**, 0 novo, 0 mismatch
-- C1: PO-usvojeno; na `origin/main` `3d71cbf`; **nije** deployovano na produkciju
+- Faza C (tada još dokumentovana kao „C1“): PO-usvojeno; na `origin/main` `3d71cbf`; u trenutku tog dokumentacionog closeout-a još **nije** bila deployovana (naknadno: v. stavku iznad)
 - Plaintext i dalje autoritativan; Faza D nije pokrenuta; plaintext se ne uklanja
-- Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP. Bez koda / migrate / backfill / deploy u ovom closeout-u.
+- Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP. Bez koda / migrate / backfill / deploy u tom closeout-u.
 
 ## 2026-09-06 — DK-TS-002 / D15 Step 8 production closeout
 

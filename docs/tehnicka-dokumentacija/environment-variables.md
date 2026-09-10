@@ -32,13 +32,13 @@ Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. P
 
 ---
 
-## JMB/JMBG enkripcija (Faza B1 / B2 / C1)
+## JMB/JMBG enkripcija (Faza B1 / B2 / C)
 
-Kanonski implementacioni i produkcijski zapis: [jmb-encryption.md](jmb-encryption.md). Ovaj odjeljak ostaje env ugovor.
+Kanonski implementacioni i produkcijski zapis: [jmb-encryption.md](jmb-encryption.md). Ovaj odjeljak ostaje env ugovor. Kanonski redoslijed: A → B1 → B2 → C → D. Faza C2 ne postoji.
 
-Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. C1 dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG (**nakon** C1 deploya).
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. Faza C dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
 
-**Stanje 2026-09-10:** A/B1/B2 = produkcija. B2 apply + verifikacija = 71 `already_valid`, 0 grešaka. C1 je na `origin/main` (`3d71cbf`) i **nije** još deployovan. Faza D nije pokrenuta. Plaintext ostaje autoritativan.
+**Stanje 2026-09-10:** A/B1/B2/C = produkcija. B2 apply + verifikacija = 71 `already_valid`, 0 grešaka. Faza C deployovana; kontrolisana `users.jmb` verifikacija = PASS. Faza D nije pokrenuta. Plaintext ostaje autoritativan.
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -87,11 +87,11 @@ Konkurentnost: B2 je bio prije Phase C dual-write. Produkcijski B2 run je završ
 
 Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failure.
 
-### Faza C1 — application dual-write
+### Faza C — application dual-write
 
-Kod na `origin/main` (`3d71cbf`) sadrži C1. **Produkcijski deploy C1 nije izvršen** u trenutku closeout-a 2026-09-10. Ugovor ispod važi za kod na main i za produkciju tek **nakon** C1 deploya.
+Faza C je na `origin/main` (`3d71cbf`) i **deployovana na produkciju**. Kontrolisana `users.jmb` verifikacija 2026-09-10 = PASS. Evidencija: [jmb-encryption.md](jmb-encryption.md#81-produkcijska-verifikacija-faze-c--2026-09-10-usersjmb).
 
-C1 piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Plaintext ostaje autoritativan za read i uniqueness.** Encrypted-first read je Faza D, nije C1. Plaintext se ne uklanja.
+Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Plaintext ostaje autoritativan za read i uniqueness.** Encrypted-first read je Faza D, nije Faza C. Plaintext se ne uklanja.
 
 - Create/update ne-praznog JMB/JMBG: `plaintext = original`, `encrypted = JmbEncryptionService::encrypt(original)`.
 - Namjerno brisanje: obje kolone `null` (prazan string prati B1: encrypted = null).

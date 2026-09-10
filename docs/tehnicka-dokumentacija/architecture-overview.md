@@ -25,7 +25,7 @@ Horizontalna osnova za sve cjeline:
 | Profil, uloge, aktivacija naloga | Korisnik i pristup | [roles-and-permissions.md](roles-and-permissions.md) |
 | Dashboard | Ulazni panel nakon prijave | `HomeController@dashboard` |
 | **Biblioteka dokumenata** | Upload, MEGA, kvota; dokumenti se **ponovo koriste** u cjelinama (npr. prijava na konkurs preko `user_document_id`) | [document-library-and-mega.md](document-library-and-mega.md) |
-| JMB/JMBG enkripcija | Paralelne `*_encrypted` kolone; B1 service; B2 backfill (produkcija); C1 dual-write na main, nije deployovan | [jmb-encryption.md](jmb-encryption.md) |
+| JMB/JMBG enkripcija | Paralelne `*_encrypted` kolone; B1 service; B2 backfill (produkcija); Faza C dual-write deployovana i verifikovana za `users.jmb` | [jmb-encryption.md](jmb-encryption.md) |
 
 Platforma **nije** zaseban paket u repou — dijeli `auth` / `verified` / `module_access_restrict` middleware, `User` model i zajedničke rute (`/dashboard`, `/profile`, `/documents`).
 

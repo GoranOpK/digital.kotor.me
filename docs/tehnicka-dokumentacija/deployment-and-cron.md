@@ -238,7 +238,7 @@ Na produkciji se Newsletter **ne** oslanja na `php artisan schedule:run`. Invoke
 | `document:fingerprint-check` | Pixel/binarni fingerprint duplikata (`DocumentImageFingerprint`); izolovani probe |
 | `document:fingerprint-check --compare` | Poredi `storage/app/document-fingerprint-input/capture01.png` i `capture05.png` |
 | `path:show` | Ispis `base_path()` |
-| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski apply + verifikacija izvršeni 2026-09-10 (71 encrypted, zatim 71 `already_valid`, 0 grešaka). Ponovni apply samo uz PO kontrolu. C1 dual-write je na `main` i **nije** još deployovan. Detalji: [jmb-encryption.md](jmb-encryption.md), env: [environment-variables.md](environment-variables.md#faza-b2--jmbbackfill-encrypted) |
+| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski apply + verifikacija izvršeni 2026-09-10 (71 encrypted, zatim 71 `already_valid`, 0 grešaka). Ponovni apply samo uz PO kontrolu. Faza C dual-write je deployovana; kontrolisana `users.jmb` verifikacija = PASS. Faza D nije pokrenuta. Detalji: [jmb-encryption.md](jmb-encryption.md), env: [environment-variables.md](environment-variables.md#faza-b2--jmbbackfill-encrypted) |
 
 ### PDF dijagnostika na Plesku (bez SSH)
 
