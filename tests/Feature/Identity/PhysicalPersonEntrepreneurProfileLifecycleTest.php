@@ -260,10 +260,11 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
 
         $this->assertStringContainsString('Informacije o korisniku', $html);
         $this->assertStringContainsString('Preduzetnik', $html);
-        $this->assertMatchesRegularExpression(
-            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">'.preg_quote($pib, '/').'<\/span>/',
-            $html
-        );
+        $this->assertStringNotContainsString('<span class="info-label">Newsletter</span>', $html);
+        $this->assertStringNotContainsString('Upravljaj pretplatom', $html);
+        $this->assertDashboardLabeledValue($html, 'Poslovno ime', 'Radnja Ana');
+        $this->assertDashboardLabeledValue($html, 'PIB', $pib);
+        $this->assertDashboardLabeledValue($html, 'CRPS', $crps);
     }
 
     public function test_dashboard_hides_retained_business_data_after_return_to_physical_person(): void
@@ -298,11 +299,9 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
 
         $this->assertStringContainsString('Informacije o korisniku', $html);
         $this->assertStringContainsString('Fizičko lice', $html);
+        $this->assertStringNotContainsString('<span class="info-label">Poslovno ime</span>', $html);
         $this->assertStringNotContainsString('<span class="info-label">PIB</span>', $html);
-        $this->assertDoesNotMatchRegularExpression(
-            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">'.preg_quote($pib, '/').'<\/span>/',
-            $html
-        );
+        $this->assertStringNotContainsString('<span class="info-label">CRPS</span>', $html);
         $this->assertStringNotContainsString('Radnja Ana', $html);
         $this->assertStringNotContainsString($crps, $html);
         $this->assertStringNotContainsString($pib, $html);
@@ -362,10 +361,9 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertMatchesRegularExpression(
-            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">'.preg_quote($pib, '/').'<\/span>/',
-            $dashboard
-        );
+        $this->assertDashboardLabeledValue($dashboard, 'Poslovno ime', 'Radnja Krug');
+        $this->assertDashboardLabeledValue($dashboard, 'PIB', $pib);
+        $this->assertDashboardLabeledValue($dashboard, 'CRPS', $crps);
     }
 
     public function test_ordinary_profile_update_does_not_erase_retained_entrepreneur_data(): void
@@ -553,6 +551,29 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
         $this->assertSame('Firma DOO Nova', $this->platform($user)->legalEntity->legal_name);
     }
 
+    public function test_dashboard_shows_pib_for_legal_entity(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'residential_status' => null,
+            'jmb' => null,
+            'pib' => '12345672',
+            'company_name' => 'Firma DOO',
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->plSnapshot($user));
+        (new DerivedUserTypeMirror)->sync($user, $this->plSnapshot($user));
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Informacije o korisniku', $html);
+        $this->assertDashboardLabeledValue($html, 'PIB', '12345672');
+        $this->assertStringNotContainsString('<span class="info-label">Poslovno ime</span>', $html);
+        $this->assertStringNotContainsString('<span class="info-label">CRPS</span>', $html);
+    }
+
     public function test_validation_failure_preserves_entrepreneur_selection_and_entered_values(): void
     {
         $user = $this->seedPhysicalPerson();
@@ -647,5 +668,13 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
     private function physicalPersonId(User $user): int
     {
         return (int) $this->physicalPerson($user)->id;
+    }
+
+    private function assertDashboardLabeledValue(string $html, string $label, string $value): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/<span class="info-label">'.preg_quote($label, '/').'<\/span>\s*<span class="info-value">'.preg_quote($value, '/').'<\/span>/',
+            $html
+        );
     }
 }

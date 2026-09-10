@@ -389,10 +389,6 @@
                         <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Newsletter</span>
-                        <span class="info-value"><a href="{{ route('newsletter.settings') }}">Upravljaj pretplatom</a></span>
-                    </div>
-                    <div class="info-item">
                         <span class="info-label">Broj telefona</span>
                         <span class="info-value">{{ $subjectIdentity->phone ?? 'N/A' }}</span>
                     </div>
@@ -410,7 +406,26 @@
                             <span class="info-value">{{ $subjectIdentity->jmb }}</span>
                         </div>
                     @endif
-                    @if($subjectIdentity->pib && ($isCurrentEntrepreneur || ! $isPhysicalPerson))
+                    @if($isCurrentEntrepreneur)
+                        @if($subjectIdentity->companyName)
+                            <div class="info-item">
+                                <span class="info-label">Poslovno ime</span>
+                                <span class="info-value">{{ $subjectIdentity->companyName }}</span>
+                            </div>
+                        @endif
+                        @if($subjectIdentity->pib)
+                            <div class="info-item">
+                                <span class="info-label">PIB</span>
+                                <span class="info-value">{{ $subjectIdentity->pib }}</span>
+                            </div>
+                        @endif
+                        @if($subjectIdentity->crpsNumber)
+                            <div class="info-item">
+                                <span class="info-label">CRPS</span>
+                                <span class="info-value">{{ $subjectIdentity->crpsNumber }}</span>
+                            </div>
+                        @endif
+                    @elseif(! $isPhysicalPerson && $subjectIdentity->pib)
                         <div class="info-item">
                             <span class="info-label">PIB</span>
                             <span class="info-value">{{ $subjectIdentity->pib }}</span>

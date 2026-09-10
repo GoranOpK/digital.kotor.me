@@ -253,4 +253,28 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
         $this->assertNull($user->user_type);
         $this->assertNull($user->residential_status);
     }
+
+    public function test_dashboard_shows_pib_for_legal_entity(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'residential_status' => null,
+            'jmb' => null,
+            'pib' => '12345678',
+            'company_name' => 'Firma DOO',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Informacije o korisniku', $html);
+        $this->assertMatchesRegularExpression(
+            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">12345678<\/span>/',
+            $html
+        );
+        $this->assertStringNotContainsString('<span class="info-label">Poslovno ime</span>', $html);
+        $this->assertStringNotContainsString('<span class="info-label">CRPS</span>', $html);
+    }
 }
