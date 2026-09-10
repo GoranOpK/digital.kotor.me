@@ -6,8 +6,8 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.16
-**Datum:** 2026-09-09
+**Verzija:** 1.0.23
+**Datum:** 2026-09-10
 
 ---
 
@@ -61,7 +61,7 @@ Tipovi i obaveznost preuzeti su iz DK-DS-001 §3. Ovaj registar ih ne proširuje
 | **PRO** | Pravni okvir (novi moduli) | Kreiran: KN-PRO-001 — NACRT |
 | **BM** | Poslovni model | Kanonski: KN-BM-001 — USVOJENO. Sačuvani profili/framework: KN-BM-002, KN-BM-003, KN-BM-004 (vidi §5.1; nijesu trenutni Odluka SSOT). |
 | **FS** | Funkcionalna specifikacija | Kanonski: KN-FS-001 — USVOJENO. Sačuvani profili: KN-FS-002, KN-FS-003 (vidi §5.1; nijesu trenutni Odluka SSOT). |
-| **TS** | Tehnička specifikacija | Kreiran: KN-TS-001 — NACRT |
+| **TS** | Tehnička specifikacija | Kanonski: KN-TS-001 — NACRT. Sačuvani profil: KN-TS-002 (vidi §5.1; nije trenutni Odluka SSOT). |
 | **UC** | Use Cases | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
 | **FR** | Feature Registry | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
 | **CR-REG** | Change Request Register | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
@@ -106,7 +106,7 @@ KN-TS-001
 
 Minimalni kanonski lanac sadržaja prema DK-DS-001 §11: `KN-BM-*` → `KN-FS-*` → `KN-TS-*`. Za tekući Odluka SSOT to znači: `KN-BM-001` → `KN-FS-001` → `KN-TS-001`. Pravni izvor, kada bude analiziran, ulazi preko KN-PRO-001 u BM, ne zaobilazeći taj lanac.
 
-Sačuvani profili i framework (`KN-BM-002`, `KN-BM-003`, `KN-BM-004`, `KN-FS-002`, `KN-FS-003`) **nijesu** umetnuti u gornji kanonski SSOT lanac; vidi §5.1.
+Sačuvani profili i framework (`KN-BM-002`, `KN-BM-003`, `KN-BM-004`, `KN-FS-002`, `KN-FS-003`, `KN-TS-002`) **nijesu** umetnuti u gornji kanonski SSOT lanac; vidi §5.1.
 
 ---
 
@@ -122,6 +122,7 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 | **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.15) |
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
 | **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.3) |
+| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.0) |
 | **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.8) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
@@ -189,7 +190,7 @@ KEEP CURRENT TYPE-BASED STRUCTURE (DK-DS-001 §14). KN dokumenti stoje u postoje
 
 # 11. Legacy, profili i žensko preduzetništvo
 
-Postojeći tok ženskog preduzetništva i omladinski profil predstavljaju sačuvanu dokumentacionu/implementacionu građu cjeline Konkursi (`KN-BM-003` / `KN-FS-003`, `KN-BM-002` / `KN-FS-002`; vidi §5.1). Biće predmet posebnog naknadnog dokumentacionog usklađivanja. Do završetka tog procesa **ne** predstavljaju automatski kanonski izvor poslovnih pravila za tekući Odluka SSOT (`KN-BM-001` / `KN-FS-001` / `KN-TS-001`).
+Postojeći tok ženskog preduzetništva i omladinski profil predstavljaju sačuvanu dokumentacionu/implementacionu građu cjeline Konkursi (`KN-BM-003` / `KN-FS-003`, `KN-BM-002` / `KN-FS-002` / `KN-TS-002`; vidi §5.1). Biće predmet posebnog naknadnog dokumentacionog usklađivanja. Do završetka tog procesa **ne** predstavljaju automatski kanonski izvor poslovnih pravila za tekući Odluka SSOT (`KN-BM-001` / `KN-FS-001` / `KN-TS-001`).
 
 `KN-BM-004` je sačuvani remote zajednički/framework BM i **nije** trenutni kanonski poslovni SSOT.
 
@@ -227,7 +228,14 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | 1.0.14 | 2026-09-09 | Evidentirani KN-PATCH-BM-014 za KN-BM-002 v1.0.4 i KN-PATCH-FS-008 za KN-FS-002 v1.0.2 radi proširenja pojma društva na DOO, AD, OD i KD i usklađivanja izbora namjere, poslovne faze, obrasca i dokumentacionog paketa. |
 | 1.0.15 | 2026-09-09 | Evidentirani KN-PATCH-BM-015 za KN-BM-002 v1.0.5 i KN-PATCH-FS-009 za KN-FS-002 v1.0.3 radi M3 sa tri eliminatorna kriterijuma, prigovora na svaki aktivirani kriterijum, objedinjenog obavještenja i pojedinačnih ishoda. |
 | 1.0.16 | 2026-09-09 | Administrativno usklađivanje pokazivača: KN-BM-003 v1.0.15 i KN-FS-003 v1.0.8 (scoring corrective PO-IB-01…05 i zaključavanje dodatnih bodova prije otključavanja rezultata). Sačuvani pokazivači KN-BM-002 v1.0.5 / KN-FS-002 v1.0.3 i changelog 1.0.14–1.0.15. Katalog skraćenica KEEP. Bez novih Document ID-eva. KN-TS-001 ostaje NACRT. |
+| 1.0.17 | 2026-09-09 | Evidentiran početni nacrt KN-TS-002 v0.1.0, tehničke specifikacije profila konkursa za podršku preduzetništvu mladih; uneseni identitet, izvori, arhitektonska granica, autorizacija i plan tehničke razrade, bez izmjene aplikativnog koda i bez novih internih tehničkih oznaka. |
+| 1.0.18 | 2026-09-09 | Ažuriran KN-TS-002 na v0.1.1 nakon tehničke razrade godišnje instance, Poziva, klasifikacije podnosioca, snapshot-a prijave, obrazaca i dokumentacionih paketa; aplikativni kod nije mijenjan i nove interne tehničke oznake nijesu uvedene. |
+| 1.0.19 | 2026-09-09 | Ažuriran KN-TS-002 na v0.1.2 nakon tehničke razrade M3 i prigovornog toka korišćenjem postojećeg tehničkog obrasca ženskog preduzetništva uz vrijednosti profila mladih; aplikativni kod nije mijenjan i nove interne tehničke oznake nijesu uvedene. |
+| 1.0.20 | 2026-09-09 | Ažuriran KN-TS-002 na v0.1.3 nakon tehničke razrade podnošenja, statusnog modela i Komisije profila mladih; aplikativni kod nije mijenjan i nove interne tehničke oznake nijesu uvedene. |
+| 1.0.21 | 2026-09-09 | Ažuriran KN-TS-002 na v0.1.4 nakon tehničke razrade ocjenjivanja, bodovanja, rangiranja, raspodjele, drugog Poziva i arhiviranja profila mladih; aplikativni kod nije mijenjan i nove interne tehničke oznake nijesu uvedene. |
+| 1.0.22 | 2026-09-09 | Ažuriran KN-TS-002 na v0.1.5 nakon završetka sadržajne tehničke razrade modela podataka, kompatibilnosti, testiranja i nefunkcionalnih zahtjeva; dokument ostaje U IZRADI i aplikativni kod nije mijenjan. |
+| 1.0.23 | 2026-09-10 | Evidentirano usvajanje KN-TS-002 v1.0.0, tehničke specifikacije profila konkursa za podršku preduzetništvu mladih, sa razradom Poglavlja 1–14, primjenom KN-BM-002 v1.0.5 i KN-FS-002 v1.0.3, ponovnom upotrebom postojećeg tehničkog toka uz profilnu parametrizaciju, minimalnim modelom podataka i granicom V1; nove interne tehničke oznake nijesu uvedene. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.16**
+**Kraj dokumenta KN-RG-001 v1.0.23**
