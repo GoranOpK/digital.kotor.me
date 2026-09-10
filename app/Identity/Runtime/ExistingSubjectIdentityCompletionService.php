@@ -4,7 +4,9 @@ namespace App\Identity\Runtime;
 
 use App\Identity\CanonicalIdentityWriteException;
 use App\Identity\CanonicalIdentityWriter;
+use App\Identity\IdentitySnapshot;
 use App\Models\User;
+use App\Security\JmbLookupException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -18,6 +20,7 @@ final class ExistingSubjectIdentityCompletionService
         private readonly ExistingSubjectIdentitySnapshotMapper $mapper = new ExistingSubjectIdentitySnapshotMapper,
         private readonly CanonicalIdentityWriter $writer = new CanonicalIdentityWriter,
         private readonly DerivedUserTypeMirror $mirror = new DerivedUserTypeMirror,
+        private readonly CanonicalIdentifierUniqueness $uniqueness = new CanonicalIdentifierUniqueness,
     ) {
     }
 
@@ -73,6 +76,7 @@ final class ExistingSubjectIdentityCompletionService
                 }
 
                 $snapshot = $this->mapper->fromValidated($lockedUser, $branch, $validated);
+                $this->assertDeclaredJmbAvailable($snapshot, (int) $lockedUser->id);
                 $this->writer->createForUser($lockedUser, $snapshot);
                 $this->mirror->sync($lockedUser, $snapshot);
 
@@ -98,6 +102,22 @@ final class ExistingSubjectIdentityCompletionService
         $this->log($user, $branch, $outcome === 'duplicate' ? 'duplicate_prevented' : 'success', $outcome);
 
         return $outcome;
+    }
+
+    private function assertDeclaredJmbAvailable(IdentitySnapshot $snapshot, int $exceptUserId): void
+    {
+        $jmb = $snapshot->physicalPerson?->jmb;
+        if (! is_string($jmb) || $jmb === '') {
+            return;
+        }
+
+        try {
+            if ($this->uniqueness->jmbTaken($jmb, $exceptUserId)) {
+                throw new CanonicalIdentityWriteException(CanonicalIdentifierUniqueness::JMB_TAKEN_MESSAGE);
+            }
+        } catch (JmbLookupException $e) {
+            throw new CanonicalIdentityWriteException('Canonical identity completion failed.', 0, $e);
+        }
     }
 
     private function log(User $user, ?string $branch, string $outcome, ?string $reasonCode): void

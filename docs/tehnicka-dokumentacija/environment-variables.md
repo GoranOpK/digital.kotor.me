@@ -91,24 +91,24 @@ Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failu
 
 Faza C je na `origin/main` (`3d71cbf`) i **deployovana na produkciju**. Kontrolisana `users.jmb` verifikacija 2026-09-10 = PASS. Evidencija: [jmb-encryption.md](jmb-encryption.md#81-produkcijska-verifikacija-faze-c--2026-09-10-usersjmb).
 
-Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Uniqueness/equality ostaju plaintext.** Encrypted-first VALUE read je Faza D (`JmbEncryptedReadService`), nije Faza C. Faza C dual-write ostaje aktivan. Plaintext se ne uklanja.
+Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). Encrypted-first VALUE read je Faza D (`JmbEncryptedReadService`), nije Faza C. Faza C dual-write ostaje aktivan. Plaintext se ne uklanja. Runtime JMB uniqueness je kasnije prebačen na `jmb_lookup` (vidi ispod); Faza C sama nije dirala uniqueness query.
 
 - Create/update ne-praznog JMB/JMBG: `plaintext = original`, `encrypted = JmbEncryptionService::encrypt(original)`.
 - Namjerno brisanje: obje kolone `null` (prazan string prati B1: encrypted = null).
 - Ažuriranje nepovezanih polja **ne** regeneriše ciphertext ako se JMB nije promijenio.
 - Neuspjeh enkripcije **sprečava** persist novog/izmijenjenog plaintext JMB-a (isti `save()` / ista transakcija).
 - Ručni/direct DB upisi (phpMyAdmin, raw SQL) **zaobilaze** dual-write i operativno su zabranjeni za JMB/JMBG kolone.
-- `users.jmb` UNIQUE, `CanonicalIdentifierUniqueness::jmbTaken()` i ostali equality query ostaju na plaintextu. Encrypted kolone nisu unique/index.
+- `users.jmb` UNIQUE ostaje kao schema constraint. Runtime `CanonicalIdentifierUniqueness::jmbTaken()` koristi `jmb_lookup` (vidi lookup uniqueness ispod). Encrypted kolone nisu unique.
 
 ### Faza D — encrypted-first VALUE read
 
-Faza D je na `origin/main` (`077a01c`) i **deployovana / PRODUCTION ACCEPTED**. Aplikacioni VALUE read ide encrypted-first (`JmbEncryptedReadService`). Dual-write Faze C i plaintext uniqueness ostaju. Plaintext kolone i dalje postoje. Evidencija: [jmb-encryption.md](jmb-encryption.md#9-faza-d--encrypted-first-value-read).
+Faza D je na `origin/main` (`077a01c`) i **deployovana / PRODUCTION ACCEPTED**. Aplikacioni VALUE read ide encrypted-first (`JmbEncryptedReadService`). Dual-write Faze C ostaje. Plaintext kolone i dalje postoje. Evidencija: [jmb-encryption.md](jmb-encryption.md#9-faza-d--encrypted-first-value-read).
 
 ### JMB lookup digest — application dual-write
 
-Izvor u kodu: `config/jmb.php`, `App\Security\JmbLookupService`, `App\Security\JmbDualWrite`. **Nije** `APP_KEY` i **nije** `JMB_ENCRYPTION_KEY`. Boot aplikacije **ne** zahtijeva ključ. Eloquent persist ne-praznog `users.jmb` / `physical_person_identities.jmb` zahtijeva ključ. Ostali JMB/JMBG modeli (ovlašćeno lice, predstavnik, application/business-plan snapshot) **ne** pišu lookup.
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbLookupService`, `App\Security\JmbDualWrite`, `App\Identity\Runtime\CanonicalIdentifierUniqueness`. **Nije** `APP_KEY` i **nije** `JMB_ENCRYPTION_KEY`. Boot aplikacije **ne** zahtijeva ključ. Eloquent persist ne-praznog `users.jmb` / `physical_person_identities.jmb` zahtijeva ključ. Ostali JMB/JMBG modeli (ovlašćeno lice, predstavnik, application/business-plan snapshot) **ne** pišu lookup.
 
-Ovo je samo sinhronizacija kolone. **Uniqueness/equality ostaju plaintext.** `CanonicalIdentifierUniqueness::jmbTaken()` i `users.jmb` UNIQUE se ne mijenjaju. Encrypted-first VALUE read se ne mijenja. Plaintext se ne uklanja.
+Ovo je sinhronizacija kolone na persist putanji. Runtime JMB uniqueness/equality za registraciju, profil i dopunu postojećeg subjekta koristi `jmb_lookup` preko `CanonicalIdentifierUniqueness::jmbTaken()`. `users.jmb` UNIQUE ostaje. Encrypted-first VALUE read se ne mijenja. Plaintext se ne uklanja.
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -120,6 +120,8 @@ Ovo je samo sinhronizacija kolone. **Uniqueness/equality ostaju plaintext.** `Ca
 - Neispravan ne-prazan JMB, ili nedostajući/neispravan lookup ključ: persist se **ne** izvršava (nema djelimičnog plaintext/encrypted/lookup upisa).
 - Ažuriranje nepovezanih polja **ne** regeneriše digest ako se JMB nije promijenio.
 - `users.jmb_lookup` ima DB UNIQUE; kolizija je native DB greška, bez novog business validation sloja.
+- `jmbTaken()` poredi digest na `users.jmb_lookup` i `physical_person_identities.jmb_lookup`. Nema SQL equality na plaintext `jmb`. Nedostajući/neispravan lookup ključ fail-closed, bez plaintext fallbacka.
+- Isti trenutni subjekt u legacy `users` + kanonskom FL redu nije lažno odbijen. Drugi subjekt sa istim digestom jeste.
 
 ---
 

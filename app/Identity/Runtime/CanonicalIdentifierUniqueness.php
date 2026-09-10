@@ -8,6 +8,9 @@ use App\Models\ForeignBranchIdentity;
 use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\User;
+use App\Security\JmbLookupException;
+use App\Security\JmbLookupService;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -16,25 +19,59 @@ use Illuminate\Database\Eloquent\Builder;
  * off after cutover. Does not introduce a new uniqueness business rule:
  * it retargets the existing HTTP uniqueness checks to current authority.
  *
+ * JMB equality uses deterministic jmb_lookup digests on users and
+ * physical_person_identities. It does not SQL-compare plaintext jmb.
+ * users.jmb UNIQUE remains as a schema constraint, not this query.
+ *
  * DB unique indexes are not added: DK-TS-002 D1/D8/D9 do not adopt
  * identifier uniqueness as schema, identifiers are nullable, and
  * passport uniqueness is not specified as composite-with-country.
  */
 final class CanonicalIdentifierUniqueness
 {
+    public const JMB_TAKEN_MESSAGE = 'JMB je već registrovan.';
+
+    public const JMB_LOOKUP_UNAVAILABLE_MESSAGE = 'JMB nije moguće provjeriti.';
+
     public function jmbTaken(?string $jmb, ?int $exceptUserId = null): bool
     {
         if (! is_string($jmb) || $jmb === '') {
             return false;
         }
 
-        $users = User::query()->where('jmb', $jmb);
-        if ($exceptUserId !== null) {
-            $users->where('id', '!=', $exceptUserId);
+        $digest = $this->lookup()->digest($jmb);
+        if ($digest === null) {
+            return false;
         }
 
-        return PhysicalPersonIdentity::query()->where('jmb', $jmb)->exists()
-            || $users->exists();
+        $users = User::query()->where('jmb_lookup', $digest);
+        $physical = PhysicalPersonIdentity::query()->where('jmb_lookup', $digest);
+
+        if ($exceptUserId !== null) {
+            $users->where('id', '!=', $exceptUserId);
+            $this->excludeOnlyCurrentUserCanonicalOwner($physical, $exceptUserId);
+        }
+
+        return $physical->exists() || $users->exists();
+    }
+
+    public function addJmbTakenValidationError(
+        Validator $validator,
+        string $field,
+        ?string $jmb,
+        ?int $exceptUserId = null,
+    ): void {
+        if (! is_string($jmb) || $jmb === '') {
+            return;
+        }
+
+        try {
+            if ($this->jmbTaken($jmb, $exceptUserId)) {
+                $validator->errors()->add($field, self::JMB_TAKEN_MESSAGE);
+            }
+        } catch (JmbLookupException) {
+            $validator->errors()->add($field, self::JMB_LOOKUP_UNAVAILABLE_MESSAGE);
+        }
     }
 
     public function pibTaken(?string $pib, ?int $exceptUserId = null): bool
@@ -87,7 +124,7 @@ final class CanonicalIdentifierUniqueness
         $passport = $snapshot->physicalPerson?->passportNumber;
 
         if ($this->jmbTaken($jmb, $exceptUserId)) {
-            throw new CanonicalIdentityWriteException('JMB je već registrovan.');
+            throw new CanonicalIdentityWriteException(self::JMB_TAKEN_MESSAGE);
         }
 
         if ($this->pibTaken($pib, $exceptUserId)) {
@@ -100,7 +137,7 @@ final class CanonicalIdentifierUniqueness
     }
 
     /**
-     * Update-path self-exclusion: ignore only a canonical PIB owned by
+     * Update-path self-exclusion: ignore only a canonical row owned by
      * $exceptUserId. Orphan rows (no platform identity) and other users
      * remain taken.
      */
@@ -112,5 +149,10 @@ final class CanonicalIdentifierUniqueness
                     $owner->where('user_id', '!=', $exceptUserId);
                 });
         });
+    }
+
+    private function lookup(): JmbLookupService
+    {
+        return app(JmbLookupService::class);
     }
 }

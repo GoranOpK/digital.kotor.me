@@ -90,7 +90,6 @@ class ProfileUpdateRequest extends FormRequest
                 'string',
                 'size:13',
                 'regex:/^[0-9]{13}$/',
-                Rule::unique(User::class)->ignore($user->id),
             ];
             if ($this->input('residential_status', $this->currentResidentialStatus($user)) === 'resident') {
                 $rules['jmb'] = [
@@ -98,7 +97,6 @@ class ProfileUpdateRequest extends FormRequest
                     'string',
                     'size:13',
                     'regex:/^[0-9]{13}$/',
-                    Rule::unique(User::class)->ignore($user->id),
                 ];
             }
 
@@ -178,6 +176,10 @@ class ProfileUpdateRequest extends FormRequest
 
             $this->refineEntrepreneurIdentifiers($validator);
             $this->refineEntrepreneurUniqueness($validator);
+        });
+
+        $validator->after(function (Validator $validator): void {
+            $this->refineJmbUniqueness($validator);
         });
     }
 
@@ -307,6 +309,36 @@ class ProfileUpdateRequest extends FormRequest
         if (app(CanonicalIdentifierUniqueness::class)->pibTaken($pib, $userId)) {
             $validator->errors()->add('pib', 'PIB je već registrovan.');
         }
+    }
+
+    private function refineJmbUniqueness(Validator $validator): void
+    {
+        $user = $this->user();
+        if (! $this->collectsCurrentBusinessIdentity($user)) {
+            return;
+        }
+
+        $currentType = $this->currentSubjectType($user);
+        $incomingType = $this->input('user_type', $currentType);
+        if (! UserType::isNaturalPerson($currentType) && ! UserType::isNaturalPerson($incomingType)) {
+            return;
+        }
+
+        $jmb = $this->input('jmb');
+        if (! is_string($jmb) || ! preg_match('/^[0-9]{13}$/', $jmb)) {
+            return;
+        }
+
+        if ($validator->errors()->has('jmb')) {
+            return;
+        }
+
+        app(CanonicalIdentifierUniqueness::class)->addJmbTakenValidationError(
+            $validator,
+            'jmb',
+            $jmb,
+            $user?->id,
+        );
     }
 
     /**

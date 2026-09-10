@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Identity\CountryCatalog;
 use App\Identity\PhoneCallingCodeCatalog;
+use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibilityResult;
 use App\Identity\Validation\CrpsIdentifierValidator;
@@ -60,6 +61,7 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
             }
 
             $this->refineIdentifierMessages($validator, $result);
+            $this->refineJmbUniqueness($validator, $result);
             $this->refinePhone($validator);
         });
     }
@@ -265,6 +267,29 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
             ? 'CRPS registracioni broj ne odgovara preduzetniku.'
             : 'CRPS registracioni broj ne odgovara izabranom pravnom obliku.';
         $validator->errors()->add('crps_number', $message);
+    }
+
+    private function refineJmbUniqueness(Validator $validator, ExistingSubjectIdentityEligibilityResult $result): void
+    {
+        if ($result->branch !== ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK) {
+            return;
+        }
+
+        $jmb = $this->input('jmb');
+        if (! is_string($jmb) || ! preg_match('/^[0-9]{13}$/', $jmb)) {
+            return;
+        }
+
+        if ($validator->errors()->has('jmb')) {
+            return;
+        }
+
+        app(CanonicalIdentifierUniqueness::class)->addJmbTakenValidationError(
+            $validator,
+            'jmb',
+            $jmb,
+            $this->user()?->id,
+        );
     }
 
     private function refinePhone(Validator $validator): void

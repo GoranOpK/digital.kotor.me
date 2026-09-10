@@ -367,8 +367,8 @@ class RegisterSubjectRequest extends FormRequest
         $uniqueness = app(CanonicalIdentifierUniqueness::class);
 
         $jmb = $this->resolvedJmb();
-        if (is_string($jmb) && $this->isNaturalPersonBranch() && $uniqueness->jmbTaken($jmb)) {
-            $validator->errors()->add('jmb', 'JMB je već registrovan.');
+        if ($this->isNaturalPersonBranch()) {
+            $uniqueness->addJmbTakenValidationError($validator, 'jmb', $jmb);
         }
 
         $pib = $this->input('pib');

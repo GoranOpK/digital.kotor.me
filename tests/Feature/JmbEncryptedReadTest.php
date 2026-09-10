@@ -396,27 +396,15 @@ class JmbEncryptedReadTest extends TestCase
         $this->assertNotSame($plaintextJmb, $prefill['jmb']);
     }
 
-    public function test_plaintext_uniqueness_and_unique_rule_remain_on_users_jmb(): void
+    public function test_uniqueness_follows_lookup_when_plaintext_is_desynced(): void
     {
         $taken = $this->nextJmb();
         $other = $this->nextJmb();
         $user = User::factory()->create(['email' => 'd-unique@example.test', 'jmb' => $taken]);
         DB::table('users')->where('id', $user->id)->update(['jmb' => $other]);
 
-        $this->assertTrue((new CanonicalIdentifierUniqueness)->jmbTaken($other));
-        $this->assertFalse((new CanonicalIdentifierUniqueness)->jmbTaken($taken));
-
-        $validator = Validator::make(
-            ['jmb' => $other],
-            ['jmb' => Rule::unique(User::class, 'jmb')]
-        );
-        $this->assertTrue($validator->fails());
-
-        $validatorTakenCiphertext = Validator::make(
-            ['jmb' => $taken],
-            ['jmb' => Rule::unique(User::class, 'jmb')]
-        );
-        $this->assertFalse($validatorTakenCiphertext->fails());
+        $this->assertTrue((new CanonicalIdentifierUniqueness)->jmbTaken($taken));
+        $this->assertFalse((new CanonicalIdentifierUniqueness)->jmbTaken($other));
     }
 
     private function readService(): JmbEncryptedReadService
