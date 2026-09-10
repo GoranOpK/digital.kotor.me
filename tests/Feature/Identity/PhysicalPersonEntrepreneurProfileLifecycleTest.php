@@ -242,6 +242,72 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
         $this->assertSame(PlatformIdentity::SUBJECT_PHYSICAL_PERSON, $this->platform($user)->subject_type);
     }
 
+    public function test_dashboard_shows_pib_for_current_entrepreneur(): void
+    {
+        $pib = $this->validPib(52);
+        $crps = $this->validCrps(1, 52);
+        $user = $this->seedPhysicalPerson([
+            'isEntrepreneur' => true,
+            'entrepreneurBusinessName' => 'Radnja Ana',
+            'pib' => $pib,
+            'crpsNumber' => $crps,
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Informacije o korisniku', $html);
+        $this->assertStringContainsString('Preduzetnik', $html);
+        $this->assertMatchesRegularExpression(
+            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">'.preg_quote($pib, '/').'<\/span>/',
+            $html
+        );
+    }
+
+    public function test_dashboard_hides_retained_business_data_after_return_to_physical_person(): void
+    {
+        $pib = $this->validPib(53);
+        $crps = $this->validCrps(1, 53);
+        $user = $this->seedPhysicalPerson([
+            'isEntrepreneur' => true,
+            'entrepreneurBusinessName' => 'Radnja Ana',
+            'pib' => $pib,
+            'crpsNumber' => $crps,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('profile.update'), $this->profilePayload($user, [
+                'registers_as_entrepreneur' => '0',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard'));
+
+        $user->refresh();
+        $fl = $this->physicalPerson($user);
+        $this->assertFalse((bool) $fl->is_entrepreneur);
+        $this->assertSame($pib, $fl->pib);
+        $this->assertSame('Radnja Ana', $fl->entrepreneur_business_name);
+        $this->assertSame($crps, $fl->crps_number);
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Informacije o korisniku', $html);
+        $this->assertStringContainsString('Fizičko lice', $html);
+        $this->assertStringNotContainsString('<span class="info-label">PIB</span>', $html);
+        $this->assertDoesNotMatchRegularExpression(
+            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">'.preg_quote($pib, '/').'<\/span>/',
+            $html
+        );
+        $this->assertStringNotContainsString('Radnja Ana', $html);
+        $this->assertStringNotContainsString($crps, $html);
+        $this->assertStringNotContainsString($pib, $html);
+    }
+
     public function test_entrepreneur_status_round_trip_reuses_retained_values(): void
     {
         $pib = $this->validPib(61);
@@ -290,6 +356,16 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
         $this->assertSame($pib, $fl->pib);
         $this->assertSame($crps, $fl->crps_number);
         $this->assertSame(UserType::ENTREPRENEUR, $user->refresh()->user_type);
+
+        $dashboard = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/<span class="info-label">PIB<\/span>\s*<span class="info-value">'.preg_quote($pib, '/').'<\/span>/',
+            $dashboard
+        );
     }
 
     public function test_ordinary_profile_update_does_not_erase_retained_entrepreneur_data(): void

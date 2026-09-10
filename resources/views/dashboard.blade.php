@@ -255,6 +255,7 @@
     $identityType = $subjectIdentity->userType;
     $identityResidency = $subjectIdentity->residentialStatus;
     $isPhysicalPerson = \App\Support\UserType::isNaturalPerson($identityType);
+    $isCurrentEntrepreneur = \App\Support\UserType::isEntrepreneur($identityType);
     $isResident = $identityResidency === 'resident';
     $isNonResident = $identityResidency === 'non-resident';
     $isLegalEntity = \App\Support\UserType::isLegalEntity($identityType);
@@ -269,7 +270,7 @@
         $userTypeLabel = $positionLabel . ' komisije';
     } elseif ($isKomisija) {
         $userTypeLabel = 'Član komisije';
-    } elseif (\App\Support\UserType::isEntrepreneur($identityType)) {
+    } elseif ($isCurrentEntrepreneur) {
         $userTypeLabel = 'Preduzetnik';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
@@ -409,7 +410,7 @@
                             <span class="info-value">{{ $subjectIdentity->jmb }}</span>
                         </div>
                     @endif
-                    @if($subjectIdentity->pib)
+                    @if($subjectIdentity->pib && ($isCurrentEntrepreneur || ! $isPhysicalPerson))
                         <div class="info-item">
                             <span class="info-label">PIB</span>
                             <span class="info-value">{{ $subjectIdentity->pib }}</span>
