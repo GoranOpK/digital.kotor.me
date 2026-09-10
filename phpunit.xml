@@ -30,5 +30,7 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="PAYMENT_GATEWAY" value="fake"/>
         <env name="PAYMENT_FAKE_ENABLED" value="true"/>
+        <env name="JMB_ENCRYPTION_KEY" value="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="/>
+        <env name="JMB_ENCRYPTION_KEY_ID" value="v1"/>
     </php>
 </phpunit>

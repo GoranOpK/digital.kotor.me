@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PhysicalPersonIdentity extends Model
 {
+    use SynchronizesJmbEncryption;
+
     protected $table = 'physical_person_identities';
 
     public const RESIDENTIAL_RESIDENT = 'resident';

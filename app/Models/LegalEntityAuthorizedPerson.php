@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LegalEntityAuthorizedPerson extends Model
 {
+    use SynchronizesJmbEncryption;
+
     protected $table = 'legal_entity_authorized_persons';
 
     public const DOCUMENT_JMB = 'jmb';

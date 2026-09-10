@@ -32,9 +32,9 @@ Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. P
 
 ---
 
-## JMB/JMBG enkripcija (Faza B1 / B2)
+## JMB/JMBG enkripcija (Faza B1 / B2 / C1)
 
-Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Servis se **ne** poziva iz postojećih JMB read/write tokova. Boot aplikacije **ne** zahtijeva ključ; poziv bez ključa pada eksplicitno.
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. C1 dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -79,9 +79,20 @@ Idempotentnost: drugi apply ne mijenja already-valid ciphertext.
 
 Transakcije: nema jedne velike transakcije preko 7 tabela. Svaki uspješan encrypted upis se commit-uje zasebno. Retry nastavlja preko `already_valid`.
 
-Konkurentnost: B2 je prije Phase C dual-write. Promjena plaintext JMB tokom backfill-a može ostaviti zastarjelu encrypted kopiju. Nema lockinga. Produkcijski run mora biti pod kontrolisanim uslovom koji odobri PO.
+Konkurentnost: B2 je bio prije Phase C dual-write. Produkcijski B2 run je završen. Direct DBA izmjene i dalje zaobilaze aplikacioni dual-write.
 
 Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failure.
+
+### Faza C1 — application dual-write
+
+C1 piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Plaintext ostaje autoritativan za read i uniqueness.** Encrypted-first read je Faza D, nije C1. Plaintext se ne uklanja.
+
+- Create/update ne-praznog JMB/JMBG: `plaintext = original`, `encrypted = JmbEncryptionService::encrypt(original)`.
+- Namjerno brisanje: obje kolone `null` (prazan string prati B1: encrypted = null).
+- Ažuriranje nepovezanih polja **ne** regeneriše ciphertext ako se JMB nije promijenio.
+- Neuspjeh enkripcije **sprečava** persist novog/izmijenjenog plaintext JMB-a (isti `save()` / ista transakcija).
+- Ručni/direct DB upisi (phpMyAdmin, raw SQL) **zaobilaze** dual-write i operativno su zabranjeni za JMB/JMBG kolone.
+- `users.jmb` UNIQUE, `CanonicalIdentifierUniqueness::jmbTaken()` i ostali equality query ostaju na plaintextu. Encrypted kolone nisu unique/index.
 
 ---
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class BusinessPlan extends Model
 {
     use HasFactory;
+    use SynchronizesJmbEncryption;
 
     protected $fillable = [
         'application_id',

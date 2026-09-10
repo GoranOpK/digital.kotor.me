@@ -12,7 +12,7 @@ use App\Support\UserType;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SynchronizesJmbEncryption;
 
     /**
      * Send the email verification notification.

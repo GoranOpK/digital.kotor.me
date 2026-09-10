@@ -311,10 +311,13 @@ class JmbEncryptedBackfillCommandTest extends TestCase
 
     private function insertUser(?string $jmb): int
     {
-        return (int) User::factory()->create([
+        $id = (int) User::factory()->create([
             'email' => 'jmb-b2-'.uniqid('', true).'@example.test',
             'jmb' => $jmb,
         ])->id;
+        $this->clearEncrypted('users', $id, 'jmb_encrypted');
+
+        return $id;
     }
 
     private function insertPhysicalPerson(?string $jmb): int
@@ -326,7 +329,7 @@ class JmbEncryptedBackfillCommandTest extends TestCase
             'mobile_phone' => '+38267000011',
         ]);
 
-        return (int) PhysicalPersonIdentity::create([
+        $id = (int) PhysicalPersonIdentity::create([
             'platform_identity_id' => $platform->id,
             'first_name' => 'Ana',
             'last_name' => 'Test',
@@ -336,6 +339,9 @@ class JmbEncryptedBackfillCommandTest extends TestCase
             'street_and_number' => 'Njegoševa 1',
             'city' => 'Kotor',
         ])->id;
+        $this->clearEncrypted('physical_person_identities', $id, 'jmb_encrypted');
+
+        return $id;
     }
 
     private function insertAuthorizedPerson(string $jmb): int
@@ -356,13 +362,16 @@ class JmbEncryptedBackfillCommandTest extends TestCase
             'city' => 'Kotor',
         ]);
 
-        return (int) LegalEntityAuthorizedPerson::create([
+        $id = (int) LegalEntityAuthorizedPerson::create([
             'legal_entity_identity_id' => $legal->id,
             'first_name' => 'Mila',
             'last_name' => 'Test',
             'id_document_type' => LegalEntityAuthorizedPerson::DOCUMENT_JMB,
             'jmb' => $jmb,
         ])->id;
+        $this->clearEncrypted('legal_entity_authorized_persons', $id, 'jmb_encrypted');
+
+        return $id;
     }
 
     private function insertRepresentative(string $jmb): int
@@ -383,13 +392,16 @@ class JmbEncryptedBackfillCommandTest extends TestCase
             'city' => 'Kotor',
         ]);
 
-        return (int) ForeignBranchRepresentative::create([
+        $id = (int) ForeignBranchRepresentative::create([
             'foreign_branch_identity_id' => $branch->id,
             'first_name' => 'Iva',
             'last_name' => 'Test',
             'id_document_type' => ForeignBranchRepresentative::DOCUMENT_JMB,
             'jmb' => $jmb,
         ])->id;
+        $this->clearEncrypted('foreign_branch_representatives', $id, 'jmb_encrypted');
+
+        return $id;
     }
 
     /**
@@ -420,15 +432,29 @@ class JmbEncryptedBackfillCommandTest extends TestCase
             'applicant_jmbg' => $applicantJmbg,
         ]);
 
-        return ['id' => (int) $application->id];
+        $id = (int) $application->id;
+        DB::table('applications')->where('id', $id)->update([
+            'physical_person_jmbg_encrypted' => null,
+            'applicant_jmbg_encrypted' => null,
+        ]);
+
+        return ['id' => $id];
     }
 
     private function insertBusinessPlan(int $applicationId, string $jmbg): int
     {
-        return (int) BusinessPlan::create([
+        $id = (int) BusinessPlan::create([
             'application_id' => $applicationId,
             'applicant_jmbg' => $jmbg,
         ])->id;
+        $this->clearEncrypted('business_plans', $id, 'applicant_jmbg_encrypted');
+
+        return $id;
+    }
+
+    private function clearEncrypted(string $table, int $id, string $column): void
+    {
+        DB::table($table)->where('id', $id)->update([$column => null]);
     }
 
     private function raw(string $table, int $id): object

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ForeignBranchRepresentative extends Model
 {
+    use SynchronizesJmbEncryption;
+
     protected $table = 'foreign_branch_representatives';
 
     public const DOCUMENT_JMB = 'jmb';

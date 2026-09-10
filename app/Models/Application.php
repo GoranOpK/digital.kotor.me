@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Application extends Model
 {
     use HasFactory;
+    use SynchronizesJmbEncryption;
 
     public const DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI = 'potvrda_zavod_nezaposleni';
 
