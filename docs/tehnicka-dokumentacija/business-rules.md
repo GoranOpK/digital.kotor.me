@@ -1,6 +1,6 @@
 # Poslovna pravila
 
-**Poslednje ažuriranje:** 2026-08-20 (kanonski V1 korisnički model: 8 kategorija; Preduzetnik = fizičko lice)
+**Poslednje ažuriranje:** 2026-09-10 (kanonski V1 korisnički model: 8 kategorija; Preduzetnik = fizičko lice)
 **Izvor u kodu:** `KotorAddress`, `HomeController`, `ProfileUpdateRequest`, `ApplicationController`, `Application` model, `App\Support\UserType`
 
 ---
@@ -37,7 +37,7 @@ Kotor, Dobrota, Prčanj, Škaljari, Risan, Perast, Muo, Orahovac, Stoliv, Ljuta,
 | Identifikator | Pravilo | Ko |
 |---------------|---------|-----|
 | **JMB** | 13 cifara + kontrolna cifra (`HomeController::validateJMB`) | Rezidenti (Fizičko lice i Preduzetnik) |
-| **PIB** | Tačno **8** cifara (`App\Support\Pib`), unique u `users` | Pravna lica. Preduzetnik: **nije** automatski obavezan |
+| **PIB** | Tačno **8** cifara (`App\Support\Pib`), unique u `users` | Pravna lica. Preduzetnik (kad je Preduzetnik = Da): obavezan, uz Poslovno ime i CRPS (`DK-BM-002` §7, §11.4) |
 | **Pasoš** | Alternativa za nerezidente | `residential_status=non-resident` (samo Fizičko lice / Preduzetnik) |
 
 Kanonski `users.residential_status` za Fizičko lice i Preduzetnika: samo `resident` / `non-resident`. Pravno lice: `NULL` na novom zapisu. `ex-non-resident` je legacy vrijednost uklonjena iz aktivnog modela (nije treći status).
