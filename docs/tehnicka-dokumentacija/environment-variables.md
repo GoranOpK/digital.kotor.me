@@ -32,13 +32,13 @@ Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. P
 
 ---
 
-## JMB/JMBG enkripcija (Faza B1 / B2 / C)
+## JMB/JMBG enkripcija (Faza B1 / B2 / C / D)
 
 Kanonski implementacioni i produkcijski zapis: [jmb-encryption.md](jmb-encryption.md). Ovaj odjeljak ostaje env ugovor. Kanonski redoslijed: A → B1 → B2 → C → D. Faza C2 ne postoji.
 
-Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. Faza C dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `App\Security\JmbEncryptedReadService`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. Faza C dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
 
-**Stanje 2026-09-10:** A/B1/B2/C = produkcija. B2 apply + verifikacija = 71 `already_valid`, 0 grešaka. Faza C deployovana; kontrolisana `users.jmb` verifikacija = PASS. Faza D nije pokrenuta. Plaintext ostaje autoritativan.
+**Stanje 2026-09-10:** A/B1/B2/C/D = produkcija. B2 apply + verifikacija = 71 `already_valid`, 0 grešaka. Faza C dual-write deployovana; kontrolisana `users.jmb` verifikacija = PASS. Faza D encrypted-first VALUE read deployovana i produkcijski prihvaćena (profil / Obrazac 1A / Obrazac 2 = PASS). SQL uniqueness ostaje plaintext. Plaintext kolone i dalje postoje.
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -91,7 +91,7 @@ Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failu
 
 Faza C je na `origin/main` (`3d71cbf`) i **deployovana na produkciju**. Kontrolisana `users.jmb` verifikacija 2026-09-10 = PASS. Evidencija: [jmb-encryption.md](jmb-encryption.md#81-produkcijska-verifikacija-faze-c--2026-09-10-usersjmb).
 
-Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Plaintext ostaje autoritativan za read i uniqueness.** Encrypted-first read je Faza D, nije Faza C. Plaintext se ne uklanja.
+Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Uniqueness/equality ostaju plaintext.** Encrypted-first VALUE read je Faza D (`JmbEncryptedReadService`), nije Faza C. Faza C dual-write ostaje aktivan. Plaintext se ne uklanja.
 
 - Create/update ne-praznog JMB/JMBG: `plaintext = original`, `encrypted = JmbEncryptionService::encrypt(original)`.
 - Namjerno brisanje: obje kolone `null` (prazan string prati B1: encrypted = null).
@@ -99,6 +99,10 @@ Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloque
 - Neuspjeh enkripcije **sprečava** persist novog/izmijenjenog plaintext JMB-a (isti `save()` / ista transakcija).
 - Ručni/direct DB upisi (phpMyAdmin, raw SQL) **zaobilaze** dual-write i operativno su zabranjeni za JMB/JMBG kolone.
 - `users.jmb` UNIQUE, `CanonicalIdentifierUniqueness::jmbTaken()` i ostali equality query ostaju na plaintextu. Encrypted kolone nisu unique/index.
+
+### Faza D — encrypted-first VALUE read
+
+Faza D je na `origin/main` (`077a01c`) i **deployovana / PRODUCTION ACCEPTED**. Aplikacioni VALUE read ide encrypted-first (`JmbEncryptedReadService`). Dual-write Faze C i plaintext uniqueness ostaju. Plaintext kolone i dalje postoje. Evidencija: [jmb-encryption.md](jmb-encryption.md#9-faza-d--encrypted-first-value-read).
 
 ---
 

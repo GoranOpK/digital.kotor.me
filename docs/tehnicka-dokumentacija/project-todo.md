@@ -57,4 +57,5 @@ Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](proj
 - ~~Prioritet cjelina~~ — dokumentovano u `project-operations.md`
 - ~~Stub moduli u UI~~ — namjerno ostaju vidljivi
 - ~~`APP_ENV` / `APP_DEBUG` na produkciji~~ — prilagođeno na serveru (2026-06-30)
-- ~~JMB Faza C produkcijski deploy~~ — 2026-09-10; `users.jmb` kontrolisana verifikacija PASS; Faza D nije pokrenuta. V. [jmb-encryption.md](jmb-encryption.md)
+- ~~JMB Faza C produkcijski deploy~~ — 2026-09-10; `users.jmb` kontrolisana verifikacija PASS. V. [jmb-encryption.md](jmb-encryption.md)
+- ~~JMB Faza D produkcijski deploy~~ — 2026-09-10; encrypted-first VALUE read; profil / Obrazac 1A / Obrazac 2 = PASS. V. [jmb-encryption.md](jmb-encryption.md)

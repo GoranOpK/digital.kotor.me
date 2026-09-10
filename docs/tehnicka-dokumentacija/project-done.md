@@ -6,6 +6,16 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 
 ---
 
+## 2026-09-10 — JMB Faza D produkcijski deploy i documentation closeout
+
+- Encrypted-first aplikacioni VALUE read: `077a01c` `feat(security): add encrypted-first JMB reads`
+- Ugovor: encrypted autoritativan; privremeni plaintext fallback + sanitizovani `plaintext_fallback`; decrypt fail = fail closed
+- Granica: `JmbEncryptedReadService`; live identitet `CanonicalIdentityReader`; snapshoti ostaju istorijski
+- Faza C dual-write i plaintext uniqueness ostaju; Eloquent JMB accessor nije uveden
+- Produkcijska UI verifikacija: profil JMB = PASS; Obrazac 1A JMBG snapshot = PASS; Obrazac 2 / Biznis plan JMBG snapshot = PASS
+- Plaintext kolone i dalje postoje u bazi; Faza D nije plaintext-at-rest retirement
+- Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP.
+
 ## 2026-09-10 — JMB Faza C produkcijski deploy i terminološki corrective
 
 - Kanonski naziv dual-write faze: **Faza C** (nema Faze C2; ranija oznaka „C1“ u dokumentaciji je povučena)
@@ -13,7 +23,7 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 - Deploy preko Plesk Laravel Toolkit; `php artisan about` = production, Laravel 12.29.0, PHP 8.3.33, Debug OFF
 - Kontrolisana `users.jmb` putanja: save OK; dry-run `--scope=users` → scanned 51, would_encrypt 0, already_valid 22, skipped_no_plaintext 29, errors 0 = **PASS**
 - Nije tvrđeno da je svaka C write putanja ručno produkcijski testirana
-- Faza D nije pokrenuta; plaintext ostaje autoritativan
+- Faza D tada **nije** bila pokrenuta; plaintext je ostajao autoritativan za read (naknadno isti dan: Faza D closed, v. stavku iznad)
 - Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP.
 
 ## 2026-09-10 — JMB/JMBG enkripcija B1/B2/C documentation closeout
@@ -22,7 +32,7 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 - B1: `JmbEncryptionService` + keyring; deployovano (`06cf729`, sa B2)
 - B2 produkcija 2026-09-10: dry-run 0 grešaka; apply = **71 encrypted**, 0 errors; drugi run = **71 already_valid**, 0 novo, 0 mismatch
 - Faza C (tada još dokumentovana kao „C1“): PO-usvojeno; na `origin/main` `3d71cbf`; u trenutku tog dokumentacionog closeout-a još **nije** bila deployovana (naknadno: v. stavku iznad)
-- Plaintext i dalje autoritativan; Faza D nije pokrenuta; plaintext se ne uklanja
+- Plaintext i dalje postoji; Faza D tada **nije** bila pokrenuta; plaintext se ne uklanja (naknadno isti dan: Faza D closed, v. stavku iznad)
 - Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP. Bez koda / migrate / backfill / deploy u tom closeout-u.
 
 ## 2026-09-06 — DK-TS-002 / D15 Step 8 production closeout
