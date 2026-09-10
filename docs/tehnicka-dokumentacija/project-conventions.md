@@ -1,6 +1,6 @@
 # Konvencije projekta (digital.kotor.me)
 
-**Poslednje ažuriranje:** 2026-06-30
+**Poslednje ažuriranje:** 2026-09-10
 
 **Za AI i ljude:** držati se ovoga pri novim izmenama da ostane konzistentno.
 
@@ -84,6 +84,7 @@ Detalji: [project-operations.md](project-operations.md#jezik-i-terminologija).
 | MEGA / biblioteka dokumenata | `document-library-and-mega.md` + postojeći MEGA setup fajlovi |
 | Kalendar kulture | `cultural-calendar.md` |
 | Nova env varijabla | `environment-variables.md` |
+| JMB/JMBG enkripcija (kolone, service, backfill, dual-write) | `jmb-encryption.md` (+ env/deploy pokazivači) |
 | Cron / deploy | `deployment-and-cron.md` |
 | Novi model / tabela | `database-entities.md` |
 | Stub postao funkcionalan | `stubs-and-future-modules.md`, `architecture-overview.md` |

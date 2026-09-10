@@ -1,6 +1,6 @@
 # Deploy, cron i Artisan komande
 
-**Poslednje ažuriranje:** 2026-08-14
+**Poslednje ažuriranje:** 2026-09-10
 **Izvor u kodu:** root PHP skripte, `routes/console.php`, `app/Console/Commands/`, `queue-worker.php`
 
 Detaljni Plesk vodiči: [PLESK_FINAL_INSTRUCTIONS.md](PLESK_FINAL_INSTRUCTIONS.md), [PLESK_DELETE_EXPIRED_CRON.md](PLESK_DELETE_EXPIRED_CRON.md).
@@ -238,7 +238,7 @@ Na produkciji se Newsletter **ne** oslanja na `php artisan schedule:run`. Invoke
 | `document:fingerprint-check` | Pixel/binarni fingerprint duplikata (`DocumentImageFingerprint`); izolovani probe |
 | `document:fingerprint-check --compare` | Poredi `storage/app/document-fingerprint-input/capture01.png` i `capture05.png` |
 | `path:show` | Ispis `base_path()` |
-| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski run je odvojena PO-odobrena akcija. Prvo `--dry-run`. Detalji: [environment-variables.md](environment-variables.md#faza-b2--jmbbackfill-encrypted) |
+| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski apply + verifikacija izvršeni 2026-09-10 (71 encrypted, zatim 71 `already_valid`, 0 grešaka). Ponovni apply samo uz PO kontrolu. C1 dual-write je na `main` i **nije** još deployovan. Detalji: [jmb-encryption.md](jmb-encryption.md), env: [environment-variables.md](environment-variables.md#faza-b2--jmbbackfill-encrypted) |
 
 ### PDF dijagnostika na Plesku (bez SSH)
 

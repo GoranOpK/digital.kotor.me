@@ -1,6 +1,6 @@
 # Project TODO — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-09-06
+**Poslednje ažuriranje:** 2026-09-10
 
 Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](project-done.md).
 
@@ -16,6 +16,7 @@ Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](proj
 
 ## Dokumentacija
 
+- [ ] **JMB C1 produkcijski deploy** — kod je na `origin/main` (`3d71cbf`); **nije** izvršen. Nije Faza D. Ne uklanjati plaintext. V. [jmb-encryption.md](jmb-encryption.md).
 - [ ] **D15 nakon Step 8** — stabilizacioni/observation period; preostali compatibility čitaoci; mirror OFF eligibility; CONTRACT; fizički DROP. **Ne** reotvara Step 8. V. `DK-TS-002` v1.0.1 §14.1.
 - [ ] Ažurirati `UPUTSTVO_ZENSKO_PREDUZETNISTVO.md` ako se promijeni tok prijave ili polja u formama
 - [ ] **Uputstva za Predsjednika komisije i ostale članove** — predloženo; manje razlike u odnosu na podnosioca; sve po Odluci

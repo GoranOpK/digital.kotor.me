@@ -34,7 +34,11 @@ Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. P
 
 ## JMB/JMBG enkripcija (Faza B1 / B2 / C1)
 
-Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. C1 dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
+Kanonski implementacioni i produkcijski zapis: [jmb-encryption.md](jmb-encryption.md). Ovaj odjeljak ostaje env ugovor.
+
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. C1 dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG (**nakon** C1 deploya).
+
+**Stanje 2026-09-10:** A/B1/B2 = produkcija. B2 apply + verifikacija = 71 `already_valid`, 0 grešaka. C1 je na `origin/main` (`3d71cbf`) i **nije** još deployovan. Faza D nije pokrenuta. Plaintext ostaje autoritativan.
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -79,11 +83,13 @@ Idempotentnost: drugi apply ne mijenja already-valid ciphertext.
 
 Transakcije: nema jedne velike transakcije preko 7 tabela. Svaki uspješan encrypted upis se commit-uje zasebno. Retry nastavlja preko `already_valid`.
 
-Konkurentnost: B2 je bio prije Phase C dual-write. Produkcijski B2 run je završen. Direct DBA izmjene i dalje zaobilaze aplikacioni dual-write.
+Konkurentnost: B2 je bio prije Phase C dual-write. Produkcijski B2 run je završen 2026-09-10 (evidencija: [jmb-encryption.md](jmb-encryption.md#6-produkcijsko-izvršenje-b2--2026-09-10)). Direct DBA izmjene i dalje zaobilaze aplikacioni dual-write.
 
 Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failure.
 
 ### Faza C1 — application dual-write
+
+Kod na `origin/main` (`3d71cbf`) sadrži C1. **Produkcijski deploy C1 nije izvršen** u trenutku closeout-a 2026-09-10. Ugovor ispod važi za kod na main i za produkciju tek **nakon** C1 deploya.
 
 C1 piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). **Plaintext ostaje autoritativan za read i uniqueness.** Encrypted-first read je Faza D, nije C1. Plaintext se ne uklanja.
 

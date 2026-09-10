@@ -1,6 +1,6 @@
 # Baza — entiteti i relacije
 
-**Poslednje ažuriranje:** 2026-08-20
+**Poslednje ažuriranje:** 2026-09-10
 **Izvor u kodu:** `app/Models/`, `database/migrations/`
 
 ---
@@ -58,6 +58,8 @@ CulturalEvent ──belongsTo──> User (created_by)
 
 Nema kolone `business_type`. Identifikaciono polje fizičkog lica je `jmb`, ne `jmbg`.
 
+Paralelne nullable `TEXT` kolone (Faza A, produkcija): `jmb_encrypted`. Plaintext `jmb` ostaje autoritativan za read/uniqueness. SSOT: [jmb-encryption.md](jmb-encryption.md).
+
 `user_type` (ENUM, safe expansion): 8 kanonskih vrijednosti + 4 zadržane legacy vrijednosti. Nove registracije pišu samo kanonski skup. SSOT: `App\Support\UserType`.
 
 `residential_status`: `resident` / `non-resident` / `NULL`. Novi zapisi pravnih lica = `NULL`.
@@ -69,6 +71,8 @@ Nema kolone `business_type`. Identifikaciono polje fizičkog lica je `jmb`, ne `
 ### `applications`
 
 `status`, `applicant_type`, `business_stage`, `is_registered`, `redni_broj`, `submitted_at`, `final_score`, bonus polja, `rejection_reason`
+
+JMBG snapshot: `physical_person_jmbg`, `applicant_jmbg` plus paralelne `physical_person_jmbg_encrypted`, `applicant_jmbg_encrypted` (nullable `TEXT`). `business_plans.applicant_jmbg` / `applicant_jmbg_encrypted` isto. Kanonski identitet: `physical_person_identities.jmb` / `jmb_encrypted`, `legal_entity_authorized_persons.jmb` / `jmb_encrypted`, `foreign_branch_representatives.jmb` / `jmb_encrypted`. SSOT: [jmb-encryption.md](jmb-encryption.md).
 
 ### `user_documents` / `application_documents`
 

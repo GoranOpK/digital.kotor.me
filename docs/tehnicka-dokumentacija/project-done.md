@@ -1,10 +1,19 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-09-06
+**Poslednje ažuriranje:** 2026-09-10
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-09-10 — JMB/JMBG enkripcija B1/B2/C1 documentation closeout
+
+- A: 7 nullable `TEXT` `*_encrypted` kolona; plaintext nedirnut; produkcijska migracija OK (`66ffa35`)
+- B1: `JmbEncryptionService` + keyring; deployovano (`06cf729`, sa B2)
+- B2 produkcija 2026-09-10: dry-run 0 grešaka; apply = **71 encrypted**, 0 errors; drugi run = **71 already_valid**, 0 novo, 0 mismatch
+- C1: PO-usvojeno; na `origin/main` `3d71cbf`; **nije** deployovano na produkciju
+- Plaintext i dalje autoritativan; Faza D nije pokrenuta; plaintext se ne uklanja
+- Dokumentacija: [jmb-encryption.md](jmb-encryption.md). DK-RG-001 KEEP. Bez koda / migrate / backfill / deploy u ovom closeout-u.
 
 ## 2026-09-06 — DK-TS-002 / D15 Step 8 production closeout
 
