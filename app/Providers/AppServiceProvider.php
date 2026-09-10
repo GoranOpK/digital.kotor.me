@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Security\JmbEncryptionService::class, function () {
             return \App\Security\JmbEncryptionService::fromConfig();
         });
+        $this->app->singleton(\App\Security\JmbLookupService::class, function () {
+            return \App\Security\JmbLookupService::fromConfig();
+        });
         $this->app->singleton(\App\Security\JmbEncryptedReadService::class);
     }
 
