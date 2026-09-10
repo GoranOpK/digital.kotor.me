@@ -367,10 +367,13 @@ class JmbLookupBackfillCommandTest extends TestCase
 
     private function insertUser(?string $jmb): int
     {
-        return (int) User::factory()->create([
+        $id = (int) User::factory()->create([
             'email' => 'jmb-lookup-'.uniqid('', true).'@example.test',
             'jmb' => $jmb,
         ])->id;
+        $this->clearLookup('users', $id);
+
+        return $id;
     }
 
     private function insertPhysicalPerson(?string $jmb): int
@@ -385,7 +388,7 @@ class JmbLookupBackfillCommandTest extends TestCase
             'mobile_phone' => '+38267000011',
         ]);
 
-        return (int) PhysicalPersonIdentity::create([
+        $id = (int) PhysicalPersonIdentity::create([
             'platform_identity_id' => $platform->id,
             'first_name' => 'Ana',
             'last_name' => 'Test',
@@ -395,6 +398,9 @@ class JmbLookupBackfillCommandTest extends TestCase
             'street_and_number' => 'Njegoševa 1',
             'city' => 'Kotor',
         ])->id;
+        $this->clearLookup('physical_person_identities', $id);
+
+        return $id;
     }
 
     private function insertAuthorizedPerson(string $jmb): int
@@ -496,6 +502,11 @@ class JmbLookupBackfillCommandTest extends TestCase
         $this->assertNotNull($row);
 
         return $row;
+    }
+
+    private function clearLookup(string $table, int $id): void
+    {
+        DB::table($table)->where('id', $id)->update(['jmb_lookup' => null]);
     }
 
     private function nextJmb(): string

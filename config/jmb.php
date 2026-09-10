@@ -20,7 +20,9 @@ return [
     | Dedicated HMAC lookup digest for future JMB uniqueness.
     | Do not reuse APP_KEY or JMB_ENCRYPTION_KEY. Application boot does not
     | require this key; digest() fails closed for a non-empty JMB without it.
-    | key_id is operational/version tracking only and is not stored in the digest.
+    | Eloquent persist of a non-empty users.jmb or physical_person_identities.jmb
+    | requires it. key_id is operational/version tracking only and is not stored
+    | in the digest.
     */
     'lookup' => [
         'key' => env('JMB_LOOKUP_KEY'),

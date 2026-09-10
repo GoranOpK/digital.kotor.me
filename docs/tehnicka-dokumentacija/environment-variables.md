@@ -104,6 +104,23 @@ Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloque
 
 Faza D je na `origin/main` (`077a01c`) i **deployovana / PRODUCTION ACCEPTED**. Aplikacioni VALUE read ide encrypted-first (`JmbEncryptedReadService`). Dual-write Faze C i plaintext uniqueness ostaju. Plaintext kolone i dalje postoje. Evidencija: [jmb-encryption.md](jmb-encryption.md#9-faza-d--encrypted-first-value-read).
 
+### JMB lookup digest — application dual-write
+
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbLookupService`, `App\Security\JmbDualWrite`. **Nije** `APP_KEY` i **nije** `JMB_ENCRYPTION_KEY`. Boot aplikacije **ne** zahtijeva ključ. Eloquent persist ne-praznog `users.jmb` / `physical_person_identities.jmb` zahtijeva ključ. Ostali JMB/JMBG modeli (ovlašćeno lice, predstavnik, application/business-plan snapshot) **ne** pišu lookup.
+
+Ovo je samo sinhronizacija kolone. **Uniqueness/equality ostaju plaintext.** `CanonicalIdentifierUniqueness::jmbTaken()` i `users.jmb` UNIQUE se ne mijenjaju. Encrypted-first VALUE read se ne mijenja. Plaintext se ne uklanja.
+
+| Varijabla | Default (example) | Namjena |
+|-----------|-------------------|---------|
+| `JMB_LOOKUP_KEY` | prazno | Aktivni 32-bajtni HMAC ključ, format `base64:...`. Ne koristiti `APP_KEY` ni `JMB_ENCRYPTION_KEY`. |
+| `JMB_LOOKUP_KEY_ID` | `v1` | Operativna verzija ključa. **Nije** dio spremljenog digest-a. |
+
+- Ne-prazan validan 13-cifreni JMB: `jmb_lookup = JmbLookupService::digest(jmb)` u istom `saving` ciklusu kao `jmb_encrypted`.
+- `null` / prazan JMB: `jmb_lookup = null` i `jmb_encrypted = null`.
+- Neispravan ne-prazan JMB, ili nedostajući/neispravan lookup ključ: persist se **ne** izvršava (nema djelimičnog plaintext/encrypted/lookup upisa).
+- Ažuriranje nepovezanih polja **ne** regeneriše digest ako se JMB nije promijenio.
+- `users.jmb_lookup` ima DB UNIQUE; kolizija je native DB greška, bez novog business validation sloja.
+
 ---
 
 ## Baza

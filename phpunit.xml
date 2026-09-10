@@ -32,5 +32,7 @@
         <env name="PAYMENT_FAKE_ENABLED" value="true"/>
         <env name="JMB_ENCRYPTION_KEY" value="base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="/>
         <env name="JMB_ENCRYPTION_KEY_ID" value="v1"/>
+        <env name="JMB_LOOKUP_KEY" value="base64:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="/>
+        <env name="JMB_LOOKUP_KEY_ID" value="v1"/>
     </php>
 </phpunit>

@@ -5,8 +5,9 @@ namespace App\Security;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Phase C1: keep parallel *_encrypted columns in sync on Eloquent persist.
- * Does not change reads or uniqueness. Does not re-encrypt unchanged JMB values.
+ * Keep parallel *_encrypted columns in sync on Eloquent persist.
+ * For User and PhysicalPersonIdentity, also sync jmb_lookup from jmb.
+ * Does not change reads or uniqueness. Does not recompute unchanged JMB values.
  */
 final class JmbDualWrite
 {
@@ -25,6 +26,14 @@ final class JmbDualWrite
         \App\Models\BusinessPlan::class => ['applicant_jmbg' => 'applicant_jmbg_encrypted'],
     ];
 
+    /**
+     * @var list<class-string<Model>>
+     */
+    public const LOOKUP_MODELS = [
+        \App\Models\User::class,
+        \App\Models\PhysicalPersonIdentity::class,
+    ];
+
     public static function syncModel(Model $model): void
     {
         $pairs = self::MODEL_COLUMNS[$model::class] ?? null;
@@ -40,19 +49,42 @@ final class JmbDualWrite
             $plaintext = $model->getAttribute($plaintextColumn);
             if ($plaintext === null || $plaintext === '') {
                 $model->setAttribute($encryptedColumn, null);
+                self::syncLookup($model, $plaintextColumn, null);
 
                 continue;
             }
 
+            $value = (string) $plaintext;
+            self::syncLookup($model, $plaintextColumn, $value);
             $model->setAttribute(
                 $encryptedColumn,
-                self::encryption()->encrypt((string) $plaintext)
+                self::encryption()->encrypt($value)
             );
         }
+    }
+
+    private static function syncLookup(Model $model, string $plaintextColumn, #[\SensitiveParameter] ?string $plaintext): void
+    {
+        if ($plaintextColumn !== 'jmb' || ! in_array($model::class, self::LOOKUP_MODELS, true)) {
+            return;
+        }
+
+        if ($plaintext === null || $plaintext === '') {
+            $model->setAttribute('jmb_lookup', null);
+
+            return;
+        }
+
+        $model->setAttribute('jmb_lookup', self::lookup()->digest($plaintext));
     }
 
     private static function encryption(): JmbEncryptionService
     {
         return app(JmbEncryptionService::class);
+    }
+
+    private static function lookup(): JmbLookupService
+    {
+        return app(JmbLookupService::class);
     }
 }
