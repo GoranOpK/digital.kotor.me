@@ -6,7 +6,7 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.24
+**Verzija:** 1.0.25
 **Datum:** 2026-09-11
 
 ---
@@ -205,6 +205,14 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | **FT-xxx** dodijeljen samo zato što modul postoji | Zabranjeno (DK-DS-001 §6). |
 | Preuzimanje KK/EP document ID-eva kao KN ID-eva | Zabranjeno. |
 
+## 11.1 Održavanje skraćenica i internih oznaka
+
+Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** restaurira istorijski katalog internih oznaka, stari SSOT lanac ni druge stavke iz ranijeg „debelog“ registra.
+
+**ZASTARJELO.** Kada registrovana skraćenica ili interna oznaka postane zastarjela: **ne** briše se iz registra; označava se kao **ZASTARJELO**; ako postoji zamjena, u registru se navodi ili referencira trenutno važeća oznaka. Svrha je očuvati istorijsku sljedivost i tumačivost starije dokumentacije. Ovaj korak **ne** uvodi nijednu ZASTARJELO stavku — samo pravilo.
+
+**Tip / profil pripadnosti.** Pri evidenciji nove skraćenice ili interne oznake koja pripada konkretnom tipu/profilu konkursa, unos u registru mora identifikovati taj tip/profil (npr. sačuvani poslovni ili funkcionalni profil iz §5.1). Ako oznaka pripada cjelini Konkursi (zajednički / module-level sloj), to mora biti jasno označeno; **ne** smije se lažno pripisati jednom profilu. Ovo **ne** uvodi novu poslovnu taksonomiju i **ne** mijenja granice Odluka SSOT iz §5 / §5.1.
+
 ---
 
 # 12. Istorija verzija
@@ -236,7 +244,8 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | 1.0.22 | 2026-09-09 | Ažuriran KN-TS-002 na v0.1.5 nakon završetka sadržajne tehničke razrade modela podataka, kompatibilnosti, testiranja i nefunkcionalnih zahtjeva; dokument ostaje U IZRADI i aplikativni kod nije mijenjan. |
 | 1.0.23 | 2026-09-10 | Evidentirano usvajanje KN-TS-002 v1.0.0, tehničke specifikacije profila konkursa za podršku preduzetništvu mladih, sa razradom Poglavlja 1–14, primjenom KN-BM-002 v1.0.5 i KN-FS-002 v1.0.3, ponovnom upotrebom postojećeg tehničkog toka uz profilnu parametrizaciju, minimalnim modelom podataka i granicom V1; nove interne tehničke oznake nijesu uvedene. |
 | 1.0.24 | 2026-09-11 | Administrativni closeout registra: evidentirani već izdati `KN-PATCH-BM-005` (vrijeme dodjele/zamjene cijele Komisije; KN-BM-003), `KN-PATCH-BM-006` (elektronski primjerak zvanične Odluke na Platformi; KN-BM-003), `KN-PATCH-BM-007` (trajno brisanje učitanog PDF-a prije prve objave; KN-BM-003), `KN-PATCH-BM-008` (reference na usvojeni KN-BM-002; KN-BM-004), `KN-PATCH-BM-009` (status matrice sposobnosti §2.5; KN-BM-002), `KN-PATCH-BM-010` (V1 granica van ugovora/M4/M4a/de minimis; KN-BM-002), `KN-PATCH-BM-011` (tri eliminatorna kriterijuma Obrasca 3; KN-BM-003), `KN-PATCH-BM-012` (zamjena člana bez retroaktivnog dejstva; KN-BM-003). §5.1 pokazivač KN-FS-003 usklađen na v1.0.9; pokazivači KN-BM-002 v1.0.6 i KN-FS-002 v1.0.4 usklađeni nakon administrativnog closeout-a zastarjelih FS-001/TS-001 pokazivača. Katalog skraćenica KEEP. Bez novih Document ID-eva. Bez izmjene poslovnih pravila. |
+| 1.0.25 | 2026-09-11 | Administrativno: PO-usvojena minimalna higijena registra (§11.1) — pravilo **ZASTARJELO** (bez brisanja; pokazivač na važeću zamjenu gdje postoji) i obavezna identifikacija tipa/profila konkursa ili zajedničkog/module-level sloja pri evidenciji nove skraćenice/interne oznake. Bez restauracije istorijskog kataloga, starog SSOT lanca ili novih Document ID / PATCH / skraćenica. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.24**
+**Kraj dokumenta KN-RG-001 v1.0.25**
