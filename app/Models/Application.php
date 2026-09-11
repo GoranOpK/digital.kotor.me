@@ -622,35 +622,61 @@ class Application extends Model
     }
 
     /**
-     * Vraća tekst podnosioca prijave u formatu za Odluku o dodjeli
-     * DOO: "NAZIV" DOO, koga zastupa osnivačica i izvršna direktorica [Ime]
+     * Vraća tekst podnosioca prijave u formatu za Odluku o dodjeli.
+     * Identitet: Application snapshot gdje postoji; naziv registrovanog DOO iz kanonskog legal entity.
+     * DOO: "NAZIV" DOO, koga zastupa osnivačica i izvršna direktorica [Nositeljka]
      * Preduzetnica: Preduzetnica [Ime] koja obavlja djelatnost u [oblast]
      * Fizičko lice: [Ime]
      */
     public function getApplicantDisplayForDecision(): string
     {
-        $companyName = $this->businessPlan?->company_name;
-        $repName = $this->founder_name ?: $this->director_name;
-        $userName = $this->user?->name ?? '';
+        $userName = filled($this->user?->name) ? (string) $this->user->name : '';
 
-        if (in_array($this->applicant_type, ['doo', 'ostalo']) && ($companyName || $repName || $userName)) {
-            $name = $companyName ?: $userName;
-            $suffix = $this->applicant_type === 'doo' ? ' DOO' : '';
-            $quoted = str_contains($name, '"') ? $name : '"' . $name . '"';
-            $rep = $repName ?: $userName;
-            if ($rep) {
-                return $quoted . $suffix . ', koga zastupa osnivačica i izvršna direktorica ' . $rep . '.';
+        if (in_array($this->applicant_type, ['doo', 'ostalo'], true)) {
+            $legalName = $this->user?->identity?->legalEntity?->legal_name;
+            $companyName = filled($legalName) ? (string) $legalName : '';
+
+            $nositeljka = filled($this->doo_name)
+                ? (string) $this->doo_name
+                : (filled($this->founder_name)
+                    ? (string) $this->founder_name
+                    : (filled($this->director_name)
+                        ? (string) $this->director_name
+                        : $userName));
+
+            if ($companyName === '' && $nositeljka === '') {
+                return 'N/A';
             }
-            return $quoted . $suffix . '.';
+
+            $suffix = $this->applicant_type === 'doo' ? ' DOO' : '';
+
+            if ($companyName !== '') {
+                $quoted = str_contains($companyName, '"') ? $companyName : '"' . $companyName . '"';
+                if ($nositeljka !== '') {
+                    return $quoted . $suffix . ', koga zastupa osnivačica i izvršna direktorica ' . $nositeljka . '.';
+                }
+
+                return $quoted . $suffix . '.';
+            }
+
+            // Bez kanonskog legal_name: ne izmišljati naziv iz BP ili user.name.
+            return $nositeljka !== '' ? $nositeljka : 'N/A';
         }
 
         if ($this->applicant_type === 'preduzetnica') {
-            $name = $repName ?: $userName ?: 'N/A';
+            $name = filled($this->preduzetnik_name)
+                ? (string) $this->preduzetnik_name
+                : ($userName !== '' ? $userName : 'N/A');
             $oblast = $this->business_area ? ' u ' . $this->business_area : '';
+
             return 'Preduzetnica ' . $name . ' koja obavlja djelatnost' . $oblast . '.';
         }
 
-        return $this->physical_person_name ?: $userName ?: 'N/A';
+        if (filled($this->physical_person_name)) {
+            return (string) $this->physical_person_name;
+        }
+
+        return $userName !== '' ? $userName : 'N/A';
     }
 
     /**
