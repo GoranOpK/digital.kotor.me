@@ -2239,6 +2239,12 @@ class AdminController extends Controller
             abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
         }
 
+        // Aktivni tok: Predlog tek nakon završenih predsjedničkih odluka (KN-FS-003 §15.1 / §14.11).
+        // Arhivirani konkurs: read-only pregled već formiranog Predloga ostaje dostupan archive viewer-ima.
+        if (! $isArchiveViewer && ! $competition->hasChairmanCompletedDecisions()) {
+            abort(403, 'Predlog odluke nije dostupan dok predsjednik ne donese zaključak za sve relevantne prijave.');
+        }
+
         $documentData = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)
             ->build($competition);
 

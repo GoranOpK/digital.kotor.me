@@ -960,6 +960,50 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->assertNotSame([1, 2, 3, 4], $afterClose->map(fn ($a) => (int) $a->ranking_position)->all());
     }
 
+    public function test_proposal_decision_requires_completed_chairman_decisions(): void
+    {
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // 50 — above line, needs decision
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 10 — below line, no decision required
+        ]);
+
+        $aboveLine = $apps[0]->fresh();
+        $belowLine = $apps[1]->fresh();
+
+        $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());
+        $this->assertFalse($competition->fresh()->hasChairmanCompletedDecisions());
+        $this->assertSame(50.0, (float) $aboveLine->final_score);
+        $this->assertSame(1, (int) $aboveLine->ranking_position);
+        $this->assertSame(10.0, (float) $belowLine->final_score);
+        $this->assertNull($belowLine->ranking_position);
+
+        $this->actingAs($president->user)
+            ->get(route('admin.competitions.decision', $competition))
+            ->assertForbidden();
+
+        $this->assertNull($aboveLine->fresh()->commission_decision);
+        $this->assertSame(50.0, (float) $aboveLine->fresh()->final_score);
+        $this->assertSame(1, (int) $aboveLine->fresh()->ranking_position);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $aboveLine), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Zakljucak za Predlog odluke.',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+
+        $this->actingAs($president->user)
+            ->get(route('admin.competitions.decision', $competition))
+            ->assertOk();
+
+        $this->assertSame(50.0, (float) $aboveLine->fresh()->final_score);
+        $this->assertSame(1, (int) $aboveLine->fresh()->ranking_position);
+        $this->assertSame(10.0, (float) $belowLine->fresh()->final_score);
+        $this->assertNull($belowLine->fresh()->ranking_position);
+    }
+
     /**
      * @param  list<list<int>>  $criteriaPerApplication  each inner list is 10 criterion values (same for all five seats)
      * @return array{0: Competition, 1: \Illuminate\Support\Collection<int, CommissionMember>, 2: CommissionMember, 3: list<Application>}
