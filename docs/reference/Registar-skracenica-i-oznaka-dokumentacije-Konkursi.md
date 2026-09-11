@@ -6,7 +6,7 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.25
+**Verzija:** 1.0.26
 **Datum:** 2026-09-11
 
 ---
@@ -123,7 +123,7 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
 | **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.4) |
 | **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.0) |
-| **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.9) |
+| **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.10) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
 
@@ -245,7 +245,8 @@ Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** rest
 | 1.0.23 | 2026-09-10 | Evidentirano usvajanje KN-TS-002 v1.0.0, tehničke specifikacije profila konkursa za podršku preduzetništvu mladih, sa razradom Poglavlja 1–14, primjenom KN-BM-002 v1.0.5 i KN-FS-002 v1.0.3, ponovnom upotrebom postojećeg tehničkog toka uz profilnu parametrizaciju, minimalnim modelom podataka i granicom V1; nove interne tehničke oznake nijesu uvedene. |
 | 1.0.24 | 2026-09-11 | Administrativni closeout registra: evidentirani već izdati `KN-PATCH-BM-005` (vrijeme dodjele/zamjene cijele Komisije; KN-BM-003), `KN-PATCH-BM-006` (elektronski primjerak zvanične Odluke na Platformi; KN-BM-003), `KN-PATCH-BM-007` (trajno brisanje učitanog PDF-a prije prve objave; KN-BM-003), `KN-PATCH-BM-008` (reference na usvojeni KN-BM-002; KN-BM-004), `KN-PATCH-BM-009` (status matrice sposobnosti §2.5; KN-BM-002), `KN-PATCH-BM-010` (V1 granica van ugovora/M4/M4a/de minimis; KN-BM-002), `KN-PATCH-BM-011` (tri eliminatorna kriterijuma Obrasca 3; KN-BM-003), `KN-PATCH-BM-012` (zamjena člana bez retroaktivnog dejstva; KN-BM-003). §5.1 pokazivač KN-FS-003 usklađen na v1.0.9; pokazivači KN-BM-002 v1.0.6 i KN-FS-002 v1.0.4 usklađeni nakon administrativnog closeout-a zastarjelih FS-001/TS-001 pokazivača. Katalog skraćenica KEEP. Bez novih Document ID-eva. Bez izmjene poslovnih pravila. |
 | 1.0.25 | 2026-09-11 | Administrativno: PO-usvojena minimalna higijena registra (§11.1) — pravilo **ZASTARJELO** (bez brisanja; pokazivač na važeću zamjenu gdje postoji) i obavezna identifikacija tipa/profila konkursa ili zajedničkog/module-level sloja pri evidenciji nove skraćenice/interne oznake. Bez restauracije istorijskog kataloga, starog SSOT lanca ili novih Document ID / PATCH / skraćenica. Status ostaje USVOJENO. |
+| 1.0.26 | 2026-09-11 | Administrativno usklađivanje pokazivača: KN-FS-003 v1.0.10 (§7.14 submit/lifecycle corrective). Katalog skraćenica KEEP. Bez novih Document ID-eva. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.25**
+**Kraj dokumenta KN-RG-001 v1.0.26**
