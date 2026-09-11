@@ -1,6 +1,6 @@
 # Project TODO — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-09-10
+**Poslednje ažuriranje:** 2026-09-11
 
 Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](project-done.md).
 
@@ -59,3 +59,4 @@ Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](proj
 - ~~`APP_ENV` / `APP_DEBUG` na produkciji~~ — prilagođeno na serveru (2026-06-30)
 - ~~JMB Faza C produkcijski deploy~~ — 2026-09-10; `users.jmb` kontrolisana verifikacija PASS. V. [jmb-encryption.md](jmb-encryption.md)
 - ~~JMB Faza D produkcijski deploy~~ — 2026-09-10; encrypted-first VALUE read; profil / Obrazac 1A / Obrazac 2 = PASS. V. [jmb-encryption.md](jmb-encryption.md)
+- ~~JMB/JMBG plaintext retirement (originalni plan 6/6)~~ — 2026-09-11; **CLOSED / PRODUCTION ACCEPTED**; 72 NULL; smoke Obrazac 1a + Biznis plan = PASS; `JMB_PLAINTEXT_RETIREMENT_ENABLED=true` obavezan produkcijski runtime. Fizički DROP kolona **nije** otvoren zadatak ovog plana. V. [jmb-encryption.md](jmb-encryption.md)

@@ -1,6 +1,6 @@
 # Tehnička dokumentacija — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-09-10
+**Poslednje ažuriranje:** 2026-09-11
 
 Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, arhitektura, moduli, deploy i operativni zapisi.
 
@@ -44,7 +44,7 @@ Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, ar
 | [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) | Testiranje kalendara prije objave |
 | [database-entities.md](database-entities.md) | Modeli, relacije, statusi |
 | [environment-variables.md](environment-variables.md) | Env varijable |
-| [jmb-encryption.md](jmb-encryption.md) | JMB/JMBG enkripcija: arhitektura A/B1/B2/C, produkcijski B2/C zapisi, rollback/plaintext status |
+| [jmb-encryption.md](jmb-encryption.md) | JMB/JMBG enkripcija: A/B1/B2/C/D, lookup, plaintext retirement closeout (6/6 CLOSED) |
 | [deployment-and-cron.md](deployment-and-cron.md) | Plesk, Git deploy, Toolkit, cron, backup |
 | [stubs-and-future-modules.md](stubs-and-future-modules.md) | Nije implementirano |
 

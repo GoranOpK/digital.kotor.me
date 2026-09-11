@@ -1,6 +1,6 @@
 # Environment varijable
 
-**Posljednje ažuriranje:** 2026-09-10
+**Posljednje ažuriranje:** 2026-09-11
 **Izvor u kodu:** `.env.example`, `config/*.php`, direktni `env()` pozivi
 
 ---
@@ -32,13 +32,13 @@ Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. P
 
 ---
 
-## JMB/JMBG enkripcija (Faza B1 / B2 / C / D)
+## JMB/JMBG enkripcija
 
-Kanonski implementacioni i produkcijski zapis: [jmb-encryption.md](jmb-encryption.md). Ovaj odjeljak ostaje env ugovor. Kanonski redoslijed: A → B1 → B2 → C → D. Faza C2 ne postoji.
+Kanonski implementacioni i produkcijski zapis: [jmb-encryption.md](jmb-encryption.md). Ovaj odjeljak ostaje env ugovor. Kanonski redoslijed: A → B1 → B2 → C → D, zatim lookup uniqueness i kontrolisani plaintext retirement. Faza C2 ne postoji.
 
-Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `App\Security\JmbEncryptedReadService`, `jmb:backfill-encrypted`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. Faza C dual-write zahtijeva ključ kada se persistuje ne-prazan JMB/JMBG.
+Izvor u kodu: `config/jmb.php`, `App\Security\JmbEncryptionService`, `App\Security\JmbDualWrite`, `App\Security\JmbEncryptedReadService`, `App\Security\JmbLookupService`, `jmb:backfill-encrypted`, `jmb:backfill-lookup`, `jmb:precheck-plaintext-retirement`, `jmb:retire-plaintext`. **Nije** `APP_KEY` / `APP_PREVIOUS_KEYS`. Boot aplikacije **ne** zahtijeva ključ. Dual-write zahtijeva enkripcijski ključ kada se persistuje ne-prazan logički JMB/JMBG. Lookup ključ je obavezan za persist `users.jmb` / `physical_person_identities.jmb`.
 
-**Stanje 2026-09-10:** A/B1/B2/C/D = produkcija. B2 apply + verifikacija = 71 `already_valid`, 0 grešaka. Faza C dual-write deployovana; kontrolisana `users.jmb` verifikacija = PASS. Faza D encrypted-first VALUE read deployovana i produkcijski prihvaćena (profil / Obrazac 1A / Obrazac 2 = PASS). SQL uniqueness ostaje plaintext. Plaintext kolone i dalje postoje.
+**Stanje 2026-09-11:** originalni JMB plan **6/6 CLOSED / PRODUCTION ACCEPTED**. Plaintext vrijednosti retired na NULL (72 reda, 7 kolona). Encrypted je autoritativan. Runtime uniqueness ide preko `jmb_lookup`. **`JMB_PLAINTEXT_RETIREMENT_ENABLED=true` je obavezno produkcijsko operativno stanje** nakon završenog retirement-a. Fizički DROP plaintext kolona nije dio ovog closeout-a. Evidencija: [jmb-encryption.md](jmb-encryption.md#17-produkcijski-plaintext-retirement-closeout--2026-09-11).
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -83,7 +83,7 @@ Idempotentnost: drugi apply ne mijenja already-valid ciphertext.
 
 Transakcije: nema jedne velike transakcije preko 7 tabela. Svaki uspješan encrypted upis se commit-uje zasebno. Retry nastavlja preko `already_valid`.
 
-Konkurentnost: B2 je bio prije Phase C dual-write. Produkcijski B2 run je završen 2026-09-10 (evidencija: [jmb-encryption.md](jmb-encryption.md#6-produkcijsko-izvršenje-b2--2026-09-10)). Direct DBA izmjene i dalje zaobilaze aplikacioni dual-write.
+Konkurentnost: B2 je bio prije Phase C dual-write. Produkcijski B2 run je završen 2026-09-10 (evidencija: [jmb-encryption.md](jmb-encryption.md#6-produkcijsko-izvršenje-b2--2026-09-10)). Direct DBA izmjene i dalje zaobilaze aplikacioni dual-write. **Važeće:** dok je `JMB_PLAINTEXT_RETIREMENT_ENABLED=true`, `jmb:backfill-encrypted` **odbija** rad.
 
 Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failure.
 
@@ -91,24 +91,27 @@ Exit: `0` uspjeh; ≠ `0` za neispravan key/scope/chunk, mismatch, decrypt failu
 
 Faza C je na `origin/main` (`3d71cbf`) i **deployovana na produkciju**. Kontrolisana `users.jmb` verifikacija 2026-09-10 = PASS. Evidencija: [jmb-encryption.md](jmb-encryption.md#81-produkcijska-verifikacija-faze-c--2026-09-10-usersjmb).
 
-Faza C piše plaintext i odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). Encrypted-first VALUE read je Faza D (`JmbEncryptedReadService`), nije Faza C. Faza C dual-write ostaje aktivan. Plaintext se ne uklanja. Runtime JMB uniqueness je kasnije prebačen na `jmb_lookup` (vidi ispod); Faza C sama nije dirala uniqueness query.
+Faza C piše logički JMB u odgovarajuću `*_encrypted` kolonu na podržanim Eloquent persist putanjama (`saving` na modelima koji vlasniče kolonama). Encrypted-first VALUE read je Faza D (`JmbEncryptedReadService`), nije Faza C. Dual-write ostaje aktivan za encrypted/lookup. Runtime JMB uniqueness je prebačen na `jmb_lookup` (vidi ispod); Faza C sama nije dirala uniqueness query.
 
-- Create/update ne-praznog JMB/JMBG: `plaintext = original`, `encrypted = JmbEncryptionService::encrypt(original)`.
-- Namjerno brisanje: obje kolone `null` (prazan string prati B1: encrypted = null).
+**Tokom Faze C (retirement OFF):** create/update ne-praznog JMB/JMBG: `plaintext = original`, `encrypted = JmbEncryptionService::encrypt(original)`.
+
+**Važeće (retirement ON, produkcija):** logički JMB ide u encrypted (+ lookup gdje je pravilo); plaintext se sprema kao `NULL`. `NULL` plaintext nije logički clear.
+
+- Namjerno brisanje: encrypted (i lookup gdje postoji) `null`; plaintext `null`.
 - Ažuriranje nepovezanih polja **ne** regeneriše ciphertext ako se JMB nije promijenio.
-- Neuspjeh enkripcije **sprečava** persist novog/izmijenjenog plaintext JMB-a (isti `save()` / ista transakcija).
+- Neuspjeh enkripcije **sprečava** persist novog/izmijenjenog logičkog JMB-a (isti `save()` / ista transakcija).
 - Ručni/direct DB upisi (phpMyAdmin, raw SQL) **zaobilaze** dual-write i operativno su zabranjeni za JMB/JMBG kolone.
 - `users.jmb` UNIQUE ostaje kao schema constraint. Runtime `CanonicalIdentifierUniqueness::jmbTaken()` koristi `jmb_lookup` (vidi lookup uniqueness ispod). Encrypted kolone nisu unique.
 
 ### Faza D — encrypted-first VALUE read
 
-Faza D je na `origin/main` (`077a01c`) i **deployovana / PRODUCTION ACCEPTED**. Aplikacioni VALUE read ide encrypted-first (`JmbEncryptedReadService`). Dual-write Faze C ostaje. Plaintext kolone i dalje postoje. Evidencija: [jmb-encryption.md](jmb-encryption.md#9-faza-d--encrypted-first-value-read).
+Faza D je na `origin/main` (`077a01c`, zatim `cb8fbea`) i **deployovana / PRODUCTION ACCEPTED**. Aplikacioni VALUE read ide encrypted-first (`JmbEncryptedReadService`). Dual-write ostaje za encrypted/lookup. U retirement mode-u nema plaintext fallback-a. Evidencija: [jmb-encryption.md](jmb-encryption.md#9-faza-d--encrypted-first-value-read), [§17](jmb-encryption.md#17-produkcijski-plaintext-retirement-closeout--2026-09-11).
 
 ### JMB lookup digest — application dual-write
 
 Izvor u kodu: `config/jmb.php`, `App\Security\JmbLookupService`, `App\Security\JmbDualWrite`, `App\Identity\Runtime\CanonicalIdentifierUniqueness`. **Nije** `APP_KEY` i **nije** `JMB_ENCRYPTION_KEY`. Boot aplikacije **ne** zahtijeva ključ. Eloquent persist ne-praznog `users.jmb` / `physical_person_identities.jmb` zahtijeva ključ. Ostali JMB/JMBG modeli (ovlašćeno lice, predstavnik, application/business-plan snapshot) **ne** pišu lookup.
 
-Ovo je sinhronizacija kolone na persist putanji. Runtime JMB uniqueness/equality za registraciju, profil i dopunu postojećeg subjekta koristi `jmb_lookup` preko `CanonicalIdentifierUniqueness::jmbTaken()`. `users.jmb` UNIQUE ostaje. Encrypted-first VALUE read se ne mijenja. Plaintext se ne uklanja.
+Ovo je sinhronizacija kolone na persist putanji. Runtime JMB uniqueness/equality za registraciju, profil i dopunu postojećeg subjekta koristi `jmb_lookup` preko `CanonicalIdentifierUniqueness::jmbTaken()`. `users.jmb` UNIQUE ostaje. Encrypted-first VALUE read se ne mijenja. Plaintext vrijednosti su retired na NULL; lookup kolone nijesu uklonjene.
 
 | Varijabla | Default (example) | Namjena |
 |-----------|-------------------|---------|
@@ -123,13 +126,27 @@ Ovo je sinhronizacija kolone na persist putanji. Runtime JMB uniqueness/equality
 - `jmbTaken()` poredi digest na `users.jmb_lookup` i `physical_person_identities.jmb_lookup`. Nema SQL equality na plaintext `jmb`. Nedostajući/neispravan lookup ključ fail-closed, bez plaintext fallbacka.
 - Isti trenutni subjekt u legacy `users` + kanonskom FL redu nije lažno odbijen. Drugi subjekt sa istim digestom jeste.
 
-### JMB plaintext retirement write-contract
+### JMB plaintext retirement
 
-Nije uključeno. Default `false`. Ne null-uje postojeće plaintext redove. Kad je `false`, persist i dalje piše plaintext + encrypted (+ lookup gdje je to pravilo). Kad je `true`, logički JMB ide u encrypted/lookup, plaintext se sprema kao NULL, a NULL plaintext **nije** logički clear.
+**Produkcija (važeće, 2026-09-11):** `JMB_PLAINTEXT_RETIREMENT_ENABLED=true` je **obavezno operativno stanje** nakon završenog kontrolisanog retirement-a. Nije privremeni flag samo za apply.
 
-| Varijabla | Default | Namjena |
-|-----------|---------|---------|
-| `JMB_PLAINTEXT_RETIREMENT_ENABLED` | `false` | Write-contract za budući plaintext retirement. Ne uključivati dok ne bude posebno odobren retirement korak. |
+Default u `.env.example` ostaje `false` (lokalni/dev ugovor). To **nije** produkcijska vrijednost. Tajne vrijednosti ključeva se **ne** dokumentuju.
+
+Kad je `true`:
+
+- logički JMB ide u encrypted/lookup; plaintext se sprema kao `NULL`;
+- `NULL` plaintext **nije** logički clear (`assignLogical(..., null)` jeste);
+- `JmbEncryptedReadService` **ne** radi plaintext fallback;
+- `jmb:backfill-encrypted` i `jmb:backfill-lookup` odbijaju rad;
+- `jmb:precheck-plaintext-retirement` odbija rad (očekivano nakon enable).
+
+Kad je `false` (samo non-production / historijski pre-retirement): persist i dalje piše plaintext + encrypted (+ lookup gdje je pravilo). Flag **ne** null-uje postojeće redove sam po sebi; to radi `jmb:retire-plaintext`.
+
+| Varijabla | Default (example) | Produkcija (važeće) | Namjena |
+|-----------|-------------------|---------------------|---------|
+| `JMB_PLAINTEXT_RETIREMENT_ENABLED` | `false` | **`true`** | Write-contract i encrypted-only read. Na produkciji **mora** ostati `true` nakon completed retirement-a. |
+
+Produkcijski apply 2026-09-11: `total_nulled=72`, svih 7 scope-ova `post_plaintext_non_null=0`, **PASS**. Ne pokretati ponovo. Evidencija: [jmb-encryption.md](jmb-encryption.md#17-produkcijski-plaintext-retirement-closeout--2026-09-11).
 
 ---
 

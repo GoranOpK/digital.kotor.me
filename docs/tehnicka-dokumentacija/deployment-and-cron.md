@@ -1,6 +1,6 @@
 # Deploy, cron i Artisan komande
 
-**Poslednje ažuriranje:** 2026-09-10
+**Poslednje ažuriranje:** 2026-09-11
 **Izvor u kodu:** root PHP skripte, `routes/console.php`, `app/Console/Commands/`, `queue-worker.php`
 
 Detaljni Plesk vodiči: [PLESK_FINAL_INSTRUCTIONS.md](PLESK_FINAL_INSTRUCTIONS.md), [PLESK_DELETE_EXPIRED_CRON.md](PLESK_DELETE_EXPIRED_CRON.md).
@@ -238,7 +238,10 @@ Na produkciji se Newsletter **ne** oslanja na `php artisan schedule:run`. Invoke
 | `document:fingerprint-check` | Pixel/binarni fingerprint duplikata (`DocumentImageFingerprint`); izolovani probe |
 | `document:fingerprint-check --compare` | Poredi `storage/app/document-fingerprint-input/capture01.png` i `capture05.png` |
 | `path:show` | Ispis `base_path()` |
-| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski apply + verifikacija izvršeni 2026-09-10 (71 encrypted, zatim 71 `already_valid`, 0 grešaka). Ponovni apply samo uz PO kontrolu. Faza C dual-write je deployovana. Faza D encrypted-first VALUE read je deployovana i produkcijski prihvaćena. Detalji: [jmb-encryption.md](jmb-encryption.md), env: [environment-variables.md](environment-variables.md#faza-b2--jmbbackfill-encrypted) |
+| `jmb:backfill-encrypted` | Faza B2: plaintext JMB/JMBG → paralelne `*_encrypted` kolone. **Nije cron.** Produkcijski apply + verifikacija izvršeni 2026-09-10 (71 encrypted, zatim 71 `already_valid`, 0 grešaka). **Važeće:** dok je `JMB_PLAINTEXT_RETIREMENT_ENABLED=true`, komanda **odbija** rad. Detalji: [jmb-encryption.md](jmb-encryption.md), env: [environment-variables.md](environment-variables.md#jmbjmbg-enkripcija) |
+| `jmb:backfill-lookup` | Lookup digest backfill za `users` / `physical_person_identities`. **Nije cron.** U retirement mode-u **odbija** rad. |
+| `jmb:precheck-plaintext-retirement` | Read-only pre-retirement verifier 7 plaintext kolona. **Nije cron.** Produkcijski PASS izvršen prije enable. Nakon `JMB_PLAINTEXT_RETIREMENT_ENABLED=true` **odbija** rad (očekivano). |
+| `jmb:retire-plaintext` | Null-uje 7 plaintext JMB/JMBG kolona. **Nije cron.** Produkcijski apply 2026-09-11 = **PASS**, `total_nulled=72`, svi scope-ovi `post_plaintext_non_null=0`. **Ne pokretati ponovo.** Encrypted/lookup nedirnuti. Evidencija: [jmb-encryption.md](jmb-encryption.md#17-produkcijski-plaintext-retirement-closeout--2026-09-11) |
 
 ### PDF dijagnostika na Plesku (bez SSH)
 

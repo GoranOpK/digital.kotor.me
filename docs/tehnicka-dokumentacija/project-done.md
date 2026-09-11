@@ -1,10 +1,21 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-09-10
+**Poslednje ažuriranje:** 2026-09-11
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-09-11 — JMB/JMBG plaintext retirement production closeout
+
+- Originalni plan **6/6 CLOSED / PRODUCTION ACCEPTED**
+- Kanonski kod: `027067c` `feat(security): add controlled JMB plaintext retirement`
+- Prethodni implementacioni commit-i: `cb8fbea` (VALUE-read cutover), `0dd9107` (retirement write-contract), `9d3139e` (precheck); lookup lanac `d9cb132` / `e660f31` / `9d90f6d` / `8b3ac4b` / `0128272`
+- Produkcija: precheck PASS → dry-run `total_would_null=72` READY → `JMB_PLAINTEXT_RETIREMENT_ENABLED=true` → apply `total_nulled=72`, svi scope-ovi `post_plaintext_non_null=0` = **PASS**
+- Smoke: Obrazac 1a snapshot = **PASS**; Business Plan JMBG snapshot = **PASS**
+- Encrypted autoritativan; plaintext fallback OFF; novi upisi ne repopuliraju plaintext
+- `users.jmb` UNIQUE ostaje; plaintext kolone **nijesu** dropovane; fizički DROP **izvan** ovog closeout-a
+- Dokumentacija: [jmb-encryption.md](jmb-encryption.md). Env: [environment-variables.md](environment-variables.md). Pokazivač u [project-conventions.md](project-conventions.md). DK-RG-001 KEEP.
 
 ## 2026-09-10 — JMB Faza D produkcijski deploy i documentation closeout
 
