@@ -608,6 +608,25 @@ class EvaluationController extends Controller
                     ->withInput();
             }
 
+            $competition = $application->competition;
+            $budget = (float) ($competition->budget ?? 0);
+            $usedByOthers = (float) Application::query()
+                ->where('competition_id', $competition->id)
+                ->where('id', '!=', $application->id)
+                ->where('commission_decision', 'podrzava_potpuno')
+                ->whereNotNull('approved_amount')
+                ->where('approved_amount', '>', 0)
+                ->sum('approved_amount');
+            $remainingForThisApplication = $budget - $usedByOthers;
+
+            if ((float) $approvedAmount > $remainingForThisApplication) {
+                return redirect()->back()
+                    ->withErrors([
+                        'approved_amount' => 'Odobreni iznos ne može biti veći od preostalih sredstava konkursa.',
+                    ])
+                    ->withInput();
+            }
+
             $approvedAmount = (float) $approvedAmount;
             $justification = $justification !== '' ? $justification : null;
         } else {
