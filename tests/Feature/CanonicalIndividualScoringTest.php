@@ -1244,6 +1244,156 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->assertSame(30000.0, (float) $current->fresh()->approved_amount);
     }
 
+    public function test_green_innovative_bonus_enforces_twenty_percent_budget_cap(): void
+    {
+        // A/B: exact 20% passes; above 20% rejected
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        ]);
+        $competition->update(['budget' => 100000]);
+        $application = $apps[0]->fresh();
+        $application->update([
+            'requested_amount' => 50000,
+            'bonus_green_innovative' => true,
+        ]);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $application), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 20000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(20000.0, (float) $application->fresh()->approved_amount);
+
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('evaluation.store-decision', $application), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 20000.01,
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors('approved_amount');
+
+        $this->assertSame(20000.0, (float) $application->fresh()->approved_amount);
+
+        // C: requested < 20% — requested cap wins
+        [$competitionC, $membersC, $presidentC, $appsC] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        ]);
+        $competitionC->update(['budget' => 100000]);
+        $appC = $appsC[0]->fresh();
+        $appC->update([
+            'requested_amount' => 15000,
+            'bonus_green_innovative' => true,
+        ]);
+
+        $this->actingAs($presidentC->user)
+            ->from(route('admin.competitions.ranking', $competitionC))
+            ->post(route('evaluation.store-decision', $appC), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 15001,
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competitionC))
+            ->assertSessionHasErrors('approved_amount');
+
+        $this->actingAs($presidentC->user)
+            ->post(route('evaluation.store-decision', $appC), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 15000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        // D: remaining < 20% — remaining cap wins
+        [$competitionD, $membersD, $presidentD, $appsD] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+            [5, 5, 5, 4, 4, 4, 4, 4, 4, 4],
+        ]);
+        $competitionD->update(['budget' => 100000]);
+        $otherD = $appsD[0]->fresh();
+        $appD = $appsD[1]->fresh();
+        $otherD->update([
+            'requested_amount' => 92000,
+            'bonus_green_innovative' => false,
+        ]);
+        $appD->update([
+            'requested_amount' => 30000,
+            'bonus_green_innovative' => true,
+        ]);
+
+        $this->actingAs($presidentD->user)
+            ->post(route('evaluation.store-decision', $otherD), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 92000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($presidentD->user)
+            ->from(route('admin.competitions.ranking', $competitionD))
+            ->post(route('evaluation.store-decision', $appD), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 8001,
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competitionD))
+            ->assertSessionHasErrors('approved_amount');
+
+        $this->actingAs($presidentD->user)
+            ->post(route('evaluation.store-decision', $appD), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 8000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        // E: bonus=false, amount above 20% but within requested/remaining — NOT rejected by 20% rule
+        [$competitionE, $membersE, $presidentE, $appsE] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        ]);
+        $competitionE->update(['budget' => 100000]);
+        $appE = $appsE[0]->fresh();
+        $appE->update([
+            'requested_amount' => 50000,
+            'bonus_green_innovative' => false,
+        ]);
+
+        $this->actingAs($presidentE->user)
+            ->post(route('evaluation.store-decision', $appE), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 30000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(30000.0, (float) $appE->fresh()->approved_amount);
+        $this->assertFalse((bool) $appE->fresh()->bonus_green_innovative);
+
+        // F: Odbija unchanged
+        [$competitionF, $membersF, $presidentF, $appsF] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        ]);
+        $competitionF->update(['budget' => 100000]);
+        $appF = $appsF[0]->fresh();
+        $appF->update([
+            'requested_amount' => 50000,
+            'bonus_green_innovative' => true,
+        ]);
+
+        $this->actingAs($presidentF->user)
+            ->post(route('evaluation.store-decision', $appF), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Odbijeno bez uticaja 20% cap-a.',
+                'approved_amount' => 50000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('odbija', $appF->fresh()->commission_decision);
+        $this->assertNull($appF->fresh()->approved_amount);
+    }
+
     /**
      * @param  list<list<int>>  $criteriaPerApplication  each inner list is 10 criterion values (same for all five seats)
      * @return array{0: Competition, 1: \Illuminate\Support\Collection<int, CommissionMember>, 2: CommissionMember, 3: list<Application>}

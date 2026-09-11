@@ -627,6 +627,19 @@ class EvaluationController extends Controller
                     ->withInput();
             }
 
+            // KN-BM-003 §13.4 / čl. 18: +3 green/innovative bonus je pouzdan dokaz za maksimum 20% budžeta.
+            // bonus=false ne isključuje 20% (Komisija može utvrditi van aplikacije) — ne nameće se 10/5.
+            if ((bool) $application->bonus_green_innovative) {
+                $twentyPercentCap = round($budget * 0.20, 2);
+                if (round((float) $approvedAmount, 2) > $twentyPercentCap) {
+                    return redirect()->back()
+                        ->withErrors([
+                            'approved_amount' => 'Odobreni iznos ne može biti veći od 20% ukupnog budžeta konkursa.',
+                        ])
+                        ->withInput();
+                }
+            }
+
             $approvedAmount = (float) $approvedAmount;
             $justification = $justification !== '' ? $justification : null;
         } else {
