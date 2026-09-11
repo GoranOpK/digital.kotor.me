@@ -963,19 +963,8 @@ class AdminController extends Controller
             }
         }
 
-        // Ako je deadline prošao, automatski odbij sve draft prijave
-        if ($isDeadlinePassed) {
-            $draftApplications = $competition->applications()
-                ->where('status', 'draft')
-                ->get();
-
-            foreach ($draftApplications as $application) {
-                $application->update([
-                    'status' => 'rejected',
-                    'rejection_reason' => 'Prijava nije podnesena u roku i rok za prijave je istekao.',
-                ]);
-            }
-        }
+        // Ako je deadline prošao, draft prijave ostaju draft (samo za pregled).
+        // Ne prelaze automatski u rejected.
 
         // Zamrzni rang pozicije u trenutku zatvaranja konkursa,
         // da arhiva uvijek prikaže isti poredak kao zaključena rang lista.

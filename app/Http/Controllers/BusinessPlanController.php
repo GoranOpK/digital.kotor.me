@@ -309,8 +309,9 @@ class BusinessPlanController extends Controller
             ]);
         }
 
-        // Član komisije i administrator konkursa (arhiva) mogu samo da pregledaju (read-only), bez izmjena
-        $readOnly = !$isOwner;
+        // Član komisije i administrator konkursa (arhiva) mogu samo da pregledaju (read-only), bez izmjena.
+        // Vlasnik takođe samo pregleda kad je Prijava zaključana (podnesena ili draft nakon isteka roka).
+        $readOnly = !$isOwner || $application->isApplicantContentWriteLocked();
         
         // Ako je član komisije, osiguraj da je readOnly = true
         if ($roleName === 'komisija' && !$readOnly) {
@@ -354,6 +355,19 @@ class BusinessPlanController extends Controller
                 'auth_user_id' => Auth::id(),
             ]);
             abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        if ($application->isApplicantContentWriteLocked()) {
+            $this->bpLog('BP_STORE: content write locked', [
+                'application_id' => $application->id,
+                'status' => $application->status,
+            ]);
+
+            return back()->withErrors([
+                'error' => $application->status === 'draft'
+                    ? 'Rok za prijave je istekao. Biznis plan više nije moguće mijenjati.'
+                    : 'Podnesena prijava je zaključana. Biznis plan više nije moguće mijenjati.',
+            ])->withInput();
         }
 
         // Proveri da li se čuva kao nacrt

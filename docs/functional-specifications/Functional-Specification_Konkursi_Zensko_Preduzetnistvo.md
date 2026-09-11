@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.9
-**Datum:** 2026-09-09
+**Verzija:** 1.0.10
+**Datum:** 2026-09-11
 
 Povezani dokumenti:
 
@@ -64,6 +64,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.7 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.14 / **PO-IB-01…05 PO USVOJENO**. Nema nacrta individualnog bodovanja; eksplicitna potvrda konačne ocjene; pet kanonskih mjesta; fiksni djelilac /5; tajnost i prag 30 tek po završetku cjelokupnog ciklusa. |
 | 1.0.8 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.15. **PO USVOJENO:** dodatni bodovi se zaključavaju u trenutku završetka cjelokupnog ciklusa individualnog bodovanja, **prije** otključavanja zbirnih rezultata i rang-liste. Nema izmjene nakon toga ni postupka ponovnog otvaranja. |
 | 1.0.9 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** JMB/JMBG ostaje dio odgovarajućeg Obrasca i evidencije Prijave i dostupan je ovlašćenim akterima kroz Platformu; **ne** uključuje se u e-mail spiska kandidata. §8.5. Ne širi se na ostale PII ni ostale outbound poruke. |
+| 1.0.10 | 2026-09-11 | Controlled corrective. §7.14: konačna predaja zahtijeva kompletan Obrazac 1a/1b, postojanje Biznis plana i potvrdu finansijske napomene; puna sadržajna kompletnost Biznis plana **nije** uslov predaje. Potvrđeno: Podnesena Prijava je zaključana za izmjene; `U pripremi` nakon isteka roka ostaje sačuvana samo za pregled (§7.16, §7.17). |
 
 Napomena:
 
@@ -1607,10 +1608,12 @@ Obuhvata postojeće DOO u fazi Razvoj. Ne primjenjuje se na neregistrovani bizni
 Konačno podnošenje je dozvoljeno samo kada su ispunjeni svi sljedeći uslovi:
 
 1. odgovarajući Obrazac 1a / 1b je **Popunjen**;
-2. Obrazac 2 je **Popunjen**;
-3. tehnička kompletnost Obrasca 2 uključuje potvrdu napomene o finansijama (§7.10);
+2. Biznis plan (Obrazac 2) **postoji**;
+3. potvrda napomene o finansijama je data (`finances_notice_confirmed`; §7.10);
 4. Konkurs je **Objavljen** i rok za prijavu još traje;
 5. Podnositeljka izričito potvrđuje konačno podnošenje.
+
+Puna sadržajna / tehnička kompletnost Obrasca 2 (**Popunjen** u smislu §7.10, osim potvrde napomene o finansijama) **nije** uslov konačne predaje. Nepotpun suštinski sadržaj biznis plana sam po sebi **ne** blokira podnošenje.
 
 Nedostajuća prateća dokumentacija **ne** blokira podnošenje.
 

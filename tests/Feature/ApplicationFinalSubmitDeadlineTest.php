@@ -64,8 +64,11 @@ class ApplicationFinalSubmitDeadlineTest extends TestCase
         $owner = User::factory()->create([
             'role_id' => $role->id,
             'activation_status' => 'active',
+            'jmb' => '0101990123456',
+            'user_type' => 'Fizičko lice',
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
+            'phone' => '067000000',
         ]);
 
         $startDate = $deadlinePassed
@@ -91,9 +94,17 @@ class ApplicationFinalSubmitDeadlineTest extends TestCase
             'competition_id' => $competition->id,
             'user_id' => $owner->id,
             'business_plan_name' => 'Test plan',
-            'applicant_type' => 'preduzetnica',
+            'applicant_type' => 'fizicko_lice',
             'business_stage' => 'započinjanje',
+            'business_area' => 'usluge',
             'status' => 'draft',
+            'is_registered' => false,
+            'physical_person_name' => $owner->name,
+            'physical_person_jmbg' => '0101990123456',
+            'physical_person_phone' => '067000000',
+            'physical_person_email' => $owner->email,
+            'physical_person_address' => 'Njegoševa 1, 85330 Kotor',
+            'accuracy_declaration' => true,
         ]);
 
         BusinessPlan::create([
@@ -103,6 +114,7 @@ class ApplicationFinalSubmitDeadlineTest extends TestCase
             'applicant_address' => 'Njegoševa 1, 85330 Kotor',
             'applicant_phone' => '067000000',
             'applicant_email' => $owner->email,
+            'finances_notice_confirmed' => true,
         ]);
 
         return [$owner, $application];

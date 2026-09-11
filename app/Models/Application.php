@@ -787,6 +787,22 @@ class Application extends Model
     }
 
     /**
+     * Podnosilac ne smije mijenjati sadržaj Prijave kada nije draft,
+     * ili kada je draft ali konkurs više nije otvoren za prijave.
+     */
+    public function isApplicantContentWriteLocked(): bool
+    {
+        if ($this->status !== 'draft') {
+            return true;
+        }
+
+        $this->loadMissing('competition');
+        $competition = $this->competition;
+
+        return ! $competition || ! $competition->is_open;
+    }
+
+    /**
      * Proverava da li je Obrazac 1a/1b kompletno popunjen
      * (sva obavezna polja + svi obavezni checkbox-ovi)
      */

@@ -180,6 +180,14 @@ class ApplicationController extends Controller
                     abort(403, 'Administrator konkursa može pregledati obrasce samo za arhivirane konkurse.');
                 }
             }
+
+            // Vlasnik: Obrazac 1a/1b samo za pregled kada je sadržaj serverski zaključan
+            if ($existingApplication
+                && (int) $existingApplication->user_id === (int) $user->id
+                && $existingApplication->isApplicantContentWriteLocked()
+            ) {
+                $readOnly = true;
+            }
         }
         
         // Blokiraj članove komisije od prijavljivanja NA KONKURSE za koje su imenovani kao članovi,
@@ -317,6 +325,15 @@ class ApplicationController extends Controller
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
 
         $existingApplication = $this->findExistingApplicationForStore($request, $competition);
+
+        if ($existingApplication && $existingApplication->isApplicantContentWriteLocked()) {
+            return back()->withErrors([
+                'error' => $existingApplication->status === 'draft'
+                    ? 'Rok za prijave je istekao. Prijavu više nije moguće mijenjati.'
+                    : 'Podnesena prijava je zaključana i više nije moguće mijenjati Obrazac 1a/1b.',
+            ])->withInput();
+        }
+
         $startContext = $this->authoritativeStartContext($request, $user, $competition, $existingApplication);
         $this->rejectIfRequestContradictsStartContext($request, $startContext);
 
@@ -549,7 +566,7 @@ class ApplicationController extends Controller
 
         try {
             if ($existingApplication) {
-            // Ažuriraj postojeću prijavu (draft ili već podnesenu) – jedna prijava po korisniku po konkursu, status se ne mijenja
+            // Ažuriraj postojeću draft prijavu – jedna prijava po korisniku po konkursu, status se ne mijenja
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
             $updateData = [
                 'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
@@ -753,11 +770,15 @@ class ApplicationController extends Controller
         $uploadedDocs = $application->documents->pluck('document_type')->toArray();
         $missingDocs = array_diff($requiredDocs, $uploadedDocs);
         
-        $isReadyToSubmit = $application->status === 'draft' && 
-                           $application->businessPlan !== null;
+        $isReadyToSubmit = $application->status === 'draft' &&
+                           $application->businessPlan !== null &&
+                           $application->isObrazacComplete() &&
+                           (bool) $application->businessPlan->finances_notice_confirmed &&
+                           ($application->competition?->is_open ?? false) &&
+                           $this->kotorAddressErrorForApplication($application) === null;
 
-        // Samo vlasnik može da mijenja (uploaduje/briše dokumente, podnosi prijavu, uređuje biznis plan)
-        $canManage = $isOwner;
+        // Samo vlasnik može da mijenja dok Prijava nije zaključana (podnesena ili draft nakon isteka roka)
+        $canManage = $isOwner && ! $application->isApplicantContentWriteLocked();
         $canSubmitPrigovor = $isOwner
             && app(\App\Services\ApplicationPrigovorService::class)->applicantCanSubmit($application, $user);
 
@@ -767,7 +788,7 @@ class ApplicationController extends Controller
     /**
      * Brisanje prijave od strane korisnika
      *
-     * Korisnik može obrisati svoju prijavu samo do isteka roka za prijavu na konkurs.
+     * Korisnik može obrisati svoju prijavu samo dok je draft i dok rok za prijavu traje.
      */
     public function destroy(Application $application): RedirectResponse
     {
@@ -778,17 +799,20 @@ class ApplicationController extends Controller
             abort(403, 'Nemate pravo da obrišete ovu prijavu.');
         }
 
+        if ($application->isApplicantContentWriteLocked()) {
+            return redirect()->route('applications.show', $application)
+                ->withErrors([
+                    'error' => $application->status === 'draft'
+                        ? 'Rok za prijave je istekao ili je konkurs zatvoren. Prijavu više nije moguće obrisati.'
+                        : 'Podnesena prijava je zaključana i ne može se obrisati.',
+                ]);
+        }
+
         $competition = $application->competition;
 
         if (!$competition || !$competition->published_at) {
             return redirect()->route('dashboard')
                 ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
-        }
-
-        // Kandidat ne može brisati prijavu nakon isteka roka od 20 dana ili ako je konkurs zatvoren
-        if ($competition->status === 'closed' || $competition->isApplicationDeadlinePassed()) {
-            return redirect()->route('applications.show', $application)
-                ->withErrors(['error' => 'Rok za prijave je istekao ili je konkurs zatvoren. Prijavu više nije moguće obrisati.']);
         }
 
         // Obriši prijavu (i kaskadno povezane podatke prema definisanim relacionim pravilima)
@@ -812,9 +836,25 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => 'Prijava je već podnesena ili je u obradi.']);
         }
 
-        // Provjera biznis plana
+        // Isti kriterijum kao create/store: podnošenje dozvoljeno samo dok je konkurs otvoren za prijave
+        $competition = $application->competition;
+        if (!$competition || !$competition->is_open) {
+            return back()->withErrors(['error' => 'Rok za prijave je istekao ili konkurs nije otvoren za prijave.']);
+        }
+
+        if (!$application->isObrazacComplete()) {
+            return back()->withErrors(['error' => 'Obrazac 1a/1b mora biti kompletan prije konačne predaje prijave.']);
+        }
+
+        $application->loadMissing('businessPlan');
+
+        // Provjera biznis plana — mora postojati; puna sadržajna kompletnost nije uslov predaje
         if (!$application->businessPlan) {
             return back()->withErrors(['error' => 'Morate popuniti biznis plan prije podnošenja prijave.']);
+        }
+
+        if (!$application->businessPlan->finances_notice_confirmed) {
+            return back()->withErrors(['error' => 'Morate potvrditi napomenu o finansijama u biznis planu prije konačne predaje.']);
         }
 
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
@@ -824,12 +864,6 @@ class ApplicationController extends Controller
 
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.
         // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje.
-
-        // Isti kriterijum kao create/store: podnošenje dozvoljeno samo dok je konkurs otvoren za prijave
-        $competition = $application->competition;
-        if (!$competition || !$competition->is_open) {
-            return back()->withErrors(['error' => 'Rok za prijave je istekao ili konkurs nije otvoren za prijave.']);
-        }
 
         // Dodeli redni broj prijave (1, 2, 3, ...) po konkursu
         $maxRedni = Application::where('competition_id', $application->competition_id)->max('redni_broj');
@@ -851,6 +885,14 @@ class ApplicationController extends Controller
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
             abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        if ($application->isApplicantContentWriteLocked()) {
+            return back()->withErrors([
+                'error' => $application->status === 'draft'
+                    ? 'Rok za prijave je istekao. Dokumente više nije moguće dodavati.'
+                    : 'Podnesena prijava je zaključana. Dokumente više nije moguće dodavati.',
+            ]);
         }
 
         // Proveri da li dokument iz biblioteke pripada korisniku (pre validacije)
@@ -1181,6 +1223,15 @@ class ApplicationController extends Controller
             abort(403, 'Samo podnosilac prijave može da briše svoje dokumente.');
         }
 
+        if ($application->isApplicantContentWriteLocked()) {
+            return redirect()->route('applications.show', $application)
+                ->withErrors([
+                    'error' => $application->status === 'draft'
+                        ? 'Rok za prijave je istekao. Dokumente više nije moguće brisati.'
+                        : 'Podnesena prijava je zaključana. Dokumente više nije moguće brisati.',
+                ]);
+        }
+
         // Ako dokument nije iz korisničke biblioteke, obriši fizički fajl
         if (!$document->user_document_id && $document->file_path) {
             if (Storage::disk('local')->exists($document->file_path)) {
@@ -1195,30 +1246,40 @@ class ApplicationController extends Controller
             ->with('success', 'Dokument je uspješno obrisan.');
     }
 
+    /**
+     * Teritorijalni uslov za konačnu predaju — formalni snapshot Obrasca 1a/1b.
+     * Ne koristi Biznis plan ni identity/profile fallback.
+     */
     protected function kotorAddressErrorForApplication(Application $application): ?string
     {
-        $application->loadMissing(['businessPlan', 'user']);
+        $type = $application->applicant_type;
 
-        if (in_array($application->applicant_type, ['doo', 'ostalo'], true)) {
-            if (!KotorAddress::isInKotorMunicipality($application->company_seat)) {
-                return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
-            }
-        } else {
-            $identity = $application->user
-                ? app(CurrentIdentityResolver::class)->viewFor($application->user)
-                : null;
-            $identityAddress = $identity
-                ? KotorAddress::formatStreetAndCity($identity->address, $identity->city)
-                : '';
-            $address = $application->businessPlan?->applicant_address ?: $identityAddress;
-            if (!KotorAddress::isInKotorMunicipality($address)) {
+        if (in_array($type, ['doo', 'ostalo'], true)) {
+            if ($application->is_registered) {
+                if (!KotorAddress::isInKotorMunicipality($application->company_seat)) {
+                    return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
+                }
+            } elseif (!KotorAddress::isInKotorMunicipality($application->doo_address)) {
                 return KotorAddress::validationMessage();
             }
+
+            return null;
         }
 
-        $companyAddress = trim((string) ($application->businessPlan?->company_address ?? ''));
-        if ($companyAddress !== '' && !KotorAddress::isInKotorMunicipality($companyAddress)) {
-            return 'Adresa/sjedište registrovane djelatnosti mora biti na teritoriji Opštine Kotor.';
+        if ($type === 'preduzetnica') {
+            if (!KotorAddress::isInKotorMunicipality($application->preduzetnik_address)) {
+                return KotorAddress::validationMessage();
+            }
+
+            return null;
+        }
+
+        if ($type === 'fizicko_lice') {
+            if (!KotorAddress::isInKotorMunicipality($application->physical_person_address)) {
+                return KotorAddress::validationMessage();
+            }
+
+            return null;
         }
 
         return null;
