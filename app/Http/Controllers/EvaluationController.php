@@ -608,6 +608,19 @@ class EvaluationController extends Controller
                     ->withInput();
             }
 
+            $requiredFunds = $application->displayRequiredFunds();
+            if (
+                $requiredFunds !== null &&
+                $requiredFunds > 0 &&
+                (float) $approvedAmount > $requiredFunds
+            ) {
+                return redirect()->back()
+                    ->withErrors([
+                        'approved_amount' => 'Odobreni iznos ne može biti veći od ukupno potrebnih sredstava za realizaciju biznis plana.',
+                    ])
+                    ->withInput();
+            }
+
             $competition = $application->competition;
             $budget = (float) ($competition->budget ?? 0);
             $usedByOthers = (float) Application::query()

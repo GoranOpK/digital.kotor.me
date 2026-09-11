@@ -1394,6 +1394,47 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->assertNull($appF->fresh()->approved_amount);
     }
 
+    public function test_approved_amount_cannot_exceed_display_required_funds(): void
+    {
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+        ]);
+
+        $competition->update(['budget' => 100000]);
+        $application = $apps[0]->fresh();
+        $application->update([
+            'requested_amount' => 7063.60,
+            'total_budget_needed' => 7063.00,
+        ]);
+
+        $this->assertSame(7063.0, $application->fresh()->displayRequiredFunds());
+
+        // A. approved > displayRequiredFunds (ali <= requested) — odbijeno
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('evaluation.store-decision', $application), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 7063.60,
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors('approved_amount');
+
+        $this->assertNull($application->fresh()->approved_amount);
+        $this->assertNull($application->fresh()->commission_decision);
+
+        // B. approved == displayRequiredFunds — prolazi
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $application), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 7063.00,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(7063.0, (float) $application->fresh()->approved_amount);
+        $this->assertSame('podrzava_potpuno', $application->fresh()->commission_decision);
+    }
+
     /**
      * @param  list<list<int>>  $criteriaPerApplication  each inner list is 10 criterion values (same for all five seats)
      * @return array{0: Competition, 1: \Illuminate\Support\Collection<int, CommissionMember>, 2: CommissionMember, 3: list<Application>}
