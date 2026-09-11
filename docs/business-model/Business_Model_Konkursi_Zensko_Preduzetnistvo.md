@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.16
-**Datum:** 2026-09-11
+**Verzija:** 1.0.17
+**Datum:** 2026-09-12
 
 Povezani dokumenti:
 
@@ -45,6 +45,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.14 | 2026-09-09 | Controlled corrective. **PO-IB-01…05 PO USVOJENO.** Nema nacrta individualnog bodovanja; unos je jednokratna konačna ocjena uz eksplicitnu potvrdu i trajnu nepromjenjivost. Bodovanje se vodi po pet kanonskih mjesta Komisije; zamjena ne stvara šesti glas. Prosjek kriterijuma uvijek / 5. Tajnost i prag od 30 bodova tek po završetku cjelokupnog ciklusa, ne pri 5/5 jedne Prijave. |
 | 1.0.15 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** dodatni bodovi smiju se unositi i mijenjati samo dok je cjelokupan ciklus individualnog bodovanja još otvoren. U trenutku kada svih pet kanonskih mjesta završi bodovanje svih prijava u ciklusu, dodatni bodovi se trajno zaključavaju **prije** otključavanja zbirnih rezultata i rang-liste. Nema naknadne izmjene ni postupka ponovnog otvaranja. |
 | 1.0.16 | 2026-09-11 | Controlled corrective. **PO USVOJENO:** §13.6 prioritet finansiranja kod jednakih bodova — prednost otpočinjanja prije odluke Komisije i u mješovitim grupama; prioritet se razrješava samo u obimu potrebnom za raspodjelu; odluka Komisije većinom najmanje 3/5 uz obrazloženje; bodovi i dijeljene rang-pozicije se ne mijenjaju. Detalj toka i gate-ova: `KN-FS-003`. **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.17 | 2026-09-12 | Dokumentacioni closeout: V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status dokumenta ostaje `USVOJEN`. Bez novih poslovnih zahtjeva. OUT_OF_V1 / van Platforme granice nepromijenjene. Napomena da dokument nije runtime izvršni izvor ostaje. |
 
 Napomena:
 
@@ -57,6 +58,8 @@ Ne mijenjaju se postojeći redovi.
 Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene označavaju se prema `KN-PATCH-BM-{NNN}` i evidentiraju se u `KN-RG-001` tek pri prvoj stvarnoj upotrebi.
 
 Formalna otvorena pravna pitanja OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvorena su poslovnom odlukom u verziji 1.0.1 / `KN-PATCH-BM-001`. Kanonska pravila su u Poglavlju 13.
+
+**V1 platformski closeout (v1.0.17):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status ovog poslovnog dokumenta ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove poslovne zahtjeve. Aktivnosti već definisane kao van V1 / van Platforme ostaju van V1. Dokument ostaje SSOT poslovnih pravila; napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi.
 
 ---
 
@@ -1108,4 +1111,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.16**
+**Kraj dokumenta KN-BM-003 v1.0.17**

@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.11
-**Datum:** 2026-09-11
+**Verzija:** 1.0.12
+**Datum:** 2026-09-12
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.16; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.17; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9; V1 platformski closeout)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -66,6 +66,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.9 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** JMB/JMBG ostaje dio odgovarajućeg Obrasca i evidencije Prijave i dostupan je ovlašćenim akterima kroz Platformu; **ne** uključuje se u e-mail spiska kandidata. §8.5. Ne širi se na ostale PII ni ostale outbound poruke. |
 | 1.0.10 | 2026-09-11 | Controlled corrective. §7.14: konačna predaja zahtijeva kompletan Obrazac 1a/1b, postojanje Biznis plana i potvrdu finansijske napomene; puna sadržajna kompletnost Biznis plana **nije** uslov predaje. Potvrđeno: Podnesena Prijava je zaključana za izmjene; `U pripremi` nakon isteka roka ostaje sačuvana samo za pregled (§7.16, §7.17). |
 | 1.0.11 | 2026-09-11 | Controlled corrective prema `KN-BM-003` v1.0.16. **PO USVOJENO:** §14.9 prioritet finansiranja kod jednakih bodova — mješovita grupa (otpočinjanje prije razvoja); razrješavanje u obimu potrebnom za raspodjelu; odluka Komisije ≥3/5 uz obavezno obrazloženje; hard gate za konačnu rang-listu i Predlog bez zabrane prethodnog unosa Podržava/Odbija. §14.6 dijeljeni rang KEEP. **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.12 | 2026-09-12 | Dokumentacioni closeout: V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status dokumenta ostaje `USVOJEN`. Bez novih funkcionalnih zahtjeva. OUT_OF_V1 granice nepromijenjene. Napomena da dokument nije runtime izvršni izvor ostaje. |
 
 Napomena:
 
@@ -76,6 +77,8 @@ Kod svake naredne verzije dodaje se novi red u tabeli.
 Ne mijenjaju se postojeći redovi.
 
 Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene označavaju se prema `KN-PATCH-FS-{NNN}` i evidentiraju se u `KN-RG-001` tek pri prvoj stvarnoj upotrebi.
+
+**V1 platformski closeout (v1.0.12):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status ove specifikacije ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove funkcionalne zahtjeve. OUT_OF_V1 / van Platforme granice ostaju nepromijenjene. Napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi.
 
 ---
 
@@ -4576,4 +4579,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.11**
+**Kraj dokumenta KN-FS-003 v1.0.12**
