@@ -421,6 +421,68 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
 
     public function test_close_competition_does_not_reject_draft_applications(): void
     {
+        [$competition, $president, $member, $draft] = $this->createCloseableCompetitionWithDraft();
+
+        $this->assertSame('draft', $draft->status);
+        $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('admin.competitions.close', $competition))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $draft->refresh();
+        $this->assertSame('draft', $draft->status);
+        $this->assertNull($draft->rejection_reason);
+        $this->assertSame('completed', $competition->fresh()->status);
+    }
+
+    public function test_close_competition_is_forbidden_for_non_chairman_actors(): void
+    {
+        [$competition, $president, $member, $draft] = $this->createCloseableCompetitionWithDraft();
+
+        $admin = User::factory()->create([
+            'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $superadmin = User::factory()->create([
+            'role_id' => Role::where('name', 'superadmin')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.competitions.close', $competition))
+            ->assertForbidden();
+
+        $this->actingAs($superadmin)
+            ->post(route('admin.competitions.close', $competition))
+            ->assertForbidden();
+
+        $this->actingAs($member->user)
+            ->post(route('admin.competitions.close', $competition))
+            ->assertForbidden();
+
+        $this->assertSame('published', $competition->fresh()->status);
+        $this->assertSame('draft', $draft->fresh()->status);
+
+        $this->actingAs($president->user)
+            ->post(route('admin.competitions.close', $competition))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('completed', $competition->fresh()->status);
+        $this->assertSame('draft', $draft->fresh()->status);
+        $this->assertNull($draft->fresh()->rejection_reason);
+    }
+
+    /**
+     * @return array{0: Competition, 1: CommissionMember, 2: CommissionMember, 3: Application}
+     */
+    private function createCloseableCompetitionWithDraft(): array
+    {
         $commission = $this->createCommissionWithFiveMembers();
         $competition = Competition::create([
             'title' => 'Close konkurs '.uniqid(),
@@ -525,24 +587,12 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
             'accuracy_declaration' => true,
         ]);
 
-        $this->assertSame('draft', $draft->status);
-        $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+        $president = $commission->activeMembers->firstWhere('position', 'predsjednik');
+        $member = $commission->activeMembers->firstWhere('position', 'clan');
+        $this->assertNotNull($president);
+        $this->assertNotNull($member);
 
-        $admin = User::factory()->create([
-            'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
-            'activation_status' => 'active',
-            'email_verified_at' => now(),
-        ]);
-
-        $this->actingAs($admin)
-            ->post(route('admin.competitions.close', $competition))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        $draft->refresh();
-        $this->assertSame('draft', $draft->status);
-        $this->assertNull($draft->rejection_reason);
-        $this->assertSame('completed', $competition->fresh()->status);
+        return [$competition->fresh(), $president, $member, $draft];
     }
 
     private int $jmbSequence = 0;

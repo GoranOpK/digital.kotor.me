@@ -882,18 +882,9 @@ class AdminController extends Controller
      */
     public function closeCompetition(Competition $competition)
     {
-        $user = auth()->user();
-        $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
-        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
-
-        // Administrator konkursa ne može zatvarati konkurse
-        if ($isCompetitionAdmin) {
+        // KN-FS-003 §15.4.1: zatvaranje je isključivo poslovna radnja Predsjednika Komisije.
+        if (! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za zatvaranje konkursa. Samo predsjednik komisije može zatvarati konkurse.');
-        }
-
-        // Ako nije superadmin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (! $isSuperAdmin && ! $this->isCommissionChairmanForCompetition($competition)) {
-            abort(403, 'Nemate dozvolu za zatvaranje ovog konkursa.');
         }
 
         // Proveri da li je deadline prošao - konkurs se ne može zatvoriti dok je još otvoren za prijave
