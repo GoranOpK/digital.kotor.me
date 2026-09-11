@@ -7,16 +7,16 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.5
-**Datum:** 2026-09-09
+**Verzija:** 1.0.6
+**Datum:** 2026-09-11
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model: **KN-BM-001 v1.0.1** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN)
-* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
+* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (postoji; USVOJENO)
 * Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (planiran; fajl nije kreiran)
-* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
+* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (postoji; NACRT)
 
 ---
 
@@ -58,6 +58,7 @@ Povezani dokumenti:
 | 1.0.3 | 2026-09-08 | KN-PATCH-BM-013 — Poslovni profil mladih usklađen sa zajedničkim katalogom statusa prijave draft, submitted, evaluated, approved i rejected. Sačuvani su posebni rezultati administrativne provjere i prigovora, pravo na prigovor prije konačnog odbijanja zbog nepotpunosti, odvojeni razlozi odbijanja i pravilo da arhiviranje Poziva ne mijenja status prijave. |
 | 1.0.4 | 2026-09-08 | KN-PATCH-BM-014 — Usklađeni pravni oblici, namjera neregistrovanog fizičkog lica, M1a/M1b i dokumentacioni paketi. Privredno društvo obuhvata DOO, AD, OD i KD. Poslovna faza ostaje objektivno pravilo Odluke; u V1 neregistrovano fizičko lice pripada započinjanju, a registrovani preduzetnik ili društvo bira fazu koju Komisija provjerava. Nema CRPS integracije ni automatskog obračuna starosti. |
 | 1.0.5 | 2026-09-09 | KN-PATCH-BM-015 — Elektronski M3 sadrži sva tri eliminatorna kriterijuma iz Odluke. Podnosilac ima pravo na jedan prigovor na svaki aktivirani kriterijum. Objedinjeno obavještenje, pojedinačni ishodi i `rejected` tek nakon konačnosti makar jednog razloga. |
+| 1.0.6 | 2026-09-11 | Administrativni closeout pokazivača: `KN-FS-001` i `KN-TS-001` označeni kao postojeći dokumenti (`USVOJENO` / `NACRT`). Poslovna pravila nijesu mijenjana. |
 
 Napomena:
 
@@ -2547,4 +2548,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.5**
+**Kraj dokumenta KN-BM-002 v1.0.6**

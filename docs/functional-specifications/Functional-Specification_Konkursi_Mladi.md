@@ -8,17 +8,17 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.3
-**Datum:** 2026-09-09
+**Verzija:** 1.0.4
+**Datum:** 2026-09-11
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.14** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v1.0.1** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN)
 * Poslovni profil mladih: **KN-BM-002 v1.0.5** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
-* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
+* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (postoji; USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v0.1.22** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (U IZRADI) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
-* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
+* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (postoji; NACRT)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -42,6 +42,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.1 | 2026-09-08 | KN-PATCH-FS-007 — Funkcionalni tok prijave mladih usklađen sa zajedničkim katalogom statusa draft, submitted, evaluated, approved i rejected. Potpunost, prigovor, eliminatorni razlozi, ocjene, bodovi, rang, raspodjela i arhiviranje ostaju odvojene funkcionalne činjenice; rejected zbog nepotpunosti nastaje tek nakon odbijenog prigovora ili isteka roka bez prigovora. |
 | 1.0.2 | 2026-09-08 | KN-PATCH-FS-008 — Usklađeni izbor namjere, pravnog oblika, poslovne faze, obrazaca M1a/M1b i četiri dokumentaciona paketa. Privredno društvo obuhvata DOO, AD, OD i KD. Neregistrovano fizičko lice bira namjeru; registrovani preduzetnik ili društvo bira fazu koju Komisija provjerava. Nepodržani identitet se ne svrstava u `ostalo`. |
 | 1.0.3 | 2026-09-09 | KN-PATCH-FS-009 — Elektronski M3 prikazuje sva tri eliminatorna kriterijuma kao odvojene stavke. Jedno objedinjeno obavještenje, jedan prigovor na aktivirane kriterijume, odluka po kriterijumu i `rejected` tek nakon konačnosti makar jednog razloga. |
+| 1.0.4 | 2026-09-11 | Administrativni closeout pokazivača: `KN-FS-001` i `KN-TS-001` označeni kao postojeći dokumenti (`USVOJENO` / `NACRT`) u povezanim dokumentima, hijerarhiji, §2.2 i tabeli izvora. Funkcionalna pravila nijesu mijenjana. |
 
 Napomena:
 
@@ -278,7 +279,7 @@ Hijerarhija dokumentacije za ovaj profil:
 * → `KN-BM-001` (zajednička pravila modula Konkursi)
 * → `KN-BM-002` (poslovna pravila profila mladih)
 * → `KN-FS-002` (ovo dokument)
-* → budući TS dokument, ako bude uveden; trenutno je planiran zajednički `KN-TS-001`.
+* → `KN-TS-001` (zajednička tehnička specifikacija; postoji; NACRT).
 
 ## 2.1. Autoritet
 
@@ -295,13 +296,13 @@ Sljedivost: BM → FS → TS → implementacija → testovi, gdje je primjenjivo
 
 ## 2.2. Odnos prema KN-FS-001
 
-`KN-FS-001` je planirani zajednički i konfigurabilni funkcionalni sloj modula Konkursi. Fajl **nije** kreiran.
+`KN-FS-001` je usvojeni zajednički i konfigurabilni funkcionalni sloj modula Konkursi (`docs/functional-specifications/Functional-Specification_Konkursi.md`; status USVOJENO).
 
 `KN-FS-002` je profilni funkcionalni sloj tipa konkursa za podršku preduzetništvu mladih.
 
-Nepostojanje fajla `KN-FS-001` **ne** daje `KN-FS-002` pravo da izmišlja zajednička pravila umjesto zajedničkog FS-a, niti da ih izvede iz koda.
+Postojanje `KN-FS-001` **ne** daje `KN-FS-002` pravo da izmišlja zajednička pravila umjesto zajedničkog FS-a, niti da ih izvede iz koda.
 
-Kada se `KN-FS-001` kreira, `KN-FS-002` će se kontrolisano uskladiti ako bude potrebno. To usklađivanje nije sadržaj verzije 0.1.0.
+`KN-FS-002` se kontrolisano usklađuje sa `KN-FS-001` kada je to potrebno. To usklađivanje nije sadržaj verzije 0.1.0.
 
 ## 2.3. Odnos prema KN-FS-003 i KN-BM-003
 
@@ -321,9 +322,9 @@ Kada se `KN-FS-001` kreira, `KN-FS-002` će se kontrolisano uskladiti ako bude p
 | KN-BM-001 | Zajednički poslovni model modula Konkursi | 1.0.1 | USVOJEN | zajednička pravila `BM-KN-001`–`BM-KN-015` |
 | KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.4 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
 | KN-BM-003 | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | 1.0.7 | USVOJEN | samo uporedni BM; nije izvor pravila mladih |
-| KN-FS-001 | Zajedničke funkcionalnosti modula Konkursi | — | planiran; fajl nije kreiran | planirani zajednički FS; ne ovlašćuje izmišljanje zajedničkih pravila |
+| KN-FS-001 | Zajedničke funkcionalnosti modula Konkursi | 0.2.13 | USVOJENO | zajednički FS; ne ovlašćuje izmišljanje zajedničkih pravila |
 | KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 0.1.22 | U IZRADI | samo strukturni/uporedni FS |
-| KN-TS-001 | Zajednička tehnička specifikacija modula Konkursi | — | planiran; fajl nije kreiran | budući tehnički sloj; nije kreiran |
+| KN-TS-001 | Zajednička tehnička specifikacija modula Konkursi | 0.1.0 | NACRT | zajednički tehnički sloj; postoji; NACRT |
 
 ## 2.5. Lokalne oznake funkcionalnih odluka F-*
 
@@ -5366,7 +5367,7 @@ Van V1 ostaju operativni procesi:
 
 ## 28.3. Tehničke teme za TS
 
-Ostaje za budući `KN-TS-001`:
+Ostaje za `KN-TS-001` (postoji; NACRT):
 
 * tehnički model podataka;
 * API;
@@ -5406,4 +5407,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.3**
+**Kraj dokumenta KN-FS-002 v1.0.4**
