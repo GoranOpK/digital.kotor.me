@@ -812,6 +812,188 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->assertSame('ca68b4b5c41be2686de4ea1ead34bab7206263ae1f19af27b294d7b4af67d6d3', hash('sha256', $this->firstStyleBlock($show)));
     }
 
+    public function test_shared_competition_ranks_for_equal_final_scores_pattern_a(): void
+    {
+        // scores 42, 40, 40, 38 → ranks 1, 2, 2, 4
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 4, 4, 4, 4, 4, 4, 4, 4], // 42
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+            [3, 3, 4, 4, 4, 4, 4, 4, 4, 4], // 38
+        ]);
+
+        $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());
+
+        $ranked = collect($apps)->map(fn (Application $app) => $app->fresh())->sortBy('id')->values();
+        $this->assertSame(42.0, (float) $ranked[0]->final_score);
+        $this->assertSame(40.0, (float) $ranked[1]->final_score);
+        $this->assertSame(40.0, (float) $ranked[2]->final_score);
+        $this->assertSame(38.0, (float) $ranked[3]->final_score);
+
+        $this->assertSame(1, (int) $ranked[0]->ranking_position);
+        $this->assertSame(2, (int) $ranked[1]->ranking_position);
+        $this->assertSame(2, (int) $ranked[2]->ranking_position);
+        $this->assertSame(4, (int) $ranked[3]->ranking_position);
+        $this->assertNotSame(
+            (int) $ranked[1]->id,
+            (int) $ranked[2]->id
+        );
+        $this->assertSame(
+            (int) $ranked[1]->ranking_position,
+            (int) $ranked[2]->ranking_position
+        );
+    }
+
+    public function test_shared_competition_ranks_for_equal_final_scores_pattern_b(): void
+    {
+        // scores 50, 45, 45, 45, 40 → ranks 1, 2, 2, 2, 5
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // 50
+            [5, 5, 5, 5, 5, 4, 4, 4, 4, 4], // 45
+            [5, 5, 5, 5, 5, 4, 4, 4, 4, 4], // 45
+            [5, 5, 5, 5, 5, 4, 4, 4, 4, 4], // 45
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+        ]);
+
+        $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());
+
+        $byScoreThenId = collect($apps)
+            ->map(fn (Application $app) => $app->fresh())
+            ->sort(function (Application $a, Application $b) {
+                $scoreCmp = ((float) $b->final_score) <=> ((float) $a->final_score);
+                if ($scoreCmp !== 0) {
+                    return $scoreCmp;
+                }
+
+                return $a->id <=> $b->id;
+            })
+            ->values();
+
+        $this->assertSame([50.0, 45.0, 45.0, 45.0, 40.0], $byScoreThenId->map(fn ($a) => (float) $a->final_score)->all());
+        $this->assertSame([1, 2, 2, 2, 5], $byScoreThenId->map(fn ($a) => (int) $a->ranking_position)->all());
+    }
+
+    public function test_equal_final_score_keeps_shared_rank_regardless_of_application_id_order(): void
+    {
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+        ]);
+
+        [$first, $second] = collect($apps)->map(fn (Application $app) => $app->fresh())->sortBy('id')->values();
+
+        $this->assertNotSame((int) $first->id, (int) $second->id);
+        $this->assertSame(40.0, (float) $first->final_score);
+        $this->assertSame(40.0, (float) $second->final_score);
+        $this->assertSame(1, (int) $first->ranking_position);
+        $this->assertSame(1, (int) $second->ranking_position);
+    }
+
+    public function test_shared_ranks_do_not_regress_threshold_or_scoring_cycle(): void
+    {
+        // Above line with a tie, plus one below-threshold application.
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // 50 → rank 1
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40 → rank 2
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40 → rank 2
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], // 10 → below 30, no rank
+        ]);
+
+        $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());
+
+        $fresh = collect($apps)->map(fn (Application $app) => $app->fresh())->sortBy('id')->values();
+
+        $this->assertTrue($fresh[0]->meetsMinimumScore());
+        $this->assertTrue($fresh[1]->meetsMinimumScore());
+        $this->assertTrue($fresh[2]->meetsMinimumScore());
+        $this->assertFalse($fresh[3]->meetsMinimumScore());
+        $this->assertSame(10.0, (float) $fresh[3]->final_score);
+        $this->assertNull($fresh[3]->ranking_position);
+
+        $this->assertSame(1, (int) $fresh[0]->ranking_position);
+        $this->assertSame(2, (int) $fresh[1]->ranking_position);
+        $this->assertSame(2, (int) $fresh[2]->ranking_position);
+
+        $before = $this->competitionScoringFingerprint($competition);
+        $this->actingAs($president->user)
+            ->get(route('admin.competitions.ranking', $competition))
+            ->assertOk();
+        $this->assertSame($before, $this->competitionScoringFingerprint($competition));
+    }
+
+    public function test_close_competition_preserves_shared_competition_ranks(): void
+    {
+        // scores 42, 40, 40, 38 → shared ranks 1, 2, 2, 4 must survive closeCompetition()
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 4, 4, 4, 4, 4, 4, 4, 4], // 42
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+            [3, 3, 4, 4, 4, 4, 4, 4, 4, 4], // 38
+        ]);
+
+        $beforeClose = collect($apps)->map(fn (Application $app) => $app->fresh())->sortBy('id')->values();
+        $this->assertSame([42.0, 40.0, 40.0, 38.0], $beforeClose->map(fn ($a) => (float) $a->final_score)->all());
+        $this->assertSame([1, 2, 2, 4], $beforeClose->map(fn ($a) => (int) $a->ranking_position)->all());
+
+        foreach ($beforeClose as $application) {
+            $this->actingAs($president->user)
+                ->post(route('evaluation.store-decision', $application), [
+                    'commission_decision' => 'odbija',
+                    'commission_justification' => 'Zakljucak potreban za zatvaranje konkursa.',
+                ])
+                ->assertRedirect();
+        }
+
+        $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('admin.competitions.close', $competition))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('completed', $competition->fresh()->status);
+
+        $afterClose = collect($apps)->map(fn (Application $app) => $app->fresh())->sortBy('id')->values();
+        $this->assertSame([42.0, 40.0, 40.0, 38.0], $afterClose->map(fn ($a) => (float) $a->final_score)->all());
+        $this->assertSame([1, 2, 2, 4], $afterClose->map(fn ($a) => (int) $a->ranking_position)->all());
+        $this->assertNotSame([1, 2, 3, 4], $afterClose->map(fn ($a) => (int) $a->ranking_position)->all());
+    }
+
+    /**
+     * @param  list<list<int>>  $criteriaPerApplication  each inner list is 10 criterion values (same for all five seats)
+     * @return array{0: Competition, 1: \Illuminate\Support\Collection<int, CommissionMember>, 2: CommissionMember, 3: list<Application>}
+     */
+    private function completeCycleWithUniformCriteria(array $criteriaPerApplication): array
+    {
+        $commission = $this->createCommissionWithMembers(5, true);
+        $competition = $this->createZenskoCompetition($commission);
+        $members = $commission->activeMembers;
+        $president = $members->firstWhere('position', 'predsjednik');
+        $this->assertNotNull($president);
+
+        $applications = [];
+        foreach ($criteriaPerApplication as $criteria) {
+            $this->assertCount(10, $criteria);
+            $application = $this->createSubmittedApplication($competition);
+            $this->confirmPass($president, $application);
+            $applications[] = $application;
+
+            $payload = ['notes' => null, 'scoring_confirmed' => '1'];
+            for ($i = 1; $i <= 10; $i++) {
+                $payload["criterion_{$i}"] = $criteria[$i - 1];
+            }
+
+            foreach ($members as $commissionMember) {
+                $this->actingAs($commissionMember->user)
+                    ->post(route('evaluation.store', $application), $payload)
+                    ->assertRedirect();
+            }
+        }
+
+        return [$competition->fresh(), $members, $president, $applications];
+    }
+
     /**
      * @return array{0: Application, 1: CommissionMember, 2?: CommissionMember, 3?: Competition, 4?: \Illuminate\Support\Collection<int, CommissionMember>}
      */

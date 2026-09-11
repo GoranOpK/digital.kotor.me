@@ -387,9 +387,14 @@ class CanonicalIndividualScoringService
     }
 
     /**
+     * Competition ranking (KN-FS-003 §14.6): equal final_score → shared rank,
+     * next distinct score skips places (e.g. 1, 2, 2, 4).
+     * Sort by id is only for deterministic order within a tied score group;
+     * it must not produce distinct ranking_position values.
+     *
      * @param  Collection<int, Application>  $eligible
      */
-    private function assignAboveLineRankingPositions(Collection $eligible): void
+    public function assignAboveLineRankingPositions(Collection $eligible): void
     {
         $aboveLine = $eligible
             ->filter(function (Application $application) {
@@ -407,12 +412,23 @@ class CanonicalIndividualScoringService
             })
             ->values();
 
-        $position = 1;
-        foreach ($aboveLine as $application) {
-            if ((int) $application->ranking_position !== $position) {
-                $application->forceFill(['ranking_position' => $position])->save();
+        $previousScore = null;
+        $rank = 1;
+
+        foreach ($aboveLine as $index => $application) {
+            $score = (float) ($application->final_score ?? 0);
+
+            if ($previousScore === null) {
+                $rank = 1;
+            } elseif ($score !== $previousScore) {
+                $rank = $index + 1;
             }
-            $position++;
+
+            if ((int) $application->ranking_position !== $rank) {
+                $application->forceFill(['ranking_position' => $rank])->save();
+            }
+
+            $previousScore = $score;
         }
     }
 

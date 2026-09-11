@@ -983,23 +983,11 @@ class AdminController extends Controller
                 }
 
                 return $application->meetsMinimumScore();
-            })
-            ->sort(function ($a, $b) {
-                $aScore = (float) ($a->final_score ?? 0);
-                $bScore = (float) ($b->final_score ?? 0);
+            });
 
-                if ($aScore !== $bScore) {
-                    return $bScore <=> $aScore;
-                }
-
-                return $a->id <=> $b->id;
-            })
-            ->values();
-
-        foreach ($rankableApplications as $index => $application) {
-            $application->ranking_position = $index + 1;
-            $application->save();
-        }
+        // KN-FS-003 §14.6: freeze shared competition ranks (not unique 1..n / id tie-break).
+        app(\App\Services\CanonicalIndividualScoringService::class)
+            ->assignAboveLineRankingPositions($rankableApplications);
 
         $competition->update([
             'status' => 'completed',
