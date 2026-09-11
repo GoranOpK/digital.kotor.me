@@ -690,6 +690,7 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->actingAs($president->user)
             ->post(route('evaluation.store-decision', $application), [
                 'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 100,
                 'commission_justification' => 'Obrazlozenje',
             ])
             ->assertRedirect();
@@ -1002,6 +1003,93 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->assertSame(1, (int) $aboveLine->fresh()->ranking_position);
         $this->assertSame(10.0, (float) $belowLine->fresh()->final_score);
         $this->assertNull($belowLine->fresh()->ranking_position);
+    }
+
+    public function test_chairman_decision_completeness_for_podrzava_and_odbija(): void
+    {
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // 50 — above line
+            [5, 5, 5, 4, 4, 4, 4, 4, 4, 4], // 43 — above line
+        ]);
+
+        $first = $apps[0]->fresh();
+        $second = $apps[1]->fresh();
+        $first->update(['requested_amount' => 1000]);
+        $second->update(['requested_amount' => 1000]);
+
+        $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());
+        $this->assertFalse($competition->fresh()->hasChairmanCompletedDecisions());
+
+        // A. Podržava bez iznosa — odbijeno; odluka nije kompletna
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('evaluation.store-decision', $first), [
+                'commission_decision' => 'podrzava_potpuno',
+                'commission_justification' => 'Opciono obrazlozenje',
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors('approved_amount');
+
+        $this->assertNull($first->fresh()->commission_decision);
+        $this->assertFalse($competition->fresh()->hasChairmanCompletedDecisions());
+
+        $this->actingAs($president->user)
+            ->get(route('admin.competitions.decision', $competition))
+            ->assertForbidden();
+
+        // B. Podržava sa validnim iznosom — prolazi
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $first), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 250,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $first->refresh();
+        $this->assertSame('podrzava_potpuno', $first->commission_decision);
+        $this->assertSame(250.0, (float) $first->approved_amount);
+        $this->assertFalse($competition->fresh()->hasChairmanCompletedDecisions());
+
+        // C. Odbija bez obrazloženja — odbijeno
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('evaluation.store-decision', $second), [
+                'commission_decision' => 'odbija',
+                'approved_amount' => 100,
+                'commission_justification' => '   ',
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors('commission_justification');
+
+        $this->assertNull($second->fresh()->commission_decision);
+        $this->assertFalse($competition->fresh()->hasChairmanCompletedDecisions());
+
+        // D/E. Odbija sa obrazloženjem — kompletno; hasChairmanCompletedDecisions true
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $second), [
+                'commission_decision' => 'odbija',
+                'approved_amount' => 100,
+                'commission_justification' => 'Nije u skladu sa kriterijumima.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $second->refresh();
+        $this->assertSame('odbija', $second->commission_decision);
+        $this->assertNull($second->approved_amount);
+        $this->assertSame('Nije u skladu sa kriterijumima.', $second->commission_justification);
+        $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+
+        // F. Predlog gate prolazi tek kada su odluke poslovno kompletne
+        $this->actingAs($president->user)
+            ->get(route('admin.competitions.decision', $competition))
+            ->assertOk();
+
+        $this->assertSame(50.0, (float) $first->fresh()->final_score);
+        $this->assertSame(1, (int) $first->fresh()->ranking_position);
+        $this->assertSame(43.0, (float) $second->fresh()->final_score);
+        $this->assertSame(2, (int) $second->fresh()->ranking_position);
     }
 
     /**

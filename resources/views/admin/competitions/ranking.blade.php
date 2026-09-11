@@ -893,13 +893,12 @@
 
                                         <div style="margin-bottom: 24px;">
                                             <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                                Obrazloženje (obavezno ako unosite odobreni iznos):
+                                                Obrazloženje (obavezno za Odbija):
                                             </label>
                                             <textarea 
                                                 name="commission_justification" 
                                                 class="form-control" 
                                                 rows="6" 
-                                                required 
                                                 placeholder="Unesite obrazloženje zaključka komisije...">{{ old('commission_justification', $application->commission_justification) }}</textarea>
                                             @error('commission_justification')
                                                 <div style="color: #ef4444; font-size: 12px; margin-top: 8px;">{{ $message }}</div>

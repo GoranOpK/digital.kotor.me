@@ -461,6 +461,7 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
             'accuracy_declaration' => true,
             'final_score' => 50,
             'commission_decision' => 'podrzava_potpuno',
+            'approved_amount' => 100,
         ]);
         BusinessPlan::create([
             'application_id' => $submitted->id,

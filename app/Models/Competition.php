@@ -388,6 +388,17 @@ class Competition extends Model
         if ($rankingApplications->isEmpty()) {
             return true;
         }
-        return $rankingApplications->every(fn ($app) => $app->commission_decision !== null);
+
+        return $rankingApplications->every(function ($app) {
+            if ($app->commission_decision === 'podrzava_potpuno') {
+                return $app->approved_amount !== null && (float) $app->approved_amount > 0;
+            }
+
+            if ($app->commission_decision === 'odbija') {
+                return trim((string) $app->commission_justification) !== '';
+            }
+
+            return false;
+        });
     }
 }

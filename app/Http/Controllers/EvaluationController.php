@@ -584,50 +584,63 @@ class EvaluationController extends Controller
             'commission_decision.required' => 'Morate odabrati zaključak komisije.',
         ]);
 
-        if (
-            isset($validated['approved_amount']) &&
-            $validated['approved_amount'] !== null &&
-            $application->requested_amount !== null &&
-            (float) $validated['approved_amount'] > (float) $application->requested_amount
-        ) {
-            return redirect()->back()
-                ->withErrors([
-                    'approved_amount' => 'Odobreni iznos ne može biti veći od traženog iznosa.',
-                ])
-                ->withInput();
-        }
+        $decision = $validated['commission_decision'];
+        $justification = trim((string) ($validated['commission_justification'] ?? ''));
+        $approvedAmount = array_key_exists('approved_amount', $validated) ? $validated['approved_amount'] : null;
 
-        if (
-            isset($validated['approved_amount']) &&
-            $validated['approved_amount'] !== null &&
-            (float) $validated['approved_amount'] > 0 &&
-            empty(trim((string)($validated['commission_justification'] ?? '')))
-        ) {
-            return redirect()->back()
-                ->withErrors([
-                    'commission_justification' => 'Obrazloženje je obavezno kada unosite odobreni iznos.',
-                ])
-                ->withInput();
+        if ($decision === 'podrzava_potpuno') {
+            if ($approvedAmount === null || $approvedAmount === '' || (float) $approvedAmount <= 0) {
+                return redirect()->back()
+                    ->withErrors([
+                        'approved_amount' => 'Za zaključak Podržava predloženi iznos podrške je obavezan i mora biti veći od nule.',
+                    ])
+                    ->withInput();
+            }
+
+            if (
+                $application->requested_amount !== null &&
+                (float) $approvedAmount > (float) $application->requested_amount
+            ) {
+                return redirect()->back()
+                    ->withErrors([
+                        'approved_amount' => 'Odobreni iznos ne može biti veći od traženog iznosa.',
+                    ])
+                    ->withInput();
+            }
+
+            $approvedAmount = (float) $approvedAmount;
+            $justification = $justification !== '' ? $justification : null;
+        } else {
+            // Odbija: obrazloženje obavezno; odobreni iznos se ne čuva.
+            if ($justification === '') {
+                return redirect()->back()
+                    ->withErrors([
+                        'commission_justification' => 'Za zaključak Odbija obrazloženje je obavezno.',
+                    ])
+                    ->withInput();
+            }
+
+            $approvedAmount = null;
         }
 
         // Ažuriraj prijavu sa zaključkom
         $application->update([
-            'commission_decision' => $validated['commission_decision'],
-            'commission_justification' => $validated['commission_justification'],
+            'commission_decision' => $decision,
+            'commission_justification' => $justification,
             'commission_notes' => $validated['commission_notes'] ?? null,
-            'approved_amount' => $validated['approved_amount'] ?? null,
+            'approved_amount' => $approvedAmount,
             'commission_decision_date' => now(),
             'signed_by_chairman' => true,
         ]);
 
         // Ažuriraj status prijave na osnovu zaključka
-        if ($validated['commission_decision'] === 'odbija') {
+        if ($decision === 'odbija') {
             // Postavi status na rejected i postavi obrazloženje kao razlog odbijanja
             $application->update([
                 'status' => 'rejected',
-                'rejection_reason' => $validated['commission_justification'],
+                'rejection_reason' => $justification,
             ]);
-        } elseif ($validated['commission_decision'] === 'podrzava_potpuno') {
+        } elseif ($decision === 'podrzava_potpuno') {
             $application->update(['status' => 'approved']);
         }
 
