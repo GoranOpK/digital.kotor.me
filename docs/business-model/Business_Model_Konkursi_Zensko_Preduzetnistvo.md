@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.15
-**Datum:** 2026-09-09
+**Verzija:** 1.0.16
+**Datum:** 2026-09-11
 
 Povezani dokumenti:
 
@@ -44,6 +44,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.13 | 2026-09-08 | Controlled corrective. §9.2: odluka Komisije o Prigovoru zahtijeva obavezno obrazloženje; Prihvaćen ne znači automatski da su svi eliminatorni razlozi otklonjeni; za svaki originalni Ne Predsjednik evidentira Otklonjen / Ostaje bez izmjene Obrasca 3; scoring se otvara samo ako nijedan razlog ne ostaje; Podnositeljka prima email obavještenje o donesenoj odluci, a autoritativni zapis ostaje na Platformi. |
 | 1.0.14 | 2026-09-09 | Controlled corrective. **PO-IB-01…05 PO USVOJENO.** Nema nacrta individualnog bodovanja; unos je jednokratna konačna ocjena uz eksplicitnu potvrdu i trajnu nepromjenjivost. Bodovanje se vodi po pet kanonskih mjesta Komisije; zamjena ne stvara šesti glas. Prosjek kriterijuma uvijek / 5. Tajnost i prag od 30 bodova tek po završetku cjelokupnog ciklusa, ne pri 5/5 jedne Prijave. |
 | 1.0.15 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** dodatni bodovi smiju se unositi i mijenjati samo dok je cjelokupan ciklus individualnog bodovanja još otvoren. U trenutku kada svih pet kanonskih mjesta završi bodovanje svih prijava u ciklusu, dodatni bodovi se trajno zaključavaju **prije** otključavanja zbirnih rezultata i rang-liste. Nema naknadne izmjene ni postupka ponovnog otvaranja. |
+| 1.0.16 | 2026-09-11 | Controlled corrective. **PO USVOJENO:** §13.6 prioritet finansiranja kod jednakih bodova — prednost otpočinjanja prije odluke Komisije i u mješovitim grupama; prioritet se razrješava samo u obimu potrebnom za raspodjelu; odluka Komisije većinom najmanje 3/5 uz obrazloženje; bodovi i dijeljene rang-pozicije se ne mijenjaju. Detalj toka i gate-ova: `KN-FS-003`. **Nije** runtime produkcijski prihvaćeno. |
 
 Napomena:
 
@@ -900,12 +901,17 @@ U slučaju preklapanja 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20
 
 ## 13.6. Tie-break
 
-Ako dva ili više biznis planova dobije isti broj bodova, a raspoloživa sredstva nisu dovoljna za njihovo finansiranje (čl. 21):
+Ako dva ili više biznis planova dobije isti broj bodova, a raspoloživa sredstva nisu dovoljna za njihovo finansiranje (čl. 21), utvrđuje se **prioritet finansiranja**. To **ne** mijenja konačni broj bodova niti dijeljene rang-pozicije.
 
-* ako je samo jedan od njih plan za otpočinjanje biznisa, sredstva se dodjeljuju tom planu;
-* ako nijedan nije plan za otpočinjanje biznisa, ili su svi planovi za otpočinjanje biznisa, sredstva se dodjeljuju na osnovu odluke donijete **većinom glasova od ukupnog broja članova Komisije**.
+Prvo se primjenjuje prednost plana za **otpočinjanje biznisa** (faza Započinjanje) u odnosu na plan za **razvoj** postojeće djelatnosti. Prednost otpočinjanja važi i u mješovitoj grupi: plan za razvoj **ne** može dobiti prioritet ispred plana za otpočinjanje dok među planovima za otpočinjanje još treba razriješiti prioritet za raspoloživa sredstva.
 
-Tehnički identifikator Prijave **nije** poslovni tie-break.
+Ako je samo jedan od izjednačenih planova plan za otpočinjanje biznisa, sredstva se dodjeljuju tom planu.
+
+Ako nakon primjene prednosti otpočinjanja ostanu međusobno nerazriješene Prijave za raspoloživa sredstva (npr. nijedan nije otpočinjanje; svi su otpočinjanje; ili više otpočinjanja među kojima treba izabrati), sredstva se dodjeljuju na osnovu odluke Komisije donijete **većinom glasova od ukupnog broja članova** (najmanje **3 od 5**). Ta odluka mora biti **obrazložena**.
+
+Prioritet se razrješava **samo u obimu potrebnom** da se jednoznačno utvrdi koje Prijave dobijaju raspoloživa sredstva. Ako budžet može finansirati sve Prijave sa tom ocjenom, ovo pravilo se **ne** aktivira.
+
+Tehnički identifikator Prijave **nije** poslovni tie-break. Detalj funkcionalnog toka, evidentiranja i gate-ova: `KN-FS-003` §14.9.
 
 ## 13.7. Konačna rang-lista
 
@@ -1102,4 +1108,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.14**
+**Kraj dokumenta KN-BM-003 v1.0.16**

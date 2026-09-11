@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.10
+**Verzija:** 1.0.11
 **Datum:** 2026-09-11
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.15; **PO USVOJENO** za PO-IB-01…05 i za zaključavanje dodatnih bodova prije otključavanja rezultata)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.16; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -65,6 +65,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.8 | 2026-09-09 | Controlled corrective prema `KN-BM-003` v1.0.15. **PO USVOJENO:** dodatni bodovi se zaključavaju u trenutku završetka cjelokupnog ciklusa individualnog bodovanja, **prije** otključavanja zbirnih rezultata i rang-liste. Nema izmjene nakon toga ni postupka ponovnog otvaranja. |
 | 1.0.9 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** JMB/JMBG ostaje dio odgovarajućeg Obrasca i evidencije Prijave i dostupan je ovlašćenim akterima kroz Platformu; **ne** uključuje se u e-mail spiska kandidata. §8.5. Ne širi se na ostale PII ni ostale outbound poruke. |
 | 1.0.10 | 2026-09-11 | Controlled corrective. §7.14: konačna predaja zahtijeva kompletan Obrazac 1a/1b, postojanje Biznis plana i potvrdu finansijske napomene; puna sadržajna kompletnost Biznis plana **nije** uslov predaje. Potvrđeno: Podnesena Prijava je zaključana za izmjene; `U pripremi` nakon isteka roka ostaje sačuvana samo za pregled (§7.16, §7.17). |
+| 1.0.11 | 2026-09-11 | Controlled corrective prema `KN-BM-003` v1.0.16. **PO USVOJENO:** §14.9 prioritet finansiranja kod jednakih bodova — mješovita grupa (otpočinjanje prije razvoja); razrješavanje u obimu potrebnom za raspodjelu; odluka Komisije ≥3/5 uz obavezno obrazloženje; hard gate za konačnu rang-listu i Predlog bez zabrane prethodnog unosa Podržava/Odbija. §14.6 dijeljeni rang KEEP. **Nije** runtime produkcijski prihvaćeno. |
 
 Napomena:
 
@@ -670,12 +671,14 @@ Ako **Podržava**, odobreni iznos je obavezan. Odobreni iznos ne može preći:
 
 Ako za sljedeći plan na rang-listi nema dovoljno za puni traženi iznos, Komisija mu može dodijeliti **preostali** raspoloživi iznos. Raspodjela tada ide do utroška sredstava.
 
-Jednaki bodovi — tačno prema čl. 21:
+Jednaki bodovi — tačno prema čl. 21 i Poglavlju 14.9:
 
-* ako je samo jedan od izjednačenih planova plan za otpočinjanje biznisa, prednost tom planu;
-* ako nijedan nije, ili su svi, Komisija odlučuje **većinom glasova od ukupnog broja članova**.
+* §14.9 se aktivira samo kada raspoloživa sredstva **nisu** dovoljna da se finansiraju sve Prijave sa tom konačnom ocjenom;
+* prednost plana za **otpočinjanje biznisa** (`business_stage` = započinjanje) primjenjuje se **prije** odluke Komisije, uključujući mješovite grupe sa planovima za razvoj;
+* ako nakon toga ostane više međusobno nerazriješenih Prijava za raspoloživa sredstva, Komisija odlučuje **većinom glasova od ukupnog broja članova** (najmanje **3 od 5**) uz **obavezno obrazloženje**;
+* prioritet se razrješava **samo u obimu potrebnom** za jednoznačnu raspodjelu; **ne** mijenja konačnu ocjenu niti dijeljeni rang (§14.6).
 
-Glasanje se sprovodi na sjednici. Ne uvodi se zaseban elektronski tok glasanja. Predsjednik evidentira zaključak Komisije.
+Glasanje se sprovodi na sjednici. Ne uvodi se zaseban elektronski tok glasanja. Predsjednik evidentira ishod Komisije na Platformi.
 
 ## 4.12. Konačna rang-lista
 
@@ -2856,36 +2859,62 @@ Završenost jedne Prijave **sama po sebi ne** formira konačnu rang-listu. Globa
 
 ## 14.9. Jednaki bodovi
 
-Ovo je pravilo **prioriteta finansiranja** prema čl. 21. **Ne** mijenja dijeljene pozicije na rang-listi iz §14.6.
+Ovo je pravilo **prioriteta finansiranja** prema čl. 21 i `KN-BM-003` §13.6. **Ne** mijenja dijeljene pozicije na rang-listi iz §14.6. **Ne** mijenja konačnu ocjenu (`final_score`).
 
-Primjenjuje se kada jednake konačne ocjene zahtijevaju utvrđivanje prioriteta finansiranja, odnosno kada raspoloživa sredstva nijesu dovoljna za finansiranje svih Prijava sa tom ocjenom.
+### 14.9.0. Aktivacija
+
+§14.9 se aktivira **samo** kada istovremeno važi:
+
+1. postoji više Prijava sa **jednakom** konačnom ocjenom; i
+2. raspoloživa sredstva **nijesu** dovoljna da se sve relevantne Prijave iz te grupe finansiraju.
+
+Ako budžet može finansirati **sve** Prijave sa tom ocjenom, §14.9 se **ne** aktivira. Ne uvodi se obavezni tie-break za svaku grupu jednakih bodova.
 
 ### 14.9.1. Prednost — otpočinjanje biznisa
 
-Kada jednake konačne ocjene zahtijevaju utvrđivanje prioriteta finansiranja, prvo se primjenjuje pravilo čl. 21:
+Kada je §14.9 aktivan, prvo se primjenjuje pravilo čl. 21:
 
 prednost ima biznis plan koji se odnosi na **otpočinjanje biznisa**.
 
+Kanonski podatak Prijave: `business_stage` = **započinjanje** (otpočinjanje) naspram **razvoj**.
+
 To određuje samo prioritet finansiranja. **Ne** mijenja konačne ocjene niti dijeljene pozicije.
 
-Ako to pravilo jednoznačno odredi prioritet, taj ishod se evidentira prema §14.9.3.
+**Mješovita grupa.** Ako među Prijavama sa istom konačnom ocjenom postoje i planovi za otpočinjanje i planovi za razvoj, prednost otpočinjanja primjenjuje se **obavezno prije** odluke Komisije. Prijava za razvoj **ne** može odlukom Komisije dobiti prioritet ispred Prijave za otpočinjanje dok među Prijavama za otpočinjanje još treba razriješiti prioritet za raspoloživa sredstva.
 
-### 14.9.2. Odluka Komisije ako prednost nije riješena
+Primjer: A i B = započinjanje, C = razvoj, isti `final_score` i isti dijeljeni `ranking_position`. A i B imaju prioritet finansiranja u odnosu na C. Ako sredstva zahtijevaju izbor između A i B, Komisija odlučuje između A i B prema §14.9.2. Komisija **ne** smije izabrati C ispred A/B i time poništiti prvi kriterijum.
 
-Ako se prioritet **ne** može riješiti pravilom o otpočinjanju biznisa, Komisija odlučuje koja od izjednačenih Prijava ima prioritet finansiranja.
+Ako je samo jedan od izjednačenih planova plan za otpočinjanje, taj plan ima prioritet finansiranja. Ako to pravilo jednoznačno odredi potrebni prioritet, taj ishod se evidentira prema §14.9.3.
+
+### 14.9.2. Odluka Komisije ako prednost nije dovoljna
+
+Ako se potrebni prioritet finansiranja **ne** može jednoznačno riješiti pravilom o otpočinjanju biznisa, Komisija odlučuje među Prijavama koje ostanu **međusobno nerazriješene** nakon primjene §14.9.1.
 
 Odluka se donosi **većinom od ukupnog broja članova Komisije**.
 
 Komisija ima pet članova. Potrebna većina = **najmanje 3 od 5**.
 
+Odluka Komisije mora biti **obrazložena**.
+
 Odluka se donosi na trećoj poslovnoj sjednici. Ne uvodi se tok elektronskog individualnog glasanja.
+
+### 14.9.2a. Obim razrješavanja
+
+Prioritet finansiranja razrješava se **onoliko koliko je potrebno** da se jednoznačno utvrdi koje Prijave dobijaju raspoloživa sredstva.
+
+Primjer: A, B i C imaju isti broj bodova i isti dijeljeni rang. Ako budžet može pokriti **dvije od tri**, nije dovoljno utvrditi samo jednu prioritetnu Prijavu ako nakon toga ostaje nerazriješen izbor za preostala sredstva. Pravila §14.9.1 i §14.9.2 primjenjuju se dalje dok raspodjela ne bude jednoznačna.
+
+**Ne** uvodi se novi poslovni rang. Sve Prijave zadržavaju postojeći zajednički `ranking_position`. Radi se isključivo o prioritetu **finansiranja** unutar grupe sa jednakom konačnom ocjenom.
 
 ### 14.9.3. Evidentiranje ishoda
 
 Predsjednik Komisije na Platformi evidentira:
 
-* koja Prijava je dobila prioritet finansiranja;
-* da li je osnov **otpočinjanje biznisa** ili odluka Komisije.
+* Prijavu kojoj je utvrđen prioritet finansiranja;
+* da li je osnov **otpočinjanje biznisa** ili **odluka Komisije**;
+* kada je osnov **odluka Komisije**, **obavezno obrazloženje** te odluke.
+
+Ako je za raspodjelu potrebno razriješiti više od jednog mjesta prioriteta unutar iste grupe, evidentira se **onoliko ishoda** koliko je potrebno da raspodjela bude jednoznačna.
 
 Platforma **ne** evidentira pojedinačne elektronske glasove članova.
 
@@ -2897,6 +2926,21 @@ Ishod:
 * **ne** mijenja dijeljenu poziciju na rang-listi;
 * koristi se **samo** za raspodjelu sredstava.
 
+### 14.9.4. Redoslijed u toku i hard gate
+
+Redoslijed:
+
+1. završen ciklus individualnog bodovanja;
+2. utvrđen `final_score`;
+3. utvrđen dijeljeni `ranking_position` (§14.6);
+4. Predsjednik **smije** prethodno evidentirati Podržava / Odbija i predložene / odobrene iznose prema §14.8;
+5. kada je §14.9 aktivan, potrebni prioritet finansiranja mora biti razriješen i evidentiran **prije** formiranja / zaključavanja konačne rang-liste (§14.10);
+6. Predlog Odluke **ne** smije biti formiran iz nerazriješenog rezultata (§15.1).
+
+**Ne** uvodi se zabrana samog prethodnog unosa Podržava / Odbija ili iznosa samo zato što §14.9 još nije razriješen.
+
+**Ali:** konačna rang-lista i Predlog Odluke moraju biti **blokirani** dok postoji relevantna grupa jednakih bodova koju raspoloživa sredstva ne mogu u cjelosti pokriti, a potrebni prioritet finansiranja nije razriješen. Ako je prioritet razriješen odlukom Komisije, mora postojati i obavezno obrazloženje.
+
 ## 14.10. Konačna rang-lista
 
 ### 14.10.1. Automatsko formiranje
@@ -2905,7 +2949,9 @@ Platforma **automatski** formira konačnu rang-listu kada su završeni svi potre
 
 Za Prijave sa ocjenom **≥ 30** mora biti završena Podržava prema §14.8 ili Odbija prema §14.8.
 
-Gdje je §14.9 bio potreban, mora biti evidentiran i ishod prioriteta finansiranja.
+Gdje je §14.9 bio potreban, mora biti evidentiran i ishod prioriteta finansiranja, u obimu potrebnom za jednoznačnu raspodjelu, uključujući obavezno obrazloženje kada je osnov odluka Komisije (§14.9.3, §14.9.4).
+
+Dok je §14.9 aktivan a potrebni ishod nije razriješen, konačna rang-lista se **ne** formira / **ne** zaključava. Predlog Odluke iz Poglavlja 15 **ne** smije nastati iz tog nerazriješenog stanja. Prethodni unos Podržava / Odbija i iznosa prema §14.8 **nije** zabranjen samo zbog nerazriješenog §14.9 (§14.9.4).
 
 Prijave sa ocjenom **< 30** **ne** zahtijevaju dodatni zaključak Komisije samo radi formiranja konačne rang-liste.
 
@@ -4040,13 +4086,21 @@ Za **Odbija** kod Prijave sa najmanje **30** bodova mora biti evidentirano detal
 
 **Ako:** dvije ili više Prijava imaju jednaku konačnu ocjenu.
 
-**Kada:** njihov međusobni redoslijed utiče na raspodjelu raspoloživih sredstava.
+**Kada:** raspoloživa sredstva **nisu** dovoljna da se sve one finansiraju (aktivacija §14.9).
 
-**Onda:** primjenjuje se usvojeno pravilo prednosti iz Poglavlja 14, a ako ono ne razriješi slučaj, odluka Komisije donosi se većinom ukupnog sastava Komisije.
+**Onda:**
 
-Takvo razrješenje **ne** mijenja zajedničke rang-pozicije Prijava sa jednakim brojem bodova.
+* prednost otpočinjanja biznisa (`business_stage` = započinjanje) primjenjuje se **prije** odluke Komisije, uključujući mješovite grupe sa planovima za razvoj;
+* Prijava za razvoj **ne** može dobiti prioritet ispred Prijave za otpočinjanje dok među otpočinjanjima još treba razriješiti prioritet za raspoloživa sredstva;
+* prioritet se razrješava **samo u obimu potrebnom** za jednoznačnu raspodjelu raspoloživih sredstava;
+* ako nakon §14.9.1 ostanu međusobno nerazriješene Prijave, odluka Komisije donosi se većinom ukupnog sastava (**najmanje 3 od 5**) uz **obavezno obrazloženje**;
+* Platforma ne uvodi elektronsko individualno glasanje niti evidenciju pojedinačnih glasova.
 
-Kada su evidentirani svi potrebni ishodi treće sjednice, Platforma formira konačnu rang-listu kao zaključani rezultat.
+Takvo razrješenje **ne** mijenja konačne ocjene niti zajedničke rang-pozicije Prijava sa jednakim brojem bodova (§14.6).
+
+Predsjednik **smije** prethodno evidentirati Podržava / Odbija i iznose. Konačna rang-lista i Predlog Odluke **ne** smiju nastati dok je §14.9 aktivan a potrebni ishod nije razriješen i evidentiran.
+
+Kada su evidentirani svi potrebni ishodi treće sjednice, uključujući potrebni §14.9, Platforma formira konačnu rang-listu kao zaključani rezultat.
 
 Nakon toga se **ne** smiju mijenjati konačne ocjene, rang-pozicije, **Podržava** / **Odbija**, predloženi iznosi niti rezultat razrješenja jednakih bodova.
 
@@ -4522,4 +4576,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.9**
+**Kraj dokumenta KN-FS-003 v1.0.11**
