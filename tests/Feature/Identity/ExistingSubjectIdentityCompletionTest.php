@@ -528,6 +528,29 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
             ->assertRedirect(route('competitions.show', $competition));
     }
 
+    public function test_kn_start_gate_returns_to_get_apply_after_successful_completion(): void
+    {
+        $this->enableCanonicalHttp();
+        $user = $this->makeDooUser();
+        $competition = $this->openCompetition();
+        $apply = '/competitions/'.$competition->id.'/apply';
+
+        $this->actingAs($user)
+            ->post(route('applications.start', $competition))
+            ->assertRedirect(route('identity.completion.create'));
+
+        $this->assertSame($apply, session(ExistingSubjectIdentityReturnTo::SESSION_KEY));
+        $this->assertStringNotContainsString('/apply/start', (string) session(ExistingSubjectIdentityReturnTo::SESSION_KEY));
+
+        $completed = $this->actingAs($user)
+            ->post(route('identity.completion.store'), $this->dooPayload());
+
+        $completed->assertRedirect($apply);
+        $location = (string) $completed->headers->get('Location');
+        $this->assertStringNotContainsString('/apply/start', $location);
+        $this->assertNull(session(ExistingSubjectIdentityReturnTo::SESSION_KEY));
+    }
+
     public function test_safe_return_to_and_unsafe_return_rejected_and_direct_defaults_dashboard(): void
     {
         $this->enableCanonicalHttp();

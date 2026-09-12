@@ -45,7 +45,9 @@ class ApplicationController extends Controller
                 $identityResolver->requireCurrentSubject($user);
             } catch (IdentityUseGateException $e) {
                 if (app(ExistingSubjectIdentityEligibility::class)->isEligible($user)) {
-                    app(ExistingSubjectIdentityReturnTo::class)->rememberFromRequest($request);
+                    app(ExistingSubjectIdentityReturnTo::class)->remember(
+                        route('applications.create', $competition, absolute: false)
+                    );
 
                     return redirect()->route('identity.completion.create');
                 }

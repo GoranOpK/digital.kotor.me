@@ -17,8 +17,13 @@ final class ExistingSubjectIdentityReturnTo
             $candidate .= '?'.$query;
         }
 
-        if ($this->isSafe($candidate)) {
-            Session::put(self::SESSION_KEY, $candidate);
+        $this->remember($candidate);
+    }
+
+    public function remember(string $url): void
+    {
+        if ($this->isSafe($url)) {
+            Session::put(self::SESSION_KEY, $url);
         }
     }
 
