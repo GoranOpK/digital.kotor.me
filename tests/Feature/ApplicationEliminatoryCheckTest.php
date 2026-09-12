@@ -340,7 +340,10 @@ class ApplicationEliminatoryCheckTest extends TestCase
         $this->assertFalse($passApplication->fresh()->isRejectedForMissingDocuments());
         $this->assertTrue($competition->fresh()->isRankingFormed());
 
-        $passApplication->update(['commission_decision' => 'podrzava_potpuno']);
+        $passApplication->update([
+            'commission_decision' => 'podrzava_potpuno',
+            'approved_amount' => 100,
+        ]);
         $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
     }
 

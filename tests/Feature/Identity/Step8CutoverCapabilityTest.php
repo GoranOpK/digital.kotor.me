@@ -853,7 +853,7 @@ class Step8CutoverCapabilityTest extends TestCase
         $this->assertStringContainsString('value="12345672"', $html);
     }
 
-    public function test_kn_existing_application_current_phone_uses_canonical_not_users_phone(): void
+    public function test_kn_existing_application_empty_phone_snapshot_does_not_fall_back_to_current_or_users_phone(): void
     {
         $user = $this->makeKorisnik([
             'phone' => '+38267000997',
@@ -886,8 +886,13 @@ class Step8CutoverCapabilityTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('value="+38267111001"', $html);
+        $phoneInputStart = strpos($html, 'name="preduzetnik_phone"');
+        $this->assertNotFalse($phoneInputStart);
+        $phoneInput = substr($html, $phoneInputStart, 250);
+
+        $this->assertStringContainsString('value=""', $phoneInput);
         $this->assertStringNotContainsString('value="+38267000997"', $html);
+        $this->assertStringNotContainsString('value="+38267111001"', $html);
     }
 
     public function test_kn_missing_canonical_does_not_fall_back_to_users_phone_or_pib(): void
