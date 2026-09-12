@@ -6,12 +6,12 @@
 **Naziv:** Funkcionalna specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.5
-**Datum:** 2026-09-08
+**Verzija:** 1.0.6
+**Datum:** 2026-09-12
 
 Povezani dokumenti:
 
-* Poslovni model (SSOT): **DK-BM-002** v1.0.5 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
+* Poslovni model (SSOT): **DK-BM-002** v1.0.6 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
 * Tehnička specifikacija: **DK-TS-002** v1.0.8 USVOJENO — `docs/technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md`
 * Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 * Dokumentacioni standard: **DK-DS-001** — `docs/reference/Digital-Kotor-Documentation-Standard.md`
@@ -60,6 +60,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.3 | 2026-09-05 | Usklađivanje sa DK-BM-002 v1.0.3: CRPS registracioni broj obavezan za Preduzetnika i pravne oblike OD, KD, AD i DOO; CRPS nije DSPD-only; V1 ne prikuplja CRPS ni dodatni matični/registarski identifikator za Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju; format CRPS-a ostaje za DK-TS-002 Decision 8. Status dokumenta ostaje USVOJENO. |
 | 1.0.4 | 2026-09-05 | Status/reference corrective: referenca/status `DK-TS-002` usklađena na v1.0.0 USVOJENO; uklonjena zastarjela temporalna referenca. Funkcionalna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
 | 1.0.5 | 2026-09-08 | PO-usvojeni profile lifecycle Fizičko lice ⇄ Preduzetnik (`DK-BM-002` v1.0.5 §11.4). Izmjena korisničkog profila: Da/Ne za preduzetnički status; false→true zahtijeva Poslovno ime, PIB i Broj registracije u CRPS; postojeći Preduzetnik smije mijenjati ta polja; true→false zadržava podatke kao neaktivne; reaktivacija prikazuje zadržane vrijednosti uz ponovnu validaciju; nije FL↔PL. Modulski snapshoti se ne reklasifikuju. Status dokumenta ostaje USVOJENO. |
+| 1.0.6 | 2026-09-12 | Izvedeno iz `DK-BM-002` v1.0.6 §11.5. Funkcionalni tok Dopune za legacy obično Fizičko lice bez kompletnog kanonskog identiteta: declare-on-use gate, prefill, potvrda rezidentnosti, JMB bez ponovnog unosa kada je već upotrebljiv, zabrana drugog kanonskog identiteta, atomski nastanak, povrat na traženu funkcionalnost, bez statusa dopune u toku i bez brisanja legacy polja. Tehnička realizacija ostaje `DK-TS-002`. Status dokumenta ostaje USVOJENO. |
 
 Napomena:
 
@@ -597,6 +598,98 @@ Nevalidan unos zadržava izabrani odgovor Da/Ne i unijete vrijednosti, i drži o
 
 Ovaj tok **ne** kreira drugi identitet, **ne** mijenja Vrstu subjekta u Pravno lice i **ne** reklasifikuje već sačuvane KN / EP / druge modulski snapshot zapise.
 
+## 16.5 Dopuna identiteta legacy običnog Fizičkog lica
+
+Ovo poglavlje razrađuje `DK-BM-002` v1.0.6 §11.5. Ne uvodi novo poslovno pravilo. Ne mijenja §16.4, registraciju, niti već usvojeni declare-on-use tok za postojeće poslovne subjekte, uključujući DOO.
+
+Predmet je nalog običnog Fizičkog lica koji još nema kompletan kanonski identitet. Nije predmet: Preduzetnik, Pravno lice, Dio stranog privrednog društva, niti interni/staff nalog koji postoji samo radi platformske uloge.
+
+Tehnički mehanizam (ruta, writer, enkripcija, lookup) ostaje `DK-TS-002` i ovim korakom se ne razrađuje. Zahtijevano posmatrano ponašanje je zatvoreno ovdje.
+
+### 16.5.1 Gate
+
+1. Prijava na Platformu ne pokreće Dopunu i ne prebacuje korisnika u kanonski identitet.
+2. Funkcionalnosti koje ne zahtijevaju kanonski identitet ostaju dostupne.
+3. Kada korisnik pokrene funkcionalnost koja zahtijeva kanonski identitet, a kompletan kanonski identitet Fizičkog lica ne postoji, Platforma ga preusmjerava na Dopunu.
+4. Samo čuvanje ili izmjena starog profila ne pokreće automatski nastanak kanonskog identiteta.
+5. Ako kompletan kanonski identitet Fizičkog lica već postoji, Dopuna se ne prikazuje, drugi identitet se ne kreira, i korisnik se vraća na traženu funkcionalnost.
+
+### 16.5.2 Prefill i obavezne potvrde
+
+Platforma prefilluje postojeće pouzdane legacy podatke koje već ima.
+
+Adresa:
+
+- `users.address` se prefilluje tačno kako je sačuvan, uključujući prazan unos ako adresa nije sačuvana;
+- grad se prefilluje samo iz `users.city` ako ta vrijednost postoji i nije prazna;
+- grad se ne parsira i ne izvodi iz slobodnog teksta adrese;
+- ako `users.city` nedostaje, korisnik mora posebno unijeti grad prije uspješnog završetka.
+
+Rezidentnost:
+
+- ako je `users.residential_status` već `resident` ili `non-resident`, ta vrijednost se prefilluje i korisnik je mora potvrditi;
+- ako nedostaje ili nije jedna od te dvije vrijednosti, korisnik mora izabrati rezident ili nerezident;
+- sačuvana legacy vrijednost ne postaje kanonska dok Dopuna ne uspije;
+- rezidentnost se i ovdje odnosi samo na Fizičko lice.
+
+JMB:
+
+- ako postoje upotrebljivi `users.jmb_encrypted` i `users.jmb_lookup`, polje za unos JMB-a se ne prikazuje i korisnik ne unosi JMB ponovo;
+- taj postojeći bezbjedno sačuvani JMB koristi se pri kreiranju kanonskog identiteta Fizičkog lica;
+- JMB se korisniku ne prikazuje;
+- plaintext `users.jmb` se ne čita kao izvor, ne popunjava se i ostaje `NULL`;
+- ako upotrebljiv postojeći JMB ne postoji, Dopuna traži unos JMB-a prema važećim pravilima za Fizičko lice (13 cifara i kontrolna cifra za rezidenta; za nerezidenta važe postojeća pravila identifikacionog dokumenta iz Poglavlja 6).
+
+Prije kreiranja kanonskog identiteta Fizičkog lica Platforma provjerava JMB lookup prema postojećim kanonskim identitetima Fizičkog lica:
+
+- isti JMB ne smije kreirati drugi kanonski identitet Fizičkog lica;
+- u konfliktu se Dopuna ne završava i kanonski identitet ne nastaje;
+- korisniku se ne prikazuju podaci drugog korisnika;
+- poruka smije reći samo da se Dopuna ne može završiti jer identifikacioni podatak nije raspoloživ za novi identitet, bez navođenja drugog naloga.
+
+### 16.5.3 Atomski nastanak i napuštanje
+
+Kanonski identitet nastaje tek nakon uspješnog završetka Dopune.
+
+Kreiranje je atomsko:
+
+- nastaju i korijen identiteta i identitet Fizičkog lica, kao jedna cjelina;
+- ako bilo koji dio ne uspije, ne smije ostati djelimičan kanonski graf;
+- ne nastaje drugi korijen identiteta za isti nalog.
+
+Ako korisnik napusti Dopunu prije uspjeha:
+
+- ne nastaje status „dopuna u toku“;
+- ne nastaje nacrt identiteta;
+- ne nastaju djelimični kanonski zapisi;
+- korisnik ostaje legacy;
+- pri narednom pokušaju funkcionalnosti koja zahtijeva kanonski identitet ponovo ulazi u Dopunu.
+
+Ne uvodi se nova tabela, status niti polje koje bilježi prelazak. Postojanje kompletnog kanonskog grafa `users` → identitet naloga → identitet Fizičkog lica samo po sebi jeste činjenica prelaska.
+
+### 16.5.4 Poslije uspjeha i povrat
+
+Nakon uspjeha:
+
+- graf je kompletan;
+- identitet Fizičkog lica je autoritativni izvor identitetskih podataka;
+- prelazak je jednosmjeran;
+- kasnije izmjene idu kroz postojeći kanonski profil, ne kroz ovu Dopunu.
+
+Korisnik se vraća na funkcionalnost iz koje je preusmjeren.
+
+Legacy polja naloga se ne brišu. `users.jmb_encrypted` i `users.jmb_lookup` se ne nuliraju i ne uklanjaju. Njihovo čišćenje nije predmet ovog toka.
+
+### 16.5.5 Prikaz korisniku
+
+Korisniku se ne prikazuju riječi „legacy“, „kanonski identitet“, „migracija“ niti nazivi tabela.
+
+Naziv ekrana: **Dopuna podataka**.
+
+Poruka: **Prije nastavka potrebno je da provjerite i dopunite podatke svog profila.**
+
+Dugme za uspješan završetak: **Sačuvaj i nastavi**.
+
 ---
 
 # 17. Funkcionalne zabrane
@@ -675,6 +768,14 @@ Format: Ako / Kada / Onda.
 24. Ako postojeći Preduzetnik na Izmjena korisničkog profila izabere da više nije Preduzetnik, onda prestaje da bude trenutni Preduzetnik, a Poslovno ime, PIB i Broj registracije u CRPS ostaju sačuvani.
 25. Ako bivši Preduzetnik ponovo izabere da je Preduzetnik, onda vidi zadržane poslovne podatke radi pregleda i izmjene, i mora ih validno sačuvati.
 26. Ako Fizičko lice pokuša da se sa profila pretvori u Pravno lice, onda Platforma to ne prihvata.
+27. Ako se legacy obično Fizičko lice bez kompletnog kanonskog identiteta prijavi, onda se prijava sama po sebi ne pretvara u kanonski identitet i nalog nije globalno blokiran.
+28. Ako taj korisnik pokrene funkcionalnost koja zahtijeva kanonski identitet, onda se preusmjerava na Dopunu podataka, a nakon uspjeha vraća na tu funkcionalnost.
+29. Ako `users.city` nedostaje, onda grad nije izveden iz adrese i korisnik ga mora unijeti; ako postoji, prefilluje se ta sačuvana vrijednost.
+30. Ako postoje upotrebljivi `users.jmb_encrypted` i `users.jmb_lookup`, onda se JMB ne prikazuje i ne traži ponovni unos; plaintext `users.jmb` ostaje `NULL`.
+31. Ako bi JMB stvorio drugi kanonski identitet Fizičkog lica, onda se Dopuna ne završava i podaci drugog korisnika se ne prikazuju.
+32. Ako korisnik napusti Dopunu prije uspjeha, onda ne nastaje nacrt identiteta, djelimičan graf ni status dopune u toku, i korisnik ostaje legacy.
+33. Ako korisnik već ima kompletan kanonski identitet Fizičkog lica, onda se Dopuna ne prikazuje i drugi identitet se ne kreira.
+34. Ako Dopuna uspije, onda je nastanak atomski, prelazak je jednosmjeran, a `users.jmb_encrypted` i `users.jmb_lookup` ostaju netaknuti.
 
 ---
 
@@ -708,7 +809,7 @@ Usvojena poslovna pravila `DK-BM-002` **nisu** otvorena pitanja.
 
 # 21. Sljedivost prema DK-BM-002
 
-Ova matrica evidentira sljedivost `DK-FS-002` prema `DK-BM-002` v1.0.3. Ne uvodi nova poslovna ni funkcionalna pravila.
+Ova matrica evidentira sljedivost `DK-FS-002` prema `DK-BM-002`. Istorijski redovi do v1.0.5 prate tadašnji SSOT. §16.5 prati `DK-BM-002` v1.0.6 §11.5. Ne uvodi nova poslovna ni funkcionalna pravila.
 
 | FS poglavlje | DK-BM-002 |
 |--------------|-----------|
@@ -729,7 +830,7 @@ Ova matrica evidentira sljedivost `DK-FS-002` prema `DK-BM-002` v1.0.3. Ne uvodi
 | 13 | §10 tač. 10; §17 A (konkretno UI ponašanje: unos broja uz +382) |
 | 14 | §9.2 (adresa dijela u Crnoj Gori); §10 tač. 11–15 |
 | 15 | §4.1 koraci 4–6; §10 tač. 1 i 16; §11.1; §11.2 |
-| 16 | §3; §4.2; §4.3; §11.1; §11.3; §16; §17 A (funkcionalni tok dopune profila u okviru usvojenog poslovnog pravila iz poglavlja 11) |
+| 16 | §3; §4.2; §4.3; §11.1; §11.3; §11.5; §16; §17 A (funkcionalni tok dopune profila u okviru usvojenog poslovnog pravila iz poglavlja 11) |
 | 17 | §5; §6.2; §6.4; §8.1; §8.4; §8.5; §9; §10 tač. 14 i 15; §11.1; §11.3; §15; §16 |
 | 18 | §3; §12; §13; §14; §15 |
 | 19 | izvedeno iz navedenih BM poglavlja i iz FS pravila ovlašćenih §17 A; ne uvodi nova pravila |
@@ -737,4 +838,4 @@ Ova matrica evidentira sljedivost `DK-FS-002` prema `DK-BM-002` v1.0.3. Ne uvodi
 
 ---
 
-**Kraj dokumenta DK-FS-002 v1.0.5**
+**Kraj dokumenta DK-FS-002 v1.0.6**
