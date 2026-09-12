@@ -9,6 +9,7 @@ use App\Identity\LegalEntitySnapshot;
 use App\Identity\Runtime\ExistingSubjectIdentityCompletionService;
 use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\ExistingSubjectIdentitySnapshotMapper;
+use App\Identity\Runtime\ExistingSubjectIdentityStoredJmb;
 use App\Models\Application;
 use App\Models\Competition;
 use App\Models\LegalEntityAuthorizedPerson;
@@ -18,8 +19,10 @@ use App\Models\PlatformIdentity;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\UserType;
+use App\Security\JmbLookupService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Tests\Support\MakesCanonicalUsers;
 use Tests\Support\MakesIdentitySnapshots;
@@ -61,6 +64,11 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
         $staff = $this->makeDooUser(['role_id' => Role::where('name', 'admin')->firstOrFail()->id]);
         $superadmin = $this->makeDooUser(['role_id' => Role::where('name', 'superadmin')->firstOrFail()->id]);
         $fl = $this->makeKorisnik(['jmb' => $this->validJmb($this->jmbSeq++)]);
+        $staffFl = $this->makeKorisnik([
+            'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+            'user_type' => UserType::PHYSICAL_PERSON,
+            'jmb' => $this->validJmb($this->jmbSeq++),
+        ]);
         $unsupported = $this->makeKorisnik([
             'user_type' => UserType::JOINT_STOCK_COMPANY,
             'jmb' => $this->validJmb($this->jmbSeq++),
@@ -70,7 +78,10 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
         $this->actingAs($inactive)->get(route('identity.completion.create'))->assertForbidden();
         $this->actingAs($staff)->get(route('identity.completion.create'))->assertForbidden();
         $this->actingAs($superadmin)->get(route('identity.completion.create'))->assertForbidden();
-        $this->actingAs($fl)->get(route('identity.completion.create'))->assertForbidden();
+        $this->actingAs($staffFl)->get(route('identity.completion.create'))->assertForbidden();
+        $this->actingAs($fl)->get(route('identity.completion.create'))
+            ->assertOk()
+            ->assertSee('Dopuna podataka');
         $this->actingAs($unsupported)->get(route('identity.completion.create'))->assertForbidden();
     }
 
@@ -508,7 +519,11 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
     {
         $this->enableCanonicalHttp();
         $doo = $this->makeDooUser();
-        $fl = $this->makeKorisnik(['jmb' => $this->validJmb($this->jmbSeq++)]);
+        $unsupported = $this->makeKorisnik([
+            'user_type' => UserType::JOINT_STOCK_COMPANY,
+            'jmb' => $this->validJmb($this->jmbSeq++),
+            'pib' => $this->uniqueValidPib(),
+        ]);
         $competition = $this->openCompetition();
 
         $this->actingAs($doo)
@@ -523,7 +538,7 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
             ->post(route('applications.store', $competition), ['applicant_type' => 'doo'])
             ->assertRedirect(route('identity.completion.create'));
 
-        $this->actingAs($fl)
+        $this->actingAs($unsupported)
             ->get(route('applications.create', $competition))
             ->assertRedirect(route('competitions.show', $competition));
     }
@@ -606,6 +621,249 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
         $this->actingAs($user)->get('/profile')->assertOk();
         $this->assertSame(0, PlatformIdentity::query()->count());
         $this->assertFalse(config('identity.ep_identity_flows'));
+    }
+
+    public function test_legacy_physical_person_completion_prefill_gate_and_return(): void
+    {
+        $this->enableCanonicalHttp();
+        $address = '  Stari grad 1, Podgorica  ';
+        $user = $this->makeKorisnik([
+            'jmb' => null,
+            'address' => $address,
+            'city' => 'Herceg Novi',
+            'residential_status' => 'resident',
+            'phone' => '+38267000001',
+        ]);
+        $competition = $this->openCompetition();
+        $apply = '/competitions/'.$competition->id.'/apply';
+
+        $shown = $this->actingAs($user)->get(route('identity.completion.create'));
+        $shown->assertOk()
+            ->assertSee('Dopuna podataka')
+            ->assertSee('Prije nastavka potrebno je da provjerite i dopunite podatke svog profila.')
+            ->assertSee('Sačuvaj i nastavi')
+            ->assertSee('value="'.$address.'"', false)
+            ->assertSee('value="Herceg Novi"', false)
+            ->assertSee('value="resident" selected', false)
+            ->assertSee('name="jmb"', false)
+            ->assertDontSee('Naziv preduzetnika')
+            ->assertDontSee('CRPS registracioni broj')
+            ->assertDontSee('PIB')
+            ->assertDontSee('Ovlašćeno lice')
+            ->assertDontSee('legacy')
+            ->assertDontSee('kanonski');
+        $this->assertSame(0, PlatformIdentity::query()->count());
+
+        $this->actingAs($user)->get(route('identity.completion.create'))->assertOk();
+        $this->assertSame(0, PlatformIdentity::query()->count());
+        $this->assertSame(0, PhysicalPersonIdentity::query()->count());
+
+        $this->actingAs($user)
+            ->post(route('applications.start', $competition))
+            ->assertRedirect(route('identity.completion.create'));
+        $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertRedirect(route('identity.completion.create'));
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), [])
+            ->assertRedirect(route('identity.completion.create'));
+        $this->assertSame($apply, session(ExistingSubjectIdentityReturnTo::SESSION_KEY));
+
+        $this->actingAs($user)
+            ->post(route('identity.completion.store'), $this->physicalPayload([
+                'jmb' => $this->validJmb($this->jmbSeq++),
+                'street_and_number' => $address,
+                'city' => 'Herceg Novi',
+            ]))
+            ->assertRedirect($apply);
+
+        $graph = PhysicalPersonIdentity::query()->first();
+        $this->assertNotNull($graph);
+        $this->assertFalse((bool) $graph->is_entrepreneur);
+        $this->assertNull($graph->pib);
+        $this->assertNull($graph->crps_number);
+        $this->assertSame($address, $graph->street_and_number);
+        $this->assertSame('Herceg Novi', $graph->city);
+        $this->assertSame(1, PlatformIdentity::query()->count());
+
+        $this->actingAs($user)->get(route('identity.completion.create'))
+            ->assertRedirect(route('dashboard', absolute: false));
+        $this->actingAs($user)
+            ->post(route('identity.completion.store'), $this->physicalPayload([
+                'jmb' => $this->validJmb($this->jmbSeq++),
+            ]))
+            ->assertRedirect();
+        $this->assertSame(1, PlatformIdentity::query()->count());
+        $this->assertSame(1, PhysicalPersonIdentity::query()->count());
+    }
+
+    public function test_legacy_physical_person_uses_stored_jmb_pair_without_showing_or_clearing_it(): void
+    {
+        $this->enableCanonicalHttp();
+        $jmb = $this->validJmb($this->jmbSeq++);
+        $user = $this->makeKorisnik([
+            'email' => 'fl-stored-jmb@example.test',
+            'jmb' => $jmb,
+        ]);
+        $before = DB::table('users')->where('id', $user->id)->first();
+        $this->assertNotNull($before->jmb_encrypted);
+        $this->assertNotNull($before->jmb_lookup);
+        DB::table('users')->where('id', $user->id)->update(['jmb' => null]);
+        config(['jmb.plaintext_retirement.enabled' => true]);
+
+        $shown = $this->actingAs($user->fresh())->get(route('identity.completion.create'));
+        $shown->assertOk()
+            ->assertDontSee('name="jmb"', false)
+            ->assertDontSee($jmb);
+        $this->assertStringNotContainsString($before->jmb_encrypted, $shown->getContent());
+        $this->assertStringNotContainsString($before->jmb_lookup, $shown->getContent());
+
+        $this->actingAs($user->fresh())
+            ->post(route('identity.completion.store'), $this->physicalPayload())
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $physical = PhysicalPersonIdentity::query()->first();
+        $this->assertNotNull($physical);
+        $this->assertNull($physical->jmb);
+        $this->assertNotNull($physical->jmb_encrypted);
+        $this->assertSame($this->digest($jmb), $physical->jmb_lookup);
+        $this->assertFalse((bool) $physical->is_entrepreneur);
+
+        $after = DB::table('users')->where('id', $user->id)->first();
+        $this->assertSame($before->jmb_encrypted, $after->jmb_encrypted);
+        $this->assertSame($before->jmb_lookup, $after->jmb_lookup);
+        $this->assertNull($after->jmb);
+    }
+
+    public function test_legacy_physical_person_missing_lookup_requires_entered_jmb_and_ignores_plaintext(): void
+    {
+        $this->enableCanonicalHttp();
+        $plaintext = $this->validJmb($this->jmbSeq++);
+        $entered = $this->validJmb($this->jmbSeq++);
+        $user = $this->makeKorisnik([
+            'email' => 'fl-missing-lookup@example.test',
+            'jmb' => $plaintext,
+        ]);
+        DB::table('users')->where('id', $user->id)->update(['jmb_lookup' => null]);
+
+        $shown = $this->actingAs($user->fresh())->get(route('identity.completion.create'));
+        $shown->assertOk()
+            ->assertSee('name="jmb"', false)
+            ->assertDontSee('value="'.$plaintext.'"', false);
+
+        $this->actingAs($user->fresh())
+            ->from(route('identity.completion.create'))
+            ->post(route('identity.completion.store'), $this->physicalPayload())
+            ->assertSessionHasErrors('jmb');
+        $this->assertSame(0, PlatformIdentity::query()->count());
+
+        $this->actingAs($user->fresh())
+            ->post(route('identity.completion.store'), $this->physicalPayload(['jmb' => $entered]))
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $physical = PhysicalPersonIdentity::query()->first();
+        $this->assertSame($this->digest($entered), $physical->jmb_lookup);
+        $this->assertNotSame($this->digest($plaintext), $physical->jmb_lookup);
+        $this->assertSame($plaintext, DB::table('users')->where('id', $user->id)->value('jmb'));
+    }
+
+    public function test_legacy_physical_person_duplicate_jmb_does_not_expose_other_user_and_does_not_self_block(): void
+    {
+        $this->enableCanonicalHttp();
+        $taken = $this->validJmb($this->jmbSeq++);
+        $holder = $this->makeKorisnik([
+            'email' => 'fl-holder@example.test',
+            'first_name' => 'Marko',
+            'last_name' => 'Marković',
+            'jmb' => $taken,
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($holder, $this->flSnapshot($holder, [
+            'person' => ['jmb' => $taken],
+        ]));
+        DB::table('users')->where('id', $holder->id)->update([
+            'jmb' => null,
+            'jmb_lookup' => null,
+        ]);
+
+        $actor = $this->makeKorisnik([
+            'email' => 'fl-actor@example.test',
+            'jmb' => null,
+        ]);
+        $blocked = $this->actingAs($actor)
+            ->from(route('identity.completion.create'))
+            ->post(route('identity.completion.store'), $this->physicalPayload(['jmb' => $taken]));
+        $blocked->assertSessionHasErrors('jmb');
+        $errors = implode(' ', session('errors')?->all() ?? []);
+        $this->assertStringContainsString(ExistingSubjectIdentityStoredJmb::CONFLICT_MESSAGE, $errors);
+        $this->assertStringNotContainsString('fl-holder@example.test', $errors);
+        $this->assertStringNotContainsString('Marko', $errors);
+        $this->assertStringNotContainsString('Marković', $errors);
+        $this->assertStringNotContainsString((string) $holder->id, $errors);
+        $this->assertStringNotContainsString($taken, $errors);
+        $this->assertSame(1, PlatformIdentity::query()->count());
+
+        $own = $this->validJmb($this->jmbSeq++);
+        $self = $this->makeKorisnik([
+            'email' => 'fl-self@example.test',
+            'jmb' => $own,
+        ]);
+        DB::table('users')->where('id', $self->id)->update(['jmb' => null]);
+        config(['jmb.plaintext_retirement.enabled' => true]);
+
+        $this->actingAs($self->fresh())
+            ->post(route('identity.completion.store'), $this->physicalPayload())
+            ->assertRedirect(route('dashboard', absolute: false));
+        $this->assertSame(2, PhysicalPersonIdentity::query()->count());
+        $this->assertSame($this->digest($own), PhysicalPersonIdentity::query()->where('jmb_lookup', $this->digest($own))->value('jmb_lookup'));
+    }
+
+    public function test_legacy_physical_person_writer_failure_rolls_back_and_profile_login_do_not_create_graph(): void
+    {
+        $this->enableCanonicalHttp();
+        $user = $this->makeKorisnik(['jmb' => null]);
+
+        $this->get('/login')->assertOk();
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+        $this->actingAs($user)->get('/profile')->assertOk();
+        $this->actingAs($user)->from(route('profile.edit'))
+            ->put(route('profile.update'), [
+                'first_name' => 'Ana',
+                'last_name' => 'Anić',
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'city' => $user->city,
+            ])
+            ->assertRedirect(route('profile.edit'));
+        $this->assertSame(0, PlatformIdentity::query()->count());
+
+        PhysicalPersonIdentity::creating(function (): void {
+            throw new RuntimeException('forced physical insert failure');
+        });
+
+        $this->actingAs($user)->post(route('identity.completion.store'), $this->physicalPayload([
+            'jmb' => $this->validJmb($this->jmbSeq++),
+        ]))->assertForbidden();
+
+        $this->assertSame(0, PlatformIdentity::query()->count());
+        $this->assertSame(0, PhysicalPersonIdentity::query()->count());
+    }
+
+    public function test_missing_city_is_not_parsed_from_address(): void
+    {
+        $this->enableCanonicalHttp();
+        $user = $this->makeKorisnik([
+            'jmb' => null,
+            'address' => 'Ulica bez grada, Podgorica',
+            'city' => null,
+            'residential_status' => 'non-resident',
+        ]);
+
+        $shown = $this->actingAs($user)->get(route('identity.completion.create'));
+        $shown->assertOk()
+            ->assertSee('value="Ulica bez grada, Podgorica"', false)
+            ->assertDontSee('value="Podgorica"', false)
+            ->assertSee('value="non-resident" selected', false);
     }
 
     private int $pibSeq = 1;
@@ -714,6 +972,24 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
             'phone_calling_code' => '+382',
             'phone_national' => '67111001',
         ], $overrides);
+    }
+
+    private function physicalPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'first_name' => 'Ana',
+            'last_name' => 'Anić',
+            'residential_status' => 'resident',
+            'street_and_number' => 'Njegoševa 12',
+            'city' => 'Kotor',
+            'phone_calling_code' => '+382',
+            'phone_national' => '67000001',
+        ], $overrides);
+    }
+
+    private function digest(string $jmb): string
+    {
+        return (string) app(JmbLookupService::class)->digest($jmb);
     }
 
     /**

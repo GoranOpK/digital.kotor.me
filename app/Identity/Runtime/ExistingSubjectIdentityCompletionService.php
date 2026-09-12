@@ -76,7 +76,7 @@ final class ExistingSubjectIdentityCompletionService
                 }
 
                 $snapshot = $this->mapper->fromValidated($lockedUser, $branch, $validated);
-                $this->assertDeclaredJmbAvailable($snapshot, (int) $lockedUser->id);
+                $this->assertDeclaredJmbAvailable($snapshot, (int) $lockedUser->id, $branch);
                 $this->writer->createForUser($lockedUser, $snapshot);
                 $this->mirror->sync($lockedUser, $snapshot);
 
@@ -104,7 +104,7 @@ final class ExistingSubjectIdentityCompletionService
         return $outcome;
     }
 
-    private function assertDeclaredJmbAvailable(IdentitySnapshot $snapshot, int $exceptUserId): void
+    private function assertDeclaredJmbAvailable(IdentitySnapshot $snapshot, int $exceptUserId, string $branch): void
     {
         $jmb = $snapshot->physicalPerson?->jmb;
         if (! is_string($jmb) || $jmb === '') {
@@ -113,7 +113,10 @@ final class ExistingSubjectIdentityCompletionService
 
         try {
             if ($this->uniqueness->jmbTaken($jmb, $exceptUserId)) {
-                throw new CanonicalIdentityWriteException(CanonicalIdentifierUniqueness::JMB_TAKEN_MESSAGE);
+                $message = $branch === ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON
+                    ? ExistingSubjectIdentityStoredJmb::CONFLICT_MESSAGE
+                    : CanonicalIdentifierUniqueness::JMB_TAKEN_MESSAGE;
+                throw new CanonicalIdentityWriteException($message);
             }
         } catch (JmbLookupException $e) {
             throw new CanonicalIdentityWriteException('Canonical identity completion failed.', 0, $e);

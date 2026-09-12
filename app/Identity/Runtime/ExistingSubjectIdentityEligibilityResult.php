@@ -8,6 +8,8 @@ final readonly class ExistingSubjectIdentityEligibilityResult
 
     public const BRANCH_PREDUZETNIK = 'preduzetnik';
 
+    public const BRANCH_PHYSICAL_PERSON = 'physical_person';
+
     public const DENY_UNAUTHENTICATED = 'unauthenticated';
 
     public const DENY_INACTIVE = 'inactive';

@@ -3,6 +3,8 @@
 @section('content')
 @php
     $isDoo = $branch === 'doo';
+    $isPhysical = $branch === 'physical_person';
+    $hideJmb = $isPhysical && ! empty($prefill['jmb_hidden']);
     $old = fn (string $key) => old($key, $prefill[$key] ?? '');
 @endphp
 <style>
@@ -40,8 +42,13 @@
 <div class="identity-completion">
     <div class="max-w-4xl mx-auto px-4">
         <div class="page-header">
-            <h1>Dopunite podatke o subjektu</h1>
-            <p>Nalog postoji, ali je potrebno dopuniti podatke o subjektu prije nastavka sa zahtijevanom uslugom. Ovo nije nova registracija.</p>
+            @if ($isPhysical)
+                <h1>Dopuna podataka</h1>
+                <p>Prije nastavka potrebno je da provjerite i dopunite podatke svog profila.</p>
+            @else
+                <h1>Dopunite podatke o subjektu</h1>
+                <p>Nalog postoji, ali je potrebno dopuniti podatke o subjektu prije nastavka sa zahtijevanom uslugom. Ovo nije nova registracija.</p>
+            @endif
         </div>
 
         @if ($errors->any())
@@ -66,6 +73,11 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <div class="form-label">Pravni oblik</div>
                         <div class="readonly-box">DOO — Društvo sa ograničenom odgovornošću</div>
+                    </div>
+                @elseif ($isPhysical)
+                    <div class="form-group" style="margin-bottom:0;">
+                        <div class="form-label">Vrsta subjekta</div>
+                        <div class="readonly-box">Fizičko lice</div>
                     </div>
                 @else
                     <div class="form-group">
@@ -120,6 +132,7 @@
                         </select>
                         @error('residential_status')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
+                    @unless ($hideJmb)
                     <div class="form-group conditional-field" id="id_document_type_group">
                         <label for="id_document_type" class="form-label">Vrsta identifikacionog dokumenta <span class="required">*</span></label>
                         <select id="id_document_type" name="id_document_type" class="form-control @error('id_document_type') error @enderror">
@@ -129,16 +142,19 @@
                         </select>
                         @error('id_document_type')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
+                    @unless ($hideJmb)
                     <div class="form-group conditional-field" id="jmb_group">
                         <label for="jmb" class="form-label">JMB <span class="required">*</span></label>
                         <input id="jmb" name="jmb" type="text" inputmode="numeric" maxlength="13" class="form-control @error('jmb') error @enderror" value="{{ $old('jmb') }}">
                         @error('jmb')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
+                    @endunless
                     <div class="form-group conditional-field" id="passport_group">
                         <label for="passport_number" class="form-label">Broj pasoša <span class="required">*</span></label>
                         <input id="passport_number" name="passport_number" type="text" class="form-control @error('passport_number') error @enderror" value="{{ $old('passport_number') }}">
                         @error('passport_number')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
+                    @endunless
                     <div class="form-group conditional-field" id="residence_country_group" style="margin-bottom:0;">
                         <label for="residence_country_code" class="form-label">Država prebivališta <span class="required">*</span></label>
                         <select id="residence_country_code" name="residence_country_code" class="form-control @error('residence_country_code') error @enderror">
@@ -151,6 +167,7 @@
                     </div>
                 </div>
 
+                @unless ($isPhysical)
                 <div class="identity-card">
                     <h2>Poslovanje</h2>
                     <div class="form-group">
@@ -169,6 +186,7 @@
                         @error('crps_number')<div class="form-error">{{ $message }}</div>@enderror
                     </div>
                 </div>
+                @endunless
             @endif
 
             <div class="identity-card">
@@ -258,6 +276,7 @@
 <script>
 (function () {
     const isDoo = @json($isDoo);
+    const hideJmb = @json($hideJmb);
 
     function show(id, visible) {
         const el = document.getElementById(id);
@@ -277,10 +296,10 @@
         const documentType = document.getElementById('id_document_type')?.value;
         const nonResident = residential === 'non-resident';
         const resident = residential === 'resident';
-        show('id_document_type_group', nonResident);
+        show('id_document_type_group', nonResident && ! hideJmb);
         show('residence_country_group', nonResident);
-        show('jmb_group', resident || (nonResident && documentType === 'jmb'));
-        show('passport_group', nonResident && documentType === 'passport');
+        show('jmb_group', ! hideJmb && (resident || (nonResident && documentType === 'jmb')));
+        show('passport_group', ! hideJmb && nonResident && documentType === 'passport');
     }
 
     function syncDoo() {

@@ -59,7 +59,11 @@ final class ExistingSubjectIdentityEligibility
                 ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK,
                 null,
             ),
-            UserType::PHYSICAL_PERSON => $this->deny(ExistingSubjectIdentityEligibilityResult::DENY_ORDINARY_FL),
+            UserType::PHYSICAL_PERSON => new ExistingSubjectIdentityEligibilityResult(
+                true,
+                ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON,
+                null,
+            ),
             null, '' => $this->deny(ExistingSubjectIdentityEligibilityResult::DENY_ACCOUNT_ONLY),
             default => $this->deny(ExistingSubjectIdentityEligibilityResult::DENY_UNSUPPORTED),
         };

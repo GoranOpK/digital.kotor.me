@@ -102,8 +102,33 @@ class ExistingSubjectIdentityEligibilityTest extends TestCase
         $this->enableCanonicalHttp();
 
         $fl = $this->eligibility->inspect($this->makeKorisnik(['jmb' => $this->validJmb($this->jmbSeq++)]));
-        $this->assertFalse($fl->eligible);
-        $this->assertSame(ExistingSubjectIdentityEligibilityResult::DENY_ORDINARY_FL, $fl->denyReason);
+        $this->assertTrue($fl->eligible);
+        $this->assertSame(ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON, $fl->branch);
+        $this->assertNull($fl->denyReason);
+
+        $staffFl = $this->eligibility->inspect($this->makeKorisnik([
+            'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+            'user_type' => UserType::PHYSICAL_PERSON,
+            'jmb' => $this->validJmb($this->jmbSeq++),
+        ]));
+        $this->assertFalse($staffFl->eligible);
+        $this->assertSame(ExistingSubjectIdentityEligibilityResult::DENY_STAFF, $staffFl->denyReason);
+
+        $inactive = $this->eligibility->inspect($this->makeKorisnik([
+            'activation_status' => 'deactivated',
+            'jmb' => $this->validJmb($this->jmbSeq++),
+        ]));
+        $this->assertSame(ExistingSubjectIdentityEligibilityResult::DENY_INACTIVE, $inactive->denyReason);
+
+        $malformedUser = $this->makeKorisnik(['jmb' => $this->validJmb($this->jmbSeq++)]);
+        PlatformIdentity::query()->create([
+            'user_id' => $malformedUser->id,
+            'subject_type' => PlatformIdentity::SUBJECT_PHYSICAL_PERSON,
+            'mobile_phone' => '+38267000002',
+        ]);
+        $malformed = $this->eligibility->inspect($malformedUser);
+        $this->assertFalse($malformed->eligible);
+        $this->assertTrue($malformed->isMalformed());
 
         $ad = $this->eligibility->inspect($this->makeKorisnik([
             'user_type' => UserType::JOINT_STOCK_COMPANY,

@@ -7,6 +7,9 @@ use App\Identity\PhoneCallingCodeCatalog;
 use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
 use App\Identity\Runtime\ExistingSubjectIdentityEligibilityResult;
+use App\Identity\Runtime\ExistingSubjectIdentityStoredJmb;
+use App\Security\JmbEncryptedReadException;
+use App\Security\JmbLookupException;
 use App\Identity\Validation\CrpsIdentifierValidator;
 use App\Identity\Validation\JmbIdentifierValidator;
 use App\Identity\Validation\PibIdentifierValidator;
@@ -47,6 +50,10 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
 
         if ($result->branch === ExistingSubjectIdentityEligibilityResult::BRANCH_DOO) {
             return array_merge($phoneRules, $this->dooRules());
+        }
+
+        if ($result->branch === ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON) {
+            return array_merge($phoneRules, $this->physicalPersonRules());
         }
 
         return array_merge($phoneRules, $this->preduzetnikRules());
@@ -224,10 +231,71 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
         return $rules;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function physicalPersonRules(): array
+    {
+        $user = $this->user();
+        $hideJmb = false;
+        if ($user !== null) {
+            try {
+                $hideJmb = app(ExistingSubjectIdentityStoredJmb::class)->readUsable($user) !== null;
+            } catch (JmbEncryptedReadException $e) {
+                abort(403, JmbEncryptedReadException::USER_MESSAGE);
+            }
+        }
+
+        $countryCodes = CountryCatalog::codes();
+        $residential = $this->input('residential_status');
+        $rules = [
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'residential_status' => ['required', 'string', Rule::in(['resident', 'non-resident'])],
+        ];
+
+        if ($hideJmb) {
+            $rules['jmb'] = ['prohibited'];
+            $rules['id_document_type'] = ['prohibited'];
+            $rules['passport_number'] = ['prohibited'];
+            if ($residential === 'non-resident') {
+                $rules['residence_country_code'] = ['required', 'string', Rule::in($countryCodes)];
+            }
+
+            return $rules;
+        }
+
+        if ($residential === 'resident') {
+            $rules['jmb'] = ['required', 'string', 'regex:/^[0-9]{13}$/', new ValidJmb];
+        } elseif ($residential === 'non-resident') {
+            $rules['id_document_type'] = ['required', 'string', Rule::in([
+                PhysicalPersonIdentity::DOCUMENT_JMB,
+                PhysicalPersonIdentity::DOCUMENT_PASSPORT,
+            ])];
+            $rules['residence_country_code'] = ['required', 'string', Rule::in($countryCodes)];
+
+            if ($this->input('id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB) {
+                $rules['jmb'] = ['required', 'string', 'regex:/^[0-9]{13}$/', new ValidJmb];
+            } elseif ($this->input('id_document_type') === PhysicalPersonIdentity::DOCUMENT_PASSPORT) {
+                $rules['passport_number'] = ['required', 'string', 'min:3', 'max:50', 'regex:/^[A-Za-z0-9]+$/'];
+            }
+        }
+
+        return $rules;
+    }
+
     private function refineIdentifierMessages(Validator $validator, ExistingSubjectIdentityEligibilityResult $result): void
     {
         $pib = $this->input('pib');
-        if (is_string($pib) && preg_match('/^[0-9]{8}$/', $pib) && ! (new PibIdentifierValidator)->isValid($pib)) {
+        if (
+            in_array($result->branch, [
+                ExistingSubjectIdentityEligibilityResult::BRANCH_DOO,
+                ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK,
+            ], true)
+            && is_string($pib)
+            && preg_match('/^[0-9]{8}$/', $pib)
+            && ! (new PibIdentifierValidator)->isValid($pib)
+        ) {
             $validator->errors()->forget('pib');
             $validator->errors()->add('pib', 'PIB nije ispravan.');
         }
@@ -244,7 +312,14 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
         }
 
         $crps = $this->input('crps_number');
-        if (! is_string($crps) || ! preg_match('/^[0-9]{8}$/', $crps)) {
+        if (
+            ! in_array($result->branch, [
+                ExistingSubjectIdentityEligibilityResult::BRANCH_DOO,
+                ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK,
+            ], true)
+            || ! is_string($crps)
+            || ! preg_match('/^[0-9]{8}$/', $crps)
+        ) {
             return;
         }
 
@@ -271,7 +346,10 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
 
     private function refineJmbUniqueness(Validator $validator, ExistingSubjectIdentityEligibilityResult $result): void
     {
-        if ($result->branch !== ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK) {
+        if (! in_array($result->branch, [
+            ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK,
+            ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON,
+        ], true)) {
             return;
         }
 
@@ -281,6 +359,18 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
         }
 
         if ($validator->errors()->has('jmb')) {
+            return;
+        }
+
+        if ($result->branch === ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON) {
+            try {
+                if (app(CanonicalIdentifierUniqueness::class)->jmbTaken($jmb, $this->user()?->id)) {
+                    $validator->errors()->add('jmb', ExistingSubjectIdentityStoredJmb::CONFLICT_MESSAGE);
+                }
+            } catch (JmbLookupException) {
+                $validator->errors()->add('jmb', CanonicalIdentifierUniqueness::JMB_LOOKUP_UNAVAILABLE_MESSAGE);
+            }
+
             return;
         }
 

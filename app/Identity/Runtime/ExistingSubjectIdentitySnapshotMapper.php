@@ -23,14 +23,31 @@ class ExistingSubjectIdentitySnapshotMapper
             (string) $validated['phone_calling_code'],
             (string) $validated['phone_national'],
         );
-        $street = trim((string) $validated['street_and_number']);
-        $city = trim((string) $validated['city']);
+        $street = $branch === ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON
+            ? $this->confirmedAddress($user, (string) $validated['street_and_number'])
+            : trim((string) $validated['street_and_number']);
+        $city = $branch === ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON
+            ? (string) $validated['city']
+            : trim((string) $validated['city']);
 
         if ($branch === ExistingSubjectIdentityEligibilityResult::BRANCH_DOO) {
             return $this->dooSnapshot($user, $validated, $mobile, $street, $city);
         }
 
+        if ($branch === ExistingSubjectIdentityEligibilityResult::BRANCH_PHYSICAL_PERSON) {
+            return $this->physicalPersonSnapshot($user, $validated, $mobile, $street, $city);
+        }
+
         return $this->preduzetnikSnapshot($user, $validated, $mobile, $street, $city);
+    }
+
+    private function confirmedAddress(User $user, string $submitted): string
+    {
+        if (is_string($user->address) && trim($user->address) === $submitted) {
+            return $user->address;
+        }
+
+        return $submitted;
     }
 
     /**
@@ -104,6 +121,54 @@ class ExistingSubjectIdentitySnapshotMapper
                 entrepreneurBusinessName: trim((string) $validated['entrepreneur_business_name']),
                 pib: (string) $validated['pib'],
                 crpsNumber: (string) $validated['crps_number'],
+            ),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function physicalPersonSnapshot(User $user, array $validated, string $mobile, string $street, string $city): IdentitySnapshot
+    {
+        $httpResidential = (string) $validated['residential_status'];
+        $canonicalResidential = $httpResidential === 'non-resident'
+            ? PhysicalPersonIdentity::RESIDENTIAL_NON_RESIDENT
+            : PhysicalPersonIdentity::RESIDENTIAL_RESIDENT;
+        $isResident = $canonicalResidential === PhysicalPersonIdentity::RESIDENTIAL_RESIDENT;
+
+        $storedJmb = app(ExistingSubjectIdentityStoredJmb::class)->readUsable($user);
+
+        if ($storedJmb !== null) {
+            $documentType = PhysicalPersonIdentity::DOCUMENT_JMB;
+            $jmb = $storedJmb;
+            $passport = null;
+        } else {
+            $documentType = $isResident
+                ? PhysicalPersonIdentity::DOCUMENT_JMB
+                : (string) $validated['id_document_type'];
+            $isJmb = $documentType === PhysicalPersonIdentity::DOCUMENT_JMB;
+            $jmb = $isJmb ? (string) $validated['jmb'] : null;
+            $passport = $isJmb ? null : strtoupper((string) ($validated['passport_number'] ?? ''));
+        }
+
+        return new IdentitySnapshot(
+            userId: (int) $user->id,
+            isRegisteredSubject: true,
+            subjectType: PlatformIdentity::SUBJECT_PHYSICAL_PERSON,
+            mobilePhone: $mobile,
+            streetAndNumber: $street,
+            city: $city,
+            physicalPerson: new PhysicalPersonSnapshot(
+                firstName: trim((string) $validated['first_name']),
+                lastName: trim((string) $validated['last_name']),
+                residentialStatus: $canonicalResidential,
+                streetAndNumber: $street,
+                city: $city,
+                idDocumentType: $documentType,
+                jmb: $jmb,
+                passportNumber: $passport,
+                residenceCountryCode: $isResident ? null : strtoupper((string) ($validated['residence_country_code'] ?? '')),
+                isEntrepreneur: false,
             ),
         );
     }
