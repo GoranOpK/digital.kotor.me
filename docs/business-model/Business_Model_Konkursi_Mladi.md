@@ -7,16 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.6
-**Datum:** 2026-09-11
+**Verzija:** 1.0.7
+**Datum:** 2026-09-14
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
-* Zajednički poslovni model: **KN-BM-001 v1.0.1** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN)
-* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (postoji; USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (planiran; fajl nije kreiran)
-* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (postoji; NACRT)
+* Registar oznaka: **KN-RG-001 v1.0.29** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
+* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.5** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.1** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -59,6 +60,7 @@ Povezani dokumenti:
 | 1.0.4 | 2026-09-08 | KN-PATCH-BM-014 — Usklađeni pravni oblici, namjera neregistrovanog fizičkog lica, M1a/M1b i dokumentacioni paketi. Privredno društvo obuhvata DOO, AD, OD i KD. Poslovna faza ostaje objektivno pravilo Odluke; u V1 neregistrovano fizičko lice pripada započinjanju, a registrovani preduzetnik ili društvo bira fazu koju Komisija provjerava. Nema CRPS integracije ni automatskog obračuna starosti. |
 | 1.0.5 | 2026-09-09 | KN-PATCH-BM-015 — Elektronski M3 sadrži sva tri eliminatorna kriterijuma iz Odluke. Podnosilac ima pravo na jedan prigovor na svaki aktivirani kriterijum. Objedinjeno obavještenje, pojedinačni ishodi i `rejected` tek nakon konačnosti makar jednog razloga. |
 | 1.0.6 | 2026-09-11 | Administrativni closeout pokazivača: `KN-FS-001` i `KN-TS-001` označeni kao postojeći dokumenti (`USVOJENO` / `NACRT`). Poslovna pravila nijesu mijenjana. |
+| 1.0.7 | 2026-09-14 | KN-PATCH-BM-016 — Precizirano tumačenje budžeta drugog Poziva: preostala godišnja sredstva računaju se kao odobrena godišnja sredstva umanjena za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog Poziva ostaje nepromijenjen; budžet drugog Poziva mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva zajedno ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Poslovni postupak, ručno kreiranje i pravila `BM-ML-049`–`BM-ML-051` nijesu mijenjani. Ženski profil nije diran. |
 
 Napomena:
 
@@ -1880,7 +1882,7 @@ Procenat predstavlja maksimalnu granicu, a ne automatski iznos. Komisija može o
 
 Primjer:
 
-Ako je godišnje bilo odobreno 100.000 EUR, a za drugi Poziv je nakon prvog Poziva raspoloživo 40.000 EUR, osnovica drugog Poziva je 40.000 EUR:
+Ako je godišnje bilo odobreno 100.000 EUR, a konačno potvrđena raspodjela prvog Poziva iznosi 60.000 EUR, preostalo je 40.000 EUR. To važi i kada je objavljeni budžet prvog Poziva 80.000 EUR i kada je 100.000 EUR, jer se ostatak računa od odobrenih godišnjih sredstava, a ne od objavljenog budžeta prvog Poziva. Ako je budžet drugog Poziva 40.000 EUR, osnovica tog Poziva je 40.000 EUR:
 
 - 30% = 12.000 EUR;
 - 20% = 8.000 EUR;
@@ -2301,6 +2303,8 @@ U okviru jedne godišnje instance mogu postojati:
 - prvi Poziv;
 - drugi Poziv, ako se ispuni uslov iz `BM-ML-049`.
 
+Treći Poziv u istoj godišnjoj instanci ne postoji.
+
 Prvi i drugi Poziv, kada postoje, pripadaju istoj godišnjoj instanci, u skladu sa `BM-ML-050`.
 
 Godišnja instanca čuva zajednički godišnji kontekst, dok svaki Poziv ima svoje podatke, rok, prijave, provjeru, ocjenjivanje, rang-listu i raspodjelu.
@@ -2326,9 +2330,19 @@ Iznos godišnjeg budžeta je konfiguraciona vrijednost zasnovana na odobrenom bu
 
 Platforma ne izmišlja niti samostalno određuje iznos budžeta.
 
-Ukupna sredstva svih Poziva iste godišnje instance ne smiju premašiti odobrena godišnja sredstva.
+Objavljeni budžet prvog Poziva ostaje nepromijenjen nakon objave. On je limit raspodjele tog Poziva i ne prepisuje se zbog raspisivanja drugog Poziva. Ne određuje ukupan ostatak godišnjih sredstava nakon završetka prvog Poziva.
 
-Neraspoređena sredstva prvog Poziva predstavljaju osnov za drugi Poziv prema `BM-ML-049`.
+Preostala godišnja sredstva nakon prvog Poziva računaju se kao odobrena godišnja sredstva minus zbir konačno potvrđenih raspodjela prvog Poziva.
+
+Drugi Poziv se raspisuje samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni.
+
+Ukupna konačno potvrđena raspodjela oba Poziva iste godišnje instance ne smije premašiti odobrena godišnja sredstva. To ograničenje se ne tumači kao zbir objavljenih polja budžeta Poziva.
+
+Primjer: ako su odobrena godišnja sredstva 100.000 EUR, objavljeni budžet prvog Poziva 80.000 EUR, a konačno potvrđena raspodjela prvog Poziva 60.000 EUR, preostalo je 40.000 EUR. Budžet drugog Poziva može biti najviše 40.000 EUR i mora biti veći od nule. Objavljeni budžet prvog ostaje 80.000 EUR. Konačne raspodjele oba Poziva zajedno ne smiju preći 100.000 EUR.
+
+Ako je objavljeni budžet prvog Poziva jednak odobrenim godišnjim sredstvima od 100.000 EUR, a raspodjela prvog 60.000 EUR, preostalo je takođe 40.000 EUR. Budžet drugog Poziva može biti najviše 40.000 EUR.
+
+Neraspoređena godišnja sredstva nakon prvog Poziva predstavljaju osnov za drugi Poziv prema `BM-ML-049`.
 
 Način tehničkog čuvanja i obračuna nije predmet poslovnog modela.
 
@@ -2384,6 +2398,10 @@ Drugi Javni konkurs je obavezan kada poslije prvog konkursa ostanu neraspoređen
 
 Ako su sva raspoloživa sredstva dodijeljena u prvom konkursu, drugi konkurs se ne raspisuje.
 
+Neraspoređena sredstva nakon prvog Poziva su razlika između odobrenih godišnjih sredstava i zbira konačno potvrđenih raspodjela prvog Poziva. Objavljeni budžet prvog Poziva ostaje nepromijenjen; on je limit prvog Poziva i ne određuje taj godišnji ostatak.
+
+Drugi Javni konkurs može se raspisati samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni.
+
 Ovo pravilo ne ovlašćuje platformu da sama donese odluku o raspisivanju, kreiranju ili objavljivanju drugog konkursa.
 
 **Izvor:** Odluka, članovi 5 i 19; odobreno poslovno tumačenje da je drugi konkurs obavezan kada sredstva nijesu u cjelosti dodijeljena.
@@ -2412,6 +2430,8 @@ Drugi Poziv mora imati sopstvene:
 Podaci i rezultati prvog Poziva moraju ostati sačuvani radi istorije i sljedivosti.
 
 Drugi Poziv ne predstavlja novu godišnju instancu samo zato što je ponovljeni konkurs.
+
+Godišnja instanca može imati samo prvi Poziv i eventualno drugi Poziv. Treći Poziv se ne raspisuje.
 
 Ovo pravilo ne određuje tehnički ID niti strukturu baze.
 
@@ -2548,4 +2568,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.6**
+**Kraj dokumenta KN-BM-002 v1.0.7**
