@@ -376,9 +376,9 @@
             $brojPrijave = $upBroj . '/' . $redniBroj;
             $applicantType = $lockedApplicantType ?? old('applicant_type', isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null);
             $obrazacLabel = 'Obrazac 1a/1b';
-            if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
+            if (\App\Support\KnApplicationClassification::isM1a($applicantType)) {
                 $obrazacLabel = 'Obrazac 1a';
-            } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+            } elseif (\App\Support\KnApplicationClassification::isM1b($applicantType)) {
                 $obrazacLabel = 'Obrazac 1b';
             }
             $obrazacRegistracijaHeading = \App\Support\KnCommercialCompanyForm::obrazacRegistracijaHeading(
@@ -420,7 +420,7 @@
             <h1 class="obrazac-naslov-prijava">PRIJAVA</h1>
             <p class="obrazac-podnaslov" id="obrazacPodnaslovHeader">
                 na javni konkurs za raspodjelu bespovratnih sredstava<br>
-                namijenjenih za podršku ženskom preduzetništvu<br>
+                namijenjenih za podršku {{ $competition->type === 'omladinsko' ? 'preduzetništvu mladih' : 'ženskom preduzetništvu' }}<br>
                 <span id="obrazacRegistracijaHeader">{{ $obrazacRegistracijaHeading }}</span>
             </p>
         </div>
@@ -483,6 +483,10 @@
             @if(!empty($lockedRegistrationForm))
                 <input type="hidden" name="registration_form" id="kn_locked_registration_form" value="{{ $lockedRegistrationForm }}">
             @endif
+            @if(!empty($lockedCommercialForm))
+                <input type="hidden" name="commercial_form" id="kn_locked_commercial_form" value="{{ $lockedCommercialForm }}">
+                <input type="hidden" name="planned_company_form" id="kn_locked_planned_company_form" value="{{ $lockedCommercialForm }}">
+            @endif
             @if(!$readOnly && !empty($lockedBusinessStage))
                 <input type="hidden" name="business_stage" id="kn_locked_business_stage" value="{{ $lockedBusinessStage }}" data-kn-locked="1">
             @endif
@@ -524,25 +528,29 @@
                             $residentialStatus = $subjectIdentity->residentialStatus ?? '';
                             $isFizickoLiceRezident = \App\Support\ApplicationCreateApplicantTypeDefault::isFizickoLiceRezident($userType, $residentialStatus);
                             $preferredApplicantType = $lockedApplicantType ?? $preferredApplicantType ?? null;
-                            $knClassification = \App\Support\KnApplicationClassification::fromUserType($userType);
+                            $knClassification = \App\Support\KnApplicationClassification::fromUserType($userType, $competition->type);
                             $knIsRegistered = $knClassification->isRegisteredBusiness;
                             $lockedIsRegistered = (isset($existingApplication) && $existingApplication)
                                 ? (bool) $existingApplication->is_registered
                                 : (isset($startContext) && $startContext
                                     ? (bool) $startContext->isRegistered
                                     : (bool) $knIsRegistered);
-                            $knAllowsRazvoj = $knClassification->allowsStage('razvoj');
+                            $knAllowsRazvoj = $competition->type === 'omladinsko'
+                                ? (bool) $lockedIsRegistered
+                                : $knClassification->allowsStage('razvoj');
                             $knAllowsFizickoLice = $knClassification->allowsApplicantType('fizicko_lice');
                             $defaultType = \App\Support\ApplicationCreateApplicantTypeDefault::forUser(
                                 $userType,
                                 $residentialStatus,
-                                $preferredApplicantType
+                                $preferredApplicantType,
+                                $competition->type
                             );
                             $selectedApplicantType = $lockedApplicantType ?? old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType);
                             $lockedCommercialForm = $lockedCommercialForm ?? null;
                             $lockedRegistrationForm = $lockedRegistrationForm ?? null;
                             $isCommercialCompanyPath = \App\Support\KnCommercialCompanyForm::isValid($lockedCommercialForm)
-                                || $selectedApplicantType === 'doo';
+                                || $selectedApplicantType === 'doo'
+                                || $selectedApplicantType === 'privredno_drustvo';
                             $showOstaloRadio = false;
                         @endphp
                         <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
@@ -567,11 +575,11 @@
                                     id="applicant_type_preduzetnica" 
                                     name="applicant_type_display"
                                     value="preduzetnica"
-                                    {{ $selectedApplicantType === 'preduzetnica' ? 'checked' : '' }}
+                                    {{ in_array($selectedApplicantType, ['preduzetnica', 'preduzetnik'], true) ? 'checked' : '' }}
                                     disabled
                                     data-kn-locked="1"
                                 >
-                                <label for="applicant_type_preduzetnica">Preduzetnica</label>
+                                <label for="applicant_type_preduzetnica">{{ $competition->type === 'omladinsko' ? 'Preduzetnik' : 'Preduzetnica' }}</label>
                             </div>
                             <div class="radio-option">
                                 <input 
@@ -736,9 +744,9 @@
                                 
                                 // Ako i dalje nema vrednost, postavi na osnovu tipa prijave
                                 if (empty($defaultRegistrationForm)) {
-                                    if ($defaultApplicantType === 'preduzetnica') {
+                                    if ($defaultApplicantType === 'preduzetnica' || $defaultApplicantType === 'preduzetnik') {
                                         $defaultRegistrationForm = 'Preduzetnik';
-                                    } elseif ($defaultApplicantType === 'doo') {
+                                    } elseif ($defaultApplicantType === 'doo' || $defaultApplicantType === 'privredno_drustvo') {
                                         $defaultRegistrationForm = 'Društvo sa ograničenom odgovornošću';
                                     } else {
                                         // Podrazumevano za obrazac 1a
@@ -969,7 +977,7 @@
                                 }
                                 
                                 if (empty($defaultRegistrationForm1b)) {
-                                    if ($defaultApplicantType === 'doo') {
+                                    if ($defaultApplicantType === 'doo' || $defaultApplicantType === 'privredno_drustvo') {
                                         $defaultRegistrationForm1b = 'Društvo sa ograničenom odgovornošću';
                                     } else {
                                         $defaultRegistrationForm1b = '';
@@ -1432,6 +1440,22 @@
                 || document.querySelector('input[name="applicant_type"]:checked')?.value;
         }
 
+        function knIsM1a(type) {
+            return type === 'preduzetnica' || type === 'fizicko_lice' || type === 'preduzetnik';
+        }
+
+        function knIsM1b(type) {
+            return type === 'doo' || type === 'ostalo' || type === 'privredno_drustvo';
+        }
+
+        function knUsesCompanyRegistrationDefault(type) {
+            return type === 'doo' || type === 'privredno_drustvo';
+        }
+
+        function knIsRegisteredEntrepreneurType(type) {
+            return type === 'preduzetnica' || type === 'preduzetnik';
+        }
+
         function syncBusinessStageRadiosInSection(section, stage) {
             if (!section || !stage) {
                 return;
@@ -1478,8 +1502,8 @@
             const selectedType = currentApplicantType();
             const headerLabel = document.getElementById('obrazacLabelHeader');
             if (headerLabel) {
-                if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') headerLabel.textContent = 'Obrazac 1a';
-                else if (selectedType === 'doo' || selectedType === 'ostalo') headerLabel.textContent = 'Obrazac 1b';
+                if (knIsM1a(selectedType)) headerLabel.textContent = 'Obrazac 1a';
+                else if (knIsM1b(selectedType)) headerLabel.textContent = 'Obrazac 1b';
                 else headerLabel.textContent = 'Obrazac 1a/1b';
             }
             const regHeader = document.getElementById('obrazacRegistracijaHeader');
@@ -1487,9 +1511,9 @@
                 const commercialHeadings = {doo: 'DOO', ad: 'AD', od: 'OD', kd: 'KD'};
                 if (knLockedCommercialForm && commercialHeadings[knLockedCommercialForm]) {
                     regHeader.textContent = '(za oblik registracije ' + commercialHeadings[knLockedCommercialForm] + ')';
-                } else if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') {
+                } else if (knIsM1a(selectedType)) {
                     regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
-                } else if (selectedType === 'doo') {
+                } else if (selectedType === 'doo' || selectedType === 'privredno_drustvo') {
                     regHeader.textContent = '(za oblik registracije DOO)';
                 } else if (selectedType === 'ostalo') {
                     regHeader.textContent = '(za ostale pravne subjekte)';
@@ -1562,8 +1586,8 @@
             });
 
             // Prikaži/sakrij obrazce na osnovu tipa
-            if (selectedType === 'preduzetnica') {
-                // Preduzetnica - prikaži Obrazac 1a
+            if (knIsRegisteredEntrepreneurType(selectedType)) {
+                // Preduzetnica / preduzetnik - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
                     // Enable sva polja u obrazac1a
@@ -1596,7 +1620,7 @@
                         syncBusinessStageRadiosInSection(obrazac1a, savedBusinessStageValue);
                     }
                 }
-            } else if (selectedType === 'doo' || selectedType === 'ostalo') {
+            } else if (knIsM1b(selectedType)) {
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
@@ -1792,7 +1816,7 @@
             // Proveri da li postoji existingApplication
             const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
             
-            if (selectedType === 'preduzetnica') {
+            if (knIsRegisteredEntrepreneurType(selectedType)) {
                 const registrationForm1a = document.getElementById('registration_form_1a');
                 if (registrationForm1a && registrationForm1a.offsetParent !== null) {
                     // Ako već postoji vrednost (iz existingApplication ili old), ne menjaj je
@@ -1809,7 +1833,7 @@
                     }
                     console.log('Postavljeno registration_form_1a na default:', registrationForm1a.value);
                 }
-            } else if (selectedType === 'doo') {
+            } else if (knUsesCompanyRegistrationDefault(selectedType)) {
                 const registrationForm1b = document.getElementById('registration_form_1b');
                 if (registrationForm1b && registrationForm1b.offsetParent !== null) {
                     // Ako već postoji vrednost (iz existingApplication ili old), ne menjaj je
@@ -1882,7 +1906,7 @@
                 if (!physicalPersonEmail || !physicalPersonEmail.value.trim()) return false;
                 if (!physicalPersonAddress || !physicalPersonAddress.value.trim()) return false;
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
-            } else if (applicantTypeValue === 'doo' || applicantTypeValue === 'ostalo') {
+            } else if (knIsM1b(applicantTypeValue)) {
                 // Traži polja samo u aktivnoj sekciji (Obrazac 1b)
                 const founderName = activeSection ? activeSection.querySelector('input[name="founder_name"]') : form.querySelector('input[name="founder_name"]:not([disabled])');
                 const directorName = activeSection ? activeSection.querySelector('input[name="director_name"]') : form.querySelector('input[name="director_name"]:not([disabled])');
@@ -1910,7 +1934,7 @@
                 if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
-            } else if (applicantTypeValue === 'preduzetnica') {
+            } else if (knIsRegisteredEntrepreneurType(applicantTypeValue)) {
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 const applicantJmbg = activeSection ? activeSection.querySelector('input[name="preduzetnik_jmbg"]') : form.querySelector('input[name="preduzetnik_jmbg"]:not([disabled])');
                 const preduzetnikName = activeSection ? activeSection.querySelector('input[name="preduzetnik_name"]') : form.querySelector('input[name="preduzetnik_name"]:not([disabled])');
@@ -2200,9 +2224,9 @@
                         
                         // Ako nema vrednost, postavi default na osnovu applicant_type
                         if (!registrationFormValue || registrationFormValue === '') {
-                            if (selectedType === 'preduzetnica') {
+                            if (knIsRegisteredEntrepreneurType(selectedType)) {
                                 registrationFormValue = 'Preduzetnik';
-                            } else if (selectedType === 'doo') {
+                            } else if (knUsesCompanyRegistrationDefault(selectedType)) {
                                 registrationFormValue = 'Društvo sa ograničenom odgovornošću';
                             }
                             registrationFormInActive.value = registrationFormValue;

@@ -14,10 +14,12 @@ use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Security\JmbDualWrite;
 use App\Security\JmbEncryptedReadException;
+use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
 use App\Support\Pib;
 use App\Support\SensitiveIdentifierLogSanitizer;
+use App\Support\UserType;
 use App\Services\KnApplicationStartContextFactory;
 use App\Services\KnApplicationStartContextStore;
 use Illuminate\Http\Request;
@@ -26,6 +28,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -36,6 +39,10 @@ class ApplicationController extends Controller
      */
     public function start(Request $request, Competition $competition): RedirectResponse
     {
+        if ($redirect = $this->redirectIfCompetitionProfileUnavailable($competition)) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
         $identityResolver = app(CurrentIdentityResolver::class);
@@ -116,6 +123,12 @@ class ApplicationController extends Controller
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
         $identityResolver = app(CurrentIdentityResolver::class);
+
+        if (! $request->has('application_id')) {
+            if ($redirect = $this->redirectIfCompetitionProfileUnavailable($competition)) {
+                return $redirect;
+            }
+        }
 
         if (! $request->has('application_id') && $identityResolver->gatesSubjectFlows()) {
             try {
@@ -214,6 +227,12 @@ class ApplicationController extends Controller
         if ($roleName === 'konkurs_admin' && !$readOnly) {
             abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
         }
+
+        if (! $readOnly) {
+            if ($redirect = $this->redirectIfCompetitionProfileUnavailable($competition)) {
+                return $redirect;
+            }
+        }
         
         // Query applicant_type nije authority. Start-context token ili sačuvana prijava jeste.
         $preferredApplicantType = null;
@@ -282,6 +301,10 @@ class ApplicationController extends Controller
      */
     public function store(Request $request, Competition $competition): RedirectResponse
     {
+        if ($redirect = $this->redirectIfCompetitionProfileUnavailable($competition)) {
+            return $redirect;
+        }
+
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
         if (app(CurrentIdentityResolver::class)->gatesSubjectFlows()) {
@@ -339,17 +362,20 @@ class ApplicationController extends Controller
         $startContext = $this->authoritativeStartContext($request, $user, $competition, $existingApplication);
         $this->rejectIfRequestContradictsStartContext($request, $startContext);
 
-        $knContext = $this->knStoreContext($user);
+        $knContext = $this->knStoreContext($user, $competition, $startContext);
         $kn = $knContext['classification'];
         $resolvedIsRegistered = $knContext['is_registered'];
-        if ($resolvedIsRegistered !== $startContext->isRegistered) {
+        if ($competition->type !== 'omladinsko' && $resolvedIsRegistered !== $startContext->isRegistered) {
             throw ValidationException::withMessages([
                 'is_registered' => 'Registrovanost biznisa se ne može mijenjati.',
             ]);
         }
 
         $requestedStage = $request->input('business_stage');
-        if (is_string($requestedStage) && $requestedStage !== '' && ! $kn->allowsStage($requestedStage)) {
+        if ($competition->type !== 'omladinsko'
+            && is_string($requestedStage)
+            && $requestedStage !== ''
+            && ! $kn->allowsStage($requestedStage)) {
             throw ValidationException::withMessages([
                 'business_stage' => 'Neregistrovani biznis može biti samo u fazi Započinjanje.',
             ]);
@@ -358,6 +384,15 @@ class ApplicationController extends Controller
         $resolvedApplicantType = $startContext->applicantType;
         $resolvedBusinessStage = $startContext->businessStage;
         $resolvedRegistrationForm = $startContext->registrationForm;
+        $resolvedCompanyLegalForm = $competition->type === 'omladinsko'
+            ? $startContext->commercialForm
+            : null;
+
+        if ($competition->type === 'omladinsko' && $resolvedApplicantType === KnApplicationClassification::FORM_OSTALO) {
+            throw ValidationException::withMessages([
+                'applicant_type' => KnApplicationStartContextFactory::UNSUPPORTED_OMLADINSKO_IDENTITY_MESSAGE,
+            ]);
+        }
 
         $request->merge([
             'applicant_type' => $resolvedApplicantType,
@@ -389,19 +424,19 @@ class ApplicationController extends Controller
             ]);
         }
 
-        if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
+        if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'preduzetnik', 'doo', 'ostalo', 'fizicko_lice', 'privredno_drustvo'], true)) {
             $profileAddressError = $this->profileAddressErrorForUser($request->user());
             if ($profileAddressError !== null) {
                 return back()->withErrors(['preduzetnik_address' => $profileAddressError])->withInput();
             }
         }
 
-        if (!$isDraft && $resolvedIsRegistered && $request->applicant_type === 'preduzetnica' && !$request->filled('registration_form')) {
+        if (!$isDraft && $resolvedIsRegistered && KnApplicationClassification::isRegisteredEntrepreneurType($request->applicant_type) && !$request->filled('registration_form')) {
             $request->merge(['registration_form' => 'Preduzetnik']);
         }
         
         $liveApplicantTypes = $resolvedApplicantType;
-        $liveStages = $kn->isRegisteredBusiness
+        $liveStages = $resolvedIsRegistered
             ? 'započinjanje,razvoj'
             : 'započinjanje';
 
@@ -421,7 +456,7 @@ class ApplicationController extends Controller
         ];
 
         // Izjava o tačnosti je obavezna za sve tipove prijave
-        if (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true) && !$isDraft) {
+        if (in_array($request->applicant_type, ['preduzetnica', 'preduzetnik', 'doo', 'ostalo', 'fizicko_lice', 'privredno_drustvo'], true) && !$isDraft) {
             $rules['accuracy_declaration'] = 'required|accepted';
         }
 
@@ -432,7 +467,7 @@ class ApplicationController extends Controller
 
         // Company-block (osnivač / direktor / sjedište) je obavezan samo za registrovani 1b.
         // KN-FS-003 §7.8: neregistrovani 1b može biti Popunjen bez podataka koji postoje tek nakon registracije.
-        $isCompanyForm = $request->applicant_type === 'doo' || $request->applicant_type === 'ostalo';
+        $isCompanyForm = KnApplicationClassification::isM1b($request->applicant_type);
         if ($isCompanyForm && $resolvedIsRegistered && !$isDraft) {
             $rules['founder_name'] = 'required|string|max:255';
             $rules['director_name'] = 'required|string|max:255';
@@ -443,14 +478,14 @@ class ApplicationController extends Controller
             $rules['company_seat'] = ['nullable', 'string', 'max:255', new KotorMunicipalityAddress()];
         }
 
-        if (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
+        if (in_array($request->applicant_type, ['preduzetnica', 'preduzetnik', 'doo', 'ostalo', 'privredno_drustvo'], true)) {
             $rules['applicant_jmbg'] = $isDraft
                 ? 'nullable|string|regex:/^[0-9]{13}$/'
                 : 'required|string|regex:/^[0-9]{13}$/';
         }
 
         $contactRequired = $isDraft ? 'nullable' : 'required';
-        if ($request->applicant_type === 'preduzetnica') {
+        if (KnApplicationClassification::isRegisteredEntrepreneurType($request->applicant_type)) {
             $rules['preduzetnik_name'] = $contactRequired.'|string|max:255';
             $rules['preduzetnik_phone'] = $contactRequired.'|string|max:50';
             $rules['preduzetnik_email'] = $contactRequired.'|email|max:255';
@@ -481,12 +516,18 @@ class ApplicationController extends Controller
             $rules['physical_person_address'] = 'nullable|string|max:500';
         }
 
-        // Oblik registracije, CRPS i PIB su obavezni samo kada je biznis registrovan
-        if ($resolvedIsRegistered && !$isDraft) {
-            $rules['registration_form'] = 'required|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
+        // Oblik registracije, CRPS i PIB su obavezni samo kada je biznis registrovan.
+        // Rule::in accepts canonical UserType values (including ženski ostalo / NVO)
+        // and historical dropdown labels that contain commas.
+        $registrationFormRule = [
+            ($resolvedIsRegistered && ! $isDraft) ? 'required' : 'nullable',
+            Rule::in(UserType::obrazacRegistrationFormValues()),
+        ];
+        if ($resolvedIsRegistered && ! $isDraft) {
+            $rules['registration_form'] = $registrationFormRule;
             $rules['crps_number'] = 'required|string|max:50';
         } else {
-            $rules['registration_form'] = 'nullable|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
+            $rules['registration_form'] = $registrationFormRule;
             $rules['crps_number'] = 'nullable|string|max:50';
         }
 
@@ -573,6 +614,7 @@ class ApplicationController extends Controller
             $updateData = [
                 'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
                 'applicant_type' => $resolvedApplicantType,
+                'company_legal_form' => $resolvedCompanyLegalForm,
                 'business_stage' => $resolvedBusinessStage,
                 'founder_name' => $resolvedIsRegistered
                     ? ($request->filled('founder_name') ? $request->founder_name : $existingApplication->founder_name)
@@ -646,6 +688,7 @@ class ApplicationController extends Controller
                     'user_id' => Auth::id(),
                     'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : null,
                     'applicant_type' => $resolvedApplicantType,
+                    'company_legal_form' => $resolvedCompanyLegalForm,
                     'business_stage' => $resolvedBusinessStage,
                     'founder_name' => ($resolvedIsRegistered && $request->filled('founder_name')) ? $request->founder_name : null,
                     'director_name' => ($resolvedIsRegistered && $request->filled('director_name')) ? $request->director_name : null,
@@ -679,7 +722,7 @@ class ApplicationController extends Controller
                 if ($request->filled('physical_person_jmbg')) {
                     JmbDualWrite::assignLogical($application, 'physical_person_jmbg', (string) $request->physical_person_jmbg);
                 }
-                if (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true) && $request->filled('applicant_jmbg')) {
+                if (in_array($request->applicant_type, ['preduzetnica', 'preduzetnik', 'doo', 'ostalo', 'privredno_drustvo'], true) && $request->filled('applicant_jmbg')) {
                     JmbDualWrite::assignLogical($application, 'applicant_jmbg', (string) $request->applicant_jmbg);
                 }
                 $application->save();
@@ -1179,6 +1222,17 @@ class ApplicationController extends Controller
         return Storage::disk('local')->download($document->file_path, $downloadName);
     }
 
+    private function redirectIfCompetitionProfileUnavailable(Competition $competition): ?RedirectResponse
+    {
+        if (CompetitionProgramCatalog::isPubliclyAvailable($competition->type)) {
+            return null;
+        }
+
+        return redirect()
+            ->route('competitions.index')
+            ->withErrors(['error' => CompetitionProgramCatalog::PROFILE_UNAVAILABLE_FOR_APPLICATIONS_MESSAGE]);
+    }
+
     /**
      * Preuzima fajl sa MEGA-e i servira ga (view ili download).
      */
@@ -1256,7 +1310,7 @@ class ApplicationController extends Controller
     {
         $type = $application->applicant_type;
 
-        if (in_array($type, ['doo', 'ostalo'], true)) {
+        if (in_array($type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
             if ($application->is_registered) {
                 if (!KotorAddress::isInKotorMunicipality($application->company_seat)) {
                     return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
@@ -1268,7 +1322,7 @@ class ApplicationController extends Controller
             return null;
         }
 
-        if ($type === 'preduzetnica') {
+        if ($type === 'preduzetnica' || $type === 'preduzetnik') {
             if (!KotorAddress::isInKotorMunicipality($application->preduzetnik_address)) {
                 return KotorAddress::validationMessage();
             }
@@ -1335,11 +1389,11 @@ class ApplicationController extends Controller
             return;
         }
 
-        if (!in_array($applicantType, ['preduzetnica', 'doo', 'ostalo'], true)) {
+        if (!in_array($applicantType, ['preduzetnica', 'preduzetnik', 'doo', 'ostalo', 'privredno_drustvo'], true)) {
             return;
         }
 
-        $fromForm = $applicantType === 'preduzetnica'
+        $fromForm = KnApplicationClassification::isRegisteredEntrepreneurType($applicantType)
             ? $request->input('preduzetnik_jmbg')
             : $request->input('doo_jmbg');
 
@@ -1389,14 +1443,19 @@ class ApplicationController extends Controller
     /**
      * @return array{classification: KnApplicationClassification, is_registered: bool}
      */
-    protected function knStoreContext(\App\Models\User $user): array
-    {
+    protected function knStoreContext(
+        \App\Models\User $user,
+        Competition $competition,
+        KnApplicationStartContext $startContext
+    ): array {
         $identity = app(CurrentIdentityResolver::class)->viewFor($user);
-        $classification = KnApplicationClassification::fromUserType($identity->userType);
+        $classification = KnApplicationClassification::fromUserType($identity->userType, $competition->type);
 
         return [
             'classification' => $classification,
-            'is_registered' => $classification->isRegisteredBusiness,
+            'is_registered' => $competition->type === 'omladinsko'
+                ? $startContext->isRegistered
+                : $classification->isRegisteredBusiness,
         ];
     }
 

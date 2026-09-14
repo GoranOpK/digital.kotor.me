@@ -39,4 +39,29 @@ class KnCommercialCompanyFormTest extends TestCase
             KnCommercialCompanyForm::obrazacRegistracijaHeading(null, 'fizicko_lice')
         );
     }
+
+    public function test_omladinsko_stores_all_commercial_forms_as_privredno_drustvo(): void
+    {
+        foreach (['doo', 'ad', 'od', 'kd'] as $code) {
+            $this->assertSame(
+                'privredno_drustvo',
+                KnCommercialCompanyForm::applicantTypeFor($code, 'omladinsko')
+            );
+        }
+
+        $this->assertSame('doo', KnCommercialCompanyForm::applicantTypeFor('doo'));
+        $this->assertSame('ostalo', KnCommercialCompanyForm::applicantTypeFor('ad'));
+        $this->assertSame(
+            '(za oblik registracije PREDUZETNIK)',
+            KnCommercialCompanyForm::obrazacRegistracijaHeading(null, 'preduzetnik')
+        );
+        $this->assertSame(
+            '(za oblik registracije DOO)',
+            KnCommercialCompanyForm::obrazacRegistracijaHeading(null, 'privredno_drustvo')
+        );
+        $this->assertSame(
+            '(za oblik registracije AD)',
+            KnCommercialCompanyForm::obrazacRegistracijaHeading('ad', 'privredno_drustvo')
+        );
+    }
 }

@@ -47,4 +47,61 @@ class KnApplicationClassificationTest extends TestCase
         $this->assertSame('doo', $kn->resolveApplicantType('fizicko_lice'));
         $this->assertTrue($kn->allowsStage('razvoj'));
     }
+
+    public function test_omladinsko_unregistered_physical_person_allows_fizicko_lice_and_privredno_drustvo(): void
+    {
+        $kn = KnApplicationClassification::fromUserType(UserType::PHYSICAL_PERSON, 'omladinsko');
+
+        $this->assertSame(['fizicko_lice', 'privredno_drustvo'], $kn->allowedApplicantTypes);
+        $this->assertTrue($kn->supportsOmladinskoDraft());
+        $this->assertFalse($kn->allowsApplicantType('doo'));
+        $this->assertFalse($kn->allowsApplicantType('ostalo'));
+        $this->assertFalse($kn->allowsStage('razvoj'));
+        $this->assertTrue(KnApplicationClassification::isM1a('fizicko_lice'));
+        $this->assertTrue(KnApplicationClassification::isM1b('privredno_drustvo'));
+    }
+
+    public function test_omladinsko_entrepreneur_locks_preduzetnik(): void
+    {
+        $kn = KnApplicationClassification::fromUserType(UserType::ENTREPRENEUR, 'omladinsko');
+
+        $this->assertSame(['preduzetnik'], $kn->allowedApplicantTypes);
+        $this->assertSame('preduzetnik', $kn->lockedApplicantType);
+        $this->assertTrue($kn->allowsStage('razvoj'));
+        $this->assertTrue(KnApplicationClassification::isM1a('preduzetnik'));
+        $this->assertTrue(KnApplicationClassification::isRegisteredEntrepreneurType('preduzetnik'));
+    }
+
+    public function test_omladinsko_commercial_company_locks_privredno_drustvo(): void
+    {
+        foreach ([
+            UserType::LIMITED_LIABILITY_COMPANY,
+            UserType::JOINT_STOCK_COMPANY,
+            UserType::GENERAL_PARTNERSHIP,
+            UserType::LIMITED_PARTNERSHIP,
+        ] as $userType) {
+            $kn = KnApplicationClassification::fromUserType($userType, 'omladinsko');
+            $this->assertSame(['privredno_drustvo'], $kn->allowedApplicantTypes);
+            $this->assertTrue($kn->supportsOmladinskoDraft());
+            $this->assertFalse($kn->allowsApplicantType('ostalo'));
+        }
+    }
+
+    public function test_omladinsko_unsupported_identity_cannot_open_draft(): void
+    {
+        $kn = KnApplicationClassification::fromUserType(UserType::NGO_ASSOCIATION, 'omladinsko');
+
+        $this->assertTrue($kn->hasIdentity);
+        $this->assertSame([], $kn->allowedApplicantTypes);
+        $this->assertFalse($kn->supportsOmladinskoDraft());
+        $this->assertFalse($kn->allowsApplicantType('ostalo'));
+    }
+
+    public function test_mysql_enum_values_keep_existing_and_add_omladinsko_types(): void
+    {
+        $this->assertSame(
+            ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo', 'preduzetnik', 'privredno_drustvo'],
+            KnApplicationClassification::mysqlEnumValues()
+        );
+    }
 }

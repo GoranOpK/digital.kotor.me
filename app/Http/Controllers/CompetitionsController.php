@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,7 +20,7 @@ class CompetitionsController extends Controller
     {
         $now = now();
         $competitions = Competition::where('status', 'published')
-            ->where('type', 'zensko')
+            ->whereIn('type', CompetitionProgramCatalog::publiclyAvailableTypes())
             ->where(function ($query) use ($now) {
                 // Konkurs je vidljiv korisnicima samo ako je datum početka danas ili u prošlosti
                 $query->where('start_date', '<=', $now->toDateString())
@@ -43,7 +44,10 @@ class CompetitionsController extends Controller
                 return $competition;
             });
 
-        return view('competitions.index', compact('competitions'));
+        $showZenskoGuidePdf = $competitions->isNotEmpty()
+            && $competitions->every(fn (Competition $competition) => $competition->type === 'zensko');
+
+        return view('competitions.index', compact('competitions', 'showZenskoGuidePdf'));
     }
 
     /**
@@ -53,8 +57,10 @@ class CompetitionsController extends Controller
     {
         $now = now();
         
-        // Proveri da li je konkurs objavljen i da li je počeo
-        if ($competition->status !== 'published' || ($competition->start_date && $competition->start_date->startOfDay() > $now)) {
+        // Proveri da li je konkurs objavljen, da li je počeo i da li je profil javno dostupan.
+        if ($competition->status !== 'published'
+            || ($competition->start_date && $competition->start_date->startOfDay() > $now)
+            || ! CompetitionProgramCatalog::isPubliclyAvailable($competition->type)) {
             abort(404, 'Konkurs nije pronađen ili još uvijek nije počeo.');
         }
 
@@ -81,6 +87,7 @@ class CompetitionsController extends Controller
         $knCanChoosePlannedForm = false;
         $knFormApplicantType = null;
         $knAllowsRazvoj = false;
+        $knSupportsOmladinskoDraft = false;
         if (auth()->check()) {
             $user = auth()->user();
             $identity = app(CurrentIdentityResolver::class)->viewFor($user);
@@ -90,11 +97,12 @@ class CompetitionsController extends Controller
                 ->first();
 
             $applicantType = app(CurrentIdentityResolver::class)->applicantTypeFor($user);
-            $kn = KnApplicationClassification::fromUserType($userType);
+            $kn = KnApplicationClassification::fromUserType($userType, $competition->type);
             $knIsRegisteredBusiness = $kn->isRegisteredBusiness;
             $knCanChoosePlannedForm = $kn->canChoosePlannedForm && $identity->hasCurrentSubjectIdentity();
             $knAllowsRazvoj = $kn->allowsStage(KnApplicationClassification::STAGE_RAZVOJ);
-            $knFormApplicantType = $identity->hasCurrentSubjectIdentity()
+            $knSupportsOmladinskoDraft = $kn->supportsOmladinskoDraft();
+            $knFormApplicantType = $identity->hasCurrentSubjectIdentity() && $kn->allowedApplicantTypes !== []
                 ? $kn->defaultFormApplicantType()
                 : null;
         }
@@ -122,10 +130,12 @@ class CompetitionsController extends Controller
         ];
 
         // Generiši početnu listu dokumenata prema V1 obliku Obrasca 1 i registrovanosti biznisa
-        $previewApplicantType = $knFormApplicantType ?? $applicantType;
+            $previewApplicantType = $knFormApplicantType ?? $applicantType;
         $defaultDocuments = [];
-        if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $previewApplicantType === 'doo' || $previewApplicantType === 'ostalo') {
-            $catalogType = $previewApplicantType;
+        if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'preduzetnik' || $previewApplicantType === 'fizicko_lice' || $previewApplicantType === 'doo' || $previewApplicantType === 'privredno_drustvo' || $previewApplicantType === 'ostalo') {
+            $catalogType = $previewApplicantType === 'preduzetnik'
+                ? 'preduzetnica'
+                : ($previewApplicantType === 'privredno_drustvo' ? 'doo' : $previewApplicantType);
             $defaultDocuments = Application::getRequiredDocumentsForType(
                 $catalogType,
                 'započinjanje',
@@ -214,12 +224,16 @@ class CompetitionsController extends Controller
             $formTitles = \App\Models\Application::startingCommercialCompanyFormTitles();
             array_unshift($requiredDocuments, $formTitles['obrazac_2']);
             array_unshift($requiredDocuments, $formTitles['obrazac_1b']);
-        } elseif ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
+        } elseif ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'preduzetnik' || $previewApplicantType === 'fizicko_lice' || $applicantType === 'preduzetnica' || $applicantType === 'preduzetnik' || $applicantType === 'fizicko_lice') {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)');
-            array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
-        } elseif ($previewApplicantType === 'doo' || $previewApplicantType === 'ostalo' || $applicantType === 'doo' || $applicantType === 'ostalo') {
+            array_unshift($requiredDocuments, $competition->type === 'omladinsko'
+                ? 'Prijava na konkurs za podsticaj preduzetništva mladih (obrazac 1a)'
+                : 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
+        } elseif ($previewApplicantType === 'doo' || $previewApplicantType === 'ostalo' || $previewApplicantType === 'privredno_drustvo' || $applicantType === 'doo' || $applicantType === 'ostalo' || $applicantType === 'privredno_drustvo') {
             array_unshift($requiredDocuments, 'Popunjenu formu za biznis plan (obrazac 2)');
-            array_unshift($requiredDocuments, 'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)');
+            array_unshift($requiredDocuments, $competition->type === 'omladinsko'
+                ? 'Prijavu na konkurs za podsticaj preduzetništva mladih (obrazac 1b)'
+                : 'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)');
         } else {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
             array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
@@ -241,7 +255,8 @@ class CompetitionsController extends Controller
             'knIsRegisteredBusiness',
             'knCanChoosePlannedForm',
             'knFormApplicantType',
-            'knAllowsRazvoj'
+            'knAllowsRazvoj',
+            'knSupportsOmladinskoDraft'
         ));
     }
 }

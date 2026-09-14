@@ -12,7 +12,11 @@ final class KnApplicationClassification
 
     public const FORM_PREDUZETNICA = 'preduzetnica';
 
+    public const FORM_PREDUZETNIK = 'preduzetnik';
+
     public const FORM_DOO = 'doo';
+
+    public const FORM_PRIVREDNO_DRUSTVO = 'privredno_drustvo';
 
     public const FORM_OSTALO = 'ostalo';
 
@@ -40,8 +44,10 @@ final class KnApplicationClassification
     ) {
     }
 
-    public static function fromUserType(?string $userType): self
+    public static function fromUserType(?string $userType, ?string $competitionType = null): self
     {
+        $isOmladinsko = $competitionType === 'omladinsko';
+
         if ($userType === null || trim($userType) === '') {
             return new self(
                 hasIdentity: false,
@@ -63,6 +69,7 @@ final class KnApplicationClassification
             || $userType === 'Preduzetnica';
         $isExistingDoo = $userType === UserType::LIMITED_LIABILITY_COMPANY
             || $userType === 'DOO';
+        $commercial = KnCommercialCompanyForm::fromUserType($userType);
 
         if ($isUnregisteredPhysicalPerson) {
             return new self(
@@ -73,13 +80,17 @@ final class KnApplicationClassification
                 isOtherLegal: false,
                 isRegisteredBusiness: false,
                 canChoosePlannedForm: true,
-                allowedApplicantTypes: [self::FORM_FIZICKO_LICE, self::FORM_DOO],
+                allowedApplicantTypes: $isOmladinsko
+                    ? [self::FORM_FIZICKO_LICE, self::FORM_PRIVREDNO_DRUSTVO]
+                    : [self::FORM_FIZICKO_LICE, self::FORM_DOO],
                 allowedBusinessStages: [self::STAGE_ZAPOCINJANJE],
                 lockedApplicantType: null,
             );
         }
 
         if ($isExistingEntrepreneur) {
+            $locked = $isOmladinsko ? self::FORM_PREDUZETNIK : self::FORM_PREDUZETNICA;
+
             return new self(
                 hasIdentity: true,
                 isUnregisteredPhysicalPerson: false,
@@ -88,9 +99,24 @@ final class KnApplicationClassification
                 isOtherLegal: false,
                 isRegisteredBusiness: true,
                 canChoosePlannedForm: false,
-                allowedApplicantTypes: [self::FORM_PREDUZETNICA],
+                allowedApplicantTypes: [$locked],
                 allowedBusinessStages: [self::STAGE_ZAPOCINJANJE, self::STAGE_RAZVOJ],
-                lockedApplicantType: self::FORM_PREDUZETNICA,
+                lockedApplicantType: $locked,
+            );
+        }
+
+        if ($isOmladinsko && $commercial !== null) {
+            return new self(
+                hasIdentity: true,
+                isUnregisteredPhysicalPerson: false,
+                isExistingEntrepreneur: false,
+                isExistingDoo: $commercial === KnCommercialCompanyForm::DOO,
+                isOtherLegal: false,
+                isRegisteredBusiness: true,
+                canChoosePlannedForm: false,
+                allowedApplicantTypes: [self::FORM_PRIVREDNO_DRUSTVO],
+                allowedBusinessStages: [self::STAGE_ZAPOCINJANJE, self::STAGE_RAZVOJ],
+                lockedApplicantType: self::FORM_PRIVREDNO_DRUSTVO,
             );
         }
 
@@ -109,6 +135,21 @@ final class KnApplicationClassification
             );
         }
 
+        if ($isOmladinsko) {
+            return new self(
+                hasIdentity: true,
+                isUnregisteredPhysicalPerson: false,
+                isExistingEntrepreneur: false,
+                isExistingDoo: false,
+                isOtherLegal: true,
+                isRegisteredBusiness: true,
+                canChoosePlannedForm: false,
+                allowedApplicantTypes: [],
+                allowedBusinessStages: [self::STAGE_ZAPOCINJANJE],
+                lockedApplicantType: null,
+            );
+        }
+
         return new self(
             hasIdentity: true,
             isUnregisteredPhysicalPerson: false,
@@ -121,6 +162,41 @@ final class KnApplicationClassification
             allowedBusinessStages: [self::STAGE_ZAPOCINJANJE, self::STAGE_RAZVOJ],
             lockedApplicantType: self::FORM_OSTALO,
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function mysqlEnumValues(): array
+    {
+        return [
+            self::FORM_PREDUZETNICA,
+            self::FORM_DOO,
+            self::FORM_FIZICKO_LICE,
+            self::FORM_OSTALO,
+            self::FORM_PREDUZETNIK,
+            self::FORM_PRIVREDNO_DRUSTVO,
+        ];
+    }
+
+    public static function isM1a(?string $type): bool
+    {
+        return in_array($type, [self::FORM_FIZICKO_LICE, self::FORM_PREDUZETNICA, self::FORM_PREDUZETNIK], true);
+    }
+
+    public static function isM1b(?string $type): bool
+    {
+        return in_array($type, [self::FORM_DOO, self::FORM_OSTALO, self::FORM_PRIVREDNO_DRUSTVO], true);
+    }
+
+    public static function isRegisteredEntrepreneurType(?string $type): bool
+    {
+        return in_array($type, [self::FORM_PREDUZETNICA, self::FORM_PREDUZETNIK], true);
+    }
+
+    public function supportsOmladinskoDraft(): bool
+    {
+        return $this->hasIdentity && $this->allowedApplicantTypes !== [];
     }
 
     public function defaultFormApplicantType(): string

@@ -146,9 +146,10 @@
     <div class="container mx-auto px-4">
         <div class="page-header">
             <div class="page-header-main">
-                <h1>Konkursi za podršku ženskom preduzetništvu</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled aktivnih konkursa za podršku ženskom preduzetništvu iz budžeta Opštine Kotor</p>
+                <h1>Konkursi za podršku preduzetništvu</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled objavljenih konkursa za podršku preduzetništvu iz budžeta Opštine Kotor</p>
             </div>
+            @if($showZenskoGuidePdf)
             <a
                 href="{{ route('competitions.guide.pdf') }}"
                 class="page-header-guide-btn"
@@ -158,6 +159,7 @@
                 <span aria-hidden="true">📄</span>
                 Uputstvo za podnosioce (PDF)
             </a>
+            @endif
         </div>
 
         @if($competitions->count() > 0)

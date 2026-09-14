@@ -17,10 +17,10 @@ final class ApplicationCreateApplicantTypeDefault
         return $userType === 'Fizičko lice' && $residentialStatus === 'resident';
     }
 
-    public static function forUser(mixed $userType, mixed $residentialStatus, mixed $preferredApplicantType = null): string
+    public static function forUser(mixed $userType, mixed $residentialStatus, mixed $preferredApplicantType = null, ?string $competitionType = null): string
     {
         $userType = $userType ?? '';
-        $kn = KnApplicationClassification::fromUserType(is_string($userType) ? $userType : null);
+        $kn = KnApplicationClassification::fromUserType(is_string($userType) ? $userType : null, $competitionType);
 
         if (is_string($preferredApplicantType) && $kn->allowsApplicantType($preferredApplicantType)) {
             return $preferredApplicantType;
@@ -30,7 +30,7 @@ final class ApplicationCreateApplicantTypeDefault
             return $kn->defaultFormApplicantType();
         }
 
-        if ($preferredApplicantType && in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
+        if ($preferredApplicantType && in_array($preferredApplicantType, KnApplicationClassification::mysqlEnumValues(), true)) {
             return $preferredApplicantType;
         }
 

@@ -18,12 +18,47 @@
         padding: 24px;
         border-radius: 16px;
         margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .page-header-main {
+        flex: 1;
+        min-width: 220px;
     }
     .page-header h1 {
         color: #fff;
         font-size: 32px;
         font-weight: 700;
         margin: 0 0 8px;
+    }
+    .page-header-guide-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        white-space: nowrap;
+        transition: background 0.2s, color 0.2s;
+    }
+    .page-header-guide-btn:hover {
+        background: #eff6ff;
+        color: var(--primary-dark);
+    }
+    @media (max-width: 640px) {
+        .page-header-guide-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
     .info-card {
         background: #fff;
@@ -168,8 +203,21 @@
 <div class="competition-detail-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>{{ $competition->title }}</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku ženskom preduzetništvu</p>
+            <div class="page-header-main">
+                <h1>{{ $competition->title }}</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku {{ $competition->type === 'omladinsko' ? 'preduzetništvu mladih' : 'ženskom preduzetništvu' }}</p>
+            </div>
+            @if($competition->type === 'zensko')
+                <a
+                    href="{{ route('competitions.guide.pdf') }}"
+                    class="page-header-guide-btn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <span aria-hidden="true">📄</span>
+                    Uputstvo za podnosioce (PDF)
+                </a>
+            @endif
         </div>
 
         @if ($errors->any())
@@ -310,6 +358,15 @@
                     }
                 }
                 $showApplicantDocumentation = !$isCommissionMemberForThisCompetition && !$isCompetitionAdmin;
+                $showZenskoStartChooser = $competition->type !== 'omladinsko'
+                    && auth()->check()
+                    && $applicantType
+                    && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident')));
+                $showOmladinskoStartChooser = auth()->check()
+                    && $competition->type === 'omladinsko'
+                    && !empty($knSupportsOmladinskoDraft);
+                $showStartChooser = $showZenskoStartChooser || $showOmladinskoStartChooser;
+                $isCompanyStagePreview = in_array($knFormApplicantType ?? $applicantType, ['doo', 'ostalo', 'privredno_drustvo'], true);
             @endphp
             @if($showApplicantDocumentation)
                 <!-- Obavezna dokumentacija -->
@@ -319,7 +376,7 @@
                         Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
                     </p>
                     
-                    @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
+                    @if($showStartChooser)
                     <!-- Izbor faze biznisa -->
                     <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
                         @if(!empty($knCanChoosePlannedForm))
@@ -386,7 +443,7 @@
                                     checked
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>{{ empty($knIsRegisteredBusiness) ? 'Započinjanje biznisa' : ((($knFormApplicantType ?? $applicantType) === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis') }}</span>
+                                <span>{{ empty($knIsRegisteredBusiness) ? 'Započinjanje biznisa' : ($isCompanyStagePreview ? 'Društvo koje započinje biznis' : ($competition->type === 'omladinsko' ? 'Preduzetnik koji započinje biznis' : 'Preduzetnica koja započinje biznis')) }}</span>
                             </label>
                             <label style="display: flex; align-items: center; cursor: pointer;{{ empty($knAllowsRazvoj) ? ' display: none;' : '' }}">
                                 <input 
@@ -397,7 +454,7 @@
                                     style="margin-right: 8px; cursor: pointer;"
                                     {{ empty($knAllowsRazvoj) ? 'disabled' : '' }}
                                 >
-                                <span>{{ (($knFormApplicantType ?? $applicantType) === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja' }}</span>
+                                <span>{{ $isCompanyStagePreview ? 'Društvo koje planira razvoj poslovanja' : ($competition->type === 'omladinsko' ? 'Preduzetnik koji planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja') }}</span>
                             </label>
                         </div>
                     </div>
@@ -454,7 +511,11 @@
         @endphp
         @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
-            @if($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
+            @if($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition && $competition->type === 'omladinsko' && empty($knSupportsOmladinskoDraft))
+                <p style="color: #6b7280; margin-bottom: 0;">
+                    {{ \App\Services\KnApplicationStartContextFactory::UNSUPPORTED_OMLADINSKO_IDENTITY_MESSAGE }}
+                </p>
+            @elseif($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
                 <form method="POST" action="{{ route('applications.start', $competition) }}" id="applyStartForm" style="display: inline;">
                     @csrf
                     <input type="hidden" name="planned_intent" id="apply_planned_intent" value="">
@@ -485,10 +546,11 @@
     </div>
 </div>
 
-@if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
+@if(!empty($showStartChooser))
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let applicantType = @json($knFormApplicantType ?? $applicantType);
+    const competitionType = @json($competition->type);
     const isRegisteredBusiness = @json((bool) ($knIsRegisteredBusiness ?? false));
     const registrationDocs = @json(\App\Support\KnApplicationClassification::registrationConditionedDocumentTypes());
     const documentLabels = @json($documentLabels);
@@ -543,6 +605,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
+    documentsMap['preduzetnik'] = documentsMap['preduzetnica'];
+    documentsMap['privredno_drustvo'] = documentsMap['doo'];
+
+    function knIsM1aPreview(type) {
+        return type === 'preduzetnica' || type === 'preduzetnik' || type === 'fizicko_lice';
+    }
+
+    function knIsM1bPreview(type) {
+        return type === 'doo' || type === 'ostalo' || type === 'privredno_drustvo';
+    }
     
     function updateDocumentsList() {
         const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
@@ -564,18 +636,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Dodaj obavezne dokumente koje svi moraju imati
         let allDocuments = [];
         
-        if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+        if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && knIsM1aPreview(applicantType)) {
             allDocuments = [
-                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
+                competitionType === 'omladinsko'
+                    ? 'Prijava na konkurs za podsticaj preduzetništva mladih (obrazac 1a)'
+                    : 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2)',
             ];
-        } else if (selectedStage === 'započinjanje' && (applicantType === 'doo' || applicantType === 'ostalo')) {
+        } else if (selectedStage === 'započinjanje' && knIsM1bPreview(applicantType)) {
             const formTitles = @json(\App\Models\Application::startingCommercialCompanyFormTitles());
             allDocuments = [
                 formTitles.obrazac_1b,
                 formTitles.obrazac_2,
             ];
-        } else if (selectedStage === 'razvoj' && (applicantType === 'doo' || applicantType === 'ostalo')) {
+        } else if (selectedStage === 'razvoj' && knIsM1bPreview(applicantType)) {
             const formTitles = @json(\App\Models\Application::developingCommercialCompanyFormTitles());
             allDocuments = [
                 formTitles.obrazac_1b,
@@ -776,7 +850,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else if (intent === 'planned_company') {
                 const selectedCompany = document.querySelector('input[name="planned_company_form"]:checked')?.value;
-                applicantType = selectedCompany === 'doo' ? 'doo' : 'ostalo';
+                applicantType = competitionType === 'omladinsko'
+                    ? 'privredno_drustvo'
+                    : (selectedCompany === 'doo' ? 'doo' : 'ostalo');
                 if (plannedCompanyForms) {
                     plannedCompanyForms.style.display = 'block';
                 }
@@ -791,7 +867,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     plannedCompanyFormRadios.forEach(radio => {
         radio.addEventListener('change', function () {
-            applicantType = radio.value === 'doo' ? 'doo' : 'ostalo';
+            applicantType = competitionType === 'omladinsko'
+                ? 'privredno_drustvo'
+                : (radio.value === 'doo' ? 'doo' : 'ostalo');
             updateDocumentsList();
             updateApplyLink();
         });

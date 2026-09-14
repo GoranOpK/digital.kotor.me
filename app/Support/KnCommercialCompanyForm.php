@@ -66,9 +66,14 @@ final class KnCommercialCompanyForm
      * Runtime applicant_type for a commercial company.
      * DOO keeps `doo`. AD/OD/KD stay on historical schema value `ostalo`
      * while registration_form preserves the concrete oblik.
+     * For omladinsko all four forms store `privredno_drustvo`.
      */
-    public static function applicantTypeFor(string $code): string
+    public static function applicantTypeFor(string $code, ?string $competitionType = null): string
     {
+        if ($competitionType === 'omladinsko') {
+            return KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO;
+        }
+
         return $code === self::DOO
             ? KnApplicationClassification::FORM_DOO
             : KnApplicationClassification::FORM_OSTALO;
@@ -98,8 +103,10 @@ final class KnCommercialCompanyForm
 
         return match ($applicantType) {
             KnApplicationClassification::FORM_PREDUZETNICA,
+            KnApplicationClassification::FORM_PREDUZETNIK,
             KnApplicationClassification::FORM_FIZICKO_LICE => '(za oblik registracije PREDUZETNIK)',
-            KnApplicationClassification::FORM_DOO => '(za oblik registracije DOO)',
+            KnApplicationClassification::FORM_DOO,
+            KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO => '(za oblik registracije DOO)',
             KnApplicationClassification::FORM_OSTALO => '(za ostale pravne subjekte)',
             default => '(za oblik registracije PREDUZETNIK)',
         };

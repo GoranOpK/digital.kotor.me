@@ -130,6 +130,35 @@ final class UserType
         ];
     }
 
+    /**
+     * Allowed Obrazac 1 registration_form values: historical dropdown labels
+     * plus canonical legal-entity storage values used by start-context.
+     *
+     * @return list<string>
+     */
+    public static function obrazacRegistrationFormValues(): array
+    {
+        return array_values(array_unique(array_merge(
+            [
+                self::ENTREPRENEUR,
+                self::GENERAL_PARTNERSHIP,
+                self::LIMITED_PARTNERSHIP,
+                self::LIMITED_LIABILITY_COMPANY,
+                self::JOINT_STOCK_COMPANY,
+                self::LEGACY_FOREIGN_BRANCH,
+                self::LEGACY_ASSOCIATION_BUNDLE,
+                self::LEGACY_INSTITUTION_BUNDLE,
+                self::LEGACY_OTHER_ORGANIZATIONS,
+                self::NGO_ASSOCIATION,
+                self::NGO_FOUNDATION,
+                self::SPORTS_ORGANIZATION,
+                self::FOREIGN_BRANCH,
+            ],
+            self::registrationBusinessStorageValues(),
+            self::retainedLegacyStorageValues()
+        )));
+    }
+
     public static function requiresCrps(?string $type): bool
     {
         return in_array($type, [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\KnApplicationClassification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Security\JmbEncryptedReadException;
@@ -185,7 +186,7 @@ class Application extends Model
         ?string $applicantType,
         ?string $businessStage
     ): bool {
-        return in_array($applicantType, ['doo', 'ostalo'], true)
+        return in_array($applicantType, ['doo', 'ostalo', 'privredno_drustvo'], true)
             && $businessStage === 'započinjanje';
     }
 
@@ -330,6 +331,7 @@ class Application extends Model
         'user_id',
         'business_plan_name',
         'applicant_type',
+        'company_legal_form',
         'business_stage',
         'founder_name',
         'director_name',
@@ -715,7 +717,8 @@ class Application extends Model
                 : null;
         }
 
-        if (!in_array($this->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
+        if (! KnApplicationClassification::isRegisteredEntrepreneurType($this->applicant_type)
+            && ! KnApplicationClassification::isM1b($this->applicant_type)) {
             return null;
         }
 
@@ -851,14 +854,14 @@ class Application extends Model
                 !$this->physical_person_address) {
                 return false;
             }
-        } elseif ($this->applicant_type === 'preduzetnica') {
+        } elseif ($this->applicant_type === 'preduzetnica' || $this->applicant_type === 'preduzetnik') {
             if (!$this->preduzetnik_name ||
                 !$this->preduzetnik_phone ||
                 !$this->preduzetnik_email ||
                 !$this->preduzetnik_address) {
                 return false;
             }
-        } elseif ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo') {
+        } elseif ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo' || $this->applicant_type === 'privredno_drustvo') {
             if (!$this->doo_name ||
                 !$this->doo_phone ||
                 !$this->doo_email ||
@@ -874,7 +877,7 @@ class Application extends Model
             }
         }
 
-        if (in_array($this->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
+        if (in_array($this->applicant_type, ['preduzetnica', 'preduzetnik', 'doo', 'ostalo', 'privredno_drustvo'], true)) {
             try {
                 $jmbg = $this->resolvedApplicantJmbg();
             } catch (JmbEncryptedReadException) {

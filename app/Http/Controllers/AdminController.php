@@ -20,6 +20,7 @@ use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
+use App\Support\CompetitionProgramCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -133,22 +134,7 @@ class AdminController extends Controller
      */
     protected function getCompetitionProgramDefinitions(): array
     {
-        return [
-            'zensko' => [
-                'type' => 'zensko',
-                'title' => 'Podrška ženskom preduzetništvu',
-                'description' => 'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.',
-                'status' => 'active',
-                'icon' => '👩‍💼',
-            ],
-            'omladinsko' => [
-                'type' => 'omladinsko',
-                'title' => 'Podrška preduzetništvu mladih',
-                'description' => 'Modul u razvoju — upravljanje konkursima ovog tipa.',
-                'status' => 'development',
-                'icon' => '🎓',
-            ],
-        ];
+        return CompetitionProgramCatalog::definitions();
     }
 
     /**
