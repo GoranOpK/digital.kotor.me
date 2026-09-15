@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
+use App\Support\KnOmladinskoDocumentPackage;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -132,19 +133,28 @@ class CompetitionsController extends Controller
         // Generiši početnu listu dokumenata prema V1 obliku Obrasca 1 i registrovanosti biznisa
             $previewApplicantType = $knFormApplicantType ?? $applicantType;
         $defaultDocuments = [];
-        if ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'preduzetnik' || $previewApplicantType === 'fizicko_lice' || $previewApplicantType === 'doo' || $previewApplicantType === 'privredno_drustvo' || $previewApplicantType === 'ostalo') {
-            $catalogType = $previewApplicantType === 'preduzetnik'
-                ? 'preduzetnica'
-                : ($previewApplicantType === 'privredno_drustvo' ? 'doo' : $previewApplicantType);
+        $omladinskoPackage = null;
+        if ($competition->type === 'omladinsko') {
+            $omladinskoPackage = KnOmladinskoDocumentPackage::resolve(
+                $previewApplicantType,
+                KnApplicationClassification::STAGE_ZAPOCINJANJE,
+                $knIsRegisteredBusiness
+            );
+            $defaultDocuments = $omladinskoPackage->displayedDocumentTypes();
+        } elseif ($previewApplicantType === 'preduzetnica' || $previewApplicantType === 'fizicko_lice' || $previewApplicantType === 'doo' || $previewApplicantType === 'ostalo') {
             $defaultDocuments = Application::getRequiredDocumentsForType(
-                $catalogType,
+                $previewApplicantType,
                 'započinjanje',
                 $knIsRegisteredBusiness
             );
         }
 
         // Mapiraj dokumente u ljudski čitljive nazive
-        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType, $previewApplicantType, $knIsRegisteredBusiness) {
+        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType, $previewApplicantType, $knIsRegisteredBusiness, $omladinskoPackage) {
+            if ($omladinskoPackage !== null) {
+                return $omladinskoPackage->labels()[$docType] ?? $docType;
+            }
+
             $label = $documentLabels[$docType] ?? $docType;
             $labelType = $previewApplicantType ?: $applicantType;
             
@@ -220,7 +230,11 @@ class CompetitionsController extends Controller
 
         // Dodaj obavezne dokumente koje svi moraju imati
         $previewType = $previewApplicantType ?: $applicantType;
-        if (\App\Models\Application::usesStartingCommercialCompanyLabels($previewType, 'započinjanje')) {
+        if ($omladinskoPackage !== null && $omladinskoPackage->number !== null) {
+            $formTitles = $omladinskoPackage->formTitles();
+            array_unshift($requiredDocuments, $formTitles['m2']);
+            array_unshift($requiredDocuments, $formTitles['m1']);
+        } elseif (\App\Models\Application::usesStartingCommercialCompanyLabels($previewType, 'započinjanje')) {
             $formTitles = \App\Models\Application::startingCommercialCompanyFormTitles();
             array_unshift($requiredDocuments, $formTitles['obrazac_2']);
             array_unshift($requiredDocuments, $formTitles['obrazac_1b']);
@@ -237,6 +251,26 @@ class CompetitionsController extends Controller
         } else {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
             array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
+        }
+
+        $omladinskoPreviewMaps = [];
+        if ($competition->type === 'omladinsko') {
+            $documentLabels = [];
+            foreach ([
+                ['fizicko_lice', KnApplicationClassification::STAGE_ZAPOCINJANJE],
+                ['preduzetnik', KnApplicationClassification::STAGE_ZAPOCINJANJE],
+                ['preduzetnik', KnApplicationClassification::STAGE_RAZVOJ],
+                ['privredno_drustvo', KnApplicationClassification::STAGE_ZAPOCINJANJE],
+                ['privredno_drustvo', KnApplicationClassification::STAGE_RAZVOJ],
+            ] as [$type, $stage]) {
+                $package = KnOmladinskoDocumentPackage::resolve($type, $stage, $knIsRegisteredBusiness);
+                $omladinskoPreviewMaps[$type][$stage] = [
+                    'items' => $package->previewItems(),
+                ];
+                foreach ($package->labels() as $docType => $label) {
+                    $documentLabels[$docType] = $label;
+                }
+            }
         }
 
         return view('competitions.show', compact(
@@ -256,7 +290,8 @@ class CompetitionsController extends Controller
             'knCanChoosePlannedForm',
             'knFormApplicantType',
             'knAllowsRazvoj',
-            'knSupportsOmladinskoDraft'
+            'knSupportsOmladinskoDraft',
+            'omladinskoPreviewMaps'
         ));
     }
 }

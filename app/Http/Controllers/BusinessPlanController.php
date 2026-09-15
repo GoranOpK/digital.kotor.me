@@ -10,6 +10,7 @@ use App\Support\Pib;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Security\JmbDualWrite;
 use App\Security\JmbEncryptedReadException;
+use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\KotorAddress;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use Illuminate\Http\Request;
@@ -247,13 +248,13 @@ class BusinessPlanController extends Controller
                 $defaultData['applicant_phone'] = PhoneNumber::normalize($application->physical_person_phone ?? $identity->phone ?? '');
                 $defaultData['applicant_email'] = $application->physical_person_email ?? $applicantUser->email ?? '';
                 $defaultData['applicant_address'] = $identityAddress;
-            } elseif ($application->applicant_type === 'preduzetnica') {
+            } elseif ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'preduzetnik') {
                 $defaultData['applicant_name'] = $applicantUser->name ?? '';
                 $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
                 $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
                 $defaultData['applicant_email'] = $applicantUser->email ?? '';
                 $defaultData['applicant_address'] = $identityAddress;
-            } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
+            } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo' || $application->applicant_type === 'privredno_drustvo') {
                 $defaultData['applicant_name'] = $applicantUser->name ?? '';
                 $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? $identity->jmb ?? '';
                 $defaultData['applicant_phone'] = PhoneNumber::normalize($identity->phone ?? '');
@@ -438,6 +439,7 @@ class BusinessPlanController extends Controller
             // II. MARKETING
             'products_services_table' => 'nullable|array',
             'realization_type' => 'nullable|string|max:255',
+            'realization_other_text' => 'nullable|string|max:2000',
             'target_customers' => 'nullable|array',
             'sales_locations' => 'nullable|array',
             'has_business_space' => 'nullable|string|max:50',
@@ -504,6 +506,27 @@ class BusinessPlanController extends Controller
             ]);
         }
 
+        $application->loadMissing('competition');
+        if (! $isDraft && $application->isOmladinskoProfile()) {
+            $realizationType = (string) $request->input('realization_type', '');
+            if ($realizationType === '') {
+                throw ValidationException::withMessages([
+                    'realization_type' => 'Tačka 7 biznis plana mora imati tačno jedan odgovor.',
+                ]);
+            }
+            if ($realizationType === KnOmladinskoDocumentPackage::REALIZATION_DRUGO
+                && trim((string) $request->input('realization_other_text', '')) === '') {
+                throw ValidationException::withMessages([
+                    'realization_other_text' => 'Ako je u tački 7 izabrano „Drugo“, obavezno je tekstualno objašnjenje.',
+                ]);
+            }
+            if (KnOmladinskoDocumentPackage::filledPurchaseCount($request->input('funding_sources_table')) < 1) {
+                throw ValidationException::withMessages([
+                    'funding_sources_table' => 'Tabela nabavki mora sadržati najmanje jednu stavku.',
+                ]);
+            }
+        }
+
         $this->bpLog('BP_STORE: validation ok', [
             'application_id' => $application->id,
             'validated_keys' => array_keys($validated),
@@ -536,6 +559,14 @@ class BusinessPlanController extends Controller
 
         $cleanedData = $validated;
         unset($cleanedData['finances_notice_confirmed']);
+        unset($cleanedData['realization_other_text']);
+
+        $application->loadMissing('competition');
+        if ($application->isOmladinskoProfile()) {
+            $cleanedData['product_service'] = ((string) ($validated['realization_type'] ?? '')) === KnOmladinskoDocumentPackage::REALIZATION_DRUGO
+                ? trim((string) $request->input('realization_other_text', ''))
+                : null;
+        }
         $renderedTables = array_values(array_filter(
             (array) $request->input('rendered_tables', []),
             static fn ($field) => is_string($field) && $field !== ''

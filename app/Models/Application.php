@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\KnApplicationClassification;
+use App\Support\KnOmladinskoDocumentPackage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Security\JmbEncryptedReadException;
@@ -14,6 +15,33 @@ class Application extends Model
     use SynchronizesJmbEncryption;
 
     public const DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI = 'potvrda_zavod_nezaposleni';
+
+    /**
+     * Dozvoljeni upload tipovi ženskog toka (postojeći enum).
+     *
+     * @var list<string>
+     */
+    public const ZENSKO_UPLOAD_DOCUMENT_TYPES = [
+        'licna_karta',
+        'crps_resenje',
+        'pib_resenje',
+        'pdv_resenje',
+        'statut',
+        'karton_potpisa',
+        'potvrda_neosudjivanost',
+        'uvjerenje_opstina_porezi',
+        'uvjerenje_opstina_nepokretnost',
+        'potvrda_upc_porezi',
+        'ioppd_obrazac',
+        'godisnji_racuni',
+        'izvjestaj_realizacija',
+        'finansijski_izvjestaj',
+        'izvjestaj_registar_kase',
+        'dokaz_ziro_racun',
+        'predracuni_nabavka',
+        'potvrda_zavod_nezaposleni',
+        'ostalo',
+    ];
 
     /**
      * PO-adopted labels for registered Preduzetnica / započinjanje.
@@ -991,6 +1019,35 @@ class Application extends Model
         return [self::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI];
     }
 
+    public function isOmladinskoProfile(): bool
+    {
+        $this->loadMissing('competition');
+
+        return $this->competition?->type === 'omladinsko';
+    }
+
+    public function omladinskoDocumentPackage(): ?KnOmladinskoDocumentPackage
+    {
+        if (! $this->isOmladinskoProfile()) {
+            return null;
+        }
+
+        return KnOmladinskoDocumentPackage::forApplication($this);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function allowedUploadDocumentTypes(): array
+    {
+        $package = $this->omladinskoDocumentPackage();
+        if ($package !== null) {
+            return $package->displayedDocumentTypes();
+        }
+
+        return self::ZENSKO_UPLOAD_DOCUMENT_TYPES;
+    }
+
     public static function getZavodNezaposleniDocumentLabel(): string
     {
         return 'Potvrda Zavoda za zapošljavanje Crne Gore da se podnositeljka prijave nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci (ukoliko ostvaruje pravo na dodatne bodove po tom osnovu)';
@@ -1001,6 +1058,11 @@ class Application extends Model
      */
     public function getStrictlyRequiredDocuments(): array
     {
+        $package = $this->omladinskoDocumentPackage();
+        if ($package !== null) {
+            return $package->strictlyRequiredDocumentTypes();
+        }
+
         return array_values(array_diff(
             $this->getRequiredDocuments(),
             self::getConditionallyRequiredDocumentTypes()
@@ -1043,6 +1105,11 @@ class Application extends Model
      */
     public function getDocumentLabelsMap(): array
     {
+        $package = $this->omladinskoDocumentPackage();
+        if ($package !== null) {
+            return $package->labels();
+        }
+
         $isPreduzetnica = in_array($this->applicant_type, ['preduzetnica', 'fizicko_lice'], true);
         $isDooOstalo = in_array($this->applicant_type, ['doo', 'ostalo'], true);
         $isZapocinjanje = $this->business_stage === 'započinjanje';
@@ -1175,6 +1242,11 @@ class Application extends Model
      */
     public function getRequiredDocuments(): array
     {
+        $package = $this->omladinskoDocumentPackage();
+        if ($package !== null) {
+            return $package->displayedDocumentTypes();
+        }
+
         $documents = [];
         $isRegistered = $this->is_registered ?? false;
         
@@ -1347,8 +1419,13 @@ class Application extends Model
      * Statička metoda za generisanje liste dokumenata na osnovu tipa prijave i faze biznisa
      * Koristi se za prikaz liste dokumenata prije nego što korisnik krene u prijavu
      */
-    public static function getRequiredDocumentsForType(string $applicantType, string $businessStage, bool $isRegistered = false): array
+    public static function getRequiredDocumentsForType(string $applicantType, string $businessStage, bool $isRegistered = false, ?string $competitionType = null): array
     {
+        if ($competitionType === 'omladinsko') {
+            return KnOmladinskoDocumentPackage::resolve($applicantType, $businessStage, $isRegistered)
+                ->displayedDocumentTypes();
+        }
+
         $documents = [];
         
         // Preduzetnice koje započinju biznis (započinjanje)

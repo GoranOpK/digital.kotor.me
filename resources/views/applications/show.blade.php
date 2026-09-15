@@ -294,6 +294,9 @@
 
 <div class="application-detail-page">
     <div class="container mx-auto px-4">
+        @php
+            $omladinskoPackage = $application->omladinskoDocumentPackage();
+        @endphp
         <div class="page-header">
             <h1>Status prijave</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $application->business_plan_name }}</p>
@@ -302,6 +305,38 @@
         @if(session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('document_warning'))
+            <div class="alert" style="background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e;">
+                {{ session('document_warning') }}
+            </div>
+        @endif
+
+        @if(session('omladinsko_confirm_missing_documents') && $application->status === 'draft')
+            <div id="omladinsko-missing-documents-warning" class="alert" style="background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    Upozorenje prije podnošenja: nisu priloženi svi obavezni prilozi.
+                </p>
+                <p style="margin: 0 0 8px 0;">
+                    Nedostaju: {{ implode(', ', session('omladinsko_missing_document_labels', [])) }}
+                </p>
+                <p style="margin: 0 0 12px 0;">
+                    Prijava ostaje u pripremi. Možete se vratiti na uređivanje i dopuniti priloge, ili svjesno podnijeti prijavu bez dopune. Komisija utvrđuje potpunost dokumentacije.
+                </p>
+                <p style="margin: 0 0 12px 0;">
+                    <a href="#application-documents">Vrati se na uređivanje</a>
+                </p>
+                @if($application->competition?->is_open)
+                    <form method="POST" action="{{ route('applications.final-submit', $application) }}">
+                        @csrf
+                        <input type="hidden" name="confirm_missing_documents" value="1">
+                        <button type="submit" class="btn btn-primary" style="background: #10b981;">
+                            Podnesi prijavu uprkos nedostajućim prilozima
+                        </button>
+                    </form>
+                @endif
             </div>
         @endif
 
@@ -616,15 +651,19 @@
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($isReadyToSubmit && $competition?->is_open)
+                                @if(! ($omladinskoPackage && session('omladinsko_confirm_missing_documents')))
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
                                     @csrf
                                     <button type="submit" class="btn btn-primary" style="background: #10b981; width: 100%; font-size: 13px;">
                                         🚀 Podnesi prijavu
                                     </button>
                                 </form>
+                                @endif
                                 @if(!empty($missingDocs))
                                     @php
-                                        $documentLabels = [
+                                        $documentLabels = $omladinskoPackage
+                                            ? $application->getDocumentLabelsMap()
+                                            : [
                                             'potvrda_zavod_nezaposleni' => \App\Models\Application::getZavodNezaposleniDocumentLabel(),
                                             'licna_karta' => 'Lična karta',
                                             'crps_resenje' => 'CRPS rješenje',
@@ -676,7 +715,7 @@
 
             <!-- 3. Dodaj dokument (treća sekcija u prvom redu) -->
             @if($showUpload)
-            <div class="info-card">
+            <div class="info-card" id="application-documents">
                 <h2>Dodaj dokument</h2>
                 <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
                     <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data" id="upload-doc-form-{{ $application->id }}" data-app-id="{{ $application->id }}" onsubmit="return prepareUploadFormSubmit(event, {{ $application->id }})">
@@ -691,7 +730,9 @@
                                     
                                     // Definiši redoslijed dokumenata za dropdown
                                     $order = [];
-                                    if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
+                                    if ($omladinskoPackage) {
+                                        $order = $omladinskoPackage->displayedDocumentTypes();
+                                    } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
                                         $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') {
                                         $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
@@ -729,6 +770,9 @@
                                     $isPreduzetnicaFizicko = in_array($application->applicant_type, ['preduzetnica', 'fizicko_lice']);
                                     $isZapocinjanje = $application->business_stage === 'započinjanje';
                                     $isRazvoj = $application->business_stage === 'razvoj';
+                                    if ($omladinskoPackage) {
+                                        $documentLabels = $omladinskoPackage->labels();
+                                    } else {
                                     $documentLabels = [
                                         'potvrda_zavod_nezaposleni' => \App\Models\Application::getZavodNezaposleniDocumentLabel(),
                                         'licna_karta' => ($isDooOstalo && $isRazvoj) ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)' : 'Ovjerena kopija lične karte',
@@ -792,6 +836,7 @@
                                         $application->business_stage,
                                         $application->is_registered
                                     );
+                                    }
                                 @endphp
                                 @foreach($orderedDocsForDropdown as $docType)
                                     @if(!in_array($docType, $uploadedDocs))
@@ -869,6 +914,14 @@
         <!-- Dokumenti -->
         <div class="info-card">
             <h2>Priložena dokumentacija</h2>
+            @if($omladinskoPackage && $omladinskoPackage->number)
+                <p style="font-size: 13px; color: #374151; margin: 0 0 8px 0;">
+                    Dokumentacioni paket {{ $omladinskoPackage->number }} — {{ $omladinskoPackage->title() }}
+                </p>
+                <p style="font-size: 12px; color: #4b5563; margin: 0 0 16px 0;">
+                    Obrasci (nisu upload prilozi): {{ $omladinskoPackage->formTitles()['m1'] }}; {{ $omladinskoPackage->formTitles()['m2'] }}
+                </p>
+            @endif
             
             @php
                 $requiredDocs = $application->getRequiredDocuments();
@@ -878,7 +931,16 @@
                 
                 // Definiši redoslijed dokumenata na osnovu tipa prijave i faze biznisa
                 $orderedDocs = [];
-                if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
+                if ($omladinskoPackage) {
+                    $order = $omladinskoPackage->displayedDocumentTypes();
+                    foreach ($requiredDocs as $docType) {
+                        if (!in_array($docType, $order)) {
+                            $order[] = $docType;
+                        }
+                    }
+                    $orderedDocs = array_intersect($order, $requiredDocs);
+                    $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
+                } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
                     // Redoslijed za Preduzetnica koja započinje biznis
                     $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     // Dodaj ostale dokumente koje možda postoje (npr. izvještaji)
@@ -950,6 +1012,9 @@
                     $isZapocinjanje = $application->business_stage === 'započinjanje';
                     $isRazvoj = $application->business_stage === 'razvoj';
 
+                    if ($omladinskoPackage) {
+                        $documentLabels = $omladinskoPackage->labels();
+                    } else {
                     $documentLabels = [];
                     $documentLabels['potvrda_zavod_nezaposleni'] = \App\Models\Application::getZavodNezaposleniDocumentLabel();
                     $documentLabels['licna_karta'] = ($isDooOstalo && $isRazvoj) ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)' : (($isDooOstalo && $isZapocinjanje) ? 'Ovjerenu kopiju lične karte' : 'Ovjerena kopija lične karte');
@@ -1018,6 +1083,7 @@
                         $application->business_stage,
                         $application->is_registered
                     );
+                    }
                     // Broj priloženih obaveznih dokumenata (samo tipovi iz $orderedDocs)
                     $uploadedRequiredCount = count(array_intersect($orderedDocs, $allUploadedTypes));
             @endphp
@@ -1076,6 +1142,7 @@
                                 $isUploaded = in_array($docType, $uploadedDocs);
                                 $document = $isUploaded ? $application->documents->firstWhere('document_type', $docType) : null;
                                 $isOptionalDoc = in_array($docType, \App\Models\Application::getConditionallyRequiredDocumentTypes(), true);
+                                $omladinskoNonBlocking = $omladinskoPackage && $omladinskoPackage->isNonBlocking($docType);
                             @endphp
                             <tr style="border-bottom: 1px solid #e5e7eb;">
                                 <td style="padding: 12px; color: #111827;">
@@ -1085,6 +1152,10 @@
                                     @if($isUploaded)
                                         <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 12px; font-weight: 600;">
                                             ✓ Priloženo
+                                        </span>
+                                    @elseif($omladinskoNonBlocking)
+                                        <span style="display: inline-block; padding: 4px 12px; background: #e0f2fe; color: #075985; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                            Nije uslov podnošenja
                                         </span>
                                     @elseif($isOptionalDoc)
                                         <span style="display: inline-block; padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 12px; font-weight: 600;">
@@ -1119,13 +1190,16 @@
                             $uploaded = in_array($docType, $uploadedDocs);
                             $doc = $application->documents->where('document_type', $docType)->first();
                             $isOptionalDoc = in_array($docType, \App\Models\Application::getConditionallyRequiredDocumentTypes(), true);
+                            $omladinskoNonBlocking = $omladinskoPackage && $omladinskoPackage->isNonBlocking($docType);
                         @endphp
-                        <li class="document-item {{ $uploaded ? 'uploaded' : ($isOptionalDoc ? '' : 'required') }}">
+                        <li class="document-item {{ $uploaded ? 'uploaded' : ($isOptionalDoc || $omladinskoNonBlocking ? '' : 'required') }}">
                             <div class="document-info">
                                 <div class="document-name">
                                     {{ $documentLabels[$docType] ?? $docType }}
                                     @if(!$uploaded)
-                                        @if($isOptionalDoc)
+                                        @if($omladinskoNonBlocking)
+                                            <span style="color: #075985; font-size: 12px; margin-left: 8px;">(Nije uslov podnošenja)</span>
+                                        @elseif($isOptionalDoc)
                                             <span style="color: #92400e; font-size: 12px; margin-left: 8px;">(Opciono — za dodatne bodove)</span>
                                         @else
                                             <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
@@ -1144,11 +1218,13 @@
                                        class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
                                         Pogledaj
                                     </a>
-                                    @if(auth()->id() === $application->user_id)
+                                    @if(auth()->id() === $application->user_id && ! $omladinskoPackage)
                                         <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
                                            class="btn btn-secondary" style="margin-right: 4px;">
                                             Preuzmi
                                         </a>
+                                    @endif
+                                    @if(auth()->id() === $application->user_id)
                                         <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
                                               method="POST" 
                                               style="display: inline;" 

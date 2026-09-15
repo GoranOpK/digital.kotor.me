@@ -375,11 +375,12 @@
             $redniBroj = isset($existingApplication) && $existingApplication ? ($existingApplication->redni_broj ?? '—') : '—';
             $brojPrijave = $upBroj . '/' . $redniBroj;
             $applicantType = $lockedApplicantType ?? old('applicant_type', isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null);
+            $isOmladinsko = $competition->type === 'omladinsko';
             $obrazacLabel = 'Obrazac 1a/1b';
             if (\App\Support\KnApplicationClassification::isM1a($applicantType)) {
-                $obrazacLabel = 'Obrazac 1a';
+                $obrazacLabel = $isOmladinsko ? 'Obrazac M1a' : 'Obrazac 1a';
             } elseif (\App\Support\KnApplicationClassification::isM1b($applicantType)) {
-                $obrazacLabel = 'Obrazac 1b';
+                $obrazacLabel = $isOmladinsko ? 'Obrazac M1b' : 'Obrazac 1b';
             }
             $obrazacRegistracijaHeading = \App\Support\KnCommercialCompanyForm::obrazacRegistracijaHeading(
                 $lockedCommercialForm ?? null,
@@ -603,7 +604,7 @@
 
             <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
             <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: {{ !empty($knIsRegistered) ? 'none' : 'block' }}; margin-bottom: 24px;">
-                <strong>Važno:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+                <strong>Važno:</strong> Ukoliko {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} biznis plana nema registrovanu djelatnost, u slučaju da {{ $isOmladinsko ? 'mu' : 'joj' }} sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
             </div>
 
             <!-- Izbor tipa prijave za Fizičko lice (Rezident) -->
@@ -834,7 +835,7 @@
                                 required
                             >
                             <label for="accuracy_declaration_1a">
-                                Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                Kao {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
                                 <span class="required">*</span>
                             </label>
                         </div>
@@ -866,7 +867,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Ime i prezime nositeljke biznisa:</label>
+                        <label class="form-label">Ime i prezime {{ $isOmladinsko ? 'nosioca' : 'nositeljke' }} biznisa:</label>
                         <input 
                             type="text" 
                             name="doo_name" 
@@ -1110,7 +1111,7 @@
                                 required
                             >
                             <label for="accuracy_declaration_1b">
-                                Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                Kao {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
                                 <span class="required">*</span>
                             </label>
                         </div>
@@ -1235,7 +1236,7 @@
                                 required
                             >
                             <label for="accuracy_declaration_fizicko">
-                                Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                Kao {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
                                 <span class="required">*</span>
                             </label>
                         </div>
@@ -1418,6 +1419,7 @@
     const knLockedCommercialForm = @json($lockedCommercialForm ?? null);
     const knLockedBusinessStage = @json($lockedBusinessStage ?? null);
     const knLockedRegistrationForm = @json($lockedRegistrationForm ?? null);
+    const knIsOmladinsko = @json($isOmladinsko);
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -1502,9 +1504,9 @@
             const selectedType = currentApplicantType();
             const headerLabel = document.getElementById('obrazacLabelHeader');
             if (headerLabel) {
-                if (knIsM1a(selectedType)) headerLabel.textContent = 'Obrazac 1a';
-                else if (knIsM1b(selectedType)) headerLabel.textContent = 'Obrazac 1b';
-                else headerLabel.textContent = 'Obrazac 1a/1b';
+                if (knIsM1a(selectedType)) headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1a' : 'Obrazac 1a';
+                else if (knIsM1b(selectedType)) headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1b' : 'Obrazac 1b';
+                else headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1a/M1b' : 'Obrazac 1a/1b';
             }
             const regHeader = document.getElementById('obrazacRegistracijaHeader');
             if (regHeader) {

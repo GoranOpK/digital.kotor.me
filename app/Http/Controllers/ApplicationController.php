@@ -17,6 +17,7 @@ use App\Security\JmbEncryptedReadException;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
+use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\Pib;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Support\UserType;
@@ -870,7 +871,7 @@ class ApplicationController extends Controller
     /**
      * Konačno podnošenje prijave
      */
-    public function submit(Application $application): RedirectResponse
+    public function submit(Request $request, Application $application): RedirectResponse
     {
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
@@ -907,8 +908,37 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => $kotorAddressError]);
         }
 
+        $application->loadMissing('competition');
+        if ($application->isOmladinskoProfile()) {
+            $businessPlan = $application->businessPlan;
+            if (! KnOmladinskoDocumentPackage::hasPurchaseItem($businessPlan)) {
+                return back()->withErrors(['error' => 'Tabela nabavki mora sadržati najmanje jednu stavku.']);
+            }
+            $realizationError = KnOmladinskoDocumentPackage::realizationError($businessPlan);
+            if ($realizationError !== null) {
+                return back()->withErrors(['error' => $realizationError]);
+            }
+        }
+
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.
         // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje.
+        // Za omladinsko BM-ML-022: upozorenje prije submitted; svjesna potvrda dozvoljava nastavak.
+
+        $missingDocumentWarning = null;
+        if ($application->isOmladinskoProfile()) {
+            $application->loadMissing('documents');
+            $missingLabels = $application->getMissingRequiredDocumentLabels();
+            if ($missingLabels !== []) {
+                if ((string) $request->input('confirm_missing_documents') !== '1') {
+                    return redirect()
+                        ->route('applications.show', $application)
+                        ->with('omladinsko_confirm_missing_documents', true)
+                        ->with('omladinsko_missing_document_labels', $missingLabels);
+                }
+
+                $missingDocumentWarning = 'Napomena: nisu priloženi svi obavezni prilozi ('.implode(', ', $missingLabels).'). Podnošenje je evidentirano. Komisija utvrđuje potpunost dokumentacije.';
+            }
+        }
 
         // Dodeli redni broj prijave (1, 2, 3, ...) po konkursu
         $maxRedni = Application::where('competition_id', $application->competition_id)->max('redni_broj');
@@ -918,8 +948,14 @@ class ApplicationController extends Controller
             'redni_broj' => ($maxRedni ?? 0) + 1,
         ]);
 
-        return redirect()->route('applications.show', $application)
+        $redirect = redirect()->route('applications.show', $application)
             ->with('success', 'Poštovani, vaša prijava će biti proslijeđena komisiji na razmatranje, nakon isteka roka za prijavljivanje!');
+
+        if ($missingDocumentWarning !== null) {
+            $redirect->with('document_warning', $missingDocumentWarning);
+        }
+
+        return $redirect;
     }
 
     /**
@@ -952,14 +988,20 @@ class ApplicationController extends Controller
             }
         }
 
+        $allowedTypes = $application->allowedUploadDocumentTypes();
+        if ($allowedTypes === []) {
+            return back()->withErrors(['document_type' => 'Za ovu prijavu nema dozvoljenih priloga.'])->withInput();
+        }
+
         $validated = $request->validate([
-            'document_type' => 'required|string|in:licna_karta,crps_resenje,pib_resenje,pdv_resenje,statut,karton_potpisa,potvrda_neosudjivanost,uvjerenje_opstina_porezi,uvjerenje_opstina_nepokretnost,potvrda_upc_porezi,ioppd_obrazac,godisnji_racuni,izvjestaj_realizacija,finansijski_izvjestaj,izvjestaj_registar_kase,dokaz_ziro_racun,predracuni_nabavka,potvrda_zavod_nezaposleni,ostalo',
+            'document_type' => ['required', 'string', Rule::in($allowedTypes)],
             'files' => 'required_without:user_document_id|array|min:1',
             'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max po fajlu
             'user_document_id' => 'nullable|required_without:files',
             'document_name' => 'nullable|string|max:255',
         ], [
             'document_type.required' => 'Tip dokumenta je obavezan.',
+            'document_type.in' => 'Ovaj tip dokumenta ne pripada paketu ove prijave.',
             'files.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
             'user_document_id.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
             'files.*.max' => 'Fajl ne može biti veći od 20MB.',

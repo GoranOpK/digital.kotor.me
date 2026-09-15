@@ -551,6 +551,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let applicantType = @json($knFormApplicantType ?? $applicantType);
     const competitionType = @json($competition->type);
+    const omladinskoPreviewMaps = @json($omladinskoPreviewMaps ?? []);
     const isRegisteredBusiness = @json((bool) ($knIsRegisteredBusiness ?? false));
     const registrationDocs = @json(\App\Support\KnApplicationClassification::registrationConditionedDocumentTypes());
     const documentLabels = @json($documentLabels);
@@ -559,7 +560,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const plannedCompanyFormRadios = document.querySelectorAll('input[name="planned_company_form"]');
     const plannedCompanyForms = document.getElementById('planned-company-forms');
     const documentsList = document.getElementById('documents-list');
-    
+
+    @if(($competition->type ?? '') === 'omladinsko')
+    function updateDocumentsList() {
+        const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
+        if (!selectedStage) return;
+        const items = omladinskoPreviewMaps[applicantType]?.[selectedStage]?.items || [];
+        if (documentsList) {
+            documentsList.innerHTML = items.map(function (doc) {
+                return '<li>' + doc + '</li>';
+            }).join('');
+        }
+    }
+    @else
     // Mapa dokumenata po tipu prijave i fazi biznisa
     // Za započinjanje, uvijek prikazujemo sve dokumente sa napomenama za opcione
     const documentsMap = {
@@ -638,9 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && knIsM1aPreview(applicantType)) {
             allDocuments = [
-                competitionType === 'omladinsko'
-                    ? 'Prijava na konkurs za podsticaj preduzetništva mladih (obrazac 1a)'
-                    : 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
+                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2)',
             ];
         } else if (selectedStage === 'započinjanje' && knIsM1bPreview(applicantType)) {
@@ -834,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function() {
             documentsList.innerHTML = allDocuments.map(doc => `<li>${doc}</li>`).join('');
         }
     }
+    @endif
     
     // Dodaj event listener-e na radio button-e
     businessStageRadios.forEach(radio => {

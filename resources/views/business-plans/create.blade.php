@@ -630,6 +630,7 @@
 
         @php
             $readOnly = $readOnly ?? false;
+            $isOmladinsko = $application->competition?->type === 'omladinsko';
             $businessPlanTableFields = [
                 'products_services_table',
                 'target_customers',
@@ -695,7 +696,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            2. Podaci o podnositeljki biznis plana: <span class="required">*</span>
+                            2. Podaci o {{ $isOmladinsko ? 'podnosiocu' : 'podnositeljki' }} biznis plana: <span class="required">*</span>
                         </label>
                         <div class="form-row" style="grid-template-columns: repeat(3, 1fr);">
                             <div class="form-group">
@@ -754,7 +755,7 @@
                         </div>
                         <input type="hidden" name="has_registered_business" value="{{ (bool) ($application->is_registered ?? false) ? '1' : '0' }}">
                         <div id="napomenaNemaRegistraciju" class="info-box conditional-field {{ ! (bool) ($application->is_registered ?? false) ? 'show' : '' }}">
-                            <strong>Napomena:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima ili na način definisan pravilima djelatnosti kojom namjerava da se bavi, najkasnije do dana potpisivanja ugovora.
+                            <strong>Napomena:</strong> Ukoliko {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} biznis plana nema registrovanu djelatnost, u slučaju da {{ $isOmladinsko ? 'mu' : 'joj' }} sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima ili na način definisan pravilima djelatnosti kojom namjerava da se bavi, najkasnije do dana potpisivanja ugovora.
                         </div>
                     </div>
 
@@ -910,9 +911,21 @@
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="realization_type" value="nista_od_navedenog" id="realization_none" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'nista_od_navedenog' ? 'checked' : '' }}>
-                                <label for="realization_none">Ništa od navedenog</label>
+                                <label for="realization_none">{{ $isOmladinsko ? 'Drugo' : 'Ništa od navedenog' }}</label>
                             </div>
                         </div>
+                        @if($isOmladinsko)
+                            <div class="form-group" style="margin-top: 12px;">
+                                <label class="form-label" for="realization_other_text">Ako je izabrano „Drugo“, unesite objašnjenje:</label>
+                                <textarea name="realization_other_text" id="realization_other_text" class="form-control @error('realization_other_text') error @enderror" rows="3">{{ old('realization_other_text', $businessPlan->product_service ?? '') }}</textarea>
+                                @error('realization_other_text')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endif
+                        @error('realization_type')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
