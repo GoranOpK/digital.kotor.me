@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.5
-**Datum:** 2026-09-14
+**Verzija:** 1.0.6
+**Datum:** 2026-09-15
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.29** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.30** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.7** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.8** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.12** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.1** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.2** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -45,6 +45,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.3 | 2026-09-09 | KN-PATCH-FS-009 — Elektronski M3 prikazuje sva tri eliminatorna kriterijuma kao odvojene stavke. Jedno objedinjeno obavještenje, jedan prigovor na aktivirane kriterijume, odluka po kriterijumu i `rejected` tek nakon konačnosti makar jednog razloga. |
 | 1.0.4 | 2026-09-11 | Administrativni closeout pokazivača: `KN-FS-001` i `KN-TS-001` označeni kao postojeći dokumenti (`USVOJENO` / `NACRT`) u povezanim dokumentima, hijerarhiji, §2.2 i tabeli izvora. Funkcionalna pravila nijesu mijenjana. |
 | 1.0.5 | 2026-09-14 | KN-PATCH-FS-010 — Usklađeno tumačenje budžeta drugog Poziva: preostala godišnja sredstva računaju se kao odobreni godišnji budžet umanjen za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog Poziva ostaje nepromijenjen; budžet drugog Poziva mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva zajedno ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Funkcionalni tok, ručno kreiranje i ženski profil nijesu mijenjani. |
+| 1.0.6 | 2026-09-15 | KN-PATCH-FS-011 — Usklađena kapija drugog Poziva sa postojećim zatvaranjem prvog Poziva: dugme ili akcija za drugi Poziv nije dostupna dok prvi nije `completed`; `hasChairmanCompletedDecisions()` i `completed` predstavljaju tehničku kapiju V1; nakon kapije i `remaining_after_first > 0` Administrator ručno kreira nacrt; nema automatskog drugog ni trećeg Poziva. Indeks ostaje 142/142. Ženski tok nije diran. |
 
 Napomena:
 
@@ -177,7 +178,7 @@ Dokument se odnosi na **V1**.
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.5.
+Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.8.
 
 Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.1.
 
@@ -277,11 +278,11 @@ Status poglavlja: USVOJENO
 
 Hijerarhija dokumentacije za ovaj profil:
 
-* `KN-RG-001` v1.0.29
+* `KN-RG-001` v1.0.30
 * → `KN-BM-001` (zajednička pravila modula Konkursi)
 * → `KN-BM-002` (poslovna pravila profila mladih)
 * → `KN-FS-002` (ovo dokument)
-* → `KN-TS-002` (tehnička specifikacija profila mladih; USVOJEN v1.0.1)
+* → `KN-TS-002` (tehnička specifikacija profila mladih; USVOJEN v1.0.2)
 * → `KN-TS-001` (zajednička tehnička specifikacija; NACRT).
 
 ## 2.1. Autoritet
@@ -321,14 +322,14 @@ Postojanje `KN-FS-001` **ne** daje `KN-FS-002` pravo da izmišlja zajednička pr
 |----|-------|---------|--------|-------------------|
 | DK-DS-001 | Digital Kotor Documentation Standard v1 | 1.0.0 | USVOJENO | Document ID, tipovi, statusi, sljedivost, folderi |
 | METHODOLOGY.md | Metodologija dokumentacije | 1.0 | AKTIVAN | FS se piše prema BM, ne prema kodu; BM → FS → TS |
-| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.29 | USVOJENO | kanonski Document ID i evidencija ovog dokumenta |
+| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.30 | USVOJENO | kanonski Document ID i evidencija ovog dokumenta |
 | KN-BM-001 | Zajednički poslovni model modula Konkursi | 0.2.11 | USVOJENO | zajednička pravila `BM-KN-001`–`BM-KN-015` |
-| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.7 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
+| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.8 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
 | KN-BM-003 | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | 1.0.17 | USVOJEN | samo uporedni BM; nije izvor pravila mladih |
 | KN-FS-001 | Zajedničke funkcionalnosti modula Konkursi | 0.2.13 | USVOJENO | zajednički FS; ne ovlašćuje izmišljanje zajedničkih pravila |
 | KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 1.0.12 | USVOJEN | samo strukturni/uporedni FS |
 | KN-TS-001 | Zajednička tehnička specifikacija modula Konkursi | 0.1.0 | NACRT | zajednički tehnički sloj; NACRT |
-| KN-TS-002 | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | 1.0.1 | USVOJEN | tehnička realizacija ovog FS-a; nije univerzalni KN SSOT |
+| KN-TS-002 | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | 1.0.2 | USVOJEN | tehnička realizacija ovog FS-a; nije univerzalni KN SSOT |
 
 ## 2.5. Lokalne oznake funkcionalnih odluka F-*
 
@@ -902,7 +903,7 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Prijava | `evaluated` | potvrda nepodrške ispod praga | puna ocjena < 30 | `rejected`; bodovi i rang sačuvani | predsjednik | `BM-ML-044` |
 | Prijava | `evaluated` | prag ispunjen, nema dovoljno sredstava | konačna raspodjela | `rejected` uz razlog nedovoljnih sredstava; bodovi i rang sačuvani | predsjednik | `BM-ML-044`; `BM-ML-048` |
 | Raspodjela | (nema evidentiranog iznosa) | unos iznosa | konačna faza | iznos evidentiran; prijava ostaje zaključana | predsjednik | `BM-ML-048` |
-| Poziv | konačni rezultat; iznosi evidentirani | ručno zaključi i arhiviraj | svi preduslovi iz §23.2 ispunjeni | Poziv arhiviran; status prijave nepromijenjen; nije obrisan; drugi Poziv se ne kreira automatski | predsjednik / sistem blokira ako uslovi nisu ispunjeni | F-05; `BM-ML-058`; `BM-ML-051` |
+| Poziv | konačni rezultat; iznosi evidentirani | ručno zaključi i arhiviraj | svi preduslovi iz §23.2 ispunjeni | Poziv arhiviran; status prijave nepromijenjen; nije obrisan; drugi Poziv se ne kreira automatski; zatvaranje je kapija poslije koje se drugi Poziv može ručno kreirati | predsjednik / sistem blokira ako uslovi nisu ispunjeni | F-05; `BM-ML-058`; `BM-ML-051` |
 
 ## 4.11. Prihvatni kriterijumi — stanja i F-05
 
@@ -1025,7 +1026,7 @@ Ukupna konačno potvrđena raspodjela oba Poziva iste godišnje instance **ne** 
 
 Primjer: odobreni godišnji budžet 100.000 EUR, objavljeni budžet prvog Poziva 80.000 EUR, konačna raspodjela prvog 60.000 EUR → preostalo 40.000 EUR; budžet drugog najviše 40.000 EUR; objavljeni budžet prvog ostaje 80.000 EUR. Ako je objavljeni budžet prvog 100.000 EUR uz istu raspodjelu 60.000 EUR, preostalo je takođe 40.000 EUR.
 
-Neraspoređena godišnja sredstva nakon prvog Poziva predstavljaju poslovni osnov za drugi Poziv prema `BM-ML-049`. Platforma **ne** kreira drugi Poziv automatski (`BM-ML-051`). Godišnja instanca može imati samo prvi i eventualno drugi Poziv.
+Neraspoređena godišnja sredstva nakon prvog Poziva predstavljaju poslovni osnov za drugi Poziv prema `BM-ML-049`. Drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: `hasChairmanCompletedDecisions()` mora biti tačno i prvi Poziv mora imati status `completed`. Tek tada, i samo ako je ostatak veći od nule, Administrator ručno kreira nacrt. Platforma **ne** kreira drugi Poziv automatski (`BM-ML-051`). Godišnja instanca može imati samo prvi i eventualno drugi Poziv.
 
 ## 5.3. Pojedinačni Poziv
 
@@ -4064,6 +4065,12 @@ Nakon potvrđene raspodjele prvog Poziva Platforma:
 * računa i prikazuje preostala godišnja sredstva nakon prvog Poziva kao odobreni godišnji budžet minus zbir konačno potvrđenih raspodjela prvog Poziva;
 * evidentira da postoje ili ne postoje takva neraspoređena sredstva.
 
+Prikaz ostatka **nije** dozvola za kreiranje drugog Poziva.
+
+Dugme ili akcija za drugi Poziv **nije** dostupna dok prvi Poziv nema status `completed`. Prije toga Platforma prikazuje da postupak prvog Poziva nije završen.
+
+U V1 su `hasChairmanCompletedDecisions()` i status `completed` tehnička kapija. Koristi se isti postojeći postupak zatvaranja kao kod ženskog preduzetništva. Predsjednik završava sve odluke i iznose. Tek nakon te kapije, i samo ako je `remaining_after_first` veći od nule, Administrator može ručno kreirati nacrt drugog Poziva.
+
 Ako su sva godišnja sredstva raspodijeljena, odnosno ako ostatak nije veći od nule:
 
 * drugi Poziv se **ne** raspisuje;
@@ -4074,9 +4081,9 @@ Ako postoje neraspoređena godišnja sredstva nakon prvog Poziva:
 * drugi Javni konkurs je **obavezan** prema `BM-ML-049`;
 * Platforma **ne** donosi pravnu ili poslovnu odluku umjesto odgovornog korisnika;
 * Platforma **ne** kreira i **ne** objavljuje drugi Poziv automatski;
-* odgovorni korisnik **ručno** započinje pripremu drugog Poziva.
+* odgovorni korisnik **ručno** započinje pripremu drugog Poziva tek nakon `completed` prvog Poziva.
 
-Opcionalnost drugog Poziva iz ženskog profila **ne** važi ovdje. Kod mladih je drugi Poziv obavezan kada ostanu sredstva. Platforma ne pretvara tu obavezu u automatsko kreiranje ni automatsko objavljivanje.
+Opcionalnost drugog Poziva iz ženskog profila **ne** važi ovdje. Kod mladih je drugi Poziv obavezan kada ostanu sredstva. Platforma ne pretvara tu obavezu u automatsko kreiranje ni automatsko objavljivanje. Ženski tok se ne mijenja.
 
 ## 22.2. Godišnja instanca
 
@@ -4086,13 +4093,13 @@ Drugi Poziv je **novi i odvojen** Poziv. **Ne** kreira se nova godišnja instanc
 
 Godišnja instanca može imati samo prvi Poziv (`call_number` 1) i eventualno drugi Poziv (`call_number` 2). Pokušaj kreiranja trećeg Poziva je **blokiran**.
 
-Podaci prvog Poziva ostaju **nepromijenjeni i sačuvani**. Platforma čuva vezu između godišnje instance, prvog Poziva i drugog Poziva.
+Podaci prvog Poziva ostaju **nepromijenjeni i sačuvani**. Arhivirani ili zatvoreni prvi Poziv ostaje nepromijenjen. Drugi Poziv je novi odvojeni zapis. Platforma čuva vezu između godišnje instance, prvog Poziva i drugog Poziva.
 
 Ovo poglavlje **ne** određuje tehnički model baze ni konkretne ID strukture.
 
 ## 22.3. Ručno kreiranje i objavljivanje
 
-Administrator Konkursa **ručno** kreira drugi Poziv.
+Administrator Konkursa **ručno** kreira drugi Poziv tek nakon što je prvi Poziv `completed`, sve odluke predsjednika su završene i `remaining_after_first` je veći od nule. Prije te kapije akcija nije dostupna. Zatvaranje prvog Poziva **ne** kreira drugi Poziv.
 
 Drugi Poziv ima sopstvene:
 
@@ -4182,8 +4189,9 @@ Jedan podnosilac može imati **najviše jednu** konačno podnesenu prijavu po po
 |---------|-------------------|----------------|-------|----------|-------|------------|
 | Godišnja instanca | potvrđena raspodjela prvog Poziva; sva godišnja sredstva raspodijeljena | prikaz stanja | ostatak nije veći od nule | drugi Poziv se ne raspisuje; nema ponude automatskog kreiranja | sistem | `BM-ML-049`; `BM-ML-051` |
 | Godišnja instanca | potvrđena raspodjela prvog Poziva; postoje preostala godišnja sredstva | prikaz stanja | ostatak veći od nule | drugi Javni konkurs obavezan; Platforma ne odlučuje i ne kreira automatski | sistem | `BM-ML-049`; `BM-ML-051` |
+| Drugi Poziv | prvi Poziv nije `completed` | pokušaj kreiranja nacrta | Administrator | akcija nije dostupna; prikaz da postupak prvog Poziva nije završen | sistem | `BM-ML-049`; `BM-ML-051` |
 | Drugi Poziv | preostala sredstva | pokušaj automatskog kreiranja ili objave | — | zabranjeno | sistem | `BM-ML-051` |
-| Drugi Poziv | ista godišnja instanca; preostala sredstva evidentirana | ručno kreiranje nacrta | Administrator Konkursa; ostatak veći od nule; nema trećeg Poziva | nacrt drugog Poziva u istoj instanci; prvi Poziv nepromijenjen | Administrator | `BM-ML-050`; `BM-ML-051` |
+| Drugi Poziv | ista godišnja instanca; preostala sredstva evidentirana | ručno kreiranje nacrta | Administrator Konkursa; prvi Poziv `completed`; `hasChairmanCompletedDecisions()` tačno; ostatak veći od nule; drugi Poziv još ne postoji; nema trećeg Poziva | nacrt drugog Poziva u istoj instanci; prvi Poziv nepromijenjen | Administrator | `BM-ML-050`; `BM-ML-051` |
 | Treći Poziv | postoje prvi i drugi Poziv iste instance | pokušaj kreiranja | bilo koji | blokirano | sistem | `BM-ML-050` |
 | Drugi Poziv | nacrt | čuvanje | — | sačuvan; nije objavljen; rok ne kreće | Administrator | `BM-ML-051`; `BM-ML-033` |
 | Budžet drugog Poziva | unos | potvrda | iznos nije veći od nule ili premašuje preostala godišnja sredstva nakon prvog Poziva | blokirano; razlog prikazan | sistem | `BM-ML-049`; `BM-ML-047` |
@@ -4200,9 +4208,9 @@ Jedan podnosilac može imati **najviše jednu** konačno podnesenu prijavu po po
 
 **Ako:** su nakon potvrđene raspodjele prvog Poziva preostala godišnja sredstva jednaka nuli ili nijesu veća od nule.
 
-**Kada:** Platforma prikazuje stanje godišnje instance.
+**Kada:** Platforma prikazuje stanje godišnje instance ili Administrator pokuša kreirati drugi Poziv.
 
-**Onda:** drugi Poziv se ne raspisuje. Platforma ne nudi automatsko kreiranje drugog Poziva.
+**Onda:** drugi Poziv se ne raspisuje i ne kreira. Platforma ne nudi automatsko kreiranje drugog Poziva.
 
 Izvor: `BM-ML-049`; `BM-ML-051`.
 
@@ -4212,7 +4220,7 @@ Izvor: `BM-ML-049`; `BM-ML-051`.
 
 **Kada:** se utvrđuje uslov za drugi Javni konkurs.
 
-**Onda:** drugi Javni konkurs je obavezan. Platforma ne donosi tu odluku umjesto odgovornog korisnika i ne kreira drugi Poziv automatski. Opcionalnost iz ženskog profila ne važi.
+**Onda:** drugi Javni konkurs je obavezan. Dugme ili akcija za drugi Poziv nije dostupna dok prvi Poziv nije `completed`. Prije toga Platforma prikazuje da postupak prvog nije završen. `hasChairmanCompletedDecisions()` i `completed` predstavljaju tehničku kapiju V1. Nakon kapije Administrator ručno kreira nacrt. Platforma ne donosi tu odluku umjesto odgovornog korisnika i ne kreira drugi Poziv automatski. Opcionalnost iz ženskog profila ne važi.
 
 Izvor: `BM-ML-049`; `BM-ML-051`.
 
@@ -4222,7 +4230,7 @@ Izvor: `BM-ML-049`; `BM-ML-051`.
 
 **Kada:** sistem ili korisnik očekuje automatsko kreiranje ili objavljivanje drugog Poziva.
 
-**Onda:** Platforma ne kreira i ne objavljuje drugi Poziv automatski.
+**Onda:** Platforma ne kreira i ne objavljuje drugi Poziv automatski. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv.
 
 Izvor: `BM-ML-051`.
 
@@ -4232,7 +4240,7 @@ Izvor: `BM-ML-051`.
 
 **Kada:** se uspostavlja veza sa godišnjom instancom.
 
-**Onda:** drugi Poziv pripada istoj godišnjoj instanci kao prvi. Godišnja instanca može imati samo `call_number` 1 i eventualno `call_number` 2. Pokušaj kreiranja trećeg Poziva je blokiran. Nova godišnja instanca se ne kreira samo zbog drugog Poziva. Podaci prvog Poziva ostaju nepromijenjeni i sačuvani.
+**Onda:** drugi Poziv pripada istoj godišnjoj instanci kao prvi. Godišnja instanca može imati samo `call_number` 1 i eventualno `call_number` 2. Pokušaj kreiranja trećeg Poziva je blokiran. Nova godišnja instanca se ne kreira samo zbog drugog Poziva. Podaci prvog Poziva ostaju nepromijenjeni i sačuvani. Arhivirani ili zatvoreni prvi Poziv ostaje nepromijenjen. Drugi Poziv je novi odvojeni zapis. Ručno kreiranje nacrta dozvoljeno je tek kada je prvi Poziv `completed`, `hasChairmanCompletedDecisions()` tačno, `remaining_after_first > 0` i drugi Poziv još ne postoji.
 
 Izvor: `BM-ML-050`.
 
@@ -4420,7 +4428,7 @@ Arhiviranje prvog Poziva **ne** kreira drugi Poziv.
 
 Postojanje preostalih sredstava ostaje evidentirano.
 
-Drugi Poziv Administrator kreira **ručno** prema Poglavlju 22.
+U V1 postojeće zatvaranje prvog Poziva postavlja status `completed` i zaključava prvi Poziv. To je tehnička kapija poslije koje se može kreirati drugi Poziv. Drugi Poziv se **ne** kreira samom akcijom zatvaranja. Administrator ga pokreće posebno i ručno prema Poglavlju 22, tek kada su sve odluke predsjednika završene, prvi Poziv je `completed` i `remaining_after_first > 0`. Zatvaranje prvog ne mijenja status njegovih prijava. Dokumentacija i podaci prvog ostaju sačuvani. Zatvaranje prvog nije brisanje niti javna objava.
 
 Prvi Poziv ostaje arhiviran i **ne** otključava se zbog drugog Poziva.
 
@@ -4438,8 +4446,8 @@ Arhiviranje drugog Poziva sprovodi se prema **istim** uslovima.
 | Poziv | svi preduslovi iz §23.2 ispunjeni | pokretanje zaključivanja | predsjednik | prikazano upozorenje; čeka izričitu potvrdu | predsjednik | F-05 |
 | Poziv | upozorenje prikazano | izričita potvrda predsjednika | svi preduslovi i dalje ispunjeni | Poziv arhiviran; status prijave nepromijenjen; evidencija lica, datuma, vremena, rang-liste, rezultata, iznosa i preduslova; samo pregled | predsjednik | F-05; `BM-ML-058` |
 | Poziv | arhiviran | pokušaj izmjene | — | zabranjeno; nema ponovnog otvaranja bez posebnog odobrenog pravila | svi | F-05; `BM-ML-058` |
-| Poziv | arhiviranje sa preostalim sredstvima | potvrda predsjednika | preduslovi ispunjeni | Poziv arhiviran; preostali iznos ostaje evidentiran; drugi Poziv se ne kreira | predsjednik / sistem | F-05; `BM-ML-049`; `BM-ML-051` |
-| Drugi Poziv | prvi Poziv arhiviran; preostala sredstva | pokušaj automatskog kreiranja | — | zabranjeno; Administrator kreira ručno prema Poglavlju 22; prvi Poziv ostaje arhiviran | sistem | `BM-ML-051`; `BM-ML-050` |
+| Poziv | arhiviranje sa preostalim sredstvima | potvrda predsjednika | preduslovi ispunjeni | Poziv arhiviran; status `completed`; preostali iznos ostaje evidentiran; drugi Poziv se ne kreira; zatvaranje nije brisanje ni javna objava | predsjednik / sistem | F-05; `BM-ML-049`; `BM-ML-051` |
+| Drugi Poziv | prvi Poziv arhiviran / `completed`; preostala sredstva | pokušaj automatskog kreiranja | — | zabranjeno; Administrator kreira ručno prema Poglavlju 22 tek nakon kapije; prvi Poziv ostaje arhiviran i nepromijenjen | sistem | `BM-ML-051`; `BM-ML-050` |
 
 ## 23.8. Prihvatni kriterijumi — arhiviranje
 
@@ -4539,7 +4547,7 @@ Izvor: `BM-ML-054`; `BM-ML-058`.
 
 **Kada:** se završi potvrda.
 
-**Onda:** arhiviranje ne zavisi od ugovora, isplate, realizacije, M4/M4a, faktura, de minimis dokumentacije, praćenja ugovornih obaveza ni javnog objavljivanja službenih akata. Javni PDF tok Odluke se ne pokreće. Arhiviranje prvog Poziva ne kreira drugi Poziv. Preostala sredstva ostaju evidentirana. Prvi Poziv se ne otključava zbog drugog Poziva.
+**Onda:** arhiviranje ne zavisi od ugovora, isplate, realizacije, M4/M4a, faktura, de minimis dokumentacije, praćenja ugovornih obaveza ni javnog objavljivanja službenih akata. Javni PDF tok Odluke se ne pokreće. Postojeće zatvaranje postavlja `completed` i zaključava prvi Poziv. To je tehnička kapija V1 poslije koje se drugi Poziv može ručno kreirati. Arhiviranje prvog Poziva ne kreira drugi Poziv. Preostala sredstva ostaju evidentirana. Zatvaranje prvog ne mijenja status njegovih prijava, nije brisanje i nije javna objava. Prvi Poziv se ne otključava zbog drugog Poziva. Drugi Poziv može nastati tek nakon što je prvi Poziv zatvoren postojećom akcijom `closeCompetition()` i dobije status `completed`; prije ispunjenja te kapije kreiranje drugog Poziva nije dozvoljeno. `closeCompetition()` ne kreira drugi Poziv automatski. Administrator drugi Poziv pokreće posebno i ručno, tek kada su sve odluke predsjednika završene, `remaining_after_first` je veći od nule i drugi Poziv još ne postoji. Treći Poziv nije dozvoljen.
 
 Izvor: F-05; `BM-ML-051`; `BM-ML-056`; `BM-ML-057`; `KN-PATCH-BM-010`.
 
@@ -4562,6 +4570,7 @@ Platforma **ne** smije:
 * tretirati čuvanje kao objavljivanje;
 * automatski objaviti prvi Poziv;
 * automatski kreirati ili objaviti drugi Poziv;
+* kreirati drugi Poziv prije nego što je prvi `completed`;
 * kreirati treći Poziv u istoj godišnjoj instanci;
 * drugi Poziv tretirati kao novu godišnju instancu;
 * dozvoliti budžet drugog Poziva koji nije veći od nule ili koji premašuje preostala godišnja sredstva nakon prvog Poziva;
@@ -4993,9 +5002,9 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 21.8.5 | Raspodjela | Zbir premašuje budžet Poziva | Potvrda blokirana | 21 | `BM-ML-048` |
 | 21.8.6 | Raspodjela | Valjana potvrda | Iznosi zaključani; drugi Poziv se ne kreira automatski | 21 | `BM-ML-048`; `BM-ML-051` |
 | 22.7.1 | Drugi Poziv | Nema preostalih sredstava | Ne raspisuje se; nema automatske ponude | 22 | `BM-ML-049` |
-| 22.7.2 | Drugi Poziv | Ima preostalih sredstava | Obavezan; Platforma ne odlučuje sama | 22 | `BM-ML-049` |
-| 22.7.3 | Drugi Poziv | Automatsko kreiranje ili objava | Zabranjeno | 22 | `BM-ML-051` |
-| 22.7.4 | Instanca | Ručno kreiranje | Ista godišnja instanca; samo call_number 1 i eventualno 2; treći blokiran; prvi Poziv nepromijenjen | 22 | `BM-ML-050` |
+| 22.7.2 | Drugi Poziv | Ima preostalih sredstava | Obavezan; akcija tek nakon `completed`; Platforma ne odlučuje sama | 22 | `BM-ML-049` |
+| 22.7.3 | Drugi Poziv | Automatsko kreiranje ili objava | Zabranjeno; zatvaranje prvog ne kreira drugi | 22 | `BM-ML-051` |
+| 22.7.4 | Instanca | Ručno kreiranje | Ista instanca; kapija `completed` i ostatak > 0; treći blokiran; prvi nepromijenjen | 22 | `BM-ML-050` |
 | 22.7.5 | Čuvanje | Nacrt drugog Poziva | Nije objava | 22 | `BM-ML-051` |
 | 22.7.6 | Budžet | Iznos nije veći od nule ili je iznad preostalih godišnjih sredstava nakon prvog | Blokirano; razlog prikazan | 22 | `BM-ML-049` |
 | 22.7.7 | Limit | Drugi Poziv | Osnovica 30/20/15 je budžet tog Poziva | 22 | `BM-ML-047` |
@@ -5011,7 +5020,7 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 23.8.7 | Arhiva | Svi preduslovi; izričita potvrda | Arhiviran; samo pregled | 23 | F-05; `BM-ML-058` |
 | 23.8.8 | Arhiva | Pokušaj izmjene ili otvaranja | Zabranjeno | 23 | F-05 |
 | 23.8.9 | Arhiva | Čitanje arhive | Nije brisanje ni javnost | 23 | `BM-ML-054`; `BM-ML-058` |
-| 23.8.10 | V1 | Arhiviranje | Ne zavisi od ugovora/M4; ne kreira drugi Poziv | 23 | F-05; `KN-PATCH-BM-010` |
+| 23.8.10 | V1 | Arhiviranje | Ne zavisi od ugovora/M4; kapija `completed`; ne kreira drugi Poziv | 23 | F-05; `KN-PATCH-BM-010` |
 
 Brojanje indeksa: 5.9 (7) + 6.8 (12) + 7.9 (7) + 8.6 (9) + 9.9 (5) + 10.5 (7) + 11.5 (5) + 12.5 (5) + 13.5 (9) + 14.6 (14) + 15.7 (6) + 16.8 (8) + 17.7 (6) + 18.7 (6) + 19.6 (4) + 20.7 (6) + 21.8 (6) + 22.7 (10) + 23.8 (10) = **142**.
 
@@ -5215,7 +5224,7 @@ Izvor: 21.8.3; `BM-ML-048`.
 
 **Kada:** se očekuje automatsko kreiranje.
 
-**Onda:** drugi Poziv se ne kreira automatski.
+**Onda:** drugi Poziv se ne kreira automatski. Nacrt se ručno kreira tek nakon `completed` prvog Poziva, završenih odluka predsjednika i `remaining_after_first > 0`.
 
 Izvor: 22.7.3; 23.8.10; `BM-ML-051`.
 
@@ -5309,9 +5318,9 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | §20 | 20.7.4; 20.7.5; 26.2.17 | 1, 2, 2, 4; član 22; bez tehničkog tie-breaka | U V1 |
 | BM-ML-047 | Procentualni limiti i njihovo preklapanje | 11.10 | §21; §22.4 | 21.8.1; 21.8.2; 26.2.18 | 30/20/15 budžeta konkretnog Poziva | U V1 |
 | BM-ML-048 | Određivanje i kontrola dodijeljenog iznosa | 11.10 | §21 | 21.8.3–21.8.6; 26.2.19 | Komisija određuje; Platforma ne dodjeljuje automatski | U V1 |
-| BM-ML-049 | Uslov za raspisivanje drugog Javnog konkursa | 16.1 | §22.1 | 22.7.1; 22.7.2 | Obavezan kada ostanu sredstva; nije automatski | U V1 |
-| BM-ML-050 | Ista godišnja instanca i odvojeni Poziv | 16.2 | §22.2 | 22.7.4 | Prvi i drugi Poziv u istoj instanci; treći blokiran | U V1 |
-| BM-ML-051 | Ručno kreiranje i objavljivanje drugog Poziva | 16.3 | §22.3 | 22.7.3; 22.7.5; 26.2.20 | Administrator ručno; čuvanje nije objava | U V1 |
+| BM-ML-049 | Uslov za raspisivanje drugog Javnog konkursa | 16.1 | §22.1 | 22.7.1; 22.7.2 | Obavezan kada ostanu sredstva; tek nakon `completed`; nije automatski | U V1 |
+| BM-ML-050 | Ista godišnja instanca i odvojeni Poziv | 16.2 | §22.2 | 22.7.4 | Prvi i drugi Poziv u istoj instanci; treći blokiran; prvi nepromijenjen | U V1 |
+| BM-ML-051 | Ručno kreiranje i objavljivanje drugog Poziva | 16.3 | §22.3 | 22.7.3; 22.7.5; 26.2.20 | Administrator ručno nakon kapije; čuvanje nije objava | U V1 |
 | BM-ML-052 | Ponovno konkurisanje na drugom Pozivu | 16.4 | §22.5 | 22.7.10; 26.2.21 | Nova prijava; bez automatskog prenosa | U V1 |
 | BM-ML-053 | Raspisivanje prvog Javnog konkursa | 15.2 | §5.6; §6 | 5.9.2; 6.8.5; 6.8.6 | Prvi Poziv u Q2; ručna objava | U V1 |
 | BM-ML-054 | Privatnost prijave i odvojenost javnih rezultata | 14.1 | §11; §23.4 | 11.5.1–11.5.4; 23.8.9; 26.2.2 | Privatnost ostaje i nakon arhiviranja | U V1 |
@@ -5429,4 +5438,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.5**
+**Kraj dokumenta KN-FS-002 v1.0.6**

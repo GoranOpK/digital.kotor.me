@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.7
-**Datum:** 2026-09-14
+**Verzija:** 1.0.8
+**Datum:** 2026-09-15
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.29** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.30** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.5** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.6** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.1** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.2** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -61,6 +61,7 @@ Povezani dokumenti:
 | 1.0.5 | 2026-09-09 | KN-PATCH-BM-015 — Elektronski M3 sadrži sva tri eliminatorna kriterijuma iz Odluke. Podnosilac ima pravo na jedan prigovor na svaki aktivirani kriterijum. Objedinjeno obavještenje, pojedinačni ishodi i `rejected` tek nakon konačnosti makar jednog razloga. |
 | 1.0.6 | 2026-09-11 | Administrativni closeout pokazivača: `KN-FS-001` i `KN-TS-001` označeni kao postojeći dokumenti (`USVOJENO` / `NACRT`). Poslovna pravila nijesu mijenjana. |
 | 1.0.7 | 2026-09-14 | KN-PATCH-BM-016 — Precizirano tumačenje budžeta drugog Poziva: preostala godišnja sredstva računaju se kao odobrena godišnja sredstva umanjena za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog Poziva ostaje nepromijenjen; budžet drugog Poziva mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva zajedno ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Poslovni postupak, ručno kreiranje i pravila `BM-ML-049`–`BM-ML-051` nijesu mijenjani. Ženski profil nije diran. |
+| 1.0.8 | 2026-09-15 | KN-PATCH-BM-017 — Precizirano da drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: sve odluke predsjednika moraju biti završene, prvi Poziv mora biti `completed`, a `remaining_after_first` mora biti veći od nule. Tek tada Administrator ručno kreira nacrt drugog Poziva. Nema automatskog kreiranja, trećeg Poziva ni novog poslovnog pravila. Ženski tok nije diran. |
 
 Napomena:
 
@@ -2344,6 +2345,8 @@ Ako je objavljeni budžet prvog Poziva jednak odobrenim godišnjim sredstvima od
 
 Neraspoređena godišnja sredstva nakon prvog Poziva predstavljaju osnov za drugi Poziv prema `BM-ML-049`.
 
+Drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se taj završetak dokazuje postojećim zatvaranjem Poziva: predsjednik je završio sve odluke i iznose, a prvi Poziv ima status `completed`. Tek tada, i samo ako je ostatak veći od nule, Administrator ručno kreira nacrt drugog Poziva. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv. Nema automatskog kreiranja i nema trećeg Poziva. Ženski tok se ovim pravilom ne mijenja.
+
 Način tehničkog čuvanja i obračuna nije predmet poslovnog modela.
 
 Ovaj opis ne dobija posebnu `BM-ML` oznaku jer predstavlja primjenu zajedničkog koncepta godišnje instance i konfiguracionih vrijednosti.
@@ -2398,6 +2401,8 @@ Drugi Javni konkurs je obavezan kada poslije prvog konkursa ostanu neraspoređen
 
 Ako su sva raspoloživa sredstva dodijeljena u prvom konkursu, drugi konkurs se ne raspisuje.
 
+Drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se završetak prvog dokazuje postojećim zatvaranjem Poziva. Predsjednik mora završiti sve odluke i iznose. Prvi Poziv mora imati status `completed`. Tek tada Administrator može ručno kreirati nacrt drugog Poziva, i samo ako je `remaining_after_first` veći od nule. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv. Nema automatskog kreiranja i nema trećeg Poziva.
+
 Neraspoređena sredstva nakon prvog Poziva su razlika između odobrenih godišnjih sredstava i zbira konačno potvrđenih raspodjela prvog Poziva. Objavljeni budžet prvog Poziva ostaje nepromijenjen; on je limit prvog Poziva i ne određuje taj godišnji ostatak.
 
 Drugi Javni konkurs može se raspisati samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni.
@@ -2433,6 +2438,8 @@ Drugi Poziv ne predstavlja novu godišnju instancu samo zato što je ponovljeni 
 
 Godišnja instanca može imati samo prvi Poziv i eventualno drugi Poziv. Treći Poziv se ne raspisuje.
 
+Drugi Poziv je novi odvojeni zapis. Arhivirani ili zatvoreni prvi Poziv ostaje nepromijenjen. Njegovi podaci i rezultati ostaju sačuvani.
+
 Ovo pravilo ne određuje tehnički ID niti strukturu baze.
 
 **Izvor:** Odluka, članovi 5 i 19; Poglavlje 4, pitanje 18; odobrena projektna odluka.
@@ -2443,7 +2450,7 @@ Ovo pravilo ne određuje tehnički ID niti strukturu baze.
 
 Platforma ne kreira i ne objavljuje drugi Poziv automatski.
 
-Administrator Konkursa ručno kreira drugi Poziv unutar postojeće godišnje instance.
+Administrator Konkursa ručno kreira drugi Poziv unutar postojeće godišnje instance tek nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: sve odluke predsjednika moraju biti završene, prvi Poziv mora imati status `completed`, a `remaining_after_first` mora biti veći od nule. Ako je ostatak jednak nuli, drugi Poziv se ne kreira. Zatvaranje prvog Poziva ne mijenja status njegovih prijava, nije brisanje i nije javna objava.
 
 Administrator unosi podatke drugog Poziva, uključujući službeni zavodni broj dobijen iz pisarnice.
 
@@ -2568,4 +2575,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.7**
+**Kraj dokumenta KN-BM-002 v1.0.8**
