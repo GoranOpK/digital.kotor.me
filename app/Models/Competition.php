@@ -18,10 +18,12 @@ class Competition extends Model
         'start_date',
         'end_date',
         'type',
+        'call_number',
         'status',
         'competition_number',
         'year',
         'budget',
+        'annual_budget',
         'max_support_percentage',
         'deadline_days',
         'published_at',
@@ -37,10 +39,32 @@ class Competition extends Model
         'closed_at' => 'datetime',
         'candidates_list_email_sent_at' => 'datetime',
         'budget' => 'decimal:2',
+        'annual_budget' => 'decimal:2',
         'max_support_percentage' => 'decimal:2',
         'year' => 'integer',
+        'call_number' => 'integer',
         'deadline_days' => 'integer',
     ];
+
+    public function isOmladinskoProfile(): bool
+    {
+        return $this->type === 'omladinsko';
+    }
+
+    public function isFirstCall(): bool
+    {
+        return $this->isOmladinskoProfile() && (int) $this->call_number === 1;
+    }
+
+    public function isSecondCall(): bool
+    {
+        return $this->isOmladinskoProfile() && (int) $this->call_number === 2;
+    }
+
+    public function usesAnnualCallSequence(): bool
+    {
+        return $this->isFirstCall() || $this->isSecondCall();
+    }
 
     public function descriptionHtml(): string
     {
