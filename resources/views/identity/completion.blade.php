@@ -10,6 +10,7 @@
 <style>
     :root { --primary:#0B3D91; --primary-dark:#0A347B; --secondary:#B8860B; }
     .identity-completion { background:#f9fafb; min-height:100vh; padding:24px 0; }
+    .identity-completion .page-wrap { width:40%; max-width:560px; margin:0 auto; padding:0 16px; box-sizing:border-box; }
     .identity-completion .page-header { background:linear-gradient(90deg, var(--primary), var(--primary-dark)); color:#fff; padding:24px; border-radius:16px; margin-bottom:24px; }
     .identity-completion .page-header h1 { color:#fff; font-size:28px; font-weight:700; margin:0 0 8px; }
     .identity-completion .page-header p { color:rgba(255,255,255,.9); margin:0; font-size:14px; line-height:1.5; }
@@ -18,29 +19,63 @@
     .form-group { margin-bottom:16px; }
     .form-label { display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px; }
     .form-label .required { color:#dc2626; }
-    .form-control { width:100%; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; }
+    .form-control { width:100%; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; box-sizing:border-box; }
     .form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(11,61,145,.1); }
     .form-control.error { border-color:#dc2626; }
     .readonly-box { background:#f3f4f6; border-radius:8px; padding:12px 14px; color:#111827; font-weight:600; }
     .readonly-caption { color:#6b7280; font-size:12px; margin-top:4px; }
     .form-error { color:#dc2626; font-size:12px; margin-top:4px; }
     .form-note { color:#6b7280; font-size:12px; margin-top:4px; }
-    .phone-wrapper { display:flex; gap:8px; }
-    .phone-flag-select { min-width:220px; }
-    .phone-input { flex:1; }
+    .phone-wrapper { display:flex; gap:8px; align-items:stretch; }
+    .phone-flag { position:relative; flex-shrink:0; }
+    .phone-flag-trigger {
+        display:flex; align-items:center; gap:8px;
+        min-width:108px; height:100%; padding:10px 12px;
+        border:1px solid #d1d5db; border-radius:8px; background:#fff;
+        cursor:pointer; font-size:14px; color:#111827; box-sizing:border-box;
+    }
+    .phone-flag-trigger:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(11,61,145,.1); }
+    .phone-flag-trigger[aria-expanded="true"] { border-color:var(--primary); }
+    .phone-flag-trigger.error { border-color:#dc2626; }
+    .phone-flag-img { width:20px; height:15px; object-fit:cover; border-radius:2px; flex-shrink:0; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
+    .phone-flag-code { font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .phone-flag-caret { margin-left:auto; color:#6b7280; font-size:10px; line-height:1; }
+    .phone-flag-dropdown {
+        display:none; position:absolute; z-index:40; top:calc(100% + 4px); left:0;
+        width:min(320px, 80vw); max-height:280px; overflow:auto;
+        margin:0; padding:6px 0; list-style:none;
+        background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+        box-shadow:0 10px 25px rgba(0,0,0,.12);
+    }
+    .phone-flag-dropdown.open { display:block; }
+    .phone-flag-option {
+        display:flex; align-items:center; gap:10px;
+        width:100%; padding:8px 12px; border:0; background:transparent;
+        cursor:pointer; text-align:left; font-size:14px; color:#111827;
+    }
+    .phone-flag-option:hover,
+    .phone-flag-option:focus { background:#f3f4f6; outline:none; }
+    .phone-flag-option.is-selected { background:#eff6ff; }
+    .phone-flag-option-name { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .phone-flag-option-code { color:#6b7280; font-variant-numeric:tabular-nums; flex-shrink:0; }
+    .phone-input { flex:1; min-width:0; }
     .btn-row { display:flex; gap:12px; flex-wrap:wrap; }
     .btn { display:inline-block; padding:12px 24px; border-radius:8px; font-weight:600; text-decoration:none; border:1px solid transparent; cursor:pointer; font-size:14px; }
     .btn-primary { background:var(--primary); color:#fff; border:none; }
     .btn-secondary { background:#fff; color:#374151; border:1px solid #d1d5db; }
     .conditional-field { display:none; }
     .conditional-field.show { display:block; }
+    @media (max-width: 900px) {
+        .identity-completion .page-wrap { width:100%; max-width:560px; }
+    }
     @media (max-width: 640px) {
         .phone-wrapper { flex-direction:column; }
-        .phone-flag-select { width:100%; min-width:0; }
+        .phone-flag-trigger { width:100%; }
+        .phone-flag-dropdown { width:100%; }
     }
 </style>
 <div class="identity-completion">
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="page-wrap">
         <div class="page-header">
             @if ($isPhysical)
                 <h1>Dopuna podataka</h1>
@@ -194,15 +229,51 @@
                 <div class="form-group">
                     <label for="phone_national" class="form-label">Broj mobilnog telefona <span class="required">*</span></label>
                     <div class="phone-wrapper">
-                        <select id="phone_calling_code" name="phone_calling_code" class="form-control phone-flag-select @error('phone_calling_code') error @enderror" required>
-                            <option value="">Pozivni broj</option>
-                            @foreach ($callingCodes as $entry)
-                                <option value="{{ $entry['calling_code'] }}" @selected($old('phone_calling_code') === $entry['calling_code'])>{{ $entry['label'] }} ({{ $entry['calling_code'] }})</option>
-                            @endforeach
-                        </select>
-                        <input id="phone_national" name="phone_national" type="text" inputmode="numeric" class="form-control phone-input @error('phone_national') error @enderror" value="{{ $old('phone_national') }}" required>
+                        @php
+                            $phoneCountries = collect($callingCodes ?? [])
+                                ->map(fn ($entry) => [
+                                    'code' => $entry['calling_code'],
+                                    'iso' => strtolower($entry['country_code']),
+                                    'name' => $entry['label'],
+                                ])
+                                ->all();
+                            $oldCallingCode = $old('phone_calling_code');
+                            $selectedCountry = $phoneCountries[0] ?? ['code' => '', 'iso' => 'me', 'name' => ''];
+                            if ($oldCallingCode) {
+                                foreach ($phoneCountries as $country) {
+                                    if ($country['code'] === $oldCallingCode) {
+                                        $selectedCountry = $country;
+                                        break;
+                                    }
+                                }
+                            }
+                        @endphp
+                        <div class="phone-flag" id="phone_calling_code_picker">
+                            <button type="button" class="phone-flag-trigger @error('phone_calling_code') error @enderror" id="phone_calling_code_btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Izaberite pozivni broj države">
+                                <img class="phone-flag-img" id="phone_calling_code_flag" src="https://flagcdn.com/w40/{{ $selectedCountry['iso'] }}.png" width="20" height="15" alt="">
+                                <span class="phone-flag-code" id="phone_calling_code_label">{{ $selectedCountry['code'] }}</span>
+                                <span class="phone-flag-caret" aria-hidden="true">▾</span>
+                            </button>
+                            <input type="hidden" name="phone_calling_code" id="phone_calling_code" value="{{ $selectedCountry['code'] }}" required>
+                            <ul class="phone-flag-dropdown" id="phone_calling_code_list" role="listbox" hidden>
+                                @foreach ($phoneCountries as $country)
+                                    <li role="option"
+                                        class="phone-flag-option{{ $country['iso'] === $selectedCountry['iso'] ? ' is-selected' : '' }}"
+                                        tabindex="-1"
+                                        data-code="{{ $country['code'] }}"
+                                        data-iso="{{ $country['iso'] }}"
+                                        data-name="{{ $country['name'] }}"
+                                        aria-selected="{{ $country['iso'] === $selectedCountry['iso'] ? 'true' : 'false' }}">
+                                        <img class="phone-flag-img" src="https://flagcdn.com/w40/{{ $country['iso'] }}.png" width="20" height="15" alt="" loading="lazy">
+                                        <span class="phone-flag-option-name">{{ $country['name'] }}</span>
+                                        <span class="phone-flag-option-code">{{ $country['code'] }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <input id="phone_national" name="phone_national" type="tel" inputmode="numeric" autocomplete="tel" class="form-control phone-input @error('phone_national') error @enderror" value="{{ $old('phone_national') }}" placeholder="Unesite broj mobilnog telefona" required>
                     </div>
-                    <div class="form-note">Pozivni broj nije država. Država identiteta je ISO alpha-2 / XK.</div>
+                    <div class="form-note">Format: Unesite broj bez nacionalnog prefiksa i bez vodeće nule (npr. za +382, umjesto 069123456 unesite 69123456)</div>
                     @error('phone_calling_code')<div class="form-error">{{ $message }}</div>@enderror
                     @error('phone_national')<div class="form-error">{{ $message }}</div>@enderror
                 </div>
@@ -316,6 +387,83 @@
         document.getElementById('residential_status')?.addEventListener('change', syncPreduzetnik);
         document.getElementById('id_document_type')?.addEventListener('change', syncPreduzetnik);
         syncPreduzetnik();
+    }
+
+    const phoneCallingCode = document.getElementById('phone_calling_code');
+    const phoneNational = document.getElementById('phone_national');
+    const phoneCallingCodeBtn = document.getElementById('phone_calling_code_btn');
+    const phoneCallingCodeList = document.getElementById('phone_calling_code_list');
+    const phoneCallingCodeFlag = document.getElementById('phone_calling_code_flag');
+    const phoneCallingCodeLabel = document.getElementById('phone_calling_code_label');
+    const phoneCallingCodeOptions = phoneCallingCodeList
+        ? Array.from(phoneCallingCodeList.querySelectorAll('.phone-flag-option'))
+        : [];
+
+    function setPhoneCallingCodeOpen(isOpen) {
+        if (!phoneCallingCodeBtn || !phoneCallingCodeList) return;
+        phoneCallingCodeBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        phoneCallingCodeList.classList.toggle('open', isOpen);
+        phoneCallingCodeList.hidden = !isOpen;
+    }
+
+    function selectPhoneCallingCode(option) {
+        if (!option || !phoneCallingCode) return;
+        const code = option.dataset.code;
+        const iso = option.dataset.iso;
+        const name = option.dataset.name;
+
+        phoneCallingCode.value = code;
+        if (phoneCallingCodeFlag) {
+            phoneCallingCodeFlag.src = 'https://flagcdn.com/w40/' + iso + '.png';
+            phoneCallingCodeFlag.alt = name || '';
+        }
+        if (phoneCallingCodeLabel) {
+            phoneCallingCodeLabel.textContent = code;
+        }
+
+        phoneCallingCodeOptions.forEach(function (item) {
+            const selected = item === option;
+            item.classList.toggle('is-selected', selected);
+            item.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+
+        setPhoneCallingCodeOpen(false);
+    }
+
+    if (phoneCallingCodeBtn && phoneCallingCodeList) {
+        phoneCallingCodeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const isOpen = phoneCallingCodeBtn.getAttribute('aria-expanded') === 'true';
+            setPhoneCallingCodeOpen(!isOpen);
+        });
+
+        phoneCallingCodeOptions.forEach(function (option) {
+            option.addEventListener('click', function () {
+                selectPhoneCallingCode(option);
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            const picker = document.getElementById('phone_calling_code_picker');
+            if (picker && !picker.contains(e.target)) {
+                setPhoneCallingCodeOpen(false);
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                setPhoneCallingCodeOpen(false);
+            }
+        });
+    }
+
+    if (phoneNational) {
+        phoneNational.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.startsWith('0')) {
+                this.value = this.value.substring(1);
+            }
+        });
     }
 })();
 </script>
