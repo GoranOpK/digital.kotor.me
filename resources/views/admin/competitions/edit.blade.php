@@ -117,14 +117,27 @@
                     @enderror
                 </div>
 
+                @php
+                    $isOmladinskoEdit = $competition->isOmladinskoProfile();
+                    $lockOmladinskoPublished = $isOmladinskoEdit && $competition->status !== 'draft';
+                    $lockOmladinskoInherited = $isOmladinskoEdit && $competition->isSecondCall();
+                    $lockTypeYear = $isOmladinskoEdit;
+                    $lockBudgetAndNumber = $lockOmladinskoPublished;
+                    $lockAnnualBudget = $lockOmladinskoPublished || $lockOmladinskoInherited;
+                @endphp
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tip konkursa *</label>
+                        @if($lockTypeYear)
+                            <input type="hidden" name="type" value="omladinsko">
+                            <input type="text" class="form-control" value="Omladinsko preduzetništvo" readonly>
+                        @else
                         <select name="type" class="form-control @error('type') error @enderror" required>
                             <option value="zensko" {{ old('type', $competition->type) === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
                             <option value="omladinsko" {{ old('type', $competition->type) === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
                             <option value="ostalo" {{ old('type', $competition->type) === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
                         </select>
+                        @endif
                         @error('type')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -152,14 +165,14 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Broj konkursa *</label>
-                        <input type="text" id="up_number" name="up_number" class="form-control input-uppercase @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required autocomplete="off">
+                        <input type="text" id="up_number" name="up_number" class="form-control input-uppercase @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required autocomplete="off" @if($lockBudgetAndNumber) readonly @endif>
                         @error('up_number')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
                         <label class="form-label">Godina *</label>
-                        <input type="number" name="year" class="form-control @error('year') error @enderror" value="{{ old('year', $competition->year ?? date('Y')) }}" min="2020" max="2100" required>
+                        <input type="number" name="year" class="form-control @error('year') error @enderror" value="{{ old('year', $competition->year ?? date('Y')) }}" min="2020" max="2100" required @if($lockOmladinskoInherited || $lockOmladinskoPublished) readonly @endif>
                         @error('year')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -169,12 +182,30 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Ukupan budžet (€) *</label>
-                        <input type="number" name="budget" class="form-control @error('budget') error @enderror" value="{{ old('budget', $competition->budget) }}" step="0.01" min="0" required>
+                        <input type="number" name="budget" class="form-control @error('budget') error @enderror" value="{{ old('budget', $competition->budget) }}" step="0.01" min="{{ $isOmladinskoEdit ? '0.01' : '0' }}" required @if($lockBudgetAndNumber) readonly @endif>
                         @error('budget')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
+                    @if($isOmladinskoEdit)
+                    <div class="form-group">
+                        <label class="form-label">Godišnji budžet (€) *</label>
+                        <input type="number" name="annual_budget" class="form-control @error('annual_budget') error @enderror" value="{{ old('annual_budget', $competition->annual_budget) }}" step="0.01" min="0.01" @if($lockAnnualBudget) readonly @endif>
+                        @error('annual_budget')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                        @if($competition->isSecondCall())
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Naslijeđeno sa prvog Poziva.</div>
+                        @endif
+                    </div>
+                    @endif
                 </div>
+                @if($isOmladinskoEdit && $competition->isFirstCall())
+                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je prvi Poziv. Drugi Poziv se kreira posebno nakon završetka prvog ako ostanu sredstva.</p>
+                @endif
+                @if($isOmladinskoEdit && $competition->isSecondCall())
+                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je drugi Poziv. Profil, godina, redni broj i godišnji budžet su zaključani.</p>
+                @endif
 
                 <div class="form-row">
                     <div class="form-group">

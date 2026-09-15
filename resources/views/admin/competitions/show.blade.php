@@ -183,6 +183,12 @@
                         </form>
                     @endif
                 @endif
+                @if(!empty($omladinskoCanCreateSecondCall) && isset($isAdmin) && $isAdmin)
+                    <a href="{{ route('admin.competitions.second-call.create', $competition) }}" class="btn btn-success">Kreiraj drugi Poziv</a>
+                @endif
+                @if(!empty($omladinskoSecondCall) && isset($isAdmin) && $isAdmin && empty($omladinskoCanCreateSecondCall))
+                    <a href="{{ route('admin.competitions.show', $omladinskoSecondCall) }}" class="btn" style="background: #1d4ed8; color: #fff;">Otvori drugi Poziv</a>
+                @endif
                 @if(isset($showRankingLink) && $showRankingLink)
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                 @endif
@@ -216,6 +222,28 @@
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
+            </div>
+        @endif
+
+        @if(!empty($omladinskoShowAnnualPanel) && isset($isAdmin) && $isAdmin)
+            <div class="info-card" id="omladinsko-annual-panel">
+                <h2 style="font-size: 20px; margin-bottom: 16px;">Godišnja instanca prvog Poziva</h2>
+                <p><strong>Godišnji budžet:</strong> {{ number_format((float) $competition->annual_budget, 2, ',', '.') }} €</p>
+                <p><strong>Konačno potvrđena raspodjela prvog Poziva:</strong>
+                    {{ $omladinskoConfirmedAllocation !== null ? number_format((float) $omladinskoConfirmedAllocation, 2, ',', '.').' €' : 'Nije dostupna' }}
+                </p>
+                <p><strong>Preostala sredstva nakon prvog Poziva:</strong>
+                    {{ $omladinskoRemainingAfterFirst !== null ? number_format((float) $omladinskoRemainingAfterFirst, 2, ',', '.').' €' : 'Nije dostupno' }}
+                </p>
+                @if(!empty($omladinskoSecondCall))
+                    <p><strong>Drugi Poziv:</strong> već je kreiran.
+                        <a href="{{ route('admin.competitions.show', $omladinskoSecondCall) }}" style="color: var(--primary); text-decoration: underline;">Otvori drugi Poziv</a>
+                    </p>
+                @elseif(!empty($omladinskoCanCreateSecondCall))
+                    <p><strong>Kapija za drugi Poziv:</strong> ispunjena. Drugi Poziv se može kreirati ručno.</p>
+                @else
+                    <p><strong>Kapija za drugi Poziv:</strong> {{ $omladinskoSecondCallBlockReason ?? 'Drugi Poziv još nije dostupan.' }}</p>
+                @endif
             </div>
         @endif
 

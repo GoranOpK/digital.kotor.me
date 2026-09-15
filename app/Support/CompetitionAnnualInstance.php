@@ -29,6 +29,30 @@ final class CompetitionAnnualInstance
 
     public const CONFIRMED_COMMISSION_DECISION = 'podrzava_potpuno';
 
+    public const MSG_FIRST_NOT_FINISHED = 'Prvi Poziv još nije završen.';
+
+    public const MSG_CHAIRMAN_INCOMPLETE = 'Odluke predsjednika nijesu kompletne.';
+
+    public const MSG_FIRST_NOT_COMPLETED = 'Prvi Poziv nije završen.';
+
+    public const MSG_NO_REMAINING = 'Nema preostalih sredstava za drugi Poziv.';
+
+    public const MSG_SECOND_EXISTS = 'Drugi Poziv već postoji.';
+
+    public const MSG_BUDGET_NOT_POSITIVE = 'Budžet mora biti veći od nule.';
+
+    public const MSG_ANNUAL_BUDGET_NOT_POSITIVE = 'Godišnji budžet mora biti veći od nule.';
+
+    public const MSG_BUDGET_EXCEEDS_REMAINING = 'Budžet prelazi preostala sredstva.';
+
+    public const MSG_THIRD_NOT_ALLOWED = 'Treći Poziv nije dozvoljen.';
+
+    public const MSG_INVALID_INSTANCE = 'Godišnja instanca nije ispravna.';
+
+    public const MSG_CONCURRENT_SECOND_CALL = 'Istovremeni zahtjev je već kreirao drugi Poziv.';
+
+    public const MSG_FIRST_ALREADY_EXISTS = 'Prvi Poziv iste godine već postoji.';
+
     public function appliesTo(?string $type): bool
     {
         return $type === self::PROFILE_OMLADINSKO;
@@ -175,6 +199,121 @@ final class CompetitionAnnualInstance
         if ($callNumber !== self::CALL_FIRST && $callNumber !== self::CALL_SECOND) {
             throw new DomainException('Treći Poziv nije dozvoljen. Dozvoljeni su samo call_number 1 ili 2.');
         }
+    }
+
+    public function canCreateSecondCall(Competition $first): bool
+    {
+        return $this->secondCallCreationBlockReason($first) === null;
+    }
+
+    public function secondCallCreationBlockReason(Competition $first): ?string
+    {
+        $reason = $this->secondCallPrerequisiteReason($first);
+
+        if ($reason !== null) {
+            return $reason;
+        }
+
+        if ($this->findSecondCall((string) $first->type, (int) $first->year)) {
+            return self::MSG_SECOND_EXISTS;
+        }
+
+        return null;
+    }
+
+    public function secondCallPublishBlockReason(Competition $second): ?string
+    {
+        if (! $this->appliesTo($second->type) || ! $second->isSecondCall()) {
+            return self::MSG_INVALID_INSTANCE;
+        }
+
+        $first = $this->findFirstCall((string) $second->type, (int) $second->year);
+
+        if (! $first) {
+            return self::MSG_INVALID_INSTANCE;
+        }
+
+        $reason = $this->secondCallPrerequisiteReason($first);
+
+        if ($reason !== null) {
+            return $reason;
+        }
+
+        try {
+            $this->validateSecondCall($second);
+        } catch (DomainException $exception) {
+            return $this->userFacingMessage($exception);
+        }
+
+        return null;
+    }
+
+    public function userFacingMessage(DomainException $exception): string
+    {
+        $message = $exception->getMessage();
+
+        $known = [
+            self::MSG_FIRST_NOT_FINISHED,
+            self::MSG_CHAIRMAN_INCOMPLETE,
+            self::MSG_FIRST_NOT_COMPLETED,
+            self::MSG_NO_REMAINING,
+            self::MSG_SECOND_EXISTS,
+            self::MSG_BUDGET_NOT_POSITIVE,
+            self::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
+            self::MSG_BUDGET_EXCEEDS_REMAINING,
+            self::MSG_THIRD_NOT_ALLOWED,
+            self::MSG_INVALID_INSTANCE,
+            self::MSG_CONCURRENT_SECOND_CALL,
+            self::MSG_FIRST_ALREADY_EXISTS,
+        ];
+
+        if (in_array($message, $known, true)) {
+            return $message;
+        }
+
+        $lower = strtolower($message);
+
+        return match (true) {
+            str_contains($message, 'budget mora biti veći od nule') => self::MSG_BUDGET_NOT_POSITIVE,
+            str_contains($message, 'annual_budget mora biti veći od nule') => self::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
+            str_contains($message, 'ne smije premašiti preostala') => self::MSG_BUDGET_EXCEEDS_REMAINING,
+            str_contains($message, 'Drugi Poziv iste godišnje instance već postoji') => self::MSG_SECOND_EXISTS,
+            str_contains($message, 'Prvi Poziv iste godišnje instance već postoji') => self::MSG_FIRST_ALREADY_EXISTS,
+            str_contains($message, 'Treći Poziv nije dozvoljen') => self::MSG_THIRD_NOT_ALLOWED,
+            str_contains($message, 'samo na profil omladinsko') => self::MSG_INVALID_INSTANCE,
+            str_contains($message, 'Godišnja instanca zahtijeva godinu') => self::MSG_INVALID_INSTANCE,
+            str_contains($message, 'SQLSTATE') => self::MSG_CONCURRENT_SECOND_CALL,
+            str_contains($lower, 'integrity constraint') => self::MSG_CONCURRENT_SECOND_CALL,
+            str_contains($lower, 'duplicate') => self::MSG_CONCURRENT_SECOND_CALL,
+            default => self::MSG_INVALID_INSTANCE,
+        };
+    }
+
+    private function secondCallPrerequisiteReason(Competition $first): ?string
+    {
+        if (! $this->appliesTo($first->type) || ! $first->isFirstCall()) {
+            return self::MSG_INVALID_INSTANCE;
+        }
+
+        if (! $first->hasChairmanCompletedDecisions()) {
+            return self::MSG_CHAIRMAN_INCOMPLETE;
+        }
+
+        if ($first->status !== 'completed') {
+            return self::MSG_FIRST_NOT_FINISHED;
+        }
+
+        try {
+            $remaining = $this->remainingAfterFirst((string) $first->type, (int) $first->year);
+        } catch (DomainException $exception) {
+            return $this->userFacingMessage($exception);
+        }
+
+        if (bccomp($remaining, '0.00', 2) !== 1) {
+            return self::MSG_NO_REMAINING;
+        }
+
+        return null;
     }
 
     private function findCall(string $type, int $year, int $callNumber): ?Competition

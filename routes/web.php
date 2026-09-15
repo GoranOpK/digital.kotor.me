@@ -575,6 +575,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
             Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            Route::get('/competitions/{competition}/second-call/create', [AdminController::class, 'createSecondCall'])->name('competitions.second-call.create');
+            Route::post('/competitions/{competition}/second-call', [AdminController::class, 'storeSecondCall'])->name('competitions.second-call.store');
             Route::post('/competitions/{competition}/official-decision', [CompetitionOfficialDecisionController::class, 'store'])
                 ->name('competitions.official-decision.store');
             Route::post('/competitions/{competition}/official-decision/{copy}/publish', [CompetitionOfficialDecisionController::class, 'publish'])

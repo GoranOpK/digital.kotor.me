@@ -20,7 +20,11 @@ use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
+use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
+use DomainException;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -589,13 +593,15 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za kreiranje konkursa.');
         }
 
+        $isOmladinsko = $request->input('type') === CompetitionAnnualInstance::PROFILE_OMLADINSKO;
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:zensko,omladinsko,ostalo',
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
-            'budget' => 'required|numeric|min:0',
+            'budget' => $isOmladinsko ? 'required|numeric|gt:0' : 'required|numeric|min:0',
+            'annual_budget' => $isOmladinsko ? 'required|numeric|gt:0' : 'nullable',
             'start_date' => 'nullable|date',
             'commission_id' => 'nullable|exists:commissions,id',
         ], [
@@ -604,6 +610,9 @@ class AdminController extends Controller
             'up_number.required' => 'UP broj konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
+            'budget.gt' => CompetitionAnnualInstance::MSG_BUDGET_NOT_POSITIVE,
+            'annual_budget.required' => 'Godišnji budžet je obavezan.',
+            'annual_budget.gt' => CompetitionAnnualInstance::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
@@ -618,35 +627,66 @@ class AdminController extends Controller
             'status' => 'draft',
         ];
 
+        if ($isOmladinsko) {
+            $data['call_number'] = CompetitionAnnualInstance::CALL_FIRST;
+            $data['annual_budget'] = $validated['annual_budget'];
+        }
+
         if (! empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
         }
 
-        $competition = DB::transaction(function () use ($data, $validated) {
-            $competition = Competition::create($data);
-            $datePart = $competition->created_at->format('Ymd');
-            $sameDay = Competition::where('id', '!=', $competition->id)
-                ->whereDate('created_at', $competition->created_at->toDateString())
-                ->get();
-            $maxN = 0;
-            foreach ($sameDay as $c) {
-                if ($c->competition_number && preg_match('/^\d{8}(\d+)$/', $c->competition_number, $m)) {
-                    $n = (int) $m[1];
-                    if ($n > $maxN) {
-                        $maxN = $n;
-                    }
-                }
-            }
-            $competition->update(['competition_number' => $datePart.($maxN + 1)]);
-            UpNumber::create([
-                'competition_id' => $competition->id,
-                'number' => $validated['up_number'],
-            ]);
+        try {
+            $competition = DB::transaction(function () use ($data, $validated, $isOmladinsko) {
+                $competition = Competition::create($data);
 
-            return $competition->fresh();
-        });
+                if ($isOmladinsko) {
+                    app(CompetitionAnnualInstance::class)->validateFirstCall($competition);
+                    $competition->update(['competition_number' => $validated['up_number']]);
+                } else {
+                    $datePart = $competition->created_at->format('Ymd');
+                    $sameDay = Competition::where('id', '!=', $competition->id)
+                        ->whereDate('created_at', $competition->created_at->toDateString())
+                        ->get();
+                    $maxN = 0;
+                    foreach ($sameDay as $c) {
+                        if ($c->competition_number && preg_match('/^\d{8}(\d+)$/', $c->competition_number, $m)) {
+                            $n = (int) $m[1];
+                            if ($n > $maxN) {
+                                $maxN = $n;
+                            }
+                        }
+                    }
+                    $competition->update(['competition_number' => $datePart.($maxN + 1)]);
+                }
+
+                UpNumber::create([
+                    'competition_id' => $competition->id,
+                    'number' => $validated['up_number'],
+                ]);
+
+                return $competition->fresh();
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            return back()->withErrors([
+                'error' => $isOmladinsko
+                    ? CompetitionAnnualInstance::MSG_FIRST_ALREADY_EXISTS
+                    : CompetitionAnnualInstance::MSG_INVALID_INSTANCE,
+            ])->withInput();
+        } catch (QueryException $e) {
+            if ($this->isCompetitionCallNumberUniqueViolation($e)) {
+                return back()->withErrors([
+                    'error' => CompetitionAnnualInstance::MSG_FIRST_ALREADY_EXISTS,
+                ])->withInput();
+            }
+            throw $e;
+        } catch (DomainException $e) {
+            return back()->withErrors([
+                'error' => app(CompetitionAnnualInstance::class)->userFacingMessage($e),
+            ])->withInput();
+        }
 
         // Ako je konkursu odmah dodijeljena komisija, obavijesti članove komisije
         if ($competition->commission_id && $competition->commission) {
@@ -655,6 +695,135 @@ class AdminController extends Controller
 
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno kreiran.');
+    }
+
+    /**
+     * Forma za ručno kreiranje drugog Poziva profila mladih.
+     */
+    public function createSecondCall(Competition $competition)
+    {
+        $this->assertCompetitionAdminRole();
+
+        $instance = app(CompetitionAnnualInstance::class);
+        $reason = $instance->secondCallCreationBlockReason($competition);
+
+        if ($reason !== null) {
+            return redirect()->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => $reason]);
+        }
+
+        $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
+        $confirmedAllocation = $instance->confirmedAllocation($competition);
+        $remainingAfterFirst = $instance->remainingAfterFirst((string) $competition->type, (int) $competition->year);
+        $typeLabel = $this->getCompetitionTypeLabel($competition->type);
+        $isSecondCallForm = true;
+        $firstCall = $competition;
+
+        return view('admin.competitions.create', compact(
+            'commissions',
+            'isSecondCallForm',
+            'firstCall',
+            'confirmedAllocation',
+            'remainingAfterFirst',
+            'typeLabel'
+        ));
+    }
+
+    /**
+     * Čuvanje drugog Poziva profila mladih kao novog nacrta.
+     */
+    public function storeSecondCall(Request $request, Competition $competition)
+    {
+        $this->assertCompetitionAdminRole();
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'up_number' => 'required|string|max:255',
+            'budget' => 'required|numeric|gt:0',
+            'start_date' => 'nullable|date',
+            'commission_id' => 'nullable|exists:commissions,id',
+        ], [
+            'title.required' => 'Naziv konkursa je obavezan.',
+            'up_number.required' => 'UP broj konkursa je obavezan.',
+            'budget.required' => 'Budžet je obavezan.',
+            'budget.gt' => CompetitionAnnualInstance::MSG_BUDGET_NOT_POSITIVE,
+            'commission_id.exists' => 'Izabrana komisija ne postoji.',
+        ]);
+
+        $instance = app(CompetitionAnnualInstance::class);
+
+        try {
+            $second = DB::transaction(function () use ($validated, $competition, $instance) {
+                $first = Competition::query()
+                    ->whereKey($competition->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $first) {
+                    throw new DomainException(CompetitionAnnualInstance::MSG_INVALID_INSTANCE);
+                }
+
+                $reason = $instance->secondCallCreationBlockReason($first);
+                if ($reason !== null) {
+                    throw new DomainException($reason);
+                }
+
+                $data = [
+                    'title' => $validated['title'],
+                    'description' => $validated['description'] ?? null,
+                    'type' => $first->type,
+                    'year' => $first->year,
+                    'call_number' => CompetitionAnnualInstance::CALL_SECOND,
+                    'annual_budget' => $first->annual_budget,
+                    'budget' => $validated['budget'],
+                    'commission_id' => $validated['commission_id'] ?? null,
+                    'deadline_days' => 20,
+                    'status' => 'draft',
+                    'competition_number' => $validated['up_number'],
+                ];
+
+                if (! empty($validated['start_date'])) {
+                    $start = \Carbon\Carbon::parse($validated['start_date']);
+                    $data['start_date'] = $start->toDateString();
+                    $data['end_date'] = $start->copy()->addDays(20)->toDateString();
+                }
+
+                $draft = new Competition($data);
+                $instance->assertCallNumberAllowed(CompetitionAnnualInstance::CALL_SECOND, (string) $first->type);
+                $instance->validateSecondCall($draft);
+
+                $created = Competition::create($data);
+                UpNumber::create([
+                    'competition_id' => $created->id,
+                    'number' => $validated['up_number'],
+                ]);
+
+                return $created->fresh();
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            return back()->withErrors([
+                'error' => CompetitionAnnualInstance::MSG_CONCURRENT_SECOND_CALL,
+            ])->withInput();
+        } catch (QueryException $e) {
+            if ($this->isCompetitionCallNumberUniqueViolation($e)) {
+                return back()->withErrors([
+                    'error' => CompetitionAnnualInstance::MSG_CONCURRENT_SECOND_CALL,
+                ])->withInput();
+            }
+            throw $e;
+                } catch (DomainException $e) {
+            return back()->withErrors([
+                'error' => $instance->userFacingMessage($e),
+            ])->withInput();
+        }
+
+        if ($second->commission_id && $second->commission) {
+            $this->notifyCommissionMembersAboutCompetition($second->commission, $second);
+        }
+
+        return redirect()->route('admin.competitions.show', $second)
+            ->with('success', 'Drugi Poziv je uspješno kreiran kao nacrt.');
     }
 
     /**
@@ -709,7 +878,12 @@ class AdminController extends Controller
             ? ($isSuperAdmin || $isChairman || $isCommissionMember || $isCompetitionAdmin)
             : (($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed());
 
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView'));
+        $omladinskoAnnualOverview = $this->omladinskoAnnualOverviewForShow($competition);
+
+        return view('admin.competitions.show', array_merge(
+            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView'),
+            $omladinskoAnnualOverview
+        ));
     }
 
     /**
@@ -753,13 +927,24 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
         }
 
+        $isOmladinsko = $competition->isOmladinskoProfile();
+        if ($isOmladinsko) {
+            $competition->loadMissing('upNumber');
+        }
+        $isPublishedOmladinsko = $isOmladinsko && $competition->status !== 'draft';
+        $budgetRule = $isOmladinsko ? 'required|numeric|gt:0' : 'required|numeric|min:0';
+        $annualBudgetRule = $isOmladinsko && $competition->isFirstCall() && $competition->status === 'draft'
+            ? 'required|numeric|gt:0'
+            : 'nullable';
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:zensko,omladinsko,ostalo',
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
-            'budget' => 'required|numeric|min:0',
+            'budget' => $budgetRule,
+            'annual_budget' => $annualBudgetRule,
             'start_date' => 'nullable|date',
             'status' => 'required|in:draft,published,completed',
             'commission_id' => 'nullable|exists:commissions,id',
@@ -769,8 +954,30 @@ class AdminController extends Controller
             'up_number.required' => 'UP broj konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
+            'budget.gt' => CompetitionAnnualInstance::MSG_BUDGET_NOT_POSITIVE,
+            'annual_budget.required' => 'Godišnji budžet je obavezan.',
+            'annual_budget.gt' => CompetitionAnnualInstance::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
+
+        if ($isOmladinsko) {
+            $lockErrors = $this->omladinskoLockedFieldErrors($competition, $validated);
+            if ($lockErrors !== []) {
+                return back()->withErrors($lockErrors)->withInput();
+            }
+
+            $validated['type'] = $competition->type;
+            $validated['year'] = $competition->isSecondCall() || $isPublishedOmladinsko
+                ? $competition->year
+                : $validated['year'];
+            if ($isPublishedOmladinsko) {
+                $validated['budget'] = $competition->budget;
+                $validated['up_number'] = $competition->upNumber?->number ?? $validated['up_number'];
+            }
+            if ($competition->isSecondCall()) {
+                $validated['year'] = $competition->year;
+            }
+        }
 
         $data = [
             'title' => $validated['title'],
@@ -782,6 +989,22 @@ class AdminController extends Controller
             'commission_id' => $validated['commission_id'] ?? null,
             'deadline_days' => 20,
         ];
+
+        if ($isOmladinsko) {
+            $data['call_number'] = $competition->call_number;
+            $data['type'] = CompetitionAnnualInstance::PROFILE_OMLADINSKO;
+            if ($competition->isFirstCall() && $competition->status === 'draft') {
+                $data['annual_budget'] = $validated['annual_budget'];
+            } else {
+                $data['annual_budget'] = $competition->annual_budget;
+            }
+            if ($competition->isSecondCall() || $isPublishedOmladinsko) {
+                $data['year'] = $competition->year;
+            }
+            if ($isPublishedOmladinsko) {
+                $data['budget'] = $competition->budget;
+            }
+        }
 
         // Ako vraćamo konkurs u status 'published' ili 'draft', poništi datum zatvaranja
         if (in_array($validated['status'], ['published', 'draft'])) {
@@ -804,12 +1027,46 @@ class AdminController extends Controller
             return back()->withErrors(['commission_id' => $assignmentError])->withInput();
         }
 
+        if ($isOmladinsko && $competition->status === 'draft') {
+            $data['competition_number'] = $validated['up_number'];
+        }
+
+        if ($isOmladinsko) {
+            $instance = app(CompetitionAnnualInstance::class);
+            $pending = $competition->replicate();
+            $pending->id = $competition->id;
+            $pending->exists = true;
+            $pending->fill($data);
+
+            try {
+                if ($competition->isFirstCall()) {
+                    $instance->validateFirstCall($pending);
+                } elseif ($competition->isSecondCall()) {
+                    $instance->validateSecondCall($pending);
+                    if ($validated['status'] === 'published') {
+                        $publishReason = $instance->secondCallPublishBlockReason($pending);
+                        if ($publishReason !== null) {
+                            return back()->withErrors(['error' => $publishReason])->withInput();
+                        }
+                    }
+                }
+            } catch (DomainException $e) {
+                return back()->withErrors([
+                    'error' => $instance->userFacingMessage($e),
+                ])->withInput();
+            }
+        }
+
+        $wasOmladinskoDraft = $isOmladinsko && $competition->status === 'draft';
+
         $competition->update($data);
 
-        $competition->upNumber()->updateOrCreate(
-            ['competition_id' => $competition->id],
-            ['number' => $validated['up_number']]
-        );
+        if (! $isOmladinsko || $wasOmladinskoDraft) {
+            $competition->upNumber()->updateOrCreate(
+                ['competition_id' => $competition->id],
+                ['number' => $validated['up_number']]
+            );
+        }
 
         // Ako je dodijeljena nova komisija, obavijesti članove te komisije
         $newCommissionId = $validated['commission_id'] ?? null;
@@ -839,6 +1096,28 @@ class AdminController extends Controller
 
         if ($competition->status !== 'draft') {
             return redirect()->back()->withErrors(['error' => 'Samo nacrti konkursa mogu biti objavljeni.']);
+        }
+
+        if ($competition->isOmladinskoProfile()) {
+            $instance = app(CompetitionAnnualInstance::class);
+            try {
+                if ($competition->isFirstCall()) {
+                    $instance->validateFirstCall($competition);
+                } elseif ($competition->isSecondCall()) {
+                    $publishReason = $instance->secondCallPublishBlockReason($competition);
+                    if ($publishReason !== null) {
+                        return redirect()->back()->withErrors(['error' => $publishReason]);
+                    }
+                } else {
+                    return redirect()->back()->withErrors([
+                        'error' => CompetitionAnnualInstance::MSG_INVALID_INSTANCE,
+                    ]);
+                }
+            } catch (DomainException $e) {
+                return redirect()->back()->withErrors([
+                    'error' => $instance->userFacingMessage($e),
+                ]);
+            }
         }
 
         $now = now();
@@ -2229,5 +2508,117 @@ class AdminController extends Controller
             'isSuperAdmin' => $isSuperAdmin,
             'isChairman' => $isChairman,
         ]));
+    }
+
+    private function assertCompetitionAdminRole(): void
+    {
+        $user = auth()->user();
+        $isAdmin = $user && $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin'], true);
+
+        if (! $isAdmin) {
+            abort(403, 'Nemate dozvolu za ovu radnju.');
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function omladinskoAnnualOverviewForShow(Competition $competition): array
+    {
+        $empty = [
+            'omladinskoShowAnnualPanel' => false,
+            'omladinskoCanCreateSecondCall' => false,
+            'omladinskoSecondCallBlockReason' => null,
+            'omladinskoConfirmedAllocation' => null,
+            'omladinskoRemainingAfterFirst' => null,
+            'omladinskoSecondCall' => null,
+        ];
+
+        if (! $competition->isFirstCall()) {
+            return $empty;
+        }
+
+        $instance = app(CompetitionAnnualInstance::class);
+        $second = $instance->findSecondCall((string) $competition->type, (int) $competition->year);
+        $reason = $instance->secondCallCreationBlockReason($competition);
+        $allocation = null;
+        $remaining = null;
+
+        try {
+            $allocation = $instance->confirmedAllocation($competition);
+            $remaining = $instance->remainingAfterFirst((string) $competition->type, (int) $competition->year);
+        } catch (DomainException $e) {
+            $reason = $reason ?? $instance->userFacingMessage($e);
+        }
+
+        return [
+            'omladinskoShowAnnualPanel' => true,
+            'omladinskoCanCreateSecondCall' => $reason === null,
+            'omladinskoSecondCallBlockReason' => $reason,
+            'omladinskoConfirmedAllocation' => $allocation,
+            'omladinskoRemainingAfterFirst' => $remaining,
+            'omladinskoSecondCall' => $second,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string>
+     */
+    private function omladinskoLockedFieldErrors(Competition $competition, array $validated): array
+    {
+        $errors = [];
+        $published = $competition->status !== 'draft';
+        $lockInherited = $competition->isSecondCall() || $published;
+
+        if (($validated['type'] ?? null) !== $competition->type) {
+            $errors['type'] = 'Tip konkursa se ne može mijenjati.';
+        }
+
+        if ($lockInherited && (int) ($validated['year'] ?? 0) !== (int) $competition->year) {
+            $errors['year'] = 'Godina se ne može mijenjati.';
+        }
+
+        if ($published && ! $this->decimalEquals($validated['budget'] ?? null, $competition->budget)) {
+            $errors['budget'] = 'Budžet se ne može mijenjati nakon objave.';
+        }
+
+        if ($published) {
+            $currentNumber = $competition->upNumber?->number;
+            if ($currentNumber !== null && (string) ($validated['up_number'] ?? '') !== (string) $currentNumber) {
+                $errors['up_number'] = 'Zavodni broj se ne može mijenjati nakon objave.';
+            }
+        }
+
+        if ($lockInherited && array_key_exists('annual_budget', $validated) && $validated['annual_budget'] !== null
+            && ! $this->decimalEquals($validated['annual_budget'], $competition->annual_budget)) {
+            $errors['annual_budget'] = 'Godišnji budžet se ne može mijenjati.';
+        }
+
+        return $errors;
+    }
+
+    private function decimalEquals(mixed $left, mixed $right): bool
+    {
+        if ($left === null || $right === null || $left === '' || $right === '') {
+            return $left === $right;
+        }
+
+        return bccomp(bcadd((string) $left, '0', 2), bcadd((string) $right, '0', 2), 2) === 0;
+    }
+
+    private function isCompetitionCallNumberUniqueViolation(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? $e->getCode());
+        $driverCode = (int) ($e->errorInfo[1] ?? 0);
+        $message = strtolower($e->getMessage());
+
+        if ($driverCode !== 1062 && $sqlState !== '23000') {
+            return false;
+        }
+
+        return str_contains($message, 'competitions_type_year_call_number_unique')
+            || str_contains($message, 'type_year_call_number')
+            || str_contains($message, 'duplicate');
     }
 }
