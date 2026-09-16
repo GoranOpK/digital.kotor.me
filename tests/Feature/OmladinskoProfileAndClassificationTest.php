@@ -186,7 +186,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(399)]);
         $response = $this->actingAs($user)->get(route('competitions.guide.pdf'));
-        if ($response->status() === 200) {
+        if ($response->getStatusCode() === 200) {
             $this->assertSame('application/pdf', $response->headers->get('Content-Type'));
 
             return;
