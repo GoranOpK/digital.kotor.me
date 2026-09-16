@@ -29,6 +29,7 @@ use App\Http\Controllers\CulturalOrganizerCreationRequestController;
 use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\CommissionSessionController;
 use App\Http\Controllers\ApplicationPrigovorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterPublicUnsubscribeController;
@@ -461,6 +462,11 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::post('/applications/{application}/decision', [EvaluationController::class, 'storeDecision'])->name('store-decision');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
         });
+
+        Route::get('/competitions/{competition}/commission-sessions/first', [CommissionSessionController::class, 'editFirst'])->name('commission-sessions.first.edit');
+        Route::post('/competitions/{competition}/commission-sessions/first', [CommissionSessionController::class, 'storeFirst'])->name('commission-sessions.first.store');
+        Route::put('/competitions/{competition}/commission-sessions/first', [CommissionSessionController::class, 'updateFirst'])->name('commission-sessions.first.update');
+        Route::post('/competitions/{competition}/commission-sessions/first/confirm', [CommissionSessionController::class, 'confirmFirst'])->name('commission-sessions.first.confirm');
     });
 
     // Ruta za pregled ocjenjivanja - dostupna i podnosiocu prijave kada je prijava odbijena

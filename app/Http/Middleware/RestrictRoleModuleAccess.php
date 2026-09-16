@@ -169,6 +169,10 @@ class RestrictRoleModuleAccess
                 'applications.business-plan.create',
                 'applications.document.view',
                 'applications.document.download',
+                'commission-sessions.first.edit',
+                'commission-sessions.first.store',
+                'commission-sessions.first.update',
+                'commission-sessions.first.confirm',
             ];
 
             if ($routeName && in_array($routeName, $allowedRouteNames, true)) {
@@ -181,6 +185,7 @@ class RestrictRoleModuleAccess
                 || $request->is('admin/competitions*')
                 || $request->is('competitions/archive')
                 || $request->is('competitions/*/apply')
+                || $request->is('competitions/*/commission-sessions*')
                 || $request->is('applications/*/business-plan')
                 || $request->is('applications/*/documents/*')
                 || $request->is('profile*')

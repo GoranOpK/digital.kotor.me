@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\CommissionProfileConfig;
 use App\Support\RichText;
 use App\Services\CanonicalIndividualScoringService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class Competition extends Model
@@ -98,6 +100,23 @@ class Competition extends Model
     public function commission()
     {
         return $this->belongsTo(Commission::class);
+    }
+
+    public function commissionSessions(): HasMany
+    {
+        return $this->hasMany(CommissionSession::class);
+    }
+
+    public function firstCommissionSession(): ?CommissionSession
+    {
+        if ($this->relationLoaded('commissionSessions')) {
+            return $this->commissionSessions
+                ->first(fn (CommissionSession $session) => $session->session_type === CommissionSession::TYPE_FIRST);
+        }
+
+        return $this->commissionSessions()
+            ->where('session_type', CommissionSession::TYPE_FIRST)
+            ->first();
     }
 
     // Veza: konkurs ima jedan UP broj
@@ -260,15 +279,20 @@ class Competition extends Model
     }
 
     /**
-     * Profil Žensko preduzetništvo predviđa Komisiju (`KN-BM-003`).
+     * Profil predviđa Komisiju (`KN-BM-003` za zensko; `KN-BM-002` za omladinsko).
      */
     public function profileProvidesCommission(): bool
     {
-        return $this->type === 'zensko';
+        return CommissionProfileConfig::for($this->type)->providesCommission;
+    }
+
+    public function commissionProfileConfig(): CommissionProfileConfig
+    {
+        return CommissionProfileConfig::for($this->type);
     }
 
     /**
-     * Potpuna i valjana Komisija za `zensko`: pet aktivnih članova, od kojih je jedan predsjednik (`KN-BM-003` §4.3).
+     * Potpuna i valjana Komisija prema profilu Poziva.
      */
     public function hasCompleteValidCommission(): bool
     {
@@ -276,28 +300,94 @@ class Competition extends Model
             return true;
         }
 
-        return self::commissionIsCompleteAndValid($this->commission);
+        return self::commissionIsCompleteAndValidForType($this->commission, (string) $this->type);
     }
 
     public static function commissionIsCompleteAndValid(?Commission $commission): bool
     {
+        return self::commissionIsCompleteAndValidForType($commission, 'zensko');
+    }
+
+    public static function commissionIsCompleteAndValidForType(?Commission $commission, string $type): bool
+    {
         if (! $commission) {
             return false;
+        }
+
+        $config = CommissionProfileConfig::for($type);
+
+        if (! $config->providesCommission) {
+            return true;
         }
 
         $active = $commission->relationLoaded('activeMembers')
             ? $commission->activeMembers
             : $commission->activeMembers()->get();
 
-        if ($active->count() !== 5) {
+        if ($type === 'zensko') {
+            if ($active->count() !== 5) {
+                return false;
+            }
+
+            return $active->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
+        }
+
+        if ($type !== 'omladinsko') {
+            return true;
+        }
+
+        $seats = [];
+        $presidents = 0;
+
+        foreach ($active as $member) {
+            $seat = $member->canonicalSeatNumber();
+            if ($seat === null || ! $config->allowsSeat($seat)) {
+                return false;
+            }
+            if (isset($seats[$seat])) {
+                return false;
+            }
+            $seats[$seat] = true;
+            if ($member->position === 'predsjednik') {
+                $presidents++;
+            }
+        }
+
+        if ($presidents !== 1) {
             return false;
         }
 
-        return $active->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
+        if (count($seats) !== $config->seatCount) {
+            return false;
+        }
+
+        foreach ($config->allowedSeats as $requiredSeat) {
+            if (! isset($seats[$requiredSeat])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function hasConfirmedFirstSessionQuorum(): bool
+    {
+        $config = $this->commissionProfileConfig();
+        if ($config->firstSessionQuorum === null) {
+            return true;
+        }
+
+        $session = $this->firstCommissionSession();
+        if ($session === null || ! $session->isConfirmed()) {
+            return false;
+        }
+
+        return $session->meetsFirstSessionQuorum($this);
     }
 
     /**
      * Nakon isteka roka (ili zatvaranja) postupak Komisije ostaje blokiran dok Komisija nije potpuna i valjana.
+     * Za omladinsko dodatno zahtijeva potvrđenu prvu sjednicu sa kvorumom.
      * Ne uvodi novo lifecycle stanje.
      */
     public function isCommissionProcessingBlocked(): bool
@@ -313,10 +403,18 @@ class Competition extends Model
             return false;
         }
 
-        return ! $this->hasCompleteValidCommission();
+        if (! $this->hasCompleteValidCommission()) {
+            return true;
+        }
+
+        if ($this->type === 'omladinsko') {
+            return ! $this->hasConfirmedFirstSessionQuorum();
+        }
+
+        return false;
     }
 
-    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Konkursu nije dodijeljena potpuna i valjana Komisija.';
+    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Komisija nije formalno kompletna, ili dok prva sjednica nije potvrđena sa potrebnim kvorumom.';
 
     public const WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE = 'Nakon isteka roka za Prijave nije dozvoljena obična zamjena cijele dodijeljene Komisije.';
 
@@ -351,12 +449,33 @@ class Competition extends Model
 
         if ($oldId !== null && $newId !== null) {
             $newCommission = Commission::with('activeMembers')->find($newId);
-            if (! self::commissionIsCompleteAndValid($newCommission)) {
+            if (! self::commissionIsCompleteAndValidForType($newCommission, (string) $this->type)) {
                 return self::WHOLE_COMMISSION_REPLACE_MUST_BE_VALID_MESSAGE;
             }
         }
 
         return null;
+    }
+
+    public function commissionProfileConflictError(?int $commissionId): ?string
+    {
+        if ($commissionId === null) {
+            return null;
+        }
+
+        $commission = $this->relationLoaded('commission') && (int) $this->commission_id === $commissionId
+            ? $this->commission
+            : Commission::with('competitions')->find($commissionId);
+
+        if (! $commission) {
+            return null;
+        }
+
+        return CommissionProfileConfig::conflictWithAssignedCompetitions(
+            $commission,
+            (string) $this->type,
+            $this->exists ? $this->id : null
+        );
     }
 
     /**

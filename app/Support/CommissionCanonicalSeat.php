@@ -161,10 +161,14 @@ class CommissionCanonicalSeat
 
     public static function persistForCommission(Commission $commission): void
     {
-        $commission->loadMissing('members');
+        $commission->loadMissing(['members', 'competitions']);
         $regularMap = self::regularSeatMap($commission, false);
 
         foreach ($commission->members as $member) {
+            if (self::shouldPreserveExplicitYouthSeat($commission, $member)) {
+                continue;
+            }
+
             $seat = $member->is_substitute
                 ? ((((int) $member->replaces_member_number >= 1) && (int) $member->replaces_member_number <= 5)
                     ? (int) $member->replaces_member_number
@@ -180,5 +184,30 @@ class CommissionCanonicalSeat
                 $member->save();
             }
         }
+    }
+
+    /**
+     * Omladinska mjesta 1–3 ostaju eksplicitna. Ženski infer 1–5 se ne dira.
+     */
+    private static function shouldPreserveExplicitYouthSeat(Commission $commission, CommissionMember $member): bool
+    {
+        if ($member->canonical_seat_no === null) {
+            return false;
+        }
+
+        $seat = (int) $member->canonical_seat_no;
+        $youthSeats = CommissionProfileConfig::for('omladinsko')->allowedSeats;
+        if (! in_array($seat, $youthSeats, true)) {
+            return false;
+        }
+
+        $config = $commission->profileConfig();
+        if ($config->usesExplicitCanonicalSeats) {
+            return true;
+        }
+
+        // storeCommission() persistuje prije dodjele Poziva; čuvaj već upisano youth mjesto.
+        return $commission->assignedProfileType() === null
+            && $member->member_type === null;
     }
 }

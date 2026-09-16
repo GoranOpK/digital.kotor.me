@@ -263,10 +263,23 @@
                             <select name="replaces_member_number" class="form-control @error('replaces_member_number') error @enderror">
                                 <option value="">-- Izaberite --</option>
                                 @php
+                                    $isOmladinskoCommission = $isOmladinskoCommission ?? false;
                                     $regularMembers = $commission->members
                                         ->reject(fn($m) => !empty($m->is_substitute))
                                         ->filter(fn($m) => $m->status === 'active')
                                         ->values();
+                                @endphp
+                                @if(!empty($isOmladinskoCommission))
+                                    @foreach($regularMembers as $regular)
+                                        @php $seat = $regular->canonicalSeatNumber(); @endphp
+                                        @if($seat)
+                                            <option value="{{ $seat }}" {{ old('replaces_member_number') == $seat ? 'selected' : '' }}>
+                                                Mjesto {{ $seat }}{{ $regular->position === 'predsjednik' ? ' (predsjednik)' : '' }} - {{ $regular->name }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                @else
+                                @php
                                     $chairmanMember = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
                                     $opstinaMembers = $regularMembers->filter(fn($m) => $m->position === 'clan' && $m->member_type === 'opstina')->values();
                                     $udruzenjeMember = $regularMembers->first(fn($m) => $m->position === 'clan' && $m->member_type === 'udruzenje');
@@ -296,6 +309,7 @@
                                     <option value="5" {{ old('replaces_member_number') == '5' ? 'selected' : '' }}>
                                         Član 5 - {{ $zeneMrezaMember->name }}
                                     </option>
+                                @endif
                                 @endif
                             </select>
                             @if($decisionInProgress)

@@ -215,6 +215,22 @@
             </div>
         @endif
 
+        @if(session('commission_incomplete_warning'))
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                {{ session('commission_incomplete_warning') }}
+            </div>
+        @elseif($competition->isOmladinskoProfile() && $competition->profileProvidesCommission() && ! $competition->hasCompleteValidCommission())
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                {{ \App\Support\CommissionProfileConfig::OMLADINSKO_INCOMPLETE_PUBLISH_WARNING }}
+            </div>
+        @endif
+
+        @if(!empty($isChairman) && $competition->isOmladinskoProfile() && ($competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed'], true)))
+            <div style="background: #eff6ff; border: 1px solid #3b82f6; color: #1e3a8a; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <a href="{{ route('commission-sessions.first.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Evidentiraj prvu sjednicu Komisije</a>
+            </div>
+        @endif
+
         @if($errors->any())
             <div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
                 <ul style="margin: 0; padding-left: 20px;">

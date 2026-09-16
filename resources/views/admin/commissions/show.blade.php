@@ -383,8 +383,10 @@
             @php
                 $regularMembersCount = $commission->members->reject(fn($m) => !empty($m->is_substitute))->count();
                 $hasActiveSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
+                $commissionSeatCount = $commissionSeatCount ?? 5;
+                $isOmladinskoCommission = $isOmladinskoCommission ?? false;
             @endphp
-            @if($regularMembersCount < 5)
+            @if($regularMembersCount < $commissionSeatCount)
             <div class="form-card">
                 <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Dodaj novog člana</h3>
                 <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}">
@@ -448,6 +450,14 @@
                         </div>
 
                         <div class="form-group">
+                            @if(!empty($isOmladinskoCommission))
+                                <label class="form-label">Kanonsko mjesto *</label>
+                                <select name="canonical_seat_no" class="form-control" required>
+                                    @foreach([1,2,3] as $seat)
+                                        <option value="{{ $seat }}">Mjesto {{ $seat }}</option>
+                                    @endforeach
+                                </select>
+                            @else
                             <label class="form-label">Tip člana *</label>
                             <select name="member_type" class="form-control" required>
                                 @php
@@ -468,6 +478,7 @@
                                     <option value="zene_mreza">Predstavnica Ženske političke mreže</option>
                                 @endif
                             </select>
+                            @endif
                         </div>
                     </div>
 
@@ -481,7 +492,7 @@
             </div>
             @else
                 <div class="alert alert-warning">
-                    Komisija je popunjena (5/5 redovnih članova).
+                    Komisija je popunjena ({{ $regularMembersCount }}/{{ $commissionSeatCount }} redovnih članova).
                     @if(!$hasActiveSubstituteMember)
                         Možete dodati još <strong>1 zamjenskog člana</strong> kroz <a href="{{ route('admin.commissions.edit', $commission) }}" style="color: var(--primary); font-weight: 700;">Izmijeni komisiju</a>.
                     @else

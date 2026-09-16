@@ -68,6 +68,29 @@ class CommissionMember extends Model
             && !empty($this->conflict_of_interest_declaration);
     }
 
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(CommissionSessionAttendance::class);
+    }
+
+    /**
+     * Kanonsko mjesto: persisted seat, zamjenski slot, ili null.
+     */
+    public function canonicalSeatNumber(): ?int
+    {
+        if ($this->canonical_seat_no !== null) {
+            return (int) $this->canonical_seat_no;
+        }
+
+        if ($this->is_substitute) {
+            $slot = (int) ($this->replaces_member_number ?? 0);
+
+            return $slot > 0 ? $slot : null;
+        }
+
+        return null;
+    }
+
     /**
      * Aktivan član komisije za korisnika na konkretnoj komisiji.
      */
@@ -77,6 +100,18 @@ class CommissionMember extends Model
             ->where('commission_id', $commissionId)
             ->where('status', 'active')
             ->first();
+    }
+
+    /**
+     * Aktivno članstvo u Komisiji konkretnog Poziva.
+     */
+    public static function activeForCompetition(int $userId, Competition $competition): ?self
+    {
+        if (! $competition->commission_id) {
+            return null;
+        }
+
+        return static::activeForCommission($userId, (int) $competition->commission_id);
     }
 
     /**

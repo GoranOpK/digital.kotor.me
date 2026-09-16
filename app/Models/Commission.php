@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CommissionProfileConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -55,6 +56,36 @@ class Commission extends Model
     public function competitions()
     {
         return $this->hasMany(Competition::class);
+    }
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(CommissionSession::class);
+    }
+
+    /**
+     * Profil dodijeljenih KN Poziva, ili null ako Komisija nije vezana.
+     */
+    public function assignedProfileType(): ?string
+    {
+        $this->loadMissing('competitions');
+
+        $types = $this->competitions
+            ->pluck('type')
+            ->filter(fn ($type) => in_array($type, ['zensko', 'omladinsko'], true))
+            ->unique()
+            ->values();
+
+        if ($types->count() !== 1) {
+            return null;
+        }
+
+        return $types->first();
+    }
+
+    public function profileConfig(): CommissionProfileConfig
+    {
+        return CommissionProfileConfig::for($this->assignedProfileType());
     }
 
     /**
