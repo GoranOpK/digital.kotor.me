@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\CommissionMember;
+use App\Support\EliminatoryProfileConfig;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,7 +25,11 @@ class ApplicationEliminatoryCheckService
 
     public function scoringIsAllowed(Application $application): bool
     {
-        $application->loadMissing(['eliminatoryCheck', 'prigovor']);
+        $application->loadMissing(['eliminatoryCheck', 'prigovor', 'competition']);
+
+        if ($application->competition?->isOmladinskoProfile()) {
+            return false;
+        }
 
         if ($application->eliminatoryCheck?->isConfirmedPass() === true) {
             return true;
@@ -100,18 +105,16 @@ class ApplicationEliminatoryCheckService
                 'note' => $answers['note'],
             ]);
 
+            $profile = EliminatoryProfileConfig::for($application->competition?->type);
+
             if ($check->hasAnyFailCriterion()) {
                 if (! $acknowledgement) {
                     throw ValidationException::withMessages([
-                        'confirmation_acknowledged' => self::FAIL_CONFIRMATION_MESSAGE,
+                        'confirmation_acknowledged' => $profile->failConfirmationMessage,
                     ]);
                 }
 
-                if (trim((string) $check->note) === '') {
-                    throw ValidationException::withMessages([
-                        'note' => 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.',
-                    ]);
-                }
+                $this->assertRequiredExplanations($check, $profile);
             }
 
             $check->confirmed_at = now();
@@ -122,18 +125,43 @@ class ApplicationEliminatoryCheckService
 
             $check = $check->fresh();
 
-            if ($check->isConfirmedFail()) {
+            if ($check->isConfirmedFail() && $profile->sendsFailNotice) {
                 $this->notices->persistForFailedCheck($application, $check);
             }
 
             return $check;
         });
 
-        if ($check->isConfirmedFail()) {
+        $profile = EliminatoryProfileConfig::for($application->competition?->type);
+        if ($check->isConfirmedFail() && $profile->sendsFailNotice) {
             $this->notices->deliverRegisteredEmail($application);
         }
 
         return $check;
+    }
+
+    private function assertRequiredExplanations(ApplicationEliminatoryCheck $check, EliminatoryProfileConfig $profile): void
+    {
+        if ($profile->usesStructuredNotes) {
+            $explanations = EliminatoryProfileConfig::parseYouthNotes($check->note);
+            $errors = [];
+            foreach ([1, 2, 3] as $number) {
+                if ($check->criterionIsFalse($check->{"criterion_{$number}"}) && $explanations[$number] === '') {
+                    $errors['criterion_notes.'.$number] = EliminatoryProfileConfig::YOUTH_EXPLANATION_REQUIRED_MESSAGE;
+                }
+            }
+            if ($errors !== []) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            return;
+        }
+
+        if (trim((string) $check->note) === '') {
+            throw ValidationException::withMessages([
+                'note' => 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.',
+            ]);
+        }
     }
 
     private function assertChairmanCanMutate(Application $application, CommissionMember $chairman): void

@@ -378,6 +378,7 @@
 
         <!-- Forma za prikaz ocjene -->
             <div class="form-card">
+            @if(! ($eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type))->usesStructuredNotes)
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
                     Obrazac 3
                 </div>
@@ -609,6 +610,66 @@
                 @endif
                 <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
             </div>
+            @else
+                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
+                    Obrazac 3
+                </div>
+                <div class="form-title">
+                    LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
+                </div>
+                <div class="form-subtitle">
+                    {{ ($eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type))->formSubtitle }}
+                </div>
+                <div class="print-segment-intro">
+                <div class="form-section form-section-compact">
+                    <label class="form-label form-label-large">1. Podnosilac:</label>
+                    @php
+                        $applicantLabel = $application->applicant_type === 'preduzetnica'
+                            ? 'Preduzetnica'
+                            : ($application->applicant_type === 'doo'
+                                ? 'DOO'
+                                : ($application->applicant_type === 'fizicko_lice'
+                                    ? 'Fizičko lice'
+                                    : 'Ostalo'));
+                    @endphp
+                    <input type="text" class="form-control-readonly" value="{{ $applicantLabel }} - {{ $application->user->name }}" readonly>
+                </div>
+                <div class="form-section form-section-compact">
+                    <label class="form-label form-label-large">2. Naziv biznis plana:</label>
+                    <input type="text" class="form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
+                </div>
+                <div class="form-section form-section-compact">
+                    @php
+                        $eliminatoryCheck = $eliminatoryCheck ?? $application->eliminatoryCheck;
+                    @endphp
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
+                        @include('evaluation.partials.eliminatory_check', ['mode' => 'readonly'])
+                        <div>
+                            <strong>Rezultat:</strong>
+                            @if(! $eliminatoryCheck || ! $eliminatoryCheck->isConfirmed())
+                                Nije potvrđeno
+                            @elseif($eliminatoryCheck->isConfirmedPass())
+                                Ispunjava eliminatorne kriterijume
+                            @else
+                                Ne ispunjava eliminatorne kriterijume
+                            @endif
+                        </div>
+                        @if($eliminatoryCheck && $eliminatoryCheck->isConfirmed())
+                            <div style="margin-top: 8px;">
+                                Potvrdio: {{ $eliminatoryCheck->confirmed_by_name }}
+                            </div>
+                            <div>
+                                Datum i vrijeme: {{ $eliminatoryCheck->confirmed_at?->format('d.m.Y. H:i') }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                </div>
+                <div style="margin-top: 32px; text-align: center;" class="no-print">
+                    <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
+                    <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
+                </div>
+            @endif
         </div>
 
         @include('evaluation.partials.prigovor_commission_block')

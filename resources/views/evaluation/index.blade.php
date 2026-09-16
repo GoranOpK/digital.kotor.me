@@ -226,8 +226,12 @@
                 <tbody>
                     @forelse($applications as $application)
                         @php
+                            $viewerMembershipIds = $viewerMembershipIds ?? [$commissionMember->id];
+                            $rowMembership = isset($membershipByCommissionId)
+                                ? ($membershipByCommissionId[$application->competition->commission_id] ?? null)
+                                : $commissionMember;
                             $isEvaluated = \App\Models\EvaluationScore::where('application_id', $application->id)
-                                ->where('commission_member_id', $commissionMember->id)
+                                ->whereIn('commission_member_id', $viewerMembershipIds)
                                 ->whereCompletedFinal()
                                 ->exists();
 
@@ -275,7 +279,8 @@
                             </td>
                             <td>
                                 @php
-                                    $isChairman = $commissionMember->position === 'predsjednik';
+                                    $isChairman = $rowMembership && $rowMembership->position === 'predsjednik';
+                                    $isYouthApplication = $application->competition?->isOmladinskoProfile();
                                 @endphp
                                 
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -292,7 +297,7 @@
                                     @else
                                         {{-- Dok nisu svi ocjenili, normalni flow --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
-                                            {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
+                                            {{ $isYouthApplication ? 'Obrazac 3' : ($isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni') }}
                                         </a>
                                     @endif
                                 </div>

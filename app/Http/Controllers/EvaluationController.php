@@ -9,6 +9,7 @@ use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Support\CommissionCanonicalSeat;
+use App\Support\EliminatoryProfileConfig;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -51,45 +52,47 @@ class EvaluationController extends Controller
     public function index(Request $request): View
     {
         $user = Auth::user();
-        
-        // Pronađi člana komisije za trenutnog korisnika
-        $commissionMember = CommissionMember::activeMembershipForUser($user->id);
 
-        if (!$commissionMember) {
+        $memberships = CommissionMember::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->get();
+
+        if ($memberships->isEmpty()) {
             abort(403, 'Niste član komisije.');
         }
 
-        // Učitaj komisiju sa njenim konkursima
-        $commission = $commissionMember->commission;
-        $commission->load('competitions');
+        $commissionIds = $memberships->pluck('commission_id')->unique()->filter()->values();
+        $assignedCompetitions = \App\Models\Competition::query()
+            ->whereIn('commission_id', $commissionIds)
+            ->get();
 
-        // Prijave su komisiji vidljive i na ocjenjivanje tek nakon isteka roka za prijavljivanje (20 dana)
-        $competitionIds = $commission->competitions->filter(function ($c) {
+        $competitionIds = $assignedCompetitions->filter(function ($c) {
             if (! in_array($c->status, ['closed', 'completed']) && ! $c->isApplicationDeadlinePassed()) {
                 return false;
             }
 
             return ! $c->isCommissionProcessingBlocked();
         })->pluck('id');
-        
-        // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
-        // Statusi se određuju na osnovu filtera
+
         $query = Application::with(['user', 'competition']);
-        
+
         if ($competitionIds->isNotEmpty()) {
             $query->whereIn('competition_id', $competitionIds);
         } else {
-            // Ako nema konkursa dodijeljenih komisiji, ne prikazuj ništa
             $query->whereRaw('1 = 0');
         }
 
-        // Filtriranje po konkursu (ako je dodatno odabran u filteru)
         if ($request->filled('competition_id')) {
-            $query->where('competition_id', $request->competition_id);
+            $requestedId = (int) $request->competition_id;
+            if (! $assignedCompetitions->pluck('id')->contains($requestedId)) {
+                abort(403, 'Niste član komisije tog Poziva.');
+            }
+            $query->where('competition_id', $requestedId);
         }
 
-        // Prijave koje član komisije još nije ocjenio
-        $evaluatedApplicationIds = EvaluationScore::where('commission_member_id', $commissionMember->id)
+        $viewerMembershipIds = $memberships->pluck('id')->all();
+        $evaluatedApplicationIds = EvaluationScore::whereIn('commission_member_id', $viewerMembershipIds)
             ->whereCompletedFinal()
             ->pluck('application_id')
             ->toArray();
@@ -127,10 +130,10 @@ class EvaluationController extends Controller
 
         $applications = $query->latest()->paginate(20)->appends($request->query());
         
-        // Filtriranje konkursa samo za konkurse dodijeljene komisiji člana
-        $competitions = \App\Models\Competition::whereIn('id', $competitionIds->toArray())
+        $competitions = $assignedCompetitions
+            ->whereIn('id', $competitionIds->all())
             ->whereIn('status', ['draft', 'published', 'closed', 'completed'])
-            ->get();
+            ->values();
 
         // Link na rang listu na ekranu za ocjenjivanje:
         // prikaži samo za konkurse koji imaju formiranu rang listu (isRankingFormed)
@@ -143,7 +146,9 @@ class EvaluationController extends Controller
             ->mapWithKeys(fn ($c) => [$c->id => $c->isIndividualScoringCycleComplete()])
             ->toArray();
 
-        $isChairman = $commissionMember->position === 'predsjednik';
+        $isChairman = $memberships->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
+        $commissionMember = $memberships->firstWhere('position', 'predsjednik') ?? $memberships->first();
+        $membershipByCommissionId = $memberships->keyBy('commission_id');
 
         return view('evaluation.index', compact(
             'applications',
@@ -151,7 +156,9 @@ class EvaluationController extends Controller
             'commissionMember',
             'competitionsWithAllEvaluated',
             'canViewFinalScoresByCompetition',
-            'isChairman'
+            'isChairman',
+            'viewerMembershipIds',
+            'membershipByCommissionId',
         ));
     }
 
@@ -268,6 +275,7 @@ class EvaluationController extends Controller
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         $eliminatoryCheck = $application->eliminatoryCheck;
+        $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
         $scoringIsAllowed = $this->eliminatoryChecks->scoringIsAllowed($application);
         $eliminatoryIsConfirmedFail = $this->eliminatoryChecks->isConfirmedFail($application);
         $eliminatoryNotice = $application->eliminatoryNotice;
@@ -297,6 +305,7 @@ class EvaluationController extends Controller
             'isChairman',
             'isApplicant',
             'eliminatoryCheck',
+            'eliminatoryProfile',
             'scoringIsAllowed',
             'eliminatoryIsConfirmedFail',
             'eliminatoryNotice',
@@ -508,6 +517,7 @@ class EvaluationController extends Controller
         $application->load(['user', 'competition', 'businessPlan', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         $eliminatoryCheck = $application->eliminatoryCheck;
+        $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $commissionMember
@@ -526,6 +536,7 @@ class EvaluationController extends Controller
             'commission',
             'canViewOtherMembersScores',
             'eliminatoryCheck',
+            'eliminatoryProfile',
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
@@ -739,7 +750,7 @@ class EvaluationController extends Controller
     {
         $chairman = $this->chairmanForEliminatoryMutation($application);
 
-        $answers = $this->validatedEliminatoryAnswers($request, requireNoteIfFail: false);
+        $answers = $this->validatedEliminatoryAnswers($request, $application, requireNotesIfFail: false);
         $this->eliminatoryChecks->saveDraft($application, $chairman, $answers);
 
         return redirect()->route('evaluation.create', $application)
@@ -750,7 +761,7 @@ class EvaluationController extends Controller
     {
         $chairman = $this->chairmanForEliminatoryMutation($application);
 
-        $answers = $this->validatedEliminatoryAnswers($request, requireNoteIfFail: true);
+        $answers = $this->validatedEliminatoryAnswers($request, $application, requireNotesIfFail: true);
         $acknowledgement = $request->boolean('confirmation_acknowledged');
 
         $this->eliminatoryChecks->confirm($application, $chairman, $answers, $acknowledgement);
@@ -814,8 +825,51 @@ class EvaluationController extends Controller
     /**
      * @return array{criterion_1: bool, criterion_2: bool, criterion_3: bool, note: ?string}
      */
-    protected function validatedEliminatoryAnswers(Request $request, bool $requireNoteIfFail): array
+    protected function validatedEliminatoryAnswers(Request $request, Application $application, bool $requireNotesIfFail): array
     {
+        $application->loadMissing('competition');
+        $profile = EliminatoryProfileConfig::for($application->competition?->type);
+
+        $criterion1 = $request->boolean('criterion_1');
+        $criterion2 = $request->boolean('criterion_2');
+        $criterion3 = $request->boolean('criterion_3');
+
+        if ($profile->usesStructuredNotes) {
+            $request->validate([
+                'criterion_1' => 'required|boolean',
+                'criterion_2' => 'required|boolean',
+                'criterion_3' => 'required|boolean',
+                'criterion_notes' => 'nullable|array',
+                'criterion_notes.1' => 'nullable|string|max:2000',
+                'criterion_notes.2' => 'nullable|string|max:2000',
+                'criterion_notes.3' => 'nullable|string|max:2000',
+            ]);
+
+            $explanations = [
+                1 => trim((string) $request->input('criterion_notes.1', '')),
+                2 => trim((string) $request->input('criterion_notes.2', '')),
+                3 => trim((string) $request->input('criterion_notes.3', '')),
+            ];
+
+            $passedByNumber = [1 => $criterion1, 2 => $criterion2, 3 => $criterion3];
+            $errors = [];
+            foreach ($passedByNumber as $number => $passed) {
+                if ($requireNotesIfFail && ! $passed && $explanations[$number] === '') {
+                    $errors['criterion_notes.'.$number] = EliminatoryProfileConfig::YOUTH_EXPLANATION_REQUIRED_MESSAGE;
+                }
+            }
+            if ($errors !== []) {
+                throw \Illuminate\Validation\ValidationException::withMessages($errors);
+            }
+
+            return [
+                'criterion_1' => $criterion1,
+                'criterion_2' => $criterion2,
+                'criterion_3' => $criterion3,
+                'note' => EliminatoryProfileConfig::composeYouthNotes($explanations),
+            ];
+        }
+
         $validated = $request->validate([
             'criterion_1' => 'required|boolean',
             'criterion_2' => 'required|boolean',
@@ -823,13 +877,10 @@ class EvaluationController extends Controller
             'note' => 'nullable|string|max:5000',
         ]);
 
-        $criterion1 = $request->boolean('criterion_1');
-        $criterion2 = $request->boolean('criterion_2');
-        $criterion3 = $request->boolean('criterion_3');
         $note = isset($validated['note']) ? trim((string) $validated['note']) : '';
         $note = $note === '' ? null : $note;
 
-        if ($requireNoteIfFail && (! $criterion1 || ! $criterion2 || ! $criterion3) && $note === null) {
+        if ($requireNotesIfFail && (! $criterion1 || ! $criterion2 || ! $criterion3) && $note === null) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'note' => 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.',
             ]);

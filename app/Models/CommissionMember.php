@@ -117,8 +117,9 @@ class CommissionMember extends Model
     /**
      * Aktivno članstvo ulogovanog člana komisije (bez konkursa u kontekstu).
      *
-     * Koristi se na dashboardu i listi ocjenjivanja. Za konkurs podrške ženskom
-     * preduzetništvu postoji jedna komisija po mandatu; više konkursa dijeli isti commission_id.
+     * Koristi se na dashboardu. Lista ocjenjivanja ne smije ovo koristiti
+     * kada korisnik može biti aktivan na više Komisija — tada se Pozivi
+     * određuju preko svih aktivnih članstava i njihovih commission_id.
      */
     public static function activeMembershipForUser(int $userId): ?self
     {

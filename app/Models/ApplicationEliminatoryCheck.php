@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Support\EliminatoryProfileConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApplicationEliminatoryCheck extends Model
 {
+    /**
+     * Ženske labele (Prigovor i postojeći snapshoti). Polaritet kolona:
+     * true = prolaz / razlog nije aktiviran; false = pad / razlog je aktiviran.
+     */
     public const CRITERION_LABELS = [
         1 => 'Dostavljena su sva potrebna dokumenta?',
         2 => 'Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?',
@@ -72,15 +77,23 @@ class ApplicationEliminatoryCheck extends Model
             || $this->criterionIsFalse($this->criterion_3);
     }
 
+    public function profileConfig(): EliminatoryProfileConfig
+    {
+        $this->loadMissing('application.competition');
+
+        return EliminatoryProfileConfig::for($this->application?->competition?->type);
+    }
+
     /**
      * @return list<string>
      */
     public function failedCriterionLabels(): array
     {
         $failed = [];
-        foreach (self::CRITERION_LABELS as $number => $label) {
+        $labels = $this->profileConfig()->criteria;
+        foreach ($labels as $number => $criterion) {
             if ($this->criterionIsFalse($this->{"criterion_{$number}"})) {
-                $failed[] = $label;
+                $failed[] = $criterion['statement'];
             }
         }
 

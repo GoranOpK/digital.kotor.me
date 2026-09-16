@@ -506,6 +506,7 @@
             
             @php
                 $eliminatoryCheck = $eliminatoryCheck ?? $application->eliminatoryCheck;
+                $eliminatoryProfile = $eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type);
                 $scoringIsAllowed = $scoringIsAllowed ?? false;
                 $eliminatoryIsConfirmedFail = $eliminatoryIsConfirmedFail ?? false;
                 $eliminatoryIsConfirmed = $eliminatoryCheck && $eliminatoryCheck->confirmed_at;
@@ -527,6 +528,7 @@
                 };
             @endphp
 
+            @if(! $eliminatoryProfile->usesStructuredNotes)
                 <div class="print-document-header">
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
                     Obrazac 3
@@ -1191,6 +1193,82 @@
                     @endif
                 </div>
             </form>
+            @else
+                <div class="print-document-header">
+                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
+                    Obrazac 3
+                </div>
+                <div class="form-title">
+                    LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
+                </div>
+                <div class="form-subtitle">
+                    {{ $eliminatoryProfile->formSubtitle }}
+                </div>
+                </div>
+
+                <div class="print-segment-intro">
+                <div class="form-section form-section-compact">
+                    <label class="form-label form-label-large">1. Podnosilac:</label>
+                    @php
+                        $applicantLabel = $application->applicant_type === 'preduzetnica'
+                            ? 'Preduzetnica'
+                            : ($application->applicant_type === 'doo'
+                                ? 'DOO'
+                                : ($application->applicant_type === 'fizicko_lice'
+                                    ? 'Fizičko lice'
+                                    : 'Ostalo'));
+                    @endphp
+                    <input type="text" class="form-control form-control-readonly" value="{{ $applicantLabel }} - {{ $application->user->name }}" readonly>
+                </div>
+
+                <div class="form-section form-section-compact">
+                    <label class="form-label form-label-large">2. Naziv biznis plana:</label>
+                    <input type="text" class="form-control form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
+                </div>
+
+                <div class="form-section form-section-compact">
+                    @if($canEditEliminatory)
+                        <form method="POST" action="{{ route('evaluation.eliminatory.store', $application) }}" id="eliminatoryForm">
+                            @csrf
+                            <input type="hidden" name="confirmation_acknowledged" id="confirmation_acknowledged" value="0">
+                            @include('evaluation.partials.eliminatory_check', ['mode' => 'edit'])
+                            <div class="no-print" style="margin-top: 16px;">
+                                <button type="submit" class="btn-primary">Sačuvaj</button>
+                                <button type="submit" class="btn-primary" formaction="{{ route('evaluation.eliminatory.confirm', $application) }}" onclick="return acknowledgeEliminatoryConfirm(this.form);" style="margin-left: 12px;">Potvrdi Obrazac 3</button>
+                            </div>
+                        </form>
+                    @else
+                        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
+                            @include('evaluation.partials.eliminatory_check', ['mode' => 'readonly'])
+                            <div>
+                                <strong>Rezultat:</strong>
+                                @if(! $eliminatoryCheck || ! $eliminatoryCheck->isConfirmed())
+                                    Nije potvrđeno
+                                @elseif($eliminatoryCheck->isConfirmedPass())
+                                    Ispunjava eliminatorne kriterijume
+                                @else
+                                    Ne ispunjava eliminatorne kriterijume
+                                @endif
+                            </div>
+                            @if($eliminatoryCheck && $eliminatoryCheck->isConfirmed())
+                                <div style="margin-top: 8px;">
+                                    Potvrdio: {{ $eliminatoryCheck->confirmed_by_name }}
+                                </div>
+                                <div>
+                                    Datum i vrijeme: {{ $eliminatoryCheck->confirmed_at?->format('d.m.Y. H:i') }}
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+                </div>
+
+                <div class="no-print" style="margin-top: 24px;">
+                    <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                        Nazad na listu
+                    </a>
+                </div>
+            @endif
         </div>
 
         @include('evaluation.partials.prigovor_commission_block')
@@ -1206,7 +1284,7 @@
     }
 
     function acknowledgeEliminatoryConfirm(form) {
-        const failMessage = @json(\App\Services\ApplicationEliminatoryCheckService::FAIL_CONFIRMATION_MESSAGE);
+        const failMessage = @json(($eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type))->failConfirmationMessage);
         const anyNo = ['criterion_1', 'criterion_2', 'criterion_3'].some(function (name) {
             const checked = form.querySelector('input[name="' + name + '"]:checked');
             return checked && checked.value === '0';
