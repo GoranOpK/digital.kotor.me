@@ -123,7 +123,6 @@
                     $lockOmladinskoInherited = $isOmladinskoEdit && $competition->isSecondCall();
                     $lockTypeYear = $isOmladinskoEdit;
                     $lockBudgetAndNumber = $lockOmladinskoPublished;
-                    $lockAnnualBudget = $lockOmladinskoPublished || $lockOmladinskoInherited;
                 @endphp
                 <div class="form-row">
                     <div class="form-group">
@@ -181,30 +180,25 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Ukupan budžet (€) *</label>
+                        <label class="form-label">{{ $isOmladinskoEdit && $competition->isSecondCall() ? 'Budžet drugog Poziva (€) *' : 'Ukupan budžet (€) *' }}</label>
                         <input type="number" name="budget" class="form-control @error('budget') error @enderror" value="{{ old('budget', $competition->budget) }}" step="0.01" min="{{ $isOmladinskoEdit ? '0.01' : '0' }}" required @if($lockBudgetAndNumber) readonly @endif>
                         @error('budget')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
-                    @if($isOmladinskoEdit)
+                    @if($isOmladinskoEdit && $competition->isSecondCall())
                     <div class="form-group">
-                        <label class="form-label">Godišnji budžet (€) *</label>
-                        <input type="number" name="annual_budget" class="form-control @error('annual_budget') error @enderror" value="{{ old('annual_budget', $competition->annual_budget) }}" step="0.01" min="0.01" @if($lockAnnualBudget) readonly @endif>
-                        @error('annual_budget')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        @if($competition->isSecondCall())
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Naslijeđeno sa prvog Poziva.</div>
-                        @endif
+                        <label class="form-label">Naslijeđeni godišnji okvir (€)</label>
+                        <input type="text" class="form-control" value="{{ number_format((float) $competition->annual_budget, 2, ',', '.') }}" readonly>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Informativno, naslijeđeno sa prvog Poziva. Nije korisnički unos.</div>
                     </div>
                     @endif
                 </div>
                 @if($isOmladinskoEdit && $competition->isFirstCall())
-                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je prvi Poziv. Drugi Poziv se kreira posebno nakon završetka prvog ako ostanu sredstva.</p>
+                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je prvi Poziv. Ukupan budžet je i godišnji okvir. Drugi Poziv se kreira posebno nakon završetka prvog ako ostanu sredstva.</p>
                 @endif
                 @if($isOmladinskoEdit && $competition->isSecondCall())
-                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je drugi Poziv. Profil, godina, redni broj i godišnji budžet su zaključani.</p>
+                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je drugi Poziv. Profil, godina, redni broj i naslijeđeni godišnji okvir su zaključani.</p>
                 @endif
 
                 <div class="form-row">

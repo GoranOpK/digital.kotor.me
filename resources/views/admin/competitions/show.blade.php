@@ -244,7 +244,8 @@
         @if(!empty($omladinskoShowAnnualPanel) && isset($isAdmin) && $isAdmin)
             <div class="info-card" id="omladinsko-annual-panel">
                 <h2 style="font-size: 20px; margin-bottom: 16px;">Godišnja instanca prvog Poziva</h2>
-                <p><strong>Godišnji budžet:</strong> {{ number_format((float) $competition->annual_budget, 2, ',', '.') }} €</p>
+                <p><strong>Ukupan budžet:</strong> {{ number_format((float) $competition->budget, 2, ',', '.') }} €</p>
+                <p style="font-size: 13px; color: #4b5563;">Godišnji okvir je jednak ukupnom budžetu prvog Poziva. Nije odvojeni korisnički iznos.</p>
                 <p><strong>Konačno potvrđena raspodjela prvog Poziva:</strong>
                     {{ $omladinskoConfirmedAllocation !== null ? number_format((float) $omladinskoConfirmedAllocation, 2, ',', '.').' €' : 'Nije dostupna' }}
                 </p>
@@ -329,7 +330,14 @@
                         $competitionStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
                     @endphp
                     <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competitionStatusLabels[$competition->status] ?? $competition->status }}</span></p>
-                    <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
+                    @if($competition->isOmladinskoProfile() && $competition->isFirstCall())
+                        <p><strong>Ukupan budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
+                    @elseif($competition->isOmladinskoProfile() && $competition->isSecondCall())
+                        <p><strong>Budžet drugog Poziva:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
+                        <p><strong>Naslijeđeni godišnji okvir:</strong> {{ number_format((float) $competition->annual_budget, 2, ',', '.') }} € <span style="font-size: 13px; color: #6b7280;">(informativno, jednak ukupnom budžetu prvog Poziva)</span></p>
+                    @else
+                        <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
+                    @endif
                     @if($canCompetitionAdminSeeApplications)
                         <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
                     @endif

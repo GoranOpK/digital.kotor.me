@@ -41,8 +41,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'type' => 'omladinsko',
             'up_number' => '01-123/26',
             'year' => 2026,
-            'budget' => '80000.00',
-            'annual_budget' => '100000.00',
+            'budget' => '100000.00',
             'start_date' => '2026-04-01',
             'call_number' => 2,
         ]);
@@ -57,7 +56,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->assertSame('omladinsko', $created->type);
         $this->assertSame(1, (int) $created->call_number);
         $this->assertSame('100000.00', $created->annual_budget);
-        $this->assertSame('80000.00', $created->budget);
+        $this->assertSame('100000.00', $created->budget);
         $this->assertSame('01-123/26', $created->competition_number);
         $this->assertSame('01-123/26', $created->upNumber?->number);
         $this->assertFalse(preg_match('/^\d{8}\d+$/', (string) $created->competition_number) === 1);
@@ -74,6 +73,86 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->actingAs($user)
             ->get(route('competitions.show', $created))
             ->assertNotFound();
+    }
+
+    public function test_omladinsko_create_form_has_only_total_budget_and_no_annual_budget_input(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.competitions.create', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Ukupan budžet', $html);
+        $this->assertStringContainsString('id="omladinsko-first-call-fields"', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="omladinsko-first-call-fields"[^>]*display:none/', $html);
+        $this->assertStringNotContainsString('name="annual_budget"', $html);
+        $this->assertStringNotContainsString('Godišnji budžet (€) *', $html);
+    }
+
+    public function test_malicious_client_annual_budget_is_ignored_on_first_call_store(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+
+        $this->actingAs($admin)
+            ->post(route('admin.competitions.store'), $this->firstCallPayload([
+                'budget' => '100000.00',
+                'annual_budget' => '80000.00',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $created = Competition::query()->where('title', 'Omladinsko prvi Poziv')->firstOrFail();
+        $this->assertSame('100000.00', $created->budget);
+        $this->assertSame('100000.00', $created->annual_budget);
+        $this->assertSame(1, (int) $created->call_number);
+    }
+
+    public function test_first_call_draft_update_copies_budget_to_annual_budget_and_ignores_client_value(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $first = $this->makeOmladinskoFirst(['status' => 'draft']);
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.edit', $first))
+            ->put(route('admin.competitions.update', $first), $this->updatePayload($first, [
+                'budget' => '120000.00',
+                'annual_budget' => '80000.00',
+            ]))
+            ->assertRedirect(route('admin.competitions.show', $first))
+            ->assertSessionHasNoErrors();
+
+        $first->refresh();
+        $this->assertSame('120000.00', $first->budget);
+        $this->assertSame('120000.00', $first->annual_budget);
+        $this->assertSame('draft', $first->status);
+    }
+
+    public function test_publish_of_mismatched_historical_first_call_is_blocked_without_silent_fix(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $first = $this->makeOmladinskoFirst([
+            'status' => 'draft',
+            'budget' => '80000.00',
+            'annual_budget' => '100000.00',
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.show', $first))
+            ->post(route('admin.competitions.publish', $first))
+            ->assertRedirect()
+            ->assertSessionHasErrors('error');
+
+        $this->assertSame(
+            CompetitionAnnualInstance::MSG_FIRST_BUDGET_ANNUAL_MISMATCH,
+            session('errors')->first('error')
+        );
+
+        $first->refresh();
+        $this->assertSame('draft', $first->status);
+        $this->assertSame('80000.00', $first->budget);
+        $this->assertSame('100000.00', $first->annual_budget);
     }
 
     public function test_second_first_call_of_same_year_is_blocked(): void
@@ -192,7 +271,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             ->assertOk()
             ->assertSee('Kreiraj drugi Poziv')
             ->assertSee('40.000,00', false)
-            ->assertSee('Godišnji budžet', false);
+            ->assertSee('Ukupan budžet', false);
 
         $this->actingAs($admin)
             ->get(route('admin.competitions.second-call.create', $first))
@@ -350,8 +429,20 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->assertSame(2026, (int) $first->year);
         $this->assertSame(1, (int) $first->call_number);
         $this->assertSame('100000.00', $first->annual_budget);
-        $this->assertSame('80000.00', $first->budget);
+        $this->assertSame('100000.00', $first->budget);
         $this->assertSame('UP-OML-1', $first->upNumber?->number);
+    }
+
+    public function test_first_call_edit_form_has_no_annual_budget_input(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $first = $this->makeOmladinskoFirst(['status' => 'draft']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.competitions.edit', $first))
+            ->assertOk()
+            ->assertSee('Ukupan budžet', false)
+            ->assertDontSee('name="annual_budget"', false);
     }
 
     public function test_second_draft_cannot_change_inherited_fields_and_publish_rechecks_gate(): void
@@ -402,6 +493,8 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->assertStringNotContainsString('name="call_number"', $html);
         $this->assertStringContainsString('id="omladinsko-first-call-fields"', $html);
         $this->assertMatchesRegularExpression('/id="omladinsko-first-call-fields"[^>]*display:none/', $html);
+        $this->assertStringContainsString('Ukupan budžet', $html);
+        $this->assertStringNotContainsString('name="annual_budget"', $html);
 
         $this->actingAs($admin)->post(route('admin.competitions.store'), [
             'title' => 'Ženski konkurs',
@@ -430,7 +523,8 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.competitions.edit', $zensko))
             ->assertOk()
-            ->assertDontSee('Godišnji budžet');
+            ->assertDontSee('Godišnji budžet')
+            ->assertSee('Ukupan budžet');
 
         $this->actingAs($admin)
             ->put(route('admin.competitions.update', $zensko), $this->updatePayload($zensko, [
@@ -456,6 +550,23 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->assertSame(0, Competition::query()->where('type', 'zensko')->whereNotNull('call_number')->count());
     }
 
+    public function test_closing_first_call_does_not_create_second_and_administrator_may_leave_only_first(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $first = $this->makeGateReadyFirstCall();
+        $this->assertSame('completed', $first->status);
+        $this->assertTrue(app(CompetitionAnnualInstance::class)->canCreateSecondCall($first->fresh()));
+        $this->assertSame(0, Competition::query()->where('call_number', 2)->count());
+
+        $this->actingAs($admin)
+            ->get(route('admin.competitions.show', $first))
+            ->assertOk()
+            ->assertSee('Kreiraj drugi Poziv');
+
+        $this->assertSame(1, Competition::query()->where('type', 'omladinsko')->where('call_number', 1)->count());
+        $this->assertSame(0, Competition::query()->where('call_number', 2)->count());
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
@@ -468,8 +579,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'type' => 'omladinsko',
             'up_number' => '01-123/26',
             'year' => 2026,
-            'budget' => '80000.00',
-            'annual_budget' => '100000.00',
+            'budget' => '100000.00',
             'start_date' => '2026-04-01',
         ], $overrides);
     }
@@ -542,7 +652,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'year' => 2026,
             'call_number' => 1,
             'annual_budget' => '100000.00',
-            'budget' => '80000.00',
+            'budget' => '100000.00',
             'deadline_days' => 20,
             'published_at' => now()->subDays(30),
             'commission_id' => $commission?->id,

@@ -602,7 +602,6 @@ class AdminController extends Controller
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => $isOmladinsko ? 'required|numeric|gt:0' : 'required|numeric|min:0',
-            'annual_budget' => $isOmladinsko ? 'required|numeric|gt:0' : 'nullable',
             'start_date' => 'nullable|date',
             'commission_id' => 'nullable|exists:commissions,id',
         ], [
@@ -612,8 +611,6 @@ class AdminController extends Controller
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'budget.gt' => CompetitionAnnualInstance::MSG_BUDGET_NOT_POSITIVE,
-            'annual_budget.required' => 'Godišnji budžet je obavezan.',
-            'annual_budget.gt' => CompetitionAnnualInstance::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
@@ -640,7 +637,7 @@ class AdminController extends Controller
 
         if ($isOmladinsko) {
             $data['call_number'] = CompetitionAnnualInstance::CALL_FIRST;
-            $data['annual_budget'] = $validated['annual_budget'];
+            $data['annual_budget'] = $validated['budget'];
         }
 
         if (! empty($validated['start_date'])) {
@@ -954,9 +951,6 @@ class AdminController extends Controller
         }
         $isPublishedOmladinsko = $isOmladinsko && $competition->status !== 'draft';
         $budgetRule = $isOmladinsko ? 'required|numeric|gt:0' : 'required|numeric|min:0';
-        $annualBudgetRule = $isOmladinsko && $competition->isFirstCall() && $competition->status === 'draft'
-            ? 'required|numeric|gt:0'
-            : 'nullable';
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -965,7 +959,6 @@ class AdminController extends Controller
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => $budgetRule,
-            'annual_budget' => $annualBudgetRule,
             'start_date' => 'nullable|date',
             'status' => 'required|in:draft,published,completed',
             'commission_id' => 'nullable|exists:commissions,id',
@@ -976,8 +969,6 @@ class AdminController extends Controller
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'budget.gt' => CompetitionAnnualInstance::MSG_BUDGET_NOT_POSITIVE,
-            'annual_budget.required' => 'Godišnji budžet je obavezan.',
-            'annual_budget.gt' => CompetitionAnnualInstance::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
@@ -1015,7 +1006,7 @@ class AdminController extends Controller
             $data['call_number'] = $competition->call_number;
             $data['type'] = CompetitionAnnualInstance::PROFILE_OMLADINSKO;
             if ($competition->isFirstCall() && $competition->status === 'draft') {
-                $data['annual_budget'] = $validated['annual_budget'];
+                $data['annual_budget'] = $validated['budget'];
             } else {
                 $data['annual_budget'] = $competition->annual_budget;
             }
@@ -2750,11 +2741,6 @@ class AdminController extends Controller
             if ($currentNumber !== null && (string) ($validated['up_number'] ?? '') !== (string) $currentNumber) {
                 $errors['up_number'] = 'Zavodni broj se ne može mijenjati nakon objave.';
             }
-        }
-
-        if ($lockInherited && array_key_exists('annual_budget', $validated) && $validated['annual_budget'] !== null
-            && ! $this->decimalEquals($validated['annual_budget'], $competition->annual_budget)) {
-            $errors['annual_budget'] = 'Godišnji budžet se ne može mijenjati.';
         }
 
         return $errors;

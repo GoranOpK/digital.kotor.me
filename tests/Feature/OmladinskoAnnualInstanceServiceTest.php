@@ -149,14 +149,24 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
 
     public function test_published_first_call_budget_remains_unchanged_when_second_is_validated(): void
     {
-        $first = $this->createOmladinskoCall(1, '100000.00', '80000.00', 2026);
+        $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
         $second = $this->newOmladinskoCall(2, '100000.00', '40000.00', 2026);
 
         $this->service->validateSecondCall($second);
 
-        $this->assertSame('80000.00', $first->fresh()->budget);
-        $this->assertSame('80000.00', $this->service->findFirstCall('omladinsko', 2026)?->budget);
+        $this->assertSame('100000.00', $first->fresh()->budget);
+        $this->assertSame('100000.00', $this->service->findFirstCall('omladinsko', 2026)?->budget);
+    }
+
+    public function test_first_call_with_unequal_budget_and_annual_budget_is_rejected(): void
+    {
+        $first = $this->createOmladinskoCall(1, '100000.00', '80000.00', 2026);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage(CompetitionAnnualInstance::MSG_FIRST_BUDGET_ANNUAL_MISMATCH);
+
+        $this->service->validateFirstCall($first);
     }
 
     public function test_confirmed_allocation_includes_only_finally_confirmed_approved_applications(): void
@@ -182,7 +192,7 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->createConfirmedApplication($first, '1.00');
 
         $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Konačno potvrđena raspodjela prvog Poziva premašuje godišnji okvir.');
+        $this->expectExceptionMessage(CompetitionAnnualInstance::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET);
 
         $this->service->remainingAfterFirst('omladinsko', 2026);
     }
@@ -199,17 +209,19 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->assertSame('100000.00', $first->fresh()->budget);
     }
 
-    public function test_example_annual_one_hundred_first_budget_eighty_allocation_sixty_remaining_forty(): void
+    public function test_remaining_after_first_uses_first_call_budget_not_independent_annual_budget(): void
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '80000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
 
-        $this->assertSame('40000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
-        $this->assertNotSame('20000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('20000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertNotSame('40000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
 
         $second = $this->newOmladinskoCall(2, '100000.00', '40000.00', 2026);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Budžet drugog Poziva ne smije premašiti preostala godišnja sredstva.');
         $this->service->validateSecondCall($second);
-        $this->assertSame('80000.00', $first->fresh()->budget);
     }
 
     public function test_zensko_profile_is_not_subject_to_call_number_and_annual_budget_rules(): void

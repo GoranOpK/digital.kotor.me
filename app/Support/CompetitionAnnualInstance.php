@@ -11,6 +11,7 @@ use DomainException;
  *
  * Radi nad postojećim Competition i Application modelima. Ne primjenjuje se na zensko.
  * Ne kreira Poziv, ne mijenja objavljeni budget prvog Poziva i ne uvodi remaining_amount.
+ * remaining_after_first = budget prvog Poziva − zbir konačno potvrđenih approved_amount.
  */
 final class CompetitionAnnualInstance
 {
@@ -42,6 +43,10 @@ final class CompetitionAnnualInstance
     public const MSG_BUDGET_NOT_POSITIVE = 'Budžet mora biti veći od nule.';
 
     public const MSG_ANNUAL_BUDGET_NOT_POSITIVE = 'Godišnji budžet mora biti veći od nule.';
+
+    public const MSG_FIRST_BUDGET_ANNUAL_MISMATCH = 'Ukupan budžet i godišnji okvir nijesu usklađeni. Objava nije dozvoljena dok se iznosi ne izjednače.';
+
+    public const MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET = 'Konačno potvrđena raspodjela prvog Poziva premašuje budžet prvog Poziva. Prekoračenje se ne prikriva.';
 
     public const MSG_BUDGET_EXCEEDS_REMAINING = 'Budžet prelazi preostala sredstva.';
 
@@ -102,16 +107,14 @@ final class CompetitionAnnualInstance
         $this->assertBcMath();
 
         $first = $this->requireFirstCall($type, $year);
-        $annual = $this->requirePositiveDecimal((string) $first->annual_budget, 'annual_budget');
+        $firstBudget = $this->requirePositiveDecimal((string) $first->budget, 'budget');
         $allocated = $this->confirmedAllocation($first);
 
-        if (bccomp($allocated, $annual, 2) === 1) {
-            throw new DomainException(
-                'Konačno potvrđena raspodjela prvog Poziva premašuje godišnji okvir. Prekoračenje se ne prikriva.'
-            );
+        if (bccomp($allocated, $firstBudget, 2) === 1) {
+            throw new DomainException(self::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET);
         }
 
-        return bcsub($annual, $allocated, 2);
+        return bcsub($firstBudget, $allocated, 2);
     }
 
     public function validateFirstCall(Competition $competition): void
@@ -121,8 +124,13 @@ final class CompetitionAnnualInstance
         }
 
         $this->assertCallNumber($competition->call_number, self::CALL_FIRST);
-        $this->requirePositiveDecimal((string) $competition->annual_budget, 'annual_budget');
-        $this->requirePositiveDecimal((string) $competition->budget, 'budget');
+        $budget = $this->requirePositiveDecimal((string) $competition->budget, 'budget');
+        $annualBudget = $this->requirePositiveDecimal((string) $competition->annual_budget, 'annual_budget');
+
+        if (bccomp($budget, $annualBudget, 2) !== 0) {
+            throw new DomainException(self::MSG_FIRST_BUDGET_ANNUAL_MISMATCH);
+        }
+
         $this->assertYear($competition);
 
         $existing = $this->findCall(
@@ -260,6 +268,8 @@ final class CompetitionAnnualInstance
             self::MSG_SECOND_EXISTS,
             self::MSG_BUDGET_NOT_POSITIVE,
             self::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
+            self::MSG_FIRST_BUDGET_ANNUAL_MISMATCH,
+            self::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET,
             self::MSG_BUDGET_EXCEEDS_REMAINING,
             self::MSG_THIRD_NOT_ALLOWED,
             self::MSG_INVALID_INSTANCE,
@@ -276,6 +286,8 @@ final class CompetitionAnnualInstance
         return match (true) {
             str_contains($message, 'budget mora biti veći od nule') => self::MSG_BUDGET_NOT_POSITIVE,
             str_contains($message, 'annual_budget mora biti veći od nule') => self::MSG_ANNUAL_BUDGET_NOT_POSITIVE,
+            str_contains($message, 'premašuje budžet prvog Poziva') => self::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET,
+            str_contains($message, 'premašuje godišnji okvir') => self::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET,
             str_contains($message, 'ne smije premašiti preostala') => self::MSG_BUDGET_EXCEEDS_REMAINING,
             str_contains($message, 'Drugi Poziv iste godišnje instance već postoji') => self::MSG_SECOND_EXISTS,
             str_contains($message, 'Prvi Poziv iste godišnje instance već postoji') => self::MSG_FIRST_ALREADY_EXISTS,

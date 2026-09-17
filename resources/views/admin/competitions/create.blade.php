@@ -135,8 +135,9 @@
                             <input type="text" class="form-control" value="Drugi Poziv" readonly>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Godišnji budžet (€)</label>
+                            <label class="form-label">Naslijeđeni godišnji okvir (€)</label>
                             <input type="text" class="form-control" value="{{ number_format((float) $firstCall->annual_budget, 2, ',', '.') }}" readonly>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Informativno, jednak ukupnom budžetu prvog Poziva. Nije korisnički unos.</div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -206,14 +207,7 @@
 
                 @if(! $isSecondCallForm)
                 <div id="omladinsko-first-call-fields" class="info-note" style="{{ $selectedType === 'omladinsko' ? '' : 'display:none;' }}">
-                    <p style="margin: 0 0 12px 0;"><strong>Prvi Poziv</strong> profila mladih. Redni broj Poziva sistem postavlja na 1. Drugi Poziv se kreira posebno, nakon završetka prvog, ako ostanu sredstva.</p>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Godišnji budžet (€) *</label>
-                        <input type="number" name="annual_budget" class="form-control @error('annual_budget') error @enderror" value="{{ old('annual_budget') }}" step="0.01" min="0.01">
-                        @error('annual_budget')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    <p style="margin: 0;"><strong>Prvi Poziv</strong> profila mladih. Redni broj Poziva sistem postavlja na 1. Polje <strong>Ukupan budžet</strong> je i godišnji okvir. Drugi Poziv se kreira posebno, nakon završetka prvog, ako ostanu sredstva.</p>
                 </div>
                 @endif
 
