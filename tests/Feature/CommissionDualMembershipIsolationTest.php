@@ -513,7 +513,7 @@ class CommissionDualMembershipIsolationTest extends TestCase
             'year' => $year,
             'call_number' => 1,
             'annual_budget' => '100000.00',
-            'budget' => '80000.00',
+            'budget' => '100000.00',
             'deadline_days' => 20,
             'published_at' => $published ? now()->subDays(30) : null,
             'competition_number' => 'UP-O-'.$year.'-'.uniqid(),

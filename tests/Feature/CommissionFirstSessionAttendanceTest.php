@@ -363,7 +363,7 @@ class CommissionFirstSessionAttendanceTest extends TestCase
             'year' => $year,
             'call_number' => 1,
             'annual_budget' => '100000.00',
-            'budget' => '80000.00',
+            'budget' => '100000.00',
             'deadline_days' => 20,
             'published_at' => $deadlinePassed ? now()->subDays(30) : now(),
             'commission_id' => $commission->id,

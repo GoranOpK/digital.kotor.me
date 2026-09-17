@@ -537,7 +537,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             'year' => $year,
             'call_number' => 1,
             'annual_budget' => '100000.00',
-            'budget' => '80000.00',
+            'budget' => '100000.00',
             'deadline_days' => 20,
             'published_at' => now()->subDays(30),
             'commission_id' => $commission->id,
