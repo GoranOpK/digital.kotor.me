@@ -35,6 +35,9 @@ class ApplicationPrigovor extends Model
         'criterion_1_remaining',
         'criterion_2_remaining',
         'criterion_3_remaining',
+        'criterion_1_contested',
+        'criterion_2_contested',
+        'criterion_3_contested',
     ];
 
     protected function casts(): array
@@ -43,7 +46,7 @@ class ApplicationPrigovor extends Model
             'submitted_at' => 'datetime',
             'decided_at' => 'datetime',
             'eliminatory_reason_remaining' => 'boolean',
-            // criterion_*_remaining stay uncast so NULL (original Da) is not coerced to false.
+            // criterion_*_remaining and criterion_*_contested stay uncast so NULL is not coerced to false.
         ];
     }
 
@@ -128,6 +131,13 @@ class ApplicationPrigovor extends Model
     public function criterionRemainingIsTrue(int $number): bool
     {
         $value = $this->{"criterion_{$number}_remaining"};
+
+        return $value === true || $value === 1 || $value === '1';
+    }
+
+    public function criterionIsContested(int $number): bool
+    {
+        $value = $this->{"criterion_{$number}_contested"};
 
         return $value === true || $value === 1 || $value === '1';
     }

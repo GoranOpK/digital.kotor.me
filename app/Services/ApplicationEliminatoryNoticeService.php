@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Mail\ApplicationEliminatoryAppealNoticeMail;
 use App\Mail\ApplicationEliminatoryRejectionMail;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\ApplicationEliminatoryNotice;
+use App\Support\EliminatoryProfileConfig;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -27,13 +29,17 @@ class ApplicationEliminatoryNoticeService
             return $notice;
         }
 
+        $profile = $check->profileConfig();
+
         return ApplicationEliminatoryNotice::create([
             'application_id' => $application->id,
             'eliminatory_check_id' => $check->id,
             'sent_at' => now(),
             'portal_recorded_at' => now(),
             'reasons_snapshot' => $check->failedCriterionLabels(),
-            'note_snapshot' => $check->note,
+            'note_snapshot' => $profile->usesStructuredNotes
+                ? EliminatoryProfileConfig::humanYouthActivatedExplanations($check)
+                : $check->note,
         ]);
     }
 
@@ -42,7 +48,7 @@ class ApplicationEliminatoryNoticeService
      */
     public function deliverRegisteredEmail(Application $application): void
     {
-        $application->loadMissing(['user', 'eliminatoryNotice']);
+        $application->loadMissing(['user', 'eliminatoryNotice', 'competition', 'eliminatoryCheck']);
         $notice = $application->eliminatoryNotice;
 
         if ($notice === null || $notice->mail_sent_at !== null) {
@@ -58,7 +64,11 @@ class ApplicationEliminatoryNoticeService
         }
 
         try {
-            Mail::to($recipient)->send(new ApplicationEliminatoryRejectionMail($application, $notice->fresh()));
+            $mailable = $application->competition?->isOmladinskoProfile()
+                ? new ApplicationEliminatoryAppealNoticeMail($application, $notice->fresh())
+                : new ApplicationEliminatoryRejectionMail($application, $notice->fresh());
+
+            Mail::to($recipient)->send($mailable);
             $notice->mail_sent_at = now();
             $notice->mail_failed_at = null;
             $notice->save();

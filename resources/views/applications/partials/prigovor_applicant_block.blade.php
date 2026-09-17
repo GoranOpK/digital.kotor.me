@@ -1,4 +1,7 @@
 {{-- Isolated applicant Prigovor / notice. Not part of Obrazac 3. --}}
+@if($application->isOmladinskoProfile())
+    @include('applications.partials.prigovor_applicant_block_omladinsko')
+@else
 @php
     $notice = $application->eliminatoryNotice;
     $prigovor = $application->prigovor;
@@ -128,4 +131,5 @@
         <p>Rok za Prigovor je istekao. Odbijanje po eliminatornoj provjeri je konačno za ovu fazu.</p>
     @endif
 </div>
+@endif
 @endif

@@ -1,4 +1,7 @@
 {{-- Isolated Prigovor block. Must not wrap or restyle Obrazac 3. --}}
+@if($application->competition?->isOmladinskoProfile())
+    @include('evaluation.partials.prigovor_commission_block_omladinsko')
+@else
 @php
     $eliminatoryNotice = $eliminatoryNotice ?? ($application->eliminatoryNotice ?? null);
     $prigovor = $prigovor ?? ($application->prigovor ?? null);
@@ -229,4 +232,5 @@
         <p>Prigovor nije podnesen u roku od 3 dana. Odbijanje po eliminatornoj provjeri je konačno za ovu fazu.</p>
     @endif
 </div>
+@endif
 @endif

@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\ApplicationEliminatoryCheck;
+
 /**
  * Profilna konfiguracija Obrasca 3 (eliminatorna provjera).
  *
@@ -42,7 +44,7 @@ final class EliminatoryProfileConfig
                 formSubtitle: '(Popunjava Komisija za podršku preduzetništvu mladih)',
                 usesStructuredNotes: true,
                 scoringUnlockedAfterPass: false,
-                sendsFailNotice: false,
+                sendsFailNotice: true,
                 failConfirmationMessage: self::YOUTH_FAIL_CONFIRMATION_MESSAGE,
                 passLabel: 'Razlog nije aktiviran',
                 failLabel: 'Razlog aktiviran',
@@ -173,5 +175,58 @@ final class EliminatoryProfileConfig
     public static function youthDraftExplanations(?string $note): array
     {
         return self::parseYouthNotes($note);
+    }
+
+    public function commissionName(): string
+    {
+        return $this->type === 'omladinsko'
+            ? 'Komisija za podršku preduzetništvu mladih'
+            : 'Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu';
+    }
+
+    /**
+     * @return list<array{number: int, statement: string, explanation: string}>
+     */
+    public function activatedReasonDetails(?ApplicationEliminatoryCheck $check): array
+    {
+        if ($check === null) {
+            return [];
+        }
+
+        $explanations = $this->usesStructuredNotes
+            ? self::parseYouthNotes($check->note)
+            : [1 => (string) $check->note, 2 => '', 3 => ''];
+
+        $details = [];
+        foreach ([1, 2, 3] as $number) {
+            if (! $check->criterionIsFalse($check->{"criterion_{$number}"})) {
+                continue;
+            }
+
+            $details[] = [
+                'number' => $number,
+                'statement' => $this->statement($number),
+                'explanation' => $this->usesStructuredNotes
+                    ? ($explanations[$number] ?? '')
+                    : trim((string) $check->note),
+            ];
+        }
+
+        return $details;
+    }
+
+    public static function humanYouthActivatedExplanations(ApplicationEliminatoryCheck $check): string
+    {
+        $profile = $check->profileConfig();
+        $blocks = [];
+        foreach ($profile->activatedReasonDetails($check) as $detail) {
+            $block = $detail['statement'];
+            if ($detail['explanation'] !== '') {
+                $block .= "\nObrazloženje Komisije: ".$detail['explanation'];
+            }
+            $blocks[] = $block;
+        }
+
+        return implode("\n\n", $blocks);
     }
 }

@@ -317,7 +317,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_fail_does_not_send_womens_notice_or_set_rejected(): void
+    public function test_fail_sends_youth_notice_keeps_submitted_and_does_not_open_scoring(): void
     {
         $ctx = $this->makeYouthReadyContext();
         $this->actingAs($ctx['chairman']->user)
@@ -338,10 +338,11 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertTrue($application->eliminatoryCheck->isConfirmedFail());
         $this->assertSame('submitted', $application->status);
         $this->assertNotSame('rejected', $application->status);
-        $this->assertNull($application->eliminatoryNotice);
-        $this->assertSame(0, ApplicationEliminatoryNotice::query()->count());
-        Mail::assertNothingSent();
-        Mail::assertNotQueued(ApplicationEliminatoryRejectionMail::class);
+        $this->assertNotNull($application->eliminatoryNotice);
+        $this->assertSame(1, ApplicationEliminatoryNotice::query()->count());
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        Mail::assertSent(\App\Mail\ApplicationEliminatoryAppealNoticeMail::class);
+        Mail::assertNotSent(ApplicationEliminatoryRejectionMail::class);
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $application))
@@ -352,7 +353,9 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertStringContainsString('dokumentacija je nepotpuna', $html);
         $this->assertStringNotContainsString('biće odbijena', $html);
         $this->assertStringNotContainsString('dopuna dokumentacije', $html);
-        $this->assertStringNotContainsString('kn-prigovor', $html);
+        $this->assertStringNotContainsString('članu 10', $html);
+        $this->assertStringNotContainsString(trim(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX), $html);
+        $this->assertStringNotContainsString('>Ocijeni<', $html);
     }
 
     public function test_fail_does_not_create_document_supplement_request(): void

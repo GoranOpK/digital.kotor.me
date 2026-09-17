@@ -7,6 +7,7 @@ use App\Models\EvaluationScore;
 use App\Models\CommissionMember;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
+use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
@@ -22,6 +23,7 @@ class EvaluationController extends Controller
         protected ApplicationEliminatoryCheckService $eliminatoryChecks,
         protected ApplicationPrigovorService $prigovors,
         protected CanonicalIndividualScoringService $canonicalScoring,
+        protected ApplicationYouthAppealWindowService $youthAppealWindows,
     ) {}
 
     /**
@@ -79,6 +81,7 @@ class EvaluationController extends Controller
 
         if ($competitionIds->isNotEmpty()) {
             $query->whereIn('competition_id', $competitionIds);
+            $this->youthAppealWindows->finalizeExpiredWithoutPrigovorForCompetitionIds($competitionIds->all());
         } else {
             $query->whereRaw('1 = 0');
         }
@@ -183,7 +186,12 @@ class EvaluationController extends Controller
             } else {
                 abort(403, 'Niste član komisije.');
             }
-        } else {
+        }
+
+        $this->youthAppealWindows->finalizeExpiredWithoutPrigovor($application);
+        $application->refresh();
+
+        if ($commissionMember) {
             // Članovi komisije mogu vidjeti samo prijave koje su podnesene (status 'submitted' ili viši)
             // Ne mogu vidjeti draft prijave
             if ($application->status === 'draft') {
@@ -280,10 +288,7 @@ class EvaluationController extends Controller
         $eliminatoryIsConfirmedFail = $this->eliminatoryChecks->isConfirmedFail($application);
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
-        $canDecidePrigovor = $commissionMember
-            && $commissionMember->position === 'predsjednik'
-            && $commissionMember->status === 'active'
-            && $prigovor?->isPodnesen();
+        $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
@@ -470,6 +475,9 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        $this->youthAppealWindows->finalizeExpiredWithoutPrigovor($application);
+        $application->refresh();
+
         $this->abortIfCommissionProcessingBlocked($application->competition);
 
         $evaluationScore = EvaluationScore::where('application_id', $application->id)
@@ -520,10 +528,7 @@ class EvaluationController extends Controller
         $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
-        $canDecidePrigovor = $commissionMember
-            && $commissionMember->position === 'predsjednik'
-            && $commissionMember->status === 'active'
-            && $prigovor?->isPodnesen();
+        $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
 
         return view('evaluation.show', compact(
             'application',
@@ -820,6 +825,18 @@ class EvaluationController extends Controller
         }
 
         return $commissionMember;
+    }
+
+    protected function chairmanCanDecidePrigovor(?CommissionMember $commissionMember, Application $application, $prigovor): bool
+    {
+        if ($application->competition?->isOmladinskoProfile()) {
+            return false;
+        }
+
+        return $commissionMember
+            && $commissionMember->position === 'predsjednik'
+            && $commissionMember->status === 'active'
+            && $prigovor?->isPodnesen();
     }
 
     /**

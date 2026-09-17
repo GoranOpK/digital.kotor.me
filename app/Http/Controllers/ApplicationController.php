@@ -807,6 +807,10 @@ class ApplicationController extends Controller
             }
         }
 
+        app(\App\Services\ApplicationYouthAppealWindowService::class)
+            ->finalizeExpiredWithoutPrigovor($application);
+        $application->refresh();
+
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         // Provjeri da li je prijava spremna za podnošenje
