@@ -7,8 +7,10 @@ use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\ApplicationEliminatoryNotice;
 use App\Models\ApplicationPrigovor;
+use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\User;
+use App\Support\EliminatoryProfileConfig;
 use App\Support\YouthPrigovorObrazlozenje;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +37,13 @@ class ApplicationPrigovorService
 
     public const CONTESTED_EXPLANATION_REQUIRED_MESSAGE = 'Obrazloženje je obavezno za svaki osporeni kriterijum.';
 
-    public const YOUTH_DECISION_NOT_AVAILABLE_MESSAGE = 'Odluka Komisije po prigovoru za ovaj profil nije dostupna u ovom koraku.';
+    public const YOUTH_COMMISSION_INCOMPLETE_MESSAGE = 'Odluku po prigovoru može evidentirati samo predsjednik kompletne Komisije Poziva sa tačno tri aktivna mjesta.';
+
+    public const YOUTH_CONTESTED_OUTCOME_REQUIRED_MESSAGE = 'Za svaki osporeni kriterijum mora se označiti Otklonjen ili Ostaje.';
+
+    public const YOUTH_UNCONTESTED_CANNOT_LIFT_MESSAGE = 'Neosporeni aktivirani razlog ostaje. Ne može se otkloniti.';
+
+    public const YOUTH_INACTIVE_OUTCOME_MESSAGE = 'Ishod se ne evidentira za kriterijum koji nije bio aktiviran.';
 
     public const NOT_SUBMITTED_MESSAGE = 'Prigovor je moguć samo dok je prijava u stanju submitted.';
 
@@ -196,7 +204,7 @@ class ApplicationPrigovorService
         $application->loadMissing('competition');
 
         if ($application->competition?->isOmladinskoProfile()) {
-            abort(403, self::YOUTH_DECISION_NOT_AVAILABLE_MESSAGE);
+            return $this->decideYouth($application, $chairman, $decisionNote, $criterionOutcomes);
         }
 
         if ($chairman->position !== 'predsjednik' || $chairman->status !== 'active') {
@@ -267,6 +275,264 @@ class ApplicationPrigovorService
         $this->deliverDecisionEmail($application, $prigovor);
 
         return $prigovor;
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $criterionOutcomes
+     */
+    private function decideYouth(
+        Application $application,
+        CommissionMember $chairman,
+        ?string $decisionNote,
+        array $criterionOutcomes,
+    ): ApplicationPrigovor {
+        if ($chairman->position !== 'predsjednik' || $chairman->status !== 'active') {
+            abort(403, 'Samo predsjednik Komisije, u ime Komisije, može evidentirati odluku o Prigovoru.');
+        }
+
+        if ((int) $chairman->commission_id !== (int) $application->competition?->commission_id) {
+            abort(403, 'Samo predsjednik Komisije konkretnog Konkursa može evidentirati odluku o Prigovoru.');
+        }
+
+        $decisionNote = $decisionNote !== null ? trim($decisionNote) : '';
+        if ($decisionNote === '') {
+            throw ValidationException::withMessages([
+                'decision_note' => self::DECISION_NOTE_REQUIRED_MESSAGE,
+            ]);
+        }
+
+        try {
+            $prigovor = DB::transaction(function () use ($application, $chairman, $decisionNote, $criterionOutcomes) {
+                /** @var Application $locked */
+                $locked = Application::query()
+                    ->whereKey($application->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $locked->load('competition');
+
+                $prigovor = ApplicationPrigovor::query()
+                    ->where('application_id', $locked->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($prigovor === null) {
+                    abort(403, 'Ne postoji podneseni Prigovor za ovu prijavu.');
+                }
+
+                if ($prigovor->isFinished()) {
+                    abort(403, self::FINISHED_MESSAGE);
+                }
+
+                if (! $prigovor->isPodnesen()) {
+                    abort(403, self::NOT_PENDING_MESSAGE);
+                }
+
+                $check = ApplicationEliminatoryCheck::query()
+                    ->where('application_id', $locked->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($check === null || ! $check->isConfirmedFail()) {
+                    abort(403, 'Odluka po Prigovoru je moguća samo uz potvrđenu eliminatornu provjeru.');
+                }
+
+                if (! $prigovor->hasReadableContestedData()) {
+                    abort(403, 'Odluka po prigovoru zahtijeva čitljive osporene kriterijume i obrazloženja.');
+                }
+
+                $this->assertYouthCommissionDecisionGate($locked, $chairman);
+
+                $remainingByCriterion = $this->validatedYouthRemainingByCriterion($check, $prigovor, $criterionOutcomes);
+                $anyRemaining = in_array(true, $remainingByCriterion, true);
+                $odluka = $anyRemaining
+                    ? ApplicationPrigovor::STATUS_ODBIJEN
+                    : ApplicationPrigovor::STATUS_PRIHVACEN;
+
+                $prigovor->status = $odluka;
+                $prigovor->decided_at = now();
+                $prigovor->decided_by_commission_member_id = $chairman->id;
+                $prigovor->decided_by_user_id = $chairman->user_id;
+                $prigovor->decided_by_name = $chairman->name;
+                $prigovor->decision_note = $decisionNote;
+                $prigovor->criterion_1_remaining = $remainingByCriterion[1];
+                $prigovor->criterion_2_remaining = $remainingByCriterion[2];
+                $prigovor->criterion_3_remaining = $remainingByCriterion[3];
+                $prigovor->eliminatory_reason_remaining = $anyRemaining;
+                $prigovor->save();
+
+                if ($anyRemaining) {
+                    $locked->status = 'rejected';
+                    $locked->rejection_reason = $this->youthRemainingRejectionReason($locked, $remainingByCriterion);
+                } else {
+                    $locked->status = 'submitted';
+                    if ($this->youthRejectionReasonBelongsToCycle($locked->rejection_reason, $check)) {
+                        $locked->rejection_reason = null;
+                    }
+                }
+                $locked->save();
+
+                return $prigovor->fresh();
+            });
+        } catch (QueryException $e) {
+            if ($this->isRecognizedLockOrUniqueFailure($e)) {
+                $existing = ApplicationPrigovor::query()
+                    ->where('application_id', $application->id)
+                    ->first();
+                if ($existing?->isFinished()) {
+                    abort(403, self::FINISHED_MESSAGE);
+                }
+            }
+
+            throw $e;
+        }
+
+        $this->deliverDecisionEmail($application, $prigovor);
+
+        return $prigovor;
+    }
+
+    private function assertYouthCommissionDecisionGate(Application $application, CommissionMember $chairman): void
+    {
+        $commissionId = $application->competition?->commission_id;
+        if (! $commissionId) {
+            abort(403, self::YOUTH_COMMISSION_INCOMPLETE_MESSAGE);
+        }
+
+        Commission::query()
+            ->whereKey($commissionId)
+            ->lockForUpdate()
+            ->first();
+
+        $activeMembers = CommissionMember::query()
+            ->where('commission_id', $commissionId)
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        $lockedChairman = $activeMembers->firstWhere('id', $chairman->id);
+        if (
+            $lockedChairman === null
+            || $lockedChairman->position !== 'predsjednik'
+            || $lockedChairman->status !== 'active'
+            || (int) $lockedChairman->user_id !== (int) $chairman->user_id
+        ) {
+            abort(403, 'Samo predsjednik Komisije, u ime Komisije, može evidentirati odluku o Prigovoru.');
+        }
+
+        $presidents = $activeMembers->where('position', 'predsjednik');
+        if ($presidents->count() !== 1 || (int) $presidents->first()->id !== (int) $chairman->id) {
+            abort(403, self::YOUTH_COMMISSION_INCOMPLETE_MESSAGE);
+        }
+
+        $application->competition?->unsetRelation('commission');
+        if ($application->competition?->hasCompleteValidCommission() !== true) {
+            abort(403, self::YOUTH_COMMISSION_INCOMPLETE_MESSAGE);
+        }
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $criterionOutcomes
+     * @return array{1: ?bool, 2: ?bool, 3: ?bool}
+     */
+    private function validatedYouthRemainingByCriterion(
+        ApplicationEliminatoryCheck $check,
+        ApplicationPrigovor $prigovor,
+        array $criterionOutcomes,
+    ): array {
+        $normalized = [];
+        foreach ($criterionOutcomes as $key => $value) {
+            $number = (int) $key;
+            if ($number >= 1 && $number <= 3) {
+                $normalized[$number] = is_string($value) ? trim($value) : $value;
+            }
+        }
+
+        $remaining = [1 => null, 2 => null, 3 => null];
+        $errors = [];
+
+        foreach ([1, 2, 3] as $number) {
+            $isActivated = $check->criterionIsFalse($check->{"criterion_{$number}"});
+            $isContested = $prigovor->criterionIsContested($number);
+            $hasPostedOutcome = array_key_exists($number, $normalized)
+                && $normalized[$number] !== ''
+                && $normalized[$number] !== null;
+
+            if (! $isActivated) {
+                if ($hasPostedOutcome) {
+                    $errors["criterion_outcomes.{$number}"] = self::YOUTH_INACTIVE_OUTCOME_MESSAGE;
+                }
+                $remaining[$number] = null;
+
+                continue;
+            }
+
+            if (! $isContested) {
+                if ($hasPostedOutcome && $normalized[$number] === ApplicationPrigovor::OUTCOME_OTKLONJEN) {
+                    $errors["criterion_outcomes.{$number}"] = self::YOUTH_UNCONTESTED_CANNOT_LIFT_MESSAGE;
+                }
+                $remaining[$number] = true;
+
+                continue;
+            }
+
+            if (! $hasPostedOutcome) {
+                $errors["criterion_outcomes.{$number}"] = self::YOUTH_CONTESTED_OUTCOME_REQUIRED_MESSAGE;
+
+                continue;
+            }
+
+            $outcome = $normalized[$number];
+            if (! in_array($outcome, [ApplicationPrigovor::OUTCOME_OTKLONJEN, ApplicationPrigovor::OUTCOME_OSTAJE], true)) {
+                $errors["criterion_outcomes.{$number}"] = 'Ishod mora biti Otklonjen ili Ostaje.';
+
+                continue;
+            }
+
+            $remaining[$number] = $outcome === ApplicationPrigovor::OUTCOME_OSTAJE;
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $remaining;
+    }
+
+    /**
+     * @param  array{1: ?bool, 2: ?bool, 3: ?bool}  $remainingByCriterion
+     */
+    private function youthRemainingRejectionReason(Application $application, array $remainingByCriterion): string
+    {
+        $profile = EliminatoryProfileConfig::for($application->competition?->type);
+        $labels = [];
+        foreach ([1, 2, 3] as $number) {
+            if ($remainingByCriterion[$number] === true) {
+                $labels[] = $profile->statement($number);
+            }
+        }
+
+        return implode('; ', $labels);
+    }
+
+    private function youthRejectionReasonBelongsToCycle(?string $reason, ApplicationEliminatoryCheck $check): bool
+    {
+        if ($reason === null || trim($reason) === '') {
+            return false;
+        }
+
+        if (str_starts_with($reason, 'Istekao je rok za prigovor')) {
+            return true;
+        }
+
+        foreach ($check->failedCriterionLabels() as $statement) {
+            if ($statement !== '' && str_contains($reason, $statement)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -425,6 +691,18 @@ class ApplicationPrigovorService
 
         return str_contains($message, 'apg_application_id_unique')
             || str_contains($message, 'application_prigovors.application_id');
+    }
+
+    private function isRecognizedLockOrUniqueFailure(QueryException $e): bool
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $driverCode = (int) ($e->errorInfo[1] ?? 0);
+
+        if (in_array($driverCode, [1205, 1213], true) || $sqlState === '40001') {
+            return true;
+        }
+
+        return $this->isDuplicatePrigovorConstraint($e);
     }
 
     private function deliverDecisionEmail(Application $application, ApplicationPrigovor $prigovor): void

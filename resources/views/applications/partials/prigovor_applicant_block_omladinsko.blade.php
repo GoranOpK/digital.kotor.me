@@ -105,6 +105,43 @@
         </ul>
         @if($prigovor->isPodnesen())
             <p>Prigovor je podnesen Komisiji.</p>
+            <p>Rok Komisije za odluku: {{ $prigovor->komisijaDeadlineAt()->format('d.m.Y. H:i') }} (7 kalendarskih dana od prijema).</p>
+            @if($prigovor->komisijaDeadlineHasPassed())
+                <p>Rok od 7 dana je prekoračen. Čeka se odluka Komisije. Platforma ne donosi automatsku odluku.</p>
+            @else
+                <p>Čeka se odluka Komisije.</p>
+            @endif
+        @elseif($prigovor->isFinished())
+            <p>
+                Konačna odluka Komisije: {{ $prigovor->statusLabel() }}
+                @if($prigovor->decided_at)
+                    ({{ $prigovor->decided_at->format('d.m.Y. H:i') }})
+                @endif
+            </p>
+            @if($prigovor->wasDecidedAfterKomisijaDeadline())
+                <p>Odluka je evidentirana nakon isteka roka od 7 dana.</p>
+            @endif
+            @if($prigovor->decision_note)
+                <p><strong>Obrazloženje odluke:</strong></p>
+                <p style="white-space: pre-wrap;">{{ $prigovor->decision_note }}</p>
+            @endif
+            <p><strong>Ishod po aktiviranim razlozima:</strong></p>
+            <ul>
+                @foreach($activatedReasons as $reason)
+                    <li>
+                        {{ $reason['statement'] }}
+                        — {{ $prigovor->criterionOutcomeLabel($reason['number']) ?? 'Ostaje' }}
+                        @if(! $prigovor->criterionIsContested($reason['number']))
+                            (nije osporen, razlog ostaje)
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+            @if($prigovor->isAccepted())
+                <p>Eliminatorni razlozi su otklonjeni. Prijava ostaje podnesena.</p>
+            @else
+                <p>Najmanje jedan eliminatorni razlog ostaje. Prijava je odbijena.</p>
+            @endif
         @endif
     @elseif($canSubmitPrigovor)
         <form method="POST" action="{{ route('applications.prigovor.store', $application) }}">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EliminatoryProfileConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -95,6 +96,32 @@ class ApplicationPrigovor extends Model
         return $this->submitted_at->copy()->addDays(self::KOMISIJA_DECISION_DAYS);
     }
 
+    public function komisijaDeadlineHasPassed(?Carbon $at = null): bool
+    {
+        return ($at ?? now())->gt($this->komisijaDeadlineAt());
+    }
+
+    public function wasDecidedAfterKomisijaDeadline(): bool
+    {
+        if ($this->decided_at === null) {
+            return false;
+        }
+
+        return $this->komisijaDeadlineHasPassed($this->decided_at);
+    }
+
+    public function hasReadableContestedData(): bool
+    {
+        foreach ([1, 2, 3] as $number) {
+            $value = $this->{"criterion_{$number}_contested"};
+            if ($value !== null && $value !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function liftsEliminatoryBar(): bool
     {
         return $this->isAccepted() && $this->eliminatory_reason_remaining === false;
@@ -109,6 +136,23 @@ class ApplicationPrigovor extends Model
         foreach (ApplicationEliminatoryCheck::CRITERION_LABELS as $number => $label) {
             if ($this->criterionRemainingIsTrue($number)) {
                 $labels[] = $label;
+            }
+        }
+
+        return $labels;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function remainingReasonStatements(): array
+    {
+        $this->loadMissing('application.competition');
+        $profile = EliminatoryProfileConfig::for($this->application?->competition?->type);
+        $labels = [];
+        foreach ([1, 2, 3] as $number) {
+            if ($this->criterionRemainingIsTrue($number)) {
+                $labels[] = $profile->statement($number);
             }
         }
 

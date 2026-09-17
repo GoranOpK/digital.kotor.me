@@ -778,20 +778,26 @@ class EvaluationController extends Controller
     public function decidePrigovor(Request $request, Application $application): RedirectResponse
     {
         $chairman = $this->chairmanForEliminatoryMutation($application);
+        $application->loadMissing('competition');
+        $isYouth = $application->competition?->isOmladinskoProfile() === true;
 
-        $validated = $request->validate([
-            'odluka' => 'required|in:prihvacen,odbijen',
+        $rules = [
             'decision_note' => 'required|string|max:5000',
             'criterion_outcomes' => 'nullable|array',
             'criterion_outcomes.1' => 'nullable|in:otklonjen,ostaje',
             'criterion_outcomes.2' => 'nullable|in:otklonjen,ostaje',
             'criterion_outcomes.3' => 'nullable|in:otklonjen,ostaje',
-        ]);
+        ];
+        if (! $isYouth) {
+            $rules['odluka'] = 'required|in:prihvacen,odbijen';
+        }
+
+        $validated = $request->validate($rules);
 
         $this->prigovors->decide(
             $application,
             $chairman,
-            $validated['odluka'],
+            $validated['odluka'] ?? '',
             $validated['decision_note'],
             $validated['criterion_outcomes'] ?? [],
         );
@@ -829,14 +835,29 @@ class EvaluationController extends Controller
 
     protected function chairmanCanDecidePrigovor(?CommissionMember $commissionMember, Application $application, $prigovor): bool
     {
-        if ($application->competition?->isOmladinskoProfile()) {
+        if (! $commissionMember
+            || $commissionMember->position !== 'predsjednik'
+            || $commissionMember->status !== 'active'
+            || $prigovor?->isPodnesen() !== true
+        ) {
             return false;
         }
 
-        return $commissionMember
-            && $commissionMember->position === 'predsjednik'
-            && $commissionMember->status === 'active'
-            && $prigovor?->isPodnesen();
+        $application->loadMissing(['competition.commission.activeMembers', 'eliminatoryCheck']);
+
+        if ($application->competition?->isOmladinskoProfile()) {
+            if ($application->eliminatoryCheck?->isConfirmedFail() !== true) {
+                return false;
+            }
+
+            if ($application->competition?->hasCompleteValidCommission() !== true) {
+                return false;
+            }
+
+            return $prigovor->hasReadableContestedData();
+        }
+
+        return true;
     }
 
     /**

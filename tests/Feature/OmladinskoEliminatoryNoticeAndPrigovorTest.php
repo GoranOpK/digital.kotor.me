@@ -335,7 +335,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx2['application']->fresh()));
     }
 
-    public function test_timely_prigovor_keeps_submitted_and_chairman_cannot_decide_yet(): void
+    public function test_timely_prigovor_keeps_submitted_and_shows_chairman_decision_form(): void
     {
         $ctx = $this->confirmYouthFail();
         $application = $ctx['application'];
@@ -363,19 +363,10 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('Prvi razlog', $html);
+        $this->assertStringContainsString('Evidentiraj odluku Komisije', $html);
+        $this->assertStringContainsString('7 kalendarskih dana od prijema', $html);
         $this->assertStringNotContainsString('name="odluka"', $html);
-        $this->assertStringNotContainsString('Evidentiraj odluku Komisije', $html);
-        $this->assertStringNotContainsString('7 dana od prijema', $html);
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.prigovor.decide', $application), [
-                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
-                'decision_note' => 'Premature',
-                'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
-            ])
-            ->assertForbidden();
-        $this->assertTrue($application->fresh()->prigovor->isPodnesen());
-        $this->assertSame('submitted', $application->fresh()->status);
+        $this->assertStringNotContainsString('Odluka Komisije nije dostupna u ovom koraku', $html);
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
     }
 
