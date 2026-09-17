@@ -51,6 +51,11 @@ class CommissionSession extends Model
         return $this->hasMany(CommissionSessionAttendance::class);
     }
 
+    public function oralPresentations(): HasMany
+    {
+        return $this->hasMany(ApplicationOralPresentation::class);
+    }
+
     public function isDraft(): bool
     {
         return $this->completed_at === null;
@@ -115,5 +120,27 @@ class CommissionSession extends Model
         }
 
         return $this->validPresentCount($competition) >= $quorum;
+    }
+
+    public function meetsSecondSessionAttendance(?Competition $competition = null): bool
+    {
+        $competition ??= $this->competition;
+        $required = CommissionProfileConfig::for($competition?->type)->allMembersRequiredCount;
+        if ($required < 1) {
+            return false;
+        }
+
+        if ($this->validPresentCount($competition) !== $required) {
+            return false;
+        }
+
+        return $this->chairmanIsPresent($competition);
+    }
+
+    public function chairmanIsPresent(?Competition $competition = null): bool
+    {
+        return $this->validPresentMembers($competition)->contains(
+            fn (CommissionMember $member) => $member->position === 'predsjednik'
+        );
     }
 }

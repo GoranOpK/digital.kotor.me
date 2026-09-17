@@ -119,6 +119,18 @@ class Competition extends Model
             ->first();
     }
 
+    public function secondCommissionSession(): ?CommissionSession
+    {
+        if ($this->relationLoaded('commissionSessions')) {
+            return $this->commissionSessions
+                ->first(fn (CommissionSession $session) => $session->session_type === CommissionSession::TYPE_SECOND);
+        }
+
+        return $this->commissionSessions()
+            ->where('session_type', CommissionSession::TYPE_SECOND)
+            ->first();
+    }
+
     // Veza: konkurs ima jedan UP broj
     public function upNumber()
     {

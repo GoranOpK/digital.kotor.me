@@ -476,6 +476,11 @@ class Application extends Model
         return $this->hasOne(ApplicationPrigovor::class);
     }
 
+    public function oralPresentation()
+    {
+        return $this->hasOne(ApplicationOralPresentation::class);
+    }
+
     // Veza: aplikacija ima biznis plan
     public function businessPlan()
     {

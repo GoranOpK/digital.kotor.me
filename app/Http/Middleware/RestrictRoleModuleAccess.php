@@ -173,6 +173,14 @@ class RestrictRoleModuleAccess
                 'commission-sessions.first.store',
                 'commission-sessions.first.update',
                 'commission-sessions.first.confirm',
+                'commission-sessions.second.edit',
+                'commission-sessions.second.store',
+                'commission-sessions.second.update',
+                'commission-sessions.second.confirm',
+                'commission-sessions.oral.edit',
+                'commission-sessions.oral.store',
+                'commission-sessions.oral.update',
+                'commission-sessions.oral.complete',
             ];
 
             if ($routeName && in_array($routeName, $allowedRouteNames, true)) {

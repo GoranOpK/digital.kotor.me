@@ -30,6 +30,7 @@ use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\CommissionSessionController;
+use App\Http\Controllers\ApplicationOralPresentationController;
 use App\Http\Controllers\ApplicationPrigovorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterPublicUnsubscribeController;
@@ -467,6 +468,14 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         Route::post('/competitions/{competition}/commission-sessions/first', [CommissionSessionController::class, 'storeFirst'])->name('commission-sessions.first.store');
         Route::put('/competitions/{competition}/commission-sessions/first', [CommissionSessionController::class, 'updateFirst'])->name('commission-sessions.first.update');
         Route::post('/competitions/{competition}/commission-sessions/first/confirm', [CommissionSessionController::class, 'confirmFirst'])->name('commission-sessions.first.confirm');
+        Route::get('/competitions/{competition}/commission-sessions/second', [CommissionSessionController::class, 'editSecond'])->name('commission-sessions.second.edit');
+        Route::post('/competitions/{competition}/commission-sessions/second', [CommissionSessionController::class, 'storeSecond'])->name('commission-sessions.second.store');
+        Route::put('/competitions/{competition}/commission-sessions/second', [CommissionSessionController::class, 'updateSecond'])->name('commission-sessions.second.update');
+        Route::post('/competitions/{competition}/commission-sessions/second/confirm', [CommissionSessionController::class, 'confirmSecond'])->name('commission-sessions.second.confirm');
+        Route::get('/competitions/{competition}/commission-sessions/second/orals/{application}', [ApplicationOralPresentationController::class, 'edit'])->name('commission-sessions.oral.edit');
+        Route::post('/competitions/{competition}/commission-sessions/second/orals/{application}', [ApplicationOralPresentationController::class, 'store'])->name('commission-sessions.oral.store');
+        Route::put('/competitions/{competition}/commission-sessions/second/orals/{application}', [ApplicationOralPresentationController::class, 'update'])->name('commission-sessions.oral.update');
+        Route::post('/competitions/{competition}/commission-sessions/second/orals/{application}/complete', [ApplicationOralPresentationController::class, 'complete'])->name('commission-sessions.oral.complete');
     });
 
     // Ruta za pregled ocjenjivanja - dostupna i podnosiocu prijave kada je prijava odbijena

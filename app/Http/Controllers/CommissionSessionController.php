@@ -6,7 +6,9 @@ use App\Models\CommissionMember;
 use App\Models\CommissionSession;
 use App\Models\CommissionSessionAttendance;
 use App\Models\Competition;
+use App\Services\YouthSecondSessionGate;
 use App\Support\CommissionProfileConfig;
+use App\Support\NamedMysqlUniqueViolation;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +20,10 @@ use Illuminate\View\View;
 
 class CommissionSessionController extends Controller
 {
+    public function __construct(
+        protected YouthSecondSessionGate $gate,
+    ) {}
+
     public function editFirst(Competition $competition): View
     {
         $chairman = $this->authorizeFirstSessionAccess($competition);
@@ -162,6 +168,162 @@ class CommissionSessionController extends Controller
             ->with('success', 'Prva sjednica je potvrđena.');
     }
 
+    public function editSecond(Competition $competition): View
+    {
+        $chairman = $this->authorizeSecondSessionAccess($competition);
+        $session = $competition->secondCommissionSession();
+        $session?->load('attendances');
+        $eligibleMembers = $this->eligibleMembers($competition);
+        $first = $competition->firstCommissionSession();
+        $deadlineAt = $first?->held_at?->copy()->addDays(CommissionProfileConfig::SESSION_SECOND_DEADLINE_DAYS);
+
+        return view('commission-sessions.second', [
+            'competition' => $competition,
+            'session' => $session,
+            'eligibleMembers' => $eligibleMembers,
+            'chairman' => $chairman,
+            'readonly' => $session?->isConfirmed() ?? false,
+            'firstSession' => $first,
+            'secondDeadlineAt' => $deadlineAt,
+            'secondDeadlineOverdue' => $deadlineAt !== null && now()->gt($deadlineAt),
+            'gateMessage' => $this->gate->secondSessionBlockMessage($competition),
+            'eligibleApplications' => $this->gate->eligibleOralApplications($competition, $session),
+        ]);
+    }
+
+    public function storeSecond(Request $request, Competition $competition): RedirectResponse
+    {
+        $chairman = $this->authorizeSecondSessionAccess($competition);
+        $this->assertSecondSessionMayStart($competition);
+
+        if ($competition->secondCommissionSession() !== null) {
+            throw ValidationException::withMessages([
+                'session' => CommissionProfileConfig::SESSION_SECOND_EXISTS_MESSAGE,
+            ]);
+        }
+
+        $payload = $this->validatedDraftPayload($request, $competition);
+
+        try {
+            DB::transaction(function () use ($competition, $chairman, $payload) {
+                Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
+
+                $session = CommissionSession::create([
+                    'competition_id' => $competition->id,
+                    'commission_id' => $competition->commission_id,
+                    'session_type' => CommissionSession::TYPE_SECOND,
+                    'held_at' => $payload['held_at'],
+                    'completed_at' => null,
+                    'recorded_by_user_id' => $chairman->user_id,
+                    'notes' => $payload['notes'],
+                ]);
+
+                $this->syncAttendances($session, $competition, $payload['present_member_ids']);
+            });
+        } catch (UniqueConstraintViolationException|QueryException $e) {
+            $this->throwSecondSessionConflictOrRethrow($e);
+        }
+
+        return redirect()
+            ->route('commission-sessions.second.edit', $competition)
+            ->with('success', 'Nacrt druge sjednice je sačuvan.');
+    }
+
+    public function updateSecond(Request $request, Competition $competition): RedirectResponse
+    {
+        $chairman = $this->authorizeSecondSessionAccess($competition);
+        $this->assertSecondSessionMayStart($competition);
+        $session = $this->requireDraftSecondSession($competition);
+        $payload = $this->validatedDraftPayload($request, $competition);
+
+        DB::transaction(function () use ($session, $competition, $chairman, $payload) {
+            $locked = CommissionSession::query()
+                ->whereKey($session->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($locked->isConfirmed()) {
+                throw ValidationException::withMessages([
+                    'session' => CommissionProfileConfig::SESSION_LOCKED_MESSAGE,
+                ]);
+            }
+
+            $locked->update([
+                'held_at' => $payload['held_at'],
+                'notes' => $payload['notes'],
+                'recorded_by_user_id' => $chairman->user_id,
+            ]);
+
+            $this->syncAttendances($locked, $competition, $payload['present_member_ids']);
+        });
+
+        return redirect()
+            ->route('commission-sessions.second.edit', $competition)
+            ->with('success', 'Nacrt druge sjednice je ažuriran.');
+    }
+
+    public function confirmSecond(Competition $competition): RedirectResponse
+    {
+        $this->authorizeSecondSessionAccess($competition);
+
+        DB::transaction(function () use ($competition) {
+            $session = CommissionSession::query()
+                ->where('competition_id', $competition->id)
+                ->where('session_type', CommissionSession::TYPE_SECOND)
+                ->lockForUpdate()
+                ->first();
+
+            if ($session === null) {
+                abort(404);
+            }
+
+            if ($session->isConfirmed()) {
+                throw ValidationException::withMessages([
+                    'session' => CommissionProfileConfig::SESSION_LOCKED_MESSAGE,
+                ]);
+            }
+
+            $lockedCompetition = Competition::query()
+                ->whereKey($competition->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->authorizeSecondSessionAccess($lockedCompetition);
+            $this->assertSecondSessionMayStart($lockedCompetition);
+
+            if ((int) $session->competition_id !== (int) $lockedCompetition->id
+                || (int) $session->commission_id !== (int) $lockedCompetition->commission_id) {
+                throw ValidationException::withMessages([
+                    'session' => CommissionProfileConfig::SESSION_SECOND_INCOMPLETE_COMMISSION_MESSAGE,
+                ]);
+            }
+
+            $lockedCompetition->unsetRelation('commission');
+            $lockedCompetition->load(['commission.activeMembers']);
+
+            if (! $lockedCompetition->hasCompleteValidCommission()) {
+                throw ValidationException::withMessages([
+                    'session' => CommissionProfileConfig::SESSION_SECOND_INCOMPLETE_COMMISSION_MESSAGE,
+                ]);
+            }
+
+            $session->unsetRelation('attendances');
+            $session->load(['attendances.member']);
+
+            if (! $session->meetsSecondSessionAttendance($lockedCompetition)) {
+                throw ValidationException::withMessages([
+                    'session' => CommissionProfileConfig::SESSION_SECOND_QUORUM_MESSAGE,
+                ]);
+            }
+
+            $session->update(['completed_at' => now()]);
+        });
+
+        return redirect()
+            ->route('commission-sessions.second.edit', $competition)
+            ->with('success', 'Druga sjednica je potvrđena.');
+    }
+
     protected function authorizeFirstSessionAccess(Competition $competition): CommissionMember
     {
         $user = Auth::user();
@@ -181,6 +343,51 @@ class CommissionSessionController extends Controller
         }
 
         return $member;
+    }
+
+    protected function authorizeSecondSessionAccess(Competition $competition): CommissionMember
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            abort(403, CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE);
+        }
+
+        return $this->authorizeFirstSessionAccess($competition);
+    }
+
+    protected function assertSecondSessionMayStart(Competition $competition): void
+    {
+        $message = $this->gate->secondSessionBlockMessage($competition);
+        if ($message !== null) {
+            throw ValidationException::withMessages([
+                'session' => $message,
+            ]);
+        }
+    }
+
+    protected function requireDraftSecondSession(Competition $competition): CommissionSession
+    {
+        $session = $competition->secondCommissionSession();
+        if ($session === null) {
+            abort(404);
+        }
+        if ($session->isConfirmed()) {
+            throw ValidationException::withMessages([
+                'session' => CommissionProfileConfig::SESSION_LOCKED_MESSAGE,
+            ]);
+        }
+
+        return $session;
+    }
+
+    protected function throwSecondSessionConflictOrRethrow(QueryException $e): never
+    {
+        if (! NamedMysqlUniqueViolation::matches($e, CommissionProfileConfig::SESSION_COMPETITION_TYPE_UNIQUE)) {
+            throw $e;
+        }
+
+        throw ValidationException::withMessages([
+            'session' => CommissionProfileConfig::SESSION_SECOND_CONFLICT_MESSAGE,
+        ]);
     }
 
     protected function requireDraftFirstSession(Competition $competition): CommissionSession
