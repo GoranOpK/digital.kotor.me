@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.8
-**Datum:** 2026-09-15
+**Verzija:** 1.0.9
+**Datum:** 2026-09-17
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.30** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.31** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.6** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.7** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.2** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.3** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -62,6 +62,7 @@ Povezani dokumenti:
 | 1.0.6 | 2026-09-11 | Administrativni closeout pokazivača: `KN-FS-001` i `KN-TS-001` označeni kao postojeći dokumenti (`USVOJENO` / `NACRT`). Poslovna pravila nijesu mijenjana. |
 | 1.0.7 | 2026-09-14 | KN-PATCH-BM-016 — Precizirano tumačenje budžeta drugog Poziva: preostala godišnja sredstva računaju se kao odobrena godišnja sredstva umanjena za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog Poziva ostaje nepromijenjen; budžet drugog Poziva mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva zajedno ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Poslovni postupak, ručno kreiranje i pravila `BM-ML-049`–`BM-ML-051` nijesu mijenjani. Ženski profil nije diran. |
 | 1.0.8 | 2026-09-15 | KN-PATCH-BM-017 — Precizirano da drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: sve odluke predsjednika moraju biti završene, prvi Poziv mora biti `completed`, a `remaining_after_first` mora biti veći od nule. Tek tada Administrator ručno kreira nacrt drugog Poziva. Nema automatskog kreiranja, trećeg Poziva ni novog poslovnog pravila. Ženski tok nije diran. |
+| 1.0.9 | 2026-09-17 | KN-PATCH-BM-018 — Godišnji budžet mladih jednak je ukupnom budžetu prvog Poziva. Na formi prvog Poziva Administrator unosi samo polje `Ukupan budžet`; sistem isti iznos čuva kao budžet prvog Poziva i kao godišnji okvir. Drugi Poziv nije obavezan i ne kreira se automatski; ostatak nakon prvog daje mogućnost, a ne obavezu ručnog raspisivanja. `remaining_after_first` = budžet prvog Poziva − konačno potvrđena raspodjela prvog Poziva. Uklonjen važeći primjer 100.000/80.000. Ženski tok nije diran. |
 
 Napomena:
 
@@ -499,7 +500,7 @@ Ove zavisnosti ne mijenjaju broj, sadržaj ni status prvobitnih 18 pitanja.
 Naknadno razmatrana pitanja kvoruma za administrativnu provjeru i obaveznosti drugog Javnog konkursa nijesu otvorene zavisnosti.
 
 - prema čl. 7 i čl. 18, prva sjednica i evidentiranje rezultata na M3, uključujući `Potpuna` / `Nepotpuna` kao prvi od tri eliminatorna kriterijuma, mogu se sprovesti uz kvorum od najmanje dva člana; sva tri člana potrebna su za odlučivanje o prigovoru, intervju, konačno ocjenjivanje i druge punovažne odluke;
-- ako na prvom raspisu nijesu dodijeljena sva raspoloživa sredstva, drugi raspis je obavezan, ali ga platforma ne kreira niti objavljuje automatski; administrator kreira i objavljuje novi Poziv najkasnije u trećem kvartalu;
+- ako na prvom raspisu ostanu raspoloživa sredstva, drugi raspis nije obavezan i ne kreira se automatski; ostatak daje mogućnost, a ne obavezu; Administrator procjenjuje postoji li potreba za drugim Pozivom i, ako ostanu sredstva, može odobriti i ručno raspisati drugi Poziv najkasnije u trećem kvartalu;
 - pravilo o radnom kvorumu i administrativnoj provjeri uneseno je kao `BM-ML-002`;
 - pravila o drugom Javnom konkursu unesena su kao `BM-ML-049`–`BM-ML-052`;
 - navedena rješenja evidentirana su u Poglavlju 17 i `KN-RG-001`.
@@ -1883,7 +1884,7 @@ Procenat predstavlja maksimalnu granicu, a ne automatski iznos. Komisija može o
 
 Primjer:
 
-Ako je godišnje bilo odobreno 100.000 EUR, a konačno potvrđena raspodjela prvog Poziva iznosi 60.000 EUR, preostalo je 40.000 EUR. To važi i kada je objavljeni budžet prvog Poziva 80.000 EUR i kada je 100.000 EUR, jer se ostatak računa od odobrenih godišnjih sredstava, a ne od objavljenog budžeta prvog Poziva. Ako je budžet drugog Poziva 40.000 EUR, osnovica tog Poziva je 40.000 EUR:
+Ako je ukupan budžet prvog Poziva 100.000 EUR, to je i godišnji okvir te godine. Ako je konačno potvrđena raspodjela prvog Poziva 60.000 EUR, preostalo je 40.000 EUR. Administrator može, ali nije obavezan, raspisati drugi Poziv sa budžetom najviše 40.000 EUR. Ako je budžet drugog Poziva 40.000 EUR, osnovica tog Poziva je 40.000 EUR:
 
 - 30% = 12.000 EUR;
 - 20% = 8.000 EUR;
@@ -2315,7 +2316,7 @@ Konfiguracioni podaci godišnje instance obuhvataju najmanje:
 - kalendarsku godinu;
 - tip konkursa, odnosno profil podrške preduzetništvu mladih;
 - važeću verziju poslovnog profila;
-- ukupan iznos sredstava raspoloživ za tu godinu;
+- ukupan iznos sredstava raspoloživ za tu godinu, jednak ukupnom budžetu prvog Poziva;
 - povezane Pozive;
 - stanje iskorišćenosti godišnjih sredstava.
 
@@ -2329,23 +2330,27 @@ Poziv ne smije samostalno mijenjati pravila profila.
 
 Iznos godišnjeg budžeta je konfiguraciona vrijednost zasnovana na odobrenom budžetu i Javnom konkursu.
 
+Godišnji budžet mladih u konkretnoj godini jednak je ukupnom budžetu prvog Poziva. Na formi prvog Poziva Administrator unosi samo jedno polje: `Ukupan budžet`. Sistem isti iznos čuva kao budžet prvog Poziva i kao godišnji okvir te godine. Administrator ne unosi dva odvojena iznosa za prvi Poziv. Ovaj korisnički unos prati isti princip kao žensko polje `Ukupan budžet`. Ženska forma, kod i dokumenti se ovim pravilom ne mijenjaju. Ženskom profilu se ne dodaju redni broj Poziva ni godišnji okvir.
+
 Platforma ne izmišlja niti samostalno određuje iznos budžeta.
 
-Objavljeni budžet prvog Poziva ostaje nepromijenjen nakon objave. On je limit raspodjele tog Poziva i ne prepisuje se zbog raspisivanja drugog Poziva. Ne određuje ukupan ostatak godišnjih sredstava nakon završetka prvog Poziva.
+Objavljeni budžet prvog Poziva ostaje nepromijenjen nakon objave. On je i limit raspodjele tog Poziva i godišnji okvir instance.
 
-Preostala godišnja sredstva nakon prvog Poziva računaju se kao odobrena godišnja sredstva minus zbir konačno potvrđenih raspodjela prvog Poziva.
+Preostala sredstva nakon prvog Poziva računaju se kao:
 
-Drugi Poziv se raspisuje samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni.
+`remaining_after_first` = budžet prvog Poziva − zbir konačno potvrđenih raspodjela prvog Poziva.
 
-Ukupna konačno potvrđena raspodjela oba Poziva iste godišnje instance ne smije premašiti odobrena godišnja sredstva. To ograničenje se ne tumači kao zbir objavljenih polja budžeta Poziva.
+Pošto je budžet prvog Poziva jednak godišnjem okviru, godišnji limit ostaje isti.
 
-Primjer: ako su odobrena godišnja sredstva 100.000 EUR, objavljeni budžet prvog Poziva 80.000 EUR, a konačno potvrđena raspodjela prvog Poziva 60.000 EUR, preostalo je 40.000 EUR. Budžet drugog Poziva može biti najviše 40.000 EUR i mora biti veći od nule. Objavljeni budžet prvog ostaje 80.000 EUR. Konačne raspodjele oba Poziva zajedno ne smiju preći 100.000 EUR.
+Drugi Poziv nije obavezan i ne kreira se automatski. Ako poslije prvog ostanu sredstva, Administrator procjenjuje postoji li potreba za drugim Pozivom i može odobriti i ručno raspisati drugi Poziv. Administrator nije obavezan da ga raspisuje. Postojanje ostatka daje mogućnost, ali ne stvara obavezu raspisivanja. Drugi Poziv se može raspisati samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni. Drugi Poziv nasljeđuje profil, godinu i godišnji okvir prvog.
 
-Ako je objavljeni budžet prvog Poziva jednak odobrenim godišnjim sredstvima od 100.000 EUR, a raspodjela prvog 60.000 EUR, preostalo je takođe 40.000 EUR. Budžet drugog Poziva može biti najviše 40.000 EUR.
+Ukupna konačno potvrđena raspodjela oba Poziva iste godišnje instance ne smije premašiti odobrena godišnja sredstva, odnosno ukupan budžet prvog Poziva. To ograničenje se ne tumači kao zbir objavljenih polja budžeta Poziva.
 
-Neraspoređena godišnja sredstva nakon prvog Poziva predstavljaju osnov za drugi Poziv prema `BM-ML-049`.
+Primjer: ukupan/godišnji budžet prvog Poziva 100.000 EUR, konačno raspoređeno u prvom 60.000 EUR, preostalo 40.000 EUR. Administrator može raspisati drugi Poziv sa budžetom najviše 40.000 EUR, ali nije obavezan. Objavljeni budžet prvog ostaje 100.000 EUR. Konačne raspodjele oba Poziva zajedno ne smiju preći 100.000 EUR.
 
-Drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se taj završetak dokazuje postojećim zatvaranjem Poziva: predsjednik je završio sve odluke i iznose, a prvi Poziv ima status `completed`. Tek tada, i samo ako je ostatak veći od nule, Administrator ručno kreira nacrt drugog Poziva. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv. Nema automatskog kreiranja i nema trećeg Poziva. Ženski tok se ovim pravilom ne mijenja.
+Neraspoređena sredstva nakon prvog Poziva predstavljaju mogućnost za drugi Poziv prema `BM-ML-049`, a ne obavezu.
+
+Drugi Poziv, ako se raspisuje, slijedi nakon završetka prvog Poziva. U V1 se taj završetak dokazuje postojećim zatvaranjem Poziva: predsjednik je završio sve odluke i iznose, a prvi Poziv ima status `completed`. Tek tada, i samo ako je ostatak veći od nule, Administrator može ručno kreirati nacrt drugog Poziva. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv. Nema automatskog kreiranja i nema trećeg Poziva. Ženski tok se ovim pravilom ne mijenja.
 
 Način tehničkog čuvanja i obračuna nije predmet poslovnog modela.
 
@@ -2364,6 +2369,8 @@ Drugi kvartal obuhvata april, maj i jun.
 Prvi Poziv pripada godišnjoj instanci za tekuću godinu.
 
 Administrator Konkursa ručno priprema prvi Poziv u okviru odgovarajuće godišnje instance.
+
+Na formi prvog Poziva Administrator unosi samo jedno budžetsko polje: `Ukupan budžet`. Taj iznos je budžet prvog Poziva i godišnji okvir instance. Administrator ne unosi drugi, odvojeni godišnji iznos.
 
 Administrator unosi službeni zavodni broj dobijen iz pisarnice.
 
@@ -2395,21 +2402,21 @@ Status poglavlja: USVOJENO
 
 ### BM-ML-049 — Uslov za raspisivanje drugog Javnog konkursa
 
-Ako nakon završetka prvog Javnog konkursa nijesu dodijeljena sva raspoloživa sredstva za podršku preduzetništvu mladih, raspisuje se drugi Javni konkurs.
+Drugi Javni konkurs nije obavezan.
 
-Drugi Javni konkurs je obavezan kada poslije prvog konkursa ostanu neraspoređena sredstva.
+Ako nakon završetka prvog Javnog konkursa ostanu raspoloživa sredstva za podršku preduzetništvu mladih, Administrator procjenjuje postoji li potreba za drugim Pozivom. Ako ostanu sredstva, Administrator može odobriti i ručno raspisati drugi Javni konkurs. Administrator nije obavezan da ga raspisuje. Postojanje ostatka daje mogućnost, ali ne stvara obavezu raspisivanja.
 
 Ako su sva raspoloživa sredstva dodijeljena u prvom konkursu, drugi konkurs se ne raspisuje.
 
-Drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se završetak prvog dokazuje postojećim zatvaranjem Poziva. Predsjednik mora završiti sve odluke i iznose. Prvi Poziv mora imati status `completed`. Tek tada Administrator može ručno kreirati nacrt drugog Poziva, i samo ako je `remaining_after_first` veći od nule. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv. Nema automatskog kreiranja i nema trećeg Poziva.
+Drugi Poziv, ako se raspisuje, slijedi nakon završetka prvog Poziva. U V1 se završetak prvog dokazuje postojećim zatvaranjem Poziva. Predsjednik mora završiti sve odluke i iznose. Prvi Poziv mora imati status `completed`. Tek tada Administrator može ručno kreirati nacrt drugog Poziva, i samo ako je `remaining_after_first` veći od nule. Zatvaranje prvog Poziva samo po sebi ne kreira drugi Poziv. Nema automatskog kreiranja i nema trećeg Poziva.
 
-Neraspoređena sredstva nakon prvog Poziva su razlika između odobrenih godišnjih sredstava i zbira konačno potvrđenih raspodjela prvog Poziva. Objavljeni budžet prvog Poziva ostaje nepromijenjen; on je limit prvog Poziva i ne određuje taj godišnji ostatak.
+Neraspoređena sredstva nakon prvog Poziva su razlika između budžeta prvog Poziva i zbira konačno potvrđenih raspodjela prvog Poziva. Budžet prvog Poziva jednak je godišnjem okviru. Objavljeni budžet prvog Poziva ostaje nepromijenjen.
 
-Drugi Javni konkurs može se raspisati samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni.
+Drugi Javni konkurs može se raspisati samo kada je taj ostatak veći od nule. Budžet drugog Poziva mora biti veći od nule i ne smije biti veći od tog ostatka. Nula, negativan iznos i iznos iznad ostatka nijesu dozvoljeni. Drugi Poziv nasljeđuje profil, godinu i godišnji okvir prvog.
 
-Ovo pravilo ne ovlašćuje platformu da sama donese odluku o raspisivanju, kreiranju ili objavljivanju drugog konkursa.
+Ovo pravilo ne ovlašćuje platformu da sama donese odluku o raspisivanju, kreiranju ili objavljivanju drugog konkursa. Odluku donosi Administrator.
 
-**Izvor:** Odluka, članovi 5 i 19; odobreno poslovno tumačenje da je drugi konkurs obavezan kada sredstva nijesu u cjelosti dodijeljena.
+**Izvor:** Odluka, članovi 5 i 19; odobreno poslovno tumačenje da ostatak nakon prvog Poziva daje mogućnost, a ne obavezu, raspisivanja drugog konkursa; `KN-PATCH-BM-018`.
 
 ## 16.2. Ista godišnja instanca i odvojeni Poziv
 
@@ -2450,7 +2457,7 @@ Ovo pravilo ne određuje tehnički ID niti strukturu baze.
 
 Platforma ne kreira i ne objavljuje drugi Poziv automatski.
 
-Administrator Konkursa ručno kreira drugi Poziv unutar postojeće godišnje instance tek nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: sve odluke predsjednika moraju biti završene, prvi Poziv mora imati status `completed`, a `remaining_after_first` mora biti veći od nule. Ako je ostatak jednak nuli, drugi Poziv se ne kreira. Zatvaranje prvog Poziva ne mijenja status njegovih prijava, nije brisanje i nije javna objava.
+Administrator Konkursa ručno kreira drugi Poziv unutar postojeće godišnje instance tek nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: sve odluke predsjednika moraju biti završene, prvi Poziv mora imati status `completed`, a `remaining_after_first` mora biti veći od nule. Ako je ostatak jednak nuli, drugi Poziv se ne kreira. Ako je ostatak veći od nule, drugi Poziv i dalje nije obavezan. Zatvaranje prvog Poziva ne mijenja status njegovih prijava, nije brisanje i nije javna objava.
 
 Administrator unosi podatke drugog Poziva, uključujući službeni zavodni broj dobijen iz pisarnice.
 
@@ -2575,4 +2582,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.8**
+**Kraj dokumenta KN-BM-002 v1.0.9**

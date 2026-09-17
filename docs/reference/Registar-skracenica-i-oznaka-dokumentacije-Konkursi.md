@@ -6,8 +6,8 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.30
-**Datum:** 2026-09-15
+**Verzija:** 1.0.31
+**Datum:** 2026-09-17
 
 ---
 
@@ -118,11 +118,11 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 
 | Oznaka | Dokument | Putanja | Uloga | Status u izvornom zaglavlju |
 |--------|----------|---------|-------|------------------------------|
-| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.8) |
+| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.9) |
 | **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.17) |
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
-| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.6) |
-| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.2) |
+| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.7) |
+| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.3) |
 | **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.12) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
@@ -136,7 +136,7 @@ Pravila su DK-DS-001 §6–§8. KN ih primjenjuje, ne mijenja.
 
 | Kategorija | KN model | Status |
 |------------|----------|--------|
-| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-BM-004`, `KN-PATCH-BM-005`, `KN-PATCH-BM-006`, `KN-PATCH-BM-007`, `KN-PATCH-BM-008`, `KN-PATCH-BM-009`, `KN-PATCH-BM-010`, `KN-PATCH-BM-011`, `KN-PATCH-BM-012`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005`, `KN-PATCH-FS-006`, `KN-PATCH-BM-013`, `KN-PATCH-FS-007`, `KN-PATCH-BM-014`, `KN-PATCH-FS-008`, `KN-PATCH-BM-015`, `KN-PATCH-FS-009`, `KN-PATCH-BM-016`, `KN-PATCH-FS-010`, `KN-PATCH-TS-001`, `KN-PATCH-BM-017`, `KN-PATCH-FS-011`, `KN-PATCH-TS-002` |
+| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-BM-004`, `KN-PATCH-BM-005`, `KN-PATCH-BM-006`, `KN-PATCH-BM-007`, `KN-PATCH-BM-008`, `KN-PATCH-BM-009`, `KN-PATCH-BM-010`, `KN-PATCH-BM-011`, `KN-PATCH-BM-012`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005`, `KN-PATCH-FS-006`, `KN-PATCH-BM-013`, `KN-PATCH-FS-007`, `KN-PATCH-BM-014`, `KN-PATCH-FS-008`, `KN-PATCH-BM-015`, `KN-PATCH-FS-009`, `KN-PATCH-BM-016`, `KN-PATCH-FS-010`, `KN-PATCH-TS-001`, `KN-PATCH-BM-017`, `KN-PATCH-FS-011`, `KN-PATCH-TS-002`, `KN-PATCH-BM-018`, `KN-PATCH-FS-012`, `KN-PATCH-TS-003` |
 | Feature ID | Globalni `FT-*` **nije obavezan**. Ako se kasnije uvede FR: `{NS}-FR-001`; model feature ID-a definiše se tada u ovom RG-u i **ne** nastavlja automatski istorijski `FT-*` niz. | **NOT YET CREATED** |
 | CR | Ako zatreba: `KN-CR-{NNN}`; registar `KN-CR-REG-001` | **NOT YET CREATED** |
 | KN-DOC | Dokumentaciona načela otvaranja paketa (`KN-DOC-01` … `KN-DOC-07`) | Žive u KN-BM-001 §5. **Nisu** poslovna pravila konkursa i **nisu** BR. |
@@ -250,7 +250,8 @@ Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** rest
 | 1.0.28 | 2026-09-12 | Administrativni closeout / pointer sync: KN-BM-003 v1.0.17 i KN-FS-003 v1.0.12 (V1 platformski dokumentacioni closeout ženskog konkursa). Katalog skraćenica KEEP. Bez novih Document ID-eva / skraćenica. Status ostaje USVOJENO. |
 | 1.0.29 | 2026-09-14 | Evidentirani KN-PATCH-BM-016 za KN-BM-002 v1.0.7, KN-PATCH-FS-010 za KN-FS-002 v1.0.5 i KN-PATCH-TS-001 za KN-TS-002 v1.0.1 radi usklađivanja tumačenja budžeta drugog Poziva: preostala godišnja sredstva = annual_budget umanjena za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog ostaje nepromijenjen; budžet drugog mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.30 | 2026-09-15 | Evidentirani KN-PATCH-BM-017 za KN-BM-002 v1.0.8, KN-PATCH-FS-011 za KN-FS-002 v1.0.6 i KN-PATCH-TS-002 za KN-TS-002 v1.0.2 radi usklađivanja kapije drugog Poziva mladih sa postojećim zatvaranjem prvog Poziva: drugi Poziv se ručno kreira tek kada su sve odluke predsjednika završene, prvi Poziv ima status completed i remaining_after_first > 0; nema automatskog kreiranja, trećeg Poziva, novog statusa ni nove tabele. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
+| 1.0.31 | 2026-09-17 | Evidentirani KN-PATCH-BM-018 za KN-BM-002 v1.0.9, KN-PATCH-FS-012 za KN-FS-002 v1.0.7 i KN-PATCH-TS-003 za KN-TS-002 v1.0.3: godišnji budžet mladih jednak je ukupnom budžetu prvog Poziva; na formi prvog Poziva Administrator unosi samo `Ukupan budžet`; `remaining_after_first` = budžet prvog − konačno potvrđena raspodjela prvog; drugi Poziv je opcioni, nije automatski i nije treći. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.30**
+**Kraj dokumenta KN-RG-001 v1.0.31**
