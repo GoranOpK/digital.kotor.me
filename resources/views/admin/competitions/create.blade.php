@@ -205,12 +205,6 @@
                     </div>
                 </div>
 
-                @if(! $isSecondCallForm)
-                <div id="omladinsko-first-call-fields" class="info-note" style="{{ $selectedType === 'omladinsko' ? '' : 'display:none;' }}">
-                    <p style="margin: 0;"><strong>Prvi Poziv</strong> profila mladih. Redni broj Poziva sistem postavlja na 1. Polje <strong>Ukupan budžet</strong> je i godišnji okvir. Drugi Poziv se kreira posebno, nakon završetka prvog, ako ostanu sredstva.</p>
-                </div>
-                @endif
-
                 <div class="form-group">
                     <label class="form-label">Datum početka</label>
                     <input type="date" name="start_date" id="start_date" class="form-control" value="{{ old('start_date') }}">
@@ -275,20 +269,6 @@
                         toUpper();
                     })();
                 </script>
-                @if(! $isSecondCallForm)
-                <script>
-                    (function() {
-                        var type = document.getElementById('competition_type');
-                        var box = document.getElementById('omladinsko-first-call-fields');
-                        if (!type || !box) return;
-                        function sync() {
-                            box.style.display = type.value === 'omladinsko' ? '' : 'none';
-                        }
-                        type.addEventListener('change', sync);
-                        sync();
-                    })();
-                </script>
-                @endif
 
                 <div style="margin-top: 24px;">
                     <button type="submit" class="btn-primary">{{ $isSecondCallForm ? 'Sačuvaj drugi Poziv' : 'Sačuvaj konkurs' }}</button>

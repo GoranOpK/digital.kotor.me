@@ -85,8 +85,10 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Ukupan budžet', $html);
-        $this->assertStringContainsString('id="omladinsko-first-call-fields"', $html);
-        $this->assertDoesNotMatchRegularExpression('/id="omladinsko-first-call-fields"[^>]*display:none/', $html);
+        $this->assertStringNotContainsString('omladinsko-first-call-fields', $html);
+        $this->assertStringNotContainsString('Redni broj Poziva sistem postavlja na 1', $html);
+        $this->assertStringNotContainsString('Ukupan budžet je i godišnji okvir', $html);
+        $this->assertStringNotContainsString('Drugi Poziv se kreira posebno, nakon završetka prvog, ako ostanu sredstva.', $html);
         $this->assertStringNotContainsString('name="annual_budget"', $html);
         $this->assertStringNotContainsString('Godišnji budžet (€) *', $html);
     }
@@ -442,7 +444,10 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             ->get(route('admin.competitions.edit', $first))
             ->assertOk()
             ->assertSee('Ukupan budžet', false)
-            ->assertDontSee('name="annual_budget"', false);
+            ->assertDontSee('name="annual_budget"', false)
+            ->assertDontSee('Redni broj Poziva sistem postavlja na 1', false)
+            ->assertDontSee('Ukupan budžet je i godišnji okvir', false)
+            ->assertDontSee('Ovo je prvi Poziv', false);
     }
 
     public function test_second_draft_cannot_change_inherited_fields_and_publish_rechecks_gate(): void
@@ -491,8 +496,8 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $createPage->assertOk();
         $html = $createPage->getContent();
         $this->assertStringNotContainsString('name="call_number"', $html);
-        $this->assertStringContainsString('id="omladinsko-first-call-fields"', $html);
-        $this->assertMatchesRegularExpression('/id="omladinsko-first-call-fields"[^>]*display:none/', $html);
+        $this->assertStringNotContainsString('omladinsko-first-call-fields', $html);
+        $this->assertStringNotContainsString('Redni broj Poziva sistem postavlja na 1', $html);
         $this->assertStringContainsString('Ukupan budžet', $html);
         $this->assertStringNotContainsString('name="annual_budget"', $html);
 

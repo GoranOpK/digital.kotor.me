@@ -194,9 +194,6 @@
                     </div>
                     @endif
                 </div>
-                @if($isOmladinskoEdit && $competition->isFirstCall())
-                    <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je prvi Poziv. Ukupan budžet je i godišnji okvir. Drugi Poziv se kreira posebno nakon završetka prvog ako ostanu sredstva.</p>
-                @endif
                 @if($isOmladinskoEdit && $competition->isSecondCall())
                     <p style="font-size: 13px; color: #1e3a8a; margin-top: -8px; margin-bottom: 20px;">Ovo je drugi Poziv. Profil, godina, redni broj i naslijeđeni godišnji okvir su zaključani.</p>
                 @endif
