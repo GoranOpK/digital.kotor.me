@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.7
+**Verzija:** 1.0.8
 **Datum:** 2026-09-17
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.31** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.32** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.9** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.10** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.12** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.3** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.4** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -47,6 +47,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.5 | 2026-09-14 | KN-PATCH-FS-010 — Usklađeno tumačenje budžeta drugog Poziva: preostala godišnja sredstva računaju se kao odobreni godišnji budžet umanjen za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog Poziva ostaje nepromijenjen; budžet drugog Poziva mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva zajedno ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Funkcionalni tok, ručno kreiranje i ženski profil nijesu mijenjani. |
 | 1.0.6 | 2026-09-15 | KN-PATCH-FS-011 — Usklađena kapija drugog Poziva sa postojećim zatvaranjem prvog Poziva: dugme ili akcija za drugi Poziv nije dostupna dok prvi nije `completed`; `hasChairmanCompletedDecisions()` i `completed` predstavljaju tehničku kapiju V1; nakon kapije i `remaining_after_first > 0` Administrator ručno kreira nacrt; nema automatskog drugog ni trećeg Poziva. Indeks ostaje 142/142. Ženski tok nije diran. |
 | 1.0.7 | 2026-09-17 | KN-PATCH-FS-012 — Forma prvog Poziva ima samo polje `Ukupan budžet`; isti iznos je budžet prvog Poziva i godišnji okvir. `remaining_after_first` = budžet prvog − konačno potvrđena raspodjela prvog. Drugi Poziv je opcioni: ostatak daje mogućnost, a ne obavezu; nema automatskog ni trećeg Poziva. Precizirani 22.7.2 i povezana mjesta; indeks ostaje 142/142. Uklonjen važeći primjer 100.000/80.000. Ženski tok nije diran. |
+| 1.0.8 | 2026-09-17 | KN-PATCH-FS-013 — Kapija usmenog predstavljanja i druge sjednice nije sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. Dozvoljeno je samo kada je prijava `submitted`, M3 potvrđen, nema konačno aktivnog razloga, rok za prigovor nije otvoren i nema neriješenog blagovremenog prigovora; dva puta: nijedan razlog nije aktiviran, ili je svaki preostali razlog otklonjen konačnom odlukom po prigovoru. M3 ostaje istorijski nepromijenjen. Precizirani 15.7.1 i povezana mjesta; indeks ostaje 142/142. Živi pokazivači usklađeni na KN-BM-002 v1.0.10, KN-TS-002 v1.0.4 i KN-RG-001 v1.0.32. Ženski tok nije diran. |
 
 Napomena:
 
@@ -179,7 +180,7 @@ Dokument se odnosi na **V1**.
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.9.
+Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.10.
 
 Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.1.
 
@@ -279,11 +280,11 @@ Status poglavlja: USVOJENO
 
 Hijerarhija dokumentacije za ovaj profil:
 
-* `KN-RG-001` v1.0.31
+* `KN-RG-001` v1.0.32
 * → `KN-BM-001` (zajednička pravila modula Konkursi)
 * → `KN-BM-002` (poslovna pravila profila mladih)
 * → `KN-FS-002` (ovo dokument)
-* → `KN-TS-002` (tehnička specifikacija profila mladih; USVOJEN v1.0.3)
+* → `KN-TS-002` (tehnička specifikacija profila mladih; USVOJEN v1.0.4)
 * → `KN-TS-001` (zajednička tehnička specifikacija; NACRT).
 
 ## 2.1. Autoritet
@@ -887,7 +888,7 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Sjednica Komisije | Komisija formalno kompletna | početak administrativne provjere | prisutna manje od dva člana | blokirano odnosno sjednica se odlaže | sistem | `BM-ML-002` |
 | Sjednica Komisije | Komisija formalno kompletna | početak administrativne provjere | prisutna najmanje dva člana | administrativna provjera može početi | predsjednik / prisutni članovi | `BM-ML-002`; F-02 |
 | Sjednica Komisije | rok za prijave istekao | prva sjednica | najkasnije sedam dana od isteka roka; Platforma ne zakazuje | poslovni rok; Platforma ne vodi sjednicu kao objekat | Komisija | `BM-ML-034` |
-| Sjednica Komisije | prva sjednica održana | druga sjednica i usmena obrazloženja | najkasnije sedam dana od prve sjednice; svi blagovremeni prigovori riješeni | nije dozvoljena dok postoji blagovremen neriješen prigovor; rok se ne produžava automatski | Komisija | `BM-ML-034` |
+| Sjednica Komisije | prva sjednica održana | druga sjednica i usmena obrazloženja | najkasnije sedam dana od prve sjednice; prijava `submitted`; M3 potvrđen; nema konačno aktivnog razloga; rok za prigovor nije otvoren; nema neriješenog blagovremenog prigovora | nije dozvoljena po istorijskoj M3 `Potpuna`; Platforma ne zakazuje; rok se ne produžava automatski | Komisija | `BM-ML-034` |
 | Sjednica Komisije | druga sjednica i usmena održani | treća sjednica | najkasnije sedam dana od druge sjednice i usmenih intervjua; Platforma ne zakazuje | poslovni rok evidentiran | Komisija | `BM-ML-034` |
 | Admin. rezultat / M3 | (nema) | evidentiranje u M3 | `submitted`; rok istekao; formalno kompletna Komisija; kvorum najmanje dva prisutna člana | sva tri kriterijuma evidentirana odvojeno; status ostaje `submitted`; aktiviranje bilo kojeg kriterijuma ne postavlja odmah `rejected` | predsjednik u ime Komisije | `BM-ML-002`; `BM-ML-035` |
 | Prigovor | — | podnošenje | najmanje jedan aktiviran kriterijum; rok 3 dana; digitalni servis; obrazloženje po osporenom kriterijumu | Podnesen; prijava ostaje `submitted`; neaktivirani kriterijumi se ne mogu osporavati | podnosilac | `BM-ML-036` |
@@ -2926,7 +2927,22 @@ Ne uvodi se videokonferencijska integracija, kalendarska integracija, SMS ni dru
 
 ## 15.1. Zakazivanje
 
-Predsjednik Komisije, za prijave za koje nijedan eliminatorni razlog nije konačno aktivan, na Platformi:
+Usmeno predstavljanje i druga sjednica dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi:
+
+* prijava ima status `submitted`;
+* M3 je potvrđen;
+* nema konačno aktivnog eliminatornog razloga;
+* rok za prigovor nije otvoren;
+* nema neriješenog blagovremenog prigovora.
+
+Dozvoljena su dva puta:
+
+1. M3 nije aktivirao nijedan razlog;
+2. M3 je aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen.
+
+Kapija **nije** sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. M3 ostaje nepromijenjen istorijski zapis, uključujući slučaj u kojem je prvi razlog nakon uspješnog prigovora otklonjen.
+
+Predsjednik Komisije, za prijave koje ispunjavaju tu kapiju, na Platformi:
 
 * određuje datum i vrijeme usmenog obrazloženja;
 * evidentira mjesto ili način održavanja kao poslovni podatak, bez tehničke integracije;
@@ -3012,7 +3028,7 @@ Službena napomena **ne** omogućava:
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Termin | Prijava Potpuna | zakazivanje | predsjednik; datum, vrijeme, mjesto ili način | termin evidentiran; poziv potvrđen | predsjednik | `BM-ML-034` |
+| Termin | Kapija §15.1 / 15.7.1 | zakazivanje | predsjednik; datum, vrijeme, mjesto ili način; nema automatskog zakazivanja | termin evidentiran; poziv potvrđen | predsjednik | `BM-ML-034` |
 | Obavještenje | poziv potvrđen | slanje | registrovana e-mail adresa | obavještenje poslato; bez lifecycle-a | sistem | Poglavlje 14; `BM-ML-036` |
 | Termin | postoji | izmjena | evidentiran razlog | novi termin; čuvaju se stari, novi, lice i vrijeme; nije automatski | predsjednik | `BM-ML-034` |
 | Usmeno | zakazano | evidencija održavanja | nijesu prisutna sva tri člana | nije pravilno održano | sistem | `BM-ML-003` |
@@ -3024,13 +3040,20 @@ Službena napomena **ne** omogućava:
 
 ### 15.7.1 — Zakazivanje i obavještenje
 
-**Ako:** prijava ima rezultat `Potpuna`.
+**Ako:** prijava ima status `submitted`; M3 je potvrđen; nema konačno aktivnog eliminatornog razloga; rok za prigovor nije otvoren; i nema neriješenog blagovremenog prigovora.
+
+Dozvoljena su dva puta do ove kapije:
+
+1. M3 nije aktivirao nijedan razlog;
+2. M3 je aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen.
+
+Istorijski M3, uključujući kriterijum 1 vrijednost `Potpuna` ili `Nepotpuna`, ostaje nepromijenjen zapis. Kapija **ne** zahtijeva da kriterijum 1 i dalje ima vrijednost `Potpuna` nakon uspješnog prigovora.
 
 **Kada:** predsjednik odredi termin i potvrdi poziv.
 
-**Onda:** Platforma čuva datum, vrijeme i mjesto ili način, i šalje obavještenje na registrovanu e-mail adresu. Ne uvodi se videokonferencija, kalendar ni SMS.
+**Onda:** Platforma čuva datum, vrijeme i mjesto ili način, i šalje obavještenje na registrovanu e-mail adresu. Ne uvodi se videokonferencija, kalendar ni SMS. Platforma **ne** zakazuje termin automatski.
 
-Izvor: `BM-ML-034`.
+Izvor: `BM-ML-034`; `BM-ML-035`–`BM-ML-037`; `BM-ML-043`.
 
 ### 15.7.2 — Promjena termina
 
@@ -3121,7 +3144,7 @@ Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Izvorni zapi
 
 **Ne** uvode se ponderi. Opciona napomena **ne** donosi bodove.
 
-U ocjenjivanje ulaze samo prijave za koje nijedan eliminatorni razlog nije konačno aktivan i za koje ne traje rok ni neriješen blagovremen prigovor.
+U ocjenjivanje ulaze samo prijave za koje nijedan eliminatorni razlog nije konačno aktivan i za koje ne traje rok ni neriješen blagovremen prigovor. To uključuje prijave kod kojih M3 nije aktivirao nijedan razlog, i prijave kod kojih je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Istorijski M3 se ne mijenja. Kapija ocjenjivanja **nije** sirova istorijska vrijednost `Potpuna`.
 
 ## 16.2. Nacrt
 
@@ -4671,6 +4694,7 @@ Izvori: Poglavlja 10 i 14; `BM-ML-023`; `BM-ML-034`; `BM-ML-036`; `BM-ML-037`.
 
 Platforma **ne** smije:
 
+* zakazati usmeno ili drugu sjednicu samo zbog istorijske M3 vrijednosti `Potpuna`, ili dok prijava nije `submitted`, M3 nije potvrđen, traje rok za prigovor, postoji neriješen blagovremen prigovor ili postoji konačno aktivan razlog;
 * evidentirati pravilno održano usmeno obrazloženje bez sva tri člana;
 * nedolazak podnosioca automatski pretvoriti u eliminaciju ili ocjenu kriterijuma 10;
 * zapisnik koristiti za dopunu prijave;
@@ -4966,7 +4990,7 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 14.6.12 | Prigovor | Izbor kriterijuma | Može osporiti samo aktivirane | 14 | `BM-ML-036` |
 | 14.6.13 | Prigovor | Odluka Komisije | Evidentira se po kriterijumu | 14 | `BM-ML-037` |
 | 14.6.14 | Prigovor | Djelimično prihvatanje | Pojedinačni ishodi; `rejected` ako ostane makar jedan razlog | 14 | `BM-ML-036`; `BM-ML-037` |
-| 15.7.1 | Usmeno | Zakazivanje | Termin i obavještenje evidentirani | 15 | `BM-ML-034` |
+| 15.7.1 | Usmeno | Zakazivanje | Kapija nije sirova M3 `Potpuna`; termin i obavještenje; nema automatskog zakazivanja | 15 | `BM-ML-034` |
 | 15.7.2 | Usmeno | Promjena termina | Nije automatska; razlog evidentiran | 15 | `BM-ML-034` |
 | 15.7.3 | Usmeno | Evidencija održavanja | Sva tri člana obavezna | 15 | `BM-ML-003` |
 | 15.7.4 | Usmeno | Završavanje ocjena | Blokirano dok nije evidentiran završetak | 15 | `BM-ML-039` |
@@ -5310,7 +5334,7 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-031 | IOPPD ili potvrda Poreske uprave za društvo u razvoju | 9.7 | §9 | 9.9.2 | Jedan odgovarajući dokaz, ne oba | U V1 |
 | BM-ML-032 | Dokaz o žiro računu | 9.7 | §9; §1.3; §25.3 | 9.9.3; 25.6.1 | Nije obavezan uz početnu prijavu; provjera pred ugovor van V1 | U V1 opciono; operativna provjera van V1 |
 | BM-ML-033 | Objavljivanje i rok za prijave | 10.2 | §6 | 6.8.1–6.8.12 | Ručna objava; 20 dana; 23:59:59; bez pomjeranja | U V1 |
-| BM-ML-034 | Rokovi sjednica Komisije | 10.3 | §4.10; §13.2; §14.3; §15.1; §20 | 4.11.6; 4.11.7; 14.6.9; 15.7.1 | Platforma evidentira; ne zakazuje umjesto Komisije; treća sjednica najkasnije sedam dana; nema automatskog produženja roka druge sjednice | U V1 evidencija |
+| BM-ML-034 | Rokovi sjednica Komisije | 10.3 | §4.10; §13.2; §14.3; §15.1; §20 | 4.11.6; 4.11.7; 14.6.9; 15.7.1 | Platforma evidentira; ne zakazuje umjesto Komisije; kapija druge sjednice/usmenog nije istorijska M3 `Potpuna`; treća sjednica najkasnije sedam dana; nema automatskog produženja roka druge sjednice | U V1 evidencija |
 | BM-ML-035 | M3 i tri eliminatorna kriterijuma | 10.4 | §13 | 13.5.3; 13.5.7; 13.5.8; 4.11.2 | Tri odvojene stavke na M3; status ostaje submitted dok traje prigovor | U V1 |
 | BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | §14 | 14.6.1–14.6.14; 26.2.8; 26.2.9 | Objedinjeno e-mail obavještenje; jedan prigovor na aktivirane; rejected tek nakon konačnosti | U V1 |
 | BM-ML-037 | Konačnost ishoda prigovora | 10.5 | §14 | 14.6.8; 14.6.13; 14.6.14 | Ishod po kriterijumu; Prihvaćen/Odbijen se ne otvara ponovo | U V1 |
@@ -5445,4 +5469,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.7**
+**Kraj dokumenta KN-FS-002 v1.0.8**

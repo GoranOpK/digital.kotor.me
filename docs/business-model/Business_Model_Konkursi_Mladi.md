@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.9
+**Verzija:** 1.0.10
 **Datum:** 2026-09-17
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.31** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.32** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.7** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.8** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.3** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.4** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -63,6 +63,7 @@ Povezani dokumenti:
 | 1.0.7 | 2026-09-14 | KN-PATCH-BM-016 — Precizirano tumačenje budžeta drugog Poziva: preostala godišnja sredstva računaju se kao odobrena godišnja sredstva umanjena za konačno potvrđenu raspodjelu prvog Poziva; objavljeni budžet prvog Poziva ostaje nepromijenjen; budžet drugog Poziva mora biti veći od nule i ne smije premašiti taj ostatak; konačne raspodjele oba Poziva zajedno ne smiju premašiti godišnji okvir; treći Poziv nije dozvoljen. Poslovni postupak, ručno kreiranje i pravila `BM-ML-049`–`BM-ML-051` nijesu mijenjani. Ženski profil nije diran. |
 | 1.0.8 | 2026-09-15 | KN-PATCH-BM-017 — Precizirano da drugi Poziv slijedi nakon završetka prvog Poziva. U V1 se završetak dokazuje postojećim zatvaranjem Poziva: sve odluke predsjednika moraju biti završene, prvi Poziv mora biti `completed`, a `remaining_after_first` mora biti veći od nule. Tek tada Administrator ručno kreira nacrt drugog Poziva. Nema automatskog kreiranja, trećeg Poziva ni novog poslovnog pravila. Ženski tok nije diran. |
 | 1.0.9 | 2026-09-17 | KN-PATCH-BM-018 — Godišnji budžet mladih jednak je ukupnom budžetu prvog Poziva. Na formi prvog Poziva Administrator unosi samo polje `Ukupan budžet`; sistem isti iznos čuva kao budžet prvog Poziva i kao godišnji okvir. Drugi Poziv nije obavezan i ne kreira se automatski; ostatak nakon prvog daje mogućnost, a ne obavezu ručnog raspisivanja. `remaining_after_first` = budžet prvog Poziva − konačno potvrđena raspodjela prvog Poziva. Uklonjen važeći primjer 100.000/80.000. Ženski tok nije diran. |
+| 1.0.10 | 2026-09-17 | KN-PATCH-BM-019 — Usklađeni kanonski pokazivači povezanih dokumenata zbog FS/TS PATCH-a kapije usmenog: KN-RG-001 v1.0.32, KN-FS-002 v1.0.8, KN-TS-002 v1.0.4. Poslovna pravila BM-ML-001–BM-ML-058 nijesu mijenjana. Ženski tok nije diran. |
 
 Napomena:
 
@@ -2582,4 +2583,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.9**
+**Kraj dokumenta KN-BM-002 v1.0.10**
