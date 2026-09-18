@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.21
+**Verzija:** 1.0.22
 **Datum:** 2026-09-18
 
 Povezani dokumenti:
@@ -51,6 +51,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.19 | 2026-09-17 | Patch 9 terminologija: company eligibility / document labels vraćeni na doslovnu formulaciju čl. 3 („osnivačica ili jedna od osnivačica i izvršna direktorica“ / odgovarajući padež). Bez uvođenja same-person enforcementa (`founder_name` / `director_name` ostaju odvojena). Status ostaje `USVOJEN`. |
 | 1.0.20 | 2026-09-18 | Documentation reconciliation §13.6: poslovno pravilo prioriteta finansiranja kod jednakih bodova ostaje **PO USVOJENO**. Eksplicitno: runtime implementacija **ne postoji**; runtime testovi **ne postoje** (TEST GAP); produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.17) **ne** tumači se kao runtime acceptance §13.6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan. |
 | 1.0.21 | 2026-09-18 | §13.6 runtime closeout (dokumentacija): runtime implementacija evidentirana commitom `35a0da8` (`feat(competitions): enforce equal-score allocation rules`) — IMPLEMENTED IN CODE; TESTED LOCALLY (`ZpEqualScoreAllocationGateTest` i regresija); PUSHED TO `origin/main`. Produkcijski runtime acceptance **nije** još izvršen/potvrđen. Poslovno pravilo §13.6 KEEP. Status dokumenta ostaje `USVOJEN`. |
+| 1.0.22 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Poslovna pravila KEEP. Status dokumenta ostaje `USVOJEN`. |
 
 Napomena:
 
@@ -73,6 +74,8 @@ Formalna otvorena pravna pitanja OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvo
 **§13.6 documentation reconciliation (v1.0.20):** §13.6 ostaje **PO USVOJENO**. Runtime implementacija **ne postoji**. Runtime testovi **ne postoje** (TEST GAP). Produkcijski runtime acceptance **nije** izvršen. V1 closeout v1.0.17 **ne** predstavlja runtime acceptance ovog pravila. Detalj toka: `KN-FS-003` §14.9. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan.
 
 **§13.6 runtime closeout (v1.0.21):** §13.6 ostaje **PO USVOJENO**. Runtime implementacija je u kodu (commit `35a0da8` — IMPLEMENTED IN CODE; TESTED LOCALLY; PUSHED TO `origin/main`). Produkcijski runtime acceptance **nije** još izvršen/potvrđen. V1 closeout v1.0.17 i reconciliation v1.0.20 **ne** tumače se kao produkcijski runtime acceptance. Detalj toka: `KN-FS-003` §14.9. Status dokumenta ostaje `USVOJEN`.
+
+**V1 COMPLETE / PRODUCTION ACCEPTED (v1.0.22):** Tok „Podrška ženskom preduzetništvu“ V1 je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. §13.6 ostaje **PO USVOJENO**; runtime u kodu (`35a0da8`). Status dokumenta ostaje `USVOJEN`.
 
 ---
 
@@ -925,7 +928,7 @@ U slučaju preklapanja 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20
 
 ## 13.6. Tie-break
 
-**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Runtime implementacija **postoji** u kodu (commit `35a0da8` — IMPLEMENTED IN CODE; TESTED LOCALLY; PUSHED TO `origin/main`). Produkcijski runtime acceptance **nije** još izvršen/potvrđen. V1 platformski closeout (v1.0.17) i documentation reconciliation (v1.0.20) **ne** tumače se kao produkcijski runtime acceptance ovog pravila.
+**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Runtime implementacija **postoji** u kodu (commit `35a0da8`). V1 tok „Podrška ženskom preduzetništvu“ je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. V1 platformski closeout (v1.0.17) i documentation reconciliation (v1.0.20) ostaju historijski zapisi tadašnjeg stanja.
 
 Ako dva ili više biznis planova dobije isti broj bodova, a raspoloživa sredstva nisu dovoljna za njihovo finansiranje (čl. 21), utvrđuje se **prioritet finansiranja**. To **ne** mijenja konačni broj bodova niti dijeljene rang-pozicije.
 
