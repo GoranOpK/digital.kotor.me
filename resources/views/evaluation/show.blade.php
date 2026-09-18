@@ -425,10 +425,11 @@
                         <div style="margin-bottom: 12px;">
                             <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_2) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_2) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
                         </div>
-                        <div style="margin-bottom: 8px; font-weight: 600;">Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?</div>
+                        <div style="margin-bottom: 8px; font-weight: 600;">Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?</div>
                         <div style="margin-bottom: 12px;">
                             <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_3) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_3) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
                         </div>
+                        <p style="margin-bottom: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE }}</p>
                         <div style="margin-bottom: 8px; font-weight: 600;">Napomena</div>
                         <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $eliminatoryCheck?->note ?: '—' }}</div>
                         <div>
@@ -533,7 +534,7 @@
                 </table>
 
                 <div class="info-box notes-info-box" style="margin-top: 16px; background: #fef3c7; border-left-color: #f59e0b;">
-                    <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
+                    <strong>Napomena:</strong> Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.
                 </div>
             </div>
 

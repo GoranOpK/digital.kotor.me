@@ -376,11 +376,11 @@
             $brojPrijave = $upBroj . '/' . $redniBroj;
             $applicantType = $lockedApplicantType ?? old('applicant_type', isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null);
             $isOmladinsko = $competition->type === 'omladinsko';
-            $obrazacLabel = 'Obrazac 1a/1b';
+            $obrazacLabel = $isOmladinsko ? 'Obrazac M1a/M1b' : 'Obrazac 1a/1b';
             if (\App\Support\KnApplicationClassification::isM1a($applicantType)) {
-                $obrazacLabel = $isOmladinsko ? 'Obrazac M1a' : 'Obrazac 1a';
+                $obrazacLabel = $isOmladinsko ? 'Obrazac M1a' : 'Obrazac 1a – preduzetnica';
             } elseif (\App\Support\KnApplicationClassification::isM1b($applicantType)) {
-                $obrazacLabel = $isOmladinsko ? 'Obrazac M1b' : 'Obrazac 1b';
+                $obrazacLabel = $isOmladinsko ? 'Obrazac M1b' : 'Obrazac 1b – privredno društvo';
             }
             $obrazacRegistracijaHeading = \App\Support\KnCommercialCompanyForm::obrazacRegistracijaHeading(
                 $lockedCommercialForm ?? null,
@@ -604,7 +604,12 @@
 
             <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
             <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: {{ !empty($knIsRegistered) ? 'none' : 'block' }}; margin-bottom: 24px;">
-                <strong>Važno:</strong> Ukoliko {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} biznis plana nema registrovanu djelatnost, u slučaju da {{ $isOmladinsko ? 'mu' : 'joj' }} sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+                <strong>Važno:</strong>
+                @if($isOmladinsko)
+                    Ukoliko podnosilac prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva mu budu odobrena, dužan je da prije zaključenja ugovora o dodjeli sredstava izvrši registraciju preduzetnika, odnosno osnuje i registruje privredno društvo, u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi dokaz o registraciji kod nadležnog organa, dokaz o poreskoj registraciji i dokaz o otvorenom poslovnom računu.
+                @else
+                    Ukoliko podnositeljka prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva joj budu odobrena, dužna je da prije zaključenja ugovora o dodjeli sredstava izvrši registraciju preduzetnice, odnosno osnuje i registruje privredno društvo, u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi dokaz o registraciji kod nadležnog organa, dokaz o poreskoj registraciji i dokaz o otvorenom poslovnom računu.
+                @endif
             </div>
 
             <!-- Izbor tipa prijave za Fizičko lice (Rezident) -->
@@ -771,6 +776,9 @@
                     </div>
 
                     @if(!empty($lockedIsRegistered))
+                    <p style="margin: 0 0 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">
+                        * Popunjava {{ $isOmladinsko ? 'registrovani preduzetnik' : 'registrovana preduzetnica' }}.
+                    </p>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">*Broj registracije u CRPS:</label>
@@ -867,7 +875,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Ime i prezime {{ $isOmladinsko ? 'nosioca' : 'nositeljke' }} biznisa:</label>
+                        <label class="form-label">Ime i prezime {{ $isOmladinsko ? 'podnosioca' : 'podnositeljke' }} prijave:</label>
                         <input 
                             type="text" 
                             name="doo_name" 
@@ -1002,6 +1010,9 @@
                     </div>
 
                     @if(!empty($lockedIsRegistered))
+                        <p style="margin: 0 0 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">
+                            * Popunjava se samo ako je privredno društvo registrovano.
+                        </p>
                         <div class="form-group">
                             <label class="form-label">*Broj registracije u CRPS:</label>
                             <input
@@ -1019,7 +1030,7 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">*Osnivač/ica:</label>
+                            <label class="form-label">Ime i prezime osnivačice/osnivačica:</label>
                             <input 
                                 type="text" 
                                 name="founder_name" 
@@ -1034,7 +1045,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">*Izvršni direktor/ica:</label>
+                            <label class="form-label">Ime i prezime izvršne direktorice:</label>
                             <input 
                                 type="text" 
                                 name="director_name" 
@@ -1504,8 +1515,8 @@
             const selectedType = currentApplicantType();
             const headerLabel = document.getElementById('obrazacLabelHeader');
             if (headerLabel) {
-                if (knIsM1a(selectedType)) headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1a' : 'Obrazac 1a';
-                else if (knIsM1b(selectedType)) headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1b' : 'Obrazac 1b';
+                if (knIsM1a(selectedType)) headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1a' : 'Obrazac 1a – preduzetnica';
+                else if (knIsM1b(selectedType)) headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1b' : 'Obrazac 1b – privredno društvo';
                 else headerLabel.textContent = knIsOmladinsko ? 'Obrazac M1a/M1b' : 'Obrazac 1a/1b';
             }
             const regHeader = document.getElementById('obrazacRegistracijaHeader');

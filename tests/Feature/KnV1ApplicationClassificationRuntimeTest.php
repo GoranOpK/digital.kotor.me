@@ -771,7 +771,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertStringNotContainsString('ukoliko ima registrovanu djelatnost', $applicantHtml);
         $this->assertStringContainsString($poCrps, $applicantHtml);
         $this->assertStringContainsString($poPdv, $applicantHtml);
-        $this->assertStringContainsString('Ovjerena kopija lične karte nositeljke biznisa', $applicantHtml);
+        $this->assertStringContainsString('Ovjerena kopija lične karte osnivačice ili jedne od osnivačica i izvršne direktorice', $applicantHtml);
         $this->assertStringContainsString('Rješenje o registraciji kod PJ Poreske uprave', $applicantHtml);
         $this->assertStringContainsString('Važeći Statut društva', $applicantHtml);
         $this->assertStringContainsString('Važeći karton deponovanih potpisa', $applicantHtml);
@@ -814,7 +814,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
 
         $this->assertStringContainsString($poCrps, $adminHtml);
         $this->assertStringContainsString($poPdv, $adminHtml);
-        $this->assertStringContainsString('Ovjerena kopija lične karte nositeljke biznisa', $adminHtml);
+        $this->assertStringContainsString('Ovjerena kopija lične karte osnivačice ili jedne od osnivačica i izvršne direktorice', $adminHtml);
         $this->assertStringNotContainsString('ukoliko ima registrovanu djelatnost', $adminHtml);
         $this->assertStringContainsString('Opciono (za dodatne bodove)', $adminHtml);
     }
@@ -837,8 +837,8 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
 
         $this->assertStringContainsString('value="licna_karta"', $html);
         $this->assertStringContainsString('value="uvjerenje_opstina_nepokretnost"', $html);
-        $this->assertStringContainsString('Ovjerena kopija lične karte nositeljke biznisa', $html);
-        $this->assertStringContainsString('Potvrda Osnovnog suda da se protiv podnositeljke prijave/nositeljke biznisa ne vodi krivični postupak', $html);
+        $this->assertStringContainsString('Ovjerena kopija lične karte podnositeljke prijave', $html);
+        $this->assertStringContainsString('Potvrda Osnovnog suda da se protiv podnositeljke prijave ne vodi krivični postupak', $html);
         $this->assertStringNotContainsString('value="crps_resenje"', $html);
         $this->assertStringNotContainsString('value="pib_resenje"', $html);
         $this->assertStringNotContainsString('value="pdv_resenje"', $html);
@@ -865,7 +865,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->assertViewHas('knIsRegisteredBusiness', true)
             ->getContent();
 
-        $this->assertStringContainsString('Obrazac 1b – Prijava na konkurs', $html);
+        $this->assertStringContainsString('Obrazac 1b – privredno društvo', $html);
         $this->assertStringContainsString('Obrazac 2 – Biznis plan', $html);
         $this->assertStringContainsString('Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)', $html);
         $this->assertStringContainsString('Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik', $html);
@@ -886,7 +886,18 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
 
         $this->assertStringContainsString('unregisteredCompanyStart', $html);
         $this->assertStringContainsString('poUnregisteredCompanyStartLabels', $html);
-        $this->assertStringContainsString('nositeljke biznisa', $html);
+        // Blade @json embeds Unicode escapes (e.g. č → \u010d); compare against that encoding.
+        $label = Application::unregisteredStartingCommercialCompanyDocumentLabels()['licna_karta'];
+        $jsonNeedle = substr(
+            json_encode(
+                $label,
+                JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+            ),
+            1,
+            -1
+        );
+        $this->assertStringContainsString($jsonNeedle, $html);
+        $this->assertStringNotContainsString('nositeljke biznisa', $html);
         $this->assertStringContainsString("optional: ['potvrda_zavod_nezaposleni']", $html);
         $this->assertStringContainsString('"crps_resenje"', $html);
         $this->assertStringContainsString('registrationDocs', $html);
@@ -971,8 +982,10 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
             ] as $documentType) {
-                $this->assertStringContainsString('nositeljke biznisa', $labels[$documentType]);
+                $this->assertStringContainsString('osnivačice ili jedne od osnivačica i izvršne direktorice', $labels[$documentType]);
                 $this->assertStringContainsString('društva', $labels[$documentType]);
+                $this->assertStringNotContainsString('nositeljke biznisa', $labels[$documentType]);
+                $this->assertStringNotContainsString('nosioca biznisa', $labels[$documentType]);
             }
 
             if ($applicantType === 'doo') {
@@ -1064,7 +1077,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $this->assertCompanyDevelopmentSurfaceContainsPoLabels($adminHtml, $poLabels);
         $this->assertStringNotContainsString('nema zaposlenih', $adminHtml);
         $this->assertStringContainsString('Opciono (za dodatne bodove)', $adminHtml);
-        $this->assertSame($formTitles['obrazac_1b'], 'Obrazac 1b – Prijava na konkurs');
+        $this->assertSame($formTitles['obrazac_1b'], 'Obrazac 1b – privredno društvo');
         $this->assertSame($formTitles['obrazac_2'], 'Obrazac 2 – Biznis plan');
     }
 
@@ -1118,7 +1131,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->assertViewHas('knIsRegisteredBusiness', true)
             ->getContent();
 
-        $this->assertStringContainsString('Obrazac 1b – Prijava na konkurs', $html);
+        $this->assertStringContainsString('Obrazac 1b – privredno društvo', $html);
         $this->assertStringContainsString('Obrazac 2 – Biznis plan', $html);
         $this->assertStringContainsString('registeredCompanyDevelopment', $html);
         $this->assertStringContainsString('poRegisteredCompanyDevelopmentLabels', $html);

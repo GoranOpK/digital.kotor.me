@@ -547,7 +547,7 @@ class ApplicationController extends Controller
             'preduzetnik_phone.required' => 'Kontakt telefon je obavezan.',
             'preduzetnik_email.required' => 'E-mail je obavezan.',
             'preduzetnik_address.required' => 'Adresa je obavezna.',
-            'doo_name.required' => 'Ime i prezime nositeljke biznisa je obavezno.',
+            'doo_name.required' => 'Ime i prezime podnositeljke prijave je obavezno.',
             'doo_phone.required' => 'Kontakt telefon je obavezan.',
             'doo_email.required' => 'E-mail je obavezan.',
             'doo_address.required' => 'Adresa je obavezna.',

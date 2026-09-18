@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.12
-**Datum:** 2026-09-12
+**Verzija:** 1.0.14
+**Datum:** 2026-09-17
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
-* Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.17; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9; V1 platformski closeout)
-* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
-* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
+* Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.19; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9; V1 platformski closeout; ŽP V1 documentation corrective; Patch 9 Article 3 wording)
+* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
+* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-003`.
 
@@ -67,6 +67,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.10 | 2026-09-11 | Controlled corrective. §7.14: konačna predaja zahtijeva kompletan Obrazac 1a/1b, postojanje Biznis plana i potvrdu finansijske napomene; puna sadržajna kompletnost Biznis plana **nije** uslov predaje. Potvrđeno: Podnesena Prijava je zaključana za izmjene; `U pripremi` nakon isteka roka ostaje sačuvana samo za pregled (§7.16, §7.17). |
 | 1.0.11 | 2026-09-11 | Controlled corrective prema `KN-BM-003` v1.0.16. **PO USVOJENO:** §14.9 prioritet finansiranja kod jednakih bodova — mješovita grupa (otpočinjanje prije razvoja); razrješavanje u obimu potrebnom za raspodjelu; odluka Komisije ≥3/5 uz obavezno obrazloženje; hard gate za konačnu rang-listu i Predlog bez zabrane prethodnog unosa Podržava/Odbija. §14.6 dijeljeni rang KEEP. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.12 | 2026-09-12 | Dokumentacioni closeout: V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status dokumenta ostaje `USVOJEN`. Bez novih funkcionalnih zahtjeva. OUT_OF_V1 granice nepromijenjene. Napomena da dokument nije runtime izvršni izvor ostaje. |
+| 1.0.13 | 2026-09-17 | ŽP V1 documentation corrective nakon runtime Patch 1–6: cross-reference BM-001/FS-001/TS-001; 1a/1b naslovi i labeli; Obrazac 2 napomena/Q4; šest document package slučajeva A–F; eliminatorni kriterijum 3 → član 11; K7/K8/K10; +2 eligibility + server authority; granica Obrazac 4/4a. Status ostaje `USVOJEN`. Kod nije mijenjan. |
+| 1.0.14 | 2026-09-17 | Patch 9 terminologija: company eligibility / document labels vraćeni na doslovnu formulaciju čl. 3 („osnivačica ili jedna od osnivačica i izvršna direktorica“ / odgovarajući padež). Bez uvođenja same-person enforcementa. Status ostaje `USVOJEN`. |
 
 Napomena:
 
@@ -79,6 +81,10 @@ Ne mijenjaju se postojeći redovi.
 Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene označavaju se prema `KN-PATCH-FS-{NNN}` i evidentiraju se u `KN-RG-001` tek pri prvoj stvarnoj upotrebi.
 
 **V1 platformski closeout (v1.0.12):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status ove specifikacije ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove funkcionalne zahtjeve. OUT_OF_V1 / van Platforme granice ostaju nepromijenjene. Napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi.
+
+**ŽP V1 documentation corrective (v1.0.13):** Usklađivanje ACTIVE funkcionalnog teksta sa `KN-BM-003` v1.0.18 i finalnim ŽP V1 runtime-om nakon Patch 1–6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan ovim dokumentacionim korakom.
+
+**Patch 9 Article 3 wording (v1.0.14):** Terminologija company eligibility / document labels usklađena sa `KN-BM-003` v1.0.19 i doslovnom formulacijom čl. 3, bez uvođenja same-person enforcementa. Status dokumenta ostaje `USVOJEN`.
 
 ---
 
@@ -163,9 +169,9 @@ Dokument određuje kako Platforma ostvaruje usvojena poslovna pravila tog profil
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-003` v1.0.11.
+Primarni poslovni SSOT ovog profila je `KN-BM-003` v1.0.18.
 
-Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.0.
+Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v0.2.11 (USVOJENO).
 
 `KN-FS-003` **ne** mijenja poslovna pravila. **Ne** izvodi pravila iz trenutnog koda. **Ne** usklađuje poslovni model sa postojećom implementacijom.
 
@@ -215,7 +221,7 @@ funkcionalni sloj
 → `KN-FS-003` (ovo dokument)
 
 tehnički sloj  
-→ prema kanonskoj KN arhitekturi; trenutno je planiran zajednički `KN-TS-001`. Novi TS Document ID se ovim dokumentom **ne** uvodi.
+→ zajednički `KN-TS-001` (NACRT v0.1.0). Novi TS Document ID se ovim dokumentom **ne** uvodi.
 
 ## 2.1. Autoritet
 
@@ -231,15 +237,15 @@ Sljedivost: BM → FS → TS → implementacija → testovi, gdje je primjenjivo
 
 ## 2.2. Odnos prema KN-FS-001
 
-`KN-FS-001` je planirani zajednički i konfigurabilni funkcionalni sloj modula Konkursi.
+`KN-FS-001` je usvojeni zajednički i konfigurabilni funkcionalni sloj modula Konkursi (USVOJENO v0.2.13).
 
 `KN-FS-003` je profilni funkcionalni sloj tipa konkursa Žensko preduzetništvo.
 
 `KN-FS-003` **ne** pretvara pravila ovog profila u univerzalno ponašanje svih konkursa (`KN-BM-001`, `KN-FS-001` / `KN-FS-00x`).
 
-Zajedničke konfigurabilne sposobnosti ne treba nepotrebno duplirati ovdje ako pripadaju `KN-FS-001`. Nepostojanje fajla `KN-FS-001` **ne** ovlašćuje ovaj dokument da usvoji zajednička pravila umjesto zajedničkog FS-a, niti da ih izvede iz koda.
+Zajedničke konfigurabilne sposobnosti ne treba nepotrebno duplirati ovdje ako pripadaju `KN-FS-001`. Postojanje `KN-FS-001` **ne** ovlašćuje ovaj dokument da usvoji zajednička pravila umjesto zajedničkog FS-a, niti da ih izvede iz koda.
 
-`KN-FS-002` ostaje planirani funkcionalni profil konkursa za podršku preduzetništvu mladih. Ovaj dokument ga **ne** mijenja.
+`KN-FS-002` ostaje funkcionalni profil konkursa za podršku preduzetništvu mladih. Ovaj dokument ga **ne** mijenja.
 
 ---
 
@@ -547,7 +553,7 @@ Formulacije stavki:
 
 1. **Dostavljena su sva potrebna dokumenta?** a. Da b. Ne\*
 2. **Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?** a. Da b. Ne\*
-3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?** a. Da b. Ne\*
+3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?** a. Da b. Ne\*
 
 **Da** = nema eliminacije po tom kriterijumu. **Ne\*** = postoji eliminatorni razlog.
 
@@ -1235,12 +1241,12 @@ Obavezna izjava:
 
 *Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.*
 
-## 7.7. Obrazac 1a
+## 7.7. Obrazac 1a – preduzetnica
 
-Obrazac 1a primjenjuje se na:
+Obrazac 1a – preduzetnica primjenjuje se na:
 
-* postojeću Preduzetnicu;
-* fizičko lice bez registrovanog biznisa u podrazumijevanom toku (`fizicko_lice`).
+* postojeću / registrovanu Preduzetnicu;
+* fizičko lice bez registrovanog biznisa u podrazumijevanom toku (`fizicko_lice`) koje planira registraciju preduzetnice.
 
 Uvijek obavezno:
 
@@ -1290,19 +1296,19 @@ Ako je `is_registered` = NE, sekcija „Dodatni podaci“ **nije primjenjiva** i
 
 Kanonski identitet: izveden iz naloga; ne bira se ručno. To **ne** zabranjuje fizičkom licu bez registrovanog biznisa da umjesto podrazumijevanog Obrasca 1a izabere planirano osnivanje DOO i Obrazac 1b.
 
-## 7.8. Obrazac 1b
+## 7.8. Obrazac 1b – privredno društvo
 
-Obrazac 1b primjenjuje se na:
+Obrazac 1b – privredno društvo primjenjuje se na:
 
-* postojeće DOO;
-* fizičko lice bez registrovanog biznisa koje planira osnivanje DOO (`doo` + `is_registered` = false).
+* postojeće / registrovano privredno društvo (OD / KD / AD / DOO);
+* fizičko lice bez registrovanog biznisa koje planira osnivanje privrednog društva (`doo` + `is_registered` = false).
 
 Kanonski identitet pravnog lica / DOO **ne** dokazuje sam po sebi da je formalna registracija društva već izvršena. Registrovanost biznisa ostaje zasebna činjenica (§7.4).
 
 Uvijek obavezno i izmjenjivo:
 
 * Naziv biznis plana;
-* Ime i prezime nositeljke biznisa;
+* Ime i prezime podnositeljke prijave;
 * Kontakt telefon;
 * Adresa;
 * E-mail;
@@ -1323,8 +1329,8 @@ Ako registrovani biznis postoji, postaju primjenjiva / obavezna:
 
 * Oblik registracije;
 * Broj registracije u CRPS;
-* Osnivač/ica;
-* Izvršni direktor/ica;
+* Ime i prezime osnivačice/osnivačica;
+* Ime i prezime izvršne direktorice;
 * Sjedište društva;
 * PIB.
 
@@ -1415,14 +1421,33 @@ Izmjene utiču samo na Obrazac 2.
 
 Ako je odgovor DA, blok registrovanog biznisa postaje primjenjiv.
 
-Ako je odgovor NE, polja registrovanog biznisa nijesu obavezna.
+Ako je odgovor NE, polja registrovanog biznisa nijesu obavezna. Neregistrovana podnositeljka prijave bira planirani oblik obavljanja djelatnosti (preduzetnica ili privredno društvo) u skladu sa tokom Prijave.
 
-**Q4 — Podaci registrovanog biznisa**
+**Napomena za neregistrovanu podnositeljku (registracija prije ugovora):** Ukoliko podnositeljka prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva joj budu odobrena, dužna je da prije zaključenja ugovora o dodjeli sredstava:
 
-* prenose se iz Obrasca 1a / 1b;
+* izvrši registraciju preduzetnice; ili
+* osnuje i registruje privredno društvo,
+
+u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi:
+
+* dokaz registracije kod nadležnog organa;
+* dokaz poreske registracije;
+* dokaz o otvorenom poslovnom računu.
+
+**Q4 — trgovački / naziv subjekta**
+
+Kanonski TARGET label (`KN-BM-003` §7):
+
+„Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:“
+
+Ostala polja bloka registrovanog / planiranog biznisa:
+
+* prenose se iz Obrasca 1a / 1b gdje postoje;
 * obaveznost prati primjenjiva pravila Obrasca 1a / 1b;
 * izmjenjivo, osim vrijednosti koje su već određene kao zaključane;
 * izmjene u Obrascu 2 ne mijenjaju Obrazac 1a / 1b niti profil.
+
+Elektronski Obrazac 2 **ne** zahtijeva polje Potpis niti papirni footer kao platformsku funkcionalnost.
 
 **Q5 — Rezime**
 
@@ -1514,26 +1539,30 @@ Nakon konačnog podnošenja nema dodavanja, uklanjanja ni zamjene (§7.16).
 
 ## 7.13. Katalog prateće dokumentacije (čl. 13)
 
-Za sva četiri skupa važi opšte pravilo upozorenja i dozvole iz §7.12. Nedostajući dokumenti se **ne** pretvaraju u prepreku konačnog podnošenja.
+V1 katalog je eksplicitno strukturiran u **šest slučajeva A–F**. Za sve slučajeve važi opšte pravilo upozorenja i dozvole iz §7.12. Nedostajući dokumenti se **ne** pretvaraju u hard-block / prepreku konačnog podnošenja. Nepotpuna dokumentacija utvrđuje se **eliminatornom provjerom** (eliminatorni kriterijum 1 / Poglavlje 11).
 
-Obrazac 1a, Obrazac 1b i Obrazac 2 su obavezni digitalni Obrasci Prijave, nisu prilozi za učitavanje.
+Obrazac 1a – preduzetnica, Obrazac 1b – privredno društvo i Obrazac 2 su obavezni digitalni Obrasci Prijave, nisu prilozi za učitavanje.
 
-Postojeća struktura skupova pokriva V1 tokove, bez novog kataloga:
+Mapiranje:
 
-* neregistrovano fizičko lice, planirani Preduzetnik, Započinjanje, Obrazac 1a → skup **A**, uz uslovna registraciona dokumenta koja se ne zahtijevaju dok biznis nije registrovan;
-* neregistrovano fizičko lice, planirano privredno društvo OD / KD / AD / DOO, Započinjanje, Obrazac 1b → skup **C**, uz uslovna registraciona dokumenta koja se ne zahtijevaju dok biznis nije registrovan;
-* postojeća Preduzetnica, Obrazac 1a, Započinjanje ili Razvoj → skup **A** odnosno skup **B**, uz registracionu dokumentaciju prema konkursnim pravilima tog skupa;
-* postojeće privredno društvo OD / KD / AD / DOO, Obrazac 1b, Započinjanje ili Razvoj → skup **C** odnosno skup **D**, uz registracionu dokumentaciju prema konkursnim pravilima tog skupa.
+* **A** — fizičko lice → planira registraciju preduzetnice (Obrazac 1a; samo Započinjanje);
+* **B** — registrovana preduzetnica / započinjanje (Obrazac 1a);
+* **C** — registrovana preduzetnica / razvoj (Obrazac 1a);
+* **D** — fizičko lice → planira osnivanje privrednog društva (Obrazac 1b; samo Započinjanje);
+* **E** — registrovano privredno društvo / započinjanje (Obrazac 1b);
+* **F** — registrovano privredno društvo / razvoj (Obrazac 1b).
 
-Neregistrovani tokovi koriste samo fazu Započinjanje. Razvojni skupovi **B** i **D** primjenjuju se na registrovani biznis.
+Neregistrovana fizička lica (**A**, **D**) koriste **samo** fazu Započinjanje. Razvoj (**C**, **F**) primjenjuje se samo na registrovani biznis.
 
-### A. Preduzetnica koja započinje biznis
+**ZZZCG (>12 mjeseci):** dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci je **CONDITIONAL** — traži se samo ako se ostvaruje / traži pripadajući bonus (+2). Sam po sebi **ne** blokira podnošenje.
 
-Obuhvata postojeću Preduzetnicu u fazi Započinjanje i neregistrovano fizičko lice u podrazumijevanom toku Obrasca 1a.
+Kod **E** / **F**, gdje konkretni dokaz to zahtijeva, koristi se formulacija: „osnivačica ili jedna od osnivačica i izvršna direktorica“.
 
-1. Obrazac 1a — obavezni digitalni Obrazac
+### A. Fizičko lice → planira registraciju preduzetnice
+
+1. Obrazac 1a – preduzetnica — obavezni digitalni Obrazac
 2. Obrazac 2 — obavezni digitalni Obrazac
-3. Ovjerena kopija lične karte — obavezno
+3. Ovjerena kopija lične karte podnositeljke prijave — obavezno
 4. CRPS — uslovno ako postoji registrovana djelatnost
 5. Registracija kod Poreske uprave — uslovno ako postoji registrovana djelatnost
 6. Dokaz o PDV statusu — uslovno ako postoji registrovana djelatnost; odgovarajuća varijanta prema PDV statusu
@@ -1541,14 +1570,27 @@ Obuhvata postojeću Preduzetnicu u fazi Započinjanje i neregistrovano fizičko 
 8. Uvjerenje o lokalnim obavezama, ne starije od 30 dana — obavezno
 9. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
 10. Dokaz o poslovnom žiro-računu — uslovno ako postoji registrovana djelatnost
-11. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+11. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — **CONDITIONAL** (samo uz traženi/ostvareni bonus)
 12. Predračuni — obavezno
 
-### B. Preduzetnica koja planira razvoj poslovanja
+### B. Registrovana preduzetnica / započinjanje
 
-Obuhvata postojeću Preduzetnicu u fazi Razvoj. Ne primjenjuje se na neregistrovani biznis.
+1. Obrazac 1a – preduzetnica — obavezni digitalni Obrazac
+2. Obrazac 2 — obavezni digitalni Obrazac
+3. Ovjerena kopija lične karte — obavezno
+4. CRPS — uslovno / prema pravilima registrovane djelatnosti
+5. Registracija kod Poreske uprave — uslovno / prema pravilima registrovane djelatnosti
+6. Dokaz o PDV statusu — uslovno / prema PDV statusu
+7. Potvrda Osnovnog suda da se ne vodi krivični postupak — obavezno
+8. Uvjerenje o lokalnim obavezama, ne starije od 30 dana — obavezno
+9. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
+10. Dokaz o poslovnom žiro-računu — uslovno / prema pravilima registrovane djelatnosti
+11. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — **CONDITIONAL** (samo uz traženi/ostvareni bonus)
+12. Predračuni — obavezno
 
-1. Obrazac 1a
+### C. Registrovana preduzetnica / razvoj
+
+1. Obrazac 1a – preduzetnica
 2. Obrazac 2
 3. Ovjerena kopija lične karte — obavezno
 4. CRPS — obavezno
@@ -1560,34 +1602,46 @@ Obuhvata postojeću Preduzetnicu u fazi Razvoj. Ne primjenjuje se na neregistrov
 10. Potvrda Poreske uprave o porezima i doprinosima, ne starija od 30 dana — obavezno
 11. IOPPD ili potvrda Poreske uprave da nema zaposlenih — obavezna alternativa
 12. Dokaz o poslovnom žiro-računu — obavezno
-13. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+13. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — **CONDITIONAL** (samo uz traženi/ostvareni bonus)
 14. Predračuni — obavezno
 
-### C. Društvo koje započinje biznis
+### D. Fizičko lice → planira osnivanje privrednog društva
 
-Obuhvata postojeće DOO u fazi Započinjanje i neregistrovano fizičko lice koje planira osnivanje DOO.
-
-1. Obrazac 1b
+1. Obrazac 1b – privredno društvo
 2. Obrazac 2
-3. Ovjerena kopija lične karte nositeljke biznisa — obavezno
+3. Ovjerena kopija lične karte podnositeljke prijave — obavezno
 4. CRPS — uslovno ako postoji registrovana djelatnost
 5. Registracija kod Poreske uprave — uslovno ako postoji registrovana djelatnost
 6. Dokaz o PDV statusu — uslovno ako postoji registrovana djelatnost; odgovarajuća varijanta prema PDV statusu
 7. Važeći Statut — uslovno ako postoji registrovana djelatnost
 8. Važeći karton deponovanih potpisa — uslovno ako postoji registrovana djelatnost
-9. Potvrda Osnovnog suda za Podnositeljku / nositeljku biznisa — obavezno
+9. Potvrda Osnovnog suda za podnositeljku prijave — obavezno
 10. Uvjerenje o lokalnim poreskim obavezama, ne starije od 30 dana — obavezno
 11. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
-12. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+12. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — **CONDITIONAL** (samo uz traženi/ostvareni bonus)
 13. Predračuni — obavezno
 
-### D. Društvo koje planira razvoj poslovanja
+### E. Registrovano privredno društvo / započinjanje
 
-Obuhvata postojeće DOO u fazi Razvoj. Ne primjenjuje se na neregistrovani biznis.
-
-1. Obrazac 1b
+1. Obrazac 1b – privredno društvo
 2. Obrazac 2
-3. Ovjerena kopija lične karte nositeljke biznisa — obavezno
+3. Ovjerena kopija lične karte osnivačice ili jedne od osnivačica i izvršne direktorice — obavezno
+4. CRPS — obavezno / prema pravilima registrovane djelatnosti
+5. Registracija kod Poreske uprave — obavezno / prema pravilima registrovane djelatnosti
+6. Dokaz o PDV statusu — obavezno; odgovarajuća varijanta prema PDV statusu
+7. Važeći Statut — obavezno
+8. Važeći karton deponovanih potpisa — obavezno
+9. Potvrda Osnovnog suda za podnositeljku prijave / osnivačicu ili jednu od osnivačica i izvršnu direktoricu — obavezno
+10. Uvjerenje o lokalnim poreskim obavezama, ne starije od 30 dana — obavezno
+11. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
+12. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — **CONDITIONAL** (samo uz traženi/ostvareni bonus)
+13. Predračuni — obavezno
+
+### F. Registrovano privredno društvo / razvoj
+
+1. Obrazac 1b – privredno društvo
+2. Obrazac 2
+3. Ovjerena kopija lične karte osnivačice ili jedne od osnivačica i izvršne direktorice — obavezno
 4. CRPS — obavezno
 5. Registracija kod Poreske uprave — obavezno
 6. Dokaz o PDV statusu — obavezno; odgovarajuća alternativa prema PDV statusu
@@ -1601,12 +1655,12 @@ Obuhvata postojeće DOO u fazi Razvoj. Ne primjenjuje se na neregistrovani bizni
 
    Ako analitika kupaca ne postoji zato što su kupci isključivo fizička lica / neposredna kasa, periodični izvještaj kase prihvata se kao alternativni dokaz unutar ove stavke.
 
-10. Dokaz da se ne vodi krivični postupak za nositeljku **i** društvo — obavezno
-11. Dokaz o lokalnim porezima, ne stariji od 30 dana, za nositeljku **i** društvo — obavezno
-12. Dokaz o porezu na nepokretnost, ne stariji od 30 dana, za nositeljku **i** društvo — obavezno
-13. Potvrda Poreske uprave o porezima i doprinosima, ne starija od 30 dana, za nositeljku **i** društvo — obavezno
+10. Dokaz da se ne vodi krivični postupak za osnivačicu ili jednu od osnivačica i izvršnu direktoricu **i** društvo — obavezno
+11. Dokaz o lokalnim porezima, ne stariji od 30 dana, za osnivačicu ili jednu od osnivačica i izvršnu direktoricu **i** društvo — obavezno
+12. Dokaz o porezu na nepokretnost, ne stariji od 30 dana, za osnivačicu ili jednu od osnivačica i izvršnu direktoricu **i** društvo — obavezno
+13. Potvrda Poreske uprave o porezima i doprinosima, ne starija od 30 dana, za osnivačicu ili jednu od osnivačica i izvršnu direktoricu **i** društvo — obavezno
 14. IOPPD za posljednji mjesec — obavezno
-15. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+15. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — **CONDITIONAL** (samo uz traženi/ostvareni bonus)
 16. Predračuni — obavezno
 
 ## 7.14. Podnošenje Prijave
@@ -2183,7 +2237,7 @@ Sva tri eliminatorna kriterijuma su dio Obrasca 3. Prikazuju se kao tri zasebne 
 2. **Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?**
    a. Da
    b. Ne\*
-3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?**
+3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?**
    a. Da
    b. Ne\*
 
@@ -2447,10 +2501,10 @@ Pozitivni kriterijumi (`KN-BM-003` §12.1; čl. 19):
 4. Prepoznata je i navedena konkurencija kao i slabosti i snage iste.
 5. Jasno su navedeni potrebni resursi i identifikovani dobavljači.
 6. Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).
-7. Podaci o preduzetnici (fizičko lice/preduzetnica posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).
-8. Preduzetnica planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.
+7. Podaci o podnositeljki prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti);
+8. Podnositeljka prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje;
 9. Razvijena matrica rizika je jasna i logična.
-10. Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).
+10. Usmeno obrazloženje biznis plana (podnositeljka prijave je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za njenu realizaciju i spremno odgovara na sva pitanja).
 
 Kriterijum 10 je kriterijum usmenog obrazloženja. Poslovni redoslijed unosa uređuje Poglavlje 12. Ovo poglavlje **ne** mijenja tu granicu.
 
@@ -2603,7 +2657,7 @@ Predsjednik evidentira ostvareni osnov. Platforma primjenjuje **fiksan** broj bo
 Kanonski dodatni bodovi (`KN-BM-003` §12.6; čl. 19):
 
 * **+1** — prisustvo Info danu i obuci za izradu Biznis plana, za tekuću godinu;
-* **+2** — fizičko lice koje planira registrovanje biznisa;
+* **+2** — neregistrovano fizičko lice koje planira registraciju **preduzetnice**, ili neregistrovano fizičko lice koje planira osnivanje **privrednog društva**. **Nije** dozvoljen registrovanoj preduzetnici niti registrovanom privrednom društvu. Stara formulacija „planira da registruje biznis“ **nije** kanonska;
 * **+2** — evidencija Zavoda za zapošljavanje duže od 12 mjeseci;
 * **+3** — inovativna i/ili zelena biznis ideja.
 
@@ -2613,7 +2667,7 @@ Dodatni bodovi **nijesu** jedanaesti kriterijum ocjenjivanja i **nijesu** indivi
 
 Rano evidentiranje osnova **ne** smije otkriti niti na drugi način uticati na tajne individualne ocjene iz Poglavlja 13.
 
-Ne uvodi se novi tok dokaza, novo stanje Prijave, automatski motor podobnosti ni drugi nepodržani poslovni postupak.
+**Server-side authority za +2 (`bonus_new_business`):** Predsjednik može označiti osnov, ali Platforma **nameće** podobnost na serveru. Ako klijent pošalje `bonus_new_business=true` za nepodobnu prijavu, vrijednost se **normalizuje / ignoriše** i efektivni bonus je **0**. Stale nevalidna vrijednost (npr. ranije sačuvan flag nakon što prijava više nije podobna) takođe **ne** smije dati +2. Ne uvodi se novi tok dokaza ni novo stanje Prijave.
 
 Razlikuje se:
 
@@ -3780,6 +3834,8 @@ Nakon objavljivanja zvanične Odluke, van V1 ostaju:
 * kontrola namjene sredstava;
 * naknadne izmjene Odluke zbog odustanka.
 
+**Obrazac 4 / Obrazac 4a — granica elektronskog Konkursi ŽP V1:** Odluka propisuje poslovnu obavezu korisnice da Sekretarijatu podnese **Obrazac 4 — Izvještaj o realizaciji biznis plana** i **Obrazac 4a — Finansijski izvještaj** sa pratećom dokumentacijom. Poslovna obaveza **postoji**. Obrazac 4 i Obrazac 4a **nijesu** dio elektronskog workflow-a modula Konkursi u ŽP V1. Postojeći `reports/*` runtime **nije** predmet ovog profila.
+
 Platforma u V1 **ne** upravlja ovim poslovnim radnjama:
 
 * elektronskim vođenjem sjednica Komisije;
@@ -4425,7 +4481,7 @@ Status poglavlja: USVOJENO
 
 Ovo poglavlje evidentira sljedivost već usvojenih pravila. **Ne** uvodi nova poslovna ni funkcionalna pravila. **Ne** mijenja Poglavlja 1–18. **Ne** određuje tehničku realizaciju.
 
-Osnov: `KN-BM-003` v1.0.11; Poglavlja 1–18 ovog dokumenta.
+Osnov: `KN-BM-003` v1.0.18; Poglavlja 1–18 ovog dokumenta.
 
 ## 19.1. Svrha i pravila sljedivosti
 
@@ -4484,7 +4540,7 @@ Jedan red može obuhvatiti više neposredno relevantnih referenci istog predmeta
 
 ### 19.2.2. Poslovni izvor
 
-Poslovni izvor je stvarna referenca iz `KN-BM-003` v1.0.11.
+Poslovni izvor je stvarna referenca iz `KN-BM-003` v1.0.18.
 
 Može sadržati više BM referenci kada zajedno čine isti poslovni predmet.
 
@@ -4579,4 +4635,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.12**
+**Kraj dokumenta KN-FS-003 v1.0.14**

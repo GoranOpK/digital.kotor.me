@@ -807,8 +807,8 @@ class CanonicalIndividualScoringTest extends TestCase
             '            <!-- 4. Ocjena biznis plana u brojkama -->',
         );
 
-        $this->assertSame('29cde03cd76ff93cb965e7796d9d5917a5bb8dc41bf9c31d119e86795a186084', hash('sha256', $createObrazac3));
-        $this->assertSame('5478ab31568e39130cefe7b3829bb80a92c19468d796d0b928c9a5e1d66198c3', hash('sha256', $showObrazac3));
+        $this->assertSame('5bf5ae2c8d95b91a722605c82ee765faaa7494206cd8d39eec26db383de65d27', hash('sha256', $createObrazac3));
+        $this->assertSame('6d63fa99b51c7879d3fec1417c53338cbd56c0378817095f2441aa8a4aec9f17', hash('sha256', $showObrazac3));
         $this->assertSame('219ce30bee90a0b00e87db8d6a0591fbc609c242e59a8baa60e7032f9a2973d3', hash('sha256', $this->firstStyleBlock($create)));
         $this->assertSame('ca68b4b5c41be2686de4ea1ead34bab7206263ae1f19af27b294d7b4af67d6d3', hash('sha256', $this->firstStyleBlock($show)));
     }
@@ -833,6 +833,109 @@ class CanonicalIndividualScoringTest extends TestCase
             session('errors')->first('error')
         );
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $application->id)->count());
+    }
+
+    public function test_obrazac_3_scoring_labels_bonus_and_threshold_match_target(): void
+    {
+        // Worktree vendor is junctioned to main; assert against this tree's resolved sources.
+        $root = dirname(__DIR__, 2);
+        $createPath = $root.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'views'.DIRECTORY_SEPARATOR.'evaluation'.DIRECTORY_SEPARATOR.'create.blade.php';
+        $showPath = $root.DIRECTORY_SEPARATOR.'resources'.DIRECTORY_SEPARATOR.'views'.DIRECTORY_SEPARATOR.'evaluation'.DIRECTORY_SEPARATOR.'show.blade.php';
+        $applicationPath = $root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Models'.DIRECTORY_SEPARATOR.'Application.php';
+        $scoringProfilePath = $root.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR.'Support'.DIRECTORY_SEPARATOR.'ScoringProfileConfig.php';
+
+        $this->assertFileExists($createPath);
+        $this->assertFileExists($showPath);
+        $this->assertFileExists($applicationPath);
+        $this->assertFileExists($scoringProfilePath);
+
+        $create = file_get_contents($createPath);
+        $show = file_get_contents($showPath);
+        $applicationSource = file_get_contents($applicationPath);
+        require_once $scoringProfilePath;
+
+        $criterion7 = 'Podaci o podnositeljki prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti)';
+        $criterion8 = 'Podnositeljka prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.';
+        $criterion10 = 'Usmeno obrazloženje biznis plana (podnositeljka prijave je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za njenu realizaciju i spremno odgovara na sva pitanja).';
+        $bonusLabel = 'Fizičko lice koje planira registraciju preduzetnice ili osnivanje privrednog društva (2 boda)';
+        $thresholdNote = 'Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.';
+
+        $zenskoCriteria = \App\Support\ScoringProfileConfig::zenskoCriteria();
+        $this->assertSame($criterion7, $zenskoCriteria[7]);
+        $this->assertSame($criterion8, $zenskoCriteria[8]);
+        $this->assertSame($criterion10, $zenskoCriteria[10]);
+
+        $defaultProfileCriteria = \App\Support\ScoringProfileConfig::for(null)->criteria;
+        $this->assertSame($criterion7, $defaultProfileCriteria[7]);
+        $this->assertSame($criterion8, $defaultProfileCriteria[8]);
+        $this->assertSame($criterion10, $defaultProfileCriteria[10]);
+
+        $this->assertStringContainsString('$criteria = $scoringProfile->criteria;', $create);
+        $this->assertStringContainsString('$criteria = $scoringProfile->criteria;', $show);
+
+        foreach ([$create, $show] as $blade) {
+            $this->assertStringContainsString($thresholdNote, $blade);
+        }
+
+        $this->assertStringContainsString($bonusLabel, $create);
+        $this->assertStringContainsString('return $finalScore >= 30;', $applicationSource);
+
+        // Read-only guard: youth criteria SSOT must remain untouched by ŽP label updates.
+        $youthCriteria = \App\Support\ScoringProfileConfig::youthCriteria();
+        $this->assertSame(
+            'Podaci o preduzetniku (fizičko lice/preduzetnik posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
+            $youthCriteria[7]
+        );
+        $this->assertSame(
+            'Preduzetnik planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
+            $youthCriteria[8]
+        );
+        $this->assertSame(
+            'Usmeno obrazloženje biznis plana (preduzetnik je uvjerljivi siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovora na sva pitanja).',
+            $youthCriteria[10]
+        );
+    }
+
+    public function test_chairman_cannot_persist_new_business_bonus_on_registered_preduzetnica(): void
+    {
+        [$application, $president] = $this->readyToScore();
+        $application->forceFill([
+            'applicant_type' => 'preduzetnica',
+            'is_registered' => true,
+            'business_stage' => 'započinjanje',
+        ])->save();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store', $application), $this->scorePayload([
+                'bonus_new_business' => '1',
+                'bonus_info_day' => '1',
+            ]))
+            ->assertRedirect();
+
+        $application->refresh();
+        $this->assertFalse((bool) $application->bonus_new_business);
+        $this->assertTrue((bool) $application->bonus_info_day);
+        $this->assertSame(1, $application->getBonusScore());
+    }
+
+    public function test_chairman_can_persist_new_business_bonus_on_unregistered_fizicko_lice(): void
+    {
+        [$application, $president] = $this->readyToScore();
+        $application->forceFill([
+            'applicant_type' => 'fizicko_lice',
+            'is_registered' => false,
+            'business_stage' => 'započinjanje',
+        ])->save();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store', $application), $this->scorePayload([
+                'bonus_new_business' => '1',
+            ]))
+            ->assertRedirect();
+
+        $application->refresh();
+        $this->assertTrue((bool) $application->bonus_new_business);
+        $this->assertSame(2, $application->getBonusScore());
     }
 
     public function test_shared_competition_ranks_for_equal_final_scores_pattern_a(): void

@@ -755,7 +755,12 @@
                         </div>
                         <input type="hidden" name="has_registered_business" value="{{ (bool) ($application->is_registered ?? false) ? '1' : '0' }}">
                         <div id="napomenaNemaRegistraciju" class="info-box conditional-field {{ ! (bool) ($application->is_registered ?? false) ? 'show' : '' }}">
-                            <strong>Napomena:</strong> Ukoliko {{ $isOmladinsko ? 'podnosilac' : 'podnositeljka' }} biznis plana nema registrovanu djelatnost, u slučaju da {{ $isOmladinsko ? 'mu' : 'joj' }} sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima ili na način definisan pravilima djelatnosti kojom namjerava da se bavi, najkasnije do dana potpisivanja ugovora.
+                            <strong>Napomena:</strong>
+                            @if($isOmladinsko)
+                                Ukoliko podnosilac prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva mu budu odobrena, dužan je da prije zaključenja ugovora o dodjeli sredstava izvrši registraciju preduzetnika, odnosno osnuje i registruje privredno društvo, u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi dokaz o registraciji kod nadležnog organa, dokaz o poreskoj registraciji i dokaz o otvorenom poslovnom računu.
+                            @else
+                                Ukoliko podnositeljka prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva joj budu odobrena, dužna je da prije zaključenja ugovora o dodjeli sredstava izvrši registraciju preduzetnice, odnosno osnuje i registruje privredno društvo, u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi dokaz o registraciji kod nadležnog organa, dokaz o poreskoj registraciji i dokaz o otvorenom poslovnom računu.
+                            @endif
                         </div>
                     </div>
 
@@ -769,9 +774,8 @@
                                 <input type="text" name="registration_form" id="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? ($defaultData['registration_form'] ?? '')) }}" placeholder="Preduzetnik / DOO / itd.">
                             </div>
                             <div class="form-group">
-                                <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "DOO":</label>
+                                <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
-                                <div class="form-text">*Nositeljka biznisa je osnivačica ili jedna od osnivača i izvršna direktorica društva</div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -2406,32 +2410,11 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSubmitButton();
         @endif
         
-        // Dinamičko mijenjanje teksta labela za "company_name" u zavisnosti od "Oblika registracije"
-        const registrationFormInput = document.getElementById('registration_form');
+        // Q4 company_name label remains the TARGET static text (no dynamic legacy overrides).
         const companyNameLabel = document.getElementById('company_name_label');
-        
-        function updateCompanyNameLabel() {
-            if (!registrationFormInput || !companyNameLabel) return;
-            
-            const registrationForm = registrationFormInput.value.trim().toLowerCase();
-            
-            if (registrationForm === 'preduzetnik') {
-                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik":';
-            } else if (registrationForm !== '') {
-                // Za DOO ili ostale oblike registracije
-                companyNameLabel.textContent = 'Ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "' + registrationFormInput.value + '" ili ostali:';
-            } else {
-                // Default tekst ako nije ništa uneseno
-                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "DOO":';
-            }
-        }
-        
-        // Ažuriraj label pri učitavanju stranice
-        if (registrationFormInput && companyNameLabel) {
-            updateCompanyNameLabel();
-            // Pratiti promjene u polju
-            registrationFormInput.addEventListener('input', updateCompanyNameLabel);
-            registrationFormInput.addEventListener('change', updateCompanyNameLabel);
+        const companyNameLabelTarget = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:';
+        if (companyNameLabel) {
+            companyNameLabel.textContent = companyNameLabelTarget;
         }
 
         const pibField = document.getElementById('pib');

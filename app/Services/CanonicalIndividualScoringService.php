@@ -470,9 +470,12 @@ class CanonicalIndividualScoringService
             abort(403, self::BONUS_LOCKED_MESSAGE);
         }
 
+        $wantsNewBusinessBonus = (bool) ($flags['bonus_new_business'] ?? false);
+        $bonusNewBusiness = $wantsNewBusinessBonus && $application->isEligibleForNewBusinessBonus();
+
         $application->forceFill([
             'bonus_info_day' => (bool) ($flags['bonus_info_day'] ?? false),
-            'bonus_new_business' => (bool) ($flags['bonus_new_business'] ?? false),
+            'bonus_new_business' => $bonusNewBusiness,
             'bonus_zavod_nezaposleni' => (bool) ($flags['bonus_zavod_nezaposleni'] ?? false),
             'bonus_green_innovative' => (bool) ($flags['bonus_green_innovative'] ?? false),
         ])->save();

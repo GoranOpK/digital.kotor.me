@@ -104,4 +104,25 @@ class KnApplicationClassificationTest extends TestCase
             KnApplicationClassification::mysqlEnumValues()
         );
     }
+
+    public function test_new_business_bonus_eligibility_matches_unregistered_planned_paths_only(): void
+    {
+        // A: FL plans entrepreneur registration
+        $this->assertTrue(KnApplicationClassification::isEligibleForNewBusinessBonus('fizicko_lice', false));
+        // B: FL plans company founding (ŽP doo / omladinsko privredno_drustvo)
+        $this->assertTrue(KnApplicationClassification::isEligibleForNewBusinessBonus('doo', false));
+        $this->assertTrue(KnApplicationClassification::isEligibleForNewBusinessBonus('privredno_drustvo', false));
+
+        // C: registered entrepreneur
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('preduzetnica', true));
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('preduzetnik', true));
+        // D: registered company
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('doo', true));
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('privredno_drustvo', true));
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('ostalo', true));
+
+        // business_stage is not consulted; registered type without registration flag still fails when type is registered entrepreneur
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('preduzetnica', false));
+        $this->assertFalse(KnApplicationClassification::isEligibleForNewBusinessBonus('ostalo', false));
+    }
 }

@@ -8,15 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.17
-**Datum:** 2026-09-12
+**Verzija:** 1.0.19
+**Datum:** 2026-09-17
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
-* Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md`
-* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
-* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
+* Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
+* Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
+* Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
+* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md`
 
 Ovaj dokument **ne** mijenja `KN-BM-001`. Zajednička pravila se ne ponavljaju osim koliko je potrebno da profil bude samodovoljan (`BM-KN-008`).
 
@@ -46,6 +47,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.15 | 2026-09-09 | Controlled corrective. **PO USVOJENO:** dodatni bodovi smiju se unositi i mijenjati samo dok je cjelokupan ciklus individualnog bodovanja još otvoren. U trenutku kada svih pet kanonskih mjesta završi bodovanje svih prijava u ciklusu, dodatni bodovi se trajno zaključavaju **prije** otključavanja zbirnih rezultata i rang-liste. Nema naknadne izmjene ni postupka ponovnog otvaranja. |
 | 1.0.16 | 2026-09-11 | Controlled corrective. **PO USVOJENO:** §13.6 prioritet finansiranja kod jednakih bodova — prednost otpočinjanja prije odluke Komisije i u mješovitim grupama; prioritet se razrješava samo u obimu potrebnom za raspodjelu; odluka Komisije većinom najmanje 3/5 uz obrazloženje; bodovi i dijeljene rang-pozicije se ne mijenjaju. Detalj toka i gate-ova: `KN-FS-003`. **Nije** runtime produkcijski prihvaćeno. |
 | 1.0.17 | 2026-09-12 | Dokumentacioni closeout: V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status dokumenta ostaje `USVOJEN`. Bez novih poslovnih zahtjeva. OUT_OF_V1 / van Platforme granice nepromijenjene. Napomena da dokument nije runtime izvršni izvor ostaje. |
+| 1.0.18 | 2026-09-17 | ŽP V1 documentation corrective nakon runtime Patch 1–6: terminologija podnositeljke / osnivačice / izvršne direktorice; Obrazac 2 napomena o registraciji prije ugovora i Q4; eliminatorni kriterijum 3 → član 11; K7/K8/K10; precizan +2 bonus; granica Obrazac 4/4a van elektronskog Konkursi V1. Status ostaje `USVOJEN`. Kod nije mijenjan. |
+| 1.0.19 | 2026-09-17 | Patch 9 terminologija: company eligibility / document labels vraćeni na doslovnu formulaciju čl. 3 („osnivačica ili jedna od osnivačica i izvršna direktorica“ / odgovarajući padež). Bez uvođenja same-person enforcementa (`founder_name` / `director_name` ostaju odvojena). Status ostaje `USVOJEN`. |
 
 Napomena:
 
@@ -60,6 +63,10 @@ Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene o
 Formalna otvorena pravna pitanja OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvorena su poslovnom odlukom u verziji 1.0.1 / `KN-PATCH-BM-001`. Kanonska pravila su u Poglavlju 13.
 
 **V1 platformski closeout (v1.0.17):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status ovog poslovnog dokumenta ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove poslovne zahtjeve. Aktivnosti već definisane kao van V1 / van Platforme ostaju van V1. Dokument ostaje SSOT poslovnih pravila; napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi.
+
+**ŽP V1 documentation corrective (v1.0.18):** Usklađivanje ACTIVE poslovnog teksta sa finalnim ŽP V1 modelom i runtime-om nakon Patch 1–6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan ovim dokumentacionim korakom.
+
+**Patch 9 Article 3 wording (v1.0.19):** Terminologija company eligibility / document labels vraćena na doslovnu formulaciju čl. 3, bez uvođenja same-person enforcementa. Status dokumenta ostaje `USVOJEN`.
 
 ---
 
@@ -204,7 +211,7 @@ Podnositeljka je žensko lice koje učestvuje na Konkursu podnošenjem Prijave, 
 
 * preduzetnica sa prebivalištem na teritoriji opštine Kotor; ili
 * fizičko lice koje tek planira registraciju djelatnosti, pod uslovima Odluke; ili
-* nositeljka biznisa u privrednom društvu (osnivačica ili jedna od osnivača i izvršna direktorica) čije sjedište je na teritoriji opštine Kotor.
+* osnivačica ili jedna od osnivačica i izvršna direktorica privrednog društva čije sjedište je na teritoriji opštine Kotor.
 
 Ove tri kategorije prava učešća **ne** izjednačavaju se sa kanonskim identitetom naloga, sa činjenicom da registrovan biznis već postoji, niti sa fazom biznisa. Razrada: §7.2.
 
@@ -502,13 +509,21 @@ Platforma V1:
 
 ### Obrazac 2
 
+Obrazac 2 je elektronski biznis plan Prijave. Zadržava šest poslovnih cjelina (osnovni podaci, marketing, poslovanje/operacije, finansije, ljudi, rizici).
+
 Obrazac 2 sadrži pitanje: da li imate registrovan biznis?
 
 To je **ista** poslovna činjenica kao registrovanost utvrđena u toku Prijave. Ne postoji drugi, nezavisni odgovor kojim bi se te dvije činjenice mogle razići.
 
-Ako je odgovor **NE**, podaci o registrovanoj djelatnosti nijesu obavezni.
+Ako je odgovor **NE**, podaci o registrovanoj djelatnosti nijesu obavezni. Neregistrovana podnositeljka prijave bira planirani oblik obavljanja djelatnosti (preduzetnica ili privredno društvo) u skladu sa tokom Prijave.
+
+**Napomena za neregistrovanu podnositeljku:** Ukoliko podnositeljka prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva joj budu odobrena, dužna je da prije zaključenja ugovora o dodjeli sredstava izvrši registraciju preduzetnice, odnosno osnuje i registruje privredno društvo, u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi dokaz o registraciji kod nadležnog organa, dokaz o poreskoj registraciji i dokaz o otvorenom poslovnom računu.
+
+**Q4 — trgovački / naziv subjekta:** „Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:“
 
 Ako je odgovor **DA**, primjenjuju se odgovarajući podaci i dokumentacija za registrovani biznis.
+
+Elektronski Obrazac 2 **ne** zahtijeva polje Potpis niti papirni footer kao platformsku funkcionalnost.
 
 ---
 
@@ -602,7 +617,7 @@ Tri eliminatorna kriterijuma, ovim redoslijedom, tretiraju se kao PO-potvrđeni 
 
 1. Nedostatak formalnih uslova za kandidovanje biznis plana (nepotpuna dokumentacija);
 2. Preduzetnica/društvo nije dostavila/lo Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine;
-3. Biznis plan nije vezan za prioritetne oblasti navedene u članu 10 ove Odluke.
+3. Biznis plan nije vezan za prioritetne oblasti navedene u članu 11 ove Odluke.
 
 Sva tri kriterijuma su dio Obrasca 3. Predstavljaju tri zasebne i eksplicitno vidljive stavke, redoslijedom **1 → 2 → 3**. Utvrđuje ih i potvrđuje **isključivo predsjednik Komisije**. Ostali članovi Komisije vide rezultate, ali ih **ne** mogu mijenjati.
 
@@ -610,7 +625,7 @@ Formulacije stavki Obrasca 3, sa istom poslovnom semantikom (**Da** = nema elimi
 
 1. **Dostavljena su sva potrebna dokumenta?** a. Da b. Ne\*
 2. **Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?** a. Da b. Ne\*
-3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?** a. Da b. Ne\*
+3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?** a. Da b. Ne\*
 
 Za sva tri kriterijuma **Da** je podrazumijevano označeno. Predsjednik mijenja odgovor na **Ne\*** kada utvrdi eliminatorni razlog.
 
@@ -710,10 +725,10 @@ Pozitivni kriterijumi prema čl. 19 Odluke 027/26:
 4. Prepoznata je i navedena konkurencija kao i slabosti i snage iste.
 5. Jasno su navedeni potrebni resursi i identifikovani dobavljači.
 6. Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).
-7. Podaci o preduzetnici (fizičko lice/preduzetnica posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).
-8. Preduzetnica planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.
+7. Podaci o podnositeljki prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti);
+8. Podnositeljka prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje;
 9. Razvijena matrica rizika je jasna i logična.
-10. Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).
+10. Usmeno obrazloženje biznis plana (podnositeljka prijave je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za njenu realizaciju i spremno odgovara na sva pitanja).
 
 ## 12.2. Skala
 
@@ -771,7 +786,7 @@ Predsjednik Komisije elektronski unosi dodatne bodove ukoliko ih ima (čl. 20).
 Dodatni bodovi prema čl. 19:
 
 * **+1** — Podnositeljka je prisustvovala Info danu i obuci za pisanje biznis plana koju organizuje Opština Kotor u tekućoj godini;
-* **+2** — Podnositeljka je fizičko lice koje tek planira da registruje biznis;
+* **+2** — Podnositeljka je **neregistrovano fizičko lice** koje planira registraciju **preduzetnice**, ili **neregistrovano fizičko lice** koje planira osnivanje **privrednog društva**. Registrovana preduzetnica i registrovano privredno društvo **nemaju** pravo na ovaj bonus;
 * **+2** — Podnositeljka se nalazi na evidenciji Zavoda za zapošljavanje duže od 12 mjeseci;
 * **+3** — biznis ideja je inovativna i/ili „zelena“, prema definicijama čl. 19.
 
@@ -1067,6 +1082,8 @@ Van Platforme u V1 ostaju, osim gdje je ovaj profil već eksplicitno drugačije 
 * kontrola namjenskog korišćenja;
 * naknadne izmjene Odluke zbog odustanka.
 
+**Obrazac 4 / Obrazac 4a — granica elektronskog Konkursi V1:** Odluka propisuje **Obrazac 4 — Izvještaj o realizaciji biznis plana** i **Obrazac 4a — Finansijski izvještaj**. Korisnica nakon dodjele sredstava podnosi ih Sekretarijatu zajedno sa propisanom pratećom dokumentacijom. Poslovna obaveza izvještavanja **postoji**. Obrazac 4 i Obrazac 4a **nijesu** dio elektronskog workflow-a modula Konkursi u ŽP V1. Postojeći `reports/*` runtime **nije** predmet ovog profila.
+
 ## 15.4. Elektronski primjerak zvanične Odluke na Platformi
 
 Objavljivanje već donesene zvanične Odluke na digital.kotor.me odnosi se na **elektronski primjerak** te Odluke.
@@ -1111,4 +1128,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.17**
+**Kraj dokumenta KN-BM-003 v1.0.19**

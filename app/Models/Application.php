@@ -168,15 +168,15 @@ class Application extends Model
     public static function registeredStartingCommercialCompanyDocumentLabels(): array
     {
         return [
-            'licna_karta' => 'Ovjerena kopija lične karte nositeljke biznisa',
+            'licna_karta' => 'Ovjerena kopija lične karte osnivačice ili jedne od osnivačica i izvršne direktorice',
             'crps_resenje' => 'Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)',
             'pib_resenje' => 'Rješenje o registraciji kod PJ Poreske uprave',
             'pdv_resenje' => 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik',
             'statut' => 'Važeći Statut društva',
             'karton_potpisa' => 'Važeći karton deponovanih potpisa',
-            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv podnositeljke prijave/nositeljke biznisa ne vodi krivični postupak',
-            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
-            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv podnositeljke prijave/osnivačice ili jedne od osnivačica i izvršne direktorice ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime podnositeljke prijave/osnivačice ili jedne od osnivačica i izvršne direktorice, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave/osnivačice ili jedne od osnivačica i izvršne direktorice, ne starije od 30 dana',
             'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
             'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
         ];
@@ -190,10 +190,10 @@ class Application extends Model
     public static function unregisteredStartingCommercialCompanyDocumentLabels(): array
     {
         return [
-            'licna_karta' => 'Ovjerena kopija lične karte nositeljke biznisa',
-            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv podnositeljke prijave/nositeljke biznisa ne vodi krivični postupak',
-            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
-            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave/nositeljke biznisa, ne starije od 30 dana',
+            'licna_karta' => 'Ovjerena kopija lične karte podnositeljke prijave',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv podnositeljke prijave ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime podnositeljke prijave, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave, ne starije od 30 dana',
             'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
             'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
         ];
@@ -205,7 +205,7 @@ class Application extends Model
     public static function startingCommercialCompanyFormTitles(): array
     {
         return [
-            'obrazac_1b' => 'Obrazac 1b – Prijava na konkurs',
+            'obrazac_1b' => 'Obrazac 1b – privredno društvo',
             'obrazac_2' => 'Obrazac 2 – Biznis plan',
         ];
     }
@@ -265,17 +265,17 @@ class Application extends Model
     public static function registeredDevelopingCommercialCompanyDocumentLabels(): array
     {
         return [
-            'licna_karta' => 'Ovjerena kopija lične karte nositeljke biznisa',
+            'licna_karta' => 'Ovjerena kopija lične karte osnivačice ili jedne od osnivačica i izvršne direktorice',
             'crps_resenje' => 'Rješenje o upisu u Centralni registar privrednih subjekata (CRPS)',
             'pib_resenje' => 'Rješenje o registraciji kod PJ Poreske uprave',
             'pdv_resenje' => 'Rješenje o registraciji za PDV, ukoliko je PDV obveznik, odnosno potvrda da nije PDV obveznik',
             'statut' => 'Važeći Statut društva',
             'karton_potpisa' => 'Važeći karton deponovanih potpisa',
             'godisnji_racuni' => 'Kompletan set godišnjih računa za prethodnu godinu: bilans stanja, bilans uspjeha, analitika kupaca i dobavljača; ukoliko društvo nema analitiku kupaca jer posluje isključivo sa fizičkim licima i naplatu vrši neposredno preko fiskalne kase, dostavlja periodični izvještaj fiskalne kase',
-            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv nositeljke biznisa i društva ne vodi krivični postupak',
-            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime nositeljke biznisa i društva, ne starije od 30 dana',
-            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime nositeljke biznisa i društva, ne starije od 30 dana',
-            'potvrda_upc_porezi' => 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa na ime nositeljke biznisa i društva, ne starija od 30 dana',
+            'potvrda_neosudjivanost' => 'Potvrda Osnovnog suda da se protiv osnivačice ili jedne od osnivačica i izvršne direktorice i društva ne vodi krivični postupak',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju lokalnih obaveza na ime osnivačice ili jedne od osnivačica i izvršne direktorice i društva, ne starije od 30 dana',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje nadležnog organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime osnivačice ili jedne od osnivačica i izvršne direktorice i društva, ne starije od 30 dana',
+            'potvrda_upc_porezi' => 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa na ime osnivačice ili jedne od osnivačica i izvršne direktorice i društva, ne starija od 30 dana',
             'ioppd_obrazac' => 'IOPPD obrazac za posljednji mjesec',
             'potvrda_zavod_nezaposleni' => 'Potvrda Zavoda za zapošljavanje da se nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci',
             'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
@@ -538,9 +538,31 @@ class Application extends Model
     }
 
     /**
+     * Snapshot eligibility for Obrazac 3 „new business“ +2 bonus.
+     * Uses saved applicant_type + is_registered (start-context facts),
+     * not live identity and not business_stage alone.
+     */
+    public function isEligibleForNewBusinessBonus(): bool
+    {
+        return KnApplicationClassification::isEligibleForNewBusinessBonus(
+            $this->applicant_type,
+            (bool) $this->is_registered
+        );
+    }
+
+    /**
+     * Effective points for the new-business bonus (0 or 2).
+     * Flag alone is insufficient when the application is not eligible.
+     */
+    public function newBusinessBonusPoints(): int
+    {
+        return ($this->bonus_new_business && $this->isEligibleForNewBusinessBonus()) ? 2 : 0;
+    }
+
+    /**
      * Vraća zbir dodatnih bodova na osnovu dodatnih kriterijuma:
      * - Prisustvo Info danu i radionici (1 bod)
-     * - Novi biznis (2 boda)
+     * - Novi biznis (2 boda) — only when eligible (unregistered FL planning entrepreneur/company)
      * - Evidencija Zavoda za zapošljavanje duže od 12 mjeseci (2 boda)
      * - Inovativna i/ili „zelena“ ideja (3 boda)
      */
@@ -551,9 +573,7 @@ class Application extends Model
         if ($this->bonus_info_day) {
             $bonus += 1;
         }
-        if ($this->bonus_new_business) {
-            $bonus += 2;
-        }
+        $bonus += $this->newBusinessBonusPoints();
         if ($this->bonus_zavod_nezaposleni) {
             $bonus += 2;
         }
@@ -1123,7 +1143,7 @@ class Application extends Model
         $documentLabels = [];
         $documentLabels['potvrda_zavod_nezaposleni'] = self::getZavodNezaposleniDocumentLabel();
         $documentLabels['licna_karta'] = ($isDooOstalo && $isRazvoj)
-            ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)'
+            ? 'Ovjerenu kopiju lične karte osnivačice ili jedne od osnivačica i izvršne direktorice'
             : (($isDooOstalo && $isZapocinjanje) ? 'Ovjerenu kopiju lične karte' : 'Ovjerena kopija lične karte');
         $documentLabels['crps_resenje'] = 'Rješenje o upisu u CRPS' . (($isPreduzetnica && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : (($isDooOstalo && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : ''));
         if ($isPreduzetnica && $isZapocinjanje) {
@@ -1153,18 +1173,18 @@ class Application extends Model
             : ($isPreduzetnica
                 ? 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno preduzetnice izdatu od Osnovnog suda'
                 : (($isDooOstalo && $isZapocinjanje)
-                    ? 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda'
+                    ? 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno osnivačice ili jedne od osnivačica i izvršne direktorice izdatu od strane Osnovnog suda'
                     : (($isDooOstalo && $isRazvoj)
-                        ? 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda'
+                        ? 'Potvrda da se ne vodi krivični postupak na ime društva i na ime osnivačice ili jedne od osnivačica i izvršne direktorice izdatu od strane Osnovnog suda'
                         : 'Potvrda o neosuđivanosti')));
         if ($this->applicant_type === 'preduzetnica' && $isRazvoj) {
             $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
         } elseif ($isPreduzetnica && ($isZapocinjanje || $isRazvoj)) {
             $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
         } elseif ($isDooOstalo && $isRazvoj) {
-            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime osnivačice ili jedne od osnivačica i izvršne direktorice i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
         } elseif ($isDooOstalo && $isZapocinjanje) {
-            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno osnivačice ili jedne od osnivačica i izvršne direktorice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
         } else {
             $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
         }
@@ -1173,9 +1193,9 @@ class Application extends Model
         } elseif ($isPreduzetnica) {
             $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno preduzetnice';
         } elseif ($isDooOstalo && $isRazvoj) {
-            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime osnivačice ili jedne od osnivačica i izvršne direktorice i na ime društva';
         } elseif ($isDooOstalo && $isZapocinjanje) {
-            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice)';
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno osnivačice ili jedne od osnivačica i izvršne direktorice';
         } else {
             $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
         }
@@ -1184,7 +1204,7 @@ class Application extends Model
             : (($isPreduzetnica && $isRazvoj)
                 ? 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana na ime preduzetnika'
                 : (($isDooOstalo && $isRazvoj)
-                    ? 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva'
+                    ? 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime osnivačice ili jedne od osnivačica i izvršne direktorice i na ime društva'
                     : 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza'));
         $documentLabels['ioppd_obrazac'] = ($this->applicant_type === 'preduzetnica' && $isRazvoj)
             ? 'Odgovarajući obrazac ovjeren od strane Poreske uprave za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od strane Poreske uprave da preduzetnica nema zaposlenih'
@@ -1601,8 +1621,8 @@ class Application extends Model
             'business_plan_name' => 'Naziv biznis plana',
             'business_stage' => 'Faza (započinjanje/razvoj)',
             'business_area' => 'Područje djelatnosti',
-            'founder_name' => 'Ime i prezime osnivača',
-            'director_name' => 'Ime i prezime direktora',
+            'founder_name' => 'Ime i prezime osnivačice/osnivačica',
+            'director_name' => 'Ime i prezime izvršne direktorice',
             'company_seat' => 'Sjedište',
             'physical_person_name' => 'Ime i prezime (fizičko lice)',
             'physical_person_phone' => 'Telefon (fizičko lice)',
@@ -1612,7 +1632,7 @@ class Application extends Model
             'preduzetnik_phone' => 'Telefon (preduzetnica)',
             'preduzetnik_email' => 'E-mail (preduzetnica)',
             'preduzetnik_address' => 'Adresa (preduzetnica)',
-            'doo_name' => 'Ime i prezime nositeljke biznisa',
+            'doo_name' => 'Ime i prezime podnositeljke prijave',
             'doo_phone' => 'Telefon (1b)',
             'doo_email' => 'E-mail (1b)',
             'doo_address' => 'Adresa (1b)',

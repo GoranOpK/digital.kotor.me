@@ -603,7 +603,7 @@
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
 
-                            <label class="form-label form-label-large" style="margin-top: 16px;">Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?</label>
+                            <label class="form-label form-label-large" style="margin-top: 16px;">Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?</label>
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input type="radio" name="criterion_3" value="1" {{ $criterionYes('criterion_3', $eliminatoryCheck?->criterion_3) ? 'checked' : '' }} required>
@@ -617,6 +617,8 @@
                             @error('criterion_3')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
+
+                            <p style="margin-top: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE }}</p>
 
                             <label class="form-label" style="margin-top: 16px;">Napomena</label>
                             <textarea name="note" class="form-control" rows="4" placeholder="Napomena Obrasca 3">{{ old('note', $eliminatoryCheck?->note) }}</textarea>
@@ -642,10 +644,11 @@
                             <div style="margin-bottom: 12px;">
                                 <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_2) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_2) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
                             </div>
-                            <div style="margin-bottom: 8px; font-weight: 600;">Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?</div>
+                            <div style="margin-bottom: 8px; font-weight: 600;">Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?</div>
                             <div style="margin-bottom: 12px;">
                                 <strong>{{ $eliminatoryCheck ? ($eliminatoryCheck->criterionIsTrue($eliminatoryCheck->criterion_3) ? 'Da' : ($eliminatoryCheck->criterionIsFalse($eliminatoryCheck->criterion_3) ? 'Ne*' : 'Nije označeno')) : 'Nije označeno' }}</strong>
                             </div>
+                            <p style="margin-bottom: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE }}</p>
                             <div style="margin-bottom: 8px; font-weight: 600;">Napomena</div>
                             <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $eliminatoryCheck?->note ?: '—' }}</div>
                             <div>
@@ -859,10 +862,19 @@
                                 </td>
                             </tr>
 
-                            {{-- 2) Novi biznis – 2 boda --}}
+                            {{-- 2) Novi biznis – 2 boda (samo neregistrovano FL: planira preduzetnicu ili PD) --}}
+                            @php
+                                $eligibleNewBusinessBonus = $application->isEligibleForNewBusinessBonus();
+                                $effectiveNewBusinessBonus = $application->newBusinessBonusPoints() > 0;
+                            @endphp
                             <tr>
                                 <td class="criterion-col">
-                                    Novi biznis – podnositeljka prijave nema već registrovanu djelatnost (2 boda)
+                                    Fizičko lice koje planira registraciju preduzetnice ili osnivanje privrednog društva (2 boda)
+                                    @if(! $eligibleNewBusinessBonus)
+                                        <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280;">
+                                            Nije primjenjivo na ovu prijavu (registrovani subjekt ili neispravan tip).
+                                        </div>
+                                    @endif
                                 </td>
                                 @foreach($allMembers as $member)
                                     @php
@@ -870,7 +882,7 @@
                                         $isChairmanMember = $member->position === 'predsjednik';
                                     @endphp
                                     <td style="text-align: center;">
-                                        @if($isCurrentMember && $isChairmanMember && $scoringIsAllowed && !$isRejected && !($isApplicant ?? false))
+                                        @if($eligibleNewBusinessBonus && $isCurrentMember && $isChairmanMember && $scoringIsAllowed && !$isRejected && !($isApplicant ?? false))
                                             <input 
                                                 type="checkbox" 
                                                 name="bonus_new_business" 
@@ -878,7 +890,7 @@
                                                 {{ old('bonus_new_business', $application->bonus_new_business ?? false) ? 'checked' : '' }}
                                             >
                                         @else
-                                            @if(($application->bonus_new_business ?? false) && $isChairmanMember)
+                                            @if($effectiveNewBusinessBonus && $isChairmanMember)
                                                 ✓
                                             @else
                                                 —
@@ -887,7 +899,7 @@
                                     </td>
                                 @endforeach
                                 <td class="average-col">
-                                    {{ ($application->bonus_new_business ?? false) ? '2.00' : '—' }}
+                                    {{ $effectiveNewBusinessBonus ? '2.00' : '—' }}
                                 </td>
                             </tr>
 
@@ -998,7 +1010,7 @@
                     </table>
 
                     <div class="warning-box notes-info-box" style="margin-top: 16px;">
-                        <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
+                        <strong>Napomena:</strong> Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.
                     </div>
                     @endif
 

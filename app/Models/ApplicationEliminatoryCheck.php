@@ -15,8 +15,10 @@ class ApplicationEliminatoryCheck extends Model
     public const CRITERION_LABELS = [
         1 => 'Dostavljena su sva potrebna dokumenta?',
         2 => 'Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?',
-        3 => 'Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?',
+        3 => 'Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?',
     ];
+
+    public const NE_STAR_FOOTNOTE = '* Odgovor \'Ne\' predstavlja eliminatorni razlog. U slučaju utvrđenog najmanje jednog eliminatornog razloga, biznis plan se ne boduje, osim ako se u postupku po prigovoru otklone svi utvrđeni eliminatorni razlozi.';
 
     protected $fillable = [
         'application_id',

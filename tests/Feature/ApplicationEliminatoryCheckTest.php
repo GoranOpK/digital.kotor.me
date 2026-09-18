@@ -41,12 +41,16 @@ class ApplicationEliminatoryCheckTest extends TestCase
 
         $pos1 = strpos($html, 'Dostavljena su sva potrebna dokumenta?');
         $pos2 = strpos($html, 'Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem');
-        $pos3 = strpos($html, 'Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?');
+        $pos3 = strpos($html, 'Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?');
 
         $this->assertNotFalse($pos1);
         $this->assertNotFalse($pos2);
         $this->assertNotFalse($pos3);
         $this->assertTrue($pos1 < $pos2 && $pos2 < $pos3);
+
+        $this->assertStringNotContainsString('članu 10 Odluke', $html);
+        // Blade {{ }} HTML-escapes the footnote (e.g. 'Ne' → &#039;Ne&#039;).
+        $this->assertStringContainsString(e(\App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE), $html);
 
         $this->assertMatchesRegularExpression('/name="criterion_1"[^>]*value="1"[^>]*checked/', $html);
         $this->assertMatchesRegularExpression('/name="criterion_2"[^>]*value="1"[^>]*checked/', $html);

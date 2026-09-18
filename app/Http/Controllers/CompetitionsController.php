@@ -197,11 +197,11 @@ class CompetitionsController extends Controller
                 } elseif ($docType === 'karton_potpisa') {
                     $label = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'potvrda_neosudjivanost') {
-                    $label = 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                    $label = 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno osnivačice ili jedne od osnivačica i izvršne direktorice izdatu od strane Osnovnog suda';
                 } elseif ($docType === 'uvjerenje_opstina_porezi') {
-                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno osnivačice ili jedne od osnivačica i izvršne direktorice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
-                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice)';
+                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno osnivačice ili jedne od osnivačica i izvršne direktorice';
                 } elseif ($docType === 'dokaz_ziro_racun') {
                     $label = 'Dokaz o broju poslovnog žiro računa društva (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'predracuni_nabavka') {
@@ -209,7 +209,7 @@ class CompetitionsController extends Controller
                 } elseif ($docType === 'godisnji_racuni') {
                     $label = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu';
                 } elseif ($docType === 'potvrda_upc_porezi') {
-                    $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa i na ime društva';
+                    $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime osnivačice ili jedne od osnivačica i izvršne direktorice i na ime društva';
                 } elseif ($docType === 'ioppd_obrazac') {
                     $label = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
                 }
@@ -242,12 +242,12 @@ class CompetitionsController extends Controller
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)');
             array_unshift($requiredDocuments, $competition->type === 'omladinsko'
                 ? 'Prijava na konkurs za podsticaj preduzetništva mladih (obrazac 1a)'
-                : 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
+                : 'Obrazac 1a – preduzetnica');
         } elseif ($previewApplicantType === 'doo' || $previewApplicantType === 'ostalo' || $previewApplicantType === 'privredno_drustvo' || $applicantType === 'doo' || $applicantType === 'ostalo' || $applicantType === 'privredno_drustvo') {
             array_unshift($requiredDocuments, 'Popunjenu formu za biznis plan (obrazac 2)');
             array_unshift($requiredDocuments, $competition->type === 'omladinsko'
                 ? 'Prijavu na konkurs za podsticaj preduzetništva mladih (obrazac 1b)'
-                : 'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)');
+                : 'Obrazac 1b – privredno društvo');
         } else {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
             array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');

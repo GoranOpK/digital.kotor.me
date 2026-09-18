@@ -87,7 +87,7 @@ final class EliminatoryProfileConfig
                         'fail_label' => 'Ne*',
                     ],
                     3 => [
-                        'statement' => 'Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?',
+                        'statement' => 'Biznis plan je vezan za prioritetne oblasti navedene u članu 11 Odluke?',
                         'pass_label' => 'Da',
                         'fail_label' => 'Ne*',
                     ],

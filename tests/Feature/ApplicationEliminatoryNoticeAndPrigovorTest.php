@@ -639,8 +639,8 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         $createStyle = $this->firstStyleBlock($create);
         $showStyle = $this->firstStyleBlock($show);
 
-        $this->assertSame('29cde03cd76ff93cb965e7796d9d5917a5bb8dc41bf9c31d119e86795a186084', hash('sha256', $createObrazac3));
-        $this->assertSame('5478ab31568e39130cefe7b3829bb80a92c19468d796d0b928c9a5e1d66198c3', hash('sha256', $showObrazac3));
+        $this->assertSame('5bf5ae2c8d95b91a722605c82ee765faaa7494206cd8d39eec26db383de65d27', hash('sha256', $createObrazac3));
+        $this->assertSame('6d63fa99b51c7879d3fec1417c53338cbd56c0378817095f2441aa8a4aec9f17', hash('sha256', $showObrazac3));
         $this->assertSame('219ce30bee90a0b00e87db8d6a0591fbc609c242e59a8baa60e7032f9a2973d3', hash('sha256', $createStyle));
         $this->assertSame('ca68b4b5c41be2686de4ea1ead34bab7206263ae1f19af27b294d7b4af67d6d3', hash('sha256', $showStyle));
 

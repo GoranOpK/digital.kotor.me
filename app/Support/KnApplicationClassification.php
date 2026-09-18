@@ -259,4 +259,21 @@ final class KnApplicationClassification
     {
         return $applicantType === self::FORM_FIZICKO_LICE;
     }
+
+    /**
+     * Obrazac 3 bonus +2: only unregistered physical person planning
+     * entrepreneur registration (1a / fizicko_lice) or company founding
+     * (1b / doo|privredno_drustvo). Registered subjects never qualify,
+     * including registered započinjanje.
+     */
+    public static function isEligibleForNewBusinessBonus(?string $applicantType, bool $isRegistered): bool
+    {
+        if ($isRegistered) {
+            return false;
+        }
+
+        return $applicantType === self::FORM_FIZICKO_LICE
+            || $applicantType === self::FORM_DOO
+            || $applicantType === self::FORM_PRIVREDNO_DRUSTVO;
+    }
 }
