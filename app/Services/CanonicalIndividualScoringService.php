@@ -30,11 +30,27 @@ class CanonicalIndividualScoringService
 
     public const BONUS_LOCKED_MESSAGE = 'Dodatni bodovi su trajno zaključani. Izmjena nije dozvoljena nakon završetka cjelokupnog ciklusa individualnog bodovanja.';
 
+    public const YOUTH_BONUS_LOCKED_MESSAGE = 'Dodatni bodovi mladih su trajno zaključani. Izmjena nije dozvoljena.';
+
+    public const YOUTH_BONUS_CHAIRMAN_REQUIRED_MESSAGE = 'Dodatne bodove mladih evidentira samo aktivni predsjednik Komisije konkretnog Poziva.';
+
+    public const YOUTH_BONUS_NEW_BUSINESS_INVALID_MESSAGE = 'Dodatni bod za planiranu registraciju može se evidentirati samo za fizičko lice koje planira registraciju.';
+
+    public const YOUTH_BONUS_SCALE = 10;
+
     /** @var list<string> */
     public const BONUS_FLAG_KEYS = [
         'bonus_info_day',
         'bonus_new_business',
         'bonus_zavod_nezaposleni',
+        'bonus_green_innovative',
+    ];
+
+    /** @var list<string> */
+    public const YOUTH_BONUS_FLAG_KEYS = [
+        'bonus_info_day',
+        'bonus_training',
+        'bonus_new_business',
         'bonus_green_innovative',
     ];
 
@@ -434,6 +450,7 @@ class CanonicalIndividualScoringService
                 }
 
                 $this->markYouthEvaluatedIfThreeSeatsLocked($lockedApplication);
+                $this->persistYouthAggregateIfReady($lockedApplication);
 
                 return $fresh;
             });
@@ -479,6 +496,170 @@ class CanonicalIndividualScoringService
             'bonus_zavod_nezaposleni' => (bool) ($flags['bonus_zavod_nezaposleni'] ?? false),
             'bonus_green_innovative' => (bool) ($flags['bonus_green_innovative'] ?? false),
         ])->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $flags
+     */
+    public function saveYouthBonuses(
+        Application $application,
+        CommissionMember $member,
+        array $flags,
+        bool $confirm,
+    ): void {
+        DB::transaction(function () use ($application, $member, $flags, $confirm) {
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            $locked->load(['competition', 'eliminatoryCheck', 'prigovor']);
+
+            $this->assertYouthBonusGates($locked, $member);
+
+            $normalized = $this->normalizedYouthBonusFlags($locked, $flags);
+
+            $payload = [
+                'bonus_info_day' => $normalized['bonus_info_day'],
+                'bonus_training' => $normalized['bonus_training'],
+                'bonus_new_business' => $normalized['bonus_new_business'],
+                'bonus_green_innovative' => $normalized['bonus_green_innovative'],
+            ];
+
+            if ($confirm) {
+                $payload['bonuses_confirmed_at'] = now();
+                $payload['bonuses_confirmed_by_user_id'] = $member->user_id;
+                $payload['bonuses_confirmed_by_commission_member_id'] = $member->id;
+                $payload['bonuses_confirmed_by_name'] = $member->name;
+            }
+
+            $locked->forceFill($payload)->save();
+            if ($confirm) {
+                $this->persistYouthAggregateIfReady($locked);
+            }
+        });
+    }
+
+    public function youthQualifiesForPlannedRegistrationBonus(Application $application): bool
+    {
+        if ($application->applicant_type === \App\Support\KnApplicationClassification::FORM_FIZICKO_LICE) {
+            return true;
+        }
+
+        return $application->applicant_type === \App\Support\KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO
+            && ! (bool) $application->is_registered;
+    }
+
+    public function youthBonusScore(Application $application): int
+    {
+        $bonus = 0;
+        if ((bool) $application->bonus_info_day && (bool) $application->bonus_training) {
+            $bonus += 1;
+        }
+        if ((bool) $application->bonus_new_business && $this->youthQualifiesForPlannedRegistrationBonus($application)) {
+            $bonus += 2;
+        }
+        if ((bool) $application->bonus_green_innovative) {
+            $bonus += 3;
+        }
+
+        return min($bonus, 6);
+    }
+
+    public function youthMeetsMinimumScore(Application $application): bool
+    {
+        $full = $this->youthFullPrecisionFinalScore($application);
+        if ($full === null) {
+            return false;
+        }
+
+        return bccomp($full, '30', self::YOUTH_BONUS_SCALE) >= 0;
+    }
+
+    public function persistYouthAggregateIfReady(Application $application): void
+    {
+        $run = function () use ($application) {
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->first();
+            if ($locked === null) {
+                return;
+            }
+
+            $locked->loadMissing('competition');
+            if (! $locked->competition?->isOmladinskoProfile()) {
+                return;
+            }
+
+            if ($locked->bonuses_confirmed_at === null) {
+                return;
+            }
+
+            EvaluationScore::query()
+                ->where('application_id', $locked->id)
+                ->lockForUpdate()
+                ->get();
+            $locked->unsetRelation('evaluationScores');
+
+            $aggregate = $this->aggregateYouthApplication($locked);
+            if ($aggregate === null) {
+                return;
+            }
+
+            $display = $aggregate['final_score_display'];
+            if ($locked->final_score !== null && bccomp((string) $locked->final_score, $display, 2) === 0) {
+                return;
+            }
+
+            $locked->forceFill(['final_score' => $display])->save();
+        };
+
+        if (DB::transactionLevel() > 0) {
+            $run();
+
+            return;
+        }
+
+        DB::transaction($run);
+    }
+
+    /**
+     * @return array{
+     *     criterion_averages: array<int, string>,
+     *     base_score: string,
+     *     bonus: int,
+     *     final_score_full: string,
+     *     final_score_display: string
+     * }|null
+     */
+    public function aggregateYouthApplication(Application $application): ?array
+    {
+        if (! $application->competition?->isOmladinskoProfile() && ! $application->isOmladinskoProfile()) {
+            return null;
+        }
+
+        if (! $this->applicationHasYouthCanonicalSeats($application)) {
+            return null;
+        }
+
+        $bySeat = $this->completedEvaluationsBySeat($application);
+        $averages = [];
+        $base = '0';
+
+        for ($i = 1; $i <= 10; $i++) {
+            $sum = '0';
+            foreach (ScoringProfileConfig::for('omladinsko')->allowedSeats as $seat) {
+                $sum = bcadd($sum, (string) (int) $bySeat[$seat]->{"criterion_{$i}"}, self::YOUTH_BONUS_SCALE);
+            }
+            $average = bcdiv($sum, '3', self::YOUTH_BONUS_SCALE);
+            $averages[$i] = $average;
+            $base = bcadd($base, $average, self::YOUTH_BONUS_SCALE);
+        }
+
+        $bonus = $this->youthBonusScore($application);
+        $full = bcadd($base, (string) $bonus, self::YOUTH_BONUS_SCALE);
+
+        return [
+            'criterion_averages' => $averages,
+            'base_score' => $base,
+            'bonus' => $bonus,
+            'final_score_full' => $full,
+            'final_score_display' => $this->bcRound($full, 2),
+        ];
     }
 
     /**
@@ -802,5 +983,81 @@ class CanonicalIndividualScoringService
             'status' => 'evaluated',
             'evaluated_at' => now(),
         ])->save();
+    }
+
+    private function assertYouthBonusGates(Application $application, CommissionMember $member): void
+    {
+        if (! $application->competition?->isOmladinskoProfile()) {
+            abort(403, ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+        }
+
+        $expectedCommissionId = (int) ($application->competition?->commission_id ?? 0);
+        if ($expectedCommissionId === 0
+            || (int) $member->commission_id !== $expectedCommissionId
+            || $member->status !== 'active'
+            || $member->position !== 'predsjednik') {
+            abort(403, self::YOUTH_BONUS_CHAIRMAN_REQUIRED_MESSAGE);
+        }
+
+        if (! $application->competition->hasCompleteValidCommission()) {
+            abort(403, ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+        }
+
+        if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
+            abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
+                ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
+                : ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+        }
+
+        if ($application->bonuses_confirmed_at !== null) {
+            abort(403, self::YOUTH_BONUS_LOCKED_MESSAGE);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $flags
+     * @return array{bonus_info_day: bool, bonus_training: bool, bonus_new_business: bool, bonus_green_innovative: bool}
+     */
+    private function normalizedYouthBonusFlags(Application $application, array $flags): array
+    {
+        $newBusiness = (bool) ($flags['bonus_new_business'] ?? false);
+        if ($newBusiness && ! $this->youthQualifiesForPlannedRegistrationBonus($application)) {
+            throw ValidationException::withMessages([
+                'bonus_new_business' => self::YOUTH_BONUS_NEW_BUSINESS_INVALID_MESSAGE,
+            ]);
+        }
+
+        return [
+            'bonus_info_day' => (bool) ($flags['bonus_info_day'] ?? false),
+            'bonus_training' => (bool) ($flags['bonus_training'] ?? false),
+            'bonus_new_business' => $newBusiness,
+            'bonus_green_innovative' => (bool) ($flags['bonus_green_innovative'] ?? false),
+        ];
+    }
+
+    private function youthFullPrecisionFinalScore(Application $application): ?string
+    {
+        $application->loadMissing('competition');
+        if (! $application->competition?->isOmladinskoProfile()) {
+            return null;
+        }
+
+        if ($application->bonuses_confirmed_at === null) {
+            return null;
+        }
+
+        $aggregate = $this->aggregateYouthApplication($application);
+
+        return $aggregate['final_score_full'] ?? null;
+    }
+
+    private function bcRound(string $value, int $scale): string
+    {
+        $negative = str_starts_with($value, '-');
+        $absolute = $negative ? substr($value, 1) : $value;
+        $nudge = bcdiv('5', bcpow('10', (string) ($scale + 1), 0), $scale + 1);
+        $rounded = bcadd($absolute, $nudge, $scale);
+
+        return $negative ? '-'.$rounded : $rounded;
     }
 }

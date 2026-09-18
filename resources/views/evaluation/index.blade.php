@@ -184,7 +184,7 @@
                             Rok za prijave: {{ $comp->deadline ? $comp->deadline->format('d.m.Y H:i') : 'N/A' }}
                         </p>
                     </div>
-                @elseif($comp->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null)
+                @elseif($comp->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null && \App\Support\ScoringProfileConfig::for($comp->type)->appliesEvaluationDeadline)
                     @php
                         $evalDeadlineDate = $comp->getEvaluationDeadlineDate();
                         $yearLabel = $comp->year ?? $comp->deadline?->year ?? $evalDeadlineDate?->year ?? now()->format('Y');

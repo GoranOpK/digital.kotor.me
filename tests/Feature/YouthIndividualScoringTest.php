@@ -147,7 +147,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString('Završi ocjenjivanje', $html);
         $this->assertStringContainsString(ScoringProfileConfig::SCALE_MIN_LABEL, $html);
         $this->assertStringNotContainsString('>Ocijeni<', $html);
-        $this->assertStringNotContainsString('Podaci o preduzetnici', $html);
+        $this->assertStringNotContainsString('Podaci o podnositeljki prijave', $html);
         $this->assertStringNotContainsString('preduzetnica je uvjerljiva', $html);
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
@@ -317,7 +317,7 @@ class YouthIndividualScoringTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString(ScoringProfileConfig::zenskoCriteria()[6], $html);
-        $this->assertStringContainsString('Podaci o preduzetnici', $html);
+        $this->assertStringContainsString('Podaci o podnositeljki prijave', $html);
         $this->assertStringContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringContainsString('>Ocijeni<', $html);
         $this->assertStringNotContainsString('.......................', $html);

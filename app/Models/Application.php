@@ -428,6 +428,7 @@ class Application extends Model
         'bonus_new_business' => 'boolean',
         'bonus_zavod_nezaposleni' => 'boolean',
         'bonus_green_innovative' => 'boolean',
+        'bonuses_confirmed_at' => 'datetime',
         'email' => 'integer',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
@@ -491,6 +492,16 @@ class Application extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bonusesConfirmedByUser()
+    {
+        return $this->belongsTo(User::class, 'bonuses_confirmed_by_user_id');
+    }
+
+    public function bonusesConfirmedByCommissionMember()
+    {
+        return $this->belongsTo(CommissionMember::class, 'bonuses_confirmed_by_commission_member_id');
     }
 
     // Veza: aplikacija ima izvještaje realizacije
@@ -589,6 +600,11 @@ class Application extends Model
      */
     public function meetsMinimumScore(): bool
     {
+        if ($this->isOmladinskoProfile()) {
+            return app(\App\Services\CanonicalIndividualScoringService::class)
+                ->youthMeetsMinimumScore($this);
+        }
+
         $finalScore = $this->final_score ?? $this->calculateFinalScore();
         return $finalScore >= 30;
     }

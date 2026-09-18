@@ -533,9 +533,11 @@
                     </tbody>
                 </table>
 
+                @if(! $isOmladinskoScoring)
                 <div class="info-box notes-info-box" style="margin-top: 16px; background: #fef3c7; border-left-color: #f59e0b;">
                     <strong>Napomena:</strong> Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.
                 </div>
+                @endif
             </div>
 
             <!-- 4. Zaključak komisije -->

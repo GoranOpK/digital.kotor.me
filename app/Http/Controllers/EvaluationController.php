@@ -306,6 +306,9 @@ class EvaluationController extends Controller
         $scoringLockedMessage = $isOmladinskoScoring
             ? ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE
             : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE;
+        $youthPlannedRegistrationBonusEligible = $isOmladinskoScoring
+            && $this->canonicalScoring->youthQualifiesForPlannedRegistrationBonus($application);
+        $youthBonusesLocked = $isOmladinskoScoring && $application->bonuses_confirmed_at !== null;
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
@@ -338,6 +341,8 @@ class EvaluationController extends Controller
             'youthOralPresentation',
             'youthLockEvidenceReady',
             'scoringLockedMessage',
+            'youthPlannedRegistrationBonusEligible',
+            'youthBonusesLocked',
         ));
     }
 
@@ -395,6 +400,10 @@ class EvaluationController extends Controller
             : false;
 
         if ($competition?->isOmladinskoProfile()) {
+            if ($request->filled('youth_bonus_action')) {
+                return $this->storeYouthBonuses($request, $application, $commissionMember);
+            }
+
             return $this->storeYouthScore($request, $application, $commissionMember, $alreadyFinal);
         }
 
@@ -532,6 +541,42 @@ class EvaluationController extends Controller
 
         return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
             ->with('success', 'Ocjena je uspješno sačuvana.');
+    }
+
+    protected function storeYouthBonuses(
+        Request $request,
+        Application $application,
+        CommissionMember $commissionMember,
+    ): RedirectResponse {
+        $action = (string) $request->input('youth_bonus_action');
+        if (! in_array($action, ['draft', 'confirm'], true)) {
+            abort(403, CanonicalIndividualScoringService::YOUTH_BONUS_CHAIRMAN_REQUIRED_MESSAGE);
+        }
+
+        $validated = $request->validate([
+            'youth_bonus_action' => 'required|in:draft,confirm',
+            'bonus_info_day' => 'sometimes|boolean',
+            'bonus_training' => 'sometimes|boolean',
+            'bonus_new_business' => 'sometimes|boolean',
+            'bonus_green_innovative' => 'sometimes|boolean',
+        ]);
+
+        $flags = [];
+        foreach (CanonicalIndividualScoringService::YOUTH_BONUS_FLAG_KEYS as $key) {
+            $flags[$key] = $request->boolean($key);
+        }
+
+        $this->canonicalScoring->saveYouthBonuses(
+            $application,
+            $commissionMember,
+            $flags,
+            $action === 'confirm',
+        );
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', $action === 'confirm'
+                ? 'Dodatni bodovi su potvrđeni i zaključani.'
+                : 'Nacrt dodatnih bodova je sačuvan.');
     }
 
     /**
