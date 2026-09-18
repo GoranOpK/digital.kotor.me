@@ -568,7 +568,7 @@
                                     disabled
                                     data-kn-locked="1"
                                 >
-                                <label for="applicant_type_fizicko_lice">{{ $knAllowsFizickoLice ? 'Planiram registraciju kao preduzetnik' : 'Fizičko lice (nema registrovanu djelatnost)' }}</label>
+                                <label for="applicant_type_fizicko_lice">{{ $knAllowsFizickoLice ? ($isOmladinsko ? 'Planiram registraciju kao preduzetnik' : 'Planiram registraciju kao preduzetnica') : 'Fizičko lice (nema registrovanu djelatnost)' }}</label>
                             </div>
                             <div class="radio-option">
                                 <input 

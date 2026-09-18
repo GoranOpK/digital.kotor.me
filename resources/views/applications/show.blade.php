@@ -390,7 +390,7 @@
                 <h2>Osnovni podaci</h2>
                 <div class="info-grid" style="grid-template-columns: 1fr;">
                     <div class="info-item">
-                        <span class="info-label">Tip podnosioca</span>
+                        <span class="info-label">{{ ($application->competition?->type === 'omladinsko') ? 'Tip podnosioca' : 'Tip podnositeljke prijave' }}</span>
                         <span class="info-value">
                             @if($application->applicant_type === 'preduzetnica')
                                 Preduzetnica

@@ -1220,7 +1220,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             ->assertViewHas('knCanChoosePlannedForm', true)
             ->assertDontSee('Planirani oblik poslovanja')
             ->assertDontSee('planirani oblik Preduzetnica')
-            ->assertSee('Planiram registraciju kao preduzetnik')
+            ->assertSee('Planiram registraciju kao preduzetnica')
             ->assertSee('Planiram osnivanje privrednog društva')
             ->assertSee('name="planned_intent"', false)
             ->assertSee('value="future_entrepreneur"', false)

@@ -316,7 +316,7 @@ class KnV1ApplicationStartContextTest extends TestCase
         $this->actingAs($user)
             ->get(route('competitions.show', $competition))
             ->assertOk()
-            ->assertSee('Planiram registraciju kao preduzetnik')
+            ->assertSee('Planiram registraciju kao preduzetnica')
             ->assertSee('Planiram osnivanje privrednog društva')
             ->assertSee('value="doo"', false)
             ->assertSee('value="ad"', false)
@@ -626,6 +626,50 @@ class KnV1ApplicationStartContextTest extends TestCase
             ->assertSessionHasErrors(['founder_name', 'director_name']);
 
         $this->assertSame(0, Application::query()->where('user_id', $user->id)->count());
+    }
+
+    public function test_registered_doo_allows_distinct_founder_and_director_names(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => $this->validPib(222),
+            'company_name' => 'Distinct founder director DOO',
+            'residential_status' => null,
+            'jmb' => $this->validJmb(222),
+        ]);
+        $competition = $this->openCompetition();
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+
+        $founder = 'Ana Osnivačica';
+        $director = 'Jelena Direktorica';
+        $this->assertNotSame($founder, $director);
+
+        $payload = $this->finalStorePayload([
+            'start_context_token' => $token,
+            'applicant_type' => 'doo',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'doo_jmbg' => $user->jmb,
+            'doo_name' => 'Podnositeljka Distinct DOO',
+            'doo_phone' => '+38267111444',
+            'doo_email' => 'distinct-founder-director@example.test',
+            'doo_address' => 'Adresa prijave 9, Kotor',
+            'founder_name' => $founder,
+            'director_name' => $director,
+            'company_seat' => 'Sjedište 9, Kotor',
+            'crps_number' => $this->validCrps(6, 222),
+            'pib' => $this->validPib(222),
+            'accuracy_declaration' => '1',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $payload)
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['founder_name', 'director_name']);
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame($founder, $application->founder_name);
+        $this->assertSame($director, $application->director_name);
+        $this->assertNotSame($application->founder_name, $application->director_name);
     }
 
     /**

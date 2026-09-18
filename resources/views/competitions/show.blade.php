@@ -393,7 +393,7 @@
                                     checked
                                     style="margin-right: 8px; cursor: pointer;"
                                 >
-                                <span>Planiram registraciju kao preduzetnik</span>
+                                <span>{{ ($competition->type === 'omladinsko') ? 'Planiram registraciju kao preduzetnik' : 'Planiram registraciju kao preduzetnica' }}</span>
                             </label>
                             <label style="display: flex; align-items: center; cursor: pointer;">
                                 <input 

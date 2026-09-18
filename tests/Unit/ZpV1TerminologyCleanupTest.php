@@ -153,6 +153,7 @@ class ZpV1TerminologyCleanupTest extends TestCase
             $root.'/resources/views/evaluation/show.blade.php',
             $root.'/resources/views/admin/applications/show.blade.php',
             $root.'/resources/views/competitions/show.blade.php',
+            $root.'/resources/views/competitions/partials/decision-document.blade.php',
             $root.'/app/Http/Controllers/CompetitionsController.php',
         ];
 
@@ -161,10 +162,46 @@ class ZpV1TerminologyCleanupTest extends TestCase
             $content = file_get_contents($path);
             $this->assertStringNotContainsString('nositeljke biznisa', $content, basename($path));
             $this->assertStringNotContainsString('nositeljka biznisa', $content, basename($path));
+            $this->assertStringNotContainsString('nositeljkom biznisa', $content, basename($path));
             // Allow historical comment in Obrazac 2 JS that names the removed term.
             if (! str_ends_with($path, 'business-plans/create.blade.php')) {
                 $this->assertStringNotContainsString('nosioca biznisa', $content, basename($path));
             }
         }
+    }
+
+    public function test_zp_start_create_and_show_use_canonical_feminine_applicant_labels(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $competitionShow = file_get_contents($root.'/resources/views/competitions/show.blade.php');
+        $create = file_get_contents($root.'/resources/views/applications/create.blade.php');
+        $show = file_get_contents($root.'/resources/views/applications/show.blade.php');
+        $decision = file_get_contents($root.'/resources/views/competitions/partials/decision-document.blade.php');
+
+        $this->assertStringContainsString('Planiram registraciju kao preduzetnica', $competitionShow);
+        $this->assertStringContainsString(
+            "(\$competition->type === 'omladinsko') ? 'Planiram registraciju kao preduzetnik' : 'Planiram registraciju kao preduzetnica'",
+            $competitionShow
+        );
+        $this->assertStringNotContainsString('<span>Planiram registraciju kao preduzetnik</span>', $competitionShow);
+
+        $this->assertStringContainsString('Planiram registraciju kao preduzetnica', $create);
+        $this->assertStringContainsString(
+            "(\$isOmladinsko ? 'Planiram registraciju kao preduzetnik' : 'Planiram registraciju kao preduzetnica')",
+            $create
+        );
+
+        $this->assertStringContainsString('Tip podnositeljke prijave', $show);
+        $this->assertStringContainsString(
+            "(\$application->competition?->type === 'omladinsko') ? 'Tip podnosioca' : 'Tip podnositeljke prijave'",
+            $show
+        );
+        $this->assertStringNotContainsString('<span class="info-label">Tip podnosioca</span>', $show);
+
+        $this->assertStringContainsString(
+            'sa preduzetnicom odnosno sa privrednim društvom u kojem je žena osnivačica ili jedna od osnivačica i izvršna direktorica',
+            $decision
+        );
+        $this->assertStringNotContainsString('nositeljkom biznisa', $decision);
     }
 }

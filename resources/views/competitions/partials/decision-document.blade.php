@@ -310,7 +310,7 @@
             <div class="decision-article">
                 <div class="decision-article-title">Član 2</div>
                 <p class="decision-article-intro" style="margin-bottom: 0;">
-                    Međusobna prava i obaveze utvrdiće se posebnim aktom – Ugovorom koji sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj zaključuje sa preduzetnicom odnosno nositeljkom biznisa u društvu kojem su dodijeljena sredstva u roku od 10 dana od dana izvršnosti ove Odluke.
+                    Međusobna prava i obaveze utvrdiće se posebnim aktom – Ugovorom koji sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj zaključuje sa preduzetnicom odnosno sa privrednim društvom u kojem je žena osnivačica ili jedna od osnivačica i izvršna direktorica, kojem su dodijeljena sredstva u roku od 10 dana od dana izvršnosti ove Odluke.
                 </p>
             </div>
 
