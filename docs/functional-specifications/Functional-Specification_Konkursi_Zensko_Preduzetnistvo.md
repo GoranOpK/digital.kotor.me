@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.14
-**Datum:** 2026-09-17
+**Verzija:** 1.0.15
+**Datum:** 2026-09-18
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.19; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9; V1 platformski closeout; ŽP V1 documentation corrective; Patch 9 Article 3 wording)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.20; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9 — runtime **ne** implementiran / **nije** produkcijski prihvaćen; V1 platformski closeout; ŽP V1 documentation corrective; Patch 9 Article 3 wording; §13.6/§14.9 documentation reconciliation)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
 
@@ -69,6 +69,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.12 | 2026-09-12 | Dokumentacioni closeout: V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status dokumenta ostaje `USVOJEN`. Bez novih funkcionalnih zahtjeva. OUT_OF_V1 granice nepromijenjene. Napomena da dokument nije runtime izvršni izvor ostaje. |
 | 1.0.13 | 2026-09-17 | ŽP V1 documentation corrective nakon runtime Patch 1–6: cross-reference BM-001/FS-001/TS-001; 1a/1b naslovi i labeli; Obrazac 2 napomena/Q4; šest document package slučajeva A–F; eliminatorni kriterijum 3 → član 11; K7/K8/K10; +2 eligibility + server authority; granica Obrazac 4/4a. Status ostaje `USVOJEN`. Kod nije mijenjan. |
 | 1.0.14 | 2026-09-17 | Patch 9 terminologija: company eligibility / document labels vraćeni na doslovnu formulaciju čl. 3 („osnivačica ili jedna od osnivačica i izvršna direktorica“ / odgovarajući padež). Bez uvođenja same-person enforcementa. Status ostaje `USVOJEN`. |
+| 1.0.15 | 2026-09-18 | Documentation reconciliation §14.9 / §18.6.4 prema `KN-BM-003` v1.0.20: funkcionalni zahtjev prioriteta finansiranja kod jednakih bodova ostaje **USVOJEN / specifikovan**. Eksplicitno: runtime implementacija **ne postoji**; runtime testovi **ne postoje** (TEST GAP); produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.12) **ne** tumači se kao runtime acceptance §14.9. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan. |
 
 Napomena:
 
@@ -80,11 +81,13 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene označavaju se prema `KN-PATCH-FS-{NNN}` i evidentiraju se u `KN-RG-001` tek pri prvoj stvarnoj upotrebi.
 
-**V1 platformski closeout (v1.0.12):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status ove specifikacije ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove funkcionalne zahtjeve. OUT_OF_V1 / van Platforme granice ostaju nepromijenjene. Napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi.
+**V1 platformski closeout (v1.0.12):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je COMPLETE / CLOSED. Status ove specifikacije ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove funkcionalne zahtjeve. OUT_OF_V1 / van Platforme granice ostaju nepromijenjene. Napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi. Ovaj closeout **ne** znači da je §14.9 (prioritet finansiranja kod jednakih bodova) / §18.6.4 runtime implementiran niti produkcijski prihvaćen.
 
 **ŽP V1 documentation corrective (v1.0.13):** Usklađivanje ACTIVE funkcionalnog teksta sa `KN-BM-003` v1.0.18 i finalnim ŽP V1 runtime-om nakon Patch 1–6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan ovim dokumentacionim korakom.
 
 **Patch 9 Article 3 wording (v1.0.14):** Terminologija company eligibility / document labels usklađena sa `KN-BM-003` v1.0.19 i doslovnom formulacijom čl. 3, bez uvođenja same-person enforcementa. Status dokumenta ostaje `USVOJEN`.
+
+**§14.9 / §18.6.4 documentation reconciliation (v1.0.15):** §14.9 i AC §18.6.4 ostaju **USVOJENI / funkcionalno specifikovani** prema `KN-BM-003` §13.6 (**PO USVOJENO**). Runtime implementacija **ne postoji**. Runtime testovi **ne postoje** (TEST GAP). Produkcijski runtime acceptance **nije** izvršen. V1 closeout v1.0.12 **ne** predstavlja runtime acceptance ovog pravila. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan.
 
 ---
 
@@ -2916,6 +2919,8 @@ Završenost jedne Prijave **sama po sebi ne** formira konačnu rang-listu. Globa
 
 ## 14.9. Jednaki bodovi
 
+**Status (ACTIVE):** Funkcionalni zahtjev je **USVOJEN / specifikovan** (`KN-BM-003` §13.6 — **PO USVOJENO**). Runtime implementacija **ne postoji**. Runtime testovi **ne postoje** (TEST GAP). Produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.12) **ne** tumači se kao runtime acceptance ovog pravila.
+
 Ovo je pravilo **prioriteta finansiranja** prema čl. 21 i `KN-BM-003` §13.6. **Ne** mijenja dijeljene pozicije na rang-listi iz §14.6. **Ne** mijenja konačnu ocjenu (`final_score`).
 
 ### 14.9.0. Aktivacija
@@ -4143,6 +4148,8 @@ Za **Odbija** kod Prijave sa najmanje **30** bodova mora biti evidentirano detal
 
 ### 18.6.4 — Jednaki bodovi i zaključavanje konačne rang-liste
 
+**Status (ACTIVE):** Prihvatni kriterijum je **USVOJEN / specifikovan**. Runtime implementacija §14.9 **ne postoji**. Runtime testovi **ne postoje** (TEST GAP). Produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.12) **ne** tumači se kao runtime acceptance ovog kriterijuma.
+
 **Ako:** dvije ili više Prijava imaju jednaku konačnu ocjenu.
 
 **Kada:** raspoloživa sredstva **nisu** dovoljna da se sve one finansiraju (aktivacija §14.9).
@@ -4609,7 +4616,7 @@ Matrica sljedivosti:
 | `KN-BM-003` §12.5, §12.6, §13.1 | §14.1–§14.4, §14.6 | §18.6.1, §18.6.2 | USVOJENO. Zbirni rezultati i preliminarna rang-lista tek po završetku ciklusa. |
 | `KN-BM-003` §13.3 | §14.5 | §18.6.2 | USVOJENO. Prag od 30 bodova. |
 | `KN-BM-003` §13.2, §13.4, §13.5 | §14.7, §14.8 | §18.6.3 | USVOJENO. Podržava / Odbija, predloženi iznos, limiti i raspodjela. Treća sjednica van Platforme. |
-| `KN-BM-003` §13.6 | §14.9 | §18.6.4 | USVOJENO. Jednaki bodovi; dijeljene rang-pozicije se ne mijenjaju. |
+| `KN-BM-003` §13.6 | §14.9 | §18.6.4 | USVOJENO (poslovno/funkcionalno). Jednaki bodovi; dijeljene rang-pozicije se ne mijenjaju. Runtime implementacija **ne postoji**; TEST GAP; produkcijski runtime acceptance **nije** izvršen (v1.0.15 reconciliation). |
 | `KN-BM-003` §13.7 | §14.10, §16.5 | §18.6.4 | USVOJENO. Konačna rang-lista je zaključani rezultat. |
 | `KN-BM-003` §13.8 | §15.8, §17.2 | — | USVOJENO. Evidentirana je samo poslovna mogućnost drugog Konkursa. Detaljan tok **nije** predmet ovog FS-a. |
 | `KN-BM-003` §14 | §15.2 | §18.7.1 | USVOJENO. Generiši Odluku proizvodi Predlog i ne mijenja zaključani rezultat. |

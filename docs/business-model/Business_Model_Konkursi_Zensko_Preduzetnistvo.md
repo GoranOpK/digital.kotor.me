@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.19
-**Datum:** 2026-09-17
+**Verzija:** 1.0.20
+**Datum:** 2026-09-18
 
 Povezani dokumenti:
 
@@ -49,6 +49,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.17 | 2026-09-12 | Dokumentacioni closeout: V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status dokumenta ostaje `USVOJEN`. Bez novih poslovnih zahtjeva. OUT_OF_V1 / van Platforme granice nepromijenjene. Napomena da dokument nije runtime izvršni izvor ostaje. |
 | 1.0.18 | 2026-09-17 | ŽP V1 documentation corrective nakon runtime Patch 1–6: terminologija podnositeljke / osnivačice / izvršne direktorice; Obrazac 2 napomena o registraciji prije ugovora i Q4; eliminatorni kriterijum 3 → član 11; K7/K8/K10; precizan +2 bonus; granica Obrazac 4/4a van elektronskog Konkursi V1. Status ostaje `USVOJEN`. Kod nije mijenjan. |
 | 1.0.19 | 2026-09-17 | Patch 9 terminologija: company eligibility / document labels vraćeni na doslovnu formulaciju čl. 3 („osnivačica ili jedna od osnivačica i izvršna direktorica“ / odgovarajući padež). Bez uvođenja same-person enforcementa (`founder_name` / `director_name` ostaju odvojena). Status ostaje `USVOJEN`. |
+| 1.0.20 | 2026-09-18 | Documentation reconciliation §13.6: poslovno pravilo prioriteta finansiranja kod jednakih bodova ostaje **PO USVOJENO**. Eksplicitno: runtime implementacija **ne postoji**; runtime testovi **ne postoje** (TEST GAP); produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.17) **ne** tumači se kao runtime acceptance §13.6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan. |
 
 Napomena:
 
@@ -62,11 +63,13 @@ Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene o
 
 Formalna otvorena pravna pitanja OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvorena su poslovnom odlukom u verziji 1.0.1 / `KN-PATCH-BM-001`. Kanonska pravila su u Poglavlju 13.
 
-**V1 platformski closeout (v1.0.17):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status ovog poslovnog dokumenta ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove poslovne zahtjeve. Aktivnosti već definisane kao van V1 / van Platforme ostaju van V1. Dokument ostaje SSOT poslovnih pravila; napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi.
+**V1 platformski closeout (v1.0.17):** V1 platformski funkcionalni tok za podršku ženskom preduzetništvu je implementiran i funkcionalno zatvoren. Status ovog poslovnog dokumenta ostaje `USVOJEN`. Ovaj closeout **ne** uvodi nove poslovne zahtjeve. Aktivnosti već definisane kao van V1 / van Platforme ostaju van V1. Dokument ostaje SSOT poslovnih pravila; napomena da dokumentacija nije runtime izvršni izvor ostaje na snazi. Ovaj closeout **ne** znači da je §13.6 (prioritet finansiranja kod jednakih bodova) runtime implementiran niti produkcijski prihvaćen.
 
 **ŽP V1 documentation corrective (v1.0.18):** Usklađivanje ACTIVE poslovnog teksta sa finalnim ŽP V1 modelom i runtime-om nakon Patch 1–6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan ovim dokumentacionim korakom.
 
 **Patch 9 Article 3 wording (v1.0.19):** Terminologija company eligibility / document labels vraćena na doslovnu formulaciju čl. 3, bez uvođenja same-person enforcementa. Status dokumenta ostaje `USVOJEN`.
+
+**§13.6 documentation reconciliation (v1.0.20):** §13.6 ostaje **PO USVOJENO**. Runtime implementacija **ne postoji**. Runtime testovi **ne postoje** (TEST GAP). Produkcijski runtime acceptance **nije** izvršen. V1 closeout v1.0.17 **ne** predstavlja runtime acceptance ovog pravila. Detalj toka: `KN-FS-003` §14.9. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan.
 
 ---
 
@@ -918,6 +921,8 @@ Odobreni iznos:
 U slučaju preklapanja 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%, prema §13.4.
 
 ## 13.6. Tie-break
+
+**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Runtime implementacija **ne postoji**. Runtime testovi **ne postoje** (TEST GAP). Produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.17) **ne** tumači se kao runtime acceptance ovog pravila.
 
 Ako dva ili više biznis planova dobije isti broj bodova, a raspoloživa sredstva nisu dovoljna za njihovo finansiranje (čl. 21), utvrđuje se **prioritet finansiranja**. To **ne** mijenja konačni broj bodova niti dijeljene rang-pozicije.
 
