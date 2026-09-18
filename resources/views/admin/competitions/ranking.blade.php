@@ -823,7 +823,7 @@
 
                         @foreach($applications as $application)
                             <div class="commission-decision-block{{ $application->signed_by_chairman ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                                @if(!$application->signed_by_chairman && !in_array($competition->status, ['closed', 'completed']))
+                                @if(!in_array($competition->status, ['closed', 'completed']))
                                 <div class="commission-decision-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                                     <div>
                                         <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 4px 0;">
@@ -893,7 +893,7 @@
 
                                         <div style="margin-bottom: 24px;">
                                             <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                                Obrazloženje (obavezno za Odbija):
+                                                Obrazloženje (obavezno za Odbija; kod jednakih bodova i istog stadijuma kada sredstva nijesu dovoljna — i za Podržava):
                                             </label>
                                             <textarea 
                                                 name="commission_justification" 
@@ -911,7 +911,7 @@
                                     </form>
                                 @endif
 
-                                <table class="commission-decision-table{{ (!$application->signed_by_chairman && !in_array($competition->status, ['closed', 'completed'])) ? ' print-only' : '' }}">
+                                <table class="commission-decision-table{{ (!in_array($competition->status, ['closed', 'completed'])) ? ' print-only' : '' }}">
                                     <tbody>
                                         <tr class="commission-decision-name">
                                             <th colspan="2">{{ $application->business_plan_name }}</th>

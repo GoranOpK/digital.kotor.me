@@ -1189,6 +1189,13 @@ class AdminController extends Controller
                 ->withErrors(['error' => 'Ne možete zatvoriti konkurs prije nego što donesete zaključak za sve prijave i generišete odluku o dodjeli sredstava.']);
         }
 
+        // §13.6: ne finalizovati konkurs sa raspodjelom koja krši prednost započinjanja (ŽP).
+        $equalScoreBlock = app(\App\Services\Competitions\ZpEqualScoreAllocationGuard::class)
+            ->blockReason($competition);
+        if ($equalScoreBlock !== null) {
+            return redirect()->back()->withErrors(['error' => $equalScoreBlock]);
+        }
+
         // Proveri da li postoje prijave koje nisu ocijenjene
         $submittedApplications = $competition->applications()
             ->where('status', 'submitted')
@@ -2652,6 +2659,17 @@ class AdminController extends Controller
         // Arhivirani konkurs: read-only pregled već formiranog Predloga ostaje dostupan archive viewer-ima.
         if (! $isArchiveViewer && ! $competition->hasChairmanCompletedDecisions()) {
             abort(403, 'Predlog odluke nije dostupan dok predsjednik ne donese zaključak za sve relevantne prijave.');
+        }
+
+        // §13.6 minimal gate: equal-score allocation must respect započinjanje prednost (ŽP only).
+        if (! $isArchiveViewer) {
+            $equalScoreBlock = app(\App\Services\Competitions\ZpEqualScoreAllocationGuard::class)
+                ->blockReason($competition);
+            if ($equalScoreBlock !== null) {
+                return redirect()
+                    ->route('admin.competitions.ranking', $competition)
+                    ->withErrors(['error' => $equalScoreBlock]);
+            }
         }
 
         $documentData = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)

@@ -9,6 +9,7 @@ use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
 use App\Support\ScoringProfileConfig;
@@ -739,6 +740,25 @@ class EvaluationController extends Controller
         $decision = $validated['commission_decision'];
         $justification = trim((string) ($validated['commission_justification'] ?? ''));
         $approvedAmount = array_key_exists('approved_amount', $validated) ? $validated['approved_amount'] : null;
+
+        // §13.6 same-stage: require obrazloženje only when equal-score / same-stage budget choice is active.
+        // Does not block mid-flow for mixed-stage priority (that is enforced at Predlog).
+        if (
+            $competition
+            && $competition->type === 'zensko'
+            && $justification === ''
+            && app(ZpEqualScoreAllocationGuard::class)->requiresCommissionJustification(
+                $competition,
+                $application,
+                ['commission_decision' => $decision]
+            )
+        ) {
+            return redirect()->back()
+                ->withErrors([
+                    'commission_justification' => ZpEqualScoreAllocationGuard::SAME_STAGE_JUSTIFICATION_MESSAGE,
+                ])
+                ->withInput();
+        }
 
         if ($decision === 'podrzava_potpuno') {
             if ($approvedAmount === null || $approvedAmount === '' || (float) $approvedAmount <= 0) {
