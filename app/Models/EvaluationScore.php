@@ -78,10 +78,14 @@ class EvaluationScore extends Model
     {
         return $query->where(function ($inner) {
             $inner->whereNotNull('completed_at')
-                ->orWhere(function ($all) {
+                ->orWhere(function ($legacy) {
+                    $legacy->whereNull('completed_at');
                     for ($i = 1; $i <= 10; $i++) {
-                        $all->whereNotNull("criterion_{$i}");
+                        $legacy->whereNotNull("criterion_{$i}");
                     }
+                    $legacy->whereHas('application.competition', function ($competition) {
+                        $competition->where('type', '!=', 'omladinsko');
+                    });
                 });
         });
     }

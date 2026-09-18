@@ -813,6 +813,28 @@ class CanonicalIndividualScoringTest extends TestCase
         $this->assertSame('ca68b4b5c41be2686de4ea1ead34bab7206263ae1f19af27b294d7b4af67d6d3', hash('sha256', $this->firstStyleBlock($show)));
     }
 
+    public function test_zensko_evaluation_deadline_still_blocks_create_and_store(): void
+    {
+        [$application, $president] = $this->readyToScore();
+        $application->competition->update(['closed_at' => now()->subDays(46)]);
+        $this->assertTrue($application->competition->fresh()->isEvaluationDeadlinePassed());
+
+        $this->actingAs($president->user)
+            ->get(route('evaluation.create', $application))
+            ->assertForbidden();
+
+        $this->actingAs($president->user)
+            ->from(route('evaluation.index'))
+            ->post(route('evaluation.store', $application), $this->scorePayload())
+            ->assertRedirect(route('evaluation.index'))
+            ->assertSessionHasErrors('error');
+        $this->assertStringContainsString(
+            'Rok za ocjenjivanje je istekao',
+            session('errors')->first('error')
+        );
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $application->id)->count());
+    }
+
     public function test_shared_competition_ranks_for_equal_final_scores_pattern_a(): void
     {
         // scores 42, 40, 40, 38 → ranks 1, 2, 2, 4

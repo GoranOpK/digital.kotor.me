@@ -293,7 +293,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertNotNull($ctx['application']->fresh()->eliminatoryCheck->confirmed_at);
     }
 
-    public function test_pass_does_not_open_scoring(): void
+    public function test_pass_opens_draft_scoring_but_not_womens_final_button(): void
     {
         $ctx = $this->makeYouthReadyContext();
         $this->actingAs($ctx['chairman']->user)
@@ -302,7 +302,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
 
         $application = $ctx['application']->fresh();
         $this->assertTrue($application->eliminatoryCheck->isConfirmedPass());
-        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $application))
@@ -310,7 +310,8 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('>Ocijeni<', $html);
         $this->assertStringNotContainsString('Da / Da / Da', $html);
-        $this->assertStringNotContainsString('4. Ocjena biznis plana u brojkama', $html);
+        $this->assertStringContainsString('4. Ocjena biznis plana u brojkama', $html);
+        $this->assertStringContainsString('Sačuvaj nacrt', $html);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.store', $application), $this->scorePayload())

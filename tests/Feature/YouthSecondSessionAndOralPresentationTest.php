@@ -256,6 +256,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->storeAndCompleteOral($ctx, attended: true);
         $this->assertTrue($application->fresh()->oralPresentation->isCompleted());
         $this->assertTrue($application->fresh()->oralPresentation->applicantAttended());
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
     }
 
     public function test_oral_requires_confirmed_second_session_and_allows_multiple_orals(): void
@@ -319,7 +320,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->assertNotNull($oral->held_at);
         $this->assertSame('submitted', $ctx['application']->fresh()->status);
         $this->assertSame($interview, $ctx['application']->fresh()->interview_scheduled_at?->toDateTimeString());
-        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
 
         $noShow = $this->youthWithConfirmedSecond();
         $noShow['application']->update(['interview_scheduled_at' => '2026-05-01 09:00:00']);
@@ -333,7 +334,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             '2026-05-01 09:00:00',
             $noShow['application']->fresh()->interview_scheduled_at?->format('Y-m-d H:i:s')
         );
-        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($noShow['application']->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($noShow['application']->fresh()));
 
         $this->actingAs($noShow['chairman']->user)->put(
             route('commission-sessions.oral.update', [$noShow['competition'], $noShow['application']]),

@@ -7,6 +7,8 @@ use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
 use App\Support\CommissionCanonicalSeat;
+use App\Support\NamedMysqlUniqueViolation;
+use App\Support\ScoringProfileConfig;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -38,12 +40,18 @@ class CanonicalIndividualScoringService
 
     public function __construct(
         protected ApplicationEliminatoryCheckService $eliminatoryChecks,
+        protected YouthSecondSessionGate $youthSecondSessionGate,
     ) {}
 
     public function isFinalCompleted(?EvaluationScore $score): bool
     {
         if ($score === null) {
             return false;
+        }
+
+        $score->loadMissing('application.competition');
+        if ($score->application?->competition?->isOmladinskoProfile()) {
+            return $score->completed_at !== null;
         }
 
         return CommissionCanonicalSeat::isHistoricallyCompleted($score);
@@ -114,6 +122,26 @@ class CanonicalIndividualScoringService
         }
 
         return count($bySeat) === 5;
+    }
+
+    public function applicationHasYouthCanonicalSeats(Application $application): bool
+    {
+        $bySeat = $this->completedEvaluationsBySeat($application);
+        $profile = ScoringProfileConfig::for('omladinsko');
+
+        foreach ($profile->allowedSeats as $seat) {
+            if (! isset($bySeat[$seat])) {
+                return false;
+            }
+        }
+
+        foreach (array_keys($bySeat) as $seat) {
+            if (! $profile->allowsSeat((int) $seat)) {
+                return false;
+            }
+        }
+
+        return count($bySeat) === $profile->requiredFinalCount;
     }
 
     /**
@@ -285,6 +313,151 @@ class CanonicalIndividualScoringService
     }
 
     /**
+     * @param  array<string, mixed>  $criteria
+     */
+    public function recordYouthDraftScore(
+        Application $application,
+        CommissionMember $member,
+        array $criteria,
+        ?string $notes,
+    ): EvaluationScore {
+        $this->assertYouthDraftGates($application, $member);
+
+        try {
+            return DB::transaction(function () use ($application, $member, $criteria, $notes) {
+                Application::query()->whereKey($application->id)->lockForUpdate()->first();
+
+                $own = EvaluationScore::query()
+                    ->where('application_id', $application->id)
+                    ->where('commission_member_id', $member->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($this->isFinalCompleted($own)) {
+                    abort(403, self::SCORE_IMMUTABLE_MESSAGE);
+                }
+
+                $payload = $this->youthDraftPayload($application, $member, $criteria, $notes);
+
+                if ($own) {
+                    $own->fill($payload);
+                    $own->save();
+
+                    return $own->fresh();
+                }
+
+                return EvaluationScore::query()->create($payload);
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            abort(403, ScoringProfileConfig::YOUTH_SCORE_CONFLICT_MESSAGE);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $criteria
+     */
+    public function recordYouthFinalScore(
+        Application $application,
+        CommissionMember $member,
+        array $criteria,
+        ?string $notes,
+        bool $confirmed,
+    ): EvaluationScore {
+        $this->assertYouthDraftGates($application, $member);
+
+        if ($application->status !== 'submitted') {
+            abort(403, ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+        }
+
+        $lockMessage = $this->youthSecondSessionGate->youthLockEvidenceBlockMessage($application);
+        if ($lockMessage !== null) {
+            abort(403, $lockMessage);
+        }
+
+        if (! $confirmed) {
+            throw ValidationException::withMessages([
+                'scoring_confirmed' => self::CONFIRMATION_REQUIRED_MESSAGE,
+            ]);
+        }
+
+        $seat = $this->resolveYouthSeat($member);
+
+        try {
+            $recorded = DB::transaction(function () use ($application, $member, $criteria, $notes, $seat) {
+                $lockedApplication = Application::query()->whereKey($application->id)->lockForUpdate()->first();
+                if ($lockedApplication === null || $lockedApplication->status !== 'submitted') {
+                    abort(403, ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+                }
+
+                CommissionMember::query()
+                    ->whereKey($member->id)
+                    ->where('commission_id', $member->commission_id)
+                    ->where('status', 'active')
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $lockedApplication->load(['oralPresentation', 'competition', 'eliminatoryCheck', 'prigovor']);
+                $this->assertYouthDraftGates($lockedApplication, $member);
+                $lockMessage = $this->youthSecondSessionGate->youthLockEvidenceBlockMessage($lockedApplication);
+                if ($lockMessage !== null) {
+                    abort(403, $lockMessage);
+                }
+
+                $lockedScores = EvaluationScore::query()
+                    ->where('application_id', $application->id)
+                    ->lockForUpdate()
+                    ->get();
+
+                $seatAlreadyFinal = $lockedScores->first(function (EvaluationScore $score) use ($seat) {
+                    return $this->isFinalCompleted($score)
+                        && (int) ($score->canonical_seat_no ?? 0) === $seat;
+                });
+
+                if ($seatAlreadyFinal && (int) $seatAlreadyFinal->commission_member_id !== (int) $member->id) {
+                    abort(403, self::SEAT_ALREADY_FINAL_MESSAGE);
+                }
+
+                $own = $lockedScores->firstWhere('commission_member_id', $member->id);
+
+                if ($this->isFinalCompleted($own)) {
+                    abort(403, self::SCORE_IMMUTABLE_MESSAGE);
+                }
+
+                $payload = $this->youthFinalPayload($application, $member, $criteria, $notes, $seat);
+
+                if ($own) {
+                    $own->fill($payload);
+                    $own->save();
+                    $fresh = $own->fresh();
+                } else {
+                    $fresh = EvaluationScore::query()->create($payload);
+                }
+
+                $this->markYouthEvaluatedIfThreeSeatsLocked($lockedApplication);
+
+                return $fresh;
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            $message = NamedMysqlUniqueViolation::matches($e, 'eval_scores_app_seat_unique')
+                || NamedMysqlUniqueViolation::matches($e, 'evaluation_scores_application_id_commission_member_id_unique')
+                ? ScoringProfileConfig::YOUTH_SCORE_CONFLICT_MESSAGE
+                : self::SEAT_ALREADY_FINAL_MESSAGE;
+            abort(403, $message);
+        }
+
+        return $recorded;
+    }
+
+    public function persistApplicationAggregatesIfCycleComplete(Competition $competition): void
+    {
+        if ($competition->isOmladinskoProfile()) {
+            return;
+        }
+
+        $this->persistZenskoApplicationAggregatesIfCycleComplete($competition);
+    }
+
+    /**
      * Chairman bonus may be written only while the global scoring cycle is still open.
      * The completing POST uses the pre-write cycle flag so legitimate bonus on that
      * request is stored before aggregate finalization.
@@ -344,7 +517,7 @@ class CanonicalIndividualScoringService
         ];
     }
 
-    public function persistApplicationAggregatesIfCycleComplete(Competition $competition): void
+    public function persistZenskoApplicationAggregatesIfCycleComplete(Competition $competition): void
     {
         $competition = $competition->fresh(['commission']);
         if (! $this->isIndividualScoringCycleComplete($competition)) {
@@ -532,5 +705,99 @@ class CanonicalIndividualScoringService
         $payload['final_score'] = $total;
 
         return $payload;
+    }
+
+    private function assertYouthDraftGates(Application $application, CommissionMember $member): void
+    {
+        if (! $application->competition?->isOmladinskoProfile()) {
+            abort(403, ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+        }
+
+        if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
+            abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
+                ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
+                : ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
+        }
+
+        $expectedCommissionId = (int) ($application->competition?->commission_id ?? 0);
+        if ($expectedCommissionId === 0 || (int) $member->commission_id !== $expectedCommissionId || $member->status !== 'active') {
+            abort(403, 'Niste član komisije.');
+        }
+
+        $seat = $member->canonical_seat_no !== null ? (int) $member->canonical_seat_no : 0;
+        if (! ScoringProfileConfig::for('omladinsko')->allowsSeat($seat)) {
+            abort(403, self::INVALID_SEAT_MESSAGE);
+        }
+    }
+
+    private function resolveYouthSeat(CommissionMember $member): int
+    {
+        $seat = $member->canonical_seat_no !== null ? (int) $member->canonical_seat_no : 0;
+        if (! ScoringProfileConfig::for('omladinsko')->allowsSeat($seat)) {
+            abort(403, self::INVALID_SEAT_MESSAGE);
+        }
+
+        return $seat;
+    }
+
+    /**
+     * @param  array<string, mixed>  $criteria
+     * @return array<string, mixed>
+     */
+    private function youthDraftPayload(
+        Application $application,
+        CommissionMember $member,
+        array $criteria,
+        ?string $notes,
+    ): array {
+        $payload = [
+            'application_id' => $application->id,
+            'commission_member_id' => $member->id,
+            'canonical_seat_no' => null,
+            'notes' => $notes,
+            'completed_at' => null,
+            'final_score' => null,
+        ];
+
+        for ($i = 1; $i <= 10; $i++) {
+            $raw = $criteria["criterion_{$i}"] ?? null;
+            $payload["criterion_{$i}"] = $raw === null || $raw === '' ? null : (int) $raw;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $criteria
+     * @return array<string, mixed>
+     */
+    private function youthFinalPayload(
+        Application $application,
+        CommissionMember $member,
+        array $criteria,
+        ?string $notes,
+        int $seat,
+    ): array {
+        $payload = $this->finalScorePayload($application, $member, $criteria, $notes, $seat);
+        $payload['final_score'] = null;
+
+        return $payload;
+    }
+
+    private function markYouthEvaluatedIfThreeSeatsLocked(Application $application): void
+    {
+        if (! $this->applicationHasYouthCanonicalSeats($application->fresh(['evaluationScores.commissionMember.commission.members']))) {
+            return;
+        }
+
+        $application->refresh();
+        if ($application->status !== 'submitted') {
+            return;
+        }
+
+        $application->forceFill([
+            'status' => 'evaluated',
+            'evaluated_at' => now(),
+        ])->save();
     }
 }

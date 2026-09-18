@@ -285,7 +285,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->assertSame('submitted', $application->status);
         $this->assertNull($application->rejection_reason);
         $this->assertSame($m3Before, $this->m3Snapshot($application));
-        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
 
         $evalHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $application))

@@ -130,6 +130,74 @@ class YouthSecondSessionGate
         return $application->eliminatoryCheck?->isConfirmedFail() === true;
     }
 
+    public function youthDraftScoringIsAllowed(Application $application): bool
+    {
+        return $this->youthDraftScoringBlockMessage($application) === null;
+    }
+
+    public function youthDraftScoringBlockMessage(Application $application): ?string
+    {
+        $application->loadMissing(['competition', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+
+        if (! $application->competition?->isOmladinskoProfile()) {
+            return CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE;
+        }
+
+        if (! in_array($application->status, ['submitted', 'evaluated'], true)) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        if ($application->eliminatoryCheck?->isConfirmed() !== true) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        if ($this->hasFinalRemainingReason($application)) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        if ($this->appealWindowIsOpen($application)) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        if ($application->prigovor?->isPodnesen() === true) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        $passPath = $application->eliminatoryCheck->isConfirmedPass();
+        $liftPath = $application->prigovor?->liftsEliminatoryBar() === true;
+        if (! $passPath && ! $liftPath) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        if (! $application->competition->hasCompleteValidCommission()) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
+        }
+
+        return null;
+    }
+
+    public function youthLockEvidenceIsComplete(Application $application): bool
+    {
+        return $this->youthLockEvidenceBlockMessage($application) === null;
+    }
+
+    public function youthLockEvidenceBlockMessage(Application $application): ?string
+    {
+        $application->loadMissing(['competition', 'oralPresentation']);
+
+        $second = $application->competition?->secondCommissionSession();
+        if ($second === null || ! $second->isConfirmed()) {
+            return \App\Support\ScoringProfileConfig::YOUTH_SECOND_SESSION_REQUIRED_FOR_LOCK_MESSAGE;
+        }
+
+        $oral = $application->oralPresentation;
+        if ($oral === null || ! $oral->isCompleted() || $oral->applicant_attended === null) {
+            return \App\Support\ScoringProfileConfig::YOUTH_ORAL_REQUIRED_FOR_LOCK_MESSAGE;
+        }
+
+        return null;
+    }
+
     public function competitionHasUnresolvedPrigovor(Competition $competition): bool
     {
         return ApplicationPrigovor::query()

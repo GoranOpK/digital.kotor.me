@@ -11,6 +11,8 @@ use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
+use App\Support\ScoringProfileConfig;
+use App\Services\YouthSecondSessionGate;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +26,7 @@ class EvaluationController extends Controller
         protected ApplicationPrigovorService $prigovors,
         protected CanonicalIndividualScoringService $canonicalScoring,
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
+        protected YouthSecondSessionGate $youthSecondSessionGate,
     ) {}
 
     /**
@@ -208,7 +211,7 @@ class EvaluationController extends Controller
             $this->abortIfCommissionProcessingBlocked($competition);
             
             // Provjeri da li je prošao rok od 45 dana za ocjenjivanje
-            if ($competition && $competition->isEvaluationDeadlinePassed()) {
+            if ($competition && ! $competition->isOmladinskoProfile() && $competition->isEvaluationDeadlinePassed()) {
                 abort(403, 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.');
             }
         }
@@ -254,10 +257,16 @@ class EvaluationController extends Controller
         // Član je završio ocjenjivanje kada su uneseni svi kriterijumi (ne samo prazan red nakon odbijanja zbog dokumentacije)
         $hasCompletedEvaluation = $this->canonicalScoring->isFinalCompleted($existingScore);
 
-        $totalMembers = count(CommissionCanonicalSeat::SEATS);
+        $scoringProfile = ScoringProfileConfig::for($application->competition?->type);
+        $isOmladinskoScoring = $scoringProfile->isOmladinsko();
+        $totalMembers = $isOmladinskoScoring
+            ? $scoringProfile->requiredFinalCount
+            : count(CommissionCanonicalSeat::SEATS);
         $completedBySeat = $this->canonicalScoring->completedEvaluationsBySeat($application);
         $evaluatedMemberIds = count($completedBySeat);
-        $allMembersEvaluated = $this->canonicalScoring->applicationHasFiveCanonicalSeats($application);
+        $allMembersEvaluated = $isOmladinskoScoring
+            ? $this->canonicalScoring->applicationHasYouthCanonicalSeats($application)
+            : $this->canonicalScoring->applicationHasFiveCanonicalSeats($application);
         
         $isDecisionMade = $application->commission_decision !== null;
         
@@ -269,7 +278,9 @@ class EvaluationController extends Controller
         }
 
         $competition = $application->competition;
-        $canViewOtherMembersScores = $competition ? $competition->isIndividualScoringCycleComplete() : false;
+        $canViewOtherMembersScores = $isOmladinskoScoring
+            ? false
+            : ($competition ? $competition->isIndividualScoringCycleComplete() : false);
         if (! $canViewOtherMembersScores && $commissionMember) {
             $allScores = $allScores->only([$commissionMember->id]);
         }
@@ -280,7 +291,7 @@ class EvaluationController extends Controller
         $averageScores = $aggregate['criterion_averages'] ?? [];
         $finalScore = $aggregate['base_score'] ?? 0;
 
-        $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation']);
 
         $eliminatoryCheck = $application->eliminatoryCheck;
         $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
@@ -289,6 +300,12 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
+        $youthOralPresentation = $isOmladinskoScoring ? $application->oralPresentation : null;
+        $youthLockEvidenceReady = $isOmladinskoScoring
+            && $this->youthSecondSessionGate->youthLockEvidenceIsComplete($application);
+        $scoringLockedMessage = $isOmladinskoScoring
+            ? ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE
+            : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE;
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
@@ -316,6 +333,11 @@ class EvaluationController extends Controller
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
+            'scoringProfile',
+            'isOmladinskoScoring',
+            'youthOralPresentation',
+            'youthLockEvidenceReady',
+            'scoringLockedMessage',
         ));
     }
 
@@ -337,7 +359,7 @@ class EvaluationController extends Controller
         $this->abortIfCommissionProcessingBlocked($competition);
         
         // Provjeri da li je prošao rok od 45 dana za ocjenjivanje
-        if ($competition && $competition->isEvaluationDeadlinePassed()) {
+        if ($competition && ! $competition->isOmladinskoProfile() && $competition->isEvaluationDeadlinePassed()) {
             return redirect()->back()
                 ->withErrors(['error' => 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.']);
         }
@@ -352,7 +374,9 @@ class EvaluationController extends Controller
         if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
             abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
                 ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
-                : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE);
+                : ($competition?->isOmladinskoProfile()
+                    ? ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE
+                    : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE));
         }
 
         // Provjeri da li je prijava već odbijena - ako jeste, ne dozvoli izmjene
@@ -369,6 +393,10 @@ class EvaluationController extends Controller
         $cycleCompleteBefore = $competition
             ? $this->canonicalScoring->isIndividualScoringCycleComplete($competition)
             : false;
+
+        if ($competition?->isOmladinskoProfile()) {
+            return $this->storeYouthScore($request, $application, $commissionMember, $alreadyFinal);
+        }
 
         if (!$isChairman) {
             $request->merge([
@@ -449,6 +477,63 @@ class EvaluationController extends Controller
             ->with('success', 'Ocjena je uspješno sačuvana.');
     }
 
+    protected function storeYouthScore(
+        Request $request,
+        Application $application,
+        CommissionMember $commissionMember,
+        bool $alreadyFinal,
+    ): RedirectResponse {
+        if ($alreadyFinal) {
+            abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
+        }
+
+        $saveAsDraft = $request->boolean('save_as_draft');
+        $messages = [
+            'scoring_confirmed.accepted' => CanonicalIndividualScoringService::CONFIRMATION_REQUIRED_MESSAGE,
+        ];
+        $rules = [
+            'notes' => 'nullable|string|max:5000',
+        ];
+
+        for ($i = 1; $i <= 10; $i++) {
+            $messages["criterion_{$i}.min"] = "Kriterijum {$i} mora biti najmanje 1 poen.";
+            $messages["criterion_{$i}.max"] = "Kriterijum {$i} može biti najviše 5 poena.";
+            $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
+            $rules["criterion_{$i}"] = $saveAsDraft
+                ? 'nullable|integer|min:1|max:5'
+                : 'required|integer|min:1|max:5';
+        }
+
+        if (! $saveAsDraft) {
+            $rules['scoring_confirmed'] = 'accepted';
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        if ($saveAsDraft) {
+            $this->canonicalScoring->recordYouthDraftScore(
+                $application,
+                $commissionMember,
+                $validated,
+                $validated['notes'] ?? null,
+            );
+
+            return redirect()->route('evaluation.create', $application)
+                ->with('success', 'Nacrt ocjene je sačuvan.');
+        }
+
+        $this->canonicalScoring->recordYouthFinalScore(
+            $application,
+            $commissionMember,
+            $validated,
+            $validated['notes'] ?? null,
+            $request->boolean('scoring_confirmed'),
+        );
+
+        return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+            ->with('success', 'Ocjena je uspješno sačuvana.');
+    }
+
     /**
      * @return array<string, bool>
      */
@@ -509,9 +594,11 @@ class EvaluationController extends Controller
             ->get()
             ->keyBy('commission_member_id');
 
-        $canViewOtherMembersScores = $application->competition
-            ? $application->competition->isIndividualScoringCycleComplete()
-            : false;
+        $canViewOtherMembersScores = $application->competition?->isOmladinskoProfile()
+            ? false
+            : ($application->competition
+                ? $application->competition->isIndividualScoringCycleComplete()
+                : false);
         if (! $canViewOtherMembersScores && $commissionMember) {
             $allScores = $allScores->only([$commissionMember->id]);
         }
@@ -526,6 +613,8 @@ class EvaluationController extends Controller
 
         $eliminatoryCheck = $application->eliminatoryCheck;
         $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
+        $scoringProfile = ScoringProfileConfig::for($application->competition?->type);
+        $isOmladinskoScoring = $scoringProfile->isOmladinsko();
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
@@ -545,6 +634,8 @@ class EvaluationController extends Controller
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
+            'scoringProfile',
+            'isOmladinskoScoring',
         ));
     }
 

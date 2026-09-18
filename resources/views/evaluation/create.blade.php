@@ -494,8 +494,11 @@
                 $isRejected = $application->status === 'rejected';
                 $isApplicant = $isApplicant ?? false;
                 $competition = $application->competition;
+                $scoringProfile = $scoringProfile ?? \App\Support\ScoringProfileConfig::for($application->competition?->type);
                 $daysRemaining = $competition ? $competition->getDaysUntilEvaluationDeadline() : null;
-                $isDeadlinePassed = $competition ? $competition->isEvaluationDeadlinePassed() : false;
+                $isDeadlinePassed = $scoringProfile->appliesEvaluationDeadline
+                    && $competition
+                    && $competition->isEvaluationDeadlinePassed();
             @endphp
                         
             @if($isDeadlinePassed)
@@ -673,7 +676,7 @@
                     @if($eliminatoryIsConfirmedFail)
                         {{ \App\Services\ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE }}
                     @else
-                        {{ \App\Services\ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE }}
+                        {{ $scoringLockedMessage ?? \App\Services\ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE }}
                     @endif
                 </div>
             @endif
@@ -685,20 +688,32 @@
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section form-section-scores">
                     <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
+                    @if($isOmladinskoScoring)
+                        <div class="no-print" style="margin-bottom: 12px; color: #374151; font-size: 13px;">
+                            Skala: 1 — {{ \App\Support\ScoringProfileConfig::SCALE_MIN_LABEL }}; 5 — {{ \App\Support\ScoringProfileConfig::SCALE_MAX_LABEL }}. Vrijednosti 2, 3 i 4 su međuvrijednosti.
+                        </div>
+                        @php
+                            $youthOral = $youthOralPresentation ?? $application->oralPresentation;
+                        @endphp
+                        @if($youthOral && $youthOral->isCompleted())
+                            <div class="no-print" style="background: #eff6ff; border: 1px solid #93c5fd; color: #1e3a8a; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                                @if($youthOral->applicantAttended())
+                                    Usmeno predstavljanje je završeno. Podnosilac je prisustvovao. Prisustvo ne postavlja automatski ocjenu kriterijuma 10.
+                                @else
+                                    Usmeno predstavljanje je završeno. Evidentiran je nedolazak. Nedolazak nije eliminacija i ne postavlja automatski ocjenu kriterijuma 10.
+                                @endif
+                            </div>
+                        @else
+                            <div class="no-print" style="background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
+                                Nacrt ocjene je dozvoljen. Završetak ocjenjivanja je moguć tek nakon završene evidencije usmenog predstavljanja ove prijave.
+                            </div>
+                        @endif
+                    @endif
 
                     @php
-                        $criteria = [
-                            1 => 'Obrazac biznis plana je detaljno popunjen sa svim neophodnim informacijama i jasno su precizirani proizvodi/usluge koje će se ponuditi na tržištu.',
-                            2 => 'Jasno su identifikovani potencijalni kupci i njihove karakteristike.',
-                            3 => 'Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor.',
-                            4 => 'Prepoznata je i navedena konkurencija, kao i slabosti i snage iste.',
-                            5 => 'Jasno su navedeni potrebni resursi i identifikovani dobavljači.',
-                            6 => 'Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).',
-                            7 => 'Podaci o preduzetnici (preduzetnica posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
-                            8 => 'Preduzetnica planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
-                            9 => 'Razvijena matrica rizika je jasna i logična.',
-                            10 => 'Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).',
-                        ];
+                        $scoringProfile = $scoringProfile ?? \App\Support\ScoringProfileConfig::for($application->competition?->type);
+                        $isOmladinskoScoring = $isOmladinskoScoring ?? $scoringProfile->isOmladinsko();
+                        $criteria = $scoringProfile->criteria;
                     @endphp
 
                     <table class="evaluation-table evaluation-table-criteria">
@@ -744,6 +759,7 @@
                                                     {{-- Može unijeti ili mijenjati --}}
                                                     @php
                                                         $scoreInputsLocked = ! $scoringIsAllowed || $isRejected || ($isApplicant ?? false);
+                                                        $scoreInputRequired = ! $scoreInputsLocked && ! $isOmladinskoScoring;
                                                     @endphp
                                                     <input 
                                                         type="number" 
@@ -752,7 +768,7 @@
                                                         min="1" 
                                                         max="5" 
                                                         value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                        @if(! $scoreInputsLocked) required @endif
+                                                        @if($scoreInputRequired) required @endif
                                                         @if($scoreInputsLocked) disabled @endif
                                                         onchange="updateAverages()">
                                                 @endif
@@ -797,6 +813,7 @@
                 </div>
 
                 <div class="print-segment-bonus-page">
+                    @if(! $isOmladinskoScoring)
                     <table class="evaluation-table evaluation-table-bonus">
                         <thead>
                             <tr>
@@ -983,6 +1000,7 @@
                     <div class="warning-box notes-info-box" style="margin-top: 16px;">
                         <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
                     </div>
+                    @endif
 
                 <!-- 5. Ostale napomene -->
                 <div class="form-section form-section-notes">
@@ -1188,8 +1206,25 @@
                         </a>
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
+                        @if($isOmladinskoScoring)
+                            @if($hasCompletedEvaluation)
+                                <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
+                                    Individualna ocjena je zaključana i ne može se mijenjati.
+                                </div>
+                            @else
+                                <button type="submit" name="save_as_draft" value="1" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj nacrt</button>
+                                <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed || ! ($youthLockEvidenceReady ?? false)) disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;" @else style="margin-left: 12px;" @endif>Završi ocjenjivanje</button>
+                                @if(! ($youthLockEvidenceReady ?? false))
+                                    <div style="margin-top: 12px; color: #9a3412; font-size: 13px;">
+                                        Završetak ocjenjivanja je onemogućen dok usmeno predstavljanje ove prijave nije evidentirano kao završeno.
+                                    </div>
+                                @endif
+                            @endif
+                            <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                        @else
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                        @endif
                     @endif
                 </div>
             </form>
@@ -1263,6 +1298,10 @@
                 </div>
                 </div>
 
+                @if(($scoringIsAllowed || ($hasCompletedEvaluation ?? false)) && ! ($isApplicant ?? false))
+                    @include('evaluation.partials.youth_individual_scoring_form')
+                @endif
+
                 <div class="no-print" style="margin-top: 24px;">
                     <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                         Nazad na listu
@@ -1308,6 +1347,15 @@
     }
 
     document.getElementById('evaluationForm')?.addEventListener('submit', function (event) {
+        const submitter = event.submitter;
+        if (submitter && submitter.getAttribute('name') === 'save_as_draft') {
+            const confirmed = this.querySelector('[name="scoring_confirmed"]');
+            if (confirmed) {
+                confirmed.value = '0';
+            }
+            return;
+        }
+
         if (this.dataset.needsFinalConfirm !== '1') {
             return;
         }

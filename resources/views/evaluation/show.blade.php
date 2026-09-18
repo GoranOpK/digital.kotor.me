@@ -458,18 +458,9 @@
                 <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
                 
                 @php
-                    $criteria = [
-                        1 => 'Obrazac biznis plana je detaljno popunjen sa svim neophodnim informacijama i jasno su precizirani proizvodi/usluge koje će se ponuditi na tržištu.',
-                        2 => 'Jasno su identifikovani potencijalni kupci i njihove karakteristike.',
-                        3 => 'Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor.',
-                        4 => 'Prepoznata je i navedena konkurencija, kao i slabosti i snage iste.',
-                        5 => 'Jasno su navedeni potrebni resursi i identifikovani dobavljači.',
-                        6 => 'Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).',
-                        7 => 'Podaci o preduzetnici (preduzetnica posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
-                        8 => 'Preduzetnica planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
-                        9 => 'Razvijena matrica rizika je jasna i logična.',
-                        10 => 'Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).',
-                    ];
+                    $scoringProfile = $scoringProfile ?? \App\Support\ScoringProfileConfig::for($application->competition?->type);
+                    $isOmladinskoScoring = $isOmladinskoScoring ?? $scoringProfile->isOmladinsko();
+                    $criteria = $scoringProfile->criteria;
                 @endphp
 
                 <table class="evaluation-table">

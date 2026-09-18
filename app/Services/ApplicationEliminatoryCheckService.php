@@ -13,6 +13,7 @@ class ApplicationEliminatoryCheckService
 {
     public function __construct(
         protected ApplicationEliminatoryNoticeService $notices,
+        protected YouthSecondSessionGate $youthSecondSessionGate,
     ) {}
 
     public const FAIL_CONFIRMATION_MESSAGE = 'Prijava ne ispunjava jedan ili više eliminatornih kriterijuma i biće odbijena. Da li želite da nastavite?';
@@ -28,7 +29,7 @@ class ApplicationEliminatoryCheckService
         $application->loadMissing(['eliminatoryCheck', 'prigovor', 'competition']);
 
         if ($application->competition?->isOmladinskoProfile()) {
-            return false;
+            return $this->youthSecondSessionGate->youthDraftScoringIsAllowed($application);
         }
 
         if ($application->eliminatoryCheck?->isConfirmedPass() === true) {
