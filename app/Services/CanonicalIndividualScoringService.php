@@ -26,6 +26,18 @@ class CanonicalIndividualScoringService
 
     public const RANKING_LOCKED_MESSAGE = 'Rang lista i zbirni rezultati dostupni su tek kada svih pet kanonskih mjesta Komisije završi individualno bodovanje svih prijava koje su ušle u bodovanje.';
 
+    public const YOUTH_ADMIN_RANKING_ROUTE_MESSAGE = 'Preliminarna rang-lista mladih dostupna je Komisiji na ekranu ocjenjivanja, ne na administratorskoj ruti.';
+
+    public const YOUTH_CYCLE_INCOMPLETE_MESSAGE = 'Nijesu završene sve individualne ocjene prijava u ciklusu.';
+
+    public const YOUTH_RANKING_APPEAL_WINDOW_MESSAGE = 'Rok za prigovor je otvoren.';
+
+    public const YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE = 'Postoji neriješen prigovor.';
+
+    public const YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE = 'Bonusi nijesu potvrđeni.';
+
+    public const YOUTH_RANKING_FINAL_SCORE_MISSING_MESSAGE = 'Konačni rezultat nije obračunat.';
+
     public const PARTIAL_ROW_MESSAGE = 'Pronađen je nepotpun istorijski red ocjena za ovo kanonsko mjesto. Konačno bodovanje je zaustavljeno do pregleda. Red se ne smije prepisati niti dopuniti.';
 
     public const BONUS_LOCKED_MESSAGE = 'Dodatni bodovi su trajno zaključani. Izmjena nije dozvoljena nakon završetka cjelokupnog ciklusa individualnog bodovanja.';
@@ -172,6 +184,10 @@ class CanonicalIndividualScoringService
 
     public function isIndividualScoringCycleComplete(Competition $competition): bool
     {
+        if ($competition->isOmladinskoProfile()) {
+            return $this->isYouthIndividualScoringCycleComplete($competition);
+        }
+
         if ($competition->status !== 'closed' && $competition->status !== 'completed' && ! $competition->isApplicationDeadlinePassed()) {
             return false;
         }
@@ -218,6 +234,298 @@ class CanonicalIndividualScoringService
         }
 
         return true;
+    }
+
+    /**
+     * Operativni scoring skup: unos novih ocjena.
+     * Samo submitted/evaluated i aktivne youth scoring kapije.
+     *
+     * @return Collection<int, Application>
+     */
+    public function youthPositiveScoringApplications(Competition $competition): Collection
+    {
+        return $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated'])
+            ->with(['user', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation', 'evaluationScores.commissionMember.commission.members', 'competition'])
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (Application $application) => $this->youthSecondSessionGate->youthDraftScoringIsAllowed($application))
+            ->values();
+    }
+
+    /**
+     * Istorijski scoring skup: završetak ciklusa i trajnost formiranog ranga.
+     * Uključuje approved/rejected samo ako prijava ima pozitivne scoring činjenice.
+     *
+     * @return Collection<int, Application>
+     */
+    public function youthScoringCycleApplications(Competition $competition): Collection
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return collect();
+        }
+
+        return $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated', 'approved', 'rejected'])
+            ->with(['user', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation', 'evaluationScores.commissionMember.commission.members', 'competition'])
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (Application $application) => $this->applicationBelongsToYouthScoringCycle($application))
+            ->values();
+    }
+
+    public function isYouthIndividualScoringCycleComplete(Competition $competition): bool
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return false;
+        }
+
+        if ($competition->status !== 'closed' && $competition->status !== 'completed' && ! $competition->isApplicationDeadlinePassed()) {
+            return false;
+        }
+
+        if (! $competition->commission_id) {
+            return false;
+        }
+
+        $historical = $this->youthScoringCycleApplications($competition);
+        if ($historical->isEmpty()) {
+            return false;
+        }
+
+        foreach ($this->youthPositiveScoringApplications($competition) as $application) {
+            if (! $this->applicationHasYouthCanonicalSeats($application)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function isYouthPreliminaryRankingReady(Competition $competition): bool
+    {
+        return $this->youthPreliminaryRankingBlockReason($competition) === null;
+    }
+
+    public function youthPreliminaryRankingBlockReason(Competition $competition): ?string
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return self::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
+        }
+
+        if (! $this->isYouthIndividualScoringCycleComplete($competition)) {
+            return self::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
+        }
+
+        $historical = $this->youthScoringCycleApplications($competition);
+        if ($historical->isEmpty()) {
+            return self::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
+        }
+
+        $appealRelevant = $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated'])
+            ->with(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'competition'])
+            ->orderBy('id')
+            ->get();
+
+        $hasUnresolvedPrigovor = $appealRelevant->contains(
+            fn (Application $application) => $application->prigovor?->isPodnesen() === true
+        ) || $this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition);
+        if ($hasUnresolvedPrigovor) {
+            return self::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE;
+        }
+
+        foreach ($appealRelevant as $application) {
+            if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+                return self::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE;
+            }
+        }
+
+        foreach ($historical as $application) {
+            if ($application->bonuses_confirmed_at === null) {
+                return self::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE;
+            }
+            if ($application->final_score === null || $this->aggregateYouthApplication($application) === null) {
+                return self::YOUTH_RANKING_FINAL_SCORE_MISSING_MESSAGE;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Idempotentno formiranje preliminarne rang-liste mladih.
+     *
+     * Redoslijed katanaca: competitions → applications (id ASC) → evaluation_scores.
+     * Ne smije se zvati dok pozivalac drži application lock izvan ovog redoslijeda.
+     */
+    public function persistYouthPreliminaryRankingIfReady(Competition $competition): void
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return;
+        }
+
+        DB::transaction(function () use ($competition) {
+            /** @var Competition|null $lockedCompetition */
+            $lockedCompetition = Competition::query()
+                ->whereKey($competition->id)
+                ->lockForUpdate()
+                ->first();
+            if ($lockedCompetition === null || ! $lockedCompetition->isOmladinskoProfile()) {
+                return;
+            }
+
+            $lockedApplications = Application::query()
+                ->where('competition_id', $lockedCompetition->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($lockedApplications->isNotEmpty()) {
+                EvaluationScore::query()
+                    ->whereIn('application_id', $lockedApplications->pluck('id')->all())
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+            }
+
+            $lockedCompetition->unsetRelation('applications');
+            foreach ($lockedApplications as $lockedApplication) {
+                $lockedApplication->unsetRelation('evaluationScores');
+                $lockedApplication->setRelation('competition', $lockedCompetition);
+            }
+
+            if ($this->youthPreliminaryRankingBlockReason($lockedCompetition) !== null) {
+                return;
+            }
+
+            $eligible = $this->youthScoringCycleApplications($lockedCompetition);
+            $this->assignYouthPreliminaryRankingPositions($eligible);
+
+            $keepIds = $eligible
+                ->filter(fn (Application $application) => $application->ranking_position !== null)
+                ->pluck('id')
+                ->all();
+            $stale = Application::query()
+                ->where('competition_id', $lockedCompetition->id)
+                ->whereNotNull('ranking_position');
+            if ($keepIds !== []) {
+                $stale->whereNotIn('id', $keepIds);
+            }
+            $stale->update(['ranking_position' => null]);
+        });
+    }
+
+    /**
+     * @return array{
+     *     cycle_complete: bool,
+     *     individual_cycle_complete: bool,
+     *     ranking_ready: bool,
+     *     block_reason: ?string,
+     *     above: Collection<int, Application>,
+     *     below: Collection<int, Application>
+     * }
+     */
+    public function youthPreliminaryRankingView(Competition $competition): array
+    {
+        $cycleComplete = $this->isYouthIndividualScoringCycleComplete($competition);
+        $blockReason = $this->youthPreliminaryRankingBlockReason($competition);
+        $rankingReady = $blockReason === null;
+        $above = collect();
+        $below = collect();
+
+        if ($rankingReady) {
+            $scored = $this->youthScoringCycleApplications($competition)
+                ->sortBy('id')
+                ->values();
+            $above = $scored
+                ->filter(fn (Application $application) => $this->youthMeetsMinimumScore($application))
+                ->sort(function (Application $a, Application $b) {
+                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
+                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
+                    if ($aPos !== $bPos) {
+                        return $aPos <=> $bPos;
+                    }
+
+                    return $a->id <=> $b->id;
+                })
+                ->values();
+            $below = $scored
+                ->filter(fn (Application $application) => ! $this->youthMeetsMinimumScore($application))
+                ->sortBy('id')
+                ->values();
+        }
+
+        return [
+            'cycle_complete' => $cycleComplete,
+            'individual_cycle_complete' => $cycleComplete,
+            'ranking_ready' => $rankingReady,
+            'block_reason' => $cycleComplete ? $blockReason : self::YOUTH_CYCLE_INCOMPLETE_MESSAGE,
+            'above' => $above,
+            'below' => $below,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, Application>  $eligible
+     */
+    private function assignYouthPreliminaryRankingPositions(Collection $eligible): void
+    {
+        $rows = [];
+        foreach ($eligible as $application) {
+            $aggregate = $this->aggregateYouthApplication($application);
+            if ($aggregate === null) {
+                continue;
+            }
+
+            $rows[] = [
+                'application' => $application,
+                'full' => $aggregate['final_score_full'],
+            ];
+        }
+
+        usort($rows, function (array $a, array $b) {
+            $cmp = bccomp($b['full'], $a['full'], self::YOUTH_BONUS_SCALE);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return $a['application']->id <=> $b['application']->id;
+        });
+
+        $above = [];
+        foreach ($rows as $row) {
+            if (bccomp($row['full'], '30', self::YOUTH_BONUS_SCALE) >= 0) {
+                $above[] = $row;
+            }
+        }
+
+        $previousFull = null;
+        $previousRank = 0;
+        $aboveIds = [];
+        foreach ($above as $index => $row) {
+            $rank = ($previousFull !== null && bccomp($row['full'], $previousFull, self::YOUTH_BONUS_SCALE) === 0)
+                ? $previousRank
+                : $index + 1;
+            $previousRank = $rank;
+            $previousFull = $row['full'];
+            $aboveIds[] = $row['application']->id;
+
+            /** @var Application $application */
+            $application = $row['application'];
+            if ((int) $application->ranking_position !== $rank) {
+                $application->forceFill(['ranking_position' => $rank])->save();
+            }
+        }
+
+        foreach ($eligible as $application) {
+            if (in_array($application->id, $aboveIds, true)) {
+                continue;
+            }
+            if ($application->ranking_position !== null) {
+                $application->forceFill(['ranking_position' => null])->save();
+            }
+        }
     }
 
     /**
@@ -462,6 +770,11 @@ class CanonicalIndividualScoringService
             abort(403, $message);
         }
 
+        $application->loadMissing('competition');
+        if ($application->competition) {
+            $this->persistYouthPreliminaryRankingIfReady($application->competition);
+        }
+
         return $recorded;
     }
 
@@ -534,6 +847,11 @@ class CanonicalIndividualScoringService
                 $this->persistYouthAggregateIfReady($locked);
             }
         });
+
+        $application->loadMissing('competition');
+        if ($application->competition) {
+            $this->persistYouthPreliminaryRankingIfReady($application->competition);
+        }
     }
 
     public function youthQualifiesForPlannedRegistrationBonus(Application $application): bool
@@ -983,6 +1301,47 @@ class CanonicalIndividualScoringService
             'status' => 'evaluated',
             'evaluated_at' => now(),
         ])->save();
+    }
+
+    private function applicationBelongsToYouthScoringCycle(Application $application): bool
+    {
+        $application->loadMissing([
+            'eliminatoryCheck',
+            'eliminatoryNotice',
+            'prigovor',
+            'oralPresentation',
+            'evaluationScores.commissionMember.commission.members',
+            'competition',
+        ]);
+
+        if ($application->eliminatoryCheck?->isConfirmed() !== true) {
+            return false;
+        }
+
+        if ($this->youthSecondSessionGate->hasFinalRemainingReason($application)) {
+            return false;
+        }
+
+        if ($application->prigovor?->isPodnesen() === true) {
+            return false;
+        }
+
+        if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+            return false;
+        }
+
+        $passPath = $application->eliminatoryCheck->isConfirmedPass();
+        $liftPath = $application->prigovor?->liftsEliminatoryBar() === true;
+        if (! $passPath && ! $liftPath) {
+            return false;
+        }
+
+        $oral = $application->oralPresentation;
+        if ($oral === null || ! $oral->isCompleted() || $oral->applicant_attended === null) {
+            return false;
+        }
+
+        return $this->applicationHasYouthCanonicalSeats($application);
     }
 
     private function assertYouthBonusGates(Application $application, CommissionMember $member): void

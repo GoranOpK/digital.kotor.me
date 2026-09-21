@@ -54,10 +54,10 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $application->id)->whereIn('canonical_seat_no', [4, 5])->count());
         $this->assertTrue($application->meetsMinimumScore());
         $this->assertSame('evaluated', $application->status);
-        $this->assertNull($application->ranking_position);
+        $this->assertSame(1, (int) $application->ranking_position);
         $this->assertNotSame('approved', $application->status);
         $this->assertNotSame('rejected', $application->status);
-        $this->assertFalse($application->competition->isRankingFormed());
+        $this->assertTrue($application->competition->fresh()->isRankingFormed());
     }
 
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
@@ -135,7 +135,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertSame(8, $application->getBonusScore());
         $this->assertSame('56.00', $application->final_score);
         $this->assertSame('56.0000000000', $service->aggregateYouthApplication($application)['final_score_full']);
-        $this->assertNull($application->ranking_position);
+        $this->assertSame(1, (int) $application->ranking_position);
         $this->assertSame('evaluated', $application->status);
     }
 
@@ -204,7 +204,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertSame('evaluated', $afterA->status);
         $this->assertNotNull($afterA->evaluated_at);
         $this->assertSame('33.00', $afterA->final_score);
-        $this->assertNull($afterA->ranking_position);
+        $this->assertSame(1, (int) $afterA->ranking_position);
 
         $orderB = $this->youthReadyToLock();
         $this->lockThreeSeats($orderB);
@@ -212,13 +212,14 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertSame('evaluated', $beforeConfirm->status);
         $this->assertNotNull($beforeConfirm->evaluated_at);
         $this->assertNull($beforeConfirm->final_score);
+        $this->assertNull($beforeConfirm->ranking_position);
         $evaluatedAt = $beforeConfirm->evaluated_at->toDateTimeString();
         $this->confirmYouthBonuses($orderB, ['bonus_green_innovative' => '1']);
         $afterB = $orderB['application']->fresh();
         $this->assertSame('33.00', $afterB->final_score);
         $this->assertSame($evaluatedAt, $afterB->evaluated_at->toDateTimeString());
         $this->assertSame('evaluated', $afterB->status);
-        $this->assertNull($afterB->ranking_position);
+        $this->assertSame(1, (int) $afterB->ranking_position);
         $this->assertSame($afterA->final_score, $afterB->final_score);
     }
 
@@ -253,33 +254,37 @@ class YouthAggregateAndBonusTest extends TestCase
     public function test_secrecy_hides_totals_and_other_scores_before_cycle_complete(): void
     {
         $ctx = $this->youthReadyToLock();
-        $this->lockThreeSeats($ctx, [
-            1 => $this->allCriteria(5),
-            2 => $this->allCriteria(5),
-            3 => $this->allCriteria(5),
-        ]);
+        $this->actingAs($ctx['members'][0]->fresh('user')->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($this->allCriteria(5) + ['notes' => 'Napomena mjesta 1']))
+            ->assertSessionHasNoErrors();
+        $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($this->allCriteria(5) + ['notes' => 'Napomena mjesta 2']))
+            ->assertSessionHasNoErrors();
         $this->confirmYouthBonuses($ctx, [
             'bonus_info_day' => '1',
             'bonus_training' => '1',
             'bonus_new_business' => '1',
             'bonus_green_innovative' => '1',
         ]);
-        $this->assertSame('56.00', $ctx['application']->fresh()->final_score);
+        $this->assertNull($ctx['application']->fresh()->final_score);
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('56.00', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
+        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
         $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
+        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $memberHtml);
 
         $chairmanHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Dodatni bodovi su zaključani', $chairmanHtml);
         $this->assertStringNotContainsString('56.00', $chairmanHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $chairmanHtml);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $chairmanHtml);
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $chairmanHtml);
 
@@ -289,6 +294,8 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $indexHtml);
         $this->assertStringContainsString('Ocjenjivanje u toku', $indexHtml);
+        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $indexHtml);
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $indexHtml);
     }
 
     public function test_dual_membership_does_not_copy_youth_bonuses_to_zensko(): void

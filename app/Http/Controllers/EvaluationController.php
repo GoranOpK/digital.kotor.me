@@ -98,6 +98,20 @@ class EvaluationController extends Controller
             $query->where('competition_id', $requestedId);
         }
 
+        foreach ($assignedCompetitions as $assignedCompetition) {
+            if (! $assignedCompetition->isOmladinskoProfile()) {
+                continue;
+            }
+            $membership = $memberships->first(
+                fn (CommissionMember $member) => (int) $member->commission_id === (int) $assignedCompetition->commission_id
+                    && $member->status === 'active'
+            );
+            if ($membership === null) {
+                continue;
+            }
+            $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($assignedCompetition);
+        }
+
         $viewerMembershipIds = $memberships->pluck('id')->all();
         $evaluatedApplicationIds = EvaluationScore::whereIn('commission_member_id', $viewerMembershipIds)
             ->whereCompletedFinal()
@@ -146,12 +160,17 @@ class EvaluationController extends Controller
         // prikaži samo za konkurse koji imaju formiranu rang listu (isRankingFormed)
         // i koji nijesu arhivirani (status nije 'closed' ili 'completed')
         $competitionsWithAllEvaluated = $competitions
-            ->filter(fn ($c) => $c->isIndividualScoringCycleComplete() && !in_array($c->status, ['closed', 'completed']))
+            ->filter(fn ($c) => ! $c->isOmladinskoProfile() && $c->isIndividualScoringCycleComplete() && !in_array($c->status, ['closed', 'completed']))
             ->values();
 
         $canViewFinalScoresByCompetition = $competitions
             ->mapWithKeys(fn ($c) => [$c->id => $c->isIndividualScoringCycleComplete()])
             ->toArray();
+
+        $youthPreliminaryByCompetition = $competitions
+            ->filter(fn ($c) => $c->isOmladinskoProfile())
+            ->mapWithKeys(fn ($c) => [$c->id => $this->canonicalScoring->youthPreliminaryRankingView($c)])
+            ->all();
 
         $isChairman = $memberships->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
         $commissionMember = $memberships->firstWhere('position', 'predsjednik') ?? $memberships->first();
@@ -163,6 +182,7 @@ class EvaluationController extends Controller
             'commissionMember',
             'competitionsWithAllEvaluated',
             'canViewFinalScoresByCompetition',
+            'youthPreliminaryByCompetition',
             'isChairman',
             'viewerMembershipIds',
             'membershipByCommissionId',
@@ -215,6 +235,10 @@ class EvaluationController extends Controller
             if ($competition && ! $competition->isOmladinskoProfile() && $competition->isEvaluationDeadlinePassed()) {
                 abort(403, 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.');
             }
+
+            if ($competition?->isOmladinskoProfile()) {
+                $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
+            }
         }
 
         // Provjeri da li je prijava već odbijena
@@ -223,25 +247,69 @@ class EvaluationController extends Controller
 
         // Učitaj komisiju sa svim članovima
         // Ako je podnosilac prijave, učitaj komisiju preko konkursa
-        if ($commissionMember) {
-            $commission = $commissionMember->commission;
-        } else {
-            // Podnosilac prijave - učitaj komisiju preko konkursa
-            $commission = $application->competition->commission;
-        }
-        
-        $allMembers = $commission->members()
-            ->where('status', 'active')
-            ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
-            ->orderBy('id')
-            ->get();
+        $competition = $application->competition;
+        $scoringProfile = ScoringProfileConfig::for($competition?->type);
+        $isOmladinskoScoring = $scoringProfile->isOmladinsko();
+        $canViewOtherMembersScores = false;
+        $youthRankingView = null;
 
-        // Učitaj sve postojeće ocjene za ovu prijavu
-        $allScores = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $allMembers->pluck('id'))
-            ->with('commissionMember')
-            ->get()
-            ->keyBy('commission_member_id');
+        if ($isOmladinskoScoring) {
+            $commissionId = (int) ($competition?->commission_id ?? 0);
+            $commission = $commissionId > 0
+                ? \App\Models\Commission::query()->find($commissionId)
+                : null;
+            $allMembers = $commission
+                ? $commission->members()
+                    ->where('status', 'active')
+                    ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+                    ->orderBy('id')
+                    ->get()
+                : collect();
+            $youthRankingView = ($commissionMember && $competition)
+                ? $this->canonicalScoring->youthPreliminaryRankingView($competition)
+                : null;
+            $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
+            $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
+            $application->unsetRelation('evaluationScores');
+            $allScores = $canViewOtherMembersScores
+                ? $application->evaluationScores()
+                    ->whereNotNull('completed_at')
+                    ->whereIn('canonical_seat_no', [1, 2, 3])
+                    ->orderBy('canonical_seat_no')
+                    ->with('commissionMember')
+                    ->get()
+                    ->keyBy('commission_member_id')
+                : ($commissionMember
+                    ? $application->evaluationScores()
+                        ->where('commission_member_id', $commissionMember->id)
+                        ->get()
+                        ->keyBy('commission_member_id')
+                    : collect());
+        } elseif ($commissionMember) {
+            $commission = $commissionMember->commission;
+            $allMembers = $commission->members()
+                ->where('status', 'active')
+                ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+                ->orderBy('id')
+                ->get();
+            $allScores = EvaluationScore::where('application_id', $application->id)
+                ->whereIn('commission_member_id', $allMembers->pluck('id'))
+                ->with('commissionMember')
+                ->get()
+                ->keyBy('commission_member_id');
+        } else {
+            $commission = $application->competition->commission;
+            $allMembers = $commission->members()
+                ->where('status', 'active')
+                ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+                ->orderBy('id')
+                ->get();
+            $allScores = EvaluationScore::where('application_id', $application->id)
+                ->whereIn('commission_member_id', $allMembers->pluck('id'))
+                ->with('commissionMember')
+                ->get()
+                ->keyBy('commission_member_id');
+        }
 
         // Proveri da li je trenutni član već ocjenio
         $existingScore = $commissionMember ? $allScores->get($commissionMember->id) : null;
@@ -258,8 +326,6 @@ class EvaluationController extends Controller
         // Član je završio ocjenjivanje kada su uneseni svi kriterijumi (ne samo prazan red nakon odbijanja zbog dokumentacije)
         $hasCompletedEvaluation = $this->canonicalScoring->isFinalCompleted($existingScore);
 
-        $scoringProfile = ScoringProfileConfig::for($application->competition?->type);
-        $isOmladinskoScoring = $scoringProfile->isOmladinsko();
         $totalMembers = $isOmladinskoScoring
             ? $scoringProfile->requiredFinalCount
             : count(CommissionCanonicalSeat::SEATS);
@@ -278,19 +344,29 @@ class EvaluationController extends Controller
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
 
-        $competition = $application->competition;
-        $canViewOtherMembersScores = $isOmladinskoScoring
-            ? false
-            : ($competition ? $competition->isIndividualScoringCycleComplete() : false);
-        if (! $canViewOtherMembersScores && $commissionMember) {
-            $allScores = $allScores->only([$commissionMember->id]);
+        if (! $isOmladinskoScoring) {
+            $canViewOtherMembersScores = $competition ? $competition->isIndividualScoringCycleComplete() : false;
+            if (! $canViewOtherMembersScores && $commissionMember) {
+                $allScores = $allScores->only([$commissionMember->id]);
+            }
         }
 
-        $aggregate = $canViewOtherMembersScores
-            ? $this->canonicalScoring->aggregateApplication($application)
-            : null;
+        $aggregate = null;
+        $youthFinalScoreDisplay = null;
+        if ($canViewOtherMembersScores) {
+            if ($isOmladinskoScoring) {
+                $aggregate = $this->canonicalScoring->aggregateYouthApplication($application);
+                if ($application->bonuses_confirmed_at !== null) {
+                    $youthFinalScoreDisplay = $aggregate['final_score_display'] ?? null;
+                }
+            } else {
+                $aggregate = $this->canonicalScoring->aggregateApplication($application);
+            }
+        }
         $averageScores = $aggregate['criterion_averages'] ?? [];
-        $finalScore = $aggregate['base_score'] ?? 0;
+        $finalScore = $isOmladinskoScoring
+            ? 0
+            : ($aggregate['base_score'] ?? 0);
 
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation']);
 
@@ -344,6 +420,8 @@ class EvaluationController extends Controller
             'scoringLockedMessage',
             'youthPlannedRegistrationBonusEligible',
             'youthBonusesLocked',
+            'youthFinalScoreDisplay',
+            'youthRankingView',
         ));
     }
 
@@ -611,6 +689,10 @@ class EvaluationController extends Controller
 
         $this->abortIfCommissionProcessingBlocked($application->competition);
 
+        if ($application->competition?->isOmladinskoProfile()) {
+            $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($application->competition);
+        }
+
         $evaluationScore = EvaluationScore::where('application_id', $application->id)
             ->where('commission_member_id', $commissionMember->id)
             ->first();
@@ -619,48 +701,87 @@ class EvaluationController extends Controller
             return redirect()->route('evaluation.create', $application);
         }
 
-        // Učitaj komisiju sa svim članovima
-        // Ako je podnosilac prijave, učitaj komisiju preko konkursa
-        if ($commissionMember) {
-            $commission = $commissionMember->commission;
+        $scoringProfile = ScoringProfileConfig::for($application->competition?->type);
+        $isOmladinskoScoring = $scoringProfile->isOmladinsko();
+        $competition = $application->competition;
+        $canViewOtherMembersScores = false;
+        $youthRankingView = null;
+
+        if ($isOmladinskoScoring) {
+            $commissionId = (int) ($competition?->commission_id ?? 0);
+            $commission = $commissionId > 0
+                ? \App\Models\Commission::query()->find($commissionId)
+                : null;
+            $allMembers = $commission
+                ? $commission->members()
+                    ->where('status', 'active')
+                    ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+                    ->orderBy('id')
+                    ->get()
+                : collect();
+            $youthRankingView = ($commissionMember && $competition)
+                ? $this->canonicalScoring->youthPreliminaryRankingView($competition)
+                : null;
+            $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
+            $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
+            $application->unsetRelation('evaluationScores');
+            $allScores = $canViewOtherMembersScores
+                ? $application->evaluationScores()
+                    ->whereNotNull('completed_at')
+                    ->whereIn('canonical_seat_no', [1, 2, 3])
+                    ->orderBy('canonical_seat_no')
+                    ->with('commissionMember')
+                    ->get()
+                    ->keyBy('commission_member_id')
+                : $application->evaluationScores()
+                    ->where('commission_member_id', $commissionMember->id)
+                    ->get()
+                    ->keyBy('commission_member_id');
         } else {
-            // Podnosilac prijave - učitaj komisiju preko konkursa
-            $commission = $application->competition->commission;
-        }
-        $allMembers = $commission->members()
-            ->where('status', 'active')
-            ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
-            ->orderBy('id')
-            ->get();
-
-        // Učitaj sve postojeće ocjene za ovu prijavu
-        $allScores = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $allMembers->pluck('id'))
-            ->with('commissionMember')
-            ->get()
-            ->keyBy('commission_member_id');
-
-        $canViewOtherMembersScores = $application->competition?->isOmladinskoProfile()
-            ? false
-            : ($application->competition
-                ? $application->competition->isIndividualScoringCycleComplete()
-                : false);
-        if (! $canViewOtherMembersScores && $commissionMember) {
-            $allScores = $allScores->only([$commissionMember->id]);
+            if ($commissionMember) {
+                $commission = $commissionMember->commission;
+            } else {
+                $commission = $application->competition->commission;
+            }
+            $allMembers = $commission->members()
+                ->where('status', 'active')
+                ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+                ->orderBy('id')
+                ->get();
+            $allScores = EvaluationScore::where('application_id', $application->id)
+                ->whereIn('commission_member_id', $allMembers->pluck('id'))
+                ->with('commissionMember')
+                ->get()
+                ->keyBy('commission_member_id');
+            $canViewOtherMembersScores = $competition
+                ? $competition->isIndividualScoringCycleComplete()
+                : false;
+            if (! $canViewOtherMembersScores && $commissionMember) {
+                $allScores = $allScores->only([$commissionMember->id]);
+            }
         }
 
-        $aggregate = $canViewOtherMembersScores
-            ? $this->canonicalScoring->aggregateApplication($application)
-            : null;
+        $aggregate = null;
+        $youthFinalScoreDisplay = null;
+        if ($canViewOtherMembersScores) {
+            if ($isOmladinskoScoring) {
+                $aggregate = $this->canonicalScoring->aggregateYouthApplication($application);
+                if ($application->bonuses_confirmed_at !== null) {
+                    $youthFinalScoreDisplay = $aggregate['final_score_display'] ?? null;
+                }
+            } else {
+                $aggregate = $this->canonicalScoring->aggregateApplication($application);
+            }
+        }
         $averageScores = $aggregate['criterion_averages'] ?? [];
-        $finalScore = $aggregate['base_score'] ?? 0;
+        $finalScore = $isOmladinskoScoring
+            ? 0
+            : ($aggregate['base_score'] ?? 0);
 
         $application->load(['user', 'competition', 'businessPlan', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         $eliminatoryCheck = $application->eliminatoryCheck;
         $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
-        $scoringProfile = ScoringProfileConfig::for($application->competition?->type);
-        $isOmladinskoScoring = $scoringProfile->isOmladinsko();
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
@@ -682,6 +803,8 @@ class EvaluationController extends Controller
             'canDecidePrigovor',
             'scoringProfile',
             'isOmladinskoScoring',
+            'youthFinalScoreDisplay',
+            'youthRankingView',
         ));
     }
 

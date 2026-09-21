@@ -2389,6 +2389,10 @@ class AdminController extends Controller
      */
     public function rankingList(Competition $competition)
     {
+        if ($competition->isOmladinskoProfile()) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::YOUTH_ADMIN_RANKING_ROUTE_MESSAGE);
+        }
+
         $competition->load('upNumber');
 
         $user = auth()->user();

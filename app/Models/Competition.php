@@ -505,6 +505,11 @@ class Competition extends Model
      */
     public function isRankingFormed(): bool
     {
+        if ($this->isOmladinskoProfile()) {
+            return app(CanonicalIndividualScoringService::class)
+                ->isYouthPreliminaryRankingReady($this);
+        }
+
         return $this->isIndividualScoringCycleComplete();
     }
 
@@ -522,6 +527,28 @@ class Competition extends Model
         $chairmanMember = $commission ? $commission->activeMembers()->where('position', 'predsjednik')->first() : null;
         if (!$chairmanMember) {
             return false;
+        }
+
+        if ($this->isOmladinskoProfile()) {
+            $subjects = app(CanonicalIndividualScoringService::class)
+                ->youthScoringCycleApplications($this)
+                ->filter(fn ($application) => $application->meetsMinimumScore());
+
+            if ($subjects->isEmpty()) {
+                return true;
+            }
+
+            return $subjects->every(function ($app) {
+                if ($app->commission_decision === 'podrzava_potpuno') {
+                    return $app->approved_amount !== null && (float) $app->approved_amount > 0;
+                }
+
+                if ($app->commission_decision === 'odbija') {
+                    return trim((string) $app->commission_justification) !== '';
+                }
+
+                return false;
+            });
         }
 
         $allApplications = $this->applications()

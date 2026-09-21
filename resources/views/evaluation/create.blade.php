@@ -487,6 +487,10 @@
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
+        @include('evaluation._youth_preliminary_ranking', [
+            'youthRankingView' => $youthRankingView ?? null,
+        ])
+
 
         <!-- Forma za ocjenjivanje -->
         <div class="form-card">
@@ -994,15 +998,23 @@
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
                                     @php
-                                        // Konačna prosječna ocjena (sa bonus bodovima) vidljiva tek kada
-                                        // SVI članovi ocijene SVE prijave na konkursu
-                                        $bonusScore = $application->getBonusScore();
                                         $canViewAggregates = isset($canViewOtherMembersScores) && $canViewOtherMembersScores;
                                     @endphp
-                                    @if($canViewAggregates && $finalScore > 0)
-                                        <strong>{{ number_format($finalScore + $bonusScore, 2) }}</strong>
+                                    @if($isOmladinskoScoring)
+                                        @if($canViewAggregates && ! empty($youthFinalScoreDisplay))
+                                            <strong>{{ $youthFinalScoreDisplay }}</strong>
+                                        @else
+                                            <strong>—</strong>
+                                        @endif
                                     @else
-                                        <strong>—</strong>
+                                        @php
+                                            $bonusScore = $application->getBonusScore();
+                                        @endphp
+                                        @if($canViewAggregates && $finalScore > 0)
+                                            <strong>{{ number_format($finalScore + $bonusScore, 2) }}</strong>
+                                        @else
+                                            <strong>—</strong>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>

@@ -123,6 +123,17 @@
             @endif
         </div>
 
+        @if(isset($youthPreliminaryByCompetition) && $youthPreliminaryByCompetition !== [])
+            @foreach($competitions as $youthComp)
+                @if(isset($youthPreliminaryByCompetition[$youthComp->id]))
+                    @include('evaluation._youth_preliminary_ranking', [
+                        'youthRankingView' => $youthPreliminaryByCompetition[$youthComp->id],
+                        'youthRankingTitle' => $youthComp->title,
+                    ])
+                @endif
+            @endforeach
+        @endif
+
         @php
             // Defaultni konkurs u filteru: posljednji (najnoviji) iz kolekcije
             $lastCompetitionId = isset($competitions) && $competitions->isNotEmpty()
@@ -238,11 +249,18 @@
                             $canViewFinalScores = isset($canViewFinalScoresByCompetition[$application->competition_id])
                                 ? $canViewFinalScoresByCompetition[$application->competition_id]
                                 : false;
+                            $isYouthApplication = $application->competition?->isOmladinskoProfile();
+                            $youthRankingReady = $isYouthApplication
+                                && isset($youthPreliminaryByCompetition[$application->competition_id])
+                                && ($youthPreliminaryByCompetition[$application->competition_id]['ranking_ready'] ?? false);
+                            $hasCanonicalSeats = $isYouthApplication
+                                ? app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasYouthCanonicalSeats($application)
+                                : app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application);
 
                             if ($application->status === 'rejected') {
                                 $displayStatus = 'Odbijena prijava';
                                 $statusClass = 'status-rejected';
-                            } elseif ($canViewFinalScores && app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application)) {
+                            } elseif ($canViewFinalScores && $hasCanonicalSeats) {
                                 $displayStatus = 'Ocijenjena prijava';
                                 $statusClass = 'status-evaluated';
                             } elseif ($isEvaluated) {
@@ -270,8 +288,10 @@
                             </td>
                             <td>
                                 @if($application->status === 'rejected' && $application->isEliminatedFromScoring())
-                                    {{ number_format($application->getDisplayScore(), 2) }} / 58
-                                @elseif($canViewFinalScores && $application->final_score)
+                                    {{ number_format($application->getDisplayScore(), 2) }} / {{ $isYouthApplication ? '56' : '58' }}
+                                @elseif($isYouthApplication && $youthRankingReady && $application->final_score)
+                                    {{ number_format($application->final_score, 2) }} / 56
+                                @elseif(! $isYouthApplication && $canViewFinalScores && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 58
                                 @else
                                     Ocjenjivanje u toku

@@ -113,3 +113,74 @@
         @endif
     </div>
 </form>
+
+@if(($canViewOtherMembersScores ?? false) && isset($allMembers, $allScores))
+    {{-- read-only tabela individualnih ocjena Komisije --}}
+    @php
+        $youthSeatMembers = [];
+        foreach ($allMembers as $member) {
+            $memberScore = $allScores->get($member->id);
+            $seatNo = (int) ($memberScore?->canonical_seat_no ?? 0);
+            if ($seatNo >= 1 && $seatNo <= 3) {
+                $youthSeatMembers[$seatNo] = [
+                    'score' => $memberScore,
+                    'seat' => $seatNo,
+                ];
+            }
+        }
+        ksort($youthSeatMembers);
+    @endphp
+    <div class="form-section">
+        <table class="evaluation-table evaluation-table-criteria">
+            <thead>
+                <tr>
+                    <th class="criterion-col">KRITERIJUMI ZA OCJENU</th>
+                    @foreach($youthSeatMembers as $seatRow)
+                        <th style="font-size: 11px;">
+                            @if($seatRow['seat'] === 1)
+                                Predsjednik
+                            @else
+                                Član mjesta {{ $seatRow['seat'] }}
+                            @endif
+                        </th>
+                    @endforeach
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($criteria as $num => $name)
+                    <tr>
+                        <td class="criterion-col">
+                            <strong>{{ $num }}.</strong> {{ $name }}
+                        </td>
+                        @foreach($youthSeatMembers as $seatRow)
+                            @php
+                                $seatValue = $seatRow['score'] ? $seatRow['score']->{"criterion_{$num}"} : null;
+                            @endphp
+                            <td>
+                                <span class="score-display">{{ $seatValue !== null && $seatValue !== '' ? $seatValue : '—' }}</span>
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        @foreach($youthSeatMembers as $seatRow)
+            @php
+                $memberNotes = $seatRow['score']?->notes;
+            @endphp
+            @if(is_string($memberNotes) && trim($memberNotes) !== '')
+                <div style="margin-top: 16px;">
+                    <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                        @if($seatRow['seat'] === 1)
+                            Predsjednik
+                        @else
+                            Član mjesta {{ $seatRow['seat'] }}
+                        @endif
+                    </div>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">{{ $memberNotes }}</div>
+                </div>
+            @endif
+        @endforeach
+    </div>
+@endif

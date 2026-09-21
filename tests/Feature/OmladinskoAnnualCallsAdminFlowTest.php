@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\ApplicationEliminatoryCheck;
+use App\Models\ApplicationOralPresentation;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\CommissionSession;
 use App\Models\Competition;
+use App\Models\EvaluationScore;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
@@ -629,8 +633,10 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
      */
     private function makeGateReadyFirstCall(array $overrides = []): Competition
     {
+        $commission = $overrides['commission'] ?? $this->makeYouthThreeSeatCommission();
+        $overrides['commission'] = $commission;
         $first = $this->makeOmladinskoFirst($overrides);
-        $this->addConfirmedAllocation($first, '60000.00');
+        $this->seedYouthRankedApprovedAllocation($first, '60000.00');
 
         return $first->fresh(['commission', 'upNumber']);
     }
@@ -715,6 +721,129 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'approved_amount' => $amount,
             'requested_amount' => $amount,
         ]);
+    }
+
+    /**
+     * @return array{0: Commission, 1: list<CommissionMember>}
+     */
+    private function makeYouthThreeSeatCommission(): Commission
+    {
+        $commission = Commission::create([
+            'name' => 'Komisija mladih '.uniqid(),
+            'year' => 2026,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+        ]);
+        $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
+        for ($seat = 1; $seat <= 3; $seat++) {
+            $user = User::factory()->create([
+                'role_id' => $komisijaRole->id,
+                'activation_status' => 'active',
+                'email_verified_at' => now(),
+            ]);
+            CommissionMember::create([
+                'commission_id' => $commission->id,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'position' => $seat === 1 ? 'predsjednik' : 'clan',
+                'member_type' => null,
+                'canonical_seat_no' => $seat,
+                'status' => 'active',
+            ]);
+        }
+
+        return $commission->fresh(['activeMembers.user']);
+    }
+
+    private function seedYouthRankedApprovedAllocation(Competition $competition, string $amount): Application
+    {
+        $competition->load(['commission.activeMembers.user']);
+        $chairman = $competition->commission->activeMembers
+            ->firstWhere('position', 'predsjednik')
+            ?? $competition->commission->activeMembers->first();
+        $members = $competition->commission->activeMembers->sortBy('canonical_seat_no')->values();
+
+        $user = $this->makeKorisnik([
+            'email' => 'omladinsko-ranked-'.$this->jmbSerial.'@example.test',
+            'jmb' => $this->nextJmb(),
+        ]);
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Rangirani plan '.$this->jmbSerial,
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'status' => 'submitted',
+            'submitted_at' => now()->subDays(24),
+        ]);
+
+        ApplicationEliminatoryCheck::query()->create([
+            'application_id' => $application->id,
+            'criterion_1' => true,
+            'criterion_2' => true,
+            'criterion_3' => true,
+            'confirmed_at' => now()->subDays(4),
+            'confirmed_by_commission_member_id' => $chairman->id,
+            'confirmed_by_user_id' => $chairman->user_id,
+            'confirmed_by_name' => $chairman->name,
+        ]);
+
+        $session = CommissionSession::query()->create([
+            'competition_id' => $competition->id,
+            'commission_id' => $competition->commission_id,
+            'session_type' => CommissionSession::TYPE_SECOND,
+            'held_at' => now()->subDays(2),
+            'completed_at' => now()->subDays(2),
+            'recorded_by_user_id' => $chairman->user_id,
+            'notes' => 'Druga sjednica',
+        ]);
+        ApplicationOralPresentation::query()->create([
+            'commission_session_id' => $session->id,
+            'application_id' => $application->id,
+            'scheduled_at' => now()->subDays(2),
+            'held_at' => now()->subDays(2),
+            'applicant_attended' => true,
+            'notes' => 'Prisutan',
+            'completed_at' => now()->subDays(2),
+            'recorded_by_user_id' => $chairman->user_id,
+        ]);
+
+        foreach ($members as $index => $member) {
+            $payload = [];
+            for ($i = 1; $i <= 10; $i++) {
+                $payload["criterion_{$i}"] = 5;
+            }
+            EvaluationScore::query()->create(array_merge($payload, [
+                'application_id' => $application->id,
+                'commission_member_id' => $member->id,
+                'canonical_seat_no' => $index + 1,
+                'completed_at' => now()->subDay(),
+                'notes' => 'Ocjena mjesta '.($index + 1),
+            ]));
+        }
+
+        $application->forceFill([
+            'status' => 'evaluated',
+            'evaluated_at' => now()->subDay(),
+            'bonuses_confirmed_at' => now()->subDay(),
+            'bonuses_confirmed_by_user_id' => $chairman->user_id,
+            'bonuses_confirmed_by_commission_member_id' => $chairman->id,
+            'final_score' => '50.00',
+            'ranking_position' => 1,
+        ])->save();
+
+        $application->forceFill([
+            'status' => CompetitionAnnualInstance::CONFIRMED_APPLICATION_STATUS,
+            'commission_decision' => CompetitionAnnualInstance::CONFIRMED_COMMISSION_DECISION,
+            'approved_amount' => $amount,
+            'requested_amount' => $amount,
+            'commission_justification' => 'Odobreno.',
+            'commission_decision_date' => now()->subDay(),
+            'signed_by_chairman' => true,
+        ])->save();
+
+        return $application->fresh();
     }
 
     private function makeCommissionWithPresident(): Commission

@@ -376,6 +376,10 @@
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
+        @include('evaluation._youth_preliminary_ranking', [
+            'youthRankingView' => $youthRankingView ?? null,
+        ])
+
         <!-- Forma za prikaz ocjene -->
             <div class="form-card">
             @if(! ($eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type))->usesStructuredNotes)
@@ -520,13 +524,21 @@
                                 </td>
                             @endforeach
                             <td class="average-col" style="font-weight: bold !important;">
-                                @php
-                                    $bonusScore = $application->getBonusScore();
-                                @endphp
-                                @if($canViewOtherMembersScores ?? false)
-                                    <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
+                                @if($isOmladinskoScoring)
+                                    @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
+                                        <strong>{{ $youthFinalScoreDisplay }}</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
                                 @else
-                                    <strong>—</strong>
+                                    @php
+                                        $bonusScore = $application->getBonusScore();
+                                    @endphp
+                                    @if($canViewOtherMembersScores ?? false)
+                                        <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
                                 @endif
                             </td>
                         </tr>

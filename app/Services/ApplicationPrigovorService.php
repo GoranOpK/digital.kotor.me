@@ -10,6 +10,8 @@ use App\Models\ApplicationPrigovor;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\User;
+use App\Services\ApplicationYouthAppealWindowService;
+use App\Services\CanonicalIndividualScoringService;
 use App\Support\EliminatoryProfileConfig;
 use App\Support\YouthPrigovorObrazlozenje;
 use Illuminate\Database\QueryException;
@@ -388,6 +390,12 @@ class ApplicationPrigovorService
         }
 
         $this->deliverDecisionEmail($application, $prigovor);
+
+        $application->loadMissing('competition');
+        if ($application->competition?->isOmladinskoProfile()) {
+            app(CanonicalIndividualScoringService::class)
+                ->persistYouthPreliminaryRankingIfReady($application->competition);
+        }
 
         return $prigovor;
     }
