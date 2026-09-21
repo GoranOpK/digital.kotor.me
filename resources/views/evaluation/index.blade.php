@@ -129,6 +129,7 @@
                     @include('evaluation._youth_preliminary_ranking', [
                         'youthRankingView' => $youthPreliminaryByCompetition[$youthComp->id],
                         'youthRankingTitle' => $youthComp->title,
+                        'canEditYouthAllocationDraft' => $youthAllocationCanEditByCompetition[$youthComp->id] ?? false,
                     ])
                 @endif
             @endforeach

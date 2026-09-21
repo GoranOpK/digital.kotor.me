@@ -9,6 +9,7 @@ use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\YouthAllocationDraftService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
@@ -28,6 +29,7 @@ class EvaluationController extends Controller
         protected CanonicalIndividualScoringService $canonicalScoring,
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
         protected YouthSecondSessionGate $youthSecondSessionGate,
+        protected YouthAllocationDraftService $youthAllocationDrafts,
     ) {}
 
     /**
@@ -172,6 +174,11 @@ class EvaluationController extends Controller
             ->mapWithKeys(fn ($c) => [$c->id => $this->canonicalScoring->youthPreliminaryRankingView($c)])
             ->all();
 
+        $youthAllocationCanEditByCompetition = $competitions
+            ->filter(fn ($c) => $c->isOmladinskoProfile())
+            ->mapWithKeys(fn ($c) => [$c->id => $this->youthAllocationDrafts->canEditDraft($c, $user)])
+            ->all();
+
         $isChairman = $memberships->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
         $commissionMember = $memberships->firstWhere('position', 'predsjednik') ?? $memberships->first();
         $membershipByCommissionId = $memberships->keyBy('commission_id');
@@ -183,6 +190,7 @@ class EvaluationController extends Controller
             'competitionsWithAllEvaluated',
             'canViewFinalScoresByCompetition',
             'youthPreliminaryByCompetition',
+            'youthAllocationCanEditByCompetition',
             'isChairman',
             'viewerMembershipIds',
             'membershipByCommissionId',
@@ -386,6 +394,9 @@ class EvaluationController extends Controller
         $youthPlannedRegistrationBonusEligible = $isOmladinskoScoring
             && $this->canonicalScoring->youthQualifiesForPlannedRegistrationBonus($application);
         $youthBonusesLocked = $isOmladinskoScoring && $application->bonuses_confirmed_at !== null;
+        $canEditYouthAllocationDraft = $isOmladinskoScoring
+            && $competition
+            && $this->youthAllocationDrafts->canEditDraft($competition, $user);
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
@@ -422,6 +433,7 @@ class EvaluationController extends Controller
             'youthBonusesLocked',
             'youthFinalScoreDisplay',
             'youthRankingView',
+            'canEditYouthAllocationDraft',
         ));
     }
 
@@ -785,6 +797,9 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
+        $canEditYouthAllocationDraft = $isOmladinskoScoring
+            && $competition
+            && $this->youthAllocationDrafts->canEditDraft($competition, $user);
 
         return view('evaluation.show', compact(
             'application',
@@ -805,7 +820,29 @@ class EvaluationController extends Controller
             'isOmladinskoScoring',
             'youthFinalScoreDisplay',
             'youthRankingView',
+            'canEditYouthAllocationDraft',
         ));
+    }
+
+    /**
+     * Nacrt raspodjele mladih — predsjednik, samo nakon trajnog preliminarnog ranga.
+     */
+    public function storeYouthAllocationDraft(Request $request, Application $application): RedirectResponse
+    {
+        $application->loadMissing('competition');
+        $this->abortIfCommissionProcessingBlocked($application->competition);
+
+        $validated = $request->validate([
+            'commission_decision' => 'required|in:podrzava_potpuno,odbija',
+            'commission_justification' => 'nullable|string|max:5000',
+            'approved_amount' => 'nullable|numeric|min:0',
+        ], [
+            'commission_decision.required' => 'Morate odabrati zaključak komisije.',
+        ]);
+
+        $this->youthAllocationDrafts->saveDraft($application, Auth::user(), $validated);
+
+        return redirect()->back()->with('success', 'Nacrt raspodjele je sačuvan.');
     }
 
     /**
@@ -813,6 +850,11 @@ class EvaluationController extends Controller
      */
     public function storeDecision(Request $request, Application $application): RedirectResponse
     {
+        $application->loadMissing('competition');
+        if ($application->competition?->isOmladinskoProfile()) {
+            abort(403, YouthAllocationDraftService::WOMEN_STORE_DECISION_CLOSED_MESSAGE);
+        }
+
         $user = Auth::user();
         
         // Pronađi člana komisije

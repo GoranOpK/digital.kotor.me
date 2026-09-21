@@ -2545,6 +2545,10 @@ class AdminController extends Controller
      */
     public function selectWinners(Request $request, Competition $competition)
     {
+        if ($competition->isOmladinskoProfile()) {
+            abort(403, \App\Services\Competitions\YouthAllocationDraftService::WOMEN_SELECT_WINNERS_CLOSED_MESSAGE);
+        }
+
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
@@ -2637,6 +2641,10 @@ class AdminController extends Controller
      */
     public function generateDecision(Competition $competition)
     {
+        if ($competition->isOmladinskoProfile()) {
+            abort(403, \App\Services\Competitions\YouthAllocationDraftService::WOMEN_PREDLOG_CLOSED_MESSAGE);
+        }
+
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';

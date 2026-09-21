@@ -461,6 +461,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::post('/applications/{application}/prigovor/decide', [EvaluationController::class, 'decidePrigovor'])->name('prigovor.decide');
             // Rute za predsjednika komisije
             Route::post('/applications/{application}/decision', [EvaluationController::class, 'storeDecision'])->name('store-decision');
+            Route::post('/applications/{application}/youth-allocation-draft', [EvaluationController::class, 'storeYouthAllocationDraft'])->name('youth-allocation-draft');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
         });
 

@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Services\Competitions;
+
+use App\Models\Application;
+use App\Models\CommissionMember;
+use App\Models\Competition;
+use App\Models\User;
+use App\Services\CanonicalIndividualScoringService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * Youth 6.14.2 draft allocation only.
+ * Does not confirm ranking, apply 30/20/15, resolve equal-score, or change application status.
+ */
+final class YouthAllocationDraftService
+{
+    public const RANKING_NOT_READY_MESSAGE =
+        'Nacrt raspodjele mladih može se unijeti tek kada je preliminarna rang-lista trajno formirana.';
+
+    public const CHAIRMAN_ONLY_MESSAGE =
+        'Nacrt raspodjele mladih unosi samo aktivni predsjednik Komisije konkretnog Poziva.';
+
+    public const BELOW_THRESHOLD_MESSAGE =
+        'Prijava ispod praga od 30 bodova ne ulazi u raspodjelu.';
+
+    public const NOT_YOUTH_MESSAGE =
+        'Ovaj unos raspodjele važi samo za konkurs mladih.';
+
+    public const WOMEN_STORE_DECISION_CLOSED_MESSAGE =
+        'Zaključak raspodjele mladih čuva se kao nacrt na preliminarnom rangu Komisije, ne ženskim ulazom.';
+
+    public const WOMEN_SELECT_WINNERS_CLOSED_MESSAGE =
+        'Odabir dobitnika nije dostupan za konkurs mladih.';
+
+    public const WOMEN_PREDLOG_CLOSED_MESSAGE =
+        'Predlog odluke nije dostupan za konkurs mladih.';
+
+    public const COMPLETED_LOCKED_MESSAGE =
+        'Rang lista je zaključena. Nakon završetka konkursa izmjene nijesu dozvoljene.';
+
+    public const AMOUNT_REQUIRED_MESSAGE =
+        'Za zaključak Podržava predloženi iznos podrške je obavezan i mora biti veći od nule.';
+
+    public const AMOUNT_EXCEEDS_REQUESTED_MESSAGE =
+        'Odobreni iznos ne može biti veći od traženog iznosa.';
+
+    public const AMOUNT_EXCEEDS_REMAINING_MESSAGE =
+        'Odobreni iznos ne može biti veći od preostalih sredstava konkursa.';
+
+    public const REJECT_JUSTIFICATION_REQUIRED_MESSAGE =
+        'Za zaključak Odbija obrazloženje je obavezno.';
+
+    public const REDUCED_AMOUNT_JUSTIFICATION_REQUIRED_MESSAGE =
+        'Kada je iznos manji od traženog, obrazloženje je obavezno.';
+
+    public function __construct(
+        protected CanonicalIndividualScoringService $canonicalScoring,
+    ) {}
+
+    public function canEditDraft(Competition $competition, User $user): bool
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return false;
+        }
+
+        if (in_array($competition->status, ['closed', 'completed'], true)) {
+            return false;
+        }
+
+        if (! $this->canonicalScoring->isYouthPreliminaryRankingReady($competition)) {
+            return false;
+        }
+
+        return $this->activeChairman($competition, $user) !== null;
+    }
+
+    public function remainingBudget(Competition $competition, ?int $exceptApplicationId = null): string
+    {
+        $budget = $this->money((string) ($competition->budget ?? 0));
+        $query = Application::query()
+            ->where('competition_id', $competition->id)
+            ->where('commission_decision', 'podrzava_potpuno')
+            ->whereNotNull('approved_amount')
+            ->where('approved_amount', '>', 0);
+
+        if ($exceptApplicationId !== null) {
+            $query->where('id', '!=', $exceptApplicationId);
+        }
+
+        $used = '0.00';
+        foreach ($query->pluck('approved_amount') as $amount) {
+            $used = bcadd($used, $this->money((string) $amount), 2);
+        }
+
+        return bcsub($budget, $used, 2);
+    }
+
+    /**
+     * @param  array{commission_decision?: string|null, approved_amount?: mixed, commission_justification?: string|null}  $input
+     */
+    public function saveDraft(Application $application, User $user, array $input): void
+    {
+        $application->loadMissing('competition');
+        $competition = $application->competition;
+
+        if ($competition === null || ! $competition->isOmladinskoProfile()) {
+            abort(403, self::NOT_YOUTH_MESSAGE);
+        }
+
+        if (in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, self::COMPLETED_LOCKED_MESSAGE);
+        }
+
+        if ($this->activeChairman($competition, $user) === null) {
+            abort(403, self::CHAIRMAN_ONLY_MESSAGE);
+        }
+
+        $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
+        $competition->refresh();
+
+        if (! $this->canonicalScoring->isYouthPreliminaryRankingReady($competition)) {
+            abort(403, self::RANKING_NOT_READY_MESSAGE);
+        }
+
+        DB::transaction(function () use ($application, $input, $competition) {
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->first();
+            if ($locked === null) {
+                abort(404);
+            }
+
+            $locked->loadMissing('competition');
+            $lockedCompetition = $locked->competition ?? $competition->fresh();
+
+            if (! $this->canonicalScoring->youthMeetsMinimumScore($locked)) {
+                abort(403, self::BELOW_THRESHOLD_MESSAGE);
+            }
+
+            $decision = (string) ($input['commission_decision'] ?? '');
+            $justification = trim((string) ($input['commission_justification'] ?? ''));
+            $approvedAmount = array_key_exists('approved_amount', $input) ? $input['approved_amount'] : null;
+
+            if ($decision === 'podrzava_potpuno') {
+                if ($approvedAmount === null || $approvedAmount === '' || bccomp($this->money((string) $approvedAmount), '0', 2) <= 0) {
+                    throw ValidationException::withMessages([
+                        'approved_amount' => self::AMOUNT_REQUIRED_MESSAGE,
+                    ]);
+                }
+
+                $amount = $this->money((string) $approvedAmount);
+                $requested = $locked->requested_amount;
+                if ($requested !== null && bccomp($amount, $this->money((string) $requested), 2) === 1) {
+                    throw ValidationException::withMessages([
+                        'approved_amount' => self::AMOUNT_EXCEEDS_REQUESTED_MESSAGE,
+                    ]);
+                }
+
+                if (
+                    $requested !== null
+                    && bccomp($amount, $this->money((string) $requested), 2) === -1
+                    && $justification === ''
+                ) {
+                    throw ValidationException::withMessages([
+                        'commission_justification' => self::REDUCED_AMOUNT_JUSTIFICATION_REQUIRED_MESSAGE,
+                    ]);
+                }
+
+                $remaining = $this->remainingBudget($lockedCompetition, $locked->id);
+                if (bccomp($amount, $remaining, 2) === 1) {
+                    throw ValidationException::withMessages([
+                        'approved_amount' => self::AMOUNT_EXCEEDS_REMAINING_MESSAGE,
+                    ]);
+                }
+
+                $locked->forceFill([
+                    'commission_decision' => 'podrzava_potpuno',
+                    'approved_amount' => $amount,
+                    'commission_justification' => $justification !== '' ? $justification : null,
+                    'commission_decision_date' => now(),
+                ])->save();
+            } elseif ($decision === 'odbija') {
+                if ($justification === '') {
+                    throw ValidationException::withMessages([
+                        'commission_justification' => self::REJECT_JUSTIFICATION_REQUIRED_MESSAGE,
+                    ]);
+                }
+
+                $locked->forceFill([
+                    'commission_decision' => 'odbija',
+                    'approved_amount' => null,
+                    'commission_justification' => $justification,
+                    'commission_decision_date' => now(),
+                ])->save();
+            } else {
+                throw ValidationException::withMessages([
+                    'commission_decision' => 'Morate odabrati zaključak komisije.',
+                ]);
+            }
+
+            $locked->refresh();
+            if ($locked->status !== 'evaluated') {
+                $locked->forceFill(['status' => 'evaluated'])->save();
+            }
+        });
+    }
+
+    private function activeChairman(Competition $competition, User $user): ?CommissionMember
+    {
+        if (! $competition->commission_id) {
+            return null;
+        }
+
+        $member = CommissionMember::activeForCommission((int) $user->id, (int) $competition->commission_id);
+        if ($member === null || $member->position !== 'predsjednik') {
+            return null;
+        }
+
+        return $member;
+    }
+
+    private function money(string $value): string
+    {
+        return bcadd($value, '0', 2);
+    }
+}
