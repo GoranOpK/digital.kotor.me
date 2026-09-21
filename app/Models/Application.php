@@ -399,6 +399,9 @@ class Application extends Model
         'bonus_new_business',
         'bonus_zavod_nezaposleni',
         'bonus_green_innovative',
+        'youth_innovative_tech_startup',
+        'youth_prior_municipal_youth_funding',
+        'youth_applied_cap_percent',
         'ranking_position',
         'rejection_reason',
         'email',
@@ -429,6 +432,8 @@ class Application extends Model
         'bonus_zavod_nezaposleni' => 'boolean',
         'bonus_green_innovative' => 'boolean',
         'bonuses_confirmed_at' => 'datetime',
+        'youth_innovative_tech_startup_confirmed_at' => 'datetime',
+        'youth_prior_municipal_youth_funding_confirmed_at' => 'datetime',
         'email' => 'integer',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
@@ -502,6 +507,16 @@ class Application extends Model
     public function bonusesConfirmedByCommissionMember()
     {
         return $this->belongsTo(CommissionMember::class, 'bonuses_confirmed_by_commission_member_id');
+    }
+
+    public function youthInnovativeTechStartupConfirmedByUser()
+    {
+        return $this->belongsTo(User::class, 'youth_innovative_tech_startup_confirmed_by_user_id');
+    }
+
+    public function youthPriorMunicipalYouthFundingConfirmedByUser()
+    {
+        return $this->belongsTo(User::class, 'youth_prior_municipal_youth_funding_confirmed_by_user_id');
     }
 
     // Veza: aplikacija ima izvještaje realizacije

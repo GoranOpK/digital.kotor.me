@@ -33,8 +33,11 @@
                         </tr>
                         @if($canEditYouthAllocationDraft)
                             @php
-                                $remainingForDraft = app(\App\Services\Competitions\YouthAllocationDraftService::class)
-                                    ->remainingBudget($ranked->competition, $ranked->id);
+                                $youthDraftService = app(\App\Services\Competitions\YouthAllocationDraftService::class);
+                                $remainingForDraft = $youthDraftService->remainingBudget($ranked->competition, $ranked->id);
+                                $youthCap = $youthDraftService->capSnapshot($ranked);
+                                $startupValue = old('youth_innovative_tech_startup', $ranked->getAttributes()['youth_innovative_tech_startup'] ?? null);
+                                $priorValue = old('youth_prior_municipal_youth_funding', $ranked->getAttributes()['youth_prior_municipal_youth_funding'] ?? null);
                             @endphp
                             <tr>
                                 <td colspan="4" style="padding: 8px 8px 16px;">
@@ -59,6 +62,35 @@
                                             </label>
                                             <button type="submit" class="btn-primary">Sačuvaj nacrt</button>
                                         </div>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px;" data-testid="youth-allocation-facts">
+                                            <label>
+                                                Inovativni tehnološki start-up
+                                                <select name="youth_innovative_tech_startup" style="margin-left: 6px;">
+                                                    <option value="">—</option>
+                                                    <option value="1" {{ in_array($startupValue, [1, '1', true], true) ? 'selected' : '' }}>Da</option>
+                                                    <option value="0" {{ in_array($startupValue, [0, '0', false], true) ? 'selected' : '' }}>Ne</option>
+                                                </select>
+                                            </label>
+                                            <label>
+                                                Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih
+                                                <select name="youth_prior_municipal_youth_funding" style="margin-left: 6px;">
+                                                    <option value="">—</option>
+                                                    <option value="1" {{ in_array($priorValue, [1, '1', true], true) ? 'selected' : '' }}>Da</option>
+                                                    <option value="0" {{ in_array($priorValue, [0, '0', false], true) ? 'selected' : '' }}>Ne</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                        @if($youthCap['facts_confirmed'])
+                                            <div style="margin-top: 10px; color: #374151; font-size: 13px;" data-testid="youth-allocation-cap-summary">
+                                                <p style="margin: 0 0 4px;">Inovativni tehnološki start-up: {{ $youthCap['startup'] ? 'Da' : 'Ne' }}</p>
+                                                <p style="margin: 0 0 4px;">Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih: {{ $youthCap['prior_funding'] ? 'Da' : 'Ne' }}</p>
+                                                <p style="margin: 0 0 4px;">Primijenjeni maksimum: {{ $youthCap['percent'] }}% ({{ number_format((float) $youthCap['percent_max'], 2) }} EUR)</p>
+                                                <p style="margin: 0 0 4px;">{{ \App\Services\Competitions\YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE }}</p>
+                                                @if($youthCap['confirmed_by_name'])
+                                                    <p style="margin: 0;">Potvrdio: {{ $youthCap['confirmed_by_name'] }}@if($youthCap['confirmed_at']) — {{ $youthCap['confirmed_at'] }}@endif</p>
+                                                @endif
+                                            </div>
+                                        @endif
                                         <p style="margin: 8px 0 0; color: #6b7280; font-size: 12px;">
                                             Traženo: {{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2) : '—' }} EUR.
                                             Raspoloživo za ovu prijavu: {{ number_format((float) $remainingForDraft, 2) }} EUR.
@@ -71,6 +103,12 @@
                                             <div class="error-message">{{ $message }}</div>
                                         @enderror
                                         @error('commission_decision')
+                                            <div class="error-message">{{ $message }}</div>
+                                        @enderror
+                                        @error('youth_innovative_tech_startup')
+                                            <div class="error-message">{{ $message }}</div>
+                                        @enderror
+                                        @error('youth_prior_municipal_youth_funding')
                                             <div class="error-message">{{ $message }}</div>
                                         @enderror
                                     </form>

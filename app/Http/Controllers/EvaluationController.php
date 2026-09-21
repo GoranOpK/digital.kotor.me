@@ -836,6 +836,8 @@ class EvaluationController extends Controller
             'commission_decision' => 'required|in:podrzava_potpuno,odbija',
             'commission_justification' => 'nullable|string|max:5000',
             'approved_amount' => 'nullable|numeric|min:0',
+            'youth_innovative_tech_startup' => 'nullable|boolean',
+            'youth_prior_municipal_youth_funding' => 'nullable|boolean',
         ], [
             'commission_decision.required' => 'Morate odabrati zaključak komisije.',
         ]);
