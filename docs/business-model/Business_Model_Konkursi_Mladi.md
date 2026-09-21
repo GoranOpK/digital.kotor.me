@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.11
+**Verzija:** 1.0.12
 **Datum:** 2026-09-21
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.38** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.39** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.9** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.10** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.5** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.6** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -65,6 +65,7 @@ Povezani dokumenti:
 | 1.0.9 | 2026-09-17 | KN-PATCH-BM-018 — Godišnji budžet mladih jednak je ukupnom budžetu prvog Poziva. Na formi prvog Poziva Administrator unosi samo polje `Ukupan budžet`; sistem isti iznos čuva kao budžet prvog Poziva i kao godišnji okvir. Drugi Poziv nije obavezan i ne kreira se automatski; ostatak nakon prvog daje mogućnost, a ne obavezu ručnog raspisivanja. `remaining_after_first` = budžet prvog Poziva − konačno potvrđena raspodjela prvog Poziva. Uklonjen važeći primjer 100.000/80.000. Ženski tok nije diran. |
 | 1.0.10 | 2026-09-17 | KN-PATCH-BM-019 — Usklađeni kanonski pokazivači povezanih dokumenata zbog FS/TS PATCH-a kapije usmenog: KN-RG-001 v1.0.32, KN-FS-002 v1.0.8, KN-TS-002 v1.0.4. Poslovna pravila BM-ML-001–BM-ML-058 nijesu mijenjana. Ženski tok nije diran. |
 | 1.0.11 | 2026-09-21 | KN-PATCH-BM-020 — Precizirana konačna raspodjela mladih: 30% samo za potvrđeni inovativni tehnološki start-up u smislu čl. 19; 20%/15% prema posebnoj evidenciji ranijeg youth finansiranja; prednost otpočinjanja nad razvojem i glasanje 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni elektronski `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom. Ženski procenti, 5 članova i ženski način evidencije glasanja se ne prenose. Identifikatori BM-ML-001–BM-ML-058 ostaju. |
+| 1.0.12 | 2026-09-21 | KN-PATCH-BM-021 — Preciziran predmet glasa kod izjednačenih bodova: kompletan, budžetski validan predlog raspodjele relevantne grupe, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv` u ime Komisije; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Identifikatori BM-ML-001–BM-ML-058 ostaju. Ženski tok nije diran. |
 
 Napomena:
 
@@ -1797,7 +1798,7 @@ Dodjela zavisi i od:
 
 Status `approved` ili `rejected` određuje se tek pri potvrdi konačne rang-liste i raspodjele, prema `BM-ML-048`. Nacrt raspodjele nema konačno dejstvo i ne mijenja status prijave.
 
-Predsjednik potvrđuje cijelu listu odjednom. Prije potvrde moraju biti riješene sve granične izjednačene grupe iz `BM-ML-046` i evidentirana sva tri glasa tamo gdje je glasanje potrebno. Limiti 30/20/15 iz `BM-ML-047` moraju biti potvrđeni za svaku podržanu prijavu.
+Predsjednik potvrđuje cijelu listu odjednom. Prije potvrde svaka granična izjednačena grupa iz `BM-ML-046` mora imati usvojen i zaključan predlog raspodjele. Limiti 30/20/15 iz `BM-ML-047` moraju biti potvrđeni za svaku podržanu prijavu.
 
 Podržane prijave sa iznosom postaju `approved`.
 
@@ -1809,7 +1810,7 @@ Za provjeru praga koristi se puna nezaokružena vrijednost prema `BM-ML-041`. Pr
 
 Ženski rok od 45 dana za konačnu listu **ne** primjenjuje se na profil mladih.
 
-**Izvor:** Odluka, članovi 20–22; `BM-ML-038`, `BM-ML-041` i `BM-ML-042`; `KN-PATCH-BM-013`; `KN-PATCH-BM-020`.
+**Izvor:** Odluka, članovi 20–22; `BM-ML-038`, `BM-ML-041` i `BM-ML-042`; `KN-PATCH-BM-013`; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`.
 
 ## 11.8. Preliminarna i konačna rang-lista
 
@@ -1847,7 +1848,7 @@ Preliminarni sadržaj ostaje sačuvan radi sljedivosti. Prelazak u konačnu fazu
 
 Ovo pravilo ne određuje trenutak javnog objavljivanja rang-liste ili službenih akata.
 
-**Izvor:** Odluka, članovi 21 i 22; odobrena projektna odluka o jednoj rang-listi sa dvije faze; `KN-PATCH-BM-020`.
+**Izvor:** Odluka, članovi 21 i 22; odobrena projektna odluka o jednoj rang-listi sa dvije faze; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`.
 
 ## 11.9. Jednaki bodovi
 
@@ -1861,17 +1862,85 @@ Numeracija koristi obrazac:
 
 Redosljed tehničkog prikaza unutar iste rang-pozicije ne daje prednost pri dodjeli sredstava.
 
-Ako raspoloživa sredstva nijesu dovoljna za sve biznis planove sa istim punim, nezaokruženim brojem bodova, pravilo jednakih bodova **aktivira se samo** kada ista puna ocjena dijeli poziciju **i** budžet nije dovoljan za sve izjednačene prijave.
+Glasanje se aktivira **samo** kada su istovremeno ispunjena sva tri uslova:
 
-Tada se primjenjuje ovaj redoslijed:
+1. najmanje dvije prijave imaju isti puni, nezaokruženi rezultat i dijele rang-poziciju;
+2. raspoloživi budžet nije dovoljan za sve prijave iz relevantne izjednačene grupe;
+3. pravilo prednosti otpočinjanja samo po sebi ne određuje kompletnu raspodjelu.
+
+Budžetska provjera koristi zaključane ili trenutno važeće **nacrtne iznose** nakon primjene limita 30%/20%/15% iz `BM-ML-047`, traženog iznosa i raspoloživog budžeta konkretnog Poziva. Zaokruženi prikaz rezultata ne stvara izjednačenost niti prednost.
+
+Prednost otpočinjanja primjenjuje se **prije** glasanja:
 
 1. Prijave za otpočinjanje biznisa imaju prednost nad prijavama za razvoj. Prednost se utvrđuje prema poslovnoj fazi iz `BM-ML-010` (`započinjanje` nad `razvoj`).
-2. Ako je to pravilo dovoljno da se raspodjela utvrdi bez izbora unutar iste kategorije, prednost se primjenjuje bez glasanja.
-3. Ako budžet nije dovoljan ni za sve prijave prioritetne kategorije — uključujući slučaj da su sve izjednačene prijave iste kategorije, ili da ima više prijava otpočinjanja nego što budžet može pokriti — glasaju **sva tri aktivna člana**. Većina je **2 od 3**.
-4. Svaki glas, član, vrijeme, grupa prijava, primijenjeno pravilo i rezultat ostaju evidentirani.
-5. Predsjednik evidentira, ali ne odlučuje sam.
+2. Ako raspoloživi budžet pokriva sve prijave prioritetne kategorije, prednost se primjenjuje bez glasanja.
+3. Ako budžet ne pokriva sve prijave prioritetne kategorije — uključujući slučaj da su sve izjednačene prijave iste kategorije, ili da ima više prijava otpočinjanja nego što budžet može pokriti — glasa se **samo o raspodjeli unutar te kategorije**.
+4. Razvoj se **ne** bira automatski umjesto prioritetne prijave čiji trenutni nacrtni iznos ne staje u ostatak. Predsjednik prvo mora uskladiti nacrtni iznos sa dozvoljenim ostatkom, uz postojeće obavezno obrazloženje za smanjeni iznos iz `BM-ML-048`.
 
-Prenosi se samo procesni princip da Komisija odlučuje kada prednost kategorije nije dovoljna. **Ne** prenose se ženski procenti, broj članova Komisije, ni ženski način evidencije glasanja. Youth Komisija ima tri aktivna člana; ženski model pet članova, pojedinačnih glasova ili 3 od 5 **nije** youth pravilo.
+**Predmet glasa nije pojedinačna prijava.** Predsjednik priprema jedan kompletan, budžetski validan predlog raspodjele za cijelu relevantnu izjednačenu grupu. Platforma ne generiše niti bira predlog automatski. Predsjednik je zapisničar Komisije: evidentira zaključak, ali ne odlučuje sam.
+
+Predlog mora sadržati:
+
+- Poziv;
+- izjednačenu grupu;
+- puni rezultat i zajedničku rang-poziciju;
+- sve prijave grupe;
+- poslovnu fazu svake prijave;
+- koje prijave predlog podržava;
+- koje prijave ne podržava;
+- tačan nacrtni iznos za svaku podržanu prijavu;
+- primijenjeni youth limit 30%/20%/15%;
+- raspoloživi budžet prije predloga;
+- ukupan iznos predloga;
+- obrazloženje;
+- primijenjeno pravilo prednosti otpočinjanja.
+
+Predlog mora biti validan prema zaključanim ili trenutno važećim nacrtnim iznosima, limitima 30%/20%/15%, traženim iznosima i raspoloživom budžetu konkretnog Poziva.
+
+Youth Komisija ima tri aktivna člana. Prije zaključivanja kruga moraju biti evidentirana **sva tri pojedinačna glasa**. Članovi nemaju poseban elektronski login tok za glasanje. Predsjednik u Platformu unosi sva tri glasa u ime Komisije.
+
+Za svaki glas evidentira se:
+
+- kanonsko mjesto 1, 2 ili 3;
+- tadašnji aktivni `commission_member`;
+- korisnik člana;
+- ime člana kao snapshot;
+- vrijednost `za` ili `protiv`;
+- datum i vrijeme;
+- predsjednik koji je glas evidentirao.
+
+Predsjednik **ne** smije zaključiti krug nakon prva dva glasa `za`. Treći glas je obavezan radi punog sastava i revizijskog traga. Manje od tri evidentirana glasa znači da glasanje nije završeno i predlog nema ishod.
+
+Tek nakon evidentiranja sva tri glasa:
+
+| Glasovi `za` | Glasovi `protiv` | Ishod |
+|--------------|------------------|-------|
+| 3 | 0 | predlog usvojen |
+| 2 | 1 | predlog usvojen |
+| 1 | 2 | predlog nije usvojen |
+| 0 | 3 | predlog nije usvojen |
+
+Većina je **2 od 3**, ali samo poslije sva tri glasa.
+
+Jedna izjednačena grupa može imati više krugova:
+
+- u jednom trenutku smije postojati samo jedan aktivni nacrt kruga;
+- poslije evidentiranja sva tri glasa predsjednik zaključava krug;
+- zaključani krug se više ne mijenja;
+- ako predlog nema većinu, krug ostaje istorijski neusvojen;
+- predsjednik može pripremiti novi predlog u novom krugu;
+- prethodni predlog, sva tri glasa, članovi, vrijeme i rezultat ostaju u istoriji;
+- kada jedan krug bude usvojen, novi krug za tu grupu nije dozvoljen;
+- konačna youth lista ne može biti potvrđena dok svaka granična izjednačena grupa nema usvojen i zaključan predlog.
+
+Glas pripada kanonskom mjestu i tadašnjem članu:
+
+- ako je član zamijenjen prije glasanja, glasa novi aktivni član tog mjesta;
+- zamjena poslije zaključavanja kruga ne mijenja istorijski glas;
+- istorija čuva `commission_member_id`, `user_id`, mjesto i ime člana u trenutku glasanja;
+- stari glasovi se ne prepisuju poslije zamjene.
+
+Prenosi se samo procesni princip da predsjednik evidentira zaključak Komisije i da Platforma ne bira dobitnike automatski. **Ne** prenose se ženski procenti, broj članova Komisije, ni ženski način evidencije glasanja bez pojedinačnih glasova. Youth Komisija ima tri aktivna člana; ženski model pet članova ili 3 od 5 **nije** youth pravilo. Obavezni elektronski `TYPE_THIRD` **nije** youth kapija.
 
 Ne koriste se kao dodatni kriterijumi prednosti:
 
@@ -1880,11 +1949,13 @@ Ne koriste se kao dodatni kriterijumi prednosti:
 - tehnički ID;
 - abecedni redoslijed;
 - redosljed prikaza;
-- zaokružena vrijednost prikazana na dvije decimale.
+- zaokružena vrijednost prikazana na dvije decimale;
+- automatska optimizacija budžeta;
+- samostalna odluka predsjednika.
 
-Odluka o podršci jednom od izjednačenih planova ne mijenja njihov izvorni broj bodova niti dijeljenu rang-poziciju.
+Odluka o raspodjeli unutar izjednačene grupe ne mijenja izvorni broj bodova niti dijeljenu rang-poziciju.
 
-**Izvor:** Odluka, član 22; `BM-ML-003`; `BM-ML-010`; `BM-ML-041`; odobrena projektna odluka o dijeljenoj rang-poziciji; `KN-PATCH-BM-020`.
+**Izvor:** Odluka, član 22; `BM-ML-003`; `BM-ML-010`; `BM-ML-041`; odobrena projektna odluka o dijeljenoj rang-poziciji; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`.
 
 ### BM-ML-047 — Procentualni limiti i njihovo preklapanje
 
@@ -1955,7 +2026,7 @@ Platforma ne dozvoljava konačnu potvrdu raspodjele koja krši potvrđena finans
 
 Komisija raspodjeljuje sredstva prema konačnoj rang-listi do utroška raspoloživih sredstava.
 
-Predsjednik potvrđuje **cijelu listu odjednom**. Prije potvrde moraju biti riješene sve granične izjednačene grupe i evidentirana sva tri glasa gdje su potrebna, prema `BM-ML-046`. Limiti 30/20/15 moraju biti potvrđeni za svaku podržanu prijavu, prema `BM-ML-047`.
+Predsjednik potvrđuje **cijelu listu odjednom**. Prije potvrde svaka granična izjednačena grupa mora imati usvojen i zaključan predlog raspodjele, prema `BM-ML-046`. Limiti 30/20/15 moraju biti potvrđeni za svaku podržanu prijavu, prema `BM-ML-047`.
 
 Konačna potvrda:
 
@@ -1970,7 +2041,7 @@ Tek tada `remaining_after_first` računa odobrenu raspodjelu: zbir `approved_amo
 
 Konačna potvrda raspodjele, zajedno sa potvrdom konačne rang-liste, određuje status `approved` ili `rejected` prema `BM-ML-044`. Evidentiranje iznosa samo po sebi ne otključava prijavu.
 
-**Izvor:** Odluka, članovi 19 i 22; odobrena projektna odluka o unosu i kontroli iznosa; `KN-PATCH-BM-013`; `KN-PATCH-BM-020`.
+**Izvor:** Odluka, članovi 19 i 22; odobrena projektna odluka o unosu i kontroli iznosa; `KN-PATCH-BM-013`; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`.
 
 ---
 
@@ -2613,11 +2684,11 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-041 | Prosjek i preciznost obračuna | 11.4 | Odluka, član 21; projektna odluka | USVOJENO |
 | BM-ML-042 | Dodatni bodovi | 11.5 | Odluka, članovi 20 i 21; projektna odluka; KN-PATCH-BM-020 | USVOJENO |
 | BM-ML-043 | Eliminatorni kriterijumi | 11.6 | Odluka, član 20; KN-PATCH-BM-015 | USVOJENO |
-| BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | Odluka, članovi 20–22; KN-PATCH-BM-013; KN-PATCH-BM-020 | USVOJENO |
-| BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | Odluka, članovi 21 i 22; projektna odluka; KN-PATCH-BM-020 | USVOJENO |
-| BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | Odluka, član 22; projektna odluka; KN-PATCH-BM-020 | USVOJENO |
+| BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | Odluka, članovi 20–22; KN-PATCH-BM-013; KN-PATCH-BM-020; KN-PATCH-BM-021 | USVOJENO |
+| BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | Odluka, članovi 21 i 22; projektna odluka; KN-PATCH-BM-020; KN-PATCH-BM-021 | USVOJENO |
+| BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | Odluka, član 22; projektna odluka; KN-PATCH-BM-020; KN-PATCH-BM-021 | USVOJENO |
 | BM-ML-047 | Procentualni limiti i njihovo preklapanje | 11.10 | Odluka, član 19; odobrena poslovna tumačenja; KN-PATCH-BM-020 | USVOJENO |
-| BM-ML-048 | Određivanje i kontrola dodijeljenog iznosa | 11.10 | Odluka, članovi 19 i 22; projektna odluka; KN-PATCH-BM-013; KN-PATCH-BM-020 | USVOJENO |
+| BM-ML-048 | Određivanje i kontrola dodijeljenog iznosa | 11.10 | Odluka, članovi 19 i 22; projektna odluka; KN-PATCH-BM-013; KN-PATCH-BM-020; KN-PATCH-BM-021 | USVOJENO |
 | BM-ML-049 | Uslov za raspisivanje drugog Javnog konkursa | 16.1 | Odluka, članovi 5 i 19; poslovno tumačenje | USVOJENO |
 | BM-ML-050 | Ista godišnja instanca i odvojeni Poziv | 16.2 | Odluka, članovi 5 i 19; Poglavlje 4, pitanje 18; projektna odluka | USVOJENO |
 | BM-ML-051 | Ručno kreiranje i objavljivanje drugog Poziva | 16.3 | Odluka, članovi 5, 6 i 19; projektne odluke; BM-ML-033 | USVOJENO |
@@ -2631,4 +2702,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.11**
+**Kraj dokumenta KN-BM-002 v1.0.12**
