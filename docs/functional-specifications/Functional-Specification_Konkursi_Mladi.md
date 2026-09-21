@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.8
-**Datum:** 2026-09-17
+**Verzija:** 1.0.9
+**Datum:** 2026-09-21
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.32** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.38** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.10** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.11** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.12** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
+* Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.4** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.5** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -48,6 +48,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.6 | 2026-09-15 | KN-PATCH-FS-011 — Usklađena kapija drugog Poziva sa postojećim zatvaranjem prvog Poziva: dugme ili akcija za drugi Poziv nije dostupna dok prvi nije `completed`; `hasChairmanCompletedDecisions()` i `completed` predstavljaju tehničku kapiju V1; nakon kapije i `remaining_after_first > 0` Administrator ručno kreira nacrt; nema automatskog drugog ni trećeg Poziva. Indeks ostaje 142/142. Ženski tok nije diran. |
 | 1.0.7 | 2026-09-17 | KN-PATCH-FS-012 — Forma prvog Poziva ima samo polje `Ukupan budžet`; isti iznos je budžet prvog Poziva i godišnji okvir. `remaining_after_first` = budžet prvog − konačno potvrđena raspodjela prvog. Drugi Poziv je opcioni: ostatak daje mogućnost, a ne obavezu; nema automatskog ni trećeg Poziva. Precizirani 22.7.2 i povezana mjesta; indeks ostaje 142/142. Uklonjen važeći primjer 100.000/80.000. Ženski tok nije diran. |
 | 1.0.8 | 2026-09-17 | KN-PATCH-FS-013 — Kapija usmenog predstavljanja i druge sjednice nije sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. Dozvoljeno je samo kada je prijava `submitted`, M3 potvrđen, nema konačno aktivnog razloga, rok za prigovor nije otvoren i nema neriješenog blagovremenog prigovora; dva puta: nijedan razlog nije aktiviran, ili je svaki preostali razlog otklonjen konačnom odlukom po prigovoru. M3 ostaje istorijski nepromijenjen. Precizirani 15.7.1 i povezana mjesta; indeks ostaje 142/142. Živi pokazivači usklađeni na KN-BM-002 v1.0.10, KN-TS-002 v1.0.4 i KN-RG-001 v1.0.32. Ženski tok nije diran. |
+| 1.0.9 | 2026-09-21 | KN-PATCH-FS-014 — Precizirana konačna raspodjela mladih bez novih prihvatnih identifikatora: 30% samo za potvrđeni inovativni tehnološki start-up (čl. 19) iz posebne evidencije; 20%/15% iz posebne evidencije ranijeg youth finansiranja, ne iz `business_stage`, +3 ni M3; prednost otpočinjanja nad razvojem, zatim glas 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom; `remaining_after_first` tek od `approved`; nema ženskog roka od 45 dana. Prenosi se procesni princip, ne ženski procenti, broj članova ni način evidencije glasanja. Indeks ostaje 142/142. Živi pokazivači: KN-BM-002 v1.0.11, KN-TS-002 v1.0.5, KN-RG-001 v1.0.38, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 
 Napomena:
 
@@ -180,7 +181,7 @@ Dokument se odnosi na **V1**.
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.10.
+Primarni poslovni SSOT ovog profila je `KN-BM-002` v1.0.11.
 
 Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.1.
 
@@ -280,11 +281,11 @@ Status poglavlja: USVOJENO
 
 Hijerarhija dokumentacije za ovaj profil:
 
-* `KN-RG-001` v1.0.32
+* `KN-RG-001` v1.0.38
 * → `KN-BM-001` (zajednička pravila modula Konkursi)
 * → `KN-BM-002` (poslovna pravila profila mladih)
 * → `KN-FS-002` (ovo dokument)
-* → `KN-TS-002` (tehnička specifikacija profila mladih; USVOJEN v1.0.4)
+* → `KN-TS-002` (tehnička specifikacija profila mladih; USVOJEN v1.0.5)
 * → `KN-TS-001` (zajednička tehnička specifikacija; NACRT).
 
 ## 2.1. Autoritet
@@ -314,7 +315,7 @@ Postojanje `KN-FS-001` **ne** daje `KN-FS-002` pravo da izmišlja zajednička pr
 
 `KN-FS-003` **nije** nadređen `KN-FS-002`.
 
-`KN-FS-003` v1.0.12 služi samo kao strukturni obrazac i uporedni izvor. Zajednički funkcionalni obrazac smije se preuzeti samo kada **nije** suprotan `KN-BM-002`.
+`KN-FS-003` v1.0.17 služi samo kao strukturni obrazac i uporedni izvor. Zajednički funkcionalni obrazac smije se preuzeti samo kada **nije** suprotan `KN-BM-002`.
 
 `KN-BM-003` je uporedni poslovni profil ženskog preduzetništva. Nije SSOT za mlade. Pravila ženskog profila se ne prepisuju.
 
@@ -324,14 +325,14 @@ Postojanje `KN-FS-001` **ne** daje `KN-FS-002` pravo da izmišlja zajednička pr
 |----|-------|---------|--------|-------------------|
 | DK-DS-001 | Digital Kotor Documentation Standard v1 | 1.0.0 | USVOJENO | Document ID, tipovi, statusi, sljedivost, folderi |
 | METHODOLOGY.md | Metodologija dokumentacije | 1.0 | AKTIVAN | FS se piše prema BM, ne prema kodu; BM → FS → TS |
-| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.31 | USVOJENO | kanonski Document ID i evidencija ovog dokumenta |
+| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.38 | USVOJENO | kanonski Document ID i evidencija ovog dokumenta |
 | KN-BM-001 | Zajednički poslovni model modula Konkursi | 0.2.11 | USVOJENO | zajednička pravila `BM-KN-001`–`BM-KN-015` |
-| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.9 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
-| KN-BM-003 | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | 1.0.17 | USVOJEN | samo uporedni BM; nije izvor pravila mladih |
+| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.11 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
+| KN-BM-003 | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | 1.0.22 | USVOJEN | samo uporedni BM; nije izvor pravila mladih |
 | KN-FS-001 | Zajedničke funkcionalnosti modula Konkursi | 0.2.13 | USVOJENO | zajednički FS; ne ovlašćuje izmišljanje zajedničkih pravila |
-| KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 1.0.12 | USVOJEN | samo strukturni/uporedni FS |
+| KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 1.0.17 | USVOJEN | samo strukturni/uporedni FS |
 | KN-TS-001 | Zajednička tehnička specifikacija modula Konkursi | 0.1.0 | NACRT | zajednički tehnički sloj; NACRT |
-| KN-TS-002 | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | 1.0.3 | USVOJEN | tehnička realizacija ovog FS-a; nije univerzalni KN SSOT |
+| KN-TS-002 | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | 1.0.5 | USVOJEN | tehnička realizacija ovog FS-a; nije univerzalni KN SSOT |
 
 ## 2.5. Lokalne oznake funkcionalnih odluka F-*
 
@@ -862,7 +863,7 @@ Detaljni ekran, potvrda i prihvatni kriterijumi arhiviranja razrađuju se u Pogl
 
 Ova tabela je mapa stanja. Detalji tokova razrađuju se u navedenim poglavljima. Godišnja instanca, konfiguracija, objavljivanje i rok razrađuju se u Poglavljima 5 i 6. Prijava, obrasci, dokumentacija i podnošenje razrađuju se u Poglavljima 7–10. Privatnost, istek roka, prva sjednica i prigovori razrađuju se u Poglavljima 11–14. Usmeno obrazloženje, individualno ocjenjivanje i dodatni bodovi razrađuju se u Poglavljima 15–17. Eliminatorni kriterijumi, obračun i prag, rangiranje i raspodjela razrađuju se u Poglavljima 18–21. Drugi Poziv i zaključivanje odnosno arhiviranje razrađuju se u Poglavljima 22 i 23. Funkcionalne zabrane, granica V1, objedinjeni prihvatni kriterijumi, matrica sljedivosti i odložene teme razrađuju se u Poglavljima 24–28.
 
-Poslovni rokovi sjednica (`BM-ML-034`) evidentiraju se kao sljedeće činjenice. Platforma **ne** zakazuje sjednice automatski i **ne** vodi sjednicu kao poseban poslovni objekat.
+Poslovni rokovi sjednica (`BM-ML-034`) evidentiraju se kao sljedeće činjenice. Platforma **ne** zakazuje sjednice automatski. Prva i druga sjednica već imaju elektronsku evidenciju prisustva. Treća sjednica **nije** obavezni elektronski `TYPE_THIRD`: poslovni događaj može biti van Platforme; Platforma evidentira zaključke, glasove i konačnu potvrdu.
 
 * prva sjednica: najkasnije sedam dana od isteka roka za prijave;
 * druga sjednica i usmena obrazloženja: najkasnije sedam dana od prve sjednice;
@@ -889,7 +890,7 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Sjednica Komisije | Komisija formalno kompletna | početak administrativne provjere | prisutna najmanje dva člana | administrativna provjera može početi | predsjednik / prisutni članovi | `BM-ML-002`; F-02 |
 | Sjednica Komisije | rok za prijave istekao | prva sjednica | najkasnije sedam dana od isteka roka; Platforma ne zakazuje | poslovni rok; Platforma ne vodi sjednicu kao objekat | Komisija | `BM-ML-034` |
 | Sjednica Komisije | prva sjednica održana | druga sjednica i usmena obrazloženja | najkasnije sedam dana od prve sjednice; prijava `submitted`; M3 potvrđen; nema konačno aktivnog razloga; rok za prigovor nije otvoren; nema neriješenog blagovremenog prigovora | nije dozvoljena po istorijskoj M3 `Potpuna`; Platforma ne zakazuje; rok se ne produžava automatski | Komisija | `BM-ML-034` |
-| Sjednica Komisije | druga sjednica i usmena održani | treća sjednica | najkasnije sedam dana od druge sjednice i usmenih intervjua; Platforma ne zakazuje | poslovni rok evidentiran | Komisija | `BM-ML-034` |
+| Sjednica Komisije | druga sjednica i usmena održani | treća sjednica | najkasnije sedam dana od druge sjednice i usmenih intervjua; nije obavezni `TYPE_THIRD`; događaj može biti van Platforme | zaključci, glasovi i konačna potvrda evidentirani; sva tri aktivna člana za punovažnu odluku | Komisija | `BM-ML-034`; `BM-ML-003`; `KN-PATCH-FS-014` |
 | Admin. rezultat / M3 | (nema) | evidentiranje u M3 | `submitted`; rok istekao; formalno kompletna Komisija; kvorum najmanje dva prisutna člana | sva tri kriterijuma evidentirana odvojeno; status ostaje `submitted`; aktiviranje bilo kojeg kriterijuma ne postavlja odmah `rejected` | predsjednik u ime Komisije | `BM-ML-002`; `BM-ML-035` |
 | Prigovor | — | podnošenje | najmanje jedan aktiviran kriterijum; rok 3 dana; digitalni servis; obrazloženje po osporenom kriterijumu | Podnesen; prijava ostaje `submitted`; neaktivirani kriterijumi se ne mogu osporavati | podnosilac | `BM-ML-036` |
 | Prigovor | Podnesen | odluka Komisije | sva tri člana; odluka po svakom osporenom kriterijumu | ako nijedan razlog nije konačno aktivan → `submitted`; ako makar jedan ostane konačno aktivan → `rejected` uz sve konačne aktivne razloge | Komisija | `BM-ML-003`; `BM-ML-036`; `BM-ML-037` |
@@ -900,7 +901,7 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Prijava | `submitted` | završene tri kompletne ocjene i obračun | prijava u ocjenjivanju | `evaluated` | sistem | `BM-ML-039`; `BM-ML-044` |
 | Ciklus ocjenjivanja | nije završen | treći član zaključi sve potrebne ocjene | tri zaključane ocjene po prijavi u ciklusu | ciklus završen; otvara se međusobni uvid | sistem | `BM-ML-003`; `BM-ML-040` |
 | Rang-lista | — | nastanak preliminarne | ciklus završen | preliminarna | sistem / Komisija | `BM-ML-045` |
-| Rang-lista | preliminarna | završetak treće sjednice / konačna faza | BM tok rangiranja | konačna | Komisija | `BM-ML-045` |
+| Rang-lista | preliminarna | završetak treće sjednice / konačna faza | cijela lista odjednom; izjednačene grupe riješene; sva tri glasa gdje su potrebna; limiti 30/20/15 potvrđeni; nije obavezni `TYPE_THIRD` | konačna; nacrt i činjenice zaključani | predsjednik | `BM-ML-045`; `BM-ML-048`; `KN-PATCH-FS-014` |
 | Prijava | `evaluated` | potvrda podrške i iznosa | konačna rang-lista; iznos evidentiran | `approved` | predsjednik | `BM-ML-044`; `BM-ML-048` |
 | Prijava | `evaluated` | potvrda nepodrške ispod praga | puna ocjena < 30 | `rejected`; bodovi i rang sačuvani | predsjednik | `BM-ML-044` |
 | Prijava | `evaluated` | prag ispunjen, nema dovoljno sredstava | konačna raspodjela | `rejected` uz razlog nedovoljnih sredstava; bodovi i rang sačuvani | predsjednik | `BM-ML-044`; `BM-ML-048` |
@@ -965,9 +966,9 @@ Izvor: odluka F-05; `BM-ML-058`; `BM-ML-051`; `BM-ML-056`; `BM-ML-057`.
 
 **Kada:** Komisija zakazuje treću sjednicu.
 
-**Onda:** poslovni rok je najkasnije sedam dana od održavanja druge sjednice i usmenih intervjua. Platforma **ne** zakazuje treću sjednicu automatski i **ne** vodi sjednicu kao poseban poslovni objekat.
+**Onda:** poslovni rok je najkasnije sedam dana od održavanja druge sjednice i usmenih intervjua. Platforma **ne** zakazuje treću sjednicu automatski. **Ne** uvodi se obavezni elektronski `TYPE_THIRD`. Poslovni događaj može biti van Platforme. Platforma evidentira zaključke, glasove i konačnu potvrdu. Za punovažnu youth odluku učestvuju sva tri aktivna člana.
 
-Izvor: `BM-ML-034`.
+Izvor: `BM-ML-034`; `BM-ML-003`; `KN-PATCH-FS-014`.
 
 ### 4.11.7 — Nema automatskog produženja roka druge sjednice
 
@@ -3458,7 +3459,7 @@ Izvor: `BM-ML-042`; F-06.
 
 **Kada:** Komisija utvrdi ispunjenost.
 
-**Onda:** dodjeljuje se najviše **3** boda, ne 6. Platforma **ne** odlučuje automatski o inovativnosti ni zelenosti.
+**Onda:** dodjeljuje se najviše **3** boda, ne 6. Platforma **ne** odlučuje automatski o inovativnosti ni zelenosti. Ovaj +3 bod **nije** dokaz ni izvor limita od 30% iz člana 19 / `BM-ML-047`.
 
 Izvor: `BM-ML-042`.
 
@@ -3500,7 +3501,7 @@ Postoje **tačno tri** eliminatorna razloga, sva tri na elektronskom M3:
 2. korisnik koji je ranije dobio sredstva nije dostavio obavezne izvještaje M4 i M4a za ranije finansirani biznis plan (`BM-ML-018`);
 3. biznis plan nije povezan sa prioritetnim oblastima iz člana 12 Odluke (`BM-ML-015`).
 
-Platforma **ne** dodaje eliminatorni razlog koji nije propisan Odlukom.
+Platforma **ne** dodaje eliminatorni razlog koji nije propisan Odlukom. M3 kriterijum 2 **nije** evidencija ranijeg youth finansiranja za limite 20% i 15% iz `BM-ML-047`. Ta činjenica vodi se posebno, prema §21.2.
 
 ## 18.2. M3, obavještenje i prigovor za sva tri razloga
 
@@ -3745,7 +3746,9 @@ Ovo poglavlje određuje preliminarnu i konačnu fazu rang-liste i izjednačenje 
 
 Ne uvodi javno objavljivanje službene Odluke. To je odloženo pitanje 10 i van trenutnog obuhvata V1.
 
-Konačna faza rang-liste poslovno se veže za treću sjednicu. Komisija treću sjednicu zakazuje najkasnije sedam dana od održavanja druge sjednice i usmenih intervjua (`BM-ML-034`). Platforma **ne** zakazuje sjednice automatski i **ne** vodi sjednicu kao poseban poslovni objekat.
+Konačna faza rang-liste poslovno se veže za treću sjednicu. Komisija treću sjednicu zakazuje najkasnije sedam dana od održavanja druge sjednice i usmenih intervjua (`BM-ML-034`). Platforma **ne** zakazuje sjednice automatski. **Ne** uvodi se obavezni elektronski `TYPE_THIRD`. Poslovni događaj može biti van Platforme; Platforma evidentira zaključke, glasove i konačnu potvrdu. Nacrt raspodjele može biti pripremljen ranije, ali **nema** konačno dejstvo.
+
+Prenosi se samo procesni princip ženskog toka (događaj može biti van Platforme; Platforma čuva zaključke). **Ne** prenose se ženski procenti, broj članova Komisije ni ženski način evidencije glasanja.
 
 ## 20.1. Jedan objekat, dvije faze
 
@@ -3793,10 +3796,13 @@ Numeracija koristi obrazac:
 
 Tehnički redosljed prikaza unutar iste pozicije **ne** predstavlja prednost.
 
-Ako sredstva **nijesu** dovoljna za sve prijave sa istim brojem bodova, primjenjuje se tačno član 22 i `BM-ML-046`:
+Ako sredstva **nijesu** dovoljna za sve prijave sa istom punom ocjenom, pravilo se **aktivira samo** tada, prema `BM-ML-046`:
 
-1. ako je samo jedan izjednačeni plan namijenjen otpočinjanju biznisa, prednost ima taj plan;
-2. ako nijedan ili svi izjednačeni planovi pripadaju otpočinjanju, Komisija odlučuje većinom glasova ukupnog broja članova.
+1. prijave za otpočinjanje imaju prednost nad prijavama za razvoj;
+2. ako je to dovoljno, prednost se primjenjuje bez glasanja;
+3. ako budžet nije dovoljan ni za sve prijave prioritetne kategorije, glasaju **sva tri aktivna člana**; većina je **2 od 3**.
+
+Predsjednik evidentira, ali **ne** odlučuje sam. Svaki glas, član, vrijeme, grupa prijava, primijenjeno pravilo i rezultat ostaju evidentirani. Bodovi i zajednička pozicija se **ne** mijenjaju.
 
 **Ne** koristi se kao kriterijum:
 
@@ -3820,21 +3826,23 @@ Odluka o izjednačenju:
 
 Konačna faza nastaje nakon:
 
-* rješavanja izjednačenja koja utiču na raspodjelu;
+* rješavanja svih graničnih izjednačenih grupa koje utiču na raspodjelu;
+* evidencije sva tri glasa tamo gdje je glasanje potrebno;
+* potvrde limita 30/20/15 za svaku podržanu prijavu;
 * evidentiranja odluke `Podržava se` ili `Ne podržava se`;
 * evidentiranja konačnih iznosa raspodjele.
 
-Predsjednik **potvrđuje** konačnu rang-listu.
+Predsjednik **potvrđuje cijelu listu odjednom**. Nacrt raspodjele **nema** konačno dejstvo. Ženski rok od 45 dana **ne** primjenjuje se.
 
 Nakon potvrde:
 
 * bodovi se ne mijenjaju;
 * redosljed se ne mijenja proizvoljno;
-* iznosi se zaključavaju;
-* podržana prijava sa evidentiranim iznosom prelazi u `approved`;
-* prijava ispod praga prelazi u `rejected`;
-* prijava iznad praga koja nije podržana zbog nedovoljnih sredstava prelazi u `rejected` uz poseban razlog;
-* čuva se revizijski trag.
+* iznosi, nacrt i činjenice se zaključavaju;
+* podržane prijave sa iznosom postaju `approved`;
+* prijave ispod 30 i prijave bez sredstava postaju `rejected` sa tipiziranim razlogom;
+* čuva se revizijski trag;
+* tek tada `remaining_after_first` računa odobrenu raspodjelu.
 
 Javno objavljivanje službene Odluke **nije** sadržaj ovog poglavlja.
 
@@ -3845,9 +3853,9 @@ Javno objavljivanje službene Odluke **nije** sadržaj ovog poglavlja.
 | Rang-lista | ciklus nije završen | formiranje preliminarne | — | nije formirana | sistem | `BM-ML-045` |
 | Rang-lista | — | formiranje preliminarne | tri kompletne ocjene po prijavi; dodatni bodovi potvrđeni; ocjene izračunate; nema blokade | preliminarna; bez iznosa; bez ručne izmjene redosljeda | sistem | `BM-ML-045`; `BM-ML-041` |
 | Rang-pozicija | jednaka puna ocjena | dodjela pozicije | `1, 2, 2, 4` | ista pozicija; prikaz ne daje prednost | sistem | `BM-ML-046` |
-| Izjednačenje | ista ocjena; sredstva nijesu dovoljna | primjena čl. 22 | samo jedan plan otpočinjanja | prednost tom planu; bodovi nepromijenjeni | Komisija / sistem | `BM-ML-046` |
-| Izjednačenje | ista ocjena; sredstva nijesu dovoljna | glasanje | nijedan ili svi su otpočinjanje | glasovi sva tri člana; evidencija pravila, rezultata i vremena | Komisija | `BM-ML-046`; `BM-ML-003` |
-| Rang-lista | preliminarna | potvrda konačne | izjednačenja riješena; Podržava se / Ne podržava se; iznosi evidentirani | konačna; zaključana; podržane `approved`; nepodržane `rejected` uz razlog | predsjednik | `BM-ML-045`; `BM-ML-044` |
+| Izjednačenje | ista puna ocjena; sredstva nijesu dovoljna | prednost otpočinjanja | ima prijava otpočinjanja i razvoja; budžet dovoljan za prioritetnu kategoriju | prednost svim prijavama otpočinjanja nad razvojem; bez glasanja; bodovi i pozicija nepromijenjeni | Komisija / sistem | `BM-ML-046` |
+| Izjednačenje | ista puna ocjena; sredstva nijesu dovoljna | glasanje 2 od 3 | budžet nije dovoljan ni za sve prijave prioritetne kategorije | glasovi sva tri aktivna člana; evidencija svakog glasa, člana, vremena, grupe, pravila i rezultata; predsjednik evidentira, ne odlučuje sam | Komisija | `BM-ML-046`; `BM-ML-003` |
+| Rang-lista | preliminarna | potvrda konačne cijele liste | izjednačene grupe riješene; sva tri glasa gdje su potrebna; 30/20/15 potvrđeni; iznosi evidentirani | konačna; zaključana; podržane `approved`; ostale `rejected` uz tipizirani razlog; `remaining_after_first` tek tada | predsjednik | `BM-ML-045`; `BM-ML-044`; `BM-ML-048` |
 | Konačna rang-lista | potvrđena | izmjena bodova ili proizvoljan redosljed | — | zabranjeno | svi | `BM-ML-045` |
 
 ## 20.7. Prihvatni kriterijumi — rangiranje
@@ -3898,19 +3906,19 @@ Izvor: `BM-ML-046`; `BM-ML-041`.
 
 **Kada:** Komisija rješava izjednačenje.
 
-**Onda:** primjenjuje se samo pravilo otpočinjanja ili glasanje sva tri člana. Bodovi se ne mijenjaju. Predsjednik **ne** odlučuje proizvoljno.
+**Onda:** pravilo se aktivira samo kada ista puna ocjena dijeli poziciju i budžet nije dovoljan za sve. Prijave za otpočinjanje imaju prednost nad razvojem. Ako budžet nije dovoljan ni za sve prijave prioritetne kategorije, glasaju sva tri aktivna člana; većina je 2 od 3. Svaki glas, član, vrijeme, grupa, pravilo i rezultat ostaju evidentirani. Predsjednik evidentira, ali ne odlučuje sam. Bodovi i zajednička pozicija se ne mijenjaju. ID, vrijeme prijave i abeceda nijesu kriterijumi prednosti.
 
 Izvor: `BM-ML-046`.
 
 ### 20.7.6 — Potvrda konačne liste
 
-**Ako:** su riješena izjednačenja, evidentirane odluke `Podržava se` / `Ne podržava se` i iznosi.
+**Ako:** su riješene sve granične izjednačene grupe, evidentirana sva tri glasa gdje su potrebna, potvrđeni limiti 30/20/15 za svaku podržanu prijavu, te odluke `Podržava se` / `Ne podržava se` i iznosi.
 
-**Kada:** predsjednik potvrdi konačnu rang-listu.
+**Kada:** predsjednik potvrdi **cijelu** konačnu rang-listu odjednom.
 
-**Onda:** bodovi, redosljed i iznosi se zaključavaju. Podržana prijava sa evidentiranim iznosom prelazi u `approved`. Prijava ispod praga i prijava iznad praga bez dovoljno sredstava prelaze u `rejected` uz odgovarajući razlog. Javna objava Odluke se **ne** pokreće.
+**Onda:** bodovi, redosljed, iznosi, nacrt i činjenice se zaključavaju. Podržane prijave sa iznosom postaju `approved`. Prijave ispod 30 i prijave bez sredstava postaju `rejected` sa tipiziranim razlogom. Tek tada `remaining_after_first` računa odobrenu raspodjelu. Ženski rok od 45 dana **ne** primjenjuje se. Javna objava Odluke se **ne** pokreće.
 
-Izvor: `BM-ML-045`.
+Izvor: `BM-ML-045`; `BM-ML-048`.
 
 ---
 
@@ -3930,18 +3938,17 @@ Za drugi Poziv osnovica je **njegov** raspoloživi budžet, a ne prvobitni godi�
 
 ## 21.2. Limiti 30/20/15
 
-* **30%** — start-up, odnosno inovativni tehnološki biznis;
-* **20%** — fizičko lice, preduzetnik ili društvo kojem ranije nijesu dodjeljivana sredstva;
-* **15%** — fizičko lice, preduzetnik ili društvo kojem su ranije dodjeljivana sredstva.
+* **30%** — samo **potvrđeni inovativni tehnološki start-up** u smislu člana 19;
+* **20%** — ako podnosilac ranije **nije** dobio sredstva Opštine Kotor za podršku preduzetništvu mladih;
+* **15%** — ako **jeste** ranije dobio takva sredstva.
 
 Ranije finansirano fizičko lice pripada limitu **15%**.
 
-Ako se kategorije preklapaju:
+Primjenjuje se **najveći odgovarajući** procenat. Procenti se **ne** sabiraju.
 
-* procenti se **ne** sabiraju;
-* primjenjuje se **najveći** odgovarajući procenat.
+Osnovica je budžet konkretnog Poziva. Iznos je dodatno ograničen traženim iznosom i preostalim budžetom Poziva. Procenat je **maksimum**, ne automatski iznos.
 
-Procenat je **gornja granica**, a ne automatski dodijeljeni iznos.
+Status inovativnog tehnološkog start-upa i ranije youth finansiranje vode se u **posebnim evidencijama**. **Ne** izvode se iz `business_stage`, dodatnih +3 boda (`bonus_green_innovative`) ni M3 kriterijuma 2 (`criterion_2`). Činjenice potvrđuje ovlašćeni administratorski ili komisijski tok i zaključavaju se uz konačnu listu. Tehnička specifikacija predlaže minimalna audit polja **bez** vezivanja za ženske kolone.
 
 ## 21.3. Prikaz predsjedniku
 
@@ -3978,36 +3985,40 @@ Potvrda raspodjele **blokira se** ako bilo koji iznos krši ograničenja. Razlog
 
 ## 21.5. Preostala sredstva
 
-Nakon potvrđivanja raspodjele prvog Poziva Platforma:
+Nakon **konačne** potvrde raspodjele prvog Poziva Platforma:
 
-* evidentira ukupno raspodijeljeni iznos;
-* računa i prikazuje preostali iznos.
+* evidentira ukupno raspodijeljeni iznos prijava u statusu `approved`;
+* računa i prikazuje `remaining_after_first`.
 
-Predsjednik potvrđuje raspodjelu. Postojanje preostalih sredstava daje mogućnost, a ne obavezu, za drugi Poziv. Platforma **ne** kreira i **ne** objavljuje drugi Poziv automatski. Detalj: Poglavlje 22.
+Nacrtni iznosi **ne** ulaze u taj izvod. Predsjednik potvrđuje raspodjelu **cijele liste odjednom**. Postojanje preostalih sredstava daje mogućnost, a ne obavezu, za drugi Poziv. Platforma **ne** kreira i **ne** objavljuje drugi Poziv automatski. Detalj: Poglavlje 22.
 
 ## 21.6. Konačna evidencija
 
-Predsjednik potvrđuje konačne iznose raspodjele.
+Predsjednik potvrđuje konačne iznose raspodjele **cijele liste odjednom**. Prije potvrde moraju biti riješene sve granične izjednačene grupe i evidentirana sva tri glasa gdje su potrebna. Limiti 30/20/15 moraju biti potvrđeni za svaku podržanu prijavu.
 
 Nakon potvrde:
 
-* iznosi se zaključavaju;
+* iznosi, nacrt i činjenice se zaključavaju;
 * čuvaju se odgovorno lice, datum i vrijeme;
 * čuva se revizijski trag;
-* podaci se koriste za konačnu rang-listu;
-* javni tok službenih akata se **ne** pokreće.
+* podržane prijave sa iznosom postaju `approved`;
+* prijave ispod 30 i prijave bez sredstava postaju `rejected` sa tipiziranim razlogom;
+* bodovi i rang ostaju;
+* tek tada `remaining_after_first` računa odobrenu raspodjelu;
+* javni tok službenih akata se **ne** pokreće;
+* ženski rok od 45 dana **ne** primjenjuje se.
 
 ## 21.7. Funkcionalni prelazi — budžet i raspodjela
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Limit | rangirana prijava | izračun limita | budžet konkretnog Poziva | 30/20/15%; pri preklapanju najveći; procenti se ne sabiraju | sistem | `BM-ML-047` |
+| Limit | rangirana prijava | izračun limita | budžet konkretnog Poziva; posebne evidencije start-up i ranijeg finansiranja | 30/20/15%; najveći; ne sabiraju se; nije iz `business_stage`, +3 ni M3 | sistem | `BM-ML-047` |
 | Iznos | Komisija odredi | evidencija | predsjednik | iznos unesen; nije automatski maksimum | predsjednik | `BM-ML-048` |
 | Iznos | unos | provjera | veći od traženog, procenta ili preostalog budžeta | blokirano; razlog prikazan | sistem | `BM-ML-048` |
 | Iznos | manji od traženog | evidencija | obrazloženje | iznos sačuvan sa obrazloženjem | predsjednik | `BM-ML-048` |
 | Budžet | evidentiran iznos | ponovni obračun | — | ažuriran preostali budžet | sistem | `BM-ML-048` |
 | Raspodjela | iznosi uneseni | potvrda | bilo koji iznos krši ograničenje | potvrda blokirana; razlog prikazan | sistem | `BM-ML-048` |
-| Raspodjela | iznosi valjani | potvrda predsjednika | — | iznosi zaključani; lice, datum, vrijeme; preostali iznos prikazan; podržane prijave `approved` | predsjednik | `BM-ML-048`; `BM-ML-044` |
+| Raspodjela | iznosi valjani | potvrda predsjednika cijele liste | izjednačene grupe riješene; sva tri glasa gdje su potrebna; 30/20/15 potvrđeni | iznosi i činjenice zaključani; lice, datum, vrijeme; `approved`/`rejected`; `remaining_after_first` tek tada | predsjednik | `BM-ML-048`; `BM-ML-044` |
 | Drugi Poziv | preostala sredstva | automatsko kreiranje ili objava | — | zabranjeno | sistem | `BM-ML-051`; Poglavlje 22 |
 
 ## 21.8. Prihvatni kriterijumi — raspodjela
@@ -4028,7 +4039,7 @@ Izvor: `BM-ML-047`.
 
 **Kada:** se određuje primjenjivi procenat.
 
-**Onda:** procenti se ne sabiraju. Primjenjuje se najveći odgovarajući procenat. Ranije finansirano fizičko lice koristi 15%. Ženski limiti 20/10/5% **nijesu** dostupni.
+**Onda:** procenti se ne sabiraju. Primjenjuje se najveći odgovarajući procenat. 30% pripada samo potvrđenom inovativnom tehnološkom start-upu iz posebne evidencije. 20% ili 15% pripadaju posebnoj evidenciji ranijeg youth finansiranja. Te činjenice se ne izvode iz `business_stage`, +3 ni M3. Ranije finansirano fizičko lice koristi 15% ako nema 30%. Ženski limiti 20/10/5% **nijesu** dostupni.
 
 Izvor: `BM-ML-047`.
 
@@ -4068,7 +4079,7 @@ Izvor: `BM-ML-048`.
 
 **Kada:** se završi potvrda.
 
-**Onda:** iznosi se zaključavaju uz lice, datum i vrijeme. Preostali iznos se prikazuje. Drugi Poziv se **ne** kreira automatski. Javni tok akata se **ne** pokreće.
+**Onda:** iznosi, nacrt i činjenice se zaključavaju uz lice, datum i vrijeme. Podržane prijave sa iznosom postaju `approved`. Prijave ispod 30 i prijave bez sredstava postaju `rejected` sa tipiziranim razlogom. Tek tada `remaining_after_first` računa odobrenu raspodjelu. Drugi Poziv se **ne** kreira automatski. Javni tok akata se **ne** pokreće. Ženski rok od 45 dana **ne** primjenjuje se.
 
 Izvor: `BM-ML-048`; `BM-ML-051`.
 
@@ -5024,14 +5035,14 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 20.7.2 | Rang | Pokušaj ručne izmjene redosljeda | Zabranjeno | 20 | `BM-ML-045` |
 | 20.7.3 | Rang | Ispod praga | Nije u raspodjeli | 20 | `BM-ML-044` |
 | 20.7.4 | Tie | Ista puna ocjena | Ista pozicija; sljedeći broj se preskače | 20 | `BM-ML-046` |
-| 20.7.5 | Tie | Član 22 | Nema vremena, ID-a ni abecede kao tie-break | 20 | `BM-ML-046` |
-| 20.7.6 | Rang | Potvrda konačne liste | Lista zaključana; `approved` ili `rejected` | 20 | `BM-ML-045` |
+| 20.7.5 | Tie | Član 22 | Prednost otpočinjanja; glas 2 od 3 uz evidenciju sva tri glasa; nema ID/vremena/abecede | 20 | `BM-ML-046` |
+| 20.7.6 | Rang | Potvrda konačne liste | Cijela lista odjednom; `approved` ili `rejected`; `remaining_after_first` tek tada | 20 | `BM-ML-045`; `BM-ML-048` |
 | 21.8.1 | Limit | Račun procenta | Osnovica je budžet konkretnog Poziva | 21 | `BM-ML-047` |
-| 21.8.2 | Limit | Preklapanje kategorija | 30/20/15; najveći; ne sabiraju se; nema 20/10/5 | 21 | `BM-ML-047` |
+| 21.8.2 | Limit | Preklapanje kategorija | 30/20/15; najveći; ne sabiraju se; posebne evidencije; nema 20/10/5 | 21 | `BM-ML-047` |
 | 21.8.3 | Raspodjela | Evidentiranje iznosa | Nema automatske dodjele maksimuma | 21 | `BM-ML-048` |
 | 21.8.4 | Raspodjela | Iznos iznad traženog, procenta ili preostalog | Blokirano | 21 | `BM-ML-048` |
 | 21.8.5 | Raspodjela | Zbir premašuje budžet Poziva | Potvrda blokirana | 21 | `BM-ML-048` |
-| 21.8.6 | Raspodjela | Valjana potvrda | Iznosi zaključani; drugi Poziv se ne kreira automatski | 21 | `BM-ML-048`; `BM-ML-051` |
+| 21.8.6 | Raspodjela | Valjana potvrda | Cijela lista; iznosi zaključani; `remaining_after_first` od `approved`; drugi Poziv se ne kreira automatski | 21 | `BM-ML-048`; `BM-ML-051` |
 | 22.7.1 | Drugi Poziv | Nema preostalih sredstava | Ne raspisuje se; nema automatske ponude | 22 | `BM-ML-049` |
 | 22.7.2 | Drugi Poziv | Ima preostalih sredstava | Opcioni; Administrator odlučuje po potrebi; akcija tek nakon `completed`; Platforma ne kreira automatski | 22 | `BM-ML-049` |
 | 22.7.3 | Drugi Poziv | Automatsko kreiranje ili objava | Zabranjeno; zatvaranje prvog ne kreira drugi | 22 | `BM-ML-051` |
@@ -5225,7 +5236,7 @@ Izvor: 18.7.1; `BM-ML-043`.
 
 **Kada:** se formira rang.
 
-**Onda:** ručna izmjena je zabranjena. Tie-break nije vrijeme, broj prijave, tehnički ID ni abeceda. Primjenjuje se član 22 / `BM-ML-046`.
+**Onda:** ručna izmjena je zabranjena. Tie-break nije vrijeme, broj prijave, tehnički ID ni abeceda. Pravilo se aktivira samo kada ista puna ocjena dijeli poziciju i budžet nije dovoljan. Prednost ima otpočinjanje nad razvojem; ako to nije dovoljno, glasaju sva tri aktivna člana, većina 2 od 3. Primjenjuje se `BM-ML-046`.
 
 Izvor: 20.7.2; 20.7.4; 20.7.5.
 
@@ -5235,7 +5246,7 @@ Izvor: 20.7.2; 20.7.4; 20.7.5.
 
 **Kada:** Platforma određuje osnovicu.
 
-**Onda:** osnovica je budžet konkretnog Poziva. Limiti su 30/20/15. Procenti se ne sabiraju.
+**Onda:** osnovica je budžet konkretnog Poziva. Limiti su 30/20/15. Primjenjuje se najveći odgovarajući procenat. Procenti se ne sabiraju. 30% samo za potvrđeni inovativni tehnološki start-up iz posebne evidencije. 20%/15% iz posebne evidencije ranijeg youth finansiranja, ne iz `business_stage`, +3 ni M3.
 
 Izvor: 21.8.1; 21.8.2; `BM-ML-047`.
 
@@ -5334,7 +5345,7 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-031 | IOPPD ili potvrda Poreske uprave za društvo u razvoju | 9.7 | §9 | 9.9.2 | Jedan odgovarajući dokaz, ne oba | U V1 |
 | BM-ML-032 | Dokaz o žiro računu | 9.7 | §9; §1.3; §25.3 | 9.9.3; 25.6.1 | Nije obavezan uz početnu prijavu; provjera pred ugovor van V1 | U V1 opciono; operativna provjera van V1 |
 | BM-ML-033 | Objavljivanje i rok za prijave | 10.2 | §6 | 6.8.1–6.8.12 | Ručna objava; 20 dana; 23:59:59; bez pomjeranja | U V1 |
-| BM-ML-034 | Rokovi sjednica Komisije | 10.3 | §4.10; §13.2; §14.3; §15.1; §20 | 4.11.6; 4.11.7; 14.6.9; 15.7.1 | Platforma evidentira; ne zakazuje umjesto Komisije; kapija druge sjednice/usmenog nije istorijska M3 `Potpuna`; treća sjednica najkasnije sedam dana; nema automatskog produženja roka druge sjednice | U V1 evidencija |
+| BM-ML-034 | Rokovi sjednica Komisije | 10.3 | §4.10; §13.2; §14.3; §15.1; §20 | 4.11.6; 4.11.7; 14.6.9; 15.7.1 | Platforma evidentira zaključke; ne zakazuje umjesto Komisije; kapija druge sjednice/usmenog nije istorijska M3 `Potpuna`; treća sjednica nije obavezni `TYPE_THIRD`; nema automatskog produženja roka druge sjednice | U V1 evidencija |
 | BM-ML-035 | M3 i tri eliminatorna kriterijuma | 10.4 | §13 | 13.5.3; 13.5.7; 13.5.8; 4.11.2 | Tri odvojene stavke na M3; status ostaje submitted dok traje prigovor | U V1 |
 | BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | §14 | 14.6.1–14.6.14; 26.2.8; 26.2.9 | Objedinjeno e-mail obavještenje; jedan prigovor na aktivirane; rejected tek nakon konačnosti | U V1 |
 | BM-ML-037 | Konačnost ishoda prigovora | 10.5 | §14 | 14.6.8; 14.6.13; 14.6.14 | Ishod po kriterijumu; Prihvaćen/Odbijen se ne otvara ponovo | U V1 |
@@ -5344,11 +5355,11 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-041 | Prosjek i preciznost obračuna | 11.4 | §16.6; §19 | 16.8.8; 19.6.1; 26.2.14 | Puna nezaokružena vrijednost za prag i rang | U V1 |
 | BM-ML-042 | Dodatni bodovi | 11.5 | §17 | 17.7.1–17.7.6; 26.2.15 | +1/+2/+3; maksimum 6; nema boda Zavoda | U V1 |
 | BM-ML-043 | Eliminatorni kriterijumi | 11.6 | §18 | 18.7.1–18.7.6; 26.2.16 | Tačno tri razloga na M3; nema stanja Eliminisana; konačni razlog daje rejected | U V1 |
-| BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | §19 | 19.6.1; 19.6.3; 26.2.13 | Maksimum 56; prag 30; evaluated pa approved/rejected pri potvrdi | U V1 |
-| BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | §20 | 20.7.1; 20.7.2; 20.7.6 | Jedan objekat, dvije faze; bez ručne izmjene ranga | U V1 |
-| BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | §20 | 20.7.4; 20.7.5; 26.2.17 | 1, 2, 2, 4; član 22; bez tehničkog tie-breaka | U V1 |
-| BM-ML-047 | Procentualni limiti i njihovo preklapanje | 11.10 | §21; §22.4 | 21.8.1; 21.8.2; 26.2.18 | 30/20/15 budžeta konkretnog Poziva | U V1 |
-| BM-ML-048 | Određivanje i kontrola dodijeljenog iznosa | 11.10 | §21 | 21.8.3–21.8.6; 26.2.19 | Komisija određuje; Platforma ne dodjeljuje automatski | U V1 |
+| BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | §19; §20; §21 | 19.6.1; 19.6.3; 20.7.6; 26.2.13 | Maksimum 56; prag 30; evaluated pa approved/rejected pri potvrdi cijele liste | U V1 |
+| BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | §20 | 20.7.1; 20.7.2; 20.7.6 | Jedan objekat, dvije faze; nacrt bez konačnog dejstva; potvrda cijele liste | U V1 |
+| BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | §20 | 20.7.4; 20.7.5; 26.2.17 | 1, 2, 2, 4; otpočinjanje pa glas 2 od 3; bez tehničkog tie-breaka | U V1 |
+| BM-ML-047 | Procentualni limiti i njihovo preklapanje | 11.10 | §21; §22.4 | 21.8.1; 21.8.2; 26.2.18 | 30/20/15 budžeta konkretnog Poziva; posebne evidencije; najveći, ne zbir | U V1 |
+| BM-ML-048 | Određivanje i kontrola dodijeljenog iznosa | 11.10 | §21 | 21.8.3–21.8.6; 26.2.19 | Komisija određuje; potvrda cijele liste; remaining_after_first od approved | U V1 |
 | BM-ML-049 | Uslov za raspisivanje drugog Javnog konkursa | 16.1 | §22.1 | 22.7.1; 22.7.2 | Opcioni; Administrator odlučuje po potrebi; tek nakon `completed`; nije automatski | U V1 |
 | BM-ML-050 | Ista godišnja instanca i odvojeni Poziv | 16.2 | §22.2 | 22.7.4 | Prvi i drugi Poziv u istoj instanci; treći blokiran; prvi nepromijenjen | U V1 |
 | BM-ML-051 | Ručno kreiranje i objavljivanje drugog Poziva | 16.3 | §22.3 | 22.7.3; 22.7.5; 26.2.20 | Administrator ručno nakon kapije; čuvanje nije objava | U V1 |
@@ -5469,4 +5480,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.8**
+**Kraj dokumenta KN-FS-002 v1.0.9**

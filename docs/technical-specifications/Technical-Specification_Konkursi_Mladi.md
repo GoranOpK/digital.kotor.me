@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.4
-**Datum:** 2026-09-17
+**Verzija:** 1.0.5
+**Datum:** 2026-09-21
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.32** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.38** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.10** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.11** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.8** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.9** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.12** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
+* Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
 Ovaj dokument **ne** mijenja `KN-BM-001`, `KN-BM-002`, `KN-FS-001`, `KN-FS-002`, `KN-FS-003` niti `KN-TS-001`.
 
@@ -42,6 +42,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.2 | 2026-09-15 | KN-PATCH-TS-002 — Tehnički propišana kapija `canCreateSecondCall` = `first.hasChairmanCompletedDecisions()` && `first.status === completed` && `remaining_after_first > 0` && `secondCallDoesNotExist`. Koristi se postojeći `closeCompetition()`, status `completed`, `hasChairmanCompletedDecisions()` i `CompetitionAnnualInstance`. Status `completed` ostaje postojeća zajednička tehnička činjenica; profil mladih je samo koristi kao kapiju za drugi Poziv. Ne uvodi se novi status, `ranking_frozen_at`, nova tabela, novi snapshot, dodatno zaključavanje u `EvaluationController`, automatsko kreiranje ni scheduler. Ženski tok nije diran. |
 | 1.0.3 | 2026-09-17 | KN-PATCH-TS-003 — Pri kreiranju prvog omladinskog Poziva server postavlja `annual_budget = budget`; klijent ne šalje nezavisni `annual_budget`; update/publish ne smiju dozvoliti razilaženje. `remaining_after_first` = `budget` prvog − konačno potvrđene `approved_amount` prvog. Drugi Poziv nasljeđuje `annual_budget` i nije obavezan. Nema `remaining_amount` kolone ni tabele instance. Uklonjen važeći primjer 100.000/80.000. Ženski tok nije diran. |
 | 1.0.4 | 2026-09-17 | KN-PATCH-TS-004 — Ispravljena zastarjela tvrdnja da tabele sjednica ne postoje: `commission_sessions` i `commission_session_attendances` već postoje za prvu sjednicu; naredna implementacija proširuje taj model za drugu sjednicu i usmeno, bez paralelnog sistema i bez automatskog zakazivanja. Kapija usmenog nije istorijska M3 `Potpuna`. Sva tri aktivna člana potrebna su za usmeno; ocjenjivanje ostaje zatvoreno dok usmeno konkretne prijave nije završeno. Kolone `criterion_1_contested`, `criterion_2_contested` i `criterion_3_contested` postoje na `application_prigovors`; ženski tok ih ostavlja `NULL`. Živi pokazivači usklađeni na KN-BM-002 v1.0.10, KN-FS-002 v1.0.8 i KN-RG-001 v1.0.32. Ženski tok nije diran. |
+| 1.0.5 | 2026-09-21 | KN-PATCH-TS-005 — Predložena youth-only audit polja za konačnu raspodjelu, bez ženskih kolona i bez obaveznog `TYPE_THIRD`: posebne evidencije inovativnog tehnološkog start-upa i ranijeg youth finansiranja; evidencija glasova 2 od 3; potvrda cijele liste; `remaining_after_first` samo od `approved`. Prenosi se procesni princip, ne ženski procenti, 5 članova ni ženski model glasova. Živi pokazivači: KN-BM-002 v1.0.11, KN-FS-002 v1.0.9, KN-RG-001 v1.0.38, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 
 Napomena:
 
@@ -126,13 +127,13 @@ Tehnička specifikacija **ne smije** uvesti poslovno pravilo kojih nema u `KN-BM
 |----|-------|---------|--------|-------------------|
 | DK-DS-001 | Digital Kotor Documentation Standard | 1.0.0 | USVOJENO | Document ID, tipovi, statusi, sljedivost, folderi |
 | METHODOLOGY.md | Metodologija dokumentacije | 1.0 | AKTIVAN | BM → FS → TS → implementacija; kod nije izvor pravila |
-| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.32 | USVOJENO | evidencija Document ID-a ovog dokumenta |
+| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.38 | USVOJENO | evidencija Document ID-a ovog dokumenta |
 | KN-BM-001 | Poslovni model Konkursa | 0.2.11 | USVOJENO | zajednička poslovna pravila modula Konkursi |
-| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.10 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
+| KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.11 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
 | KN-FS-001 | Funkcionalna specifikacija Konkursa | 0.2.13 | USVOJENO | zajednički funkcionalni sloj modula Konkursi |
-| KN-FS-002 | Funkcionalna specifikacija konkursa za podršku preduzetništvu mladih | 1.0.8 | USVOJEN | **SSOT** funkcionalnog ponašanja mladih; 142 prihvatna kriterijuma |
+| KN-FS-002 | Funkcionalna specifikacija konkursa za podršku preduzetništvu mladih | 1.0.9 | USVOJEN | **SSOT** funkcionalnog ponašanja mladih; 142 prihvatna kriterijuma |
 | KN-TS-001 | Tehnička specifikacija Konkursa | 0.1.0 | NACRT | zajednička tehnička specifikacija; nije SSOT profila mladih |
-| KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 1.0.12 | USVOJEN | samo tehnički/strukturni obrazac; nije SSOT profila mladih |
+| KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 1.0.17 | USVOJEN | samo tehnički/strukturni obrazac; nije SSOT profila mladih |
 
 Postojeći aplikativni kod, migracije i testovi ženskog toka smiju se koristiti **samo kao tehnički obrazac** postojeće infrastrukture. Oni **ne** smiju poništiti `KN-BM-002` ni `KN-FS-002`.
 
@@ -582,7 +583,7 @@ Pravila:
 * update i publish **ne smiju** dozvoliti razilaženje `annual_budget` i `budget` prvog Poziva;
 * objavljeni `budget` prvog Poziva ostaje **nepromijenjen**;
 * objavljeni `budget` prvog Poziva je i limit raspodjele tog Poziva i godišnji okvir instance;
-* `remaining_after_first` = `budget` prvog Poziva − zbir konačno potvrđenih `approved_amount` prvog Poziva;
+* `remaining_after_first` = `budget` prvog Poziva − zbir `approved_amount` prijava prvog Poziva sa `status=approved`, tek nakon konačne potvrde cijele liste;
 * pošto je `budget` prvog = `annual_budget`, godišnji limit ostaje isti;
 * drugi Poziv se **može** kreirati samo kada je `canCreateSecondCall` tačno; kapija **nije** obaveza;
 * `canCreateSecondCall` = `first.hasChairmanCompletedDecisions()` && `first.status === completed` && `remaining_after_first > 0` && `secondCallDoesNotExist`;
@@ -600,7 +601,7 @@ Izvor: `KN-BM-002` Poglavlje 15.1; `KN-FS-002` §5.9.2–5.9.3.
 
 Preostala godišnja sredstva nakon prvog Poziva su **izvedena činjenica**, ne zaseban STORED workflow i **ne** kolona `remaining_amount`.
 
-`remaining_after_first` = `budget` prvog Poziva − zbir konačno potvrđenih `approved_amount` prvog Poziva.
+`remaining_after_first` = `budget` prvog Poziva − zbir `approved_amount` prijava prvog Poziva sa `status=approved`, tek nakon konačne potvrde cijele liste.
 
 Pošto je `budget` prvog = `annual_budget`, godišnji limit ostaje isti.
 
@@ -796,7 +797,7 @@ Izvor: `KN-FS-002` §5.9.3.
 
 **Kada:** Platforma prikaže stanje instance ili Administrator pokuša kreirati drugi Poziv.
 
-**Onda:** izračuna `remaining_after_first` = `budget` prvog Poziva − zbir konačno potvrđenih `approved_amount` prvog Poziva i prikaže da drugi Poziv **nije** obavezan. Administrator procjenjuje postoji li potreba i **može** odobriti i ručno raspisati. **Ne** kreira ga automatski. Nema odobrenja drugog organa. Nacrt je dozvoljen samo ako je `canCreateSecondCall` tačno. Ako je ostatak 0, drugi Poziv se ne kreira.
+**Onda:** izračuna `remaining_after_first` = `budget` prvog Poziva − zbir `approved_amount` prijava prvog Poziva sa `status=approved`, tek nakon konačne potvrde cijele liste, i prikaže da drugi Poziv **nije** obavezan. Administrator procjenjuje postoji li potreba i **može** odobriti i ručno raspisati. **Ne** kreira ga automatski. Nema odobrenja drugog organa. Nacrt je dozvoljen samo ako je `canCreateSecondCall` tačno. Ako je ostatak 0, drugi Poziv se ne kreira.
 
 Izvor: `BM-ML-049`; `BM-ML-051`.
 
@@ -1951,7 +1952,7 @@ Ponovo se koriste postojeći:
 * **jedan zapis prigovora** po prijavi;
 * predsjednikovo evidentiranje **objedinjene odluke Komisije** na tom zapisu, uključujući ishode po kriterijumima na istom redu.
 
-Ženski tok ostaje nepromijenjen. Profil mladih **parametrizuje** isti tok vrijednostima već usvojenim u `KN-BM-002` v1.0.10 i `KN-FS-002` v1.0.8:
+Ženski tok ostaje nepromijenjen. Profil mladih **parametrizuje** isti tok vrijednostima već usvojenim u `KN-BM-002` v1.0.11 i `KN-FS-002` v1.0.9:
 
 * tekstovi tri eliminatorna kriterijuma profila mladih;
 * Komisija od tri člana;
@@ -2468,9 +2469,11 @@ Izvor: `BM-ML-045`.
 
 ## 11.2. Konačna rang-lista
 
-Na trećoj sjednici Komisija za svaki plan konstatuje podršku ili odbijanje i iznos. Nakon evidencije rang-lista prelazi u konačnu fazu.
+Na trećoj sjednici Komisija za svaki plan konstatuje podršku ili odbijanje i iznos. **Ne** uvodi se obavezni elektronski `TYPE_THIRD` kao kapija. Poslovni događaj može biti van Platforme. Platforma evidentira zaključke, glasove i konačnu potvrdu. Nacrt raspodjele može biti pripremljen ranije; **nema** konačno dejstvo i **ne** mijenja `applications.status`.
 
-Preliminarni sadržaj ostaje radi sljedivosti. Prelazak **ne** mijenja zaključane ocjene i **ne** računa bodove ponovo.
+Rang-lista prelazi u konačnu fazu tek kada predsjednik potvrdi **cijelu listu odjednom**. Prije potvrde: sve granične izjednačene grupe riješene; sva tri glasa evidentirana gdje su potrebna; limiti 30/20/15 potvrđeni za svaku podržanu prijavu. Ženski rok od 45 dana **ne** primjenjuje se.
+
+Preliminarni sadržaj ostaje radi sljedivosti. Prelazak **ne** mijenja zaključane ocjene i **ne** računa bodove ponovo. Nacrt i činjenice se zaključavaju.
 
 Javni PDF lifecycle službenih akata ostaje van V1.
 
@@ -2498,12 +2501,15 @@ Izvor: `BM-ML-046`.
 
 ## 11.5. Dodatno odlučivanje kod nedovoljnih sredstava
 
-Ako sredstva nijesu dovoljna za sve planove sa istim brojem bodova, primjenjuje se tačno `BM-ML-046` / član 22:
+Ako sredstva nijesu dovoljna za sve planove sa istom punom ocjenom, pravilo se **aktivira samo** tada, prema `BM-ML-046`:
 
-1. ako je samo jedan od izjednačenih planova plan za otpočinjanje biznisa, sredstva se dodjeljuju tom planu;
-2. ako nijedan nije takav plan ili su svi takvi, Komisija odlučuje većinom glasova ukupnog broja članova.
+1. prijave za otpočinjanje imaju prednost nad prijavama za razvoj (`business_stage`);
+2. ako je to dovoljno, prednost se primjenjuje bez glasanja;
+3. ako budžet nije dovoljan ni za sve prijave prioritetne kategorije, glasaju **sva tri aktivna člana**; većina je **2 od 3**.
 
-Predsjednik evidentira tu odluku. Platforma je ne izmišlja. Rang-pozicija i bodovi ostaju.
+Predsjednik evidentira tu odluku, ali je **ne** izmišlja i **ne** odlučuje sam. Platforma čuva svaki glas, člana, vrijeme, grupu prijava, primijenjeno pravilo i rezultat. Rang-pozicija i bodovi ostaju. ID, vrijeme i abeceda **nijesu** kriterijumi.
+
+**Ne** koristi se ženski model glasova (5 članova, 3 od 5, ženske kolone). Youth audit je zaseban, prema §13.9.
 
 Prijava iznad praga koja nije podržana zbog nedovoljnih sredstava postaje `rejected` uz poseban razlog; bodovi i rang ostaju.
 
@@ -2527,13 +2533,15 @@ Izvor: `BM-ML-048`; `KN-FS-002` §21.3.
 
 Limiti se preuzimaju tačno iz `BM-ML-047`, `BM-ML-048` i `KN-FS-002` §21.2. **Ne** zaključuju se iz ženskog koda. **Ne** koriste se ženski procenti.
 
-* **30%** — start-up, odnosno inovativni tehnološki biznis;
-* **20%** — fizičko lice, preduzetnik ili društvo kojem ranije nijesu dodjeljivana sredstva Opštine Kotor za podršku preduzetništvu mladih;
-* **15%** — fizičko lice, preduzetnik ili društvo kojem su ranije dodjeljivana takva sredstva, uključujući ranije finansirano fizičko lice.
+* **30%** — samo **potvrđeni inovativni tehnološki start-up** u smislu člana 19, iz **posebne evidencije**;
+* **20%** — ako podnosilac ranije **nije** dobio sredstva Opštine Kotor za podršku preduzetništvu mladih, iz **posebne evidencije**;
+* **15%** — ako **jeste**, uključujući ranije finansirano fizičko lice.
+
+Te činjenice **se ne izvode** iz `business_stage`, `bonus_green_innovative` (+3) ni M3 `criterion_2`. Ženske kolone se **ne** koriste kao izvor. Minimalna predložena polja: §13.9.
 
 Osnovica je budžet **konkretnog Poziva**. Za drugi Poziv osnovica je njegov budžet, ne prvobitni godišnji okvir ako je raspoloživo manje.
 
-Kada se kategorije preklapaju, primjenjuje se **najveći** odgovarajući procenat. Procenti se **ne** sabiraju.
+Kada se kategorije preklapaju, primjenjuje se **najveći** odgovarajući procenat. Procenti se **ne** sabiraju. Procenat je maksimum, ne automatski iznos.
 
 Iznos ne smije preći:
 
@@ -2545,7 +2553,7 @@ Izvor: `BM-ML-047`; `BM-ML-048`; `KN-FS-002` §21.2.
 
 ## 11.8. Preostala sredstva
 
-`remaining_after_first` je izvedena činjenica: `budget` prvog Poziva minus konačno potvrđene `approved_amount` prvog Poziva, prema Poglavlju 4. Ne čuva se kao zaseban workflow ni kolona `remaining_amount`.
+`remaining_after_first` je izvedena činjenica: `budget` prvog Poziva minus zbir `approved_amount` prijava prvog Poziva u statusu `approved`, **tek nakon** konačne potvrde cijele liste. Nacrtni iznosi i `commission_decision` bez te potvrde **ne** ulaze u izvod. Ne čuva se kao zaseban workflow ni kolona `remaining_amount`.
 
 Nakon potvrde raspodjele prvog Poziva Platforma prikazuje taj iznos. **Ne** kreira drugi Poziv. Nacrt drugog Poziva ostaje ručan, opcioni i dostupan tek kada je `canCreateSecondCall` tačno.
 
@@ -2625,7 +2633,7 @@ Izvor: `BM-ML-048`.
 
 **Kada:** prijava pripada jednoj ili više kategorija 30/20/15.
 
-**Onda:** koristi se mapiranje `BM-ML-047`. Ženski procenti se ne primjenjuju. Preklapanje daje najveći procenat, bez sabiranja.
+**Onda:** koristi se mapiranje `BM-ML-047` iz posebnih evidencija. **Ne** iz `business_stage`, `bonus_green_innovative` ni `criterion_2`. Ženski procenti i ženske kolone se ne primjenjuju. Preklapanje daje najveći procenat, bez sabiranja.
 
 Izvor: `BM-ML-047`; `KN-FS-002` §21.2.
 
@@ -2645,7 +2653,7 @@ Izvor: `BM-ML-049`–`BM-ML-052`.
 
 **Kada:** se primjenjuje parametrizacija profila mladih.
 
-**Onda:** ženski tok rangiranja, limita i raspodjele ostaje nepromijenjen.
+**Onda:** ženski tok rangiranja, limita i raspodjele ostaje nepromijenjen. Profil mladih **prenosi samo procesni princip** (događaj može biti van Platforme; Platforma čuva zaključke). **Ne** prenose se ženski procenti, broj članova Komisije ni ženski način evidencije glasanja.
 
 Izvor: ovaj dokument §2.3.
 
@@ -2861,7 +2869,7 @@ Status poglavlja: USVOJENO
 
 Ovo poglavlje utvrđuje postojeću šemu, šta se ponovo koristi i koje su **minimalne** izmjene potrebne da se usvojena pravila profila mladih sačuvaju bez paralelnog sistema. Tabele `commission_sessions` i `commission_session_attendances` već postoje za prvu sjednicu. Ostali predloženi nazivi kolona i novih zajedničkih tabela označeni su kao **predložene migracione kolone / tabele** i nijesu već svi implementirani u kodu. Naredna implementacija druge sjednice i usmenog **proširuje postojeći model sjednica**, a ne uvodi paralelni sistem.
 
-Izvori: `KN-BM-002` v1.0.10; `KN-FS-002` v1.0.8; ovaj dokument Poglavlja 2–12; postojeći ženski kod **samo kao tehnički obrazac**.
+Izvori: `KN-BM-002` v1.0.11; `KN-FS-002` v1.0.9; ovaj dokument Poglavlja 2–12; postojeći ženski kod **samo kao tehnički obrazac**.
 
 ## 13.1. Načelo ponovne upotrebe postojeće šeme
 
@@ -2872,7 +2880,7 @@ Redoslijed odluke za svaku činjenicu:
 3. minimalna nova kolona na postojećoj tabeli;
 4. nova **zajednička** pomoćna tabela samo ako odnos ne može bezbjedno stati u postojeći model.
 
-Ne prave se tabele sa prefiksom za profil mladih. Ne uvodi se nova tabela godišnje instance. **Ne** uvodi se posebna kolona identifikatora instance. Ne uvodi se tabela pojedinačnih glasova prigovora. Ne uvodi se novi scheduler samo za `omladinsko`.
+Ne prave se tabele sa prefiksom za profil mladih kao kopija ženskog modela. Ne uvodi se nova tabela godišnje instance. **Ne** uvodi se posebna kolona identifikatora instance. Ne uvodi se tabela pojedinačnih glasova **prigovora**. Predložena evidencija glasova izjednačenja i limita iz §13.9 nije kopija ženskog modela; logička imena nisu runtime ključevi ovog PATCH-a. Ne uvodi se novi scheduler samo za `omladinsko`. **Ne** uvodi se obavezni elektronski `TYPE_THIRD` kao kapija.
 
 Ženski podaci se **ne** masovno konvertuju. Nove vrijednosti važe samo za `competition.type = omladinsko`.
 
@@ -2943,7 +2951,7 @@ Osnovni zapis ostaje `competitions`. Nova tabela instance **ne** uvodi se.
 | Godišnja instanca | `competitions.type` + `competitions.year` | da; grupa zapisa istog profila i godine | **nema** posebne kolone identifikatora | isti `type` i `year` za oba Poziva |
 | Redni broj Poziva 1\|2 | **ne postoji** kao 1\|2 | ne; `competition_number` je drugi semantički pojam | predloženo `call_number` | samo 1 ili 2; nema trećeg |
 | Godišnji budžetski okvir | **ne postoji** kao zaseban korisnički unos | ne | predloženo `annual_budget` | pri prvom Pozivu `annual_budget = budget`; drugi nasljeđuje `annual_budget`; zbir potvrđenih raspodjela ≤ okvir |
-| Potvrđeni preostali iznos nakon prvog | izvedeno: `remaining_after_first` = `budget` prvog − zbir potvrđenih `approved_amount` prvog Poziva | da kao izvod | **nije** obavezna kolona `remaining_amount` | nije workflow instance; `budget` prvog = `annual_budget` i jeste umanjenik |
+| Potvrđeni preostali iznos nakon prvog | izvedeno: `remaining_after_first` = `budget` prvog − zbir `approved_amount` sa `status=approved` nakon potvrde cijele liste | da kao izvod | **nije** obavezna kolona `remaining_amount` | nije workflow instance; `budget` prvog = `annual_budget` i jeste umanjenik |
 
 Obavezne predložene kolone na `competitions` (odobreno ovim usvajanjem kao namjena, ne kao već izvršeni kod): `call_number`, `annual_budget`. Obje nullable radi ženskih redova. `remaining_amount` i kolona izvršioca arhive **nijesu** obavezne.
 
@@ -2957,7 +2965,7 @@ Ograničenja:
 * pri kreiranju prvog Poziva server postavlja `annual_budget = budget`; klijent ne šalje nezavisni `annual_budget`;
 * update i publish ne smiju dozvoliti razilaženje `annual_budget` i `budget` prvog Poziva;
 * drugi Poziv nasljeđuje `annual_budget`;
-* `remaining_after_first` = `budget` prvog Poziva − zbir potvrđenih `approved_amount` prvog Poziva;
+* `remaining_after_first` = `budget` prvog Poziva − zbir `approved_amount` prijava prvog Poziva sa `status=approved`, tek nakon konačne potvrde cijele liste;
 * `0 < budget` drugog ≤ `remaining_after_first`;
 * ukupna konačno potvrđena raspodjela oba Poziva ne prelazi `annual_budget`;
 * Platforma ne kreira ni objavljuje drugi Poziv automatski; drugi Poziv nije obavezan;
@@ -3014,7 +3022,7 @@ Ponovo se koriste `commissions` i `commission_members`. Broj mjesta parametrizuj
 
 `replaces_member_number` 1–5 ostaje na šemi; za `omladinsko` servis dozvoljava samo mjesta 1–3. Ženski `member_type` katalog se **ne** prenosi kao obavezna struktura mladih.
 
-Tabele `commission_sessions` i `commission_session_attendances` **već postoje** i koriste se za **prvu sjednicu**. Postojeće kolone sjednice: `competition_id`, `commission_id`, `session_type`, `held_at`, `completed_at`, `recorded_by_user_id`, `notes`. Unique `(competition_id, session_type)` daje jednu sjednicu datog tipa po Pozivu. Stored tipovi `first`, `second` i `third` postoje kao konstante; implementiran je `first`. Prisustvo: `commission_session_id`, `commission_member_id`, `present`; UNIQUE `(commission_session_id, commission_member_id)`.
+Tabele `commission_sessions` i `commission_session_attendances` **već postoje** i koriste se za **prvu sjednicu**. Postojeće kolone sjednice: `competition_id`, `commission_id`, `session_type`, `held_at`, `completed_at`, `recorded_by_user_id`, `notes`. Unique `(competition_id, session_type)` daje jednu sjednicu datog tipa po Pozivu. Stored tipovi `first`, `second` i `third` postoje kao konstante; implementiran je `first`. **Konstanta `third` / `TYPE_THIRD` nije obavezna kapija** za youth treću sjednicu. Poslovni događaj može biti van Platforme. Platforma evidentira zaključke, glasove i konačnu potvrdu bez uslova da postoji elektronski red `session_type = third`. Prisustvo: `commission_session_id`, `commission_member_id`, `present`; UNIQUE `(commission_session_id, commission_member_id)`.
 
 Naredna implementacija usmenog predstavljanja i druge sjednice **proširuje ovaj postojeći model**. **Ne** uvodi se paralelni sistem sjednica. **Ne** uvodi se nova tabela sjednica samo za mlade, ako se postojeća šema može bezbjedno proširiti. **Ne** uvodi se automatsko zakazivanje.
 
@@ -3059,14 +3067,48 @@ Ponovo se koristi `evaluation_scores`. Živi katalog je deset `criterion_*` kolo
 | Usmeno — završetak, nedolazak, prisustvo tri člana | **ne postoji** kao završetak po prijavi | ne kao gotova činjenica | proširenje postojeće sjednice + prisustva; **nema** nove tabele sjednica samo za mlade | nema automatske eliminacije; sva tri aktivna člana; ocjenjivanje zatvoreno dok usmeno te prijave nije završeno |
 | Dodatni +1 Info dan i obuka | `bonus_info_day`, `bonus_training` | da, **zajedno** | profilni servis dodaje +1 samo ako su **oba** true | ne ženski info-dan sam |
 | Dodatni +2 planirana registracija | `bonus_new_business` | da | profilno značenje BM-ML-042 | ne ženski „novi biznis“ izvan pravila mladih |
-| Dodatni +3 inovativno/zeleno | `bonus_green_innovative` | da | maksimum jednom, ne 3+3 | `BM-ML-042` |
+| Dodatni +3 inovativno/zeleno | `bonus_green_innovative` | da za bodovanje čl. 20 | maksimum jednom, ne 3+3 | **nije** izvor limita 30% iz čl. 19 |
 | Bod Zavoda | `bonus_zavod_nezaposleni` | kolona ostaje za `zensko` | profil mladih **ne čita** ovu kolonu | maksimum dodatnih 6, ne 8 |
 | Konačni bodovi | `final_score` `decimal(5,2)` | da kao prikaz/sačuvani rezultat | **ne** širiti kolonu u ovom nacrtu; prag i rang iz izvornih ocjena | puna vrijednost za prag i rang; prikaz 2 decimale |
 | Rang `1, 2, 2, 4` | `ranking_position` | da, integer može čuvati isti broj na dvije prijave | **nema** nove kolone; mijenja se algoritam | nema ID/vrijeme/abeceda tie-breaka |
-| Odobreni iznos | `approved_amount` | da | Platforma ne računa iznos | Komisija određuje; predsjednik evidentira |
-| Odluka | `commission_decision`, obrazloženje, potpisi | da | nema | manji iznos zahtijeva obrazloženje |
+| Poslovna faza | `business_stage` | da za prednost otpočinjanja u `BM-ML-046` | **ne** mapirati na 30% | nije evidencija inovativnog tehnološkog start-upa |
+| Odobreni iznos | `approved_amount` | da kao polje nacrta i konačnog iznosa | Platforma ne računa iznos; nacrt nema konačno dejstvo | Komisija određuje; predsjednik evidentira; `remaining_after_first` samo od `status=approved` |
+| Odluka | `commission_decision`, obrazloženje, potpisi | da za nacrt | konačni `approved`/`rejected` tek pri potvrdi cijele liste | manji iznos zahtijeva obrazloženje |
+| Inovativni tehnološki start-up (čl. 19) | **ne postoji** kao posebna evidencija | ne | predložena youth-only polja ispod; **ne** ženske kolone | ne izvoditi iz `business_stage` ni +3 |
+| Ranije youth finansiranje (20%/15%) | **ne postoji** kao posebna evidencija | ne | predložena youth-only polja ispod; **ne** M3 `criterion_2` | ne izvoditi iz eliminatornog M4/M4a |
+| Glasovi izjednačenja 2 od 3 | ženske tabele/kolone glasova | **ne** | predložena youth-only tabela ispod | ne ženski 5 članova / 3 od 5 |
 
 Obračun: profilni servis uzima tačno tri kompletna zaključana seta tekućih mjesta. Prosjek po kriterijumu = zbir / 3; osnovni bodovi = zbir deset prosjeka; plus dodatni. Nema spajanja nacrta.
+
+### Predložena youth-only audit polja (nije migracija ovog PATCH-a)
+
+Ova polja se **predlažu**. **Ne** vezuju se za ženske kolone. **Ne** implementiraju se ovim dokumentacionim PATCH-om.
+
+Na prijavi, ili u odvojenoj youth evidenciji vezanoj za `application_id`:
+
+* `youth_innovative_tech_startup` — boolean, nullable do potvrde;
+* `youth_innovative_tech_startup_confirmed_at`;
+* `youth_innovative_tech_startup_confirmed_by_user_id`;
+* `youth_prior_municipal_youth_funding` — boolean, nullable do potvrde (`true` = ranije dobio sredstva Opštine Kotor za podršku preduzetništvu mladih);
+* `youth_prior_municipal_youth_funding_confirmed_at`;
+* `youth_prior_municipal_youth_funding_confirmed_by_user_id`;
+* `youth_applied_cap_percent` — 15, 20 ili 30, najveći odgovarajući;
+* `youth_allocation_list_confirmed_at`;
+* `youth_allocation_list_confirmed_by_user_id`.
+
+Predložena tabela glasova izjednačenja, npr. `youth_equal_score_votes` (ime nije runtime ključ):
+
+* `competition_id`;
+* `group_key` — ista puna ocjena i dijeljena rang-pozicija;
+* `application_id`;
+* `commission_member_id`;
+* `vote_value`;
+* `voted_at`;
+* `recorded_by_user_id`;
+* `applied_rule`;
+* `result`.
+
+Mora se čuvati svaki glas, član, vrijeme, grupa prijava, primijenjeno pravilo i rezultat. Predsjednik je zapisničar, ne jedini glas. Ženske kolone i ženske tabele glasova se **ne** koriste.
 
 Izvor: `BM-ML-038`–`BM-ML-048`; `KN-FS-002` Poglavlja 16–21; ovaj dokument Poglavlja 10–11.
 
@@ -3079,7 +3121,7 @@ Ponovo se koristi postojeća akcija zatvaranja (`status` + `closed_at`), uz prof
 | Read-only Poziv | `status` `completed` / `closed` + `closed_at` | da kao obrazac | parametrizacija preduslova i uloge | 14 uslova; predsjednik |
 | Izvršilac | `closed_at` nema lice; tabela `logs` nije dovoljna | ne kao konkursni trag | predloženi zajednički `competition_process_events`; kolona `archived_by_user_id` **nije** obavezna | Administrator ne arhivira |
 | Rezultat 14 preduslova | **ne postoji** | ne | payload predloženog audita | svi neispunjeni uslovi pri blokadi |
-| Preostala sredstva | izvod: `remaining_after_first` = `budget` prvog − potvrđene raspodjele prvog Poziva | da | `remaining_amount` **nije** obavezna kolona | statusi prijava se ne mijenjaju |
+| Preostala sredstva | izvod: `remaining_after_first` = `budget` prvog − `approved_amount` prijava sa `status=approved` nakon potvrde cijele liste | da | `remaining_amount` **nije** obavezna kolona | statusi prijava se ne mijenjaju; nacrt ne umanjuje ostatak |
 | Status prijave `archived` | — | ne uvodi se | nema | `BM-ML-058` |
 
 Predloženi **zajednički** append-only zapis `competition_process_events` ostaje opravdan jer `logs` nema model, nema `competition_id`/`application_id` i nije korišćen u tokovima konkursa. Nije tabela samo za mlade. Retention se **ne** određuje.
@@ -3104,15 +3146,17 @@ Izvor: `KN-FS-002` §23.2–23.5; `BM-ML-020`; `BM-ML-058`; ovaj dokument Poglav
 Ove stavke **nijesu** preduslov V1:
 
 * `applicant_intention`, `form_variant`, `document_package`, `registration_status_snapshot` — izvode se iz zaključanog `applicant_type`, `business_stage` i postojećih polja;
-* `remaining_amount` — izvod `remaining_after_first`; snapshot pri zatvaranju je audit, ne osnovni tok;
+* `remaining_amount` — izvod `remaining_after_first`; snapshot pri zatvaranju je audit, ne osnovni tok; izvod tek od `status=approved`;
 * `evaluation_scores.completed_at` — kompletnost je 10/10 + servisno zaključavanje;
 * širenje `applications.final_score` — prag i rang iz izvornih ocjena; `decimal(5,2)` ostaje prikaz;
 * nova tabela godišnje instance;
 * posebna kolona identifikatora instance;
-* tabela pojedinačnih glasova;
+* ženske tabele/kolone pojedinačnih glasova;
+* obavezni elektronski red `session_type = third` / `TYPE_THIRD` kao kapija treće sjednice;
 * posebna kolona snapshot-a sastava Komisije na prigovoru — sastav i prisustvo dokazuju se zajedničkom evidencijom sjednice;
 * kopije tabela samo za profil mladih;
-* `archived_by_user_id` kao obavezna kolona.
+* `archived_by_user_id` kao obavezna kolona;
+* predložena youth-only audit polja iz §13.9 — **predložena**, nijesu obavezna migracija ovog PATCH-a.
 
 `competition_process_events` je **predloženo zajedničko** audit rješenje. `logs` postoji, ali je trenutno nedovoljna za konkursni proces. Event tabela **nije** preduslov osnovnog toka V1; nije tabela samo za mlade.
 
@@ -3646,4 +3690,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.4**
+**Kraj dokumenta KN-TS-002 v1.0.5**
