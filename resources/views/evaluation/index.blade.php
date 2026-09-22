@@ -130,6 +130,8 @@
                         'youthRankingView' => $youthPreliminaryByCompetition[$youthComp->id],
                         'youthRankingTitle' => $youthComp->title,
                         'canEditYouthAllocationDraft' => $youthAllocationCanEditByCompetition[$youthComp->id] ?? false,
+                        'youthEqualScoreVotingBoard' => $youthEqualScoreVotingByCompetition[$youthComp->id] ?? null,
+                        'youthEqualScoreCompetition' => $youthComp,
                     ])
                 @endif
             @endforeach

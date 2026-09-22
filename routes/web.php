@@ -462,6 +462,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             // Rute za predsjednika komisije
             Route::post('/applications/{application}/decision', [EvaluationController::class, 'storeDecision'])->name('store-decision');
             Route::post('/applications/{application}/youth-allocation-draft', [EvaluationController::class, 'storeYouthAllocationDraft'])->name('youth-allocation-draft');
+            Route::post('/competitions/{competition}/youth-equal-score-round', [EvaluationController::class, 'storeYouthEqualScoreRound'])->name('youth-equal-score-round');
+            Route::post('/competitions/{competition}/youth-equal-score-rounds/{round}/lock', [EvaluationController::class, 'lockYouthEqualScoreRound'])->name('youth-equal-score-round.lock');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
         });
 

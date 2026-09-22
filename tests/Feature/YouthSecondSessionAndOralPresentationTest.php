@@ -81,6 +81,78 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->assertSame(CommissionProfileConfig::SESSION_LOCKED_MESSAGE, session('errors')->first('session'));
     }
 
+    public function test_confirmed_second_session_survives_later_member_replacement(): void
+    {
+        $ctx = $this->youthWithConfirmedSecond();
+        $session = $ctx['competition']->fresh()->secondCommissionSession();
+        $this->assertTrue($session->isConfirmed());
+        $this->assertTrue($session->meetsSecondSessionAttendance($ctx['competition']));
+        $this->assertSame(3, $session->historicalConfirmedPresentCount($ctx['competition']));
+
+        $oldSeatTwo = $ctx['members'][1];
+        $this->replaceSeat($oldSeatTwo, 2);
+
+        $session = $session->fresh(['attendances.member']);
+        $this->assertTrue($oldSeatTwo->fresh()->status === 'inactive');
+        $this->assertTrue($session->meetsSecondSessionAttendance($ctx['competition']));
+        $this->assertTrue($session->chairmanIsPresent($ctx['competition']));
+        $this->assertSame(3, $session->historicalConfirmedPresentCount($ctx['competition']));
+        $this->assertSame(2, $session->validPresentCount($ctx['competition']));
+        $this->assertTrue($session->historicalConfirmedPresentMembers($ctx['competition'])->contains(
+            fn (CommissionMember $member) => (int) $member->id === (int) $oldSeatTwo->id
+        ));
+
+        $this->storeAndCompleteOral($ctx, attended: true);
+        $this->assertTrue($ctx['application']->fresh()->oralPresentation->isCompleted());
+    }
+
+    public function test_unconfirmed_second_session_cannot_use_inactive_replaced_member(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)))
+            ->assertSessionHasNoErrors();
+
+        $session = $ctx['competition']->fresh()->secondCommissionSession();
+        $this->assertTrue($session->isDraft());
+
+        $oldSeatTwo = $ctx['members'][1];
+        $newSeatTwo = $this->replaceSeat($oldSeatTwo, 2);
+
+        $this->assertTrue($ctx['competition']->fresh()->hasCompleteValidCommission());
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('commission-sessions.second.edit', $ctx['competition']))
+            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
+            ->assertSessionHasErrors('session');
+        $this->assertSame(CommissionProfileConfig::SESSION_SECOND_QUORUM_MESSAGE, session('errors')->first('session'));
+        $this->assertTrue($session->fresh()->isDraft());
+        $this->assertFalse($session->fresh()->meetsSecondSessionAttendance($ctx['competition']));
+
+        $this->actingAs($ctx['chairman']->user)->put(
+            route('commission-sessions.second.update', $ctx['competition']),
+            $this->secondPayload([$ctx['members'][0]->id, $oldSeatTwo->id, $ctx['members'][2]->id])
+        )->assertSessionHasErrors('present_member_ids');
+
+        $this->actingAs($ctx['chairman']->user)->put(
+            route('commission-sessions.second.update', $ctx['competition']),
+            $this->secondPayload([$ctx['members'][0]->id, $newSeatTwo->id, $ctx['members'][2]->id])
+        )->assertSessionHasNoErrors();
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
+            ->assertSessionHasNoErrors();
+
+        $session = $session->fresh(['attendances.member']);
+        $this->assertTrue($session->isConfirmed());
+        $this->assertTrue($session->meetsSecondSessionAttendance($ctx['competition']));
+        $this->assertTrue($session->historicalConfirmedPresentMembers($ctx['competition'])->contains(
+            fn (CommissionMember $member) => (int) $member->id === (int) $newSeatTwo->id
+        ));
+        $this->assertFalse($session->historicalConfirmedPresentMembers($ctx['competition'])->contains(
+            fn (CommissionMember $member) => (int) $member->id === (int) $oldSeatTwo->id
+        ));
+    }
+
     public function test_one_second_session_per_call_and_controlled_duplicate_message(): void
     {
         $ctx = $this->youthWithPassedM3();
@@ -682,6 +754,22 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
     private function allMemberIds(array $ctx): array
     {
         return array_map(fn (CommissionMember $member) => $member->id, $ctx['members']);
+    }
+
+    private function replaceSeat(CommissionMember $old, int $seat): CommissionMember
+    {
+        $old->update(['status' => 'inactive']);
+        $user = $this->userWithRole('komisija');
+
+        return CommissionMember::create([
+            'commission_id' => $old->commission_id,
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'position' => 'clan',
+            'member_type' => null,
+            'canonical_seat_no' => $seat,
+            'status' => 'active',
+        ]);
     }
 
     /**

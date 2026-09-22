@@ -538,7 +538,7 @@ class Competition extends Model
                 return true;
             }
 
-            return $subjects->every(function ($app) {
+            $draftsComplete = $subjects->every(function ($app) {
                 if ($app->commission_decision === 'podrzava_potpuno') {
                     return $app->approved_amount !== null && (float) $app->approved_amount > 0;
                 }
@@ -549,6 +549,13 @@ class Competition extends Model
 
                 return false;
             });
+
+            if (! $draftsComplete) {
+                return false;
+            }
+
+            return ! app(\App\Services\Competitions\YouthEqualScoreVotingService::class)
+                ->blocksListClose($this);
         }
 
         $allApplications = $this->applications()

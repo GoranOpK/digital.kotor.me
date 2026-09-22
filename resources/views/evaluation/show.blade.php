@@ -378,6 +378,8 @@
 
         @include('evaluation._youth_preliminary_ranking', [
             'youthRankingView' => $youthRankingView ?? null,
+            'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
+            'youthEqualScoreCompetition' => $application->competition ?? null,
         ])
 
         <!-- Forma za prikaz ocjene -->

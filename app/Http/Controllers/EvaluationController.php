@@ -10,6 +10,7 @@ use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
@@ -30,6 +31,7 @@ class EvaluationController extends Controller
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
         protected YouthSecondSessionGate $youthSecondSessionGate,
         protected YouthAllocationDraftService $youthAllocationDrafts,
+        protected YouthEqualScoreVotingService $youthEqualScoreVoting,
     ) {}
 
     /**
@@ -51,6 +53,13 @@ class EvaluationController extends Controller
     {
         if ($competition && $competition->isCommissionProcessingBlocked()) {
             abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+    }
+
+    protected function abortUnlessOmladinskoEqualScoreVoting(\App\Models\Competition $competition): void
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            abort(403, YouthEqualScoreVotingService::NOT_YOUTH_MESSAGE);
         }
     }
 
@@ -179,6 +188,11 @@ class EvaluationController extends Controller
             ->mapWithKeys(fn ($c) => [$c->id => $this->youthAllocationDrafts->canEditDraft($c, $user)])
             ->all();
 
+        $youthEqualScoreVotingByCompetition = $competitions
+            ->filter(fn ($c) => $c->isOmladinskoProfile())
+            ->mapWithKeys(fn ($c) => [$c->id => $this->youthEqualScoreVoting->board($c, $user)])
+            ->all();
+
         $isChairman = $memberships->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
         $commissionMember = $memberships->firstWhere('position', 'predsjednik') ?? $memberships->first();
         $membershipByCommissionId = $memberships->keyBy('commission_id');
@@ -191,6 +205,7 @@ class EvaluationController extends Controller
             'canViewFinalScoresByCompetition',
             'youthPreliminaryByCompetition',
             'youthAllocationCanEditByCompetition',
+            'youthEqualScoreVotingByCompetition',
             'isChairman',
             'viewerMembershipIds',
             'membershipByCommissionId',
@@ -260,6 +275,7 @@ class EvaluationController extends Controller
         $isOmladinskoScoring = $scoringProfile->isOmladinsko();
         $canViewOtherMembersScores = false;
         $youthRankingView = null;
+        $youthEqualScoreVotingBoard = null;
 
         if ($isOmladinskoScoring) {
             $commissionId = (int) ($competition?->commission_id ?? 0);
@@ -275,6 +291,9 @@ class EvaluationController extends Controller
                 : collect();
             $youthRankingView = ($commissionMember && $competition)
                 ? $this->canonicalScoring->youthPreliminaryRankingView($competition)
+                : null;
+            $youthEqualScoreVotingBoard = ($commissionMember && $competition)
+                ? $this->youthEqualScoreVoting->board($competition, $user)
                 : null;
             $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
             $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
@@ -433,6 +452,7 @@ class EvaluationController extends Controller
             'youthBonusesLocked',
             'youthFinalScoreDisplay',
             'youthRankingView',
+            'youthEqualScoreVotingBoard',
             'canEditYouthAllocationDraft',
         ));
     }
@@ -718,6 +738,7 @@ class EvaluationController extends Controller
         $competition = $application->competition;
         $canViewOtherMembersScores = false;
         $youthRankingView = null;
+        $youthEqualScoreVotingBoard = null;
 
         if ($isOmladinskoScoring) {
             $commissionId = (int) ($competition?->commission_id ?? 0);
@@ -733,6 +754,9 @@ class EvaluationController extends Controller
                 : collect();
             $youthRankingView = ($commissionMember && $competition)
                 ? $this->canonicalScoring->youthPreliminaryRankingView($competition)
+                : null;
+            $youthEqualScoreVotingBoard = ($commissionMember && $competition)
+                ? $this->youthEqualScoreVoting->board($competition, $user)
                 : null;
             $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
             $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
@@ -820,6 +844,7 @@ class EvaluationController extends Controller
             'isOmladinskoScoring',
             'youthFinalScoreDisplay',
             'youthRankingView',
+            'youthEqualScoreVotingBoard',
             'canEditYouthAllocationDraft',
         ));
     }
@@ -845,6 +870,48 @@ class EvaluationController extends Controller
         $this->youthAllocationDrafts->saveDraft($application, Auth::user(), $validated);
 
         return redirect()->back()->with('success', 'Nacrt raspodjele je sačuvan.');
+    }
+
+    /**
+     * Nacrt kruga glasanja izjednačenih youth grupa. Ne potvrđuje listu.
+     */
+    public function storeYouthEqualScoreRound(Request $request, \App\Models\Competition $competition): RedirectResponse
+    {
+        $this->abortUnlessOmladinskoEqualScoreVoting($competition);
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $validated = $request->validate([
+            'group_key' => 'nullable|string|max:191',
+            'justification' => 'required|string|max:5000',
+            'selected' => 'nullable|array',
+            'selected.*' => 'integer',
+            'votes' => 'nullable|array',
+            'votes.1' => 'nullable|in:for,against',
+            'votes.2' => 'nullable|in:for,against',
+            'votes.3' => 'nullable|in:for,against',
+        ], [
+            'justification.required' => YouthEqualScoreVotingService::JUSTIFICATION_REQUIRED_MESSAGE,
+        ]);
+
+        $this->youthEqualScoreVoting->saveRound($competition, Auth::user(), $validated);
+
+        return redirect()->back()->with('success', 'Nacrt kruga glasanja je sačuvan.');
+    }
+
+    /**
+     * Zaključavanje kruga. Ne postavlja approved/rejected i ne potvrđuje listu.
+     */
+    public function lockYouthEqualScoreRound(
+        Request $request,
+        \App\Models\Competition $competition,
+        \App\Models\YouthEqualScoreRound $round,
+    ): RedirectResponse {
+        $this->abortUnlessOmladinskoEqualScoreVoting($competition);
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $this->youthEqualScoreVoting->lockRound($competition, Auth::user(), $round);
+
+        return redirect()->back()->with('success', 'Krug glasanja je zaključan.');
     }
 
     /**

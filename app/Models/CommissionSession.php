@@ -67,43 +67,38 @@ class CommissionSession extends Model
     }
 
     /**
+     * Aktuelna validacija nacrta i confirm POST-a: član mora biti trenutno active.
+     *
      * @return Collection<int, CommissionMember>
      */
     public function validPresentMembers(?Competition $competition = null): Collection
     {
-        $competition ??= $this->competition;
-        $config = CommissionProfileConfig::for($competition?->type);
-
-        $this->loadMissing(['attendances.member', 'commission']);
-
-        return $this->attendances
-            ->filter(fn (CommissionSessionAttendance $row) => $row->present)
-            ->map(fn (CommissionSessionAttendance $row) => $row->member)
-            ->filter(function (?CommissionMember $member) use ($config) {
-                if ($member === null) {
-                    return false;
-                }
-                if ((int) $member->commission_id !== (int) $this->commission_id) {
-                    return false;
-                }
-                if ($member->status !== 'active') {
-                    return false;
-                }
-
-                $seat = $member->canonicalSeatNumber();
-                if ($seat === null || ! $config->allowsSeat($seat)) {
-                    return false;
-                }
-
-                return true;
-            })
-            ->unique('id')
-            ->values();
+        return $this->filterPresentMembers($competition, requireActive: true);
     }
 
     public function validPresentCount(?Competition $competition = null): int
     {
         return $this->validPresentMembers($competition)->count();
+    }
+
+    /**
+     * Istorijski potvrđeno prisustvo nakon completed_at.
+     * Trenutni status=inactive ne poništava sačuvani commission_member red.
+     *
+     * @return Collection<int, CommissionMember>
+     */
+    public function historicalConfirmedPresentMembers(?Competition $competition = null): Collection
+    {
+        if (! $this->isConfirmed()) {
+            return collect();
+        }
+
+        return $this->filterPresentMembers($competition, requireActive: false);
+    }
+
+    public function historicalConfirmedPresentCount(?Competition $competition = null): int
+    {
+        return $this->historicalConfirmedPresentMembers($competition)->count();
     }
 
     public function meetsFirstSessionQuorum(?Competition $competition = null): bool
@@ -119,7 +114,7 @@ class CommissionSession extends Model
             return false;
         }
 
-        return $this->validPresentCount($competition) >= $quorum;
+        return $this->historicalConfirmedPresentCount($competition) >= $quorum;
     }
 
     public function meetsSecondSessionAttendance(?Competition $competition = null): bool
@@ -130,17 +125,71 @@ class CommissionSession extends Model
             return false;
         }
 
-        if ($this->validPresentCount($competition) !== $required) {
+        $present = $this->presentMembersForCurrentState($competition);
+        if ($present->count() !== $required) {
             return false;
         }
 
-        return $this->chairmanIsPresent($competition);
+        return $present->contains(
+            fn (CommissionMember $member) => $member->position === 'predsjednik'
+        );
     }
 
     public function chairmanIsPresent(?Competition $competition = null): bool
     {
-        return $this->validPresentMembers($competition)->contains(
+        return $this->presentMembersForCurrentState($competition)->contains(
             fn (CommissionMember $member) => $member->position === 'predsjednik'
         );
+    }
+
+    /**
+     * @return Collection<int, CommissionMember>
+     */
+    private function presentMembersForCurrentState(?Competition $competition = null): Collection
+    {
+        return $this->isConfirmed()
+            ? $this->historicalConfirmedPresentMembers($competition)
+            : $this->validPresentMembers($competition);
+    }
+
+    /**
+     * @return Collection<int, CommissionMember>
+     */
+    private function filterPresentMembers(?Competition $competition, bool $requireActive): Collection
+    {
+        $competition ??= $this->competition;
+        $config = CommissionProfileConfig::for($competition?->type);
+
+        $this->loadMissing(['attendances.member', 'commission']);
+
+        $seenSeats = [];
+
+        return $this->attendances
+            ->filter(fn (CommissionSessionAttendance $row) => $row->present)
+            ->map(fn (CommissionSessionAttendance $row) => $row->member)
+            ->filter(function (?CommissionMember $member) use ($config, $requireActive, &$seenSeats) {
+                if ($member === null) {
+                    return false;
+                }
+                if ((int) $member->commission_id !== (int) $this->commission_id) {
+                    return false;
+                }
+                if ($requireActive && $member->status !== 'active') {
+                    return false;
+                }
+
+                $seat = $member->canonicalSeatNumber();
+                if ($seat === null || ! $config->allowsSeat($seat)) {
+                    return false;
+                }
+                if (isset($seenSeats[$seat])) {
+                    return false;
+                }
+                $seenSeats[$seat] = true;
+
+                return true;
+            })
+            ->unique('id')
+            ->values();
     }
 }

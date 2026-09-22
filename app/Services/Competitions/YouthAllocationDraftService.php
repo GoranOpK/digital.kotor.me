@@ -53,7 +53,7 @@ final class YouthAllocationDraftService
         'Odobreni iznos ne može biti veći od primjenjivog maksimuma za ovu prijavu.';
 
     public const FACTS_REQUIRED_FOR_SUPPORT_MESSAGE =
-        'Za zaključak Podržava moraju biti potvrđene činjenice o inovativnom tehnološkom start-upu i ranijem youth finansiranju.';
+        'Za zaključak Podržava moraju biti potvrđene činjenice o inovativnom tehnološkom start-upu i finansiranju podrške preduzetništvu mladih.';
 
     public const CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE =
         'Primijenjeni procenat je maksimum, nije automatska dodjela.';
@@ -66,6 +66,7 @@ final class YouthAllocationDraftService
 
     public function __construct(
         protected CanonicalIndividualScoringService $canonicalScoring,
+        protected YouthEqualScoreVotingService $youthEqualScoreVoting,
     ) {}
 
     public function canEditDraft(Competition $competition, User $user): bool
@@ -87,23 +88,31 @@ final class YouthAllocationDraftService
 
     public function remainingBudget(Competition $competition, ?int $exceptApplicationId = null): string
     {
-        $budget = $this->money((string) ($competition->budget ?? 0));
-        $query = Application::query()
-            ->where('competition_id', $competition->id)
-            ->where('commission_decision', 'podrzava_potpuno')
-            ->whereNotNull('approved_amount')
-            ->where('approved_amount', '>', 0);
+        if (! $competition->isOmladinskoProfile()) {
+            $budget = $this->money((string) ($competition->budget ?? 0));
+            $query = Application::query()
+                ->where('competition_id', $competition->id)
+                ->where('commission_decision', 'podrzava_potpuno')
+                ->whereNotNull('approved_amount')
+                ->where('approved_amount', '>', 0);
 
-        if ($exceptApplicationId !== null) {
-            $query->where('id', '!=', $exceptApplicationId);
+            if ($exceptApplicationId !== null) {
+                $query->where('id', '!=', $exceptApplicationId);
+            }
+
+            $used = '0.00';
+            foreach ($query->pluck('approved_amount') as $amount) {
+                $used = bcadd($used, $this->money((string) $amount), 2);
+            }
+
+            return bcsub($budget, $used, 2);
         }
 
-        $used = '0.00';
-        foreach ($query->pluck('approved_amount') as $amount) {
-            $used = bcadd($used, $this->money((string) $amount), 2);
-        }
+        $application = $exceptApplicationId !== null
+            ? Application::query()->find($exceptApplicationId)
+            : null;
 
-        return bcsub($budget, $used, 2);
+        return $this->youthEqualScoreVoting->remainingBeforeApplication($competition, $application);
     }
 
     /**
@@ -206,6 +215,11 @@ final class YouthAllocationDraftService
                 abort(403, self::BELOW_THRESHOLD_MESSAGE);
             }
 
+            $lowerRankBlock = $this->youthEqualScoreVoting->lowerRankDraftBlockReason($lockedCompetition, $locked);
+            if ($lowerRankBlock !== null) {
+                abort(403, $lowerRankBlock);
+            }
+
             $decision = (string) ($input['commission_decision'] ?? '');
             $justification = trim((string) ($input['commission_justification'] ?? ''));
             $approvedAmount = array_key_exists('approved_amount', $input) ? $input['approved_amount'] : null;
@@ -256,7 +270,7 @@ final class YouthAllocationDraftService
                     ]);
                 }
 
-                $remaining = $this->remainingBudget($lockedCompetition, $locked->id);
+                $remaining = $this->youthEqualScoreVoting->remainingBeforeApplication($lockedCompetition, $locked);
                 if (bccomp($amount, $remaining, 2) === 1) {
                     throw ValidationException::withMessages([
                         'approved_amount' => self::AMOUNT_EXCEEDS_REMAINING_MESSAGE,

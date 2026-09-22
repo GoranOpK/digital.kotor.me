@@ -156,6 +156,10 @@
                 </tbody>
             </table>
             <p style="margin: 0; color: #6b7280; font-size: 13px;">Ova lista nije konačna odluka o podršci. Prijave ispod praga ne dobijaju odluku o raspodjeli.</p>
+            @include('evaluation._youth_equal_score_voting', [
+                'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
+                'youthEqualScoreCompetition' => $youthEqualScoreCompetition ?? ($youthRankingView['above'][0]->competition ?? null),
+            ])
         @endif
     </div>
 @endif

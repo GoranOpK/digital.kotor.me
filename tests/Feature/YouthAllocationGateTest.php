@@ -11,6 +11,7 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
@@ -611,14 +612,34 @@ class YouthAllocationGateTest extends TestCase
 
     public function test_amount_above_percent_requested_or_remaining_fails(): void
     {
-        $ctx = $this->rankingReady();
+        $ctx = $this->youthReadyToLock();
         $ctx['competition']->update(['budget' => '10000.00']);
-        $apps = [$ctx['application']];
-        foreach (['Drugi', 'Treci', 'Cetvrti'] as $name) {
-            $apps[] = $this->addRankedApplication($ctx, $name, 4000);
-        }
-        foreach ($apps as $application) {
-            $application->update(['requested_amount' => 4000]);
+        $ctx['application']->update(['requested_amount' => 4000]);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(5),
+            2 => $this->allCriteria(5),
+            3 => $this->allCriteria(5),
+        ]);
+        $this->confirmYouthBonuses($ctx);
+
+        $apps = [$ctx['application']->fresh()];
+        $apps[] = $this->addRankedApplication($ctx, 'Drugi', 4000, 4);
+        $third = $this->addPassedApplication($ctx, 'Treci');
+        $third->update(['requested_amount' => 4000]);
+        $this->lockThreeSeats($ctx, [
+            1 => array_merge($this->allCriteria(4), ['criterion_1' => 2]),
+            2 => $this->allCriteria(4),
+            3 => $this->allCriteria(4),
+        ], $third);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $third]);
+        $apps[] = $third->fresh();
+        $apps[] = $this->addRankedApplication($ctx, 'Cetvrti', 4000, 3);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $apps[0]))
+            ->assertOk();
+        foreach ($apps as $index => $application) {
+            $this->assertSame($index + 1, (int) $application->fresh()->ranking_position);
         }
 
         $this->actingAs($ctx['chairman']->user)
@@ -648,6 +669,13 @@ class YouthAllocationGateTest extends TestCase
                 ]))
                 ->assertSessionHasNoErrors();
         }
+
+        $voting = app(YouthEqualScoreVotingService::class);
+        $this->assertSame(
+            '1000.00',
+            $voting->remainingBeforeApplication($ctx['competition']->fresh(), $apps[3]->fresh())
+        );
+        $this->assertSame([], $voting->detectBoundaryGroups($ctx['competition']->fresh()));
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $apps[3]))
@@ -894,11 +922,16 @@ class YouthAllocationGateTest extends TestCase
     /**
      * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}  $ctx
      */
-    private function addRankedApplication(array $ctx, string $name, int $requested): Application
+    private function addRankedApplication(array $ctx, string $name, int $requested, int $criterion = 3): Application
     {
         $application = $this->addPassedApplication($ctx, $name);
         $application->update(['requested_amount' => $requested]);
-        $this->lockThreeSeats($ctx, [], $application);
+        $criteria = $this->allCriteria($criterion);
+        $this->lockThreeSeats($ctx, [
+            1 => $criteria,
+            2 => $criteria,
+            3 => $criteria,
+        ], $application);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $application]);
 
         return $application->fresh();
