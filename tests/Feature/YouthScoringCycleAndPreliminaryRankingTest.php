@@ -475,7 +475,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $service->persistYouthPreliminaryRankingIfReady($competition);
         $this->assertNotNull($ctx['application']->fresh()->ranking_position);
         $this->assertNull($below->fresh()->ranking_position);
-        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
 
         $bare = $this->makeYouthContext();
         $bare['application']->forceFill([

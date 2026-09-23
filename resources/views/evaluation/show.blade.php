@@ -380,6 +380,7 @@
             'youthRankingView' => $youthRankingView ?? null,
             'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
             'youthEqualScoreCompetition' => $application->competition ?? null,
+            'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
         ])
 
         <!-- Forma za prikaz ocjene -->

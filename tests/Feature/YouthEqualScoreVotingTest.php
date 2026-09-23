@@ -111,7 +111,7 @@ class YouthEqualScoreVotingTest extends TestCase
             $response->exception?->getMessage()
         );
         $this->assertSame(0, YouthEqualScoreGroup::query()->count());
-        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
     }
 
     public function test_startup_priority_fully_resolves_without_vote(): void
@@ -124,7 +124,7 @@ class YouthEqualScoreVotingTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('data-testid="youth-equal-score-voting"', $html);
         $this->assertSame(0, YouthEqualScoreGroup::query()->count());
-        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
     }
 
     public function test_two_apps_funds_for_one_and_three_apps_funds_for_two(): void
@@ -288,7 +288,7 @@ class YouthEqualScoreVotingTest extends TestCase
             $response->exception?->getMessage()
         );
         $this->assertSame(2, YouthEqualScoreRound::query()->count());
-        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
     }
 
     public function test_locked_round_is_immutable(): void

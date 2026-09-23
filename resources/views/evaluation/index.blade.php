@@ -132,6 +132,7 @@
                         'canEditYouthAllocationDraft' => $youthAllocationCanEditByCompetition[$youthComp->id] ?? false,
                         'youthEqualScoreVotingBoard' => $youthEqualScoreVotingByCompetition[$youthComp->id] ?? null,
                         'youthEqualScoreCompetition' => $youthComp,
+                        'youthAllocationConfirmationBoard' => $youthAllocationConfirmationByCompetition[$youthComp->id] ?? null,
                     ])
                 @endif
             @endforeach

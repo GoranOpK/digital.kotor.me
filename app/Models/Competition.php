@@ -32,6 +32,10 @@ class Competition extends Model
         'closed_at',
         'commission_id',
         'candidates_list_email_sent_at',
+        'youth_allocation_list_confirmed_at',
+        'youth_allocation_list_confirmed_by_user_id',
+        'youth_allocation_list_confirmed_by_commission_member_id',
+        'youth_allocation_list_confirmed_by_name',
     ];
 
     protected $casts = [
@@ -40,6 +44,7 @@ class Competition extends Model
         'published_at' => 'datetime',
         'closed_at' => 'datetime',
         'candidates_list_email_sent_at' => 'datetime',
+        'youth_allocation_list_confirmed_at' => 'datetime',
         'budget' => 'decimal:2',
         'annual_budget' => 'decimal:2',
         'max_support_percentage' => 'decimal:2',
@@ -100,6 +105,16 @@ class Competition extends Model
     public function commission()
     {
         return $this->belongsTo(Commission::class);
+    }
+
+    public function youthAllocationListConfirmedByUser()
+    {
+        return $this->belongsTo(User::class, 'youth_allocation_list_confirmed_by_user_id');
+    }
+
+    public function youthAllocationListConfirmedByCommissionMember()
+    {
+        return $this->belongsTo(CommissionMember::class, 'youth_allocation_list_confirmed_by_commission_member_id');
     }
 
     public function commissionSessions(): HasMany
@@ -530,32 +545,8 @@ class Competition extends Model
         }
 
         if ($this->isOmladinskoProfile()) {
-            $subjects = app(CanonicalIndividualScoringService::class)
-                ->youthScoringCycleApplications($this)
-                ->filter(fn ($application) => $application->meetsMinimumScore());
-
-            if ($subjects->isEmpty()) {
-                return true;
-            }
-
-            $draftsComplete = $subjects->every(function ($app) {
-                if ($app->commission_decision === 'podrzava_potpuno') {
-                    return $app->approved_amount !== null && (float) $app->approved_amount > 0;
-                }
-
-                if ($app->commission_decision === 'odbija') {
-                    return trim((string) $app->commission_justification) !== '';
-                }
-
-                return false;
-            });
-
-            if (! $draftsComplete) {
-                return false;
-            }
-
-            return ! app(\App\Services\Competitions\YouthEqualScoreVotingService::class)
-                ->blocksListClose($this);
+            return app(\App\Services\Competitions\YouthAllocationListConfirmationService::class)
+                ->confirmedListIsIntact($this);
         }
 
         $allApplications = $this->applications()

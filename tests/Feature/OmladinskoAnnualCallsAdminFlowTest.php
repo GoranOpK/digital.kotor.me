@@ -843,6 +843,13 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'signed_by_chairman' => true,
         ])->save();
 
+        $competition->forceFill([
+            'youth_allocation_list_confirmed_at' => now()->subDay(),
+            'youth_allocation_list_confirmed_by_user_id' => $chairman->user_id,
+            'youth_allocation_list_confirmed_by_commission_member_id' => $chairman->id,
+            'youth_allocation_list_confirmed_by_name' => $chairman->name,
+        ])->save();
+
         return $application->fresh();
     }
 

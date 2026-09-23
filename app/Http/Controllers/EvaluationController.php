@@ -10,6 +10,7 @@ use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CommissionCanonicalSeat;
@@ -32,6 +33,7 @@ class EvaluationController extends Controller
         protected YouthSecondSessionGate $youthSecondSessionGate,
         protected YouthAllocationDraftService $youthAllocationDrafts,
         protected YouthEqualScoreVotingService $youthEqualScoreVoting,
+        protected YouthAllocationListConfirmationService $youthAllocationListConfirmation,
     ) {}
 
     /**
@@ -60,6 +62,13 @@ class EvaluationController extends Controller
     {
         if (! $competition->isOmladinskoProfile()) {
             abort(403, YouthEqualScoreVotingService::NOT_YOUTH_MESSAGE);
+        }
+    }
+
+    protected function abortUnlessOmladinskoListConfirmation(\App\Models\Competition $competition): void
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            abort(403, YouthAllocationListConfirmationService::NOT_YOUTH_MESSAGE);
         }
     }
 
@@ -193,6 +202,11 @@ class EvaluationController extends Controller
             ->mapWithKeys(fn ($c) => [$c->id => $this->youthEqualScoreVoting->board($c, $user)])
             ->all();
 
+        $youthAllocationConfirmationByCompetition = $competitions
+            ->filter(fn ($c) => $c->isOmladinskoProfile())
+            ->mapWithKeys(fn ($c) => [$c->id => $this->youthAllocationListConfirmation->board($c, $user)])
+            ->all();
+
         $isChairman = $memberships->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
         $commissionMember = $memberships->firstWhere('position', 'predsjednik') ?? $memberships->first();
         $membershipByCommissionId = $memberships->keyBy('commission_id');
@@ -206,6 +220,7 @@ class EvaluationController extends Controller
             'youthPreliminaryByCompetition',
             'youthAllocationCanEditByCompetition',
             'youthEqualScoreVotingByCompetition',
+            'youthAllocationConfirmationByCompetition',
             'isChairman',
             'viewerMembershipIds',
             'membershipByCommissionId',
@@ -276,6 +291,7 @@ class EvaluationController extends Controller
         $canViewOtherMembersScores = false;
         $youthRankingView = null;
         $youthEqualScoreVotingBoard = null;
+        $youthAllocationConfirmationBoard = null;
 
         if ($isOmladinskoScoring) {
             $commissionId = (int) ($competition?->commission_id ?? 0);
@@ -294,6 +310,9 @@ class EvaluationController extends Controller
                 : null;
             $youthEqualScoreVotingBoard = ($commissionMember && $competition)
                 ? $this->youthEqualScoreVoting->board($competition, $user)
+                : null;
+            $youthAllocationConfirmationBoard = ($commissionMember && $competition)
+                ? $this->youthAllocationListConfirmation->board($competition, $user)
                 : null;
             $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
             $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
@@ -453,6 +472,7 @@ class EvaluationController extends Controller
             'youthFinalScoreDisplay',
             'youthRankingView',
             'youthEqualScoreVotingBoard',
+            'youthAllocationConfirmationBoard',
             'canEditYouthAllocationDraft',
         ));
     }
@@ -739,6 +759,7 @@ class EvaluationController extends Controller
         $canViewOtherMembersScores = false;
         $youthRankingView = null;
         $youthEqualScoreVotingBoard = null;
+        $youthAllocationConfirmationBoard = null;
 
         if ($isOmladinskoScoring) {
             $commissionId = (int) ($competition?->commission_id ?? 0);
@@ -757,6 +778,9 @@ class EvaluationController extends Controller
                 : null;
             $youthEqualScoreVotingBoard = ($commissionMember && $competition)
                 ? $this->youthEqualScoreVoting->board($competition, $user)
+                : null;
+            $youthAllocationConfirmationBoard = ($commissionMember && $competition)
+                ? $this->youthAllocationListConfirmation->board($competition, $user)
                 : null;
             $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
             $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
@@ -845,6 +869,7 @@ class EvaluationController extends Controller
             'youthFinalScoreDisplay',
             'youthRankingView',
             'youthEqualScoreVotingBoard',
+            'youthAllocationConfirmationBoard',
             'canEditYouthAllocationDraft',
         ));
     }
@@ -912,6 +937,19 @@ class EvaluationController extends Controller
         $this->youthEqualScoreVoting->lockRound($competition, Auth::user(), $round);
 
         return redirect()->back()->with('success', 'Krug glasanja je zaključan.');
+    }
+
+    /**
+     * Potvrda konačne liste raspodjele za mlade. Ne generiše Predlog odluke.
+     */
+    public function confirmYouthAllocationList(Request $request, \App\Models\Competition $competition): RedirectResponse
+    {
+        $this->abortUnlessOmladinskoListConfirmation($competition);
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $this->youthAllocationListConfirmation->confirm($competition, Auth::user(), $request->all());
+
+        return redirect()->back()->with('success', 'Konačna lista raspodjele za mlade je potvrđena.');
     }
 
     /**

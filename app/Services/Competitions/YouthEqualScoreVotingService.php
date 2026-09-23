@@ -140,7 +140,9 @@ final class YouthEqualScoreVotingService
 
         return [
             'visible' => true,
-            'can_edit' => $chairman !== null && ! in_array($competition->status, ['closed', 'completed'], true),
+            'can_edit' => $chairman !== null
+                && ! in_array($competition->status, ['closed', 'completed'], true)
+                && $competition->youth_allocation_list_confirmed_at === null,
             'ranking_ready' => $rankingReady,
             'groups' => $groups,
         ];
@@ -995,6 +997,10 @@ final class YouthEqualScoreVotingService
 
         if (in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403, self::COMPLETED_LOCKED_MESSAGE);
+        }
+
+        if ($competition->youth_allocation_list_confirmed_at !== null) {
+            abort(403, YouthAllocationListConfirmationService::LIST_CONFIRMED_LOCKED_MESSAGE);
         }
 
         $chairman = $this->activeChairman($competition, $user);

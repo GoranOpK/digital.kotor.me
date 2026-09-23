@@ -79,6 +79,10 @@ final class YouthAllocationDraftService
             return false;
         }
 
+        if ($competition->youth_allocation_list_confirmed_at !== null) {
+            return false;
+        }
+
         if (! $this->canonicalScoring->isYouthPreliminaryRankingReady($competition)) {
             return false;
         }
@@ -188,6 +192,10 @@ final class YouthAllocationDraftService
 
         if (in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403, self::COMPLETED_LOCKED_MESSAGE);
+        }
+
+        if ($competition->youth_allocation_list_confirmed_at !== null) {
+            abort(403, YouthAllocationListConfirmationService::LIST_CONFIRMED_LOCKED_MESSAGE);
         }
 
         $chairman = $this->activeChairman($competition, $user);

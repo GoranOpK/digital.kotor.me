@@ -160,6 +160,10 @@
                 'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
                 'youthEqualScoreCompetition' => $youthEqualScoreCompetition ?? ($youthRankingView['above'][0]->competition ?? null),
             ])
+            @include('evaluation._youth_allocation_list_confirmation', [
+                'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
+                'youthEqualScoreCompetition' => $youthEqualScoreCompetition ?? ($youthRankingView['above'][0]->competition ?? null),
+            ])
         @endif
     </div>
 @endif
