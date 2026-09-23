@@ -316,20 +316,51 @@ class YouthAggregateAndBonusTest extends TestCase
     public function test_youth_index_hides_forty_five_day_card_and_zensko_keeps_it(): void
     {
         $youth = $this->youthReadyToLock();
-        $youthHtml = $this->actingAs($youth['chairman']->user)
-            ->get(route('evaluation.index'))
-            ->assertOk()
-            ->getContent();
-        $this->assertStringNotContainsString('Rok za donošenje odluke', $youthHtml);
-        $this->assertStringNotContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $youthHtml);
+        $youthSurfaces = [
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('evaluation.index'))
+                ->assertOk()
+                ->getContent(),
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('evaluation.create', $youth['application']))
+                ->assertOk()
+                ->getContent(),
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('dashboard'))
+                ->assertOk()
+                ->getContent(),
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('admin.competitions.show', $youth['competition']))
+                ->assertOk()
+                ->getContent(),
+        ];
+        foreach ($youthSurfaces as $youthHtml) {
+            $this->assertStringNotContainsString('45 dana', $youthHtml);
+            $this->assertStringNotContainsString('Rok za donošenje odluke', $youthHtml);
+            $this->assertStringNotContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $youthHtml);
+        }
 
         $zensko = $this->zenskoReadyToScore();
-        $zenskoHtml = $this->actingAs($zensko['chairman']->user)
+        $zenskoIndex = $this->actingAs($zensko['chairman']->user)
             ->get(route('evaluation.index'))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Rok za donošenje odluke', $zenskoHtml);
-        $this->assertStringContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $zenskoHtml);
+        $this->assertStringContainsString('Rok za donošenje odluke', $zenskoIndex);
+        $this->assertStringContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $zenskoIndex);
+        $this->assertStringContainsString('45 dana', $zenskoIndex);
+
+        $zenskoShow = $this->actingAs($zensko['chairman']->user)
+            ->get(route('admin.competitions.show', $zensko['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('45 dana', $zenskoShow);
+        $this->assertStringContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs', $zenskoShow);
+
+        $zenskoDashboard = $this->actingAs($zensko['chairman']->user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('45 dana', $zenskoDashboard);
     }
 
     public function test_zensko_formula_zavod_ranking_and_null_youth_audit_remain(): void

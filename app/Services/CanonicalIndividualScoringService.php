@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
+use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\NamedMysqlUniqueViolation;
 use App\Support\ScoringProfileConfig;
@@ -37,6 +38,12 @@ class CanonicalIndividualScoringService
     public const YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE = 'Bonusi nijesu potvrđeni.';
 
     public const YOUTH_RANKING_FINAL_SCORE_MISSING_MESSAGE = 'Konačni rezultat nije obračunat.';
+
+    public const YOUTH_CLOSE_RANKING_NOT_READY_MESSAGE = 'Poziv mladih se ne može zatvoriti dok preliminarna rang-lista nije trajno formirana.';
+
+    public const YOUTH_CLOSE_LIST_NOT_CONFIRMED_MESSAGE = 'Poziv mladih se ne može zatvoriti dok konačna lista raspodjele nije potvrđena.';
+
+    public const YOUTH_CLOSE_POSITIONS_MISMATCH_MESSAGE = 'Poziv mladih se ne može zatvoriti dok rang-pozicije nijesu usklađene sa potvrđenom listom.';
 
     public const PARTIAL_ROW_MESSAGE = 'Pronađen je nepotpun istorijski red ocjena za ovo kanonsko mjesto. Konačno bodovanje je zaustavljeno do pregleda. Red se ne smije prepisati niti dopuniti.';
 
@@ -395,6 +402,10 @@ class CanonicalIndividualScoringService
                 $lockedApplication->setRelation('competition', $lockedCompetition);
             }
 
+            if ($lockedCompetition->youth_allocation_list_confirmed_at !== null) {
+                return;
+            }
+
             if ($this->youthPreliminaryRankingBlockReason($lockedCompetition) !== null) {
                 return;
             }
@@ -467,9 +478,58 @@ class CanonicalIndividualScoringService
     }
 
     /**
-     * @param  Collection<int, Application>  $eligible
+     * Read-only close gate after the omladinski list is confirmed.
+     * Does not persist ranking, rewrite scores, or change confirmation audit.
      */
-    private function assignYouthPreliminaryRankingPositions(Collection $eligible): void
+    public function youthCloseFreezeBlockReason(Competition $competition): ?string
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return null;
+        }
+
+        if ($this->youthPreliminaryRankingBlockReason($competition) !== null) {
+            return self::YOUTH_CLOSE_RANKING_NOT_READY_MESSAGE;
+        }
+
+        if (! app(YouthAllocationListConfirmationService::class)->confirmedListIsIntact($competition)) {
+            return self::YOUTH_CLOSE_LIST_NOT_CONFIRMED_MESSAGE;
+        }
+
+        if (! $competition->hasChairmanCompletedDecisions()) {
+            return self::YOUTH_CLOSE_LIST_NOT_CONFIRMED_MESSAGE;
+        }
+
+        $eligible = $this->youthScoringCycleApplications($competition);
+        $expected = $this->expectedYouthRankingPositions($eligible);
+        $applications = Application::query()
+            ->where('competition_id', $competition->id)
+            ->orderBy('id')
+            ->get();
+
+        foreach ($applications as $application) {
+            $want = $expected[$application->id] ?? null;
+            $stored = $application->ranking_position;
+            if ($want === null) {
+                if ($stored !== null) {
+                    return self::YOUTH_CLOSE_POSITIONS_MISMATCH_MESSAGE;
+                }
+
+                continue;
+            }
+
+            if ($stored === null || (int) $stored !== $want) {
+                return self::YOUTH_CLOSE_POSITIONS_MISMATCH_MESSAGE;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  Collection<int, Application>  $eligible
+     * @return array<int, int>
+     */
+    public function expectedYouthRankingPositions(Collection $eligible): array
     {
         $rows = [];
         foreach ($eligible as $application) {
@@ -502,28 +562,38 @@ class CanonicalIndividualScoringService
 
         $previousFull = null;
         $previousRank = 0;
-        $aboveIds = [];
+        $expected = [];
         foreach ($above as $index => $row) {
             $rank = ($previousFull !== null && bccomp($row['full'], $previousFull, self::YOUTH_BONUS_SCALE) === 0)
                 ? $previousRank
                 : $index + 1;
             $previousRank = $rank;
             $previousFull = $row['full'];
-            $aboveIds[] = $row['application']->id;
-
-            /** @var Application $application */
-            $application = $row['application'];
-            if ((int) $application->ranking_position !== $rank) {
-                $application->forceFill(['ranking_position' => $rank])->save();
-            }
+            $expected[$row['application']->id] = $rank;
         }
 
+        return $expected;
+    }
+
+    /**
+     * @param  Collection<int, Application>  $eligible
+     */
+    private function assignYouthPreliminaryRankingPositions(Collection $eligible): void
+    {
+        $expected = $this->expectedYouthRankingPositions($eligible);
+
         foreach ($eligible as $application) {
-            if (in_array($application->id, $aboveIds, true)) {
+            $rank = $expected[$application->id] ?? null;
+            if ($rank === null) {
+                if ($application->ranking_position !== null) {
+                    $application->forceFill(['ranking_position' => null])->save();
+                }
+
                 continue;
             }
-            if ($application->ranking_position !== null) {
-                $application->forceFill(['ranking_position' => null])->save();
+
+            if ((int) $application->ranking_position !== $rank) {
+                $application->forceFill(['ranking_position' => $rank])->save();
             }
         }
     }

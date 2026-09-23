@@ -11,6 +11,7 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Models\YouthEqualScoreRound;
 use App\Models\YouthEqualScoreVote;
+use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CompetitionAnnualInstance;
@@ -330,6 +331,128 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         );
     }
 
+    public function test_close_keeps_distinct_full_precision_ranks_that_display_the_same(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $ctx['application']->update(['requested_amount' => 5000]);
+        $this->lockScore($ctx, $ctx['application'], 5);
+        $this->confirmYouthBonuses($ctx);
+
+        $higherFull = $this->addScoredBySeat($ctx, 'Puni viši prikaz isti', [
+            1 => array_merge($this->allCriteria(3), ['criterion_1' => 5]),
+            2 => array_merge($this->allCriteria(3), ['criterion_1' => 5]),
+            3 => $this->allCriteria(3),
+        ]);
+        $lowerFull = $this->addScoredBySeat($ctx, 'Puni niži prikaz isti', [
+            1 => array_merge($this->allCriteria(3), ['criterion_1' => 5, 'criterion_2' => 5]),
+            2 => $this->allCriteria(3),
+            3 => $this->allCriteria(3),
+        ]);
+        $below = $this->addScoredApplication($ctx, 'Ispod praga', 5000, 2);
+
+        $canonical = app(CanonicalIndividualScoringService::class);
+        $higherAggregate = $canonical->aggregateYouthApplication($higherFull->fresh());
+        $lowerAggregate = $canonical->aggregateYouthApplication($lowerFull->fresh());
+        $this->assertNotNull($higherAggregate);
+        $this->assertNotNull($lowerAggregate);
+        $this->assertNotSame($higherAggregate['final_score_full'], $lowerAggregate['final_score_full']);
+        $this->assertSame($higherAggregate['final_score_display'], $lowerAggregate['final_score_display']);
+        $this->assertSame('31.33', $higherAggregate['final_score_display']);
+        $this->assertSame($higherAggregate['final_score_display'], $higherFull->fresh()->final_score);
+        $this->assertSame($lowerAggregate['final_score_display'], $lowerFull->fresh()->final_score);
+
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(2, (int) $higherFull->fresh()->ranking_position);
+        $this->assertSame(3, (int) $lowerFull->fresh()->ranking_position);
+        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertNotSame(
+            (int) $higherFull->fresh()->ranking_position,
+            (int) $lowerFull->fresh()->ranking_position
+        );
+
+        $this->saveSupport($ctx, $ctx['application'], 5000);
+        $this->saveSupport($ctx, $higherFull, 5000);
+        $this->saveSupport($ctx, $lowerFull, 5000);
+        $this->confirmList($ctx);
+
+        $snapshot = $this->youthCloseFingerprint($ctx['competition'], [
+            $ctx['application'],
+            $higherFull,
+            $lowerFull,
+            $below,
+        ]);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('admin.competitions.close', $ctx['competition']))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('completed', $ctx['competition']->fresh()->status);
+        $this->assertSame($snapshot, $this->youthCloseFingerprint($ctx['competition'], [
+            $ctx['application'],
+            $higherFull,
+            $lowerFull,
+            $below,
+        ]));
+        $this->assertSame(2, (int) $higherFull->fresh()->ranking_position);
+        $this->assertSame(3, (int) $lowerFull->fresh()->ranking_position);
+        $this->assertNull($below->fresh()->ranking_position);
+    }
+
+    public function test_close_keeps_true_equal_full_scores_as_one_two_two_four(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $ctx['application']->update(['requested_amount' => 5000]);
+        $this->lockScore($ctx, $ctx['application'], 5);
+        $this->confirmYouthBonuses($ctx);
+        $tiedA = $this->addScoredApplication($ctx, 'Jednaka A', 5000, 4);
+        $tiedB = $this->addScoredApplication($ctx, 'Jednaka B', 5000, 4);
+        $fourth = $this->addScoredApplication($ctx, 'Cetvrti rang', 5000, 3);
+        $below = $this->addScoredApplication($ctx, 'Ispod praga', 5000, 2);
+
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(2, (int) $tiedA->fresh()->ranking_position);
+        $this->assertSame(2, (int) $tiedB->fresh()->ranking_position);
+        $this->assertSame(4, (int) $fourth->fresh()->ranking_position);
+        $this->assertNull($below->fresh()->ranking_position);
+
+        foreach ([$ctx['application'], $tiedA, $tiedB, $fourth] as $application) {
+            $this->saveSupport($ctx, $application, 5000);
+        }
+        $this->confirmList($ctx);
+
+        $snapshot = $this->youthCloseFingerprint($ctx['competition'], [
+            $ctx['application'],
+            $tiedA,
+            $tiedB,
+            $fourth,
+            $below,
+        ]);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('admin.competitions.close', $ctx['competition']))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('completed', $ctx['competition']->fresh()->status);
+        $this->assertSame($snapshot, $this->youthCloseFingerprint($ctx['competition'], [
+            $ctx['application'],
+            $tiedA,
+            $tiedB,
+            $fourth,
+            $below,
+        ]));
+        $this->assertSame([1, 2, 2, 4], [
+            (int) $ctx['application']->fresh()->ranking_position,
+            (int) $tiedA->fresh()->ranking_position,
+            (int) $tiedB->fresh()->ranking_position,
+            (int) $fourth->fresh()->ranking_position,
+        ]);
+        $this->assertNull($below->fresh()->ranking_position);
+    }
+
     public function test_authorization_dual_membership_and_womens_flow_untouched(): void
     {
         $ctx = $this->rankingReady();
@@ -415,6 +538,39 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
+    }
+
+    /**
+     * @param  list<Application>  $applications
+     * @return array<string, mixed>
+     */
+    private function youthCloseFingerprint(Competition $competition, array $applications): array
+    {
+        $fresh = $competition->fresh();
+
+        return [
+            'confirmed_at' => $fresh->youth_allocation_list_confirmed_at?->format('Y-m-d H:i:s'),
+            'confirmed_user' => $fresh->youth_allocation_list_confirmed_by_user_id,
+            'confirmed_member' => $fresh->youth_allocation_list_confirmed_by_commission_member_id,
+            'confirmed_name' => $fresh->youth_allocation_list_confirmed_by_name,
+            'apps' => collect($applications)->map(fn (Application $application) => [
+                'id' => $application->id,
+                'final_score' => $application->fresh()->final_score,
+                'ranking_position' => $application->fresh()->ranking_position,
+                'approved_amount' => $application->fresh()->approved_amount,
+                'status' => $application->fresh()->status,
+            ])->all(),
+        ];
+    }
+
+    private function addScoredBySeat(array $ctx, string $name, array $bySeat): Application
+    {
+        $application = $this->addPassedApplication($ctx, $name);
+        $application->update(['requested_amount' => 5000]);
+        $this->lockScore($ctx, $application, 3, $bySeat);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $application]);
+
+        return $application->fresh();
     }
 
     /**

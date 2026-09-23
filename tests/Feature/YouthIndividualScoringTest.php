@@ -32,6 +32,12 @@ class YouthIndividualScoringTest extends TestCase
         Mail::fake();
     }
 
+    protected function tearDown(): void
+    {
+        $this->travelBack();
+        parent::tearDown();
+    }
+
     public function test_draft_is_allowed_before_oral_and_may_be_incomplete(): void
     {
         $ctx = $this->youthWithPassedM3();
@@ -337,12 +343,52 @@ class YouthIndividualScoringTest extends TestCase
             ->getContent();
 
         $this->assertStringNotContainsString('Rok za ocjenjivanje i donošenje odluke je istekao', $html);
+        $this->assertStringNotContainsString('45 dana', $html);
         $this->assertStringNotContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs', $html);
         $this->assertStringNotContainsString('onsubmit="event.preventDefault(); return false;"', $html);
         $this->assertStringContainsString('Sačuvaj nacrt', $html);
         $this->assertStringContainsString('Završi ocjenjivanje', $html);
         $this->assertStringNotContainsString('name="save_as_draft" value="1" class="btn-primary" disabled', $html);
         $this->assertStringNotContainsString('class="btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;">Završi ocjenjivanje', $html);
+    }
+
+    public function test_youth_does_not_claim_forty_five_days_before_applications_close(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $competition = $this->reopenApplicationWindow($ctx['competition']);
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
+
+        $response = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']));
+        $response->assertForbidden();
+        $this->assertSame(
+            ScoringProfileConfig::YOUTH_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE,
+            $response->exception?->getMessage()
+        );
+        $this->assertStringNotContainsString('45 dana', (string) $response->exception?->getMessage());
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.index'))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+            ->assertRedirect()
+            ->assertSessionHasErrors('error');
+        $this->assertSame(
+            ScoringProfileConfig::YOUTH_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE,
+            session('errors')->first('error')
+        );
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
+
+        $this->travelTo($competition->deadline->copy()->addMinute());
+        $this->assertTrue($ctx['competition']->fresh()->isApplicationDeadlinePassed());
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('45 dana', $html);
+        $this->assertStringNotContainsString('Rok za ocjenjivanje i donošenje odluke je istekao', $html);
+        $this->assertStringContainsString('Sačuvaj nacrt', $html);
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
     }
 
     public function test_youth_post_after_forty_five_days_succeeds(): void
@@ -391,6 +437,23 @@ class YouthIndividualScoringTest extends TestCase
     {
         $competition->update(['closed_at' => now()->subDays(46)]);
         $this->assertTrue($competition->fresh()->isEvaluationDeadlinePassed());
+    }
+
+    private function reopenApplicationWindow(Competition $competition): Competition
+    {
+        $competition->update([
+            'start_date' => now()->toDateString(),
+            'deadline_days' => 20,
+            'published_at' => now(),
+            'status' => 'published',
+        ]);
+
+        $fresh = $competition->fresh();
+        $this->assertNotNull($fresh->deadline);
+        $this->assertTrue($fresh->deadline->isFuture());
+        $this->assertFalse($fresh->isApplicationDeadlinePassed());
+
+        return $fresh;
     }
 
     /**

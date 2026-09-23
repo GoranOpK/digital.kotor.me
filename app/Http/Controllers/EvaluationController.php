@@ -262,9 +262,9 @@ class EvaluationController extends Controller
             
             $competition = $application->competition;
             
-            // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
+            // Ocjenjivanje počinje tek kada istekne rok za prijave
             if ($competition && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
-                abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.');
+                abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
             }
 
             $this->abortIfCommissionProcessingBlocked($competition);
@@ -486,10 +486,10 @@ class EvaluationController extends Controller
         
         $competition = $application->competition;
         
-        // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
+        // Ocjenjivanje počinje tek kada istekne rok za prijave
         if ($competition && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
             return redirect()->back()
-                ->withErrors(['error' => 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.']);
+                ->withErrors(['error' => ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage()]);
         }
 
         $this->abortIfCommissionProcessingBlocked($competition);
@@ -995,7 +995,7 @@ class EvaluationController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => 'Rang lista je zaključena. Nakon završetka konkursa izmjene nijesu dozvoljene.']);
         }
-        if ($competition && $competition->isEvaluationDeadlinePassed()) {
+        if ($competition && ! $competition->isOmladinskoProfile() && $competition->isEvaluationDeadlinePassed()) {
             return redirect()->back()
                 ->withErrors(['error' => 'Rok za donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.']);
         }
@@ -1240,7 +1240,7 @@ class EvaluationController extends Controller
         $competition = $application->competition;
 
         if ($competition && ! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
-            abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.');
+            abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
         }
 
         $this->abortIfCommissionProcessingBlocked($competition);

@@ -16,6 +16,10 @@ final class ScoringProfileConfig
 
     public const YOUTH_SCORE_CONFLICT_MESSAGE = 'Ocjena za ovo mjesto Komisije već postoji.';
 
+    public const WOMEN_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE = 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.';
+
+    public const YOUTH_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE = 'Ocjenjivanje počinje tek kada istekne rok za prijave na konkurs.';
+
     public const SCALE_MIN_LABEL = 'uopšte ne odgovara navedenom';
 
     public const SCALE_MAX_LABEL = 'u potpunosti odgovara navedenom';
@@ -73,6 +77,13 @@ final class ScoringProfileConfig
     public function isOmladinsko(): bool
     {
         return $this->type === 'omladinsko';
+    }
+
+    public function evaluationOpensAfterApplicationDeadlineMessage(): string
+    {
+        return $this->isOmladinsko()
+            ? self::YOUTH_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE
+            : self::WOMEN_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE;
     }
 
     public function allowsSeat(int $seat): bool

@@ -1255,24 +1255,32 @@ class AdminController extends Controller
         // da arhiva uvijek prikaže isti poredak kao zaključena rang lista.
         $competition->load('commission');
 
-        $rankableApplications = $competition->applications()
-            ->with(['evaluationScores', 'eliminatoryCheck', 'prigovor'])
-            ->get()
-            ->filter(function ($application) {
-                if ($application->isEliminatedFromScoring()) {
-                    return false;
-                }
+        if ($competition->isOmladinskoProfile()) {
+            $youthCloseBlock = app(\App\Services\CanonicalIndividualScoringService::class)
+                ->youthCloseFreezeBlockReason($competition);
+            if ($youthCloseBlock !== null) {
+                return redirect()->back()->withErrors(['error' => $youthCloseBlock]);
+            }
+        } else {
+            $rankableApplications = $competition->applications()
+                ->with(['evaluationScores', 'eliminatoryCheck', 'prigovor'])
+                ->get()
+                ->filter(function ($application) {
+                    if ($application->isEliminatedFromScoring()) {
+                        return false;
+                    }
 
-                if ($application->evaluationScores->count() === 0) {
-                    return false;
-                }
+                    if ($application->evaluationScores->count() === 0) {
+                        return false;
+                    }
 
-                return $application->meetsMinimumScore();
-            });
+                    return $application->meetsMinimumScore();
+                });
 
-        // KN-FS-003 §14.6: freeze shared competition ranks (not unique 1..n / id tie-break).
-        app(\App\Services\CanonicalIndividualScoringService::class)
-            ->assignAboveLineRankingPositions($rankableApplications);
+            // KN-FS-003 §14.6: freeze shared competition ranks (not unique 1..n / id tie-break).
+            app(\App\Services\CanonicalIndividualScoringService::class)
+                ->assignAboveLineRankingPositions($rankableApplications);
+        }
 
         $competition->update([
             'status' => 'completed',
