@@ -32,10 +32,13 @@ class CommissionAssignedToCompetition extends Mailable
      */
     public function build(): self
     {
+        $copy = CommissionAppointmentMailCopy::forAssignedCompetition($this->competition);
+
         return $this
             ->from('noreply@kotor.me', 'Opština Kotor')
-            ->subject('Imenovanje u Komisiju za podršku ženskom preduzetništvu')
-            ->view('emails.commissions.assigned');
+            ->subject($copy->assignedSubject())
+            ->view('emails.commissions.assigned', [
+                'copy' => $copy,
+            ]);
     }
 }
-

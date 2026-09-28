@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CommissionAppointmentMailCopy;
 use App\Mail\CommissionAssignedToCompetition;
 use App\Mail\CommissionMemberAdded;
 use App\Models\Application;
@@ -1635,6 +1636,12 @@ class AdminController extends Controller
             'status' => 'active',
         ]);
 
+        $appointmentMailCopy = CommissionAppointmentMailCopy::fromCompetitionTypes(
+            Competition::query()
+                ->whereIn('id', $validated['competition_ids'] ?? [])
+                ->pluck('type')
+        );
+
         // Pronađi rolu za komisiju
         $komisijaRole = Role::where('name', 'komisija')->first();
         if (! $komisijaRole) {
@@ -1679,7 +1686,7 @@ class AdminController extends Controller
 
             // Pošalji e-mail o imenovanju u komisiju
             try {
-                Mail::to($user->email)->send(new CommissionMemberAdded($member));
+                Mail::to($user->email)->send(new CommissionMemberAdded($member, $appointmentMailCopy));
             } catch (\Throwable $e) {
                 // Ne prekidaj tok zbog mail greške
             }
@@ -2101,7 +2108,10 @@ class AdminController extends Controller
                 if ($isSubstitute && $replacedMember) {
                     $replacedForMail = $replacedMember;
                 }
-                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member, $replacedForMail));
+                $appointmentMailCopy = CommissionAppointmentMailCopy::fromCompetitionTypes(
+                    $commission->fresh('competitions')->competitions->pluck('type')
+                );
+                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member, $appointmentMailCopy, $replacedForMail));
             } catch (\Throwable $e) {
                 // Ne prekidaj tok zbog mail greške
             }

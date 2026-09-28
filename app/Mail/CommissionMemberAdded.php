@@ -14,15 +14,20 @@ class CommissionMemberAdded extends Mailable
 
     public CommissionMember $member;
     public Commission $commission;
+    public CommissionAppointmentMailCopy $copy;
     public ?CommissionMember $replacedMember;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(CommissionMember $member, ?CommissionMember $replacedMember = null)
-    {
+    public function __construct(
+        CommissionMember $member,
+        CommissionAppointmentMailCopy $copy,
+        ?CommissionMember $replacedMember = null
+    ) {
         $this->member = $member;
         $this->commission = $member->commission;
+        $this->copy = $copy;
         $this->replacedMember = $replacedMember;
     }
 
@@ -31,14 +36,11 @@ class CommissionMemberAdded extends Mailable
      */
     public function build(): self
     {
-        $subject = $this->member->is_substitute
-            ? 'Imenovanje za zamjenskog člana Komisije za podršku ženskom preduzetništvu'
-            : 'Imenovanje u Komisiju za podršku ženskom preduzetništvu';
-
         return $this
             ->from('noreply@kotor.me', 'Opština Kotor')
-            ->subject($subject)
-            ->view('emails.commissions.member_added');
+            ->subject($this->copy->memberAddedSubject((bool) $this->member->is_substitute))
+            ->view('emails.commissions.member_added', [
+                'copy' => $this->copy,
+            ]);
     }
 }
-
