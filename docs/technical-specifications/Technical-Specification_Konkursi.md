@@ -18,6 +18,7 @@
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
 | 0.1.0 | 2026-08-18 | Kreirana početna struktura KN-TS-001 prema M-TS-005 (poglavlja 1–14). Tehnički model, tokovi, autorizacija, podaci, validacije, integracije i NFR nijesu projektovani. Čeka usvajanje KN-BM-001 i KN-FS-001 nakon analize Odluke. Bez izmišljenih modela, tabela, ruta, kontrolera, uloga ili servisa. |
+| 0.1.1 | 2026-09-30 | Evidencija implementiranog mehanizma za KN-FR-042 (PO DECISION — CANONICAL MAX TWO APPLICATIONS; KN-SYNC-008A), bez projektovanja ostalih poglavlja. Kanonski MMSP: `final_application_claims` nosi `subsidy_type`, `beneficiary_pib` (normalizovan, `App\Support\Pib`), `beneficiary_slot` (1–2, CHECK) i generisanu kolonu `claim_scope = COALESCE(subsidy_type, '*')`; unique `(user_id, competition_id, claim_scope)`, `(competition_id, beneficiary_pib, subsidy_type)`, `(competition_id, beneficiary_pib, beneficiary_slot)`. Historijski/netipizirani claim-ovi zadržavaju jedan po User + Competition. Autoritativna provjera u `FinalSubmissionService` pod lock-om konkursa. P2 (čl.17): `canonical_investment_plans` (vrsta, ukupna vrijednost ulaganja, sopstveno učešće, očekivani iznos, stavke troškova), zamrznut kroz `ApplicationEvidenceFreezer`, čitan kroz `CanonicalReviewBasis`. Žensko / mladi ne koriste claim tabelu; njihovo pravilo 1 po User + Competition nepromijenjeno. |
 
 Napomena:
 
