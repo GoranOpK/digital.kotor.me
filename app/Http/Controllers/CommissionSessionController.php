@@ -6,6 +6,7 @@ use App\Models\CommissionMember;
 use App\Models\CommissionSession;
 use App\Models\CommissionSessionAttendance;
 use App\Models\Competition;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\YouthSecondSessionGate;
 use App\Support\CommissionProfileConfig;
 use App\Support\NamedMysqlUniqueViolation;
@@ -326,6 +327,10 @@ class CommissionSessionController extends Controller
 
     protected function authorizeFirstSessionAccess(Competition $competition): CommissionMember
     {
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, CommissionProfileConfig::CANONICAL_SESSION_ROUTE_MESSAGE);
+        }
+
         $user = Auth::user();
         $member = CommissionMember::activeForCompetition($user->id, $competition);
 

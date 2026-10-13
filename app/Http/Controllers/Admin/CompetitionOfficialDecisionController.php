@@ -11,6 +11,7 @@ use App\Models\CompetitionOfficialDecisionCopy;
 use App\Models\CompetitionOfficialDecisionLifecycleEvent;
 use App\Models\Notice;
 use App\Services\Competitions\CompetitionOfficialDecisionCopyService;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -791,6 +792,11 @@ class CompetitionOfficialDecisionController extends Controller
 
     private function assertCompetitionAllowsOfficialDecisionAction(Competition $competition): void
     {
+        // Canonical MMSP: one-time signed Odluka publication only through the canonical flow.
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403);
+        }
+
         if (! in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403);
         }

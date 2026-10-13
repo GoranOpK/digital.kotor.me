@@ -20,8 +20,12 @@ class CommissionSession extends Model
         'competition_id',
         'commission_id',
         'session_type',
+        'canonical_purpose',
         'held_at',
         'completed_at',
+        'due_at',
+        'late',
+        'compliance_warning',
         'recorded_by_user_id',
         'notes',
     ];
@@ -29,6 +33,8 @@ class CommissionSession extends Model
     protected $casts = [
         'held_at' => 'datetime',
         'completed_at' => 'datetime',
+        'due_at' => 'datetime',
+        'late' => 'boolean',
     ];
 
     public function competition(): BelongsTo

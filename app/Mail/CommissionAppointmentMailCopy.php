@@ -2,10 +2,13 @@
 
 namespace App\Mail;
 
+use App\Models\Commission;
 use App\Models\Competition;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 
 /**
- * Korisnički tekst imenovanja u Komisiju. Profil dolazi isključivo iz tipa Poziva.
+ * Korisnički tekst imenovanja u Komisiju. Profil dolazi isključivo iz tipa Poziva
+ * (kanonska Komisija je kanonska od uspostavljanja, nezavisno od dodijeljenih Poziva).
  */
 final class CommissionAppointmentMailCopy
 {
@@ -13,7 +16,17 @@ final class CommissionAppointmentMailCopy
 
     public const PROFILE_OMLADINSKO = 'omladinsko';
 
+    public const PROFILE_CANONICAL = CompetitionProfileResolver::TYPE_CANONICAL;
+
     public const PROFILE_NEUTRAL = 'neutral';
+
+    public const CANONICAL_COMMISSION_TITLE = 'Komisija za sprovođenje javnog konkursa za podršku preduzetnicima i mikro, malim i srednjim preduzećima';
+
+    private const CANONICAL_COMMISSION_GENITIVE = 'Komisije za sprovođenje javnog konkursa za podršku preduzetnicima i mikro, malim i srednjim preduzećima';
+
+    private const CANONICAL_APPOINTMENT_SUBJECT = 'Imenovanje u Komisiju za sprovođenje javnog konkursa za podršku preduzetnicima i mikro, malim i srednjim preduzećima';
+
+    private const CANONICAL_REPLACEMENT_SUBJECT = 'Imenovanje na upražnjeno mjesto u Komisiji za sprovođenje javnog konkursa za podršku preduzetnicima i mikro, malim i srednjim preduzećima';
 
     private function __construct(private readonly string $profileType)
     {
@@ -31,7 +44,7 @@ final class CommissionAppointmentMailCopy
 
         if ($unique->count() === 1) {
             $type = $unique->first();
-            if ($type === self::PROFILE_ZENSKO || $type === self::PROFILE_OMLADINSKO) {
+            if (in_array($type, [self::PROFILE_ZENSKO, self::PROFILE_OMLADINSKO, self::PROFILE_CANONICAL], true)) {
                 return new self($type);
             }
         }
@@ -44,6 +57,13 @@ final class CommissionAppointmentMailCopy
         return self::fromCompetitionTypes([$competition->type]);
     }
 
+    public static function forCommission(Commission $commission): self
+    {
+        return $commission->isCanonicalProfile()
+            ? new self(self::PROFILE_CANONICAL)
+            : self::fromCompetitionTypes($commission->competitions()->pluck('type'));
+    }
+
     public function isZensko(): bool
     {
         return $this->profileType === self::PROFILE_ZENSKO;
@@ -52,6 +72,11 @@ final class CommissionAppointmentMailCopy
     public function isOmladinsko(): bool
     {
         return $this->profileType === self::PROFILE_OMLADINSKO;
+    }
+
+    public function isCanonical(): bool
+    {
+        return $this->profileType === self::PROFILE_CANONICAL;
     }
 
     public function isNeutral(): bool
@@ -68,6 +93,9 @@ final class CommissionAppointmentMailCopy
             self::PROFILE_ZENSKO => $substitute
                 ? 'Imenovanje za zamjenskog člana Komisije za podršku ženskom preduzetništvu'
                 : 'Imenovanje u Komisiju za podršku ženskom preduzetništvu',
+            self::PROFILE_CANONICAL => $substitute
+                ? self::CANONICAL_REPLACEMENT_SUBJECT
+                : self::CANONICAL_APPOINTMENT_SUBJECT,
             default => $substitute
                 ? 'Imenovanje za zamjenskog člana Komisije za sprovođenje konkursa'
                 : 'Imenovanje u Komisiju za sprovođenje konkursa',
@@ -79,6 +107,7 @@ final class CommissionAppointmentMailCopy
         return match ($this->profileType) {
             self::PROFILE_OMLADINSKO => 'Imenovanje u Komisiju za podršku preduzetništvu mladih',
             self::PROFILE_ZENSKO => 'Imenovanje u Komisiju za podršku ženskom preduzetništvu',
+            self::PROFILE_CANONICAL => self::CANONICAL_APPOINTMENT_SUBJECT,
             default => 'Imenovanje u Komisiju za sprovođenje konkursa',
         };
     }
@@ -93,6 +122,7 @@ final class CommissionAppointmentMailCopy
         return match ($this->profileType) {
             self::PROFILE_OMLADINSKO => 'Komisije za raspodjelu sredstava za podršku preduzetništvu mladih',
             self::PROFILE_ZENSKO => 'Komisije za raspodjelu sredstava za podršku ženskom preduzetništvu',
+            self::PROFILE_CANONICAL => self::CANONICAL_COMMISSION_GENITIVE,
             default => 'Komisije za sprovođenje konkursa',
         };
     }
@@ -102,6 +132,7 @@ final class CommissionAppointmentMailCopy
         return match ($this->profileType) {
             self::PROFILE_OMLADINSKO => 'Komisije za raspodjelu bespovratnih sredstava namijenjenih za podršku preduzetništvu mladih',
             self::PROFILE_ZENSKO => 'Komisije za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu',
+            self::PROFILE_CANONICAL => self::CANONICAL_COMMISSION_GENITIVE,
             default => 'Komisije za sprovođenje konkursa',
         };
     }

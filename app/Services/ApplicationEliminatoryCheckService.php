@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\CommissionMember;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Support\EliminatoryProfileConfig;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -168,6 +169,7 @@ class ApplicationEliminatoryCheckService
     private function assertChairmanCanMutate(Application $application, CommissionMember $chairman): void
     {
         $application->loadMissing('competition');
+        LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
 
         if ($chairman->position !== 'predsjednik' || $chairman->status !== 'active') {
             abort(403, 'Samo predsjednik Komisije može uređivati Obrazac 3.');

@@ -51,10 +51,12 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
         $response->assertSee('Podrška preduzetništvu mladih', false);
         $response->assertSee('Podrška ženskom preduzetništvu', false);
+        $response->assertSee('Preduzetnici mikro, mala i srednja preduzeća', false);
         $this->assertStringContainsString('Aktivan modul', $text);
         $this->assertStringContainsString('U razvoju', $text);
         $this->assertSame(1, substr_count($text, 'Aktivan modul'));
-        $this->assertSame(1, substr_count($text, 'U razvoju'));
+        // Youth + canonical MMSP both remain DEVELOPMENT on Catalog (not public).
+        $this->assertSame(2, substr_count($text, 'U razvoju'));
         $this->assertStringContainsString('Profil je u implementaciji i još nije pušten korisnicima.', $text);
         $this->assertStringContainsString('program-badge-development', $html);
         $this->assertSame(1, substr_count($html, 'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.'));
@@ -65,6 +67,10 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $this->assertSame(
             CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['zensko']['status']
+        );
+        $this->assertSame(
+            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::definitions()['preduzetnici_mikro_mala_i_srednja_preduzeca']['status']
         );
         $this->assertSame(
             'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.',

@@ -17,6 +17,8 @@ class ContractController extends Controller
      */
     public function generate(Application $application): View
     {
+        $this->abortIfCanonical($application);
+
         // Proveri da li je prijava odobrena
         if ($application->status !== 'approved') {
             abort(403, 'Ugovor se može generisati samo za odobrene prijave.');
@@ -42,6 +44,8 @@ class ContractController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
+        $this->abortIfCanonical($application);
+
         // Proveri da li je prijava odobrena
         if ($application->status !== 'approved') {
             abort(403, 'Ugovor se može kreirati samo za odobrene prijave.');
@@ -161,5 +165,12 @@ class ContractController extends Controller
         ]);
 
         return back()->with('success', 'Ugovor je uspješno potvrđen.');
+    }
+
+    private function abortIfCanonical(Application $application): void
+    {
+        if ($application->competition?->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, 'Ugovori za kanonski MMSP Poziv nijesu dio ove faze. Konačni ishod nije ugovor.');
+        }
     }
 }

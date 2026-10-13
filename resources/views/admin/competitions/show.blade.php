@@ -400,7 +400,59 @@
         @endif
         @endif
 
-        @include('admin.competitions.partials.official-decision')
+        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+            @if(in_array(auth()->user()?->role?->name, ['admin', 'konkurs_admin', 'superadmin'], true) && ! empty($canonicalCommissionOverview))
+                @php
+                    $cc = $canonicalCommissionOverview;
+                    $ccGovernance = \App\Services\Competitions\Commission\CanonicalCommissionGovernance::class;
+                    $ccStates = ['active' => 'Aktivan', 'vacant' => 'Upražnjeno — čeka zamjenu', 'empty' => 'Nepopunjeno'];
+                @endphp
+                <div class="info-card" data-section="canonical-commission">
+                    <h3 style="font-weight: 600; margin-bottom: 6px;">Kanonska Komisija</h3>
+                    @if($cc['foreignCommission'])
+                        <p>{{ $ccGovernance::NOT_CANONICAL_MESSAGE }}</p>
+                    @elseif($cc['commission'] === null)
+                        <p>Komisija nije uspostavljena.</p>
+                    @else
+                        <p>
+                            {{ $cc['commission']->name }}<br>
+                            Mandat: {{ $cc['commission']->mandate_starts_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
+                            – {{ $cc['commission']->mandate_ends_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
+                            ({{ $cc['mandateValid'] ? 'važeći' : 'nije važeći' }})
+                        </p>
+                        @if($cc['structuralBlock'])
+                            <p style="color: #b45309;">{{ $cc['structuralBlock'] }}</p>
+                        @endif
+                        <ul>
+                            @foreach($cc['seats'] as $seatNo => $seat)
+                                <li>
+                                    Mjesto {{ $seatNo }}:
+                                    @if($seat['member'])
+                                        {{ $seat['member']->name }} — {{ $ccGovernance::roleLabel($seat['member']->canonical_seat) }};
+                                    @endif
+                                    {{ $ccStates[$seat['state']] ?? $seat['state'] }};
+                                    @if($seat['member'])
+                                        izjave: {{ $seat['declarationsSigned'] ? 'potpisane' : 'nijesu evidentirane' }};
+                                        sukob interesa: {{ $seat['pibConflict'] ? 'DA' : 'ne' }}
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p>Zamjene: {{ $cc['replacements']->count() }}{{ $cc['replacements']->contains('late', true) ? ' (uključuje zamjenu nakon roka)' : '' }}</p>
+                    @endif
+                    <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}">Upravljanje Komisijom: uspostavljanje, imenovanje, izjave, upražnjenost i zamjene</a><br>
+                    <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije (pregled)</a>
+                    · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori (pregled)</a>
+                </div>
+            @endif
+            @if(auth()->user()?->role?->name === \App\Services\Competitions\Decision\CanonicalAdministrativeGate::SECRETARIAT_ROLE)
+                <div class="info-card">
+                    <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}">Formalna Odluka, potpisani primjerak i objava</a>
+                </div>
+            @endif
+        @else
+            @include('admin.competitions.partials.official-decision')
+        @endif
 
         @php
             $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();

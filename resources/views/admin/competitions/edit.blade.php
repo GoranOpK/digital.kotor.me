@@ -132,9 +132,9 @@
                             <input type="text" class="form-control" value="Omladinsko preduzetništvo" readonly>
                         @else
                         <select name="type" class="form-control @error('type') error @enderror" required>
-                            <option value="zensko" {{ old('type', $competition->type) === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
-                            <option value="omladinsko" {{ old('type', $competition->type) === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
-                            <option value="ostalo" {{ old('type', $competition->type) === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
+                            @foreach(\App\Services\Competitions\Profile\CompetitionProfileResolver::adminTypeOptions() as $typeKey => $typeLabel)
+                                <option value="{{ $typeKey }}" {{ old('type', $competition->type) === $typeKey ? 'selected' : '' }}>{{ $typeLabel }}</option>
+                            @endforeach
                         </select>
                         @endif
                         @error('type')

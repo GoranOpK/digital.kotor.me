@@ -3,8 +3,9 @@
 namespace App\Support;
 
 /**
- * Kanonske definicije konkursnih profila.
+ * Public discovery / visibility SSOT for konkursni profili.
  * Javni katalog i početak prijave koriste samo profile sa statusom `active`.
+ * Legal/runtime rules live in CompetitionProfileResolver / profile policies.
  */
 final class CompetitionProgramCatalog
 {
@@ -91,6 +92,13 @@ final class CompetitionProgramCatalog
                 'description' => 'Profil je u implementaciji i još nije pušten korisnicima.',
                 'status' => self::STATUS_DEVELOPMENT,
                 'icon' => '🎓',
+            ],
+            'preduzetnici_mikro_mala_i_srednja_preduzeca' => [
+                'type' => 'preduzetnici_mikro_mala_i_srednja_preduzeca',
+                'title' => 'Preduzetnici mikro, mala i srednja preduzeća',
+                'description' => 'Profil je u implementaciji i još nije pušten korisnicima.',
+                'status' => self::STATUS_DEVELOPMENT,
+                'icon' => '🏢',
             ],
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionProfileConfig;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,12 +18,20 @@ class Commission extends Model
         'start_date',
         'end_date',
         'status',
+        'profile_type',
+        'appointment_reference',
+        'appointed_at',
+        'mandate_starts_at',
+        'mandate_ends_at',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'year' => 'integer',
+        'appointed_at' => 'datetime',
+        'mandate_starts_at' => 'datetime',
+        'mandate_ends_at' => 'datetime',
     ];
 
     /**
@@ -68,11 +77,15 @@ class Commission extends Model
      */
     public function assignedProfileType(): ?string
     {
+        if ($this->isCanonicalProfile()) {
+            return CompetitionProfileResolver::TYPE_CANONICAL;
+        }
+
         $this->loadMissing('competitions');
 
         $types = $this->competitions
             ->pluck('type')
-            ->filter(fn ($type) => in_array($type, ['zensko', 'omladinsko'], true))
+            ->filter(fn ($type) => in_array($type, CommissionProfileConfig::COMMISSION_PROFILE_TYPES, true))
             ->unique()
             ->values();
 
@@ -86,6 +99,24 @@ class Commission extends Model
     public function profileConfig(): CommissionProfileConfig
     {
         return CommissionProfileConfig::for($this->assignedProfileType());
+    }
+
+    /**
+     * Canonical Commissions are marked at establishment and stay canonical regardless of assignment.
+     */
+    public function isCanonicalProfile(): bool
+    {
+        return $this->profile_type === CompetitionProfileResolver::TYPE_CANONICAL;
+    }
+
+    public function replacements(): HasMany
+    {
+        return $this->hasMany(CommissionMemberReplacement::class);
+    }
+
+    public function governanceConflicts(): HasMany
+    {
+        return $this->hasMany(CommissionGovernanceConflict::class);
     }
 
     /**

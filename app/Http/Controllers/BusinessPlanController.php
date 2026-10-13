@@ -57,6 +57,23 @@ class BusinessPlanController extends Controller
     }
 
     /**
+     * Canonical MMSP has no Women/Youth business plan: Obrazac P2 is the only plan source.
+     */
+    private function redirectCanonicalToInvestmentPlan(Application $application): ?RedirectResponse
+    {
+        if (! $application->isCanonicalProfile()) {
+            return null;
+        }
+
+        if ((int) $application->user_id !== (int) Auth::id()) {
+            abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        return redirect()->route('applications.canonical-p2.edit', $application)
+            ->withErrors(['error' => 'Za javni poziv za preduzetnike i MMSP biznis plan se ne popunjava. Plan ulaganja je Obrazac P2.']);
+    }
+
+    /**
      * PIB iz Obrasca 1a/1b (prijava) ili korisničkog profila.
      */
     protected function resolvePibFromApplication(Application $application, $user): ?string
@@ -80,6 +97,10 @@ class BusinessPlanController extends Controller
      */
     public function create(Application $application): View|RedirectResponse
     {
+        if ($redirect = $this->redirectCanonicalToInvestmentPlan($application)) {
+            return $redirect;
+        }
+
         $this->bpLog('BP_CREATE: entered create()', [
             'application_id' => $application->id,
             'auth_user_id' => Auth::id(),
@@ -327,6 +348,10 @@ class BusinessPlanController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
+        if ($redirect = $this->redirectCanonicalToInvestmentPlan($application)) {
+            return $redirect;
+        }
+
         $this->bpLog('BP_STORE: start', [
             'application_id' => $application->id,
             'user_id' => Auth::id(),

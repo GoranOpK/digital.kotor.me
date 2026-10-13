@@ -3,11 +3,17 @@
 namespace App\Services;
 
 use App\Models\Application;
+use App\Models\ApplicationCompletenessAssessment;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
+use App\Models\User;
+use App\Services\Competitions\CanonicalReviewState;
+use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Support\CommissionCanonicalSeat;
+use App\Support\CompetitionRanking;
 use App\Support\NamedMysqlUniqueViolation;
 use App\Support\ScoringProfileConfig;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -57,6 +63,27 @@ class CanonicalIndividualScoringService
 
     public const YOUTH_BONUS_SCALE = 10;
 
+    public const CANONICAL_SUPPORT_THRESHOLD = '30';
+
+    public const CANONICAL_CYCLE_INCOMPLETE_MESSAGE = 'Bodovanje kanonskog Poziva nije završeno: sva 3 člana Komisije moraju konačno ocijeniti sve prijave koje su ušle u bodovanje.';
+
+    public const CANONICAL_REVIEW_UNRESOLVED_MESSAGE = 'Preliminarna rang-lista se ne formira dok potpunost prijava i prigovori nijesu riješeni.';
+
+    public const CANONICAL_CORRUPT_ROW_MESSAGE = 'Pronađen je neispravan red ocjena kanonskog Poziva. Bodovanje i rang-lista su zaustavljeni do pregleda. Red se ne smije prepisati niti dopuniti.';
+
+    public const CANONICAL_RANKING_FROZEN_MESSAGE = 'Preliminarna rang-lista kanonskog Poziva je formirana i zaključana. Bodovanje više nije dozvoljeno.';
+
+    public const CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE = 'Ishod kanonskog Poziva (podržava/odbija, iznos, Predlog) utvrđuje se na trećoj sjednici i nije dio preliminarne rang-liste.';
+
+    public const CANONICAL_ADMIN_RANKING_ROUTE_MESSAGE = 'Preliminarna rang-lista kanonskog Poziva dostupna je Komisiji na ekranu ocjenjivanja, ne na administratorskoj ruti.';
+
+    /** @var list<string> */
+    public const CANONICAL_UNRESOLVED_REVIEW_STATES = [
+        CanonicalReviewState::PENDING_REVIEW,
+        CanonicalReviewState::COMPLAINT_ELIGIBLE,
+        CanonicalReviewState::COMPLAINT_PENDING,
+    ];
+
     /** @var list<string> */
     public const BONUS_FLAG_KEYS = [
         'bonus_info_day',
@@ -87,6 +114,10 @@ class CanonicalIndividualScoringService
         $score->loadMissing('application.competition');
         if ($score->application?->competition?->isOmladinskoProfile()) {
             return $score->completed_at !== null;
+        }
+
+        if ($this->isCanonicalCompetition($score->application?->competition)) {
+            return $this->canonicalRowIsFinal($score);
         }
 
         return CommissionCanonicalSeat::isHistoricallyCompleted($score);
@@ -193,6 +224,10 @@ class CanonicalIndividualScoringService
     {
         if ($competition->isOmladinskoProfile()) {
             return $this->isYouthIndividualScoringCycleComplete($competition);
+        }
+
+        if ($this->isCanonicalCompetition($competition)) {
+            return $this->canonicalCycleBlockReason($competition) === null;
         }
 
         if ($competition->status !== 'closed' && $competition->status !== 'completed' && ! $competition->isApplicationDeadlinePassed()) {
@@ -608,6 +643,8 @@ class CanonicalIndividualScoringService
         ?string $notes,
         bool $confirmed,
     ): EvaluationScore {
+        ScoringProfileConfig::for($application->competition()->value('type'))->assertScoringFormulaActive();
+
         if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
             abort(403, $this->eliminatoryChecks->isConfirmedFail($application)
                 ? ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE
@@ -848,9 +885,429 @@ class CanonicalIndividualScoringService
         return $recorded;
     }
 
+    public function isCanonicalCompetition(?Competition $competition): bool
+    {
+        return $competition?->type === CompetitionProfileResolver::TYPE_CANONICAL;
+    }
+
+    /**
+     * Governance gate (active valid member, persisted seat, interview 3/3, FINAL + complete +
+     * complaint resolved, ranking not formed, seat not scored) plus fail-closed row integrity.
+     */
+    public function canonicalScoreWriteBlockReason(User $user, Application $application): ?string
+    {
+        $application->loadMissing('competition');
+        if (! $this->isCanonicalCompetition($application->competition)) {
+            return CanonicalCommissionGovernance::NOT_CANONICAL_MESSAGE;
+        }
+
+        if ($this->canonicalRankingIsFormed($application->competition)) {
+            return self::CANONICAL_RANKING_FROZEN_MESSAGE;
+        }
+
+        $reason = $this->canonicalGovernance()->scoreWriteBlockReason($user, $application);
+        if ($reason !== null) {
+            return $reason;
+        }
+
+        return $this->canonicalRowsAreCorrupt($application, $this->canonicalScoreRows($application))
+            ? self::CANONICAL_CORRUPT_ROW_MESSAGE
+            : null;
+    }
+
+    /**
+     * One immutable final score per canonical seat. No drafts, no overwrite, no seat inference.
+     *
+     * @param  array<string, mixed>  $criteria
+     */
+    public function recordCanonicalFinalScore(
+        Application $application,
+        User $user,
+        array $criteria,
+        ?string $notes,
+        bool $confirmed,
+    ): EvaluationScore {
+        $application->loadMissing('competition');
+        if (! $this->isCanonicalCompetition($application->competition)) {
+            abort(403, CanonicalCommissionGovernance::NOT_CANONICAL_MESSAGE);
+        }
+
+        $profile = ScoringProfileConfig::for($application->competition->type);
+        $profile->assertScoringFormulaActive();
+
+        $reason = $this->canonicalScoreWriteBlockReason($user, $application);
+        if ($reason !== null) {
+            abort(403, $reason);
+        }
+
+        if (! $confirmed) {
+            throw ValidationException::withMessages([
+                'scoring_confirmed' => self::CONFIRMATION_REQUIRED_MESSAGE,
+            ]);
+        }
+
+        $normalized = $this->normalizedCanonicalCriteria($profile, $criteria);
+
+        try {
+            $recorded = DB::transaction(function () use ($application, $user, $normalized, $notes) {
+                $lockedCompetition = Competition::query()
+                    ->whereKey($application->competition_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $lockedApplication = Application::query()
+                    ->whereKey($application->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                CommissionMember::query()
+                    ->where('commission_id', $lockedCompetition->commission_id)
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+                $lockedScores = EvaluationScore::query()
+                    ->where('application_id', $lockedApplication->id)
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+                $lockedApplication->setRelation('competition', $lockedCompetition);
+
+                $reason = $this->canonicalScoreWriteBlockReason($user, $lockedApplication);
+                if ($reason !== null) {
+                    abort(403, $reason);
+                }
+
+                $member = $this->canonicalGovernance()->activeMemberFor($user, $lockedCompetition);
+                $seat = (int) $member->canonical_seat_no;
+
+                if ($lockedScores->contains(fn (EvaluationScore $score) => (int) $score->commission_member_id === (int) $member->id)) {
+                    abort(403, self::SCORE_IMMUTABLE_MESSAGE);
+                }
+
+                if ($lockedScores->contains(fn (EvaluationScore $score) => (int) $score->canonical_seat_no === $seat)) {
+                    abort(403, CanonicalCommissionGovernance::SEAT_SCORE_COMPLETED_MESSAGE);
+                }
+
+                return EvaluationScore::query()->create(
+                    $this->finalScorePayload($lockedApplication, $member, $normalized, $notes, $seat)
+                );
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            abort(403, CanonicalCommissionGovernance::SEAT_SCORE_COMPLETED_MESSAGE);
+        }
+
+        $this->persistCanonicalPreliminaryRankingIfReady($application->competition);
+
+        return $recorded;
+    }
+
+    /**
+     * @return Collection<int, Application> FINAL canonical applications that entered Commission review
+     */
+    public function canonicalCycleApplications(Competition $competition): Collection
+    {
+        if (! $this->isCanonicalCompetition($competition)) {
+            return collect();
+        }
+
+        return $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated', 'approved', 'rejected'])
+            ->whereHas('finalClaim')
+            ->with(['finalClaim', 'competition', 'evaluationScores.commissionMember'])
+            ->orderBy('id')
+            ->get();
+    }
+
+    public function canonicalApplicationIsScoringEligible(Application $application): bool
+    {
+        $application->loadMissing(['competition', 'finalClaim']);
+        if (! $this->isCanonicalCompetition($application->competition) || ! $application->finalClaim || $application->status === 'draft') {
+            return false;
+        }
+
+        if (! in_array(CanonicalReviewState::resolve($application), [CanonicalReviewState::COMPLETE, CanonicalReviewState::COMPLAINT_RESOLVED], true)) {
+            return false;
+        }
+
+        return ApplicationCompletenessAssessment::query()
+            ->where('application_id', $application->id)
+            ->latest('id')
+            ->value('outcome') === ApplicationCompletenessAssessment::COMPLETE;
+    }
+
+    /**
+     * @return Collection<int, Application>
+     */
+    public function canonicalScoringEligibleApplications(Competition $competition): Collection
+    {
+        return $this->canonicalCycleApplications($competition)
+            ->filter(fn (Application $application) => $this->canonicalApplicationIsScoringEligible($application))
+            ->values();
+    }
+
+    /**
+     * Čl.21: the cycle is complete only when all 3 seats scored every eligible plan and no
+     * application is still awaiting completeness review or a complaint outcome.
+     */
+    public function canonicalCycleBlockReason(Competition $competition): ?string
+    {
+        if (! $this->isCanonicalCompetition($competition)) {
+            return CanonicalCommissionGovernance::NOT_CANONICAL_MESSAGE;
+        }
+
+        if (! ScoringProfileConfig::for($competition->type)->scoringFormulaActive) {
+            return ScoringProfileConfig::CANONICAL_SCORING_DISABLED_MESSAGE;
+        }
+
+        if (! $competition->commission_id) {
+            return CanonicalCommissionGovernance::NO_COMMISSION_MESSAGE;
+        }
+
+        if (! in_array($competition->status, ['closed', 'completed'], true) && ! $competition->isApplicationDeadlinePassed()) {
+            return self::CANONICAL_CYCLE_INCOMPLETE_MESSAGE;
+        }
+
+        $applications = $this->canonicalCycleApplications($competition);
+        if ($applications->isEmpty()) {
+            return self::CANONICAL_CYCLE_INCOMPLETE_MESSAGE;
+        }
+
+        foreach ($applications as $application) {
+            if (in_array(CanonicalReviewState::resolve($application), self::CANONICAL_UNRESOLVED_REVIEW_STATES, true)) {
+                return self::CANONICAL_REVIEW_UNRESOLVED_MESSAGE;
+            }
+        }
+
+        $eligible = $applications
+            ->filter(fn (Application $application) => $this->canonicalApplicationIsScoringEligible($application))
+            ->values();
+        if ($eligible->isEmpty()) {
+            return self::CANONICAL_CYCLE_INCOMPLETE_MESSAGE;
+        }
+
+        foreach ($eligible as $application) {
+            $seats = $this->canonicalCompletedSeats($application);
+            if ($seats === null) {
+                return self::CANONICAL_CORRUPT_ROW_MESSAGE;
+            }
+
+            if (array_keys($seats) !== ScoringProfileConfig::for($competition->type)->allowedSeats) {
+                return self::CANONICAL_CYCLE_INCOMPLETE_MESSAGE;
+            }
+        }
+
+        return null;
+    }
+
+    public function isCanonicalIndividualScoringCycleComplete(Competition $competition): bool
+    {
+        return $this->canonicalCycleBlockReason($competition) === null;
+    }
+
+    /**
+     * @return array<int, EvaluationScore>|null seat => final score, ordered by seat; null when any row is corrupt
+     */
+    public function canonicalCompletedSeats(Application $application): ?array
+    {
+        $rows = $this->canonicalScoreRows($application);
+        if ($this->canonicalRowsAreCorrupt($application, $rows)) {
+            return null;
+        }
+
+        $bySeat = [];
+        foreach ($rows as $row) {
+            $bySeat[(int) $row->canonical_seat_no] = $row;
+        }
+        ksort($bySeat);
+
+        return $bySeat;
+    }
+
+    /**
+     * Čl.21 / KN-BR-036/037: average per criterion = sum of the 3 member scores / 3;
+     * final CALCULATION VALUE = sum of the 10 averages, computed as one exact division
+     * (Σ all member scores / 3) so equal plans never diverge through per-criterion truncation.
+     * No bonuses. DISPLAY VALUE = 2 decimals, half-up.
+     *
+     * @return array{
+     *     criterion_sums: array<int, int>,
+     *     criterion_averages: array<int, string>,
+     *     total_points: int,
+     *     final_score_full: string,
+     *     final_score_display: string,
+     *     meets_support_threshold: bool
+     * }|null
+     */
+    public function aggregateCanonicalApplication(Application $application): ?array
+    {
+        $application->loadMissing('competition');
+        if (! $this->isCanonicalCompetition($application->competition)) {
+            return null;
+        }
+
+        $profile = ScoringProfileConfig::for($application->competition->type);
+        $seats = $this->canonicalCompletedSeats($application);
+        if ($seats === null || array_keys($seats) !== $profile->allowedSeats) {
+            return null;
+        }
+
+        $divisor = (string) $profile->requiredFinalCount;
+        $sums = [];
+        $averages = [];
+        $total = 0;
+        foreach (array_keys($profile->criteria) as $criterion) {
+            $sum = 0;
+            foreach ($seats as $score) {
+                $sum += (int) $score->{"criterion_{$criterion}"};
+            }
+            $sums[$criterion] = $sum;
+            $averages[$criterion] = bcdiv((string) $sum, $divisor, CompetitionRanking::SCALE);
+            $total += $sum;
+        }
+
+        $full = bcdiv((string) $total, $divisor, CompetitionRanking::SCALE);
+
+        return [
+            'criterion_sums' => $sums,
+            'criterion_averages' => $averages,
+            'total_points' => $total,
+            'final_score_full' => $full,
+            'final_score_display' => CompetitionRanking::roundHalfUp($full, 2),
+            'meets_support_threshold' => bccomp($full, self::CANONICAL_SUPPORT_THRESHOLD, CompetitionRanking::SCALE) >= 0,
+        ];
+    }
+
+    public function canonicalRankingIsFormed(?Competition $competition): bool
+    {
+        return $this->canonicalGovernance()->canonicalRankingFormed($competition);
+    }
+
+    /**
+     * Idempotent, frozen preliminary ranking (čl.21, KN-BR-038): all scored eligible plans,
+     * including those below 30, ranked by full-precision CALCULATION VALUE with shared ranks.
+     * Writes only final_score (display), final_score_calc and ranking_position; never scores,
+     * statuses, outcomes or amounts. Once formed it is never rewritten here.
+     *
+     * Lock order: competitions → applications (id ASC) → evaluation_scores.
+     */
+    public function persistCanonicalPreliminaryRankingIfReady(?Competition $competition): bool
+    {
+        if (! $this->isCanonicalCompetition($competition)) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($competition) {
+            $lockedCompetition = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
+            if ($lockedCompetition === null || ! $this->isCanonicalCompetition($lockedCompetition)) {
+                return false;
+            }
+
+            if ($lockedCompetition->canonical_ranking_formed_at !== null) {
+                return true;
+            }
+
+            $lockedApplications = Application::query()
+                ->where('competition_id', $lockedCompetition->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            if ($lockedApplications->isNotEmpty()) {
+                EvaluationScore::query()
+                    ->whereIn('application_id', $lockedApplications->pluck('id')->all())
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+            }
+
+            if ($this->canonicalCycleBlockReason($lockedCompetition) !== null) {
+                return false;
+            }
+
+            $eligible = $this->canonicalScoringEligibleApplications($lockedCompetition);
+            $aggregates = [];
+            foreach ($eligible as $application) {
+                $aggregate = $this->aggregateCanonicalApplication($application);
+                if ($aggregate === null) {
+                    throw new \RuntimeException(
+                        "Fail-closed canonical ranking: eligible application {$application->id} is not exactly seats 1–3."
+                    );
+                }
+                $aggregates[$application->id] = $aggregate;
+            }
+
+            $positions = CompetitionRanking::positions(
+                array_map(fn (array $aggregate) => $aggregate['final_score_full'], $aggregates)
+            );
+
+            foreach ($eligible as $application) {
+                $aggregate = $aggregates[$application->id];
+                $application->forceFill([
+                    'final_score' => $aggregate['final_score_display'],
+                    'final_score_calc' => $aggregate['final_score_full'],
+                    'ranking_position' => $positions[$application->id],
+                ])->save();
+            }
+
+            Application::query()
+                ->where('competition_id', $lockedCompetition->id)
+                ->whereNotIn('id', array_keys($aggregates))
+                ->whereNotNull('ranking_position')
+                ->update(['ranking_position' => null]);
+
+            $lockedCompetition->forceFill(['canonical_ranking_formed_at' => now()])->save();
+
+            return true;
+        });
+    }
+
+    /**
+     * Commission view of the formed preliminary ranking (no amounts, no outcome).
+     *
+     * @return array{
+     *     formed: bool,
+     *     visible: bool,
+     *     block_reason: ?string,
+     *     rows: Collection<int, array{application: Application, rank: int, shared: bool, display: string, calc: string, meets_support_threshold: bool}>
+     * }
+     */
+    public function canonicalPreliminaryRankingView(Competition $competition, User $viewer): array
+    {
+        $formed = $this->canonicalRankingIsFormed($competition);
+        $isMember = CommissionMember::query()
+            ->where('commission_id', $competition->commission_id)
+            ->where('user_id', $viewer->id)
+            ->exists();
+        $isAdmin = in_array($viewer->role?->name, ['admin', 'superadmin'], true);
+        $visible = $formed && ($isMember || $isAdmin);
+
+        $rows = collect();
+        if ($visible) {
+            $ranked = Application::query()
+                ->where('competition_id', $competition->id)
+                ->whereNotNull('ranking_position')
+                ->orderBy('ranking_position')
+                ->orderBy('id')
+                ->get();
+            $rankCounts = $ranked->countBy(fn (Application $application) => (int) $application->ranking_position);
+            $rows = $ranked->map(fn (Application $application) => [
+                'application' => $application,
+                'rank' => (int) $application->ranking_position,
+                'shared' => $rankCounts[(int) $application->ranking_position] > 1,
+                'display' => (string) $application->final_score,
+                'calc' => (string) $application->final_score_calc,
+                'meets_support_threshold' => bccomp((string) $application->final_score_calc, self::CANONICAL_SUPPORT_THRESHOLD, CompetitionRanking::SCALE) >= 0,
+            ])->values();
+        }
+
+        return [
+            'formed' => $formed,
+            'visible' => $visible,
+            'block_reason' => $formed ? null : $this->canonicalCycleBlockReason($competition),
+            'rows' => $rows,
+        ];
+    }
+
     public function persistApplicationAggregatesIfCycleComplete(Competition $competition): void
     {
-        if ($competition->isOmladinskoProfile()) {
+        if ($competition->isOmladinskoProfile() || $this->isCanonicalCompetition($competition)) {
             return;
         }
 
@@ -1175,6 +1632,98 @@ class CanonicalIndividualScoringService
 
             $previousScore = $score;
         }
+    }
+
+    private function canonicalGovernance(): CanonicalCommissionGovernance
+    {
+        return app(CanonicalCommissionGovernance::class);
+    }
+
+    /**
+     * @return Collection<int, EvaluationScore>
+     */
+    private function canonicalScoreRows(Application $application): Collection
+    {
+        return EvaluationScore::query()
+            ->where('application_id', $application->id)
+            ->with('commissionMember')
+            ->orderBy('id')
+            ->get();
+    }
+
+    private function canonicalRowIsFinal(EvaluationScore $score): bool
+    {
+        $profile = ScoringProfileConfig::for(CompetitionProfileResolver::TYPE_CANONICAL);
+        if ($score->completed_at === null || ! $profile->allowsSeat((int) $score->canonical_seat_no)) {
+            return false;
+        }
+
+        foreach (array_keys($profile->criteria) as $criterion) {
+            $value = $score->{"criterion_{$criterion}"};
+            if ($value === null || (int) $value < 1 || (int) $value > 5) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Canonical has no drafts: every row must be a complete final score of a seat 1–3 whose
+     * persisted identity matches the member of this Commission. Anything else fails closed.
+     *
+     * @param  Collection<int, EvaluationScore>  $rows
+     */
+    private function canonicalRowsAreCorrupt(Application $application, Collection $rows): bool
+    {
+        $application->loadMissing('competition');
+        $commissionId = (int) ($application->competition?->commission_id ?? 0);
+        $seen = [];
+
+        foreach ($rows as $row) {
+            if (! $this->canonicalRowIsFinal($row)) {
+                return true;
+            }
+
+            $seat = (int) $row->canonical_seat_no;
+            $member = $row->commissionMember;
+            if (isset($seen[$seat])
+                || $member === null
+                || (int) $member->commission_id !== $commissionId
+                || (int) $member->canonical_seat_no !== $seat) {
+                return true;
+            }
+            $seen[$seat] = true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<string, mixed>  $criteria
+     * @return array<string, int>
+     */
+    private function normalizedCanonicalCriteria(ScoringProfileConfig $profile, array $criteria): array
+    {
+        $normalized = [];
+        $errors = [];
+        foreach (array_keys($profile->criteria) as $criterion) {
+            $key = "criterion_{$criterion}";
+            $raw = $criteria[$key] ?? null;
+            $valid = (is_int($raw) || (is_string($raw) && ctype_digit($raw))) && (int) $raw >= 1 && (int) $raw <= 5;
+            if (! $valid) {
+                $errors[$key] = "Kriterijum {$criterion} mora biti cijeli broj od 1 do 5.";
+
+                continue;
+            }
+            $normalized[$key] = (int) $raw;
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $normalized;
     }
 
     private function hasBlockingPartialRow(Application $application): bool

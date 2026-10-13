@@ -9,6 +9,7 @@ use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\YouthAllocationDraftService;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\YouthEqualScoreVotingService;
@@ -119,6 +120,14 @@ class EvaluationController extends Controller
         }
 
         foreach ($assignedCompetitions as $assignedCompetition) {
+            if ($this->canonicalScoring->isCanonicalCompetition($assignedCompetition)) {
+                if ($competitionIds->contains($assignedCompetition->id)) {
+                    $this->canonicalScoring->persistCanonicalPreliminaryRankingIfReady($assignedCompetition);
+                }
+
+                continue;
+            }
+
             if (! $assignedCompetition->isOmladinskoProfile()) {
                 continue;
             }
@@ -180,11 +189,16 @@ class EvaluationController extends Controller
         // prikaži samo za konkurse koji imaju formiranu rang listu (isRankingFormed)
         // i koji nijesu arhivirani (status nije 'closed' ili 'completed')
         $competitionsWithAllEvaluated = $competitions
-            ->filter(fn ($c) => ! $c->isOmladinskoProfile() && $c->isIndividualScoringCycleComplete() && !in_array($c->status, ['closed', 'completed']))
+            ->filter(fn ($c) => ! $c->isOmladinskoProfile()
+                && ! $this->canonicalScoring->isCanonicalCompetition($c)
+                && $c->isIndividualScoringCycleComplete()
+                && !in_array($c->status, ['closed', 'completed']))
             ->values();
 
         $canViewFinalScoresByCompetition = $competitions
-            ->mapWithKeys(fn ($c) => [$c->id => $c->isIndividualScoringCycleComplete()])
+            ->mapWithKeys(fn ($c) => [$c->id => $this->canonicalScoring->isCanonicalCompetition($c)
+                ? $this->canonicalScoring->canonicalRankingIsFormed($c)
+                : $c->isIndividualScoringCycleComplete()])
             ->toArray();
 
         $youthPreliminaryByCompetition = $competitions
@@ -232,6 +246,10 @@ class EvaluationController extends Controller
      */
     public function create(Application $application): View|RedirectResponse
     {
+        if ($this->canonicalScoring->isCanonicalCompetition($application->competition)) {
+            return $this->createCanonical($application);
+        }
+
         $user = Auth::user();
         
         // Provjeri da li je korisnik podnosilac prijave
@@ -485,6 +503,10 @@ class EvaluationController extends Controller
         $user = Auth::user();
         
         $competition = $application->competition;
+        if ($this->canonicalScoring->isCanonicalCompetition($competition)) {
+            return $this->storeCanonicalScore($request, $application);
+        }
+        ScoringProfileConfig::for($competition?->type)->assertScoringFormulaActive();
         
         // Ocjenjivanje počinje tek kada istekne rok za prijave
         if ($competition && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
@@ -710,6 +732,98 @@ class EvaluationController extends Controller
                 : 'Nacrt dodatnih bodova je sačuvan.');
     }
 
+    protected function createCanonical(Application $application): View
+    {
+        $user = Auth::user();
+        $competition = $application->competition;
+        $governance = app(\App\Services\Competitions\Commission\CanonicalCommissionGovernance::class);
+
+        $commissionMember = $governance->activeMemberFor($user, $competition);
+        if ($commissionMember === null) {
+            abort(403, 'Niste član komisije.');
+        }
+
+        if ($application->status === 'draft') {
+            abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+        }
+
+        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
+        }
+
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $this->canonicalScoring->persistCanonicalPreliminaryRankingIfReady($competition);
+
+        $scoringProfile = ScoringProfileConfig::for($competition->type);
+        $rankingFormed = $this->canonicalScoring->canonicalRankingIsFormed($competition);
+        $visibleScores = $governance->visibleScores($user, $application, $rankingFormed)->keyBy('commission_member_id');
+        $ownScore = $visibleScores->get($commissionMember->id);
+        $scoreBlockReason = $ownScore === null
+            ? $this->canonicalScoring->canonicalScoreWriteBlockReason($user, $application)
+            : null;
+        $aggregate = $rankingFormed ? $this->canonicalScoring->aggregateCanonicalApplication($application) : null;
+        $members = $rankingFormed
+            ? \App\Models\CommissionMember::query()->whereIn('id', $visibleScores->keys())->orderBy('canonical_seat_no')->get()
+            : collect([$commissionMember]);
+        $rankingView = $this->canonicalScoring->canonicalPreliminaryRankingView($competition, $user);
+
+        $application->load(['user', 'competition']);
+
+        return view('evaluation.canonical', compact(
+            'application',
+            'competition',
+            'commissionMember',
+            'scoringProfile',
+            'rankingFormed',
+            'visibleScores',
+            'ownScore',
+            'scoreBlockReason',
+            'aggregate',
+            'members',
+            'rankingView',
+        ));
+    }
+
+    protected function storeCanonicalScore(Request $request, Application $application): RedirectResponse
+    {
+        $profile = ScoringProfileConfig::for($application->competition?->type);
+        $profile->assertScoringFormulaActive();
+        $this->abortIfCommissionProcessingBlocked($application->competition);
+
+        $rules = [
+            'notes' => 'nullable|string|max:5000',
+            'scoring_confirmed' => 'accepted',
+        ];
+        $messages = [
+            'scoring_confirmed.accepted' => CanonicalIndividualScoringService::CONFIRMATION_REQUIRED_MESSAGE,
+        ];
+        foreach (array_keys($profile->criteria) as $criterion) {
+            $rules["criterion_{$criterion}"] = 'required|integer|min:1|max:5';
+            $messages["criterion_{$criterion}.required"] = "Kriterijum {$criterion} je obavezan.";
+            $messages["criterion_{$criterion}.min"] = "Kriterijum {$criterion} mora biti najmanje 1 poen.";
+            $messages["criterion_{$criterion}.max"] = "Kriterijum {$criterion} može biti najviše 5 poena.";
+        }
+
+        $reason = $this->canonicalScoring->canonicalScoreWriteBlockReason(Auth::user(), $application);
+        if ($reason !== null) {
+            abort(403, $reason);
+        }
+
+        $validated = $request->validate($rules, $messages);
+
+        $this->canonicalScoring->recordCanonicalFinalScore(
+            $application,
+            Auth::user(),
+            $validated,
+            $validated['notes'] ?? null,
+            $request->boolean('scoring_confirmed'),
+        );
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', 'Ocjena je uspješno sačuvana i zaključana.');
+    }
+
     /**
      * @return array<string, bool>
      */
@@ -728,6 +842,10 @@ class EvaluationController extends Controller
      */
     public function show(Application $application): View|\Illuminate\Http\RedirectResponse
     {
+        if ($this->canonicalScoring->isCanonicalCompetition($application->competition)) {
+            return redirect()->route('evaluation.create', $application);
+        }
+
         $user = Auth::user();
 
         $commissionMember = $this->commissionMemberForApplication($application, $user->id);
@@ -961,6 +1079,10 @@ class EvaluationController extends Controller
         if ($application->competition?->isOmladinskoProfile()) {
             abort(403, YouthAllocationDraftService::WOMEN_STORE_DECISION_CLOSED_MESSAGE);
         }
+        if ($this->canonicalScoring->isCanonicalCompetition($application->competition)) {
+            abort(403, CanonicalIndividualScoringService::CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE);
+        }
+        ScoringProfileConfig::for($application->competition?->type)->assertScoringFormulaActive();
 
         $user = Auth::user();
         
@@ -1142,6 +1264,11 @@ class EvaluationController extends Controller
      */
     public function signDecision(Application $application): RedirectResponse
     {
+        $application->loadMissing('competition');
+        if ($this->canonicalScoring->isCanonicalCompetition($application->competition)) {
+            abort(403, CanonicalIndividualScoringService::CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE);
+        }
+
         $user = Auth::user();
         
         // Pronađi člana komisije
@@ -1238,6 +1365,8 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         $competition = $application->competition;
+
+        LegacyCommissionFlowGuard::abortUnlessAllowed($competition);
 
         if ($competition && ! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());

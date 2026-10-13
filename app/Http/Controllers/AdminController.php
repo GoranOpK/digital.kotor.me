@@ -21,6 +21,12 @@ use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
+use App\Services\Competitions\CallPublicationService;
+use App\Services\Competitions\Commission\CanonicalCommissionAdministrationService;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
+use App\Services\Competitions\Profile\CompetitionProfilePolicy;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
@@ -599,7 +605,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:zensko,omladinsko,ostalo',
+            'type' => CompetitionProfileResolver::validationRule(),
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => $isOmladinsko ? 'required|numeric|gt:0' : 'required|numeric|min:0',
@@ -899,8 +905,12 @@ class AdminController extends Controller
 
         $omladinskoAnnualOverview = $this->omladinskoAnnualOverviewForShow($competition);
 
+        $canonicalCommissionOverview = $isAdmin && $competition->type === CompetitionProfileResolver::TYPE_CANONICAL
+            ? app(CanonicalCommissionAdministrationService::class)->overview($competition)
+            : null;
+
         return view('admin.competitions.show', array_merge(
-            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView'),
+            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView', 'canonicalCommissionOverview'),
             $omladinskoAnnualOverview
         ));
     }
@@ -956,7 +966,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:zensko,omladinsko,ostalo',
+            'type' => CompetitionProfileResolver::validationRule(),
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => $budgetRule,
@@ -992,6 +1002,33 @@ class AdminController extends Controller
             }
         }
 
+        $policy = CompetitionProfileResolver::resolve($validated['type']);
+        if (
+            $validated['status'] === 'published'
+            && $competition->status !== 'published'
+            && $policy->publicationMode() === CompetitionProfilePolicy::PUBLICATION_GUARDED
+        ) {
+            return back()->withErrors([
+                'status' => 'Objava je moguća samo kroz službenu akciju objave.',
+            ])->withInput();
+        }
+
+        if (
+            $validated['status'] === 'completed'
+            && ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL || $validated['type'] === CompetitionProfileResolver::TYPE_CANONICAL)
+        ) {
+            return back()->withErrors([
+                'status' => 'Kanonski Poziv se zatvara samo nakon objave potpisane formalne Odluke, kroz kanonsko zatvaranje.',
+            ])->withInput();
+        }
+
+        $lifecycle = app(PublishedCallLifecycleLock::class);
+        $lifecycleErrors = $lifecycle->editErrors($competition, $validated);
+        if ($lifecycleErrors !== []) {
+            return back()->withErrors($lifecycleErrors)->withInput();
+        }
+        $windowLocked = $lifecycle->locks($competition) && $competition->status !== 'draft';
+
         $data = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
@@ -1000,7 +1037,7 @@ class AdminController extends Controller
             'budget' => $validated['budget'],
             'status' => $validated['status'],
             'commission_id' => $validated['commission_id'] ?? null,
-            'deadline_days' => 20,
+            'deadline_days' => $windowLocked ? $competition->deadline_days : 20,
         ];
 
         if ($isOmladinsko) {
@@ -1102,7 +1139,7 @@ class AdminController extends Controller
     /**
      * Objavljivanje konkursa
      */
-    public function publishCompetition(Competition $competition)
+    public function publishCompetition(Competition $competition, CallPublicationService $publisher)
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
@@ -1112,30 +1149,44 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za objavljivanje konkursa.');
         }
 
+        // Youth keeps CompetitionAnnualInstance publish semantics.
+        if ($competition->isOmladinskoProfile()) {
+            return $this->publishYouthAnnualInstance($competition);
+        }
+
+        $result = $publisher->publish($competition, $user);
+
+        if (! $result->succeeded) {
+            return redirect()->back()->withErrors(['error' => $result->error]);
+        }
+
+        return redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
+    }
+
+    private function publishYouthAnnualInstance(Competition $competition)
+    {
         if ($competition->status !== 'draft') {
             return redirect()->back()->withErrors(['error' => 'Samo nacrti konkursa mogu biti objavljeni.']);
         }
 
-        if ($competition->isOmladinskoProfile()) {
-            $instance = app(CompetitionAnnualInstance::class);
-            try {
-                if ($competition->isFirstCall()) {
-                    $instance->validateFirstCall($competition);
-                } elseif ($competition->isSecondCall()) {
-                    $publishReason = $instance->secondCallPublishBlockReason($competition);
-                    if ($publishReason !== null) {
-                        return redirect()->back()->withErrors(['error' => $publishReason]);
-                    }
-                } else {
-                    return redirect()->back()->withErrors([
-                        'error' => CompetitionAnnualInstance::MSG_INVALID_INSTANCE,
-                    ]);
+        $instance = app(CompetitionAnnualInstance::class);
+        try {
+            if ($competition->isFirstCall()) {
+                $instance->validateFirstCall($competition);
+            } elseif ($competition->isSecondCall()) {
+                $publishReason = $instance->secondCallPublishBlockReason($competition);
+                if ($publishReason !== null) {
+                    return redirect()->back()->withErrors(['error' => $publishReason]);
                 }
-            } catch (DomainException $e) {
+            } else {
                 return redirect()->back()->withErrors([
-                    'error' => $instance->userFacingMessage($e),
+                    'error' => CompetitionAnnualInstance::MSG_INVALID_INSTANCE,
                 ]);
             }
+        } catch (DomainException $e) {
+            return redirect()->back()->withErrors([
+                'error' => $instance->userFacingMessage($e),
+            ]);
         }
 
         $now = now();
@@ -1145,20 +1196,17 @@ class AdminController extends Controller
             'deadline_days' => 20,
         ];
 
-        // Ako nije postavljen start_date, postavi ga na danas
         if (! $competition->start_date) {
             $updateData['start_date'] = $now->toDateString();
             $updateData['end_date'] = $now->copy()->addDays(20)->toDateString();
         } else {
-            // Ako je start_date postavljen (bio to današnji ili budući),
-            // end_date mora biti 20 dana od tog start_date
             $updateData['end_date'] = $competition->start_date->copy()->addDays(20)->toDateString();
         }
 
         $competition->update($updateData);
 
         $redirect = redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
-        if ($competition->isOmladinskoProfile() && ! $competition->fresh()->hasCompleteValidCommission()) {
+        if (! $competition->fresh()->hasCompleteValidCommission()) {
             $redirect->with('commission_incomplete_warning', CommissionProfileConfig::OMLADINSKO_INCOMPLETE_PUBLISH_WARNING);
         }
 
@@ -1170,6 +1218,14 @@ class AdminController extends Controller
      */
     public function closeCompetition(Competition $competition)
     {
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $result = app(\App\Services\Competitions\Decision\CanonicalCloseService::class)->close($competition, auth()->user());
+
+            return $result->succeeded
+                ? redirect()->back()->with('success', 'Poziv je zatvoren i arhiviran.')
+                : redirect()->back()->withErrors(['error' => $result->error]);
+        }
+
         // KN-FS-003 §15.4.1: zatvaranje je isključivo poslovna radnja Predsjednika Komisije.
         if (! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za zatvaranje konkursa. Samo predsjednik komisije može zatvarati konkurse.');
@@ -1299,6 +1355,11 @@ class AdminController extends Controller
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+
+        $deleteBlockReason = app(PublishedCallLifecycleLock::class)->deleteBlockReason($competition);
+        if ($deleteBlockReason !== null) {
+            abort(403, $deleteBlockReason);
+        }
 
         // Privremeno: Administrator konkursa može brisati sve konkurse
         // Ostali ne mogu brisati završene konkurse
@@ -1494,6 +1555,9 @@ class AdminController extends Controller
         $targetTypes = $requestedCompetitionIds->isEmpty()
             ? collect()
             : Competition::query()->whereIn('id', $requestedCompetitionIds)->pluck('type');
+        if ($targetTypes->contains(CompetitionProfileResolver::TYPE_CANONICAL)) {
+            return back()->withErrors(['competition_ids' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
+        }
         $isOmladinskoForm = $targetTypes->contains('omladinsko');
         $profileConfig = CommissionProfileConfig::for($isOmladinskoForm ? 'omladinsko' : 'zensko');
         $maxMembers = $isOmladinskoForm ? $profileConfig->seatCount : 5;
@@ -1795,6 +1859,10 @@ class AdminController extends Controller
      */
     public function editCommission(Commission $commission)
     {
+        if ($commission->isCanonicalProfile()) {
+            abort(403, CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE);
+        }
+
         // Prikaži sve dostupne konkursa (draft i published)
         $competitions = Competition::whereIn('status', ['draft', 'published'])
             ->orderBy('year', 'desc')
@@ -1812,6 +1880,10 @@ class AdminController extends Controller
      */
     public function updateCommission(Request $request, Commission $commission)
     {
+        if ($commission->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
+        }
+
         // Automatski izračunaj datum završetka (1 godina od početka)
         $startDate = $request->input('start_date');
         $endDate = null;
@@ -1835,7 +1907,8 @@ class AdminController extends Controller
         $newIds = collect($validated['competition_ids'] ?? [])->map(fn ($id) => (int) $id)->all();
         $currentlyAssigned = Competition::where('commission_id', $commission->id)->get();
 
-        $mixError = CommissionProfileConfig::homogeneousCompetitionTypes($newIds);
+        $mixError = CommissionProfileConfig::homogeneousCompetitionTypes($newIds)
+            ?? CommissionProfileConfig::assignmentProfileError($commission, $newIds);
         if ($mixError) {
             return back()->withErrors(['competition_ids' => $mixError])->withInput();
         }
@@ -1894,6 +1967,10 @@ class AdminController extends Controller
      */
     public function destroyCommission(Commission $commission)
     {
+        if ($commission->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        }
+
         // Brisanje komisije će automatski obrisati sve članove komisije zbog cascade delete
         // Takođe, treba proveriti da li postoje ocjene povezane sa ovom komisijom
         $commissionName = $commission->name;
@@ -1909,6 +1986,10 @@ class AdminController extends Controller
      */
     public function addCommissionMember(Request $request, Commission $commission)
     {
+        if ($commission->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
+        }
+
         $isSubstituteRequest = $request->input('member_type') === 'zamjenski';
         $mandateInactiveMessage = $isSubstituteRequest
             ? 'Mandat komisije nije aktivan. Nije moguće dodavanje zamjenskog člana.'
@@ -2151,6 +2232,8 @@ class AdminController extends Controller
      */
     public function signDeclarations(CommissionMember $member)
     {
+        LegacyCommissionFlowGuard::abortUnlessCommissionAllowed($member->commission);
+
         return view('admin.commissions.sign-declarations', compact('member'));
     }
 
@@ -2159,6 +2242,8 @@ class AdminController extends Controller
      */
     public function storeDeclarations(Request $request, CommissionMember $member)
     {
+        LegacyCommissionFlowGuard::abortUnlessCommissionAllowed($member->commission);
+
         $validated = $request->validate([
             'confidentiality_declaration' => 'required|string',
             'conflict_of_interest_declaration' => 'required|string',
@@ -2182,6 +2267,10 @@ class AdminController extends Controller
      */
     public function updateMemberStatus(Request $request, CommissionMember $member)
     {
+        if ($member->commission?->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        }
+
         if (! empty($member->is_substitute)) {
             return back()->withErrors([
                 'error' => 'Status zamjenskog člana nije moguće mijenjati ručno. Uklonite zamjenskog člana da biste završili zamjenu.',
@@ -2203,6 +2292,10 @@ class AdminController extends Controller
     public function deleteMember(CommissionMember $member)
     {
         $commission = $member->commission;
+        if ($commission->isCanonicalProfile()) {
+            return redirect()->route('admin.commissions.show', $commission)
+                ->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        }
         $commission->loadMissing(['members', 'competitions']);
 
         $isSubstitute = ! empty($member->is_substitute);
@@ -2411,6 +2504,10 @@ class AdminController extends Controller
             abort(403, \App\Services\CanonicalIndividualScoringService::YOUTH_ADMIN_RANKING_ROUTE_MESSAGE);
         }
 
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::CANONICAL_ADMIN_RANKING_ROUTE_MESSAGE);
+        }
+
         $competition->load('upNumber');
 
         $user = auth()->user();
@@ -2567,6 +2664,10 @@ class AdminController extends Controller
             abort(403, \App\Services\Competitions\YouthAllocationDraftService::WOMEN_SELECT_WINNERS_CLOSED_MESSAGE);
         }
 
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE);
+        }
+
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
@@ -2661,6 +2762,10 @@ class AdminController extends Controller
     {
         if ($competition->isOmladinskoProfile()) {
             abort(403, \App\Services\Competitions\YouthAllocationDraftService::WOMEN_PREDLOG_CLOSED_MESSAGE);
+        }
+
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE);
         }
 
         $user = auth()->user();
