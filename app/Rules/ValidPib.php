@@ -11,7 +11,7 @@ class ValidPib implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! (new PibIdentifierValidator)->isValid($value)) {
-            $fail('The :attribute is invalid.');
+            $fail('PIB nije ispravan.');
         }
     }
 }

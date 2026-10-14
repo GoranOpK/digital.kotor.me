@@ -198,6 +198,12 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->dooPayload(['pib' => '12345670']))
             ->assertSessionHasErrors('pib');
+        $this->assertSame(['PIB nije ispravan.'], session('errors')->get('pib'));
+
+        $this->actingAs($user)->from(route('identity.completion.create'))
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => '1234567']))
+            ->assertSessionHasErrors('pib');
+        $this->assertSame(['PIB mora imati tačno 8 cifara.'], session('errors')->get('pib'));
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->dooPayload(['crps_number' => '']))

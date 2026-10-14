@@ -68,7 +68,7 @@ class RegisterSubjectRequest extends FormRequest
 
         if ($this->isEntrepreneur()) {
             $rules['entrepreneur_business_name'] = ['required', 'string', 'max:255'];
-            $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib];
+            $rules['pib'] = ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib];
             $rules['crps_number'] = ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_ENTREPRENEUR)];
         }
 
@@ -259,7 +259,7 @@ class RegisterSubjectRequest extends FormRequest
 
         $rules = [
             'legal_name' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'authorized_first_name' => ['required', 'string', 'max:255'],
             'authorized_last_name' => ['required', 'string', 'max:255'],
             'authorized_id_document_type' => ['required', 'in:'.PhysicalPersonIdentity::DOCUMENT_JMB.','.PhysicalPersonIdentity::DOCUMENT_PASSPORT],
@@ -291,7 +291,7 @@ class RegisterSubjectRequest extends FormRequest
         $rules = [
             'foreign_company_name' => ['required', 'string', 'max:255'],
             'branch_name_in_montenegro' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'crps_number' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_FOREIGN_BRANCH)],
             'representative_first_name' => ['required', 'string', 'max:255'],
             'representative_last_name' => ['required', 'string', 'max:255'],
@@ -324,7 +324,7 @@ class RegisterSubjectRequest extends FormRequest
     private function refineIdentifiers(Validator $validator): void
     {
         $pib = $this->input('pib');
-        if (is_string($pib) && preg_match('/^[0-9]{8}$/', $pib) && ! (new PibIdentifierValidator)->isValid($pib)) {
+        if ($this->collectsPib() && is_string($pib) && preg_match('/^[0-9]{8}$/', $pib) && ! (new PibIdentifierValidator)->isValid($pib)) {
             $validator->errors()->forget('pib');
             $validator->errors()->add('pib', 'PIB nije ispravan.');
         }
@@ -372,7 +372,7 @@ class RegisterSubjectRequest extends FormRequest
         }
 
         $pib = $this->input('pib');
-        if (is_string($pib) && $pib !== '' && $uniqueness->pibTaken($pib)) {
+        if ($this->collectsPib() && is_string($pib) && $pib !== '' && $uniqueness->pibTaken($pib)) {
             $validator->errors()->add('pib', 'PIB je već registrovan.');
         }
 
@@ -430,6 +430,13 @@ class RegisterSubjectRequest extends FormRequest
     private function isNaturalPersonBranch(): bool
     {
         return $this->input('user_type') === UserType::PHYSICAL_PERSON || $this->isEntrepreneur();
+    }
+
+    private function collectsPib(): bool
+    {
+        return $this->isEntrepreneur()
+            || $this->isLegalEntityBranch()
+            || $this->input('user_type') === UserType::FOREIGN_BRANCH;
     }
 
     private function crpsMarkFor(string $type): ?int

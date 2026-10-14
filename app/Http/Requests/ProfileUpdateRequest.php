@@ -102,7 +102,7 @@ class ProfileUpdateRequest extends FormRequest
 
             if ($this->resultingIsEntrepreneur()) {
                 $rules['entrepreneur_business_name'] = ['required', 'string', 'max:255'];
-                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib];
+                $rules['pib'] = ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib];
                 $rules['crps_number'] = [
                     'required',
                     'string',
@@ -301,7 +301,7 @@ class ProfileUpdateRequest extends FormRequest
     private function refineEntrepreneurUniqueness(Validator $validator): void
     {
         $pib = $this->input('pib');
-        if (! is_string($pib) || $pib === '') {
+        if (! is_string($pib) || $pib === '' || $validator->errors()->has('pib')) {
             return;
         }
 

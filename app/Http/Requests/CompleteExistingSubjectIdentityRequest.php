@@ -175,7 +175,7 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
 
         $rules = [
             'legal_name' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'crps_number' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_DOO)],
             'authorized_first_name' => ['required', 'string', 'max:255'],
             'authorized_last_name' => ['required', 'string', 'max:255'],
@@ -208,7 +208,7 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'residential_status' => ['required', 'string', Rule::in(['resident', 'non-resident'])],
             'entrepreneur_business_name' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'crps_number' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_ENTREPRENEUR)],
         ];
 
