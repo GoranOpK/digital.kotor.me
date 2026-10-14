@@ -7,7 +7,6 @@ use App\Identity\PhoneCallingCodeCatalog;
 use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Validation\CrpsIdentifierValidator;
 use App\Identity\Validation\JmbIdentifierValidator;
-use App\Identity\Validation\PibIdentifierValidator;
 use App\Models\PhysicalPersonIdentity;
 use App\Rules\ValidCrps;
 use App\Rules\ValidJmb;
@@ -323,12 +322,6 @@ class RegisterSubjectRequest extends FormRequest
 
     private function refineIdentifiers(Validator $validator): void
     {
-        $pib = $this->input('pib');
-        if ($this->collectsPib() && is_string($pib) && preg_match('/^[0-9]{8}$/', $pib) && ! (new PibIdentifierValidator)->isValid($pib)) {
-            $validator->errors()->forget('pib');
-            $validator->errors()->add('pib', 'PIB nije ispravan.');
-        }
-
         foreach (['jmb', 'authorized_jmb', 'representative_jmb'] as $field) {
             $jmb = $this->input($field);
             if (is_string($jmb) && preg_match('/^[0-9]{13}$/', $jmb) && ! (new JmbIdentifierValidator)->isValid($jmb)) {

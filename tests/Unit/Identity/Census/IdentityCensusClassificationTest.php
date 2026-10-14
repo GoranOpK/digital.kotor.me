@@ -115,7 +115,20 @@ class IdentityCensusClassificationTest extends TestCase
         $this->assertFalse($row->fullyBackfillable);
     }
 
-    public function test_entrepreneur_invalid_pib_is_invalid_legacy(): void
+    public function test_entrepreneur_malformed_pib_is_invalid_legacy(): void
+    {
+        $row = $this->classify($this->subject([
+            'user_type' => UserType::ENTREPRENEUR,
+            'company_name' => 'Radnja Ana',
+            'pib' => '1234567A',
+        ]));
+
+        $this->assertSame(IdentityCensusRow::INVALID_LEGACY, $row->rowStatus);
+        $this->assertContains('pib_invalid', $row->d14InvalidCodes);
+        $this->assertTrue($row->isEntrepreneur);
+    }
+
+    public function test_entrepreneur_eight_digit_pib_without_iso_check_digit_is_valid(): void
     {
         $row = $this->classify($this->subject([
             'user_type' => UserType::ENTREPRENEUR,
@@ -123,9 +136,8 @@ class IdentityCensusClassificationTest extends TestCase
             'pib' => '12345670',
         ]));
 
-        $this->assertSame(IdentityCensusRow::INVALID_LEGACY, $row->rowStatus);
-        $this->assertContains('pib_invalid', $row->d14InvalidCodes);
-        $this->assertTrue($row->isEntrepreneur);
+        $this->assertSame(IdentityCensusFieldStatus::PRESENT_VALID, $row->fieldStatuses['pib']);
+        $this->assertNotContains('pib_invalid', $row->d14InvalidCodes);
     }
 
     public function test_deterministic_doo_is_not_backfillable_without_crps_and_authorized_person(): void

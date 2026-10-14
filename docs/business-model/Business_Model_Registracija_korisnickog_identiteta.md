@@ -6,8 +6,8 @@
 **Naziv:** Poslovni model registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.6
-**Datum:** 2026-09-12
+**Verzija:** 1.0.7
+**Datum:** 2026-10-14
 
 Povezani dokumenti:
 
@@ -33,6 +33,7 @@ Dokumenti `DK-UC-002`, `DK-FS-002` i `DK-TS-002` **nisu** kreirani ovim korakom.
 | 1.0.4 | 2026-09-05 | Status/reference corrective: `DK-FS-002` je već usklađen sa pravilima o CRPS registracionom broju; usklađenost nije otvorena BM stavka. Poslovna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
 | 1.0.5 | 2026-09-08 | PO-usvojeni lifecycle na Izmjena korisničkog profila: Fizičko lice ⇄ Preduzetnik na istom identitetu Fizičkog lica. `is_entrepreneur` je autoritet trenutne klasifikacije. false→true zahtijeva Poslovno ime, PIB i Broj registracije u CRPS. true→false zadržava te podatke, ali ih čini neaktivnim. Reaktivacija koristi zadržane vrijednosti nakon pregleda/izmjene. Nije dozvoljen prelaz Fizičko lice ↔ Pravno lice. Postojeći modulski snapshoti se ne reklasifikuju. Status dokumenta ostaje USVOJENO. |
 | 1.0.6 | 2026-09-12 | PO-usvojeni corrective: legacy obično Fizičko lice bez kompletnog kanonskog identiteta izlazi iz legacy modela kroz postojeći princip Dopune identiteta, declare-on-use. Nema automatskog bulk backfill-a ni pojedinačne ručne SQL migracije. Kanonski identitet nastaje tek uspješnom Dopunom, atomski i jednosmjerno. Legacy polja se ne brišu. Postojeći model Fizičko lice / Preduzetnik, rezidentnost i DOO declare-on-use tok neizmijenjeni. Status dokumenta ostaje USVOJENO. |
+| 1.0.7 | 2026-10-14 | PO odluka (Faza 3B): jedinstveno pravilo PIB-a za Preduzetnika, Pravno lice i Dio stranog privrednog društva. PIB ima tačno 8 cifara; kontrolna cifra se **ne** provjerava; jedinstvenost se provjerava prema postojećem modelu identiteta, uz izuzetak sopstvenog identiteta korisnika; postojanje PIB-a u zvaničnom registru se ne potvrđuje. Zamjenjuje raniju formulaciju „validira se kontrolna cifra prema važećem pravilu“ (poglavlja 7 i 8.3) i zatvara validaciju PIB-a Dijela stranog privrednog društva (poglavlje 9.1). Poglavlja 7, 8.3, 9.1, 10 i 17. Ostala poslovna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
 
 Napomena:
 
@@ -322,10 +323,7 @@ Za Nerezidenta primjenjuje se i:
 
 PIB Preduzetnika je obavezan.
 
-Usvojeno pravilo za PIB Preduzetnika:
-
-- PIB ima tačno 8 cifara;
-- validira se kontrolna cifra prema važećem pravilu.
+Za PIB Preduzetnika važi zajedničko pravilo PIB-a iz poglavlja 10, tačka 17.
 
 CRPS registracioni broj Preduzetnika je obavezan. PIB i CRPS registracioni broj su zasebni identifikacioni podaci i ne smiju se poistovjećivati.
 
@@ -404,10 +402,7 @@ Zatim:
 
 PIB Pravnog lica je obavezan.
 
-Usvojeno pravilo:
-
-- PIB ima tačno 8 cifara;
-- validira se kontrolna cifra prema važećem pravilu.
+Za PIB Pravnog lica važi zajedničko pravilo PIB-a iz poglavlja 10, tačka 17.
 
 ## 8.4 CRPS registracioni broj Pravnog lica
 
@@ -461,13 +456,11 @@ PIB Dijela stranog privrednog društva je obavezan podatak. Predstavlja poreski 
 
 CRPS registracioni broj Dijela stranog privrednog društva ostaje obavezan. CRPS registracioni broj **nije** identifikator isključivo Dijela stranog privrednog društva. Isti poslovni podatak se u V1 zahtijeva i za Preduzetnika i za Pravno lice oblika OD, KD, AD i DOO, prema poglavljima 7 i 8.
 
-Ovaj BM **ne** propisuje:
+Za PIB Dijela stranog privrednog društva važi zajedničko pravilo PIB-a iz poglavlja 10, tačka 17.
 
-- da PIB Dijela stranog privrednog društva mora imati 8 cifara;
-- da taj PIB mora proći ISO 7064 Modul 11,10 provjeru;
-- format CRPS registracionog broja za bilo koji subjekt.
+Ovaj BM **ne** propisuje format CRPS registracionog broja za bilo koji subjekt.
 
-Tačna funkcionalna i tehnička validacija PIB-a Dijela stranog privrednog društva ostaje za `DK-FS-002` / `DK-TS-002`, prema važećim pravilima nadležnog organa. Ti dokumenti **nisu** kreirani ovim korakom.
+Funkcionalna i tehnička razrada pravila PIB-a pripada `DK-FS-002` / `DK-TS-002`.
 
 ## 9.2 Zastupnik
 
@@ -536,6 +529,12 @@ Ulica i broj + Grad predstavljaju adresu **dijela stranog privrednog društva u 
 15. Ne uvoditi naselja kao obavezni dio registracionog modela.
 
 16. Poslovna akcija završetka registracije korisniku se prikazuje kao: **Registruj se**.
+
+17. Zajedničko pravilo PIB-a za Preduzetnika, Pravno lice i Dio stranog privrednog društva, pri registraciji, izmjeni profila i dopuni identiteta:
+    - PIB ima tačno 8 cifara;
+    - kontrolna cifra se **ne** provjerava;
+    - PIB ne smije pripadati drugom platformskom korisničkom identitetu; jedinstvenost se provjerava prema postojećem modelu identiteta, uz izuzetak sopstvenog identiteta korisnika;
+    - ispravan format **ne** potvrđuje da je PIB dodijeljen od nadležnog organa; Platforma ne potvrđuje postojanje PIB-a u zvaničnom registru.
 
 ---
 
@@ -798,7 +797,7 @@ Za PIB Dijela stranog privrednog društva:
 
 - poslovna obaveznost PIB-a je zatvorena;
 - odvojenost PIB-a od CRPS registracionog broja je zatvorena;
-- tačna funkcionalna i tehnička validacija ostaje za FS/TS prema važećim pravilima nadležnog organa.
+- pravilo PIB-a je zatvoreno u poglavlju 10, tačka 17; funkcionalna i tehnička razrada ostaje za FS/TS.
 
 `DK-FS-002` je usklađen sa ovim pravilima o CRPS registracionom broju. Ta usklađenost **nije** predmet ovog BM-a.
 
@@ -812,7 +811,7 @@ Sljedeće stavke **nisu** BM pitanja:
 - funkcionalni tok dopune profila u okviru usvojenog poslovnog pravila iz poglavlja 11;
 - način prikaza verifikacije e-mail adrese;
 - format CRPS registracionog broja, nakon pouzdane provjere;
-- tačna funkcionalna validacija PIB-a Dijela stranog privrednog društva prema pravilima nadležnog organa.
+- funkcionalna razrada pravila PIB-a iz poglavlja 10, tačka 17.
 
 ## B. TECHNICAL DESIGN
 

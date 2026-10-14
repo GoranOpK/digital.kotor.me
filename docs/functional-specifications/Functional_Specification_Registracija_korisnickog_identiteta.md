@@ -6,13 +6,13 @@
 **Naziv:** Funkcionalna specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.6
-**Datum:** 2026-09-12
+**Verzija:** 1.0.7
+**Datum:** 2026-10-14
 
 Povezani dokumenti:
 
-* Poslovni model (SSOT): **DK-BM-002** v1.0.6 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
-* Tehnička specifikacija: **DK-TS-002** v1.0.8 USVOJENO — `docs/technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md`
+* Poslovni model (SSOT): **DK-BM-002** v1.0.7 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
+* Tehnička specifikacija: **DK-TS-002** v1.0.9 USVOJENO — `docs/technical-specifications/Technical_Specification_Registracija_korisnickog_identiteta.md`
 * Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 * Dokumentacioni standard: **DK-DS-001** — `docs/reference/Digital-Kotor-Documentation-Standard.md`
 
@@ -61,6 +61,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.4 | 2026-09-05 | Status/reference corrective: referenca/status `DK-TS-002` usklađena na v1.0.0 USVOJENO; uklonjena zastarjela temporalna referenca. Funkcionalna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
 | 1.0.5 | 2026-09-08 | PO-usvojeni profile lifecycle Fizičko lice ⇄ Preduzetnik (`DK-BM-002` v1.0.5 §11.4). Izmjena korisničkog profila: Da/Ne za preduzetnički status; false→true zahtijeva Poslovno ime, PIB i Broj registracije u CRPS; postojeći Preduzetnik smije mijenjati ta polja; true→false zadržava podatke kao neaktivne; reaktivacija prikazuje zadržane vrijednosti uz ponovnu validaciju; nije FL↔PL. Modulski snapshoti se ne reklasifikuju. Status dokumenta ostaje USVOJENO. |
 | 1.0.6 | 2026-09-12 | Izvedeno iz `DK-BM-002` v1.0.6 §11.5. Funkcionalni tok Dopune za legacy obično Fizičko lice bez kompletnog kanonskog identiteta: declare-on-use gate, prefill, potvrda rezidentnosti, JMB bez ponovnog unosa kada je već upotrebljiv, zabrana drugog kanonskog identiteta, atomski nastanak, povrat na traženu funkcionalnost, bez statusa dopune u toku i bez brisanja legacy polja. Tehnička realizacija ostaje `DK-TS-002`. Status dokumenta ostaje USVOJENO. |
+| 1.0.7 | 2026-10-14 | Izvedeno iz `DK-BM-002` v1.0.7 §10 tač. 17 (PO odluka, Faza 3B), usklađeno sa `DK-TS-002` v1.0.9: PIB Preduzetnika, Pravnog lica i Dijela stranog privrednog društva ima tačno 8 cifara; kontrolna cifra se **ne** provjerava. Uklonjen zahtjev ISO 7064 Modul 11,10 za Dio stranog privrednog društva i zahtjev kontrolne cifre za Preduzetnika i Pravno lice. Jedinstvenost PIB-a provjerava se prema postojećem modelu identiteta pri registraciji, izmjeni profila i dopuni identiteta, uz izuzetak sopstvenog identiteta korisnika. Postojanje PIB-a u zvaničnom registru se ne provjerava. Poglavlja 7, 8.2, 9.1, 10, 19 (kriterijumi 5, 19, 35 i 36), 20 i 21; referenca na `DK-BM-002` u Svrsi dokumenta usklađena na v1.0.7. Ostala funkcionalna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
 
 Napomena:
 
@@ -80,7 +81,7 @@ Dokument odgovara na pitanje:
 
 Dokument **ne** odgovara kako se to ponašanje tehnički implementira.
 
-Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.5.
+Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.7.
 
 ---
 
@@ -267,9 +268,9 @@ Za Nerezidenta se dodatno primjenjuje obavezno polje Država prebivališta \* pr
 - prikazuje se;
 - obavezan;
 - tačno 8 cifara;
-- validna kontrolna cifra prema važećem pravilu usvojenom u `DK-BM-002`.
+- kontrolna cifra se **ne** provjerava.
 
-Algoritam kontrolne cifre nije predmet ovog FS-a.
+Zajedničko pravilo PIB-a: Poglavlje 10.
 
 **CRPS registracioni broj Preduzetnika:**
 
@@ -336,7 +337,9 @@ Ako je pasoš:
 - prikazuje se;
 - obavezan;
 - tačno 8 cifara;
-- validna kontrolna cifra prema važećem pravilu usvojenom u `DK-BM-002`.
+- kontrolna cifra se **ne** provjerava.
+
+Zajedničko pravilo PIB-a: Poglavlje 10.
 
 Zatim zajednička polja iz poglavlja 10–14.
 
@@ -392,11 +395,11 @@ PIB je obavezan. Predstavlja poreski identifikacioni broj dodijeljen u Crnoj Gor
 - prikazuje se;
 - obavezan;
 - tačno 8 cifara;
-- validna kontrolna cifra prema ISO 7064 Modul 11,10.
+- kontrolna cifra se **ne** provjerava.
 
 PIB je odvojen podatak od CRPS registracionog broja.
 
-Tehnička realizacija algoritma kontrolne cifre pripada `DK-TS-002`.
+Zajedničko pravilo PIB-a: Poglavlje 10. Tehnička realizacija validacije PIB-a pripada `DK-TS-002`.
 
 **CRPS registracioni broj \***
 
@@ -443,6 +446,13 @@ Ulica i broj + Grad predstavljaju adresu **dijela stranog privrednog društva u 
 2. Uslovno polje je obavezno samo dok je njegova grana aktivna.
 3. Neaktivna grana se ne prikazuje kao obavezna i njeni podaci se ne zahtijevaju.
 4. Dugme **Registruj se** ne završava registraciju dok aktivna obavezna polja nisu validna.
+
+**PIB.** Za Preduzetnika, Pravno lice i Dio stranog privrednog društva važi isto pravilo, u registraciji, dopuni i izmjeni profila:
+
+- PIB ima tačno 8 cifara;
+- kontrolna cifra se **ne** provjerava;
+- PIB ne smije pripadati drugom platformskom korisničkom identitetu; jedinstvenost se provjerava prema postojećem modelu identiteta pri registraciji, izmjeni profila i dopuni identiteta, uz izuzetak sopstvenog identiteta korisnika; poruka je **PIB je već registrovan.**, uz polje PIB; tehnička realizacija pripada `DK-TS-002`;
+- ispravan format **ne** potvrđuje da je PIB dodijeljen od nadležnog organa; Platforma ne provjerava postojanje PIB-a u zvaničnom registru.
 
 Platforma koristi jednu zajedničku kontrolisanu listu država za polja Država prebivališta i Država izdavanja pasoša. Lista sadrži Crnu Goru i druge države, a korisnik bira jednu vrijednost iz liste i ne unosi naziv države slobodnim tekstom. Kanonski izvor, standard naziva, kodovi država, struktura i tehničko čuvanje liste definišu se u `DK-TS-002`.
 
@@ -746,7 +756,7 @@ Format: Ako / Kada / Onda.
 2. Ako izabere Fizičko lice, onda vidi pitanje o preduzetništvu sa redoslijedom Da, Ne.
 3. Ako je Fizičko lice Rezident, onda je JMB obavezan sa 13 cifara i kontrolnom cifrom, a Država prebivališta se ne prikazuje.
 4. Ako je Fizičko lice Nerezident, onda bira JMB ili Broj pasoša i Država prebivališta je obavezna.
-5. Ako je Preduzetnik, onda ostaje Fizičko lice, PIB je obavezan sa 8 cifara i kontrolnom cifrom, a CRPS registracioni broj je zasebno obavezno polje.
+5. Ako je Preduzetnik, onda ostaje Fizičko lice, PIB je obavezan sa tačno 8 cifara, bez provjere kontrolne cifre, a CRPS registracioni broj je zasebno obavezno polje.
 6. Ako je Pravno lice, onda nema Status rezidentnosti i Pravni oblik je zatvorena lista od tačno sedam stavki.
 7. Ako je Dio stranog privrednog društva, onda nema Status rezidentnosti, a PIB i CRPS su dva obavezna odvojena polja.
 8. Ako se E-mail i Potvrdi e-mail ne podudaraju, onda se prikazuje: „E-mail adrese se ne podudaraju.“
@@ -760,7 +770,7 @@ Format: Ako / Kada / Onda.
 16. Ako korisnik unosi Korisničku lozinku i Potvrdu korisničke lozinke, onda vrijednosti moraju da se podudaraju, a oba polja podrazumijevano sakrivaju vrijednost i omogućavaju njen prikaz i ponovno sakrivanje.
 17. Ako je za Broj mobilnog telefona izabran međunarodni pozivni broj Crne Gore `+382`, onda korisnik broj unosi bez `+382` i bez početne nule.
 18. Ako postojeći korisnik uspješno dopuni podatke potrebne za pokrenutu funkciju, onda može nastaviti korišćenje te funkcije bez nove registracije.
-19. Ako se registruje Dio stranog privrednog društva, onda je PIB obavezan, ima tačno 8 cifara i validnu kontrolnu cifru prema ISO 7064 Modul 11,10, a CRPS registracioni broj je zasebno obavezno polje; tačan format CRPS-a se ne zatvara ovim FS-om.
+19. Ako se registruje Dio stranog privrednog društva, onda je PIB obavezan i ima tačno 8 cifara, bez provjere kontrolne cifre, a CRPS registracioni broj je zasebno obavezno polje; tačan format CRPS-a se ne zatvara ovim FS-om.
 20. Ako je Fizičko lice i nije Preduzetnik, onda se CRPS registracioni broj ne prikazuje, ne unosi i ne zahtijeva.
 21. Ako je Pravni oblik Ortačko društvo (OD), Komanditno društvo (KD), Akcionarsko društvo (AD) ili Društvo sa ograničenom odgovornošću (DOO), onda se CRPS registracioni broj prikazuje i obavezan je, kao zasebno polje od PIB-a.
 22. Ako je Pravni oblik Nevladino udruženje, Nevladina fondacija ili Sportska organizacija, onda se CRPS registracioni broj ne prikazuje i ne zahtijeva, a dodatni matični ili registarski identifikator se u V1 ne prikuplja.
@@ -776,6 +786,8 @@ Format: Ako / Kada / Onda.
 32. Ako korisnik napusti Dopunu prije uspjeha, onda ne nastaje nacrt identiteta, djelimičan graf ni status dopune u toku, i korisnik ostaje legacy.
 33. Ako korisnik već ima kompletan kanonski identitet Fizičkog lica, onda se Dopuna ne prikazuje i drugi identitet se ne kreira.
 34. Ako Dopuna uspije, onda je nastanak atomski, prelazak je jednosmjeran, a `users.jmb_encrypted` i `users.jmb_lookup` ostaju netaknuti.
+35. Ako korisnik pri registraciji, izmjeni profila ili dopuni identiteta unese PIB koji pripada drugom platformskom korisničkom identitetu, onda se izmjena ne čuva, identitet ne nastaje, a uz polje PIB prikazuje se „PIB je već registrovan.“; sopstveni već sačuvani PIB korisnika se prihvata.
+36. Ako PIB ima tačno 8 cifara i nije registrovan za drugi identitet, onda se prihvata bez provjere kontrolne cifre; prihvatanje ne znači da je postojanje PIB-a potvrđeno u zvaničnom registru.
 
 ---
 
@@ -799,7 +811,7 @@ Usvojena poslovna pravila `DK-BM-002` **nisu** otvorena pitanja.
 - tehničko čuvanje Vrste subjekta, Pravnog oblika, rezidentnosti, identifikatora i telefona;
 - kanonski izvor, standard naziva, eventualni kodovi, struktura i tehničko čuvanje kontrolisane liste država;
 - tehnička verifikacija e-maila i jedinstvenost;
-- algoritam kontrolne cifre JMB / PIB gdje je validacija usvojena;
+- algoritam kontrolne cifre JMB; tehnička validacija formata PIB-a;
 - tehnička validacija i format CRPS registracionog broja (`DK-TS-002` Decision 8);
 - centralizovani katalog validacionih poruka i njegova tehnička realizacija;
 - migracije i transitional / null stanja;
@@ -823,8 +835,8 @@ Ova matrica evidentira sljedivost `DK-FS-002` prema `DK-BM-002`. Istorijski redo
 | 6 | §6 |
 | 7 | §7 |
 | 8 | §8; §8.4; §8.5 |
-| 9 | §9; §17 A (format CRPS registracionog broja ostaje za TS Decision 8; tačna funkcionalna validacija PIB-a Dijela stranog privrednog društva) |
-| 10 | §10 tač. 1, 2 i 16; §17 A (validacione poruke; funkcionalno ponašanje kontrolisanih listi) |
+| 9 | §9; §10 tač. 17; §17 A (format CRPS registracionog broja ostaje za TS Decision 8; funkcionalna razrada pravila PIB-a) |
+| 10 | §10 tač. 1, 2, 16 i 17; §17 A (validacione poruke; funkcionalno ponašanje kontrolisanih listi) |
 | 11 | §4.1 koraci 3 i 6; §4.3; §10 tač. 3–7; §17 A (validacione poruke) |
 | 12 | §4.1 korak 3; §10 tač. 8–9; §17 A (konkretno UI ponašanje: prikaz i sakrivanje lozinke) |
 | 13 | §10 tač. 10; §17 A (konkretno UI ponašanje: unos broja uz +382) |

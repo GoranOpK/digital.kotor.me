@@ -6,13 +6,13 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.8
-**Datum:** 2026-09-08
+**Verzija:** 1.0.9
+**Datum:** 2026-10-14
 
 Povezani dokumenti:
 
-* Poslovni model (SSOT): **DK-BM-002** v1.0.5 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
-* Funkcionalna specifikacija (SSOT): **DK-FS-002** v1.0.5 USVOJENO — `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md`
+* Poslovni model (SSOT): **DK-BM-002** v1.0.7 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
+* Funkcionalna specifikacija (SSOT): **DK-FS-002** v1.0.7 USVOJENO — `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md`
 * Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 * Dokumentacioni standard: **DK-DS-001** — `docs/reference/Digital-Kotor-Documentation-Standard.md`
 * Metodologija TS: `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
@@ -67,6 +67,7 @@ Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **n
 | 1.0.6 | 2026-09-07 | Nenormativna evidencija produkcionog new-user E2E (REG-14). Real production registration → e-mail verifikacija → login → profile/dashboard = PASS. Read-only kanonska persistencija za `users.id` 68 = PASS. **REG-14 = PASS**. Registration corrective = **PRODUCTION VERIFIED**. D1–D15 nijesu reotvorene. D16 nije kreiran. Step 9 ostaje OPEN. G9-1 i G9-3 ostaju OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.7 | 2026-09-07 | Nenormativni D15 Step 9 closeout. PO odluka C1 = **PO USVOJENO**: REG-14 real production usage je dovoljan dokaz za G9-1 i G9-3. G9-1 … G9-10 = PASS. **STEP 9 = CLOSED / PO USVOJENO**. Stabilizacija = COMPLETE. Bez fiksnog trajanja, bez kvote korisnika, bez kvote Vrsta subjekta. Level B **nije** Step 9 kapija. Step 10–14 **nijesu** pokrenuti. Mirror KEEP. Fallback KEEP. R1 ACTIVE. D1–D15 nijesu reotvorene. D16 nije kreiran. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.8 | 2026-09-08 | Implementacija PO-usvojenog profile lifecycle Fizičko lice ⇄ Preduzetnik (`DK-BM-002` v1.0.5 §11.4; `DK-FS-002` v1.0.5 §16.4). Isti `updateLiveGraph` put; `is_entrepreneur` writable; entrepreneur polja se upisuju kada je rezultujuće stanje Preduzetnik i zadržavaju se kada nije; bez subject-type prelaza; bez migracije/šeme; registracija/KN/EP/Obrazac 3 netaknuti. D1–D15 nijesu reotvorene. Step 10 **nije** pokrenut. DK-RG-001 KEEP. |
+| 1.0.9 | 2026-10-14 | PO-usvojeno pravilo validacije PIB-a (Faza 3B): PIB se prihvata ako ima tačno 8 cifara; kontrolna cifra (ISO 7064 Modul 11,10 ili alternativni MOD 11) se **ne** provjerava. Isto pravilo za Preduzetnika, Pravno lice i DSPD, za registraciju, dopunu identiteta, profil, kanonski pisac i census klasifikaciju. Obaveznost PIB-a neizmijenjena. Jedinstvenost PIB-a (`DK-BM-002` v1.0.7 §10 tač. 17): postojeći mehanizam `CanonicalIdentifierUniqueness::pibTaken` primijenjen i na profil Pravnog lica (umjesto provjere ograničene na `users`) i na dopunu identiteta DOO / Preduzetnika (FormRequest i servis neposredno prije upisa); pravila za JMB, pasoš i CRPS neizmijenjena. Provjera postojanja u zvaničnom registru **nije** uvedena. Poglavlja 6.22, 6.24, 7.7 i 13 (odluka 7). Reference na `DK-BM-002` / `DK-FS-002` u zaglavlju i Svrsi dokumenta usklađene na v1.0.7. Bez migracije/šeme; EP netaknut. Usklađeno sa `DK-BM-002` v1.0.7 i `DK-FS-002` v1.0.7. |
 
 Napomena:
 
@@ -92,9 +93,9 @@ DK-TS-002:
 
 Tehničke odluke 1–15 su CLOSED / PO USVOJENO. Trenutno nema otvorenih tehničkih odluka.
 
-Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.5.
+Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.7.
 
-Jedini izvor zahtijevanog posmatranog ponašanja je **DK-FS-002** v1.0.5.
+Jedini izvor zahtijevanog posmatranog ponašanja je **DK-FS-002** v1.0.7.
 
 Ako se TS i FS razlikuju, **FS pobjedjuje** za funkcionalno ponašanje. Ako se FS i BM razlikuju, **BM pobjedjuje**.
 
@@ -846,7 +847,7 @@ Na `users` ostaje account / auth / infrastrukturni sloj, uključujući: account 
 
 Identitetski podaci **nisu** ciljna odgovornost `users` tabele. Postojeća AS-IS identitetska polja na `users` ostaju istorijska činjenica. Fizički prelaz tih kolona usvojen je odlukom 14 (Poglavlje 6.29), uz semantičko mapiranje odluke 3. Odluka 2 usvaja samo obrazac kompatibilnosti: kanonski SSOT je novi identitetski model, a `users.user_type` je privremena kompatibilnost (Poglavlje 6.17). Ova odluka **ne** projektuje ALTER ni redoslijed migracije.
 
-Jedinstvenost e-maila ostaje postojeća usvojena norma. Nova jedinstvenost JMB-a, PIB-a, Broja pasoša ili CRPS registracionog broja se **ne** uvodi.
+Jedinstvenost e-maila ostaje postojeća usvojena norma. Nova jedinstvenost JMB-a, PIB-a, Broja pasoša ili CRPS registracionog broja se **ne** uvodi. Izuzetak od v1.0.9: jedinstvenost PIB-a prema `DK-BM-002` v1.0.7 §10 tač. 17 (Poglavlje 6.22).
 
 ### Platformski identitet
 
@@ -1572,7 +1573,7 @@ Nazivi `JmbValidator`, `PibValidator`, `ValidJmb` i `ValidPib` su **arhitektonsk
 Pure validator provjerava samo:
 
 * format identifikatora;
-* kontrolnu cifru / algoritamsku validnost.
+* kontrolnu cifru / algoritamsku validnost, gdje je propisana (JMB). Za PIB se od v1.0.9 provjerava samo format.
 
 Pure validator **ne** odlučuje: da li je polje obavezno; Vrstu subjekta; status Preduzetnika; Rezidentnost; korisničku ulogu; HTTP request; DB uniqueness; postojanje korisnika; finalnu UI poruku.
 
@@ -1595,24 +1596,50 @@ Ova odluka **ne** mijenja već usvojena pravila kada je JMB obavezan (`DK-BM-002
 
 ### PIB
 
-Kada je PIB aktivan identifikator, kanonska algoritamska validacija je:
+Izmjena v1.0.9 (PO-usvojeno pravilo, Faza 3B): kanonska validacija PIB-a je **samo format**.
 
-* tačno 8 cifara;
-* kontrolna cifra prema **ISO 7064 Modul 11,10**.
+Kada je PIB aktivan identifikator, kanonska validacija je:
 
-Isto checksum pravilo važi za relevantne PIB kontekste:
+* tačno 8 cifara (`^[0-9]{8}$`), bez razmaka, slova i drugih znakova.
+
+Kontrolna cifra se **ne** provjerava: ni ISO 7064 Modul 11,10, ni alternativni ponderisani MOD 11. Zvanični uzorak važećih PIB-ova sadrži brojeve koji ne prolaze ISO 7064 Modul 11,10, pa bi algoritamska provjera blokirala registraciju postojećih subjekata.
+
+Isto pravilo važi za sve PIB kontekste:
 
 * Preduzetnik;
 * Pravno lice;
 * Dio stranog privrednog društva.
 
-Za Preduzetnika i Pravno lice pravilo je potvrđeno važećim crnogorskim propisom: *Pravilnik o bližem načinu određivanja poreskog identifikacionog broja*, „Službeni list Crne Gore“, br. 004/26, 12.01.2026. Propis utvrđuje da se PIB pravnih lica i fizičkih lica koja obavljaju samostalnu djelatnost, uključujući preduzetnike, sastoji od osam cifara, pri čemu je osma kontrolni broj određen prema ISO 7064, Modul 11,10.
+Isto pravilo primjenjuju registracija, dopuna identiteta postojećeg korisnika, profil, kanonski pisac i census / backfill klasifikacija (odluka 14). Nijedan tok **ne** održava sopstvenu provjeru kontrolne cifre PIB-a.
 
-Za DSPD je ISO 7064 Modul 11,10 već target pravilo `DK-FS-002` §9.1.
+Razlikuju se tri nezavisne provjere:
 
-Ova odluka **ne** uvodi različite checksum algoritme po PIB kontekstu. Kanonski PIB checksum algoritam je ISO 7064 Modul 11,10. Poslovni konteksti Preduzetnik / Pravno lice / DSPD ostaju različiti tamo gdje `DK-BM-002` / `DK-FS-002` tako zahtijevaju.
+| Provjera | Značenje | Status |
+|----------|----------|--------|
+| Format | tačno 8 cifara | aktivno; pure validator + Laravel Rule adapter |
+| Jedinstvenost | PIB nije već registrovan za drugi nalog / kanonski subjekt | aktivno u registraciji, profilu i dopuni identiteta; `CanonicalIdentifierUniqueness::pibTaken`; izvan pure validatora |
+| Postojanje u zvaničnom registru | PIB je stvarno dodijeljen od nadležnog organa | **nije** implementirano; eventualna buduća provjera zahtijeva posebnu odluku i integraciju |
 
-`DK-BM-002` za Preduzetnika i Pravno lice koristi formulaciju „važeće pravilo“ bez imenovanja algoritma, a za DSPD ne propisuje eksplicitno 8 cifara ni ISO 7064. `DK-FS-002` za DSPD već imenuje ISO 7064 Modul 11,10. Ova odluka tehnički precizira algoritam. `DK-BM-002` i `DK-FS-002` **ostaju neizmijenjeni**.
+PIB koji zadovoljava format **nije** time potvrđen kao postojeći u zvaničnom registru.
+
+Prethodno pravilo (v0.1.13 – v1.0.8) bilo je 8 cifara + ISO 7064 Modul 11,10, uz pozivanje na *Pravilnik o bližem načinu određivanja poreskog identifikacionog broja* („Službeni list Crne Gore“, br. 004/26). To pravilo je zamijenjeno. Istorijski redovi verzija ostaju nepromijenjeni.
+
+Pravilo je usvojeno u `DK-BM-002` v1.0.7 §10 tač. 17 i razrađeno u `DK-FS-002` v1.0.7 (Poglavlja 7, 8.2, 9.1, 10 i 19).
+
+### Jedinstvenost PIB-a
+
+Jedinstvenost PIB-a provjerava se prema postojećem modelu identiteta (`DK-BM-002` v1.0.7 §10 tač. 17). Jedini mehanizam je `CanonicalIdentifierUniqueness::pibTaken($pib, $exceptUserId)`. PIB je zauzet ako postoji u `users.pib` drugog naloga ili u `physical_person_identities`, `legal_entity_identities` ili `foreign_branch_identities`. Izuzima se samo kanonski zapis čiji je vlasnik nalog `$exceptUserId`; zapisi bez platformskog identiteta i zapisi drugih naloga ostaju zauzeti.
+
+| Tok | Provjera |
+|-----|----------|
+| Registracija (Preduzetnik, Pravno lice, DSPD) | FormRequest; servis prije upisa (`assertAvailableForSnapshot`) |
+| Profil Preduzetnika | FormRequest |
+| Profil Pravnog lica | FormRequest (od v1.0.9; ranije samo `users.pib`) |
+| Dopuna identiteta DOO / Preduzetnika | FormRequest; servis neposredno prije upisa, nezavisno od HTTP validacije (od v1.0.9) |
+
+Korisnička poruka je „PIB je već registrovan.“, uz polje PIB. Konflikt koji otkrije servis dopune vraća isti tekst kroz postojeći izuzetak pisanja kanonskog identiteta.
+
+DB unique indeks na `pib` u kanonskim tabelama se **ne** uvodi. Pravila jedinstvenosti za JMB, Broj pasoša i CRPS su neizmijenjena.
 
 ### Server authority i klijent
 
@@ -1642,7 +1669,7 @@ Ova odluka **ne** uvodi EP-specifični JMB/PIB validator. Ako EP u budućnosti t
 
 ### Uniqueness, poruke, migracija
 
-Ova odluka **ne** usvaja novu uniqueness politiku za JMB ni PIB. Postojeći DB unique constraints i runtime unique provjere ostaju AS-IS compatibility facts i **ne** postaju nova target norma kroz ovu odluku.
+Ova odluka **ne** usvaja novu uniqueness politiku za JMB ni PIB. Postojeći DB unique constraints i runtime unique provjere ostaju AS-IS compatibility facts i **ne** postaju nova target norma kroz ovu odluku. Za PIB je jedinstvenost od v1.0.9 poslovno pravilo `DK-BM-002` v1.0.7 §10 tač. 17, realizovano postojećim runtime mehanizmom (Poglavlje 6.22, Jedinstvenost PIB-a).
 
 Finalni tekstovi validacionih poruka usvojeni su odlukom 9 (Poglavlje 6.24). Pure validator **nije** vezan za finalni UI tekst.
 
@@ -1898,7 +1925,7 @@ U ovaj katalog **ne** ulazi poruka `Lozinka mora imati najmanje 8 karaktera.` do
 
 ### Jedinstvenost
 
-Jedinstvenost e-mail adrese ostaje već usvojeni zahtjev prijave. Nova jedinstvenost JMB-a, PIB-a, CRPS-a i Broja pasoša se **ne** uvodi.
+Jedinstvenost e-mail adrese ostaje već usvojeni zahtjev prijave. Nova jedinstvenost JMB-a, PIB-a, CRPS-a i Broja pasoša se **ne** uvodi. Izuzetak od v1.0.9: jedinstvenost PIB-a prema `DK-BM-002` v1.0.7 §10 tač. 17 (Poglavlje 6.22), sa porukom „PIB je već registrovan.“.
 
 ### Kanonski katalog
 
@@ -1932,7 +1959,7 @@ Jedinstvenost e-mail adrese ostaje već usvojeni zahtjev prijave. Nova jedinstve
 | Naziv preduzetnika / obavezno | FL + Preduzetnik = Da | Unesite naziv preduzetnika. |
 | PIB / obavezno | Preduzetnik; Pravno lice; DSPD | Unesite PIB. |
 | PIB / format | isti | PIB mora imati tačno 8 cifara. |
-| PIB / semantička neispravnost nakon ispravnog formata | isti | PIB nije ispravan. |
+| PIB / neispravan nakon ispravnog formata | isti | PIB nije ispravan. (od v1.0.9 PIB nema semantičku provjeru nakon formata; poruka ostaje samo kao serverska rezervna poruka, npr. kada kanonski pisac odbije PIB) |
 | CRPS / obavezno | Preduzetnik; OD; KD; AD; DOO; DSPD | Unesite CRPS registracioni broj. |
 | CRPS / format | isti | CRPS registracioni broj mora imati tačno 8 cifara. |
 | CRPS / pogrešna oznaka | Preduzetnik | CRPS registracioni broj ne odgovara preduzetniku. |
@@ -1958,7 +1985,7 @@ Jedinstvenost e-mail adrese ostaje već usvojeni zahtjev prijave. Nova jedinstve
 
 JMB format i `JMB nije ispravan.` koriste se i za ovlašćeno lice i za zastupnika, uz gornje required labele.
 
-**Ne ulaze u katalog:** poruke za CRPS Nevladinog udruženja, Nevladine fondacije i Sportske organizacije (CRPS se u V1 ne prikuplja); poruke jačine lozinke; format Broja pasoša; E.164 / broj cifara telefona van usvojenog +382 pravila; jedinstvenost JMB/PIB/CRPS/pasoša; poruke datuma/godine/regiona JMB-a; Država izdavanja pasoša za nerezidentno Fizičko lice; Status rezidentnosti za Pravno lice i DSPD.
+**Ne ulaze u katalog:** poruke za CRPS Nevladinog udruženja, Nevladine fondacije i Sportske organizacije (CRPS se u V1 ne prikuplja); poruke jačine lozinke; format Broja pasoša; E.164 / broj cifara telefona van usvojenog +382 pravila; jedinstvenost JMB/CRPS/pasoša (jedinstvenost PIB-a: Poglavlje 6.22, od v1.0.9); poruke datuma/godine/regiona JMB-a; Država izdavanja pasoša za nerezidentno Fizičko lice; Status rezidentnosti za Pravno lice i DSPD.
 
 Korisnik vidi **naziv** države, ne ISO kod.
 
@@ -3589,13 +3616,13 @@ Država izdavanja pasoša **nije** obavezna u ovom kontekstu. Format Broja paso�
 
 PIB se validira samo u aktivnom kontekstu u kojem je primjenjiv. Postojeći unosni format **nije** ciljni standard. Arhitektura validatora usvojena je odlukom 7 (Poglavlje 6.22).
 
-**Preduzetnik.** PIB je obavezan. Ima tačno 8 cifara (`DK-BM-002` §7; `DK-FS-002` §7). Validira se kontrolna cifra prema ISO 7064 Modul 11,10 (odluka 7).
+**Preduzetnik.** PIB je obavezan. Ima tačno 8 cifara (`DK-BM-002` §7; `DK-FS-002` §7). Kontrolna cifra se **ne** provjerava (odluka 7, v1.0.9).
 
-**Pravno lice.** PIB je obavezan. Ima tačno 8 cifara (`DK-BM-002` §8.3; `DK-FS-002` §8.2). Validira se kontrolna cifra prema ISO 7064 Modul 11,10 (odluka 7).
+**Pravno lice.** PIB je obavezan. Ima tačno 8 cifara (`DK-BM-002` §8.3; `DK-FS-002` §8.2). Kontrolna cifra se **ne** provjerava (odluka 7, v1.0.9).
 
-**Dio stranog privrednog društva.** PIB je obavezan. Ima tačno 8 cifara. Validira se kontrolna cifra prema ISO 7064 Modul 11,10 (`DK-FS-002` §9.1; odluka 7). PIB je odvojen podatak od CRPS registracionog broja.
+**Dio stranog privrednog društva.** PIB je obavezan. Ima tačno 8 cifara. Kontrolna cifra se **ne** provjerava (odluka 7, v1.0.9; `DK-FS-002` v1.0.7 §9.1). PIB je odvojen podatak od CRPS registracionog broja.
 
-Kanonski PIB checksum algoritam je **isti** za Preduzetnika, Pravno lice i DSPD: ISO 7064 Modul 11,10. Poslovni konteksti ostaju različiti. Kanonske PIB poruke: Poglavlje 6.24.
+Pravilo PIB-a je **isto** za Preduzetnika, Pravno lice i DSPD: tačno 8 cifara, bez provjere kontrolne cifre. Jedinstvenost PIB-a ostaje neizmijenjena. Format **ne** potvrđuje postojanje PIB-a u zvaničnom registru. Poslovni konteksti ostaju različiti. Kanonske PIB poruke: Poglavlje 6.24.
 
 ## 7.8 CRPS registracioni broj
 
@@ -3914,11 +3941,11 @@ Ukupno tehničkih odluka: **15**. Zatvorena: **15**. Otvoreno: **0**.
 
 6. Tehnički model zajedničkog kontrolisanog kataloga država. **PO USVOJENO.** Jedan platformski shared canonical catalog, system-managed u V1, bez admin CRUD-a i bez slobodnog teksta. Stabilni identifikator zasniva se na ISO 3166-1 alpha-2. Identitetski podatak čuva canonical country code; display label dolazi iz kataloga / resolvera. Država prebivališta i Država izdavanja pasoša koriste isti katalog, a ostaju različiti podaci. Nerezidentno Fizičko lice: Država prebivališta obavezna. Rezidentno Fizičko lice: Država prebivališta se ne prikazuje i **ne** upisuje se automatski `ME`. Ovlašćeno lice Pravnog lica i Zastupnik DSPD, kada koriste pasoš, imaju obaveznu Državu izdavanja pasoša. Odluka **ne** uvodi Državu izdavanja pasoša Fizičkog lica niti Državljanstvo. Telefonski picker **nije** country SSOT. DB tabela `countries` **nije** obavezna. EP availability i KN **neizmijenjeni**. Dopuna postojećih korisnika usvojena odlukom 10; migracija / backfill usvojena odlukom 14 (Poglavlje 6.29); rollout / cutover / rollback usvojeni odlukom 15 (Poglavlje 6.30). Razrada: Poglavlje 6.21. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** usvaja finalna SQL imena, Laravel klasu, package niti kompletnu listu država.
 
-7. Arhitektura tehničke implementacije već usvojenih pravila validnosti JMB-a i PIB-a. **PO USVOJENO.** Jedan kanonski JMB validator i jedan kanonski PIB validator. Obrazac: PURE IDENTIFIER VALIDATOR + LARAVEL VALIDATION RULE ADAPTER. Pure validator provjerava samo format i kontrolnu cifru; requiredness, uniqueness i UI poruka ostaju izvan njega. JMB: 13 cifara + kontrolna cifra, bez semantičke validacije datuma / godine / regiona. PIB: 8 cifara + ISO 7064 Modul 11,10 za Preduzetnika, Pravno lice i DSPD. Server je autoritativan; kanonski checksum **nije** JavaScript SSOT. Registracija i profil koriste isti identifier-validity validator. KN koristi isti algoritamski validator, a snapshot **nije** identity SSOT. EP-specifični validator se **ne** uvodi. Uniqueness ostaje AS-IS compatibility; poruke usvojene odlukom 9 (Poglavlje 6.24); migracija / census usvojena odlukom 14 (Poglavlje 6.29). Razrada: Poglavlje 6.22. Tehnička validacija CRPS-a usvojena je odlukom 8. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** propisuje finalna imena PHP klasa.
+7. Arhitektura tehničke implementacije već usvojenih pravila validnosti JMB-a i PIB-a. **PO USVOJENO.** Jedan kanonski JMB validator i jedan kanonski PIB validator. Obrazac: PURE IDENTIFIER VALIDATOR + LARAVEL VALIDATION RULE ADAPTER. Pure validator provjerava samo format i, gdje je propisana, kontrolnu cifru; requiredness, uniqueness i UI poruka ostaju izvan njega. JMB: 13 cifara + kontrolna cifra, bez semantičke validacije datuma / godine / regiona. PIB: tačno 8 cifara, bez provjere kontrolne cifre, za Preduzetnika, Pravno lice i DSPD (izmjena v1.0.9; do v1.0.8: 8 cifara + ISO 7064 Modul 11,10). Server je autoritativan; kanonski checksum **nije** JavaScript SSOT. Registracija i profil koriste isti identifier-validity validator. KN koristi isti algoritamski validator, a snapshot **nije** identity SSOT. EP-specifični validator se **ne** uvodi. Uniqueness ostaje AS-IS compatibility; za PIB se postojeći mehanizam od v1.0.9 primjenjuje u registraciji, profilu i dopuni (`DK-BM-002` v1.0.7 §10 tač. 17); poruke usvojene odlukom 9 (Poglavlje 6.24); migracija / census usvojena odlukom 14 (Poglavlje 6.29). Razrada: Poglavlje 6.22. Tehnička validacija CRPS-a usvojena je odlukom 8. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** propisuje finalna imena PHP klasa.
 
 8. Tehnička validacija CRPS registracionog broja. **PO USVOJENO.** CRPS je obavezan za Preduzetnika, OD, KD, AD, DOO i DSPD. U V1 se **ne prikuplja** za Fizičko lice koje nije Preduzetnik, Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju. Kanonska vrijednost: tačno 8 cifara; oznaka 1–6 prema aktivnom subjektu/Pravnom obliku; redni broj 0000001–9999999; bez checksum-a; digits-only. Obrazac: PURE IDENTIFIER VALIDATOR + LARAVEL RULE ADAPTER. Caller određuje očekivanu oznaku. Requiredness = BM/FS. Server je autoritativan. Registracija i profil koriste iste semantike. KN snapshot nije identity SSOT. Uniqueness se **ne** uvodi. Legacy / pre-2026 usvojeno odlukom 14 (Poglavlje 6.29). Poruke usvojene odlukom 9 (Poglavlje 6.24). Konceptualna lokacija CRPS-a usklađena je odlukom 1 (Poglavlje 6.15); validaciona semantika odluke 8 **nije** izmijenjena. Razrada: Poglavlje 6.23. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** uvodi šemu ni migraciju.
 
-9. Kanonski katalog korisničkih validacionih poruka registracije i korisničkog identiteta. **PO USVOJENO / CLOSED.** Sve kanonske korisničke poruke su na crnogorskom jeziku. Server je autoritativan. Isto polje + isto pravilo + isti uslov koriste istu poruku u registraciji, profilu i drugim kanonskim identitetskim tokovima. Korisniku se **ne** prikazuju podrazumijevane framework poruke na engleskom jeziku. Tačno sačuvano: „E-mail adrese se ne podudaraju.“ Pravila jačine lozinke nijesu dio ciljne validacije ovog paketa; postojeće platformsko ponašanje ostaje AS-IS. Nova jedinstvenost JMB/PIB/CRPS/pasoša se **ne** uvodi. Dopuna postojećih korisnika usvojena odlukom 10. Korisnički sadržaj verification e-maila usvojen odlukom 11 i **nije** dio ovog kataloga. Legacy / migracija usvojena odlukom 14 (Poglavlje 6.29). Razrada: Poglavlje 6.24. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** propisuje finalna imena PHP klasa.
+9. Kanonski katalog korisničkih validacionih poruka registracije i korisničkog identiteta. **PO USVOJENO / CLOSED.** Sve kanonske korisničke poruke su na crnogorskom jeziku. Server je autoritativan. Isto polje + isto pravilo + isti uslov koriste istu poruku u registraciji, profilu i drugim kanonskim identitetskim tokovima. Korisniku se **ne** prikazuju podrazumijevane framework poruke na engleskom jeziku. Tačno sačuvano: „E-mail adrese se ne podudaraju.“ Pravila jačine lozinke nijesu dio ciljne validacije ovog paketa; postojeće platformsko ponašanje ostaje AS-IS. Nova jedinstvenost JMB/PIB/CRPS/pasoša se **ne** uvodi (izuzetak od v1.0.9: PIB, `DK-BM-002` v1.0.7 §10 tač. 17). Dopuna postojećih korisnika usvojena odlukom 10. Korisnički sadržaj verification e-maila usvojen odlukom 11 i **nije** dio ovog kataloga. Legacy / migracija usvojena odlukom 14 (Poglavlje 6.29). Razrada: Poglavlje 6.24. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** propisuje finalna imena PHP klasa.
 
 10. Dopuna kanonskog identiteta postojećeg korisnika. **PO USVOJENO / CLOSED.** Postojeći korisnik nije globalno prisiljen na ponovnu registraciju. Nepotpun profil nije globalna blokada. Model: HYBRID — deterministička D3 projekcija bez korisničke interakcije + REQUIRE-ON-USE / DECLARE-ON-USE za nedostajuće / unresolved podatke. Dopuna je field-/need-specific. Newly active ≠ missing. Već razriješen kanonski podatak se REUSE-uje. Nema pune revalidacije. NVO bundle: eksplicitno samo Nevladino udruženje / Nevladina fondacija / Sportska organizacija. Ustanova / Druge organizacije bez približnog V1 mapiranja. Interni/admin nalog bez subject completion gate za admin-only upotrebu. Nedostajući podatak = odluka 10; postojeći nevalidan legacy podatak = odluka 14. Istorijski snapshoti neizmijenjeni. Globalni `identity_complete` flag se ne uvodi. Poruke: odluka 9. Razrada: Poglavlje 6.25. Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30). Ova odluka sama **ne** izvršava D15 i **ne** propisuje rute, tabele ni migraciju.
 

@@ -4,7 +4,9 @@ namespace Tests\Feature\Identity;
 
 use App\Identity\CanonicalIdentityWriteException;
 use App\Identity\CanonicalIdentityWriter;
+use App\Identity\IdentitySnapshot;
 use App\Identity\Runtime\DerivedUserTypeMirror;
+use App\Models\ForeignBranchIdentity;
 use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
@@ -21,6 +23,8 @@ class PibValidationMessagesTest extends TestCase
     use MakesCanonicalUsers;
     use MakesIdentitySnapshots;
     use RefreshDatabase;
+
+    private const NON_ISO_PIB = '12345670';
 
     protected function setUp(): void
     {
@@ -46,28 +50,46 @@ class PibValidationMessagesTest extends TestCase
         }
     }
 
-    public function test_registration_pib_with_invalid_check_digit_has_single_montenegrin_message(): void
+    public function test_entrepreneur_registration_accepts_eight_digit_pib_without_iso_check_digit(): void
     {
-        $this->from('/register')
-            ->post('/register', $this->entrepreneurPayload('checksum@example.com', ['pib' => '12345670']))
-            ->assertSessionHasErrors('pib');
+        $this->post('/register', $this->entrepreneurPayload('ent.noniso@example.com', ['pib' => self::NON_ISO_PIB]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('verification.notice', absolute: false));
 
-        $this->assertSame(['PIB nije ispravan.'], $this->sessionErrors('pib'));
-        $this->assertNotContains('The pib is invalid.', session('errors')->all());
-        $this->assertSame(0, PlatformIdentity::query()->count());
+        $this->assertSame(self::NON_ISO_PIB, PhysicalPersonIdentity::query()->value('pib'));
     }
 
-    public function test_active_pib_is_still_validated_for_legal_entity_and_foreign_branch(): void
+    public function test_doo_registration_accepts_eight_digit_pib_without_iso_check_digit(): void
+    {
+        $this->post('/register', $this->legalPayload('doo.noniso@example.com', ['pib' => self::NON_ISO_PIB]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('verification.notice', absolute: false));
+
+        $legal = LegalEntityIdentity::query()->firstOrFail();
+        $this->assertSame(LegalEntityIdentity::FORM_DOO, $legal->legal_form);
+        $this->assertSame(self::NON_ISO_PIB, $legal->pib);
+    }
+
+    public function test_foreign_branch_registration_accepts_eight_digit_pib_without_iso_check_digit(): void
+    {
+        $this->post('/register', $this->dspdPayload('dspd.noniso@example.com', ['pib' => self::NON_ISO_PIB]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('verification.notice', absolute: false));
+
+        $this->assertSame(self::NON_ISO_PIB, ForeignBranchIdentity::query()->value('pib'));
+    }
+
+    public function test_active_pib_format_is_still_validated_for_legal_entity_and_foreign_branch(): void
     {
         $this->from('/register')
-            ->post('/register', $this->legalPayload('doo.bad@example.com', ['pib' => '12345670']))
+            ->post('/register', $this->legalPayload('doo.bad@example.com', ['pib' => '1234567A']))
             ->assertSessionHasErrors('pib');
-        $this->assertSame(['PIB nije ispravan.'], $this->sessionErrors('pib'));
+        $this->assertSame(['PIB mora imati tačno 8 cifara.'], $this->sessionErrors('pib'));
 
         $this->from('/register')
-            ->post('/register', $this->dspdPayload('dspd.bad@example.com', ['pib' => '12345670']))
+            ->post('/register', $this->dspdPayload('dspd.bad@example.com', ['pib' => '123456789']))
             ->assertSessionHasErrors('pib');
-        $this->assertSame(['PIB nije ispravan.'], $this->sessionErrors('pib'));
+        $this->assertSame(['PIB mora imati tačno 8 cifara.'], $this->sessionErrors('pib'));
 
         $this->from('/register')
             ->post('/register', $this->legalPayload('doo.empty@example.com', ['pib' => '']))
@@ -82,7 +104,7 @@ class PibValidationMessagesTest extends TestCase
         $this->post('/register', $this->registrationHttpPayload('fl.stale@example.com', [
             'registers_as_entrepreneur' => '0',
             'entrepreneur_business_name' => 'Stari unos',
-            'pib' => '12345670',
+            'pib' => '1234567A',
             'crps_number' => '1234',
         ]))
             ->assertSessionHasNoErrors()
@@ -129,16 +151,35 @@ class PibValidationMessagesTest extends TestCase
         $this->assertFalse(User::query()->where('email', 'ent.dup@example.com')->exists());
     }
 
+    public function test_duplicate_eight_digit_pib_without_iso_check_digit_is_still_rejected(): void
+    {
+        $this->post('/register', $this->legalPayload('doo.first@example.com', ['pib' => self::NON_ISO_PIB]))
+            ->assertRedirect(route('verification.notice', absolute: false));
+        $this->post(route('logout'));
+
+        $this->from('/register')
+            ->post('/register', $this->legalPayload('doo.dup@example.com', [
+                'pib' => self::NON_ISO_PIB,
+                'crps_number' => $this->validCrps(5, 2),
+                'authorized_jmb' => $this->validJmb(604),
+            ]))
+            ->assertSessionHasErrors('pib');
+
+        $this->assertSame(['PIB je već registrovan.'], $this->sessionErrors('pib'));
+        $this->assertFalse(User::query()->where('email', 'doo.dup@example.com')->exists());
+        $this->assertSame(1, LegalEntityIdentity::query()->count());
+    }
+
     public function test_registration_pib_error_is_rendered_next_to_pib_field(): void
     {
         $this->from('/register')
-            ->post('/register', $this->entrepreneurPayload('render@example.com', ['pib' => '12345670']))
+            ->post('/register', $this->entrepreneurPayload('render@example.com', ['pib' => '1234567']))
             ->assertRedirect('/register');
 
         $html = $this->get('/register')->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression('/name="pib" id="pib" class="form-control error"/', $html);
-        $this->assertMatchesRegularExpression('/<div class="form-error show" id="pib_error">PIB nije ispravan\.<\/div>/', $html);
+        $this->assertMatchesRegularExpression('/<div class="form-error show" id="pib_error">PIB mora imati tačno 8 cifara\.<\/div>/', $html);
     }
 
     public function test_registration_writer_pib_rejection_is_shown_in_montenegrin_on_pib_field(): void
@@ -156,31 +197,28 @@ class PibValidationMessagesTest extends TestCase
         $this->assertFalse(User::query()->where('email', 'writer.pib@example.com')->exists());
     }
 
+    public function test_profile_doo_update_accepts_eight_digit_pib_without_iso_check_digit(): void
+    {
+        $user = $this->seedLegalEntity();
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('profile.update'), $this->legalProfilePayload($user, ['pib' => self::NON_ISO_PIB]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(self::NON_ISO_PIB, LegalEntityIdentity::query()->value('pib'));
+    }
+
     public function test_profile_writer_pib_rejection_is_shown_in_montenegrin_on_pib_field(): void
     {
-        $user = $this->makeKorisnik([
-            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
-            'residential_status' => null,
-            'jmb' => null,
-            'company_name' => 'Primjer DOO',
-        ]);
-        $snapshot = $this->plSnapshot($user);
-        (new CanonicalIdentityWriter)->createForUser($user, $snapshot);
-        (new DerivedUserTypeMirror)->sync($user, $snapshot);
+        $user = $this->seedLegalEntity();
+        LegalEntityIdentity::saving(function (): void {
+            throw new CanonicalIdentityWriteException('Invalid PIB.');
+        });
 
-        $this->actingAs($user->refresh())
+        $this->actingAs($user)
             ->from(route('profile.edit'))
-            ->put(route('profile.update'), [
-                'first_name' => 'Ana',
-                'last_name' => 'Anić',
-                'email' => $user->email,
-                'phone' => '+38267000002',
-                'address' => 'Njegoševa 12',
-                'city' => 'Kotor',
-                'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
-                'company_name' => 'Primjer DOO',
-                'pib' => '12345670',
-            ])
+            ->put(route('profile.update'), $this->legalProfilePayload($user, ['pib' => self::NON_ISO_PIB]))
             ->assertRedirect(route('profile.edit'))
             ->assertSessionHasErrors('pib')
             ->assertSessionDoesntHaveErrors('user_type');
@@ -198,10 +236,10 @@ class PibValidationMessagesTest extends TestCase
             'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
             'residential_status' => null,
             'jmb' => null,
-            'pib' => '12345670',
+            'pib' => self::NON_ISO_PIB,
         ]);
 
-        foreach (['1234567' => 'PIB mora imati tačno 8 cifara.', '12345670' => 'PIB nije ispravan.'] as $pib => $expected) {
+        foreach (['1234567' => 'PIB mora imati tačno 8 cifara.', self::NON_ISO_PIB => 'PIB je već registrovan.'] as $pib => $expected) {
             $this->actingAs($user)
                 ->from(route('profile.edit'))
                 ->put(route('profile.update'), $this->profilePayload($user, [
@@ -236,6 +274,29 @@ class PibValidationMessagesTest extends TestCase
         $this->assertSame($pib, PhysicalPersonIdentity::query()->value('pib'));
     }
 
+    public function test_canonical_writer_accepts_eight_digit_pib_without_iso_check_digit(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(641)]);
+
+        (new CanonicalIdentityWriter)->createForUser($user, $this->writerEntrepreneurSnapshot($user, self::NON_ISO_PIB));
+
+        $this->assertSame(self::NON_ISO_PIB, PhysicalPersonIdentity::query()->value('pib'));
+    }
+
+    public function test_canonical_writer_still_rejects_malformed_pib(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(642)]);
+
+        try {
+            (new CanonicalIdentityWriter)->createForUser($user, $this->writerEntrepreneurSnapshot($user, '1234567'));
+            $this->fail('Writer must reject a PIB that is not exactly 8 digits.');
+        } catch (CanonicalIdentityWriteException $e) {
+            $this->assertSame('Invalid PIB.', $e->getMessage());
+        }
+
+        $this->assertSame(0, PhysicalPersonIdentity::query()->count());
+    }
+
     /**
      * @return list<string>
      */
@@ -262,6 +323,52 @@ class PibValidationMessagesTest extends TestCase
         (new DerivedUserTypeMirror)->sync($user, $snapshot);
 
         return $user->refresh();
+    }
+
+    private function seedLegalEntity(): User
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'residential_status' => null,
+            'jmb' => null,
+            'company_name' => 'Primjer DOO',
+        ]);
+        $snapshot = $this->plSnapshot($user);
+        (new CanonicalIdentityWriter)->createForUser($user, $snapshot);
+        (new DerivedUserTypeMirror)->sync($user, $snapshot);
+
+        return $user->refresh();
+    }
+
+    private function writerEntrepreneurSnapshot(User $user, string $pib): IdentitySnapshot
+    {
+        return $this->flSnapshot($user, [
+            'person' => [
+                'jmb' => $user->jmb,
+                'isEntrepreneur' => true,
+                'entrepreneurBusinessName' => 'Radnja Ana',
+                'pib' => $pib,
+                'crpsNumber' => $this->validCrps(1, 43),
+            ],
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function legalProfilePayload(User $user, array $overrides = []): array
+    {
+        return array_merge([
+            'first_name' => 'Ana',
+            'last_name' => 'Anić',
+            'email' => $user->email,
+            'phone' => '+38267000002',
+            'address' => 'Njegoševa 12',
+            'city' => 'Kotor',
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'company_name' => 'Primjer DOO',
+        ], $overrides);
     }
 
     /**

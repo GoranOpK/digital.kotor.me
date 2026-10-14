@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Identity\Validation\CrpsIdentifierValidator;
-use App\Identity\Validation\PibIdentifierValidator;
 use App\Models\User;
 use App\Rules\ValidCrps;
 use App\Rules\ValidPib;
@@ -121,7 +120,6 @@ class ProfileUpdateRequest extends FormRequest
                 'string',
                 'size:'.Pib::LENGTH,
                 'regex:'.Pib::REGEX,
-                Rule::unique(User::class)->ignore($user->id),
             ];
             $rules['jmb'] = ['nullable'];
             $rules['company_name'] = ['required', 'string', 'max:255'];
@@ -170,12 +168,16 @@ class ProfileUpdateRequest extends FormRequest
         });
 
         $validator->after(function (Validator $validator): void {
-            if (! $this->resultingIsEntrepreneur()) {
+            if ($this->resultingIsEntrepreneur()) {
+                $this->refineEntrepreneurIdentifiers($validator);
+                $this->refinePibUniqueness($validator);
+
                 return;
             }
 
-            $this->refineEntrepreneurIdentifiers($validator);
-            $this->refineEntrepreneurUniqueness($validator);
+            if ($this->collectsLegalEntityPib()) {
+                $this->refinePibUniqueness($validator);
+            }
         });
 
         $validator->after(function (Validator $validator): void {
@@ -272,12 +274,6 @@ class ProfileUpdateRequest extends FormRequest
 
     private function refineEntrepreneurIdentifiers(Validator $validator): void
     {
-        $pib = $this->input('pib');
-        if (is_string($pib) && preg_match('/^[0-9]{8}$/', $pib) && ! (new PibIdentifierValidator)->isValid($pib)) {
-            $validator->errors()->forget('pib');
-            $validator->errors()->add('pib', 'PIB nije ispravan.');
-        }
-
         $crps = $this->input('crps_number');
         if (! is_string($crps) || ! preg_match('/^[0-9]{8}$/', $crps)) {
             return;
@@ -298,7 +294,20 @@ class ProfileUpdateRequest extends FormRequest
         $validator->errors()->add('crps_number', 'CRPS registracioni broj ne odgovara preduzetniku.');
     }
 
-    private function refineEntrepreneurUniqueness(Validator $validator): void
+    private function collectsLegalEntityPib(): bool
+    {
+        $user = $this->user();
+        if (! $this->collectsCurrentBusinessIdentity($user)) {
+            return false;
+        }
+
+        $currentType = $this->currentSubjectType($user);
+        $incomingType = $this->input('user_type', $currentType);
+
+        return ! UserType::isNaturalPerson($currentType) && ! UserType::isNaturalPerson($incomingType);
+    }
+
+    private function refinePibUniqueness(Validator $validator): void
     {
         $pib = $this->input('pib');
         if (! is_string($pib) || $pib === '' || $validator->errors()->has('pib')) {
@@ -307,7 +316,7 @@ class ProfileUpdateRequest extends FormRequest
 
         $userId = $this->user()?->id;
         if (app(CanonicalIdentifierUniqueness::class)->pibTaken($pib, $userId)) {
-            $validator->errors()->add('pib', 'PIB je već registrovan.');
+            $validator->errors()->add('pib', CanonicalIdentifierUniqueness::PIB_TAKEN_MESSAGE);
         }
     }
 
@@ -368,7 +377,6 @@ class ProfileUpdateRequest extends FormRequest
             'pib.required' => 'PIB je obavezan za pravna lica.',
             'pib.size' => Pib::VALIDATION_MESSAGE,
             'pib.regex' => 'PIB mora imati tačno 8 cifara.',
-            'pib.unique' => 'PIB je već u upotrebi.',
             'passport_number.unique' => 'Broj pasoša je već u upotrebi.',
             'entrepreneur_business_name.required' => 'Unesite naziv preduzetnika.',
             'crps_number.required' => 'Unesite CRPS registracioni broj.',

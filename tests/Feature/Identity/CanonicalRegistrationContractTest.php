@@ -203,10 +203,20 @@ class CanonicalRegistrationContractTest extends TestCase
         $this->assertSame(1, PhysicalPersonIdentity::query()->count());
     }
 
-    public function test_k_invalid_pib_checksum_is_rejected_before_writer(): void
+    public function test_k_eight_digit_pib_without_iso_check_digit_is_accepted(): void
+    {
+        $this->post('/register', $this->entrepreneurPayload('non.iso.pib@example.com', [
+            'pib' => '11111111',
+        ]))->assertSessionHasNoErrors()->assertRedirect();
+
+        $this->assertTrue(User::query()->where('email', 'non.iso.pib@example.com')->exists());
+        $this->assertSame('11111111', PhysicalPersonIdentity::query()->value('pib'));
+    }
+
+    public function test_k_malformed_pib_is_rejected_before_writer(): void
     {
         $this->post('/register', $this->entrepreneurPayload('bad.pib@example.com', [
-            'pib' => '11111111',
+            'pib' => '1111111A',
         ]))->assertSessionHasErrors('pib');
 
         $this->assertFalse(User::query()->where('email', 'bad.pib@example.com')->exists());
