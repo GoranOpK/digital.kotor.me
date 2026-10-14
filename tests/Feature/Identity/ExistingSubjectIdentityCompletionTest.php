@@ -219,7 +219,7 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->dooPayload(['authorized_jmb' => '0000000000001']))
-            ->assertSessionHasErrors('authorized_jmb');
+            ->assertSessionHasErrors(['authorized_jmb' => 'JMB nije ispravan.']);
 
         $this->assertSame(0, PlatformIdentity::query()->count());
 
@@ -376,7 +376,7 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->preduzetnikPayload(['jmb' => '0000000000001']))
-            ->assertSessionHasErrors('jmb');
+            ->assertSessionHasErrors(['jmb' => 'JMB nije ispravan.']);
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->preduzetnikPayload(['pib' => '123456789']))

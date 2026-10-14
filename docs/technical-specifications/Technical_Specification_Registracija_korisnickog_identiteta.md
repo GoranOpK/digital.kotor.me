@@ -6,7 +6,7 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.9
+**Verzija:** 1.0.10
 **Datum:** 2026-10-14
 
 Povezani dokumenti:
@@ -68,6 +68,7 @@ Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **n
 | 1.0.7 | 2026-09-07 | Nenormativni D15 Step 9 closeout. PO odluka C1 = **PO USVOJENO**: REG-14 real production usage je dovoljan dokaz za G9-1 i G9-3. G9-1 … G9-10 = PASS. **STEP 9 = CLOSED / PO USVOJENO**. Stabilizacija = COMPLETE. Bez fiksnog trajanja, bez kvote korisnika, bez kvote Vrsta subjekta. Level B **nije** Step 9 kapija. Step 10–14 **nijesu** pokrenuti. Mirror KEEP. Fallback KEEP. R1 ACTIVE. D1–D15 nijesu reotvorene. D16 nije kreiran. BM/FS KEEP. DK-RG-001 KEEP. |
 | 1.0.8 | 2026-09-08 | Implementacija PO-usvojenog profile lifecycle Fizičko lice ⇄ Preduzetnik (`DK-BM-002` v1.0.5 §11.4; `DK-FS-002` v1.0.5 §16.4). Isti `updateLiveGraph` put; `is_entrepreneur` writable; entrepreneur polja se upisuju kada je rezultujuće stanje Preduzetnik i zadržavaju se kada nije; bez subject-type prelaza; bez migracije/šeme; registracija/KN/EP/Obrazac 3 netaknuti. D1–D15 nijesu reotvorene. Step 10 **nije** pokrenut. DK-RG-001 KEEP. |
 | 1.0.9 | 2026-10-14 | PO-usvojeno pravilo validacije PIB-a (Faza 3B): PIB se prihvata ako ima tačno 8 cifara; kontrolna cifra (ISO 7064 Modul 11,10 ili alternativni MOD 11) se **ne** provjerava. Isto pravilo za Preduzetnika, Pravno lice i DSPD, za registraciju, dopunu identiteta, profil, kanonski pisac i census klasifikaciju. Obaveznost PIB-a neizmijenjena. Jedinstvenost PIB-a (`DK-BM-002` v1.0.7 §10 tač. 17): postojeći mehanizam `CanonicalIdentifierUniqueness::pibTaken` primijenjen i na profil Pravnog lica (umjesto provjere ograničene na `users`) i na dopunu identiteta DOO / Preduzetnika (FormRequest i servis neposredno prije upisa); pravila za JMB, pasoš i CRPS neizmijenjena. Provjera postojanja u zvaničnom registru **nije** uvedena. Poglavlja 6.22, 6.24, 7.7 i 13 (odluka 7). Reference na `DK-BM-002` / `DK-FS-002` u zaglavlju i Svrsi dokumenta usklađene na v1.0.7. Bez migracije/šeme; EP netaknut. Usklađeno sa `DK-BM-002` v1.0.7 i `DK-FS-002` v1.0.7. |
+| 1.0.10 | 2026-10-14 | Nenormativna implementaciona evidencija (Faza 3C): usklađenje registracije sa već usvojenim pravilima o neaktivnoj grani i izabranom identifikacionom dokumentu (Poglavlje 6.24, odluka 9; `DK-FS-002` §6.2 i §10). Provjera kontrolne cifre JMB-a pri registraciji izvršava se samo za aktivno JMB polje (Fizičko lice / Preduzetnik prema rezidentnosti i izabranoj vrsti dokumenta; ovlašćeno lice i zastupnik kada je izabran JMB). Neaktivni JMB ne utiče na validaciju, jedinstvenost ni kanonski upis; provjera jedinstvenosti pasoša Fizičkog lica samo kada je pasoš izabran. Nerezident sa pasošem dobija kanonski identitet sa vrstom dokumenta `passport` i bez JMB-a. Poruka JMB Rule adaptera usklađena sa katalogom: „JMB nije ispravan.“ (registracija i dopuna identiteta). Algoritam kontrolne cifre JMB-a neizmijenjen. Kanonski pisac neizmijenjen. Bez migracije/šeme; PIB, CRPS i EP netaknuti. BM/FS KEEP. |
 
 Napomena:
 

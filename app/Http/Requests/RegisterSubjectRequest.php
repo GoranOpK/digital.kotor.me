@@ -177,16 +177,10 @@ class RegisterSubjectRequest extends FormRequest
 
     public function resolvedJmb(): ?string
     {
-        if ($this->isLegalEntityBranch()) {
-            return $this->filled('authorized_jmb') ? (string) $this->input('authorized_jmb') : null;
-        }
+        $field = $this->activeJmbField();
 
-        if ($this->input('user_type') === UserType::FOREIGN_BRANCH) {
-            return $this->filled('representative_jmb') ? (string) $this->input('representative_jmb') : null;
-        }
-
-        if ($this->filled('jmb')) {
-            return (string) $this->input('jmb');
+        if ($field !== null && $this->filled($field)) {
+            return (string) $this->input($field);
         }
 
         return null;
@@ -322,12 +316,11 @@ class RegisterSubjectRequest extends FormRequest
 
     private function refineIdentifiers(Validator $validator): void
     {
-        foreach (['jmb', 'authorized_jmb', 'representative_jmb'] as $field) {
-            $jmb = $this->input($field);
-            if (is_string($jmb) && preg_match('/^[0-9]{13}$/', $jmb) && ! (new JmbIdentifierValidator)->isValid($jmb)) {
-                $validator->errors()->forget($field);
-                $validator->errors()->add($field, 'JMB nije ispravan.');
-            }
+        $field = $this->activeJmbField();
+        $jmb = $field !== null ? $this->input($field) : null;
+        if (is_string($jmb) && preg_match('/^[0-9]{13}$/', $jmb) && ! (new JmbIdentifierValidator)->isValid($jmb)) {
+            $validator->errors()->forget($field);
+            $validator->errors()->add($field, 'JMB nije ispravan.');
         }
 
         $crps = $this->input('crps_number');
@@ -370,9 +363,42 @@ class RegisterSubjectRequest extends FormRequest
         }
 
         $passport = $this->input('passport_number');
-        if (is_string($passport) && $passport !== '' && $this->isNaturalPersonBranch() && $uniqueness->physicalPassportTaken($passport)) {
+        if (is_string($passport) && $passport !== '' && $this->collectsPhysicalPassport() && $uniqueness->physicalPassportTaken($passport)) {
             $validator->errors()->add('passport_number', 'Broj pasoša je već registrovan.');
         }
+    }
+
+    private function activeJmbField(): ?string
+    {
+        if ($this->isNaturalPersonBranch()) {
+            $status = $this->input('residential_status');
+
+            return $status === 'resident'
+                || ($status === 'non-resident' && $this->input('id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB)
+                ? 'jmb'
+                : null;
+        }
+
+        if ($this->isLegalEntityBranch()) {
+            return $this->input('authorized_id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB
+                ? 'authorized_jmb'
+                : null;
+        }
+
+        if ($this->input('user_type') === UserType::FOREIGN_BRANCH) {
+            return $this->input('representative_id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB
+                ? 'representative_jmb'
+                : null;
+        }
+
+        return null;
+    }
+
+    private function collectsPhysicalPassport(): bool
+    {
+        return $this->isNaturalPersonBranch()
+            && $this->input('residential_status') === 'non-resident'
+            && $this->input('id_document_type') === PhysicalPersonIdentity::DOCUMENT_PASSPORT;
     }
 
     private function isEntrepreneur(): bool
