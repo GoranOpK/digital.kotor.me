@@ -65,7 +65,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->assertSame('01-123/26', $created->upNumber?->number);
         $this->assertFalse(preg_match('/^\d{8}\d+$/', (string) $created->competition_number) === 1);
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
 

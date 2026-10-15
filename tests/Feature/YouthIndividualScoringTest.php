@@ -158,7 +158,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
         $this->assertStringNotContainsString('članu 10', $html);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
     }
 
     public function test_seats_one_two_and_three_lock_independently_and_third_sets_evaluated(): void

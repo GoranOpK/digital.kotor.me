@@ -35,7 +35,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_omladinsko_profile_is_in_development_on_konkurs_admin_hub(): void
+    public function test_omladinsko_profile_is_active_on_konkurs_admin_hub(): void
     {
         $admin = User::factory()->create([
             'role_id' => Role::where('name', 'konkurs_admin')->firstOrFail()->id,
@@ -52,14 +52,24 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $response->assertSee('Podrška preduzetništvu mladih', false);
         $response->assertSee('Podrška ženskom preduzetništvu', false);
         $this->assertStringContainsString('Aktivan modul', $text);
-        $this->assertStringContainsString('U razvoju', $text);
-        $this->assertSame(1, substr_count($text, 'Aktivan modul'));
-        $this->assertSame(1, substr_count($text, 'U razvoju'));
-        $this->assertStringContainsString('Profil je u implementaciji i još nije pušten korisnicima.', $text);
-        $this->assertStringContainsString('program-badge-development', $html);
+        $this->assertSame(2, substr_count($text, 'Aktivan modul'));
+        $this->assertStringNotContainsString('U razvoju', $text);
+        $this->assertStringNotContainsString('Profil je u implementaciji i još nije pušten korisnicima.', $text);
+
+        $omladinskoCard = $this->programCardHtml($html, 'omladinsko');
+        $omladinskoText = $this->visiblePageText($omladinskoCard);
+        $this->assertStringContainsString('program-badge-active', $omladinskoCard);
+        $this->assertStringContainsString('Aktivan modul', $omladinskoText);
+        $this->assertStringNotContainsString('program-badge-development', $omladinskoCard);
+        $this->assertStringContainsString(
+            'Konkurs za podršku preduzetništvu mladih — prijave, dokumentacija, komisija i evaluacija.',
+            $text
+        );
         $this->assertSame(1, substr_count($html, 'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.'));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
+        $this->assertContains('omladinsko', CompetitionProgramCatalog::publiclyAvailableTypes());
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
         $this->assertSame(
@@ -72,7 +82,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         );
     }
 
-    public function test_public_catalog_hides_development_omladinsko_and_keeps_zensko(): void
+    public function test_public_catalog_shows_started_omladinsko_and_hides_draft(): void
     {
         $zensko = $this->openCompetition('zensko', 'Poziv žene');
         $omladinsko = $this->openCompetition('omladinsko', 'Poziv mladi');
@@ -87,60 +97,53 @@ class OmladinskoProfileAndClassificationTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString($zensko->title, $html);
-        $this->assertStringNotContainsString($omladinsko->title, $html);
+        $this->assertStringContainsString($omladinsko->title, $html);
         $this->assertStringNotContainsString($draft->title, $html);
         $this->assertStringContainsString('Konkursi za podršku preduzetništvu', $html);
-        $this->assertStringContainsString('Uputstvo za podnosioce (PDF)', $html);
-        $this->assertStringContainsString(route('competitions.guide.pdf', absolute: false), $html);
+        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $html);
     }
 
-    public function test_direct_show_and_start_of_development_omladinsko_are_blocked_without_draft(): void
+    public function test_draft_omladinsko_is_not_public_and_does_not_accept_applications(): void
     {
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(401)]);
-        $omladinsko = $this->openCompetition('omladinsko', 'Poziv mladi skriven');
+        $draft = $this->openCompetition('omladinsko', 'Skica mladi javno', 'draft');
         $zensko = $this->openCompetition('zensko', 'Poziv žene javni');
 
-        $this->get(route('competitions.show', $omladinsko))->assertRedirect(route('login'));
+        $this->get(route('competitions.show', $draft))->assertRedirect(route('login'));
         $this->get(route('competitions.show', $zensko))->assertRedirect(route('login'));
 
-        $this->actingAs($user)->get(route('competitions.show', $omladinsko))->assertNotFound();
+        $this->actingAs($user)->get(route('competitions.show', $draft))->assertNotFound();
         $this->actingAs($user)->get(route('competitions.show', $zensko))
             ->assertOk()
             ->assertSee($zensko->title)
             ->assertSee('ženskom preduzetništvu')
-            ->assertSee('Uputstvo za podnosioce (PDF)')
-            ->assertDontSee('preduzetništvu mladih');
+            ->assertSee('Uputstvo za podnosioce (PDF)');
 
         $this->actingAs($user)
             ->from(route('competitions.index'))
-            ->post(route('applications.start', $omladinsko), [
+            ->post(route('applications.start', $draft), [
                 'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
             ])
-            ->assertRedirect(route('competitions.index'))
-            ->assertSessionHasErrors('error');
-
-        $this->assertSame(
-            CompetitionProgramCatalog::PROFILE_UNAVAILABLE_FOR_APPLICATIONS_MESSAGE,
-            session('errors')->first('error')
-        );
+            ->assertNotFound();
         $this->assertSame(0, Application::query()->count());
 
         $this->actingAs($user)
-            ->get(route('applications.create', $omladinsko))
-            ->assertRedirect(route('competitions.index'));
+            ->get(route('applications.create', $draft))
+            ->assertNotFound();
         $this->assertSame(0, Application::query()->count());
 
         $this->actingAs($user)
-            ->post(route('applications.store', $omladinsko), $this->draftPayload([
+            ->from(route('competitions.index'))
+            ->post(route('applications.store', $draft), $this->draftPayload([
                 'applicant_type' => 'fizicko_lice',
             ]))
-            ->assertRedirect(route('competitions.index'));
+            ->assertRedirect(route('competitions.index'))
+            ->assertSessionHasErrors('error');
         $this->assertSame(0, Application::query()->count());
     }
 
-    public function test_activating_omladinsko_definition_enables_public_flow_without_controller_change(): void
+    public function test_active_omladinsko_catalog_enables_public_flow_without_controller_change(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $omladinsko = $this->openCompetition('omladinsko', 'Poziv mladi aktivan');
         $zensko = $this->openCompetition('zensko', 'Poziv žene ostaje');
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(402)]);
@@ -180,6 +183,75 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $this->assertSame(0, Application::query()->count());
     }
 
+    public function test_unpublished_upcoming_closed_and_completed_omladinsko_calls_do_not_accept_applications(): void
+    {
+        $user = $this->makeKorisnik(['jmb' => $this->validJmb(403)]);
+        $upcoming = $this->openCompetition('omladinsko', 'Poziv mladi budući');
+        $upcoming->update([
+            'start_date' => now()->addDays(5)->toDateString(),
+            'published_at' => now(),
+        ]);
+        $closed = $this->openCompetition('omladinsko', 'Poziv mladi zatvoren', 'closed');
+        $completed = $this->openCompetition('omladinsko', 'Poziv mladi zavrsen', 'completed');
+
+        $index = $this->actingAs($user)
+            ->get(route('competitions.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString($upcoming->title, $index);
+        $this->assertStringNotContainsString($closed->title, $index);
+        $this->assertStringNotContainsString($completed->title, $index);
+
+        $this->actingAs($user)->get(route('competitions.show', $upcoming))->assertNotFound();
+        $this->actingAs($user)->get(route('competitions.show', $closed))->assertNotFound();
+        $this->actingAs($user)->get(route('competitions.show', $completed))->assertNotFound();
+
+        $this->actingAs($user)
+            ->post(route('applications.start', $upcoming), [
+                'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+            ])
+            ->assertRedirect(route('competitions.show', $upcoming))
+            ->assertSessionHasErrors('error');
+        $this->assertSame(
+            'Konkurs još nije počeo. Prijave će biti moguće od datuma početka konkursa.',
+            session('errors')->first('error')
+        );
+        $this->assertSame(0, Application::query()->count());
+
+        $this->actingAs($user)
+            ->post(route('applications.start', $closed), [
+                'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+            ])
+            ->assertNotFound();
+        $this->assertSame(0, Application::query()->count());
+
+        $this->actingAs($user)
+            ->post(route('applications.start', $completed), [
+                'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+            ])
+            ->assertNotFound();
+        $this->assertSame(0, Application::query()->count());
+    }
+
+    public function test_activation_does_not_create_second_call_or_mutate_existing_call_fields(): void
+    {
+        $first = $this->openCompetition('omladinsko', 'Prvi poziv za fingerprint', 'draft');
+        $first->forceFill([
+            'call_number' => 1,
+            'budget' => '100000.00',
+            'annual_budget' => '100000.00',
+        ])->save();
+        $snapshot = $first->fresh()->only(['budget', 'annual_budget', 'call_number', 'status']);
+
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
+        $this->assertSame(1, Competition::query()->where('type', 'omladinsko')->count());
+        $this->assertSame(0, Competition::query()->where('type', 'omladinsko')->where('call_number', 2)->count());
+        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($snapshot, $first->fresh()->only(['budget', 'annual_budget', 'call_number', 'status']));
+        $this->assertSame('draft', $first->fresh()->status);
+        $this->assertNotSame('published', $first->fresh()->status);
+    }
+
     public function test_zensko_pdf_route_remains_available(): void
     {
         $this->get(route('competitions.guide.pdf'))->assertRedirect(route('login'));
@@ -201,7 +273,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_flow_a_unregistered_future_entrepreneur_stores_fizicko_lice_m1a(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(501)]);
         $competition = $this->openCompetition('omladinsko');
         $token = $this->issueStartToken($user, $competition, [
@@ -244,7 +315,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
     #[DataProvider('plannedCompanyProvider')]
     public function test_flow_b_planned_company_stores_privredno_drustvo_without_company_block(string $form, string $label): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(510 + ord($form[0]))]);
         $competition = $this->openCompetition('omladinsko');
         $token = $this->issueStartToken($user, $competition, [
@@ -286,7 +356,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_flow_c_registered_entrepreneur_stores_preduzetnik_and_locks_stage(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik([
             'user_type' => UserType::ENTREPRENEUR,
             'pib' => $this->validPib(520),
@@ -344,7 +413,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
     #[DataProvider('registeredCompanyProvider')]
     public function test_flow_d_registered_company_requires_company_block(string $userType, string $form, string $label): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik([
             'user_type' => $userType,
             'pib' => $this->validPib(530 + ord($form[0])),
@@ -411,7 +479,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_ostalo_is_forbidden_only_for_omladinsko(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $omladinskoUser = $this->makeKorisnik(['jmb' => $this->validJmb(550)]);
         $omladinsko = $this->openCompetition('omladinsko');
         $omladinskoToken = $this->issueStartToken($omladinskoUser, $omladinsko, [
@@ -527,7 +594,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_unsupported_omladinsko_identity_does_not_create_draft(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik([
             'user_type' => UserType::NGO_ASSOCIATION,
             'residential_status' => null,
@@ -558,7 +624,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_live_identity_change_does_not_rewrite_locked_omladinsko_draft(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(570)]);
         $competition = $this->openCompetition('omladinsko');
         $token = $this->issueStartToken($user, $competition, [
@@ -604,7 +669,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_submitted_omladinsko_application_keeps_locked_classification(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(580)]);
         $competition = $this->openCompetition('omladinsko');
         $application = Application::create([
@@ -638,7 +702,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
     public function test_existing_zensko_applications_remain_unchanged_beside_omladinsko_draft(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $zenskoUser = $this->makeKorisnik(['jmb' => $this->validJmb(590)]);
         $zensko = $this->openCompetition('zensko');
         $zenskoApplication = Application::create([
@@ -676,14 +739,6 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $omladinskoApplication = Application::query()->where('user_id', $omladinskoUser->id)->firstOrFail();
         $this->assertSame('privredno_drustvo', $omladinskoApplication->applicant_type);
         $this->assertSame('kd', $omladinskoApplication->company_legal_form);
-    }
-
-    private function makeOmladinskoPubliclyAvailable(): void
-    {
-        CompetitionProgramCatalog::overrideStatusForTests(
-            'omladinsko',
-            CompetitionProgramCatalog::STATUS_ACTIVE
-        );
     }
 
     /**
@@ -740,6 +795,29 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         return trim((string) preg_replace('/\s+/u', ' ', $text));
+    }
+
+    private function programCardHtml(string $html, string $type): string
+    {
+        $this->assertMatchesRegularExpression('/^[a-z]+$/', $type);
+
+        $dom = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $dom->loadHTML($html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $xpath = new \DOMXPath($dom);
+        $nodes = $xpath->query(
+            '//a[contains(concat(" ", normalize-space(@class), " "), " program-card ") and contains(@href, "type='.$type.'")]'
+        );
+        $this->assertNotFalse($nodes);
+        $this->assertSame(1, $nodes->length, 'Očekivana je tačno jedna kartica profila '.$type);
+        $card = $dom->saveHTML($nodes->item(0));
+        $this->assertIsString($card);
+        $this->assertNotSame('', trim($card));
+
+        return $card;
     }
 
     private function assertCompanyBlockInputsAbsent(string $html): void

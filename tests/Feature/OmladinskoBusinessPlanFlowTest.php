@@ -41,7 +41,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
     public function test_omladinsko_submit_warns_about_missing_documents_but_does_not_block(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft();
         $this->assertSame(0, $application->documents()->count());
         $this->assertNotEmpty($application->getMissingRequiredDocumentTypes());
@@ -66,7 +65,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
     public function test_omladinsko_documents_lock_after_submit(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft();
         $this->actingAs($owner)->post(route('applications.final-submit', $application), [
             'confirm_missing_documents' => '1',
@@ -91,7 +89,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
     public function test_omladinsko_point_seven_requires_one_answer_and_drugo_text(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft([
             'realization_type' => null,
             'product_service' => null,
@@ -126,7 +123,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
     public function test_omladinsko_requires_one_purchase_and_does_not_equate_total_to_requested_amount(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft([
             'funding_sources_table' => [['type' => '', 'price' => '']],
             'requested_amount' => 9999,
@@ -166,7 +162,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
     public function test_second_call_creates_new_application_without_copying_m1_m2_or_documents(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $first] = $this->createOmladinskoReadyDraft();
         $this->enableControlledFakePdfUploadProcessor();
         $this->actingAs($owner)->post(route('applications.upload', $first), [
@@ -265,7 +260,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
     public function test_youth_m2_defaults_for_preduzetnik_and_privredno_drustvo(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $owner = $this->makeKorisnik([
             'user_type' => 'Preduzetnik',
             'pib' => $this->validPib(740),
@@ -299,14 +293,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->assertStringContainsString($owner->name, $html);
         $this->assertStringContainsString('podnosiocu', $html);
         $this->assertStringNotContainsString('podnositeljki', $html);
-    }
-
-    private function makeOmladinskoPubliclyAvailable(): void
-    {
-        CompetitionProgramCatalog::overrideStatusForTests(
-            'omladinsko',
-            CompetitionProgramCatalog::STATUS_ACTIVE
-        );
     }
 
     private function openCompetition(string $type, ?string $title = null, ?int $callNumber = null): Competition

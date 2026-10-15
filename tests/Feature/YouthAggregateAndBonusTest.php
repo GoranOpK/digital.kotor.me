@@ -394,7 +394,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertNull($fresh->bonuses_confirmed_by_user_id);
         $this->assertNull($fresh->bonuses_confirmed_by_commission_member_id);
         $this->assertNull($fresh->bonuses_confirmed_by_name);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
     }
 
     /**

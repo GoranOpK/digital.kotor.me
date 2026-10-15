@@ -13,13 +13,13 @@ class CompetitionProgramCatalogTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_omladinsko_defaults_to_development_and_is_not_public(): void
+    public function test_omladinsko_defaults_to_active_and_is_public(): void
     {
         $definitions = CompetitionProgramCatalog::definitions();
 
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, $definitions['omladinsko']['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, $definitions['omladinsko']['status']);
         $this->assertSame(
-            'Profil je u implementaciji i još nije pušten korisnicima.',
+            'Konkurs za podršku preduzetništvu mladih — prijave, dokumentacija, komisija i evaluacija.',
             $definitions['omladinsko']['description']
         );
         $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, $definitions['zensko']['status']);
@@ -27,27 +27,32 @@ class CompetitionProgramCatalogTest extends TestCase
             'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.',
             $definitions['zensko']['description']
         );
-        $this->assertSame(['zensko'], CompetitionProgramCatalog::publiclyAvailableTypes());
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('zensko'));
+        $this->assertSame(['zensko', 'omladinsko'], CompetitionProgramCatalog::publiclyAvailableTypes());
+        $this->assertStringNotContainsString(
+            'Profil je u implementaciji i još nije pušten korisnicima.',
+            $definitions['omladinsko']['description']
+        );
     }
 
-    public function test_test_override_to_active_does_not_change_canonical_default_after_clear(): void
+    public function test_test_override_to_development_does_not_change_canonical_default_after_clear(): void
     {
         CompetitionProgramCatalog::overrideStatusForTests(
             'omladinsko',
-            CompetitionProgramCatalog::STATUS_ACTIVE
+            CompetitionProgramCatalog::STATUS_DEVELOPMENT
         );
 
-        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
-        $this->assertSame(['zensko', 'omladinsko'], CompetitionProgramCatalog::publiclyAvailableTypes());
+        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
+        $this->assertSame(['zensko'], CompetitionProgramCatalog::publiclyAvailableTypes());
 
         CompetitionProgramCatalog::clearTestOverrides();
 
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['zensko']['status']);
     }
 }

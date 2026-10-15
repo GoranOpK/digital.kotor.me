@@ -169,7 +169,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertStringContainsString('name="criterion_notes[3]"', $html);
 
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
     }

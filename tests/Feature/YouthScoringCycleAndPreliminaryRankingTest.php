@@ -403,7 +403,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertSame('rejected', $failed->fresh()->status);
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
         $this->assertStringContainsString('Preliminarna rang-lista', $html);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
 
         $zensko = $this->zenskoReadyToScore();
         foreach ($zensko['members']->take(4) as $index => $member) {

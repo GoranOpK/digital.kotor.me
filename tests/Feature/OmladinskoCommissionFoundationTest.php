@@ -50,7 +50,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
         $competition = $this->makeOmladinskoDraft();
         $this->assertTrue($competition->profileProvidesCommission());
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
     }
