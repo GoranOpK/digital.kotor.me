@@ -742,6 +742,7 @@ class CanonicalCommissionGovernanceTest extends TestCase
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $secretary = $members[G::ROLE_SEKRETAR]->user;
 
+        $this->confirmOrdinarySession($competition);
         $this->assertTrue(app(CompletenessAssessmentService::class)->record($application, $chair, ApplicationCompletenessAssessment::INCOMPLETE, 'Nedostaje prilog.')->succeeded);
         Carbon::setTestNow(Carbon::parse('2026-09-11 10:00:00', 'Europe/Belgrade'));
         $this->actingAs($application->user)
@@ -769,7 +770,7 @@ class CanonicalCommissionGovernanceTest extends TestCase
         $this->assertNull($this->gov()->complaintDecisionBlockReason($chair, $application));
         $this->actingAs($chair)
             ->from(route('evaluation.create', $application))
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHas('success');
         $this->assertSame('rejected', $complaint->fresh()->decision);
         $this->assertSame((int) $chair->id, (int) $complaint->fresh()->decided_by_user_id);
@@ -946,6 +947,7 @@ class CanonicalCommissionGovernanceTest extends TestCase
         [$commission, $members] = $this->canonicalCommission();
         $competition = $this->competition($commission);
         $application = $this->finalApplication($competition);
+        $this->confirmOrdinarySession($competition);
         $this->assertTrue(app(CompletenessAssessmentService::class)
             ->record($application, $members[G::ROLE_PREDSJEDNIK]->user, ApplicationCompletenessAssessment::COMPLETE)->succeeded);
         $this->confirmedSession($competition, $members, G::PURPOSE_INTERVIEW);

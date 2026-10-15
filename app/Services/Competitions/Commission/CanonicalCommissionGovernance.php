@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Competitions\CanonicalReviewState;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CommissionProfileConfig;
 use App\Support\Pib;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -125,6 +126,9 @@ class CanonicalCommissionGovernance
 
     public const CHAIR_COMPLETENESS_REQUIRED_MESSAGE = 'Provjeru potpunosti evidentira predsjednik kanonske Komisije.';
 
+    public const APPLICATION_DEADLINE_OPEN_MESSAGE = 'Postupak Komisije (provjera potpunosti i prigovori) počinje tek nakon isteka roka za prijave.';
+
+    public const ORDINARY_SESSION_REQUIRED_MESSAGE = 'Provjera potpunosti i odluka o prigovoru zahtijevaju potvrđenu redovnu (prvu) sjednicu Komisije sa kvorumom od najmanje 2 od 3 važeća člana.';
     public static function roleLabel(?string $role): string
     {
         return self::ROLE_LABELS[$role] ?? 'Nepoznata uloga';
@@ -138,6 +142,15 @@ class CanonicalCommissionGovernance
     public function policy(): CompetitionProfilePolicy
     {
         return CompetitionProfileResolver::resolve(CompetitionProfileResolver::TYPE_CANONICAL);
+    }
+
+    /**
+     * Seat count and session quorums come from the shared Commission profile config
+     * (seatCount 3, firstSessionQuorum 2, allMembersRequiredCount 3), as for Women/Youth.
+     */
+    public function commissionConfig(): CommissionProfileConfig
+    {
+        return CommissionProfileConfig::for(CompetitionProfileResolver::TYPE_CANONICAL);
     }
 
     public function isCanonicalCompetition(?Competition $competition): bool
@@ -156,7 +169,7 @@ class CanonicalCommissionGovernance
         }
 
         $active = $this->activeMembers($commission);
-        if ($active->count() !== $this->policy()->commissionSize()) {
+        if ($active->count() !== $this->commissionConfig()->seatCount) {
             return self::SIZE_MESSAGE;
         }
 
@@ -267,16 +280,7 @@ class CanonicalCommissionGovernance
 
     public function activeMemberFor(User $user, Competition $competition): ?CommissionMember
     {
-        if (! $competition->commission_id) {
-            return null;
-        }
-
-        return CommissionMember::query()
-            ->where('commission_id', $competition->commission_id)
-            ->where('user_id', $user->id)
-            ->where('status', 'active')
-            ->whereNull('replaced_at')
-            ->first();
+        return CommissionMember::activeForCompetition((int) $user->id, $competition);
     }
 
     public function memberActionBlockReason(
@@ -339,13 +343,44 @@ class CanonicalCommissionGovernance
 
     public function sessionQuorumBlockReason(CommissionSession $session): ?string
     {
-        $present = $this->validPresentMembers($session)->count();
+        $competition = $session->competition()->first();
 
         if ($session->canonical_purpose === self::PURPOSE_ORDINARY) {
-            return $present >= (int) $this->policy()->commissionOrdinaryQuorum() ? null : self::QUORUM_MESSAGE;
+            return $session->validPresentCount($competition) >= (int) $this->commissionConfig()->firstSessionQuorum
+                ? null
+                : self::QUORUM_MESSAGE;
         }
 
-        return $present === (int) $this->policy()->commissionFullDecisionQuorum() ? null : self::FULL_ATTENDANCE_MESSAGE;
+        return $session->meetsSecondSessionAttendance($competition) ? null : self::FULL_ATTENDANCE_MESSAGE;
+    }
+
+    /**
+     * Commission processing of FINAL applications (completeness, complaint decisions): only after the
+     * application deadline, with a structurally valid Commission and a confirmed ordinary (first) session.
+     */
+    public function commissionProcessBlockReason(Competition $competition): ?string
+    {
+        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            return self::APPLICATION_DEADLINE_OPEN_MESSAGE;
+        }
+
+        if ($competition->isCommissionProcessingBlocked()) {
+            return Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE;
+        }
+
+        return $this->ordinarySessionBlockReason($competition);
+    }
+
+    /**
+     * Confirmed attendance is historical: a later vacancy or replacement does not reopen the quorum.
+     */
+    public function ordinarySessionBlockReason(Competition $competition): ?string
+    {
+        $session = $this->purposeSession($competition, self::PURPOSE_ORDINARY);
+
+        return $session !== null && $session->meetsFirstSessionQuorum($competition)
+            ? null
+            : self::ORDINARY_SESSION_REQUIRED_MESSAGE;
     }
 
     public function interviewBlockReason(Competition $competition): ?string
@@ -384,7 +419,7 @@ class CanonicalCommissionGovernance
             ->pluck('canonical_seat_no')
             ->unique();
 
-        return $seats->count() === (int) $this->policy()->commissionFullDecisionQuorum()
+        return $seats->count() === $this->commissionConfig()->allMembersRequiredCount
             ? null
             : self::FINAL_SIGNATURES_MESSAGE;
     }
@@ -408,6 +443,11 @@ class CanonicalCommissionGovernance
         $reason = $this->memberActionBlockReason($member, $competition, $at);
         if ($reason !== null) {
             return $reason;
+        }
+
+        $phase = $this->commissionProcessBlockReason($competition);
+        if ($phase !== null) {
+            return $phase;
         }
 
         $interview = $this->interviewBlockReason($competition);
@@ -566,27 +606,27 @@ class CanonicalCommissionGovernance
      */
     public function activeMembers(Commission $commission): Collection
     {
-        return CommissionMember::query()
-            ->where('commission_id', $commission->id)
-            ->where('status', 'active')
-            ->whereNull('replaced_at')
-            ->orderBy('canonical_seat_no')
-            ->get();
+        return $commission->activeMembers()->orderBy('canonical_seat_no')->get();
     }
 
     private function confirmedFullSessionBlockReason(Competition $competition, string $purpose): bool
     {
-        $session = CommissionSession::query()
-            ->where('competition_id', $competition->id)
-            ->where('session_type', self::PURPOSE_SESSION_TYPES[$purpose])
-            ->where('canonical_purpose', $purpose)
-            ->first();
+        $session = $this->purposeSession($competition, $purpose);
 
         if ($session === null || ! $session->isConfirmed()) {
             return true;
         }
 
-        return $this->validPresentMembers($session)->count() !== (int) $this->policy()->commissionFullDecisionQuorum();
+        return ! $session->meetsSecondSessionAttendance($competition);
+    }
+
+    private function purposeSession(Competition $competition, string $purpose): ?CommissionSession
+    {
+        return CommissionSession::query()
+            ->where('competition_id', $competition->id)
+            ->where('session_type', self::PURPOSE_SESSION_TYPES[$purpose])
+            ->where('canonical_purpose', $purpose)
+            ->first();
     }
 
     private function isAdmin(User $user): bool

@@ -998,6 +998,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $fingerprint = $basis->fingerprint($basis->snapshot($application));
 
         $this->travel(25)->days();
+        $this->confirmOrdinarySession($call);
 
         $this->actingAs($chair)->get(route('evaluation.canonical-review.show', $application))
             ->assertOk()

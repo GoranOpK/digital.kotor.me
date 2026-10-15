@@ -341,7 +341,7 @@ class CanonicalCommissionAdministrationService
             'foreignCommission' => $commission !== null && $canonicalCommission === null,
             'callBlock' => $this->callBlockReason($competition, requireUnassigned: false),
             'establishBlock' => $commission === null ? $this->callBlockReason($competition) : self::ALREADY_ASSIGNED_MESSAGE,
-            'commissionSize' => (int) $policy->commissionSize(),
+            'commissionSize' => $this->governance->commissionConfig()->seatCount,
             'replacementDueDays' => (int) $policy->commissionReplacementDueDays(),
             'mandateYears' => (int) $policy->commissionMandateYears(),
             'roles' => CanonicalCommissionGovernance::ROLE_LABELS,
@@ -361,7 +361,7 @@ class CanonicalCommissionAdministrationService
         $active = $this->governance->activeMembers($canonicalCommission);
 
         $seats = [];
-        foreach (range(1, (int) $policy->commissionSize()) as $seatNo) {
+        foreach (range(1, $this->governance->commissionConfig()->seatCount) as $seatNo) {
             $member = $active->first(fn (CommissionMember $m) => (int) $m->canonical_seat_no === $seatNo);
             $openVacancy = $replacements->first(fn (CommissionMemberReplacement $r) => (int) $r->seat_no === $seatNo && $r->replacement_member_id === null);
             $seats[$seatNo] = [

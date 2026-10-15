@@ -41,6 +41,8 @@ class CanonicalCommissionSessionService
 
     public const STALE_ATTENDANCE_MESSAGE = 'Prisustvo sjednice uključuje člana koji više nije važeći (zamijenjen ili razriješen). Ažurirajte prisustvo trenutnih članova prije potvrde.';
 
+    public const SESSION_COMMISSION_MISMATCH_MESSAGE = 'Sjednica nije evidentirana za Komisiju dodijeljenu ovom Pozivu. Potvrda nije moguća.';
+
     public const ATTENDANCE_MEMBER_INVALID_MESSAGE = 'Prisustvo se evidentira samo za trenutne članove kanonske Komisije ovog Poziva. Zamijenjeni, razriješeni i članovi druge Komisije nijesu dozvoljeni.';
 
     /** @var array<string, string> */
@@ -133,12 +135,8 @@ class CanonicalCommissionSessionService
                     'notes' => $notes,
                 ]);
 
-                $members = CommissionMember::query()
-                    ->where('commission_id', $competition->commission_id)
-                    ->whereIn('id', array_keys($attendance))
-                    ->get();
-
-                foreach ($members as $member) {
+                $commission = Commission::query()->findOrFail($competition->commission_id);
+                foreach ($this->governance->activeMembers($commission) as $member) {
                     $mode = $attendance[$member->id] ?? null;
                     CommissionSessionAttendance::query()->create([
                         'commission_session_id' => $session->id,
@@ -172,7 +170,16 @@ class CanonicalCommissionSessionService
             if ($locked->isConfirmed()) {
                 return ProcessWriteResult::failed(self::SESSION_LOCKED_MESSAGE);
             }
-            if ($this->staleAttendanceQuery($locked)->exists()) {
+
+            $lockedCompetition = Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
+            if ((int) $locked->competition_id !== (int) $lockedCompetition->id
+                || (int) $locked->commission_id !== (int) $lockedCompetition->commission_id) {
+                return ProcessWriteResult::failed(self::SESSION_COMMISSION_MISMATCH_MESSAGE);
+            }
+
+            // Quorum below counts only active members; a present row of a vacated member would still
+            // enter the historical (confirmed) attendance, so it must be cleared before confirmation.
+            if ($this->nonCurrentPresentAttendance($locked)->exists()) {
                 return ProcessWriteResult::failed(self::STALE_ATTENDANCE_MESSAGE);
             }
 
@@ -229,14 +236,18 @@ class CanonicalCommissionSessionService
                 return ProcessWriteResult::failed(self::SESSION_LOCKED_MESSAGE);
             }
 
-            foreach ($attendance as $memberId => $mode) {
-                CommissionSessionAttendance::query()->updateOrCreate(
-                    ['commission_session_id' => $locked->id, 'commission_member_id' => (int) $memberId],
-                    ['present' => $mode !== null, 'attendance_mode' => $mode],
-                );
+            $commission = Commission::query()->findOrFail($locked->commission_id);
+            foreach ($this->governance->activeMembers($commission) as $member) {
+                $key = ['commission_session_id' => $locked->id, 'commission_member_id' => $member->id];
+                if (array_key_exists($member->id, $attendance)) {
+                    $mode = $attendance[$member->id];
+                    CommissionSessionAttendance::query()->updateOrCreate($key, ['present' => $mode !== null, 'attendance_mode' => $mode]);
+                } else {
+                    CommissionSessionAttendance::query()->firstOrCreate($key, ['present' => false, 'attendance_mode' => null]);
+                }
             }
 
-            $stale = $this->staleAttendanceQuery($locked)->get();
+            $stale = $this->nonCurrentPresentAttendance($locked)->get();
             foreach ($stale as $row) {
                 $row->update(['present' => false]);
             }
@@ -263,7 +274,8 @@ class CanonicalCommissionSessionService
         $current = $commission !== null ? $this->governance->activeMembers($commission) : collect();
 
         $seats = [];
-        foreach (range(1, (int) $policy->commissionSize()) as $seatNo) {
+        $config = $this->governance->commissionConfig();
+        foreach (range(1, $config->seatCount) as $seatNo) {
             $seats[$seatNo] = $current->first(fn (CommissionMember $member) => (int) $member->canonical_seat_no === $seatNo);
         }
 
@@ -291,8 +303,8 @@ class CanonicalCommissionSessionService
             $stages[$purpose] = [
                 'label' => self::PURPOSE_LABELS[$purpose],
                 'required' => $purpose === CanonicalCommissionGovernance::PURPOSE_ORDINARY
-                    ? (int) $policy->commissionOrdinaryQuorum()
-                    : (int) $policy->commissionFullDecisionQuorum(),
+                    ? (int) $config->firstSessionQuorum
+                    : $config->allMembersRequiredCount,
                 'session' => $session,
                 'presentCount' => $present->count(),
                 'missingSeats' => array_values(array_diff(array_keys($seats), $presentSeats)),
@@ -339,16 +351,27 @@ class CanonicalCommissionSessionService
     }
 
     /**
-     * Present rows of a draft session whose member is no longer a current member of the Commission.
+     * Present rows of a draft session whose member is no longer an active member of the session's Commission.
      */
-    private function staleAttendanceQuery(CommissionSession $session): \Illuminate\Database\Eloquent\Builder
+    private function nonCurrentPresentAttendance(CommissionSession $session): \Illuminate\Database\Eloquent\Builder
     {
         return CommissionSessionAttendance::query()
             ->where('commission_session_id', $session->id)
             ->where('present', true)
-            ->whereHas('member', fn ($member) => $member->where(
-                fn ($inactive) => $inactive->where('status', '!=', 'active')->orWhereNotNull('replaced_at')
-            ));
+            ->whereNotIn('commission_member_id', $this->currentMemberIds($session->commission_id));
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function currentMemberIds(?int $commissionId): array
+    {
+        $commission = $commissionId !== null ? Commission::query()->find($commissionId) : null;
+        if ($commission === null) {
+            return [];
+        }
+
+        return $this->governance->activeMembers($commission)->pluck('id')->map(fn ($id) => (int) $id)->all();
     }
 
     /**
@@ -356,13 +379,7 @@ class CanonicalCommissionSessionService
      */
     private function onlyCurrentMembers(Competition $competition, array $memberIds): bool
     {
-        $current = CommissionMember::query()
-            ->where('commission_id', $competition->commission_id)
-            ->where('status', 'active')
-            ->whereNull('replaced_at')
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+        $current = $this->currentMemberIds($competition->commission_id);
 
         foreach ($memberIds as $id) {
             if (! in_array((int) $id, $current, true)) {

@@ -308,7 +308,7 @@ final class CanonicalOutcomeService
                 ]);
 
                 $signerIds = $signatures->pluck('commission_member_id')->push($member->id);
-                if ($signerIds->count() >= (int) $this->governance->policy()->commissionFullDecisionQuorum()
+                if ($signerIds->count() >= $this->governance->commissionConfig()->allMembersRequiredCount
                     && $this->governance->finalRankSignatureBlockReason($locked, $signerIds) === null) {
                     $ranking->forceFill(['finalized_at' => now()])->save();
                     $this->predlog->prepare($ranking->fresh());

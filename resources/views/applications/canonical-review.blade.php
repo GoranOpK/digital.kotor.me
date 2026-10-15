@@ -56,6 +56,10 @@
                     Odluka od {{ $fmt($review['complaintDecidedAt']) }}:
                     <strong>prigovor je {{ $review['complaintDecision'] === \App\Models\ApplicationComplaint::ACCEPTED ? 'prihvaćen' : 'odbijen' }}</strong>.
                 </p>
+                @if(filled($review['complaintDecisionNotes']))
+                    <p data-complaint-decision-notes><strong>Obrazloženje odluke Komisije:</strong></p>
+                    <p style="white-space: pre-wrap;">{{ $review['complaintDecisionNotes'] }}</p>
+                @endif
             @endif
         </div>
     @elseif($review['complaintOpen'])

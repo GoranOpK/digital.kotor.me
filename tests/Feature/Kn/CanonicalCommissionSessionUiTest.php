@@ -464,7 +464,7 @@ class CanonicalCommissionSessionUiTest extends TestCase
         [$commission, $members] = $this->canonicalCommission();
         $call = $this->canonicalCall($commission);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
-        $application = $this->finalApplication($call, $chair);
+        $application = $this->finalApplication($call, $chair, assessCompleteness: false);
         $payload = [
             'held_at' => '2026-09-10 09:00',
             'present_member_ids' => collect($members)->pluck('id')->all(),
@@ -685,6 +685,7 @@ class CanonicalCommissionSessionUiTest extends TestCase
         ])->save();
 
         if ($assessCompleteness) {
+            $this->confirmOrdinarySession($call);
             $result = app(CompletenessAssessmentService::class)->record($application, $chair, ApplicationCompletenessAssessment::COMPLETE);
             $this->assertTrue($result->succeeded, (string) $result->error);
         }

@@ -149,7 +149,7 @@ final class CanonicalTieResolutionService
                 ]);
 
                 $votes = CanonicalTieVote::query()->where('tie_resolution_id', $locked->id)->get();
-                $quorum = (int) $this->governance->policy()->commissionFullDecisionQuorum();
+                $quorum = $this->governance->commissionConfig()->allMembersRequiredCount;
                 if ($votes->count() >= $quorum) {
                     $inFavourCount = $votes->where('in_favour', true)->count();
                     $locked->forceFill([
@@ -176,7 +176,7 @@ final class CanonicalTieResolutionService
         }
 
         $votes = CanonicalTieVote::query()->where('tie_resolution_id', $resolution->id)->get();
-        $quorum = (int) $this->governance->policy()->commissionFullDecisionQuorum();
+        $quorum = $this->governance->commissionConfig()->allMembersRequiredCount;
         if ($votes->count() !== $quorum || $votes->pluck('canonical_seat_no')->unique()->count() !== $quorum) {
             return self::INVALID_VOTES_MESSAGE;
         }

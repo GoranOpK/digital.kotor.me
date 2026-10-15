@@ -499,7 +499,7 @@ class CompletenessComplaintTest extends TestCase
 
         Carbon::setTestNow(Carbon::parse('2026-09-12 10:00:00', 'Europe/Belgrade'));
         $this->actingAs($chair)
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHas('success');
 
         $application->refresh();
@@ -633,7 +633,7 @@ class CompletenessComplaintTest extends TestCase
         $service->deliverDecision($complaint);
         $this->actingAs($chair)
             ->from(route('evaluation.create', $application))
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors('error');
 
         Mail::assertSent(CanonicalComplaintDecisionMail::class, 1);
@@ -685,7 +685,7 @@ class CompletenessComplaintTest extends TestCase
         $fake = $this->failMailTransportOnce();
         $this->actingAs($chair)
             ->from(route('evaluation.create', $application))
-            ->post(route('evaluation.complaint-decision', [$application, $complaint()]), ['decision' => 'accepted'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint()]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHas('success');
         $this->assertNotNull($complaint()->mail_failed_at);
 
@@ -923,11 +923,11 @@ class CompletenessComplaintTest extends TestCase
 
         Carbon::setTestNow(Carbon::parse('2026-09-12 10:00:00', 'Europe/Belgrade'));
         $this->actingAs($chair)
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHas('success');
 
         $this->actingAs($chair)
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors('error');
 
         $history = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->orderBy('id')->get();
@@ -972,7 +972,7 @@ class CompletenessComplaintTest extends TestCase
         $complaint = ApplicationComplaint::query()->firstOrFail();
         Carbon::setTestNow(Carbon::parse('2026-09-13 10:00:00', 'Europe/Belgrade'));
         $this->actingAs($chair)
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHas('success');
 
         $afterComplaint = $application->fresh(['finalClaim']);
@@ -1036,10 +1036,11 @@ class CompletenessComplaintTest extends TestCase
             'budget' => 10000,
             'deadline_days' => 20,
             'commission_id' => $commission->id,
-            'start_date' => '2026-09-01',
-            'end_date' => '2026-09-21',
-            'published_at' => '2026-09-01 09:00:00',
+            'start_date' => '2026-08-01',
+            'end_date' => '2026-08-21',
+            'published_at' => '2026-08-01 09:00:00',
         ]);
+        $this->confirmOrdinarySession($competition);
         $application = Application::create(array_merge([
             'competition_id' => $competition->id,
             'user_id' => $owner->id,

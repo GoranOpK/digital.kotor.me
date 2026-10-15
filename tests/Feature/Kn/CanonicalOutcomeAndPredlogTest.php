@@ -728,6 +728,7 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
             'end_date' => '2026-08-21',
             'published_at' => '2026-08-01 09:00:00',
         ]);
+        $this->confirmOrdinarySession($competition);
 
         $apps = [];
         foreach ($specs as $spec) {

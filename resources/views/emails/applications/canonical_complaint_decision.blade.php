@@ -9,4 +9,8 @@
 <p>Odluka: prigovor je <strong>odbijen</strong>.</p>
 <p>Nalaz o nepotpunosti ostaje na snazi i prijava ne učestvuje u daljem bodovanju. Podneseni dosije ostaje neizmijenjen.</p>
 @endif
+@if(filled($decisionNotes))
+<p><strong>Obrazloženje odluke Komisije:</strong></p>
+<p style="white-space: pre-wrap;">{{ $decisionNotes }}</p>
+@endif
 <p>Status prijave: <a href="{{ $statusUrl }}">{{ $statusUrl }}</a></p>

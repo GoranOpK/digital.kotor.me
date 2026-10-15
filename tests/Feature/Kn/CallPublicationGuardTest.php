@@ -424,6 +424,61 @@ class CallPublicationGuardTest extends TestCase
         $this->assertSame(0, CompetitionPublicationClaim::query()->count());
     }
 
+    public function test_fail_closed_draft_cannot_be_published_through_update(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-14 09:00:00', 'Europe/Belgrade'));
+        $admin = $this->admin();
+        $other = $this->competition(CompetitionProfileResolver::TYPE_OTHER, 'KN-SYNC-003-OSTALO-UPDATE');
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.edit', $other))
+            ->put(route('admin.competitions.update', $other), $this->updatePayload($other, ['status' => 'published']))
+            ->assertRedirect(route('admin.competitions.edit', $other))
+            ->assertSessionHasErrors(['status' => 'Objava nije dozvoljena za ovaj profil.']);
+
+        $fresh = $other->fresh();
+        $this->assertSame('draft', $fresh->status);
+        $this->assertSame(CompetitionProfileResolver::TYPE_OTHER, $fresh->type);
+        $this->assertNull($fresh->published_at);
+        $this->assertSame(0, CompetitionPublicationClaim::query()->count());
+    }
+
+    public function test_type_and_status_change_in_one_update_cannot_bypass_fail_closed_publication(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-14 09:00:00', 'Europe/Belgrade'));
+        $admin = $this->admin();
+        $other = $this->competition(CompetitionProfileResolver::TYPE_OTHER, 'KN-SYNC-003-OSTALO-TO-WOMEN');
+        $women = $this->competition(CompetitionProfileResolver::TYPE_WOMEN, 'KN-SYNC-003-WOMEN-TO-OSTALO');
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.edit', $other))
+            ->put(route('admin.competitions.update', $other), $this->updatePayload($other, [
+                'type' => CompetitionProfileResolver::TYPE_WOMEN,
+                'status' => 'published',
+            ]))
+            ->assertRedirect(route('admin.competitions.edit', $other))
+            ->assertSessionHasErrors(['status' => 'Objava nije dozvoljena za ovaj profil.']);
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.edit', $women))
+            ->put(route('admin.competitions.update', $women), $this->updatePayload($women, [
+                'type' => CompetitionProfileResolver::TYPE_OTHER,
+                'status' => 'published',
+            ]))
+            ->assertRedirect(route('admin.competitions.edit', $women))
+            ->assertSessionHasErrors(['status' => 'Objava nije dozvoljena za ovaj profil.']);
+
+        $freshOther = $other->fresh();
+        $this->assertSame('draft', $freshOther->status);
+        $this->assertSame(CompetitionProfileResolver::TYPE_OTHER, $freshOther->type);
+        $this->assertNull($freshOther->published_at);
+        $freshWomen = $women->fresh();
+        $this->assertSame('draft', $freshWomen->status);
+        $this->assertSame(CompetitionProfileResolver::TYPE_WOMEN, $freshWomen->type);
+        $this->assertNull($freshWomen->published_at);
+        $this->assertSame(0, CompetitionPublicationClaim::query()->count());
+    }
+
     public function test_non_admin_cannot_publish(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-09-14 09:00:00', 'Europe/Belgrade'));
@@ -466,5 +521,22 @@ class CallPublicationGuardTest extends TestCase
             'budget' => 10000,
             'deadline_days' => 20,
         ], $overrides));
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function updatePayload(Competition $competition, array $overrides = []): array
+    {
+        return array_merge([
+            'title' => $competition->title,
+            'description' => $competition->description,
+            'type' => $competition->type,
+            'up_number' => 'UP-01-003/26',
+            'year' => (int) $competition->year,
+            'budget' => 10000,
+            'status' => $competition->status,
+        ], $overrides);
     }
 }

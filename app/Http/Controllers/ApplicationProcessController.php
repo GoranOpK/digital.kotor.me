@@ -77,10 +77,12 @@ class ApplicationProcessController extends Controller
 
         $validated = $request->validate([
             'decision' => 'required|in:'.ApplicationComplaint::ACCEPTED.','.ApplicationComplaint::REJECTED,
-            'decision_notes' => 'nullable|string|max:5000',
+            'decision_notes' => 'required|string|max:5000',
+        ], [
+            'decision_notes.required' => ComplaintService::DECISION_NOTES_REQUIRED_MESSAGE,
         ]);
 
-        $result = $this->complaints->decide($complaint, $user, $validated['decision'], $validated['decision_notes'] ?? null);
+        $result = $this->complaints->decide($complaint, $user, $validated['decision'], $validated['decision_notes']);
         if (! $result->succeeded) {
             return back()->withErrors(['error' => $result->error]);
         }

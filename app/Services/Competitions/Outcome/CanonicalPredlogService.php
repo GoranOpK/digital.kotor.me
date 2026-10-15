@@ -74,7 +74,7 @@ final class CanonicalPredlogService
             return self::INCOMPLETE_MESSAGE;
         }
 
-        $quorum = (int) $this->governance->policy()->commissionFullDecisionQuorum();
+        $quorum = $this->governance->commissionConfig()->allMembersRequiredCount;
         $seats = CanonicalFinalRankingSignature::query()->where('final_ranking_id', $ranking->id)->pluck('canonical_seat_no')->unique();
         if (! $ranking->isFinal() || $seats->count() !== $quorum) {
             return self::NOT_SIGNED_MESSAGE;

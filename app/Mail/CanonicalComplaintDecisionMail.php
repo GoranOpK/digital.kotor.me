@@ -9,8 +9,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Operational notice to the applicant about the Commission decision on a canonical complaint.
- * Carries no Commission-internal data (no reasoning notes, member names or scores).
+ * Operational notice to the applicant about the Commission decision on a canonical complaint,
+ * including the decision reasoning. Carries no other Commission-internal data (member names, scores).
  */
 class CanonicalComplaintDecisionMail extends Mailable
 {
@@ -22,6 +22,7 @@ class CanonicalComplaintDecisionMail extends Mailable
         public readonly string $decision,
         public readonly CarbonImmutable $decidedAt,
         public readonly string $statusUrl,
+        public readonly ?string $decisionNotes = null,
     ) {
     }
 

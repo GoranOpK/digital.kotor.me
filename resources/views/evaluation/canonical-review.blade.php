@@ -234,8 +234,8 @@
                         @csrf
                         <label><input type="radio" name="decision" value="{{ $C::ACCEPTED }}" required> Prigovor se prihvata — prijava se smatra potpunom</label><br>
                         <label><input type="radio" name="decision" value="{{ $C::REJECTED }}"> Prigovor se odbija — nalaz o nepotpunosti ostaje</label>
-                        <label>Obrazloženje odluke
-                            <textarea name="decision_notes" rows="3" maxlength="5000" style="width: 100%;"></textarea>
+                        <label>Obrazloženje odluke (obavezno; dostavlja se podnosiocu)
+                            <textarea name="decision_notes" rows="3" maxlength="5000" required style="width: 100%;"></textarea>
                         </label>
                         <button type="submit" class="btn btn-primary">Evidentiraj odluku</button>
                     </form>

@@ -4,10 +4,13 @@ namespace Tests\Feature\Kn\Concerns;
 
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\CommissionSession;
+use App\Models\Competition;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Commission\CanonicalCommissionMembershipService;
+use App\Services\Competitions\Commission\CanonicalCommissionSessionService;
 use Carbon\CarbonImmutable;
 
 trait BuildsCanonicalCommission
@@ -70,6 +73,45 @@ trait BuildsCanonicalCommission
         }
 
         return [$commission->fresh(), $members];
+    }
+
+    /**
+     * Confirmed ordinary (first) session with every current member present — the phase gate for
+     * completeness review and complaint decisions. Idempotent per Poziv. The application deadline
+     * must already have passed when completeness is recorded afterwards.
+     */
+    protected function confirmOrdinarySession(Competition $competition, ?\DateTimeInterface $heldAt = null): CommissionSession
+    {
+        $session = CommissionSession::query()
+            ->where('competition_id', $competition->id)
+            ->where('canonical_purpose', CanonicalCommissionGovernance::PURPOSE_ORDINARY)
+            ->first();
+        if ($session?->isConfirmed()) {
+            return $session;
+        }
+
+        $active = app(CanonicalCommissionGovernance::class)
+            ->activeMembers(Commission::query()->findOrFail($competition->commission_id));
+        $chair = $active->firstWhere('canonical_seat', CanonicalCommissionGovernance::ROLE_PREDSJEDNIK);
+        $this->assertNotNull($chair, 'The ordinary session requires the canonical chair.');
+
+        $service = app(CanonicalCommissionSessionService::class);
+        if ($session === null) {
+            $result = $service->record(
+                $competition,
+                $chair->user,
+                CanonicalCommissionGovernance::PURPOSE_ORDINARY,
+                $heldAt ?? now(),
+                $active->mapWithKeys(fn (CommissionMember $member) => [$member->id => CanonicalCommissionGovernance::ATTENDANCE_IN_PERSON])->all(),
+            );
+            $this->assertTrue($result->succeeded, (string) $result->error);
+            $session = CommissionSession::query()->findOrFail($result->recordId);
+        }
+
+        $confirm = $service->confirm($session, $chair->user);
+        $this->assertTrue($confirm->succeeded, (string) $confirm->error);
+
+        return $session->fresh();
     }
 
     protected function signDeclarations(CommissionMember $member): void

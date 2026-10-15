@@ -69,7 +69,10 @@
             @if($application->finalClaim)
                 <tr style="border-top: 1px solid #e5e7eb;">
                     <td style="padding: 10px;"><strong>4. Provjera potpunosti i prigovor</strong></td>
-                    <td style="padding: 10px;">Status administrativne provjere vaše prijave</td>
+                    <td style="padding: 10px;">
+                        Status administrativne provjere vaše prijave
+                        @include('applications.partials.canonical_review_applicant_block')
+                    </td>
                     <td style="padding: 10px;"><a href="{{ route('applications.canonical-review.show', $application) }}">Status provjere potpunosti / prigovor</a></td>
                 </tr>
             @endif

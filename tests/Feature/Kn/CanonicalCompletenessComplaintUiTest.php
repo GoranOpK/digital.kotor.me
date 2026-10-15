@@ -235,7 +235,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             $mutation = $this->actingAs($viewer)
                 ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted']);
             $role === 'konkurs_admin' ? $mutation->assertRedirect(route('admin.dashboard')) : $mutation->assertForbidden();
-            $this->assertSame(G::NOT_MEMBER_MESSAGE, app(ComplaintService::class)->decide($complaint, $viewer, 'accepted')->error);
+            $this->assertSame(G::NOT_MEMBER_MESSAGE, app(ComplaintService::class)->decide($complaint, $viewer, 'accepted', 'Obrazloženje.')->error);
         }
 
         $this->actingAs($this->komisijaUser('stranac'))->get(route('evaluation.canonical-review.show', $application))->assertForbidden();
@@ -283,7 +283,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->post(route('applications.complaint', $incomplete), ['body' => 'Prekasno, rang lista formirana.'])
             ->assertSessionHasErrors(['error' => CompletenessAssessmentService::STAGE_LOCKED_MESSAGE]);
         $this->actingAs($chair)
-            ->post(route('evaluation.complaint-decision', [$withComplaint, $complaint]), ['decision' => 'accepted'])
+            ->post(route('evaluation.complaint-decision', [$withComplaint, $complaint]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors(['error' => CompletenessAssessmentService::STAGE_LOCKED_MESSAGE]);
 
         $this->assertSame(0, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
@@ -330,7 +330,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->assertSessionHasErrors(['error' => CanonicalAdministrativeGate::CLOSED_MESSAGE]);
         $this->actingAs($owner)->post(route('applications.complaint', $incomplete), ['body' => 'Nakon zatvaranja.'])
             ->assertSessionHasErrors(['error' => CanonicalAdministrativeGate::CLOSED_MESSAGE]);
-        $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$withComplaint, $complaint]), ['decision' => 'rejected'])
+        $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$withComplaint, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors(['error' => CanonicalAdministrativeGate::CLOSED_MESSAGE]);
 
         $this->assertSame(0, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
@@ -460,16 +460,23 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $this->actingAs($secretary)
             ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted'])
             ->assertForbidden();
-        $this->assertSame(G::CHAIR_REQUIRED_MESSAGE, $service->decide($complaint, $secretary, 'accepted')->error);
-        $this->assertSame(G::NOT_MEMBER_MESSAGE, $service->decide($complaint, $this->userWithRole('admin'), 'accepted')->error);
+        $this->assertSame(G::CHAIR_REQUIRED_MESSAGE, $service->decide($complaint, $secretary, 'accepted', 'Obrazloženje.')->error);
+        $this->assertSame(G::NOT_MEMBER_MESSAGE, $service->decide($complaint, $this->userWithRole('admin'), 'accepted', 'Obrazloženje.')->error);
         $this->assertNull($complaint->fresh()->decision);
 
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $this->actingAs($chair)
             ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected'])
+            ->assertSessionHasErrors(['decision_notes' => ComplaintService::DECISION_NOTES_REQUIRED_MESSAGE]);
+        $this->assertSame(ComplaintService::DECISION_NOTES_REQUIRED_MESSAGE, $service->decide($complaint, $chair, 'rejected', '   ')->error);
+        $this->assertNull($complaint->fresh()->decision);
+        Mail::assertNotSent(CanonicalComplaintDecisionMail::class);
+
+        $this->actingAs($chair)
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHas('success');
         $this->actingAs($chair)
-            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted'])
+            ->post(route('evaluation.complaint-decision', [$application, $complaint]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors(['error' => ComplaintService::ALREADY_DECIDED_MESSAGE]);
 
         $complaint->refresh();
@@ -574,7 +581,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
 
         try {
             DB::transaction(function () use ($rolledBackComplaint, $chair) {
-                $this->assertTrue(app(ComplaintService::class)->decide($rolledBackComplaint, $chair, 'accepted')->succeeded);
+                $this->assertTrue(app(ComplaintService::class)->decide($rolledBackComplaint, $chair, 'accepted', 'Obrazloženje.')->succeeded);
                 throw new \DomainException('rollback');
             });
         } catch (\DomainException) {
@@ -584,13 +591,13 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
 
         $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$accepted, $acceptedComplaint]), [
             'decision' => 'accepted',
-            'decision_notes' => 'Interno obrazloženje Komisije.',
+            'decision_notes' => 'Prilog je bio dostavljen u roku.',
         ])->assertSessionHas('success');
         $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$rejected, $rejectedComplaint]), [
             'decision' => 'rejected',
-            'decision_notes' => 'Interno obrazloženje Komisije.',
+            'decision_notes' => 'Potvrda poreske uprave nije dostavljena.',
         ])->assertSessionHas('success');
-        $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$rejected, $rejectedComplaint]), ['decision' => 'accepted'])
+        $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$rejected, $rejectedComplaint]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors('error');
 
         Mail::assertSent(CanonicalComplaintDecisionMail::class, 2);
@@ -604,7 +611,8 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
                 && str_contains($html, 'prihvaćen')
                 && str_contains($html, 'nastavlja postupak u fazi bodovanja')
                 && str_contains($html, route('applications.canonical-review.show', $accepted))
-                && ! str_contains($html, 'Interno obrazloženje')
+                && $mail->decisionNotes === 'Prilog je bio dostavljen u roku.'
+                && str_contains($html, 'Prilog je bio dostavljen u roku.')
                 && ! str_contains($html, $chair->name)
                 && ! preg_match('/žensk|omladin|Obrazac 3/iu', $html);
         });
@@ -615,7 +623,8 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
                 && ! $mail->accepted()
                 && str_contains($html, 'odbijen')
                 && str_contains($html, 'ne učestvuje u daljem bodovanju')
-                && ! str_contains($html, 'Interno obrazloženje');
+                && $mail->decisionNotes === 'Potvrda poreske uprave nije dostavljena.'
+                && str_contains($html, 'Potvrda poreske uprave nije dostavljena.');
         });
     }
 
@@ -639,15 +648,16 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_SUBMITTED.'"', false)->assertDontSee('name="body"', false);
 
         $complaint = ApplicationComplaint::query()->sole();
+        $status()->assertDontSee('Prilog A nije pronađen u dosijeu.');
         $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$application, $complaint]), [
             'decision' => 'rejected',
-            'decision_notes' => 'Interna napomena predsjednika.',
+            'decision_notes' => 'Prilog A nije pronađen u dosijeu.',
         ]);
         $fingerprint = ApplicationCompletenessAssessment::query()->sole()->evidence_fingerprint;
         $status()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_REJECTED.'"', false)
             ->assertSee('ne učestvuje u daljem bodovanju')
-            ->assertDontSee('Interna napomena predsjednika.')
+            ->assertSee('Prilog A nije pronađen u dosijeu.')
             ->assertDontSee($chair->name)
             ->assertDontSee($fingerprint);
 
@@ -773,6 +783,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             'end_date' => '2026-09-21',
             'published_at' => '2026-09-01 09:00:00',
         ]);
+        $this->confirmOrdinarySession($call, Carbon::parse('2026-09-22 09:00:00', self::TZ));
 
         return [$call, $members];
     }

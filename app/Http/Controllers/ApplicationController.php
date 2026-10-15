@@ -105,8 +105,10 @@ class ApplicationController extends Controller
             return redirect()->route('applications.canonical.legal-form', $competition);
         }
 
-        $existingApplication = app(CanonicalBeneficiaryApplications::class)
-            ->userApplicationForCompetition($competition, (int) $user->id);
+        $existingApplication = Application::query()
+            ->where('competition_id', $competition->id)
+            ->where('user_id', $user->id)
+            ->first();
 
         if ($existingApplication) {
             if ($existingApplication->status === 'draft') {
@@ -282,9 +284,9 @@ class ApplicationController extends Controller
             
             // Ako još uvijek nema existingApplication, provjeri da li korisnik već ima prijavu za ovaj konkurs
             if (!$existingApplication) {
-                $existingApplication = app(CanonicalBeneficiaryApplications::class)
-                    ->userApplicationForCompetition($competition, (int) Auth::id())
-                    ?->load('user');
+                $existingApplication = Application::with('user')->where('competition_id', $competition->id)
+                    ->where('user_id', Auth::id())
+                    ->first();
             }
 
             if ($existingApplication) {
@@ -622,9 +624,9 @@ class ApplicationController extends Controller
                 ->first();
         }
         if (!$existingApplication) {
-            // bilo koji status (draft, submitted, evaluated, itd.); kanonski: otvoreni draft ili nova prijava (čl.19)
-            $existingApplication = app(CanonicalBeneficiaryApplications::class)
-                ->userApplicationForCompetition($competition, (int) Auth::id());
+            $existingApplication = Application::where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first(); // bilo koji status (draft, submitted, evaluated, itd.)
         }
 
         try {
@@ -1846,8 +1848,9 @@ class ApplicationController extends Controller
                 ->first();
         }
         if (! $existingApplication) {
-            $existingApplication = app(CanonicalBeneficiaryApplications::class)
-                ->userApplicationForCompetition($competition, (int) Auth::id());
+            $existingApplication = Application::where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first();
         }
 
         return $existingApplication;

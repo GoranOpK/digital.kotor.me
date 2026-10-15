@@ -376,6 +376,7 @@ class Application extends Model
     {
         static::updating(function (self $application) {
             if ($application->isDirty(self::CANONICAL_OUTCOME_LOCKED_FIELDS)
+                && $application->isCanonicalProfile()
                 && CanonicalOutcome::query()->where('application_id', $application->id)->whereNotNull('confirmed_at')->exists()) {
                 throw new \LogicException(CanonicalOutcome::CONFIRMED_MESSAGE);
             }

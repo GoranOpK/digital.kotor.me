@@ -787,6 +787,7 @@ class CanonicalFormalDecisionAndCloseTest extends TestCase
             'published_at' => '2026-08-01 09:00:00',
         ]);
         UpNumber::query()->create(['competition_id' => $competition->id, 'number' => 'UP-01-332/26']);
+        $this->confirmOrdinarySession($competition);
 
         $apps = [];
         foreach ($specs as $spec) {

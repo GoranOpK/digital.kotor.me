@@ -260,14 +260,9 @@ class CanonicalCommissionMembershipService
             return [ProcessWriteResult::failed($categoryReason), null];
         }
 
-        $active = CommissionMember::query()
-            ->where('commission_id', $locked->id)
-            ->where('status', 'active')
-            ->whereNull('replaced_at')
-            ->lockForUpdate()
-            ->get();
+        $active = $locked->activeMembers()->lockForUpdate()->get();
 
-        if ($active->count() >= (int) $this->governance->policy()->commissionSize()) {
+        if ($active->count() >= $this->governance->commissionConfig()->seatCount) {
             return [ProcessWriteResult::failed(CanonicalCommissionGovernance::FOURTH_SEAT_MESSAGE), null];
         }
 

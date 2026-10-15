@@ -31,6 +31,8 @@ class ComplaintService
 
     public const ALREADY_DECIDED_MESSAGE = 'Odluka o ovom prigovoru je već evidentirana.';
 
+    public const DECISION_NOTES_REQUIRED_MESSAGE = 'Obrazloženje odluke o prigovoru je obavezno i dostavlja se podnosiocu.';
+
     public const STATUS_NOT_FINAL = 'not_final';
 
     public const STATUS_AWAITING_REVIEW = 'awaiting_review';
@@ -157,6 +159,11 @@ class ComplaintService
             return ProcessWriteResult::failed('Odluka o prigovoru nije dozvoljena.');
         }
 
+        $notes = is_string($notes) ? trim($notes) : '';
+        if ($notes === '') {
+            return ProcessWriteResult::failed(self::DECISION_NOTES_REQUIRED_MESSAGE);
+        }
+
         $blockReason = $this->decisionBlockReason($complaint, $actor);
         if ($blockReason !== null) {
             return ProcessWriteResult::failed($blockReason);
@@ -165,7 +172,6 @@ class ComplaintService
         $application = $complaint->application;
         $competition = $application->competition;
         $policy = $competition->profile();
-        $notes = is_string($notes) && trim($notes) !== '' ? trim($notes) : null;
 
         try {
             return DB::transaction(function () use ($complaint, $actor, $decision, $notes, $application, $competition, $policy) {
@@ -253,7 +259,7 @@ class ComplaintService
             return self::ALREADY_DECIDED_MESSAGE;
         }
 
-        return null;
+        return $this->governance->commissionProcessBlockReason($competition);
     }
 
     /**
@@ -305,6 +311,7 @@ class ComplaintService
             'complaintSubmittedAt' => $complaint?->submitted_at,
             'complaintDecision' => $complaint?->decision,
             'complaintDecidedAt' => $complaint?->decided_at,
+            'complaintDecisionNotes' => $complaint?->decision !== null ? $complaint->decision_notes : null,
             'proceedsToScoring' => in_array($status, [self::STATUS_COMPLETE, self::STATUS_COMPLAINT_ACCEPTED], true),
             'rankingFormed' => $rankingFormed,
             'closed' => $closed,
@@ -338,6 +345,7 @@ class ComplaintService
                 $complaint->decision,
                 CarbonImmutable::parse($complaint->decided_at)->setTimezone($application->competition->profile()->publicationTimezone()),
                 route('applications.canonical-review.show', $application),
+                $complaint->decision_notes,
             ));
         } catch (\Throwable $exception) {
             Log::error('Canonical complaint decision notice could not be sent.', [

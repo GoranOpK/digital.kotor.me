@@ -1006,6 +1006,16 @@ class AdminController extends Controller
         if (
             $validated['status'] === 'published'
             && $competition->status !== 'published'
+            && ($policy->isFailClosed() || $competition->profile()->isFailClosed())
+        ) {
+            return back()->withErrors([
+                'status' => 'Objava nije dozvoljena za ovaj profil.',
+            ])->withInput();
+        }
+
+        if (
+            $validated['status'] === 'published'
+            && $competition->status !== 'published'
             && $policy->publicationMode() === CompetitionProfilePolicy::PUBLICATION_GUARDED
         ) {
             return back()->withErrors([
@@ -1149,44 +1159,44 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za objavljivanje konkursa.');
         }
 
-        // Youth keeps CompetitionAnnualInstance publish semantics.
-        if ($competition->isOmladinskoProfile()) {
-            return $this->publishYouthAnnualInstance($competition);
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $result = $publisher->publish($competition, $user);
+
+            if (! $result->succeeded) {
+                return redirect()->back()->withErrors(['error' => $result->error]);
+            }
+
+            return redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
         }
 
-        $result = $publisher->publish($competition, $user);
-
-        if (! $result->succeeded) {
-            return redirect()->back()->withErrors(['error' => $result->error]);
+        if ($competition->profile()->isFailClosed()) {
+            return redirect()->back()->withErrors(['error' => 'Objava nije dozvoljena za ovaj profil.']);
         }
 
-        return redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
-    }
-
-    private function publishYouthAnnualInstance(Competition $competition)
-    {
         if ($competition->status !== 'draft') {
             return redirect()->back()->withErrors(['error' => 'Samo nacrti konkursa mogu biti objavljeni.']);
         }
 
-        $instance = app(CompetitionAnnualInstance::class);
-        try {
-            if ($competition->isFirstCall()) {
-                $instance->validateFirstCall($competition);
-            } elseif ($competition->isSecondCall()) {
-                $publishReason = $instance->secondCallPublishBlockReason($competition);
-                if ($publishReason !== null) {
-                    return redirect()->back()->withErrors(['error' => $publishReason]);
+        if ($competition->isOmladinskoProfile()) {
+            $instance = app(CompetitionAnnualInstance::class);
+            try {
+                if ($competition->isFirstCall()) {
+                    $instance->validateFirstCall($competition);
+                } elseif ($competition->isSecondCall()) {
+                    $publishReason = $instance->secondCallPublishBlockReason($competition);
+                    if ($publishReason !== null) {
+                        return redirect()->back()->withErrors(['error' => $publishReason]);
+                    }
+                } else {
+                    return redirect()->back()->withErrors([
+                        'error' => CompetitionAnnualInstance::MSG_INVALID_INSTANCE,
+                    ]);
                 }
-            } else {
+            } catch (DomainException $e) {
                 return redirect()->back()->withErrors([
-                    'error' => CompetitionAnnualInstance::MSG_INVALID_INSTANCE,
+                    'error' => $instance->userFacingMessage($e),
                 ]);
             }
-        } catch (DomainException $e) {
-            return redirect()->back()->withErrors([
-                'error' => $instance->userFacingMessage($e),
-            ]);
         }
 
         $now = now();
@@ -1196,17 +1206,20 @@ class AdminController extends Controller
             'deadline_days' => 20,
         ];
 
+        // Ako nije postavljen start_date, postavi ga na danas
         if (! $competition->start_date) {
             $updateData['start_date'] = $now->toDateString();
             $updateData['end_date'] = $now->copy()->addDays(20)->toDateString();
         } else {
+            // Ako je start_date postavljen (bio to današnji ili budući),
+            // end_date mora biti 20 dana od tog start_date
             $updateData['end_date'] = $competition->start_date->copy()->addDays(20)->toDateString();
         }
 
         $competition->update($updateData);
 
         $redirect = redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
-        if (! $competition->fresh()->hasCompleteValidCommission()) {
+        if ($competition->isOmladinskoProfile() && ! $competition->fresh()->hasCompleteValidCommission()) {
             $redirect->with('commission_incomplete_warning', CommissionProfileConfig::OMLADINSKO_INCOMPLETE_PUBLISH_WARNING);
         }
 

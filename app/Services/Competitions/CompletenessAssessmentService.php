@@ -126,6 +126,11 @@ class CompletenessAssessmentService
             return self::STAGE_LOCKED_MESSAGE;
         }
 
+        $phase = $this->governance->commissionProcessBlockReason($competition);
+        if ($phase !== null) {
+            return $phase;
+        }
+
         if (! $application->finalClaim || $application->status === 'draft') {
             return 'Potpunost se utvrđuje samo za uspješno podnesenu prijavu.';
         }
