@@ -7,6 +7,7 @@ use App\Models\Application;
 /**
  * Frozen ranking facts of one canonical ranked application, as used by outcome validation.
  * The application id identifies the row only; it is never a funding priority.
+ * Carries no business stage: canonical funding never depends on it.
  */
 final class CanonicalRankedRow
 {
@@ -18,7 +19,6 @@ final class CanonicalRankedRow
         public readonly ?string $pib,
         public readonly ?string $subsidyType,
         public readonly ?string $totalInvestment,
-        public readonly bool $businessStart,
         public readonly ?string $legalMaximum,
     ) {
     }

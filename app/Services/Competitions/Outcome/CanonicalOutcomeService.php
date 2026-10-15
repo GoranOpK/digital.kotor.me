@@ -82,11 +82,10 @@ final class CanonicalOutcomeService
         $ranked = (new EloquentCollection($ranked->all()))->loadMissing(['finalClaim', 'canonicalInvestmentPlan']);
 
         $budget = $this->budget($competition);
-        $businessStart = $this->governance->policy()->businessStartStoredValue();
 
         return $ranked
             ->sort(fn (Application $a, Application $b) => [(int) $a->ranking_position, (int) $a->id] <=> [(int) $b->ranking_position, (int) $b->id])
-            ->map(function (Application $application) use ($budget, $businessStart) {
+            ->map(function (Application $application) use ($budget) {
                 $plan = $application->canonicalInvestmentPlan;
                 $frozen = $plan !== null && $plan->isFrozen();
                 $subsidyType = $frozen ? $plan->subsidy_type : null;
@@ -100,7 +99,6 @@ final class CanonicalOutcomeService
                     pib: Pib::normalize($application->finalClaim?->beneficiary_pib) ?? Pib::normalize($application->pib),
                     subsidyType: $subsidyType,
                     totalInvestment: $total,
-                    businessStart: $businessStart !== null && $application->business_stage === $businessStart,
                     legalMaximum: $this->caps->legalMaximum($budget, $subsidyType, $total),
                 );
             })

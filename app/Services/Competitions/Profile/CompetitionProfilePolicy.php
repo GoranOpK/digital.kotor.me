@@ -455,16 +455,6 @@ abstract class CompetitionProfilePolicy
         return false;
     }
 
-    /**
-     * Authoritative stored business-stage code for business-start priority under
-     * the closed PO equal-score / scarce-funds rule (Women + Youth precedent).
-     * This is not an MMSP Odluka-prescribed term. Do not substitute other spellings.
-     */
-    public function businessStartStoredValue(): string
-    {
-        return 'započinjanje';
-    }
-
     public function budgetShareCapPercent(): ?int
     {
         $caps = $this->financialCaps();

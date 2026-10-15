@@ -354,34 +354,48 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->assertSame(0, CanonicalTieResolution::query()->count());
     }
 
-    public function test_g_single_zapocinjanje_gets_priority_at_the_boundary(): void
+    public function test_g_business_stage_gives_no_priority_at_the_boundary(): void
     {
-        [, $members, $competition, $apps] = $this->rankedCompetition($this->boundaryTie('razvoj', 'započinjanje'));
-        [$razvoj, $starter] = [$apps[4], $apps[5]];
+        [, $members, $competition, $apps] = $this->rankedCompetition($this->boundaryTie('započinjanje', 'razvoj'));
+        [$starter, $razvoj] = [$apps[4], $apps[5]];
+        $this->assertLessThan($razvoj->id, $starter->id);
         $this->fundTopFour($competition, $members, $apps);
-        $this->assertSame([5, 5], [(int) $razvoj->fresh()->ranking_position, (int) $starter->fresh()->ranking_position]);
+        $this->assertSame([5, 5], [(int) $starter->fresh()->ranking_position, (int) $razvoj->fresh()->ranking_position]);
 
-        $this->draft($competition, $members, $razvoj, 'reject', null, CanonicalOutcome::REASON_INSUFFICIENT_FUNDS);
         $this->draft($competition, $members, $starter, 'reject', null, CanonicalOutcome::REASON_INSUFFICIENT_FUNDS);
+        $this->draft($competition, $members, $razvoj, 'reject', null, CanonicalOutcome::REASON_INSUFFICIENT_FUNDS);
         $this->assertStringStartsWith(A::INSUFFICIENT_FUNDS_INVALID_MESSAGE, (string) $this->confirm($competition, $members)->error);
 
-        $this->draft($competition, $members, $razvoj, 'support', '2000');
-        $this->draft($competition, $members, $starter, 'reject', null, CanonicalOutcome::REASON_INSUFFICIENT_FUNDS);
+        $this->draft($competition, $members, $starter, 'support', '2000');
+        $this->draft($competition, $members, $razvoj, 'reject', null, CanonicalOutcome::REASON_INSUFFICIENT_FUNDS);
         $this->assertStringStartsWith(A::TIE_REASON_REQUIRED_MESSAGE, (string) $this->confirm($competition, $members)->error);
 
-        $this->draft($competition, $members, $starter, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED);
-        $this->assertStringStartsWith(A::ZAPOCINJANJE_PRIORITY_MESSAGE, (string) $this->confirm($competition, $members)->error);
-
         $this->draft($competition, $members, $razvoj, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED);
-        $this->draft($competition, $members, $starter, 'support', '2000');
+        $this->assertStringStartsWith(A::MAJORITY_REQUIRED_MESSAGE, (string) $this->confirm($competition, $members)->error);
+
+        $this->draft($competition, $members, $starter, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED);
+        $this->draft($competition, $members, $razvoj, 'support', '2000');
+        $this->assertStringStartsWith(A::MAJORITY_REQUIRED_MESSAGE, (string) $this->confirm($competition, $members)->error);
+        $this->assertSame(['submitted', 'submitted'], [$starter->fresh()->status, $razvoj->fresh()->status]);
+        $this->assertSame(0, CanonicalFinalRanking::query()->count());
+
+        $ties = app(CanonicalTieResolutionService::class);
+        $proposed = $ties->propose($competition, $members[G::ROLE_PREDSJEDNIK]->user, 5, [$starter->id, $razvoj->id], [$razvoj->id]);
+        $this->assertTrue($proposed->succeeded, (string) $proposed->error);
+        $resolution = CanonicalTieResolution::query()->findOrFail($proposed->recordId);
+        $this->assertTrue($ties->vote($resolution, $members[G::ROLE_PREDSJEDNIK]->user, true)->succeeded);
+        $this->assertTrue($ties->vote($resolution, $members[G::ROLE_SEKRETAR]->user, false)->succeeded);
+        $this->assertTrue($ties->vote($resolution, $members[G::ROLE_SPOLJASNJI]->user, true)->succeeded);
+        $this->assertSame(CanonicalTieResolution::ADOPTED, $resolution->fresh()->status);
+
         $this->assertTrue($this->confirm($competition, $members)->succeeded);
-        $this->assertSame([5, 5], [(int) $razvoj->fresh()->ranking_position, (int) $starter->fresh()->ranking_position]);
-        $this->assertSame(0, CanonicalTieResolution::query()->count());
+        $this->assertSame(['rejected', 'approved'], [$starter->fresh()->status, $razvoj->fresh()->status]);
+        $this->assertSame([5, 5], [(int) $starter->fresh()->ranking_position, (int) $razvoj->fresh()->ranking_position]);
     }
 
     // H — majority
 
-    public function test_h_no_zapocinjanje_requires_adopted_majority_over_exact_tied_set(): void
+    public function test_h_boundary_tie_requires_adopted_majority_over_exact_tied_set(): void
     {
         [, $members, $competition, $apps] = $this->rankedCompetition($this->boundaryTie('razvoj', 'razvoj'));
         [$a, $b] = [$apps[4], $apps[5]];
@@ -427,7 +441,7 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $locked->forceFill(['selected_application_ids' => [$a->id]])->save();
     }
 
-    public function test_h_minority_rejects_proposal_and_multiple_zapocinjanje_also_need_majority(): void
+    public function test_h_minority_rejects_proposal_and_unanimous_vote_adopts(): void
     {
         [, $members, $competition, $apps] = $this->rankedCompetition($this->boundaryTie('započinjanje', 'započinjanje'));
         [$a, $b] = [$apps[4], $apps[5]];
@@ -450,6 +464,26 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         }
         $this->assertSame(CanonicalTieResolution::ADOPTED, $second->fresh()->status);
         $this->assertTrue($this->confirm($competition, $members)->succeeded);
+    }
+
+    public function test_h_null_business_stage_tie_is_decided_only_by_majority(): void
+    {
+        [, $members, $competition, $apps] = $this->rankedCompetition($this->boundaryTie(null, null));
+        [$a, $b] = [$apps[4], $apps[5]];
+        $this->assertSame([null, null], [$a->fresh()->business_stage, $b->fresh()->business_stage]);
+        $this->fundTopFour($competition, $members, $apps);
+        $this->draft($competition, $members, $a, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED);
+        $this->draft($competition, $members, $b, 'support', '2000');
+        $this->assertStringStartsWith(A::MAJORITY_REQUIRED_MESSAGE, (string) $this->confirm($competition, $members)->error);
+
+        $ties = app(CanonicalTieResolutionService::class);
+        $resolution = CanonicalTieResolution::query()->findOrFail($ties->propose($competition, $members[G::ROLE_PREDSJEDNIK]->user, 5, [$a->id, $b->id], [$b->id])->recordId);
+        foreach ([G::ROLE_PREDSJEDNIK, G::ROLE_SEKRETAR, G::ROLE_SPOLJASNJI] as $role) {
+            $this->assertTrue($ties->vote($resolution, $members[$role]->user, true)->succeeded);
+        }
+        $this->assertSame(CanonicalTieResolution::ADOPTED, $resolution->fresh()->status);
+        $this->assertTrue($this->confirm($competition, $members)->succeeded);
+        $this->assertSame(['rejected', 'approved'], [$a->fresh()->status, $b->fresh()->status]);
     }
 
     public function test_h_replaced_member_cannot_vote(): void
@@ -772,7 +806,7 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
             'competition_id' => $competition->id,
             'user_id' => $owner->id,
             'applicant_type' => 'doo',
-            'business_stage' => $spec['stage'] ?? 'razvoj',
+            'business_stage' => array_key_exists('stage', $spec) ? $spec['stage'] : 'razvoj',
             'status' => 'submitted',
             'business_plan_name' => 'Plan '.uniqid(),
             'founder_name' => 'Osnivač '.uniqid(),
@@ -906,9 +940,9 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
     /**
      * Ranks 1–4 distinct, rank 5 shared by two applications with the given stages. Budget 10000, max 2000 each.
      *
-     * @return list<array{scores: array{0: int, 1: int, 2: int}, stage?: string}>
+     * @return list<array{scores: array{0: int, 1: int, 2: int}, stage?: ?string}>
      */
-    private function boundaryTie(string $firstStage, string $secondStage): array
+    private function boundaryTie(?string $firstStage, ?string $secondStage): array
     {
         return [
             ['scores' => [48, 48, 48]],

@@ -14,11 +14,12 @@ use App\Support\CompetitionRanking;
  * - Supported amount: > 0, ≤ čl.19 legal maximum, Σ supported ≤ Poziv budget.
  * - One supported application per normalized PIB; the other stays ranked with duplicate_beneficiary_support.
  * - Funding follows the frozen rank: an unfunded contender blocks support of any worse rank.
- * - Shared rank at the funding boundary: exactly one započinjanje gets priority, otherwise an adopted
- *   Commission majority resolution over the exact tied set decides. Ranks are never renumbered.
+ * - Shared rank at the funding boundary when funds do not cover the whole group: an adopted Commission
+ *   majority resolution over the exact tied set decides. Ranks are never renumbered.
  *
  * Contenders are ranked applications with calc ≥ 30 that are not rejected by the Commission or as a
- * duplicate beneficiary. The application id is never a funding criterion.
+ * duplicate beneficiary. Neither the application id nor business_stage is a funding criterion: the
+ * canonical Odluka defines no business stage and no stage priority (PO decision).
  */
 final class CanonicalAllocationPolicy
 {
@@ -57,8 +58,6 @@ final class CanonicalAllocationPolicy
     public const TIE_REASON_REQUIRED_MESSAGE = 'Nepodržana prijava sa jednakim rangom na granici sredstava odbija se uz razlog "nije izabrano pri jednakom rangu".';
 
     public const TIE_REASON_INVALID_MESSAGE = 'Razlog "nije izabrano pri jednakom rangu" važi samo kada je podržana druga prijava istog ranga, a sredstva ne pokrivaju cijelu grupu.';
-
-    public const ZAPOCINJANJE_PRIORITY_MESSAGE = 'Pri jednakom rangu na granici sredstava prednost ima jedina prijava u fazi započinjanja.';
 
     public const MAJORITY_REQUIRED_MESSAGE = 'Pri jednakom rangu na granici sredstava potrebna je usvojena odluka Komisije većinom glasova za tačan skup prijava.';
 
@@ -269,25 +268,8 @@ final class CanonicalAllocationPolicy
             return null;
         }
 
-        $starters = array_values(array_filter($members, fn (CanonicalRankedRow $row) => $row->businessStart));
-        $pool = $members;
-        if (count($starters) === 1) {
-            $starter = $starters[0];
-            if (! $this->isSupported($outcomes[$starter->id()])) {
-                return self::ZAPOCINJANJE_PRIORITY_MESSAGE.' (prijava #'.$starter->id().')';
-            }
-            $pool = array_values(array_filter($members, fn (CanonicalRankedRow $row) => $row->id() !== $starter->id()));
-            $poolSupported = array_filter($pool, fn (CanonicalRankedRow $row) => $this->isSupported($outcomes[$row->id()]));
-            if ($poolSupported === []) {
-                return null;
-            }
-        }
-
-        $tiedIds = CanonicalTieResolution::normalizeIds(array_map(fn (CanonicalRankedRow $row) => $row->id(), $pool));
-        $selectedIds = CanonicalTieResolution::normalizeIds(array_map(
-            fn (CanonicalRankedRow $row) => $row->id(),
-            array_filter($pool, fn (CanonicalRankedRow $row) => $this->isSupported($outcomes[$row->id()])),
-        ));
+        $tiedIds = CanonicalTieResolution::normalizeIds(array_map(fn (CanonicalRankedRow $row) => $row->id(), $members));
+        $selectedIds = CanonicalTieResolution::normalizeIds(array_map(fn (CanonicalRankedRow $row) => $row->id(), $supported));
 
         $resolution = $resolutions->first(fn (CanonicalTieResolution $resolution) => (int) $resolution->shared_rank === $rank
             && $resolution->tiedIds() === $tiedIds);

@@ -60,7 +60,7 @@
                     @php $outcome = $outcomes->get($row->id()); @endphp
                     <tr style="border-top: 1px solid #e5e7eb; vertical-align: top;">
                         <td style="padding: 6px; text-align: center;">{{ $row->rank }}</td>
-                        <td style="padding: 6px;">#{{ $row->application->redni_broj ?? $row->id() }} {{ $row->application->business_plan_name ?? $row->application->founder_name }}@if($row->businessStart) <small>(započinjanje)</small>@endif</td>
+                        <td style="padding: 6px;">#{{ $row->application->redni_broj ?? $row->id() }} {{ $row->application->business_plan_name ?? $row->application->founder_name }}</td>
                         <td style="padding: 6px; text-align: center;">{{ $row->display }}</td>
                         <td style="padding: 6px;">{{ $row->subsidyType && \App\Support\CanonicalSubsidyType::isValid($row->subsidyType) ? \App\Support\CanonicalSubsidyType::label($row->subsidyType) : '—' }}</td>
                         <td style="padding: 6px; text-align: right;">{{ $row->totalInvestment !== null ? number_format((float) $row->totalInvestment, 2, ',', '.') : '—' }}</td>
