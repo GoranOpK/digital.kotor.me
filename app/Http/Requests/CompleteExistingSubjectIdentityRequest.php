@@ -12,7 +12,6 @@ use App\Security\JmbEncryptedReadException;
 use App\Security\JmbLookupException;
 use App\Identity\Validation\CrpsIdentifierValidator;
 use App\Identity\Validation\JmbIdentifierValidator;
-use App\Identity\Validation\PibIdentifierValidator;
 use App\Models\PhysicalPersonIdentity;
 use App\Rules\ValidCrps;
 use App\Rules\ValidJmb;
@@ -69,6 +68,7 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
 
             $this->refineIdentifierMessages($validator, $result);
             $this->refineJmbUniqueness($validator, $result);
+            $this->refinePibUniqueness($validator, $result);
             $this->refinePhone($validator);
         });
     }
@@ -175,7 +175,7 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
 
         $rules = [
             'legal_name' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'crps_number' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_DOO)],
             'authorized_first_name' => ['required', 'string', 'max:255'],
             'authorized_last_name' => ['required', 'string', 'max:255'],
@@ -208,7 +208,7 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'residential_status' => ['required', 'string', Rule::in(['resident', 'non-resident'])],
             'entrepreneur_business_name' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'crps_number' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_ENTREPRENEUR)],
         ];
 
@@ -286,20 +286,6 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
 
     private function refineIdentifierMessages(Validator $validator, ExistingSubjectIdentityEligibilityResult $result): void
     {
-        $pib = $this->input('pib');
-        if (
-            in_array($result->branch, [
-                ExistingSubjectIdentityEligibilityResult::BRANCH_DOO,
-                ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK,
-            ], true)
-            && is_string($pib)
-            && preg_match('/^[0-9]{8}$/', $pib)
-            && ! (new PibIdentifierValidator)->isValid($pib)
-        ) {
-            $validator->errors()->forget('pib');
-            $validator->errors()->add('pib', 'PIB nije ispravan.');
-        }
-
         $jmbFields = $result->branch === ExistingSubjectIdentityEligibilityResult::BRANCH_DOO
             ? ['authorized_jmb']
             : ['jmb'];
@@ -380,6 +366,25 @@ class CompleteExistingSubjectIdentityRequest extends FormRequest
             $jmb,
             $this->user()?->id,
         );
+    }
+
+    private function refinePibUniqueness(Validator $validator, ExistingSubjectIdentityEligibilityResult $result): void
+    {
+        if (! in_array($result->branch, [
+            ExistingSubjectIdentityEligibilityResult::BRANCH_DOO,
+            ExistingSubjectIdentityEligibilityResult::BRANCH_PREDUZETNIK,
+        ], true)) {
+            return;
+        }
+
+        $pib = $this->input('pib');
+        if (! is_string($pib) || $pib === '' || $validator->errors()->has('pib')) {
+            return;
+        }
+
+        if (app(CanonicalIdentifierUniqueness::class)->pibTaken($pib, $this->user()?->id)) {
+            $validator->errors()->add('pib', CanonicalIdentifierUniqueness::PIB_TAKEN_MESSAGE);
+        }
     }
 
     private function refinePhone(Validator $validator): void

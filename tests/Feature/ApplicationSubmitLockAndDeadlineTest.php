@@ -22,6 +22,8 @@ use Tests\TestCase;
 /**
  * Ciljani testovi za konačnu predaju, zaključavanje podnesene prijave
  * i draft nakon isteka roka (žensko preduzetništvo).
+ *
+ * Limit uploada 20 MB je zajednički runtime (`applications.upload`) za ženski i omladinski profil.
  */
 class ApplicationSubmitLockAndDeadlineTest extends TestCase
 {
@@ -343,6 +345,16 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
             ->assertSessionHasErrors('error');
 
         $this->assertDatabaseHas('applications', ['id' => $application->id, 'status' => 'submitted']);
+    }
+
+    public function test_zensko_upload_rejects_file_over_20mb_without_persisting(): void
+    {
+        $this->assertOversizeUploadIsRejectedForCompetitionType('zensko');
+    }
+
+    public function test_omladinsko_upload_rejects_file_over_20mb_without_persisting(): void
+    {
+        $this->assertOversizeUploadIsRejectedForCompetitionType('omladinsko');
     }
 
     public function test_draft_after_deadline_stays_draft_visible_and_write_locked(): void
@@ -720,6 +732,148 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
         $this->assertTrue($application->isObrazacComplete());
 
         return [$owner, $application];
+    }
+
+    /**
+     * @return array{0: User, 1: Application}
+     */
+    private function createDraftForCompetitionType(string $competitionType): array
+    {
+        if ($competitionType === 'zensko') {
+            return $this->createReadyDraft(financesNotice: true);
+        }
+
+        $this->assertSame('omladinsko', $competitionType);
+
+        $jmb = $this->uniqueTestJmb();
+        $owner = $this->makeKorisnik('youth-owner-'.uniqid().'@example.com', [
+            'jmb' => $jmb,
+            'user_type' => 'Fizičko lice',
+            'address' => 'Njegoševa 1',
+            'city' => 'Kotor',
+            'phone' => '067000000',
+        ]);
+
+        $competition = Competition::create([
+            'title' => 'Omladinski konkurs '.uniqid(),
+            'description' => 'Opis',
+            'start_date' => now()->subDays(2)->toDateString(),
+            'end_date' => now()->addDays(18)->toDateString(),
+            'type' => 'omladinsko',
+            'status' => 'published',
+            'year' => (int) now()->year,
+            'deadline_days' => 20,
+            'published_at' => now()->subDays(2),
+        ]);
+
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $owner->id,
+            'business_plan_name' => 'Omladinski plan',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'usluge',
+            'status' => 'draft',
+            'accuracy_declaration' => true,
+            'applicant_type' => 'fizicko_lice',
+            'is_registered' => false,
+            'physical_person_name' => $owner->name,
+            'physical_person_jmbg' => $jmb,
+            'physical_person_phone' => '067000000',
+            'physical_person_email' => $owner->email,
+            'physical_person_address' => 'Njegoševa 1, 85330 Kotor',
+        ]);
+
+        BusinessPlan::create([
+            'application_id' => $application->id,
+            'business_idea_name' => 'Omladinska ideja',
+            'applicant_name' => $owner->name,
+            'applicant_jmbg' => $jmb,
+            'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+            'applicant_phone' => '067000000',
+            'applicant_email' => $owner->email,
+            'realization_type' => 'stvori_novi',
+            'funding_sources_table' => [
+                ['type' => 'Laptop', 'price' => '1200'],
+            ],
+            'requested_amount' => 500,
+            'finances_notice_confirmed' => true,
+        ]);
+
+        $application->refresh();
+        $application->load(['businessPlan', 'competition']);
+
+        return [$owner, $application];
+    }
+
+    private function assertOversizeUploadIsRejectedForCompetitionType(string $competitionType): void
+    {
+        Storage::fake('local');
+
+        [$owner, $application] = $this->createDraftForCompetitionType($competitionType);
+        $allowedTypes = $application->allowedUploadDocumentTypes();
+        $this->assertNotSame([], $allowedTypes);
+        $documentType = $allowedTypes[0];
+        $this->assertContains($documentType, $application->allowedUploadDocumentTypes());
+
+        $existingPath = 'applications/existing-'.$application->id.'-'.$documentType.'.pdf';
+        Storage::disk('local')->put($existingPath, '%PDF-1.4 existing');
+        $existing = ApplicationDocument::create([
+            'application_id' => $application->id,
+            'name' => 'Postojeci.pdf',
+            'file_path' => $existingPath,
+            'document_type' => $documentType,
+            'is_required' => true,
+        ]);
+        $existingSnapshot = $existing->only(['id', 'name', 'file_path', 'document_type']);
+        $statusBefore = $application->status;
+        $filesBefore = Storage::disk('local')->allFiles();
+
+        $oversized = UploadedFile::fake()->create('prevelik.pdf', 20481, 'application/pdf');
+        $this->assertSame(20481 * 1024, $oversized->getSize());
+
+        $response = $this->actingAs($owner)->from(route('applications.show', $application))->post(
+            route('applications.upload', $application),
+            [
+                'document_type' => $documentType,
+                'files' => [$oversized],
+            ]
+        );
+
+        $response->assertRedirect(route('applications.show', $application));
+        $response->assertSessionHasErrors('files.0');
+        $this->assertSame(
+            'Fajl ne može biti veći od 20MB.',
+            session('errors')->first('files.0')
+        );
+
+        $this->assertSame(1, $application->documents()->count());
+        $this->assertDatabaseHas('application_documents', $existingSnapshot);
+        $this->assertSame($statusBefore, $application->fresh()->status);
+        $this->assertEqualsCanonicalizing($filesBefore, Storage::disk('local')->allFiles());
+
+        $application->forceFill([
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ])->save();
+        $this->assertSame('submitted', $application->fresh()->status);
+
+        $locked = $this->actingAs($owner)->from(route('applications.show', $application))->post(
+            route('applications.upload', $application),
+            [
+                'document_type' => $documentType,
+                'files' => [UploadedFile::fake()->create('prevelik.pdf', 20481, 'application/pdf')],
+            ]
+        );
+        $locked->assertRedirect(route('applications.show', $application));
+        $locked->assertSessionHasErrors('error');
+        $this->assertSame(
+            'Podnesena prijava je zaključana. Dokumente više nije moguće dodavati.',
+            session('errors')->first('error')
+        );
+        $this->assertSame(1, $application->documents()->count());
+        $this->assertDatabaseHas('application_documents', $existingSnapshot);
+        $this->assertSame('submitted', $application->fresh()->status);
+        $this->assertEqualsCanonicalizing($filesBefore, Storage::disk('local')->allFiles());
     }
 
     private function uniqueTestJmb(): string

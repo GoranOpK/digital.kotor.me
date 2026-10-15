@@ -77,6 +77,7 @@ final class ExistingSubjectIdentityCompletionService
 
                 $snapshot = $this->mapper->fromValidated($lockedUser, $branch, $validated);
                 $this->assertDeclaredJmbAvailable($snapshot, (int) $lockedUser->id, $branch);
+                $this->assertDeclaredPibAvailable($snapshot, (int) $lockedUser->id);
                 $this->writer->createForUser($lockedUser, $snapshot);
                 $this->mirror->sync($lockedUser, $snapshot);
 
@@ -120,6 +121,14 @@ final class ExistingSubjectIdentityCompletionService
             }
         } catch (JmbLookupException $e) {
             throw new CanonicalIdentityWriteException('Canonical identity completion failed.', 0, $e);
+        }
+    }
+
+    private function assertDeclaredPibAvailable(IdentitySnapshot $snapshot, int $exceptUserId): void
+    {
+        $pib = $snapshot->physicalPerson?->pib ?? $snapshot->legalEntity?->pib;
+        if ($this->uniqueness->pibTaken($pib, $exceptUserId)) {
+            throw new CanonicalIdentityWriteException(CanonicalIdentifierUniqueness::PIB_TAKEN_MESSAGE);
         }
     }
 

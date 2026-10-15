@@ -234,6 +234,7 @@ class HomeController extends Controller
                 $field = 'jmb';
             } elseif (str_contains($message, 'PIB')) {
                 $field = 'pib';
+                $message = $message === 'PIB je već registrovan.' ? $message : 'PIB nije ispravan.';
             } elseif (str_contains($message, 'pasoš') || str_contains($message, 'paso')) {
                 $field = 'passport_number';
             }

@@ -33,6 +33,8 @@ final class CanonicalIdentifierUniqueness
 
     public const JMB_LOOKUP_UNAVAILABLE_MESSAGE = 'JMB nije moguće provjeriti.';
 
+    public const PIB_TAKEN_MESSAGE = 'PIB je već registrovan.';
+
     public function jmbTaken(?string $jmb, ?int $exceptUserId = null): bool
     {
         if (! is_string($jmb) || $jmb === '') {
@@ -128,7 +130,7 @@ final class CanonicalIdentifierUniqueness
         }
 
         if ($this->pibTaken($pib, $exceptUserId)) {
-            throw new CanonicalIdentityWriteException('PIB je već registrovan.');
+            throw new CanonicalIdentityWriteException(self::PIB_TAKEN_MESSAGE);
         }
 
         if ($this->physicalPassportTaken($passport, $exceptUserId)) {

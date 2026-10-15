@@ -43,6 +43,12 @@ class ProfileController extends Controller
         } catch (IdentityUseGateException $e) {
             return back()->withErrors(['user_type' => $e->getMessage()])->withInput();
         } catch (CanonicalIdentityWriteException $e) {
+            if (str_contains($e->getMessage(), 'PIB')) {
+                return back()->withErrors([
+                    'pib' => $e->getMessage() === 'PIB je već registrovan.' ? $e->getMessage() : 'PIB nije ispravan.',
+                ])->withInput();
+            }
+
             return back()->withErrors(['user_type' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
         }
 

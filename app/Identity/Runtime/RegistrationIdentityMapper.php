@@ -53,10 +53,15 @@ final class RegistrationIdentityMapper
             ? PhysicalPersonIdentity::RESIDENTIAL_NON_RESIDENT
             : PhysicalPersonIdentity::RESIDENTIAL_RESIDENT;
 
-        $passport = isset($validated['passport_number']) && $validated['passport_number'] !== ''
+        $declaredDocument = $canonicalResidential === PhysicalPersonIdentity::RESIDENTIAL_NON_RESIDENT
+            ? ($validated['id_document_type'] ?? null)
+            : PhysicalPersonIdentity::DOCUMENT_JMB;
+
+        $passport = $declaredDocument === PhysicalPersonIdentity::DOCUMENT_PASSPORT
+            && isset($validated['passport_number']) && $validated['passport_number'] !== ''
             ? strtoupper((string) $validated['passport_number'])
             : null;
-        $hasJmb = is_string($jmb) && $jmb !== '';
+        $hasJmb = $declaredDocument === PhysicalPersonIdentity::DOCUMENT_JMB && is_string($jmb) && $jmb !== '';
         $documentType = $hasJmb
             ? PhysicalPersonIdentity::DOCUMENT_JMB
             : ($passport !== null ? PhysicalPersonIdentity::DOCUMENT_PASSPORT : null);
