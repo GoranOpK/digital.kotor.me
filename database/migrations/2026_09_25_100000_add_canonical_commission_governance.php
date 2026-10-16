@@ -53,7 +53,7 @@ return new class extends Migration
             $table->foreignId('replacement_member_id')->nullable()->constrained('commission_members')->restrictOnDelete();
             $table->string('vacancy_reason', 64);
             $table->timestamp('vacancy_triggered_at');
-            $table->timestamp('due_at');
+            $table->dateTime('due_at');
             $table->timestamp('replaced_at')->nullable();
             $table->boolean('late')->default(false);
             $table->text('compliance_warning')->nullable();

@@ -47,6 +47,12 @@ class CanonicalCommissionGovernanceMigrationTest extends TestCase
         }
         $this->assertNull(DB::table('commissions')->where('id', $commissionId)->value('profile_type'));
         $this->assertSame(2, DB::table('commission_members')->whereIn('id', $memberIds)->whereNull('canonical_active_user_id')->count());
+        $this->assertReplacementDueAtIsRequiredDatetime();
+    }
+
+    public function test_replacement_due_at_is_required_datetime(): void
+    {
+        $this->assertReplacementDueAtIsRequiredDatetime();
     }
 
     public function test_down_drops_only_new_objects_and_up_restores_them(): void
@@ -75,6 +81,7 @@ class CanonicalCommissionGovernanceMigrationTest extends TestCase
         $this->assertTrue(Schema::hasTable('commission_member_replacements'));
         $this->assertTrue(Schema::hasTable('commission_governance_conflicts'));
         $this->assertSame(2, DB::table('commission_members')->whereIn('id', $memberIds)->count());
+        $this->assertReplacementDueAtIsRequiredDatetime();
     }
 
     private function migration(): object
@@ -82,13 +89,30 @@ class CanonicalCommissionGovernanceMigrationTest extends TestCase
         return require base_path(self::MIGRATION);
     }
 
+    private function assertReplacementDueAtIsRequiredDatetime(): void
+    {
+        $this->assertTrue(Schema::hasTable('commission_member_replacements'));
+        $this->assertTrue(Schema::hasColumn('commission_member_replacements', 'due_at'));
+        $column = $this->column('commission_member_replacements', 'due_at');
+        $this->assertSame('NO', $column->IS_NULLABLE);
+        $this->assertSame('datetime', strtolower($column->DATA_TYPE));
+    }
+
     private function nullable(string $table, string $column): ?string
     {
-        return DB::selectOne(
-            'SELECT IS_NULLABLE FROM information_schema.COLUMNS
+        return $this->column($table, $column)->IS_NULLABLE;
+    }
+
+    private function column(string $table, string $column): object
+    {
+        $definition = DB::selectOne(
+            'SELECT IS_NULLABLE, DATA_TYPE FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
             [$table, $column]
-        )?->IS_NULLABLE;
+        );
+        $this->assertNotNull($definition, "$table.$column");
+
+        return $definition;
     }
 
     /**
