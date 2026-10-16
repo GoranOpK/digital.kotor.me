@@ -676,6 +676,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
@@ -818,6 +819,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];

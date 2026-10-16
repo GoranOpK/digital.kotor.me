@@ -11,7 +11,42 @@ use App\Services\Competitions\Profile\CompetitionProfileResolver;
  */
 final class CommissionProfileConfig
 {
+    public const PROFILE_ZENSKO = 'zensko';
+
+    public const PROFILE_OMLADINSKO = 'omladinsko';
+
+    /** @var list<string> */
+    public const SUPPORTED_STORED_PROFILES = ['zensko', 'omladinsko'];
+
     public const MIXED_PROFILE_ASSIGNMENT_MESSAGE = 'Ista Komisija ne može biti dodijeljena Pozivima ženskog i omladinskog profila.';
+
+    public const UNKNOWN_COMPETITION_ASSIGNMENT_MESSAGE = 'Izabrani Poziv ne postoji ili ne pripada izabranom skupu.';
+
+    public const COMPETITION_REQUIRED_MESSAGE = 'Morate izabrati najmanje jedan konkretan Poziv.';
+
+    public const UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE = 'Komisija se može povezati samo sa Pozivima jednog podržanog profila.';
+
+    public const PROFILE_REQUIRED_MESSAGE = 'Morate izabrati vrstu konkursa: žensko preduzetništvo ili podrška preduzetništvu mladih.';
+
+    public const INCOMPLETE_ZENSKO_CREATE_MESSAGE = 'Komisija ženskog profila mora pri kreiranju imati svih 5 redovnih članova.';
+
+    public const INCOMPLETE_OMLADINSKO_CREATE_MESSAGE = 'Komisija mladih mora pri kreiranju imati sva 3 redovna člana.';
+
+    public const PROFILE_CHANGE_REJECTED_MESSAGE = 'Profil postojeće Komisije nije moguće promijeniti. Kreirajte novu Komisiju za izabrani tip konkursa.';
+
+    public const UNDETERMINED_COMMISSION_PROFILE_MESSAGE = 'Profil postojeće Komisije nije utvrđen. Redovno uređivanje i povezivanje nijesu dostupni dok se Komisija posebno ne klasifikuje.';
+
+    public const UNDETERMINED_COMMISSION_SHOW_MESSAGE = 'Profil Komisije nije utvrđen. Komisiju nije moguće mijenjati niti povezivati sa Pozivom dok se profil kontrolisano ne odredi.';
+
+    public const COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE = 'Poziv se može povezati samo sa Komisijom istog podržanog profila.';
+
+    public const MIXED_COMPETITION_TYPES_MESSAGE = 'Komisija ne može obuhvatiti Pozive različitih tipova.';
+
+    public const COMPETITION_ALREADY_ASSIGNED_MESSAGE = 'Poziv koji već ima Komisiju ne može se ponovo dodijeliti.';
+
+    public const YOUTH_PRESIDENT_COUNT_MESSAGE = 'Komisija mladih mora imati tačno jednog predsjednika.';
+
+    public const YOUTH_MEMBER_TYPE_REJECTED_MESSAGE = 'Komisija mladih ne koristi kategorije članova ženskog profila.';
 
     public const OMLADINSKO_INCOMPLETE_PUBLISH_WARNING = 'Komisija još nije formalno kompletirana. Administrativna provjera (M3) ne može početi dok sva tri mjesta nijesu popunjena.';
 
@@ -156,7 +191,186 @@ final class CommissionProfileConfig
     }
 
     /**
-     * @param  iterable<int|string>  $competitionIds
+     * Kanonski tip forme iz već učitanih tipova Poziva.
+     * Prihvata samo jedinstveni `zensko` ili `omladinsko`.
+     *
+     * @param  iterable<int|string|null>  $types
+     * @return array{type: ?string, error: ?string}
+     */
+    public static function canonicalFormTypeFromTypes(iterable $types): array
+    {
+        $normalized = collect($types)->map(function ($type) {
+            if (! is_string($type) || $type === '') {
+                return null;
+            }
+
+            return $type;
+        })->values();
+
+        if ($normalized->contains(null)) {
+            return ['type' => null, 'error' => self::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE];
+        }
+
+        $unique = $normalized->unique()->values();
+        if ($unique->isEmpty()) {
+            return ['type' => null, 'error' => self::COMPETITION_REQUIRED_MESSAGE];
+        }
+
+        if ($unique->count() !== 1) {
+            $knTypes = $unique->filter(fn ($type) => in_array($type, self::COMMISSION_PROFILE_TYPES, true));
+            if ($knTypes->count() > 1) {
+                return ['type' => null, 'error' => self::mixedProfileMessage($knTypes->all())];
+            }
+
+            return ['type' => null, 'error' => self::MIXED_COMPETITION_TYPES_MESSAGE];
+        }
+
+        $type = $unique->first();
+        if ($type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return ['type' => null, 'error' => self::CANONICAL_LEGACY_FORM_MESSAGE];
+        }
+        if (! in_array($type, self::SUPPORTED_STORED_PROFILES, true)) {
+            return ['type' => null, 'error' => self::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE];
+        }
+
+        return ['type' => $type, 'error' => null];
+    }
+
+    /**
+     * Kanonski tip forme iz Poziva u bazi. Ne čita browser payload.
+     *
+     * @param  iterable<int|string|null>  $competitionIds
+     * @return array{type: ?string, error: ?string}
+     */
+    public static function canonicalFormTypeFromCompetitionIds(iterable $competitionIds): array
+    {
+        $ids = collect($competitionIds)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return ['type' => null, 'error' => self::COMPETITION_REQUIRED_MESSAGE];
+        }
+
+        $competitions = Competition::query()
+            ->whereIn('id', $ids)
+            ->get(['id', 'type']);
+
+        if ($competitions->count() !== $ids->count()) {
+            return ['type' => null, 'error' => self::UNKNOWN_COMPETITION_ASSIGNMENT_MESSAGE];
+        }
+
+        return self::canonicalFormTypeFromTypes($competitions->pluck('type'));
+    }
+
+    /**
+     * Profil ženske/omladinske forme iz sačuvanog `commissions.profile_type`.
+     * Ne nagađa iz Poziva, broja mjesta, member_type ni request payload-a.
+     * Kanonska MMSP Komisija nije dostupna kroz ovu formu.
+     *
+     * @return array{type: ?string, error: ?string}
+     */
+    public static function storedCanonicalFormType(Commission $commission): array
+    {
+        $type = $commission->profile_type;
+        if ($type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return ['type' => null, 'error' => self::CANONICAL_LEGACY_FORM_MESSAGE];
+        }
+        if (! is_string($type) || ! in_array($type, self::SUPPORTED_STORED_PROFILES, true)) {
+            return ['type' => null, 'error' => self::UNDETERMINED_COMMISSION_PROFILE_MESSAGE];
+        }
+
+        return ['type' => $type, 'error' => null];
+    }
+
+    /**
+     * @return array{type: ?string, error: ?string}
+     */
+    public static function assertSupportedStoredProfile(mixed $type): array
+    {
+        if (! is_string($type) || $type === '') {
+            return ['type' => null, 'error' => self::PROFILE_REQUIRED_MESSAGE];
+        }
+
+        if (! in_array($type, self::SUPPORTED_STORED_PROFILES, true)) {
+            return ['type' => null, 'error' => self::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE];
+        }
+
+        return ['type' => $type, 'error' => null];
+    }
+
+    /**
+     * @param  iterable<int|string|null>  $competitionIds
+     */
+    public static function selectedCompetitionsMatchProfile(iterable $competitionIds, string $profile): ?string
+    {
+        $ids = collect($competitionIds)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return null;
+        }
+
+        $hasCanonicalCall = Competition::query()
+            ->whereIn('id', $ids)
+            ->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
+            ->exists();
+        if ($hasCanonicalCall) {
+            return self::CANONICAL_COMMISSION_REQUIRED_MESSAGE;
+        }
+
+        $resolved = self::canonicalFormTypeFromCompetitionIds($ids);
+        if ($resolved['error']) {
+            return $resolved['error'];
+        }
+
+        if ($resolved['type'] !== $profile) {
+            return self::COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE;
+        }
+
+        return null;
+    }
+
+    public static function conflictWithAssignedCompetitions(
+        Commission $commission,
+        string $targetType,
+        ?int $excludingCompetitionId = null
+    ): ?string {
+        unset($excludingCompetitionId);
+
+        $canonical = CompetitionProfileResolver::TYPE_CANONICAL;
+        $stored = $commission->assignedProfileType();
+
+        if ($stored === $canonical) {
+            return $targetType === $canonical ? null : self::CANONICAL_PROFILE_ASSIGNMENT_MESSAGE;
+        }
+
+        if ($targetType === $canonical) {
+            return self::CANONICAL_COMMISSION_REQUIRED_MESSAGE;
+        }
+
+        if (! in_array($stored, self::SUPPORTED_STORED_PROFILES, true)) {
+            return self::UNDETERMINED_COMMISSION_PROFILE_MESSAGE;
+        }
+
+        if (! in_array($targetType, self::SUPPORTED_STORED_PROFILES, true)) {
+            return self::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE;
+        }
+
+        if ($stored !== $targetType) {
+            return self::COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  iterable<int|string|null>  $competitionIds
      */
     public static function homogeneousCompetitionTypes(iterable $competitionIds): ?string
     {
@@ -178,42 +392,6 @@ final class CommissionProfileConfig
             ->values();
 
         return $knTypes->count() > 1 ? self::mixedProfileMessage($knTypes->all()) : null;
-    }
-
-    public static function conflictWithAssignedCompetitions(
-        Commission $commission,
-        string $targetType,
-        ?int $excludingCompetitionId = null
-    ): ?string {
-        $canonical = CompetitionProfileResolver::TYPE_CANONICAL;
-
-        if ($commission->isCanonicalProfile() && $targetType !== $canonical) {
-            return self::CANONICAL_PROFILE_ASSIGNMENT_MESSAGE;
-        }
-
-        if ($targetType === $canonical && ! $commission->isCanonicalProfile()) {
-            return self::CANONICAL_COMMISSION_REQUIRED_MESSAGE;
-        }
-
-        if (! in_array($targetType, self::COMMISSION_PROFILE_TYPES, true)) {
-            return null;
-        }
-
-        $commission->loadMissing('competitions');
-
-        foreach ($commission->competitions as $assigned) {
-            if ($excludingCompetitionId !== null && (int) $assigned->id === $excludingCompetitionId) {
-                continue;
-            }
-            if (! in_array($assigned->type, self::COMMISSION_PROFILE_TYPES, true)) {
-                continue;
-            }
-            if ($assigned->type !== $targetType) {
-                return self::mixedProfileMessage([$assigned->type, $targetType]);
-            }
-        }
-
-        return null;
     }
 
     /**

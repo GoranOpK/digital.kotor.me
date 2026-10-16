@@ -66,10 +66,7 @@ class CommissionAppointmentMailProfileTest extends TestCase
     {
         $admin = $this->userWithRole('konkurs_admin');
         $competition = $this->makeOmladinskoDraft();
-        $payload = $this->youthCommissionPayload($competition, [
-            1 => ['name' => 'Predsjednik Dva', 'email' => 'pred.dva.'.uniqid().'@kotor.me', 'position' => 'predsjednik'],
-            2 => ['name' => 'Clan Dva', 'email' => 'clan.dva.'.uniqid().'@kotor.me', 'position' => 'clan'],
-        ]);
+        $payload = $this->youthCommissionPayload($competition);
 
         $this->actingAs($admin)
             ->post(route('admin.commissions.store'), $payload)
@@ -84,15 +81,16 @@ class CommissionAppointmentMailProfileTest extends TestCase
             'email' => $newEmail,
             'password' => 'password12',
             'position' => 'clan',
-            'canonical_seat_no' => 3,
+            'member_type' => 'zamjenski',
+            'replaces_member_number' => 3,
         ])->assertRedirect()->assertSessionHasNoErrors();
 
-        Mail::assertSent(CommissionMemberAdded::class, 3);
+        Mail::assertSent(CommissionMemberAdded::class, 4);
         Mail::assertSent(CommissionMemberAdded::class, function (CommissionMemberAdded $mail) use ($newEmail) {
             $html = $mail->render();
 
             return $mail->hasTo($newEmail)
-                && $mail->hasSubject('Imenovanje u Komisiju za podršku preduzetništvu mladih')
+                && $mail->hasSubject('Imenovanje za zamjenskog člana Komisije za podršku preduzetništvu mladih')
                 && str_contains($html, 'podršku preduzetništvu mladih')
                 && $this->youthBodyIsClean($html);
         });
@@ -126,15 +124,13 @@ class CommissionAppointmentMailProfileTest extends TestCase
 
     public function test_member_added_ostalo_is_neutral(): void
     {
-        $admin = $this->userWithRole('konkurs_admin');
-        $competition = $this->makeDraftCompetition('ostalo', 'Ostalo MemberAdded '.uniqid());
-        $payload = $this->zenskoCommissionPayload($competition);
+        $copy = CommissionAppointmentMailCopy::fromCompetitionTypes(['ostalo']);
+        $this->assertTrue($copy->isNeutral());
+        $member = $this->persistMailCommissionMember();
 
-        $this->actingAs($admin)
-            ->post(route('admin.commissions.store'), $payload)
-            ->assertSessionHasNoErrors();
+        Mail::to($member->user->email)->send(new CommissionMemberAdded($member, $copy));
 
-        Mail::assertSent(CommissionMemberAdded::class, 5);
+        Mail::assertSent(CommissionMemberAdded::class, 1);
         Mail::assertSent(CommissionMemberAdded::class, function (CommissionMemberAdded $mail) {
             $html = $mail->render();
 
@@ -147,20 +143,18 @@ class CommissionAppointmentMailProfileTest extends TestCase
 
     public function test_member_added_without_competition_is_neutral(): void
     {
-        $admin = $this->userWithRole('konkurs_admin');
-        $payload = $this->zenskoCommissionPayload(null);
-        $email = $payload['members'][0]['email'];
+        $copy = CommissionAppointmentMailCopy::fromCompetitionTypes([]);
+        $this->assertTrue($copy->isNeutral());
+        $member = $this->persistMailCommissionMember();
 
-        $this->actingAs($admin)
-            ->post(route('admin.commissions.store'), $payload)
-            ->assertSessionHasNoErrors();
+        Mail::to($member->user->email)->send(new CommissionMemberAdded($member, $copy));
 
-        Mail::assertSent(CommissionMemberAdded::class, 5);
+        Mail::assertSent(CommissionMemberAdded::class, 1);
         Mail::assertNotSent(CommissionAssignedToCompetition::class);
-        Mail::assertSent(CommissionMemberAdded::class, function (CommissionMemberAdded $mail) use ($email) {
+        Mail::assertSent(CommissionMemberAdded::class, function (CommissionMemberAdded $mail) use ($member) {
             $html = $mail->render();
 
-            return $mail->hasTo($email)
+            return $mail->hasTo($member->user->email)
                 && $mail->hasSubject('Imenovanje u Komisiju za sprovođenje konkursa')
                 && str_contains($html, 'Obavještavamo Vas da ste imenovani u Komisiju za sprovođenje konkursa.')
                 && $this->neutralBodyIsClean($html);
@@ -177,17 +171,11 @@ class CommissionAppointmentMailProfileTest extends TestCase
         $this->assertTrue(CommissionAppointmentMailCopy::fromCompetitionTypes(['zensko'])->isZensko());
         $this->assertTrue(CommissionAppointmentMailCopy::fromCompetitionTypes(['omladinsko', 'omladinsko'])->isOmladinsko());
 
-        $admin = $this->userWithRole('konkurs_admin');
-        $youth = $this->makeOmladinskoDraft();
-        $ostalo = $this->makeDraftCompetition('ostalo', 'Ostalo mix '.uniqid());
-        $payload = $this->youthCommissionPayload($youth);
-        $payload['competition_ids'] = [$youth->id, $ostalo->id];
+        $copy = CommissionAppointmentMailCopy::fromCompetitionTypes(['omladinsko', 'ostalo']);
+        $member = $this->persistMailCommissionMember();
+        Mail::to($member->user->email)->send(new CommissionMemberAdded($member, $copy));
 
-        $this->actingAs($admin)
-            ->post(route('admin.commissions.store'), $payload)
-            ->assertSessionHasNoErrors();
-
-        Mail::assertSent(CommissionMemberAdded::class, 3);
+        Mail::assertSent(CommissionMemberAdded::class, 1);
         Mail::assertSent(CommissionMemberAdded::class, function (CommissionMemberAdded $mail) {
             $html = $mail->render();
 
@@ -290,15 +278,12 @@ class CommissionAppointmentMailProfileTest extends TestCase
 
     public function test_assigned_ostalo_is_neutral(): void
     {
-        $admin = $this->userWithRole('konkurs_admin');
         $competition = $this->makeDraftCompetition('ostalo', 'Ostalo Assigned '.uniqid());
-        $payload = $this->zenskoCommissionPayload($competition);
+        $member = $this->persistMailCommissionMember();
 
-        $this->actingAs($admin)
-            ->post(route('admin.commissions.store'), $payload)
-            ->assertSessionHasNoErrors();
+        Mail::to($member->user->email)->send(new CommissionAssignedToCompetition($member, $competition));
 
-        Mail::assertSent(CommissionAssignedToCompetition::class, 5);
+        Mail::assertSent(CommissionAssignedToCompetition::class, 1);
         Mail::assertSent(CommissionAssignedToCompetition::class, function (CommissionAssignedToCompetition $mail) use ($competition) {
             $html = $mail->render();
 
@@ -503,6 +488,7 @@ class CommissionAppointmentMailProfileTest extends TestCase
             'year' => 2026,
             'start_date' => now()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'omladinsko',
             'competition_ids' => [$competition->id],
             'members' => $members,
         ];
@@ -539,6 +525,7 @@ class CommissionAppointmentMailProfileTest extends TestCase
             'year' => 2026,
             'start_date' => now()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'zensko',
             'members' => $members,
         ];
         if ($competition !== null) {
@@ -546,6 +533,27 @@ class CommissionAppointmentMailProfileTest extends TestCase
         }
 
         return $payload;
+    }
+
+    private function persistMailCommissionMember(): CommissionMember
+    {
+        $user = $this->userWithRole('komisija');
+        $commission = Commission::create([
+            'name' => 'Mail helper '.uniqid(),
+            'year' => 2026,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+        ]);
+
+        return CommissionMember::create([
+            'commission_id' => $commission->id,
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'position' => 'predsjednik',
+            'member_type' => null,
+            'status' => 'active',
+        ])->load('user');
     }
 
     private function userWithRole(string $role): User

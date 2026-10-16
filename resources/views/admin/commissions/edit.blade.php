@@ -92,6 +92,14 @@
         </div>
 
         <div class="form-card">
+            @php
+                $hasStoredProfile = !empty($hasStoredProfile);
+            @endphp
+            @if(!$hasStoredProfile)
+                <div style="background:#fef3c7; border:1px solid #f59e0b; color:#92400e; border-radius:8px; padding:16px 20px; margin-bottom:20px;">
+                    {{ \App\Support\CommissionProfileConfig::UNDETERMINED_COMMISSION_PROFILE_MESSAGE }}
+                </div>
+            @endif
             <form id="commission-edit-form" method="POST" action="{{ route('admin.commissions.update', $commission) }}">
                 @csrf
                 @method('PUT')
@@ -165,7 +173,10 @@
                 </script>
 
                 <!-- Dodjela konkursa komisiji -->
-                @if($competitions->count() > 0)
+                @error('competition_type')
+                    <div class="error-message" style="margin-top: 16px;">{{ $message }}</div>
+                @enderror
+                @if(!empty($hasStoredProfile))
                 <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
                     <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Dodjela konkursa</h2>
                     <div class="form-group">
@@ -191,14 +202,18 @@
                             @endforeach
                         </div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                            Možete izabrati više konkursa. Ista komisija može biti dodijeljena na više različitih konkursa.
+                            Poziv nije obavezan. Možete ukloniti sve Pozive; profil Komisije ostaje nepromjenjiv. Možete izabrati samo Pozive istog profila.
                         </div>
+                        @error('competition_ids')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
                 @endif
 
             </form>
 
+            @if($hasStoredProfile)
             <div style="margin-top: 36px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
                 <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 16px;">Dodaj zamjenskog člana</h2>
                 <p style="font-size: 13px; color: #6b7280; margin: 0 0 16px;">
@@ -337,9 +352,12 @@
                 </form>
                 @endif
             </div>
+            @endif
 
             <div class="form-actions">
-                <button type="submit" form="commission-edit-form" class="btn-primary">Sačuvaj izmjene</button>
+                @if($hasStoredProfile)
+                    <button type="submit" form="commission-edit-form" class="btn-primary">Sačuvaj izmjene</button>
+                @endif
                 <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-cancel">Otkaži</a>
             </div>
         </div>

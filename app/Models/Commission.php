@@ -73,27 +73,15 @@ class Commission extends Model
     }
 
     /**
-     * Profil dodijeljenih KN Poziva, ili null ako Komisija nije vezana.
+     * Trajni profil Komisije iz `profile_type`. Ne nagađa iz Poziva ni sastava.
      */
     public function assignedProfileType(): ?string
     {
-        if ($this->isCanonicalProfile()) {
-            return CompetitionProfileResolver::TYPE_CANONICAL;
+        if (in_array($this->profile_type, CommissionProfileConfig::COMMISSION_PROFILE_TYPES, true)) {
+            return $this->profile_type;
         }
 
-        $this->loadMissing('competitions');
-
-        $types = $this->competitions
-            ->pluck('type')
-            ->filter(fn ($type) => in_array($type, CommissionProfileConfig::COMMISSION_PROFILE_TYPES, true))
-            ->unique()
-            ->values();
-
-        if ($types->count() !== 1) {
-            return null;
-        }
-
-        return $types->first();
+        return null;
     }
 
     public function profileConfig(): CommissionProfileConfig

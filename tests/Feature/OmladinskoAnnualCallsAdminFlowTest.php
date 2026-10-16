@@ -13,6 +13,7 @@ use App\Models\EvaluationScore;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
 use Database\Seeders\RoleSeeder;
@@ -346,6 +347,52 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
         $this->assertSame('01-200/26', $second->competition_number);
         $this->assertSame($originalBudget, $first->fresh()->budget);
         $this->assertSame(0, $second->applications()->count());
+    }
+
+    public function test_second_call_rejects_womens_and_null_profile_commission(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $first = $this->makeGateReadyFirstCall();
+        $zenskoCommission = Commission::create([
+            'name' => 'Zenska za drugi Poziv '.uniqid(),
+            'year' => 2026,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+            'profile_type' => 'zensko',
+        ]);
+        $legacy = Commission::create([
+            'name' => 'NULL za drugi Poziv '.uniqid(),
+            'year' => 2026,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.second-call.create', $first))
+            ->post(route('admin.competitions.second-call.store', $first), $this->secondCallPayload([
+                'commission_id' => $zenskoCommission->id,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('commission_id');
+        $this->assertSame(
+            CommissionProfileConfig::COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE,
+            session('errors')->first('commission_id')
+        );
+
+        $this->actingAs($admin)
+            ->post(route('admin.competitions.second-call.store', $first), $this->secondCallPayload([
+                'up_number' => '01-201/26',
+                'commission_id' => $legacy->id,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('commission_id');
+        $this->assertSame(
+            CommissionProfileConfig::UNDETERMINED_COMMISSION_PROFILE_MESSAGE,
+            session('errors')->first('commission_id')
+        );
+        $this->assertSame(0, Competition::query()->where('call_number', 2)->count());
     }
 
     public function test_second_attempt_and_third_call_are_blocked(): void
@@ -734,6 +781,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         for ($seat = 1; $seat <= 3; $seat++) {
@@ -861,6 +909,7 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
 
         $user = $this->userWithRole('komisija');

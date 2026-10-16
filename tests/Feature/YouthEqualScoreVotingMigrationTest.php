@@ -151,6 +151,7 @@ class YouthEqualScoreVotingMigrationTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         CommissionMember::create([
             'commission_id' => $commission->id,

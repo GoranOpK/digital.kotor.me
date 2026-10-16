@@ -105,6 +105,7 @@ class ApplicationOralPresentationsMigrationTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $user = User::factory()->create([
             'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,

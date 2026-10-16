@@ -65,17 +65,21 @@ class OmladinskoCommissionFoundationTest extends TestCase
             2 => ['name' => 'Marko Clan', 'email' => 'marko.clan.'.uniqid().'@kotor.me', 'position' => 'clan'],
         ]));
         $incomplete->assertRedirect();
-        $incomplete->assertSessionHasNoErrors();
-        $partial = Commission::query()->latest('id')->first();
-        $competition->refresh();
-        $this->assertSame($partial->id, $competition->commission_id);
-        $this->assertFalse($competition->hasCompleteValidCommission());
+        $incomplete->assertSessionHasErrors('members');
+        $this->assertSame(
+            CommissionProfileConfig::INCOMPLETE_OMLADINSKO_CREATE_MESSAGE,
+            session('errors')->first('members')
+        );
+        $this->assertSame(0, Commission::query()->count());
+        $this->assertNull($competition->fresh()->commission_id);
+        $this->assertFalse($competition->fresh()->hasCompleteValidCommission());
 
         $duplicateSeat = $this->actingAs($admin)->post(route('admin.commissions.store'), [
             'name' => 'Duplikat '.uniqid(),
             'year' => 2026,
             'start_date' => now()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'omladinsko',
             'competition_ids' => [$this->makeOmladinskoDraft('Drugi poziv '.uniqid())->id],
             'members' => [
                 0 => $this->youthMember(1, 'A', 'predsjednik', 'a.'.uniqid().'@kotor.me'),
@@ -91,6 +95,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
             'year' => 2026,
             'start_date' => now()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'omladinsko',
             'competition_ids' => [$this->makeOmladinskoDraft('Treci '.uniqid())->id],
             'members' => [
                 0 => $this->youthMember(1, 'A', 'predsjednik', 'a4.'.uniqid().'@kotor.me'),
@@ -175,6 +180,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
             'year' => 2026,
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'zensko',
             'competition_ids' => [$zensko->id],
             'members' => [
                 0 => ['name' => 'Predsjednik Z', 'email' => 'z.pred.'.uniqid().'@kotor.me', 'password' => 'password12', 'position' => 'predsjednik', 'member_type' => 'opstina'],
@@ -261,7 +267,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
         $response->assertRedirect(route('admin.competitions.edit', $zensko));
         $response->assertSessionHasErrors('commission_id');
         $this->assertSame(
-            CommissionProfileConfig::MIXED_PROFILE_ASSIGNMENT_MESSAGE,
+            CommissionProfileConfig::COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE,
             session('errors')->first('commission_id')
         );
         $this->assertNull($zensko->fresh()->commission_id);
@@ -337,6 +343,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
@@ -446,6 +453,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
             'year' => 2026,
             'start_date' => now()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'omladinsko',
             'competition_ids' => [$competition->id],
             'members' => $members,
         ];

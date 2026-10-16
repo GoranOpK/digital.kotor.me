@@ -7,8 +7,9 @@ use App\Models\Competition;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 
 /**
- * Korisnički tekst imenovanja u Komisiju. Profil dolazi isključivo iz tipa Poziva
- * (kanonska Komisija je kanonska od uspostavljanja, nezavisno od dodijeljenih Poziva).
+ * Korisnički tekst imenovanja u Komisiju. MemberAdded koristi sačuvani `profile_type`;
+ * Assigned koristi stvarni tip Poziva. Kanonska Komisija ostaje kanonska od uspostavljanja.
+ * Neutralni fallback nije dozvola za kreiranje.
  */
 final class CommissionAppointmentMailCopy
 {
@@ -52,6 +53,11 @@ final class CommissionAppointmentMailCopy
         return new self(self::PROFILE_NEUTRAL);
     }
 
+    public static function fromStoredCommissionProfile(?string $type): self
+    {
+        return self::fromCompetitionTypes([$type]);
+    }
+
     public static function forAssignedCompetition(Competition $competition): self
     {
         return self::fromCompetitionTypes([$competition->type]);
@@ -59,9 +65,7 @@ final class CommissionAppointmentMailCopy
 
     public static function forCommission(Commission $commission): self
     {
-        return $commission->isCanonicalProfile()
-            ? new self(self::PROFILE_CANONICAL)
-            : self::fromCompetitionTypes($commission->competitions()->pluck('type'));
+        return self::fromStoredCommissionProfile($commission->assignedProfileType());
     }
 
     public function isZensko(): bool

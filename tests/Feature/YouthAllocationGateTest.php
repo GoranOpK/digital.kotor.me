@@ -779,7 +779,7 @@ class YouthAllocationGateTest extends TestCase
         $this->assertStringContainsString('Primijenjeni maksimum: 20%', $html);
         $this->assertStringContainsString('20,000.00', $html);
         $this->assertStringContainsString(YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE, $html);
-        $this->assertStringContainsString('Potvrdio: '.$ctx['chairman']->name, $html);
+        $this->assertStringContainsString('Potvrdio: '.e($ctx['chairman']->name), $html);
         $this->assertStringNotContainsString('Napadač', $html);
         $this->assertStringNotContainsString('name="youth_innovative_tech_startup_confirmed_by_user_id"', $html);
         $this->assertStringNotContainsString('name="youth_applied_cap_percent"', $html);
@@ -948,6 +948,7 @@ class YouthAllocationGateTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
@@ -1154,6 +1155,7 @@ class YouthAllocationGateTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];
@@ -1259,6 +1261,7 @@ class YouthAllocationGateTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $user = $this->userWithRole('komisija');
         CommissionMember::create([
