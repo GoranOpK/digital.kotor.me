@@ -7,7 +7,29 @@
 <body style="font-family: Arial, sans-serif; font-size: 14px; color: #111827;">
     <p>Poštovani/a {{ $member->name }},</p>
 
-    @if($copy->isNeutral())
+    @if($copy->isCanonical())
+        <p>
+            Obavještavamo Vas da je evidentirano Vaše imenovanje za člana
+            <strong>{{ $copy->memberAddedCommissionPhrase() }}</strong>{{ $replacedMember ? ' na upražnjeno mjesto' : '' }}.
+        </p>
+        <p>
+            <strong>Uloga:</strong> {{ \App\Services\Competitions\Commission\CanonicalCommissionGovernance::roleLabel($member->canonical_seat) }}<br>
+            <strong>Mjesto u Komisiji:</strong> {{ $member->canonical_seat_no }} od 3<br>
+            @if($member->external_category)
+                <strong>Kategorija spoljašnjeg člana:</strong> {{ \App\Services\Competitions\Commission\CanonicalCommissionGovernance::externalCategoryLabel($member->external_category) }}<br>
+            @endif
+            @if($member->appointment_reference)
+                <strong>Akt o imenovanju:</strong> {{ $member->appointment_reference }}<br>
+            @endif
+            @if($competition)
+                <strong>Poziv:</strong> {{ $competition->title }}
+            @endif
+        </p>
+        <p>
+            Prije prve radnje Komisije evidentiraju se Vaša potpisana izjava o povjerljivosti
+            i izjava o nepostojanju sukoba interesa.
+        </p>
+    @elseif($copy->isNeutral())
         @if(!empty($member->is_substitute) && $replacedMember)
             <p>
                 Obavještavamo Vas da ste imenovani za <strong>zamjenskog člana</strong>

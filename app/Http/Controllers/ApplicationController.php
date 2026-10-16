@@ -21,6 +21,13 @@ use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\Pib;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Support\UserType;
+use App\Models\CanonicalApplicantForm;
+use App\Services\Competitions\CanonicalApplicantFormService;
+use App\Services\Competitions\CanonicalBeneficiaryApplications;
+use App\Services\Competitions\CanonicalDocumentService;
+use App\Services\Competitions\FinalSubmissionService;
+use App\Support\CanonicalSubsidyType;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\KnApplicationStartContextFactory;
 use App\Services\KnApplicationStartContextStore;
 use Illuminate\Http\Request;
@@ -35,6 +42,8 @@ use Illuminate\View\View;
 
 class ApplicationController extends Controller
 {
+    public const CANONICAL_OBRAZAC_1_MESSAGE = 'Prijava na javni poziv za preduzetnike i MMSP popunjava se kroz Obrazac P1a (preduzetnik) ili P1b (društvo), ne kroz Obrazac 1a/1b.';
+
     /**
      * Autoritativni start-context za novu prijavu. Query parametar nije authority.
      */
@@ -92,6 +101,10 @@ class ApplicationController extends Controller
                 ->withErrors(['error' => $message]);
         }
 
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return redirect()->route('applications.canonical.legal-form', $competition);
+        }
+
         $existingApplication = Application::query()
             ->where('competition_id', $competition->id)
             ->where('user_id', $user->id)
@@ -120,6 +133,10 @@ class ApplicationController extends Controller
      */
     public function create(Competition $competition, Request $request): View|RedirectResponse
     {
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return $this->canonicalEntryRedirect($competition, $request);
+        }
+
         $competition->load('upNumber');
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
@@ -302,6 +319,10 @@ class ApplicationController extends Controller
      */
     public function store(Request $request, Competition $competition): RedirectResponse
     {
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return back()->withErrors(['error' => self::CANONICAL_OBRAZAC_1_MESSAGE])->withInput();
+        }
+
         if ($redirect = $this->redirectIfCompetitionProfileUnavailable($competition)) {
             return $redirect;
         }
@@ -761,8 +782,12 @@ class ApplicationController extends Controller
     /**
      * Prikaz detalja prijave
      */
-    public function show(Application $application): View
+    public function show(Application $application): View|RedirectResponse
     {
+        if ($application->isCanonicalProfile()) {
+            return $this->canonicalShow($application);
+        }
+
         // Prikaz prijave:
         // - vlasnik prijave uvijek može da vidi
         // - član komisije može da vidi samo prijave za konkurse dodijeljene njegovoj komisiji
@@ -882,6 +907,21 @@ class ApplicationController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
+        $application->loadMissing('competition');
+
+        // KN-SYNC-004: canonical FINAL → FinalSubmissionService (claim + freeze, atomic).
+        // Women / Youth keep the existing submit path below (unchanged).
+        if ($application->competition?->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $result = app(FinalSubmissionService::class)->submit($application, Auth::user());
+
+            if (! $result->succeeded) {
+                return back()->withErrors(['error' => $result->error]);
+            }
+
+            return redirect()->route('applications.show', $application)
+                ->with('success', 'Poštovani, vaša prijava će biti proslijeđena komisiji na razmatranje, nakon isteka roka za prijavljivanje!');
+        }
+
         if ($application->status !== 'draft') {
             return back()->withErrors(['error' => 'Prijava je već podnesena ili je u obradi.']);
         }
@@ -992,6 +1032,25 @@ class ApplicationController extends Controller
             }
         }
 
+        $isCanonical = $application->isCanonicalProfile();
+        $canonicalEvidence = null;
+        if ($isCanonical) {
+            $canonicalDocuments = app(CanonicalDocumentService::class);
+            $block = $canonicalDocuments->uploadBlockReason($application, Auth::user());
+            if ($block !== null) {
+                return back()->withErrors(['error' => $block])->withInput();
+            }
+
+            [$canonicalEvidence, $evidenceErrors] = $canonicalDocuments->validateEvidence(
+                $application,
+                $request->input('document_type'),
+                $request->only(['document_variant', 'issued_on'])
+            );
+            if ($evidenceErrors !== []) {
+                return back()->withErrors($evidenceErrors)->withInput();
+            }
+        }
+
         $allowedTypes = $application->allowedUploadDocumentTypes();
         if ($allowedTypes === []) {
             return back()->withErrors(['document_type' => 'Za ovu prijavu nema dozvoljenih priloga.'])->withInput();
@@ -1000,7 +1059,7 @@ class ApplicationController extends Controller
         $validated = $request->validate([
             'document_type' => ['required', 'string', Rule::in($allowedTypes)],
             'files' => 'required_without:user_document_id|array|min:1',
-            'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max po fajlu
+            'files.*' => $isCanonical ? 'file|mimes:pdf|max:20480' : 'file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max po fajlu; čl.16: kanonski prilozi u PDF formatu
             'user_document_id' => 'nullable|required_without:files',
             'document_name' => 'nullable|string|max:255',
         ], [
@@ -1031,6 +1090,25 @@ class ApplicationController extends Controller
 
             if (!$userDocument) {
                 return back()->withErrors(['user_document_id' => 'Izabrani dokument nije validan ili ne pripada vašoj biblioteci.'])->withInput();
+            }
+
+            if ($isCanonical) {
+                if (strtolower(pathinfo((string) $userDocument->file_path, PATHINFO_EXTENSION)) !== 'pdf') {
+                    return back()->withErrors(['user_document_id' => 'Prilozi kanonske prijave učitavaju se u PDF formatu.'])->withInput();
+                }
+
+                $result = app(CanonicalDocumentService::class)->attach($application, Auth::user(), $validated['document_type'], [
+                    'name' => $userDocument->name,
+                    'file_path' => $userDocument->file_path,
+                    'cloud_path' => $userDocument->cloud_path,
+                    'mega_node_id' => $userDocument->mega_node_id,
+                    'mega_file_name' => $userDocument->mega_file_name,
+                    'user_document_id' => $userDocument->id,
+                ], $canonicalEvidence);
+
+                return $result->succeeded
+                    ? back()->with('success', 'Dokument je uspješno priložen iz biblioteke.')
+                    : back()->withErrors(['error' => $result->error])->withInput();
             }
 
             // Kreiraj vezu sa prijavom (kopiraj i MEGA podatke ako postoje)
@@ -1134,6 +1212,27 @@ class ApplicationController extends Controller
                 $userDocumentId = $userDocument->id;
             }
 
+            if ($isCanonical) {
+                $result = app(CanonicalDocumentService::class)->attach($application, Auth::user(), $validated['document_type'], [
+                    'name' => $documentName,
+                    'file_path' => $filePath,
+                    'cloud_path' => $cloudPath,
+                    'mega_node_id' => $megaNodeId,
+                    'mega_file_name' => $cloudPath ? $megaFileName : null,
+                    'user_document_id' => $userDocumentId,
+                ], $canonicalEvidence);
+
+                if (! $result->succeeded) {
+                    if ($userDocumentId === null) {
+                        Storage::disk('local')->delete($filePath);
+                    }
+
+                    return back()->withErrors(['error' => $result->error])->withInput();
+                }
+
+                return back()->with('success', 'Dokument je uspješno upload-ovan i priložen.');
+            }
+
             ApplicationDocument::create([
                 'application_id' => $application->id,
                 'name' => $documentName,
@@ -1178,12 +1277,17 @@ class ApplicationController extends Controller
         // može da pregleda dokument
         $isCommissionMemberForThisCompetition = false;
         $isCompetitionAdminArchiveAccess = false;
+        $canonicalGovernance = app(\App\Services\Competitions\Commission\CanonicalCommissionGovernance::class);
+        $isCanonical = $canonicalGovernance->isCanonicalCompetition($application->competition);
 
         if ($roleName === 'komisija') {
             // Učitaj konkurs povezano sa prijavom
             $competition = $application->competition;
 
-            if ($competition && $competition->commission_id) {
+            if ($isCanonical) {
+                // Kanonski MMSP: samo trenutni, važeći član kanonske Komisije ovog Poziva.
+                $isCommissionMemberForThisCompetition = $canonicalGovernance->reviewAccessBlockReason($user, $competition) === null;
+            } elseif ($competition && $competition->commission_id) {
                 $commissionMember = \App\Models\CommissionMember::activeForCommission(
                     $user->id,
                     $competition->commission_id
@@ -1217,7 +1321,7 @@ class ApplicationController extends Controller
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
 
-            if ($competition && $competition->isCommissionProcessingBlocked()) {
+            if ($competition && ! $isCanonical && $competition->isCommissionProcessingBlocked()) {
                 abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
             }
         }
@@ -1266,6 +1370,96 @@ class ApplicationController extends Controller
 
         $downloadName = $document->name ?? basename($document->file_path);
         return Storage::disk('local')->download($document->file_path, $downloadName);
+    }
+
+    /**
+     * Canonical MMSP never renders the Women Obrazac 1a/1b: continue an open draft or choose the legal form.
+     */
+    private function canonicalEntryRedirect(Competition $competition, Request $request): RedirectResponse
+    {
+        if ($request->filled('application_id')) {
+            $application = Application::query()
+                ->whereKey($request->input('application_id'))
+                ->where('competition_id', $competition->id)
+                ->first();
+            abort_unless($application, 404);
+
+            return redirect()->route('applications.show', $application);
+        }
+
+        if ($redirect = $this->redirectIfCompetitionProfileUnavailable($competition)) {
+            return $redirect;
+        }
+
+        $block = app(CanonicalApplicantFormService::class)->startBlockReason($competition, Auth::user());
+        if ($block === CanonicalApplicantFormService::OPEN_DRAFT_EXISTS_MESSAGE) {
+            $draft = app(CanonicalBeneficiaryApplications::class)
+                ->userApplicationForCompetition($competition, (int) Auth::id());
+
+            return redirect()->route('applications.show', $draft);
+        }
+        if ($block !== null) {
+            return redirect()->route('competitions.show', $competition)->withErrors(['error' => $block]);
+        }
+
+        return redirect()->route('applications.canonical.legal-form', $competition);
+    }
+
+    /**
+     * Canonical applicant overview: P1, P2, čl.14 prilozi, review/status, FINAL, second application.
+     * Commission members use the canonical review pages (KN-SYNC-014), never the Women detail view.
+     */
+    private function canonicalShow(Application $application): View|RedirectResponse
+    {
+        $user = Auth::user();
+        $application->loadMissing(['competition', 'finalClaim']);
+        $competition = $application->competition;
+
+        if ((int) $application->user_id !== (int) $user->id) {
+            $governance = app(\App\Services\Competitions\Commission\CanonicalCommissionGovernance::class);
+            if ($application->status !== 'draft' && $governance->reviewAccessBlockReason($user, $competition) === null) {
+                return redirect()->route('evaluation.canonical-review.show', $application);
+            }
+
+            abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->first();
+        $plan = \App\Models\CanonicalInvestmentPlan::query()->where('application_id', $application->id)->first();
+        $forms = app(CanonicalApplicantFormService::class);
+        $documents = app(CanonicalDocumentService::class);
+        $isDraft = $application->status === 'draft';
+        $writeLocked = $application->isApplicantContentWriteLocked();
+
+        $blockers = [];
+        if ($isDraft) {
+            foreach ([
+                $forms->finalBlockReason($application),
+                app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application),
+                $documents->finalBlockReason($application, now()),
+            ] as $reason) {
+                if ($reason !== null) {
+                    $blockers[] = $reason;
+                }
+            }
+        }
+
+        $canStartAnother = ! $isDraft
+            && $competition?->is_open
+            && $forms->startBlockReason($competition, $user) === null;
+
+        return view('applications.canonical-show', [
+            'application' => $application,
+            'competition' => $competition,
+            'form' => $form,
+            'plan' => $plan,
+            'checklist' => $documents->checklist($application, now()),
+            'blockers' => $blockers,
+            'canManage' => $isDraft && ! $writeLocked,
+            'canSubmit' => $isDraft && ! $writeLocked && $blockers === [],
+            'canStartAnother' => $canStartAnother,
+            'subsidyLabels' => CanonicalSubsidyType::labels(),
+        ]);
     }
 
     private function redirectIfCompetitionProfileUnavailable(Competition $competition): ?RedirectResponse

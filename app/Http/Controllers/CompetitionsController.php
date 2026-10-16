@@ -93,9 +93,14 @@ class CompetitionsController extends Controller
             $user = auth()->user();
             $identity = app(CurrentIdentityResolver::class)->viewFor($user);
             $userType = $identity->userType;
-            $userApplication = $competition->applications()
-                ->where('user_id', auth()->id())
-                ->first();
+            if ($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL) {
+                $userApplication = app(\App\Services\Competitions\CanonicalBeneficiaryApplications::class)
+                    ->userApplicationForCompetition($competition, (int) auth()->id());
+            } else {
+                $userApplication = $competition->applications()
+                    ->where('user_id', auth()->id())
+                    ->first();
+            }
 
             $applicantType = app(CurrentIdentityResolver::class)->applicantTypeFor($user);
             $kn = KnApplicationClassification::fromUserType($userType, $competition->type);

@@ -11,6 +11,7 @@ class CommissionSessionAttendance extends Model
         'commission_session_id',
         'commission_member_id',
         'present',
+        'attendance_mode',
     ];
 
     protected $casts = [

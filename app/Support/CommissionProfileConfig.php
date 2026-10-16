@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Commission;
 use App\Models\Competition;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 
 /**
  * Profilna konfiguracija Komisije. Ne čita status kataloga.
@@ -66,6 +67,21 @@ final class CommissionProfileConfig
 
     public const SESSION_SECOND_REQUIRED_FOR_ORAL_MESSAGE = 'Usmeno predstavljanje zahtijeva evidentiranu drugu sjednicu.';
 
+    public const CANONICAL_PROFILE_ASSIGNMENT_MESSAGE = 'Komisija jednog profila ne može biti dodijeljena Pozivu drugog profila (ženski, omladinski, kanonski MMSP).';
+
+    public const CANONICAL_COMMISSION_REQUIRED_MESSAGE = 'Kanonski MMSP Poziv može koristiti samo Komisiju evidentiranu kao kanonsku.';
+
+    public const CANONICAL_LEGACY_FORM_MESSAGE = 'Kanonska MMSP Komisija se ne formira kroz ženski/omladinski obrazac. Evidentira se kroz kanonsko evidentiranje imenovanja.';
+
+    public const CANONICAL_SESSION_ROUTE_MESSAGE = 'Kanonska MMSP Komisija koristi kanonsku politiku sjednica, ne omladinski tok prve/druge sjednice.';
+
+    /** @var list<string> */
+    public const COMMISSION_PROFILE_TYPES = [
+        'zensko',
+        'omladinsko',
+        CompetitionProfileResolver::TYPE_CANONICAL,
+    ];
+
     private function __construct(
         public readonly ?string $type,
         public readonly bool $providesCommission,
@@ -76,6 +92,11 @@ final class CommissionProfileConfig
         public readonly int $allMembersRequiredCount,
         public readonly bool $usesExplicitCanonicalSeats,
         public readonly bool $usesMemberTypeCatalog,
+        public readonly ?int $ordinaryQuorum = null,
+        public readonly ?int $fullDecisionQuorum = null,
+        public readonly bool $requiresSemanticSeats = false,
+        public readonly bool $enforcesDeclarations = false,
+        public readonly bool $allowsRemoteAttendance = false,
     ) {}
 
     public static function for(?string $type): self
@@ -100,6 +121,21 @@ final class CommissionProfileConfig
                 allMembersRequiredCount: 3,
                 usesExplicitCanonicalSeats: true,
                 usesMemberTypeCatalog: false,
+            ),
+            CompetitionProfileResolver::TYPE_CANONICAL => new self(
+                type: CompetitionProfileResolver::TYPE_CANONICAL,
+                providesCommission: true,
+                seatCount: 3,
+                allowedSeats: [1, 2, 3],
+                firstSessionQuorum: 2,
+                allMembersRequiredCount: 3,
+                usesExplicitCanonicalSeats: true,
+                usesMemberTypeCatalog: false,
+                ordinaryQuorum: 2,
+                fullDecisionQuorum: 3,
+                requiresSemanticSeats: true,
+                enforcesDeclarations: true,
+                allowsRemoteAttendance: true,
             ),
             default => new self(
                 type: $type,
@@ -137,11 +173,11 @@ final class CommissionProfileConfig
         $knTypes = Competition::query()
             ->whereIn('id', $ids)
             ->pluck('type')
-            ->filter(fn ($type) => in_array($type, ['zensko', 'omladinsko'], true))
+            ->filter(fn ($type) => in_array($type, self::COMMISSION_PROFILE_TYPES, true))
             ->unique()
             ->values();
 
-        return $knTypes->count() > 1 ? self::MIXED_PROFILE_ASSIGNMENT_MESSAGE : null;
+        return $knTypes->count() > 1 ? self::mixedProfileMessage($knTypes->all()) : null;
     }
 
     public static function conflictWithAssignedCompetitions(
@@ -149,7 +185,17 @@ final class CommissionProfileConfig
         string $targetType,
         ?int $excludingCompetitionId = null
     ): ?string {
-        if (! in_array($targetType, ['zensko', 'omladinsko'], true)) {
+        $canonical = CompetitionProfileResolver::TYPE_CANONICAL;
+
+        if ($commission->isCanonicalProfile() && $targetType !== $canonical) {
+            return self::CANONICAL_PROFILE_ASSIGNMENT_MESSAGE;
+        }
+
+        if ($targetType === $canonical && ! $commission->isCanonicalProfile()) {
+            return self::CANONICAL_COMMISSION_REQUIRED_MESSAGE;
+        }
+
+        if (! in_array($targetType, self::COMMISSION_PROFILE_TYPES, true)) {
             return null;
         }
 
@@ -159,14 +205,58 @@ final class CommissionProfileConfig
             if ($excludingCompetitionId !== null && (int) $assigned->id === $excludingCompetitionId) {
                 continue;
             }
-            if (! in_array($assigned->type, ['zensko', 'omladinsko'], true)) {
+            if (! in_array($assigned->type, self::COMMISSION_PROFILE_TYPES, true)) {
                 continue;
             }
             if ($assigned->type !== $targetType) {
-                return self::MIXED_PROFILE_ASSIGNMENT_MESSAGE;
+                return self::mixedProfileMessage([$assigned->type, $targetType]);
             }
         }
 
         return null;
+    }
+
+    /**
+     * Bulk assignment of competitions to an existing Commission (edit form).
+     *
+     * @param  iterable<int|string>  $competitionIds
+     */
+    public static function assignmentProfileError(Commission $commission, iterable $competitionIds): ?string
+    {
+        $ids = collect($competitionIds)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return null;
+        }
+
+        $canonical = CompetitionProfileResolver::TYPE_CANONICAL;
+
+        foreach (Competition::query()->whereIn('id', $ids)->pluck('type')->unique() as $type) {
+            if ($commission->isCanonicalProfile() && $type !== $canonical) {
+                return self::CANONICAL_PROFILE_ASSIGNMENT_MESSAGE;
+            }
+            if ($type === $canonical && ! $commission->isCanonicalProfile()) {
+                return self::CANONICAL_COMMISSION_REQUIRED_MESSAGE;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<string|null>  $types
+     */
+    private static function mixedProfileMessage(array $types): string
+    {
+        $types = array_values(array_unique(array_filter($types)));
+        sort($types);
+
+        return $types === ['omladinsko', 'zensko']
+            ? self::MIXED_PROFILE_ASSIGNMENT_MESSAGE
+            : self::CANONICAL_PROFILE_ASSIGNMENT_MESSAGE;
     }
 }

@@ -25,6 +25,16 @@ class CommissionMember extends Model
         'conflict_of_interest_declaration',
         'declarations_signed_at',
         'status',
+        'canonical_seat',
+        'external_category',
+        'represented_company_pib',
+        'appointment_reference',
+        'appointed_at',
+        'replaced_at',
+        'replaced_by_member_id',
+        'canonical_active_user_id',
+        'canonical_active_seat',
+        'canonical_active_seat_no',
     ];
 
     protected $casts = [
@@ -32,6 +42,9 @@ class CommissionMember extends Model
         'is_substitute' => 'boolean',
         'replaces_member_number' => 'integer',
         'canonical_seat_no' => 'integer',
+        'appointed_at' => 'datetime',
+        'replaced_at' => 'datetime',
+        'canonical_active_seat_no' => 'integer',
     ];
 
     /**

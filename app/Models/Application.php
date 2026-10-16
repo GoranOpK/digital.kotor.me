@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CanonicalDocumentCatalog;
 use App\Support\KnApplicationClassification;
 use App\Support\KnOmladinskoDocumentPackage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -354,6 +356,42 @@ class Application extends Model
         );
     }
 
+    public const CANONICAL_FINAL_JMBG_LOCKED_MESSAGE = 'JMBG podnosioca je zaključan konačnom predajom prijave i ne može se mijenjati.';
+
+    /**
+     * KN-SYNC-008: frozen once a canonical outcome for this application is confirmed.
+     *
+     * @var list<string>
+     */
+    public const CANONICAL_OUTCOME_LOCKED_FIELDS = [
+        'status',
+        'approved_amount',
+        'rejection_reason',
+        'final_score',
+        'final_score_calc',
+        'ranking_position',
+    ];
+
+    protected static function booted(): void
+    {
+        static::updating(function (self $application) {
+            if ($application->isDirty(self::CANONICAL_OUTCOME_LOCKED_FIELDS)
+                && $application->isCanonicalProfile()
+                && CanonicalOutcome::query()->where('application_id', $application->id)->whereNotNull('confirmed_at')->exists()) {
+                throw new \LogicException(CanonicalOutcome::CONFIRMED_MESSAGE);
+            }
+
+            // JmbDualWrite (saving) touches the encrypted column only when the logical JMBG changes or is cleared;
+            // plaintext retirement leaves it untouched.
+            if ($application->isDirty('applicant_jmbg_encrypted')
+                && $application->getOriginal('applicant_jmbg_encrypted') !== null
+                && $application->getOriginal('status') !== 'draft'
+                && $application->isCanonicalProfile()) {
+                throw new \LogicException(self::CANONICAL_FINAL_JMBG_LOCKED_MESSAGE);
+            }
+        });
+    }
+
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -422,6 +460,7 @@ class Application extends Model
         'total_budget_needed' => 'decimal:2',
         'approved_amount' => 'decimal:2',
         'final_score' => 'decimal:2',
+        'final_score_calc' => 'decimal:10',
         'previous_support_declaration' => 'boolean',
         'is_registered' => 'boolean',
         'accuracy_declaration' => 'boolean',
@@ -480,6 +519,31 @@ class Application extends Model
     public function prigovor()
     {
         return $this->hasOne(ApplicationPrigovor::class);
+    }
+
+    public function finalClaim()
+    {
+        return $this->hasOne(FinalApplicationClaim::class);
+    }
+
+    public function canonicalInvestmentPlan()
+    {
+        return $this->hasOne(CanonicalInvestmentPlan::class);
+    }
+
+    public function canonicalApplicantForm()
+    {
+        return $this->hasOne(CanonicalApplicantForm::class);
+    }
+
+    public function completenessAssessments()
+    {
+        return $this->hasMany(ApplicationCompletenessAssessment::class);
+    }
+
+    public function complaint()
+    {
+        return $this->hasOne(ApplicationComplaint::class);
     }
 
     public function oralPresentation()
@@ -1091,11 +1155,35 @@ class Application extends Model
         return KnOmladinskoDocumentPackage::forApplication($this);
     }
 
+    public function isCanonicalProfile(): bool
+    {
+        $this->loadMissing('competition');
+
+        return $this->competition?->type === CompetitionProfileResolver::TYPE_CANONICAL;
+    }
+
+    /**
+     * Canonical čl.14 catalog for the chosen legal form; null outside the canonical profile.
+     */
+    public function canonicalDocumentCatalog(): ?CanonicalDocumentCatalog
+    {
+        if (! $this->isCanonicalProfile()) {
+            return null;
+        }
+
+        return CanonicalDocumentCatalog::forApplication($this);
+    }
+
     /**
      * @return list<string>
      */
     public function allowedUploadDocumentTypes(): array
     {
+        $catalog = $this->canonicalDocumentCatalog();
+        if ($catalog !== null) {
+            return $catalog->uploadTypes();
+        }
+
         $package = $this->omladinskoDocumentPackage();
         if ($package !== null) {
             return $package->displayedDocumentTypes();
@@ -1114,6 +1202,21 @@ class Application extends Model
      */
     public function getStrictlyRequiredDocuments(): array
     {
+        $catalog = $this->canonicalDocumentCatalog();
+        if ($catalog !== null) {
+            $evidenceByType = [];
+            $evidence = CanonicalDocumentEvidence::query()->where('application_id', $this->id)->get();
+            foreach ($evidence as $row) {
+                $evidenceByType[$row->document_type] = $row;
+            }
+
+            return $catalog->requiredUploadTypes(
+                CanonicalApplicantForm::query()->where('application_id', $this->id)->first(),
+                $evidenceByType,
+                now(),
+            );
+        }
+
         $package = $this->omladinskoDocumentPackage();
         if ($package !== null) {
             return $package->strictlyRequiredDocumentTypes();
@@ -1161,6 +1264,11 @@ class Application extends Model
      */
     public function getDocumentLabelsMap(): array
     {
+        $catalog = $this->canonicalDocumentCatalog();
+        if ($catalog !== null) {
+            return $catalog->labels();
+        }
+
         $package = $this->omladinskoDocumentPackage();
         if ($package !== null) {
             return $package->labels();
@@ -1298,6 +1406,11 @@ class Application extends Model
      */
     public function getRequiredDocuments(): array
     {
+        $catalog = $this->canonicalDocumentCatalog();
+        if ($catalog !== null) {
+            return $catalog->uploadTypes();
+        }
+
         $package = $this->omladinskoDocumentPackage();
         if ($package !== null) {
             return $package->displayedDocumentTypes();

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Support\CommissionProfileConfig;
 use App\Support\RichText;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\Profile\CompetitionProfilePolicy;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -45,6 +47,7 @@ class Competition extends Model
         'closed_at' => 'datetime',
         'candidates_list_email_sent_at' => 'datetime',
         'youth_allocation_list_confirmed_at' => 'datetime',
+        'canonical_ranking_formed_at' => 'datetime',
         'budget' => 'decimal:2',
         'annual_budget' => 'decimal:2',
         'max_support_percentage' => 'decimal:2',
@@ -56,6 +59,11 @@ class Competition extends Model
     public function isOmladinskoProfile(): bool
     {
         return $this->type === 'omladinsko';
+    }
+
+    public function profile(): CompetitionProfilePolicy
+    {
+        return CompetitionProfileResolver::resolve($this->type);
     }
 
     public function isFirstCall(): bool
@@ -347,6 +355,11 @@ class Competition extends Model
             return true;
         }
 
+        if ($type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return app(\App\Services\Competitions\Commission\CanonicalCommissionGovernance::class)
+                ->structuralCompletenessBlockReason($commission) === null;
+        }
+
         $active = $commission->relationLoaded('activeMembers')
             ? $commission->activeMembers
             : $commission->activeMembers()->get();
@@ -520,6 +533,10 @@ class Competition extends Model
      */
     public function isRankingFormed(): bool
     {
+        if ($this->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return $this->canonical_ranking_formed_at !== null;
+        }
+
         if ($this->isOmladinskoProfile()) {
             return app(CanonicalIndividualScoringService::class)
                 ->isYouthPreliminaryRankingReady($this);
@@ -534,6 +551,11 @@ class Competition extends Model
      */
     public function hasChairmanCompletedDecisions(): bool
     {
+        // Canonical support/reject outcome and amounts belong to the third-session wave.
+        if ($this->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return false;
+        }
+
         if (!$this->isRankingFormed()) {
             return false;
         }

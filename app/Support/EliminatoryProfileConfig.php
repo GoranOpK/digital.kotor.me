@@ -3,6 +3,9 @@
 namespace App\Support;
 
 use App\Models\ApplicationEliminatoryCheck;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use DomainException;
 
 /**
  * Profilna konfiguracija Obrasca 3 (eliminatorna provjera).
@@ -38,6 +41,10 @@ final class EliminatoryProfileConfig
 
     public static function for(?string $type): self
     {
+        if (! CompetitionProfileResolver::resolve($type)->allowsLegacyCommissionFlows()) {
+            throw new DomainException(LegacyCommissionFlowGuard::BLOCKED_MESSAGE);
+        }
+
         return match ($type) {
             'omladinsko' => new self(
                 type: 'omladinsko',

@@ -51,16 +51,20 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
         $response->assertSee('Podrška preduzetništvu mladih', false);
         $response->assertSee('Podrška ženskom preduzetništvu', false);
+        $response->assertSee('Preduzetnici mikro, mala i srednja preduzeća', false);
         $this->assertStringContainsString('Aktivan modul', $text);
         $this->assertSame(2, substr_count($text, 'Aktivan modul'));
-        $this->assertStringNotContainsString('U razvoju', $text);
-        $this->assertStringNotContainsString('Profil je u implementaciji i još nije pušten korisnicima.', $text);
+        // Only the canonical MMSP card remains DEVELOPMENT on the hub.
+        $this->assertSame(1, substr_count($text, 'U razvoju'));
+        $this->assertSame(1, substr_count($text, 'Profil je u implementaciji i još nije pušten korisnicima.'));
 
         $omladinskoCard = $this->programCardHtml($html, 'omladinsko');
         $omladinskoText = $this->visiblePageText($omladinskoCard);
         $this->assertStringContainsString('program-badge-active', $omladinskoCard);
         $this->assertStringContainsString('Aktivan modul', $omladinskoText);
         $this->assertStringNotContainsString('program-badge-development', $omladinskoCard);
+        $this->assertStringNotContainsString('U razvoju', $omladinskoText);
+        $this->assertStringNotContainsString('Profil je u implementaciji i još nije pušten korisnicima.', $omladinskoText);
         $this->assertStringContainsString(
             'Konkurs za podršku preduzetništvu mladih — prijave, dokumentacija, komisija i evaluacija.',
             $text
@@ -75,6 +79,10 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $this->assertSame(
             CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['zensko']['status']
+        );
+        $this->assertSame(
+            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::definitions()['preduzetnici_mikro_mala_i_srednja_preduzeca']['status']
         );
         $this->assertSame(
             'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.',

@@ -12,6 +12,7 @@ use App\Models\CommissionMember;
 use App\Models\User;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Support\EliminatoryProfileConfig;
 use App\Support\YouthPrigovorObrazlozenje;
 use Illuminate\Database\QueryException;
@@ -59,6 +60,11 @@ class ApplicationPrigovorService
             return false;
         }
 
+        $application->loadMissing('competition');
+        if (! LegacyCommissionFlowGuard::allows($application->competition)) {
+            return false;
+        }
+
         $this->youthAppealWindows->finalizeExpiredWithoutPrigovor($application);
 
         $application->loadMissing(['eliminatoryNotice', 'prigovor', 'eliminatoryCheck', 'competition']);
@@ -86,6 +92,9 @@ class ApplicationPrigovorService
         array $contestedNumbers = [],
         array $explanationsByCriterion = [],
     ): ApplicationPrigovor {
+        $application->loadMissing('competition');
+        LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
+
         if ((int) $application->user_id !== (int) $applicant->id) {
             abort(403, 'Samo podnositeljka može podnijeti Prigovor za ovu prijavu.');
         }
@@ -204,6 +213,7 @@ class ApplicationPrigovorService
         array $criterionOutcomes = [],
     ): ApplicationPrigovor {
         $application->loadMissing('competition');
+        LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
 
         if ($application->competition?->isOmladinskoProfile()) {
             return $this->decideYouth($application, $chairman, $decisionNote, $criterionOutcomes);
