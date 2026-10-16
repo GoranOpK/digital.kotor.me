@@ -91,7 +91,7 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame('podrzava_potpuno', $ctx['application']->fresh()->commission_decision);
         $this->assertSame('5000.00', $ctx['application']->fresh()->approved_amount);
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
     }

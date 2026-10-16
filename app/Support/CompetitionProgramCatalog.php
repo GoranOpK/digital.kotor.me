@@ -89,8 +89,8 @@ final class CompetitionProgramCatalog
             'omladinsko' => [
                 'type' => 'omladinsko',
                 'title' => 'Podrška preduzetništvu mladih',
-                'description' => 'Profil je u implementaciji i još nije pušten korisnicima.',
-                'status' => self::STATUS_DEVELOPMENT,
+                'description' => 'Konkurs za podršku preduzetništvu mladih — prijave, dokumentacija, komisija i evaluacija.',
+                'status' => self::STATUS_ACTIVE,
                 'icon' => '🎓',
             ],
             'preduzetnici_mikro_mala_i_srednja_preduzeca' => [

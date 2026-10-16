@@ -326,7 +326,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             $annual->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year)
         );
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
     }

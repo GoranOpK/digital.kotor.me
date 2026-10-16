@@ -559,7 +559,7 @@ class YouthEqualScoreVotingTest extends TestCase
             app(CompetitionAnnualInstance::class)->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year)
         );
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
         $this->assertNull($ctx['competition']->fresh()->closed_at);
@@ -814,7 +814,7 @@ class YouthEqualScoreVotingTest extends TestCase
         $youth = $this->twoTiedCoveredByBudget();
         $this->assertNull(app(ZpEqualScoreAllocationGuard::class)->blockReason($youth['competition']->fresh()));
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
     }
