@@ -105,10 +105,10 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL]['status']
         );
         $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
-        $this->assertSame(['zensko'], CompetitionProfileResolver::publiclyDiscoverableTypeKeys());
+        $this->assertSame(['zensko', 'omladinsko'], CompetitionProfileResolver::publiclyDiscoverableTypeKeys());
     }
 
-    public function test_women_catalog_active_and_public_index_lists_women_only(): void
+    public function test_women_and_youth_catalog_active_and_public_index_hides_canonical(): void
     {
         $this->competition('zensko', 'KN-SYNC-002-PUBLIC-WOMEN', [
             'status' => 'published',
@@ -127,7 +127,7 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
         ]);
 
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('zensko'));
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
         $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
 
         $viewer = User::factory()->create();
@@ -135,12 +135,13 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             ->get(route('competitions.index'))
             ->assertOk()
             ->assertSee('KN-SYNC-002-PUBLIC-WOMEN')
-            ->assertDontSee('KN-SYNC-002-PUBLIC-YOUTH')
+            ->assertSee('KN-SYNC-002-PUBLIC-YOUTH')
             ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL');
 
         $this->actingAs($viewer)
             ->get(route('competitions.show', $youth))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertSee('KN-SYNC-002-PUBLIC-YOUTH');
         $this->actingAs($viewer)
             ->get(route('competitions.show', $canonical))
             ->assertNotFound();
