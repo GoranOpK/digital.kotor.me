@@ -39,7 +39,7 @@ return new class extends Migration
             $table->foreignId('submitted_by_user_id')->constrained('users')->restrictOnDelete();
             $table->text('body');
             $table->timestamp('submitted_at');
-            $table->timestamp('decision_due_at');
+            $table->dateTime('decision_due_at');
             $table->string('decision', 32)->nullable();
             $table->timestamp('decided_at')->nullable();
             $table->foreignId('decided_by_user_id')->nullable()->constrained('users')->nullOnDelete();
