@@ -1011,7 +1011,7 @@ class ApplicationController extends Controller
         if ($request->filled('user_document_id')) {
             $userDocument = UserDocument::where('id', $request->user_document_id)
                 ->where('user_id', Auth::id())
-                ->where('status', 'active')
+                ->attachable()
                 ->first();
             
             if (!$userDocument) {
@@ -1072,7 +1072,7 @@ class ApplicationController extends Controller
         if (!empty($validated['user_document_id'])) {
             $userDocument = UserDocument::where('id', $validated['user_document_id'])
                 ->where('user_id', Auth::id())
-                ->where('status', 'active')
+                ->attachable()
                 ->first();
 
             if (!$userDocument) {
@@ -1701,7 +1701,7 @@ class ApplicationController extends Controller
         $userDocuments = collect();
         if (! $readOnly && $user) {
             $userDocuments = UserDocument::where('user_id', $user->id)
-                ->where('status', 'active')
+                ->attachable()
                 ->get()
                 ->groupBy('category');
         }

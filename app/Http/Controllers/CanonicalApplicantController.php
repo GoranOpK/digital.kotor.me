@@ -117,7 +117,7 @@ class CanonicalApplicantController extends Controller
             'readOnly' => $readOnly,
             'libraryDocuments' => $readOnly ? collect() : UserDocument::query()
                 ->where('user_id', $request->user()->id)
-                ->where('status', 'active')
+                ->attachable()
                 ->orderBy('name')
                 ->get(['id', 'name', 'file_path']),
         ]);

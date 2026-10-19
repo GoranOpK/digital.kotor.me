@@ -472,6 +472,30 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame('submitted', $application->fresh()->status);
     }
 
+    public function test_processed_library_documents_are_available_and_can_be_attached(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->canonicalDraft($owner, $this->openCall(), [
+            'without_documents' => ['licna_karta'],
+        ]);
+        $processed = $this->libraryDocument($owner, 'obradjeni-prilog.pdf');
+        $processed->update(['status' => 'processed']);
+        $pending = $this->libraryDocument($owner, 'prilog-u-obradi.pdf');
+        $pending->update(['status' => 'pending']);
+
+        $this->actingAs($owner)->get(route('applications.canonical-documents.index', $application))
+            ->assertOk()
+            ->assertSee('obradjeni-prilog.pdf')
+            ->assertDontSee('prilog-u-obradi.pdf');
+
+        $this->uploadFromLibrary($owner, $application, 'licna_karta', [], $pending)
+            ->assertSessionHasErrors('user_document_id');
+        $this->uploadFromLibrary($owner, $application, 'licna_karta', [], $processed)
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue($application->documents()->where('document_type', 'licna_karta')->exists());
+    }
+
     public function test_p1a_employee_alternative_follows_obrazac_p1a_employee_count(): void
     {
         $call = $this->openCall();

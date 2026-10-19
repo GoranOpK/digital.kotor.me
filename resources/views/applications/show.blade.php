@@ -901,7 +901,7 @@
                             <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
                             <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
                                 <option value="">Izaberi...</option>
-                                @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
+                                @foreach(auth()->user()->documents()->attachable()->latest()->get() as $userDoc)
                                     <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
                                 @endforeach
                             </select>
