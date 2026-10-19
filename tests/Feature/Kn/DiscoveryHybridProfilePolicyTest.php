@@ -89,7 +89,7 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
     {
         $policy = CompetitionProfileResolver::resolve(CompetitionProfileResolver::TYPE_CANONICAL);
 
-        $this->assertSame('Preduzetnici mikro, mala i srednja preduzeća', $policy->displayName());
+        $this->assertSame('Podrška mikro, malim i srednjim preduzećima', $policy->displayName());
         $this->assertSame(
             \App\Services\Competitions\Profile\CompetitionProfilePolicy::PUBLICATION_GUARDED,
             $policy->publicationMode()
@@ -155,7 +155,7 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
         $this->assertArrayHasKey('ostalo', $options);
         $this->assertArrayHasKey(CompetitionProfileResolver::TYPE_CANONICAL, $options);
         $this->assertSame(
-            'Preduzetnici mikro, mala i srednja preduzeća',
+            'Podrška mikro, malim i srednjim preduzećima',
             $options[CompetitionProfileResolver::TYPE_CANONICAL]
         );
 
@@ -182,7 +182,7 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             ->assertSee('value="omladinsko"', false)
             ->assertSee('value="ostalo"', false)
             ->assertSee('value="'.CompetitionProfileResolver::TYPE_CANONICAL.'"', false)
-            ->assertSee('Preduzetnici mikro, mala i srednja preduzeća', false);
+            ->assertSee('Podrška mikro, malim i srednjim preduzećima', false);
     }
 
     /**
