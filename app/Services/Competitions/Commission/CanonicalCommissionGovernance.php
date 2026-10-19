@@ -114,7 +114,7 @@ class CanonicalCommissionGovernance
 
     public const INTERVIEW_REQUIRED_MESSAGE = 'Bodovanje zahtijeva potvrđenu sjednicu intervjua sa sva 3 važeća člana.';
 
-    public const FINAL_DECISION_SESSION_REQUIRED_MESSAGE = 'Konačna odluka Komisije zahtijeva potvrđenu sjednicu konačne odluke sa sva 3 važeća člana.';
+    public const FINAL_DECISION_SESSION_REQUIRED_MESSAGE = 'Utvrđivanje konačne rang-liste i predloga zahtijeva potvrđenu treću sjednicu sa sva 3 važeća člana.';
 
     public const SCORING_STAGE_CLOSED_MESSAGE = 'Faza bodovanja nije otvorena za ovu prijavu.';
 
