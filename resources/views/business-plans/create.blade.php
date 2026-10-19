@@ -1738,7 +1738,7 @@
                 <div class="form-card no-print" style="text-align: center;">
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="bpSubmitBtn" class="btn-primary" style="padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
-                            <span id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>
+                            <span id="bpSubmitBtnText">{{ $isOmladinsko ? 'Sačuvaj nacrt biznis plana' : 'Sačuvaj Nacrt plana' }}</span>
                         </button>
                     </div>
                 </div>
@@ -2216,6 +2216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const bpForm = document.getElementById('businessPlanForm');
     const bpSubmitBtn = document.getElementById('bpSubmitBtn');
     const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
+    const isOmladinsko = @json((bool) $isOmladinsko);
 
     // Obavezna polja koja treba provjeriti
     const requiredFields = [
@@ -2272,6 +2273,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funkcija za ažuriranje teksta dugmeta i informacije
     function updateSubmitButton() {
         if (!bpForm || !bpSubmitBtn) return;
+
+        if (isOmladinsko) {
+            bpSubmitBtnText.textContent = 'Sačuvaj nacrt biznis plana';
+            bpSubmitBtn.className = 'btn-secondary';
+            bpSubmitBtn.style.padding = '12px 24px';
+            bpSubmitBtn.style.fontSize = '14px';
+            return;
+        }
         
         const allFilled = checkRequiredFields();
         
@@ -2341,6 +2350,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Re-indeksiraj sve name atribute prije slanja forme
         reindexTableRows();
+
+        if (isOmladinsko) {
+            let draftInput = bpForm.querySelector('input[name="save_as_draft"]');
+            if (!draftInput) {
+                draftInput = document.createElement('input');
+                draftInput.type = 'hidden';
+                draftInput.name = 'save_as_draft';
+                draftInput.value = '1';
+                bpForm.appendChild(draftInput);
+            }
+            const requiredFieldsElements = bpForm.querySelectorAll('[required]');
+            requiredFieldsElements.forEach(field => {
+                field.removeAttribute('required');
+            });
+            bpForm.submit();
+            return;
+        }
         
         const allFilled = checkRequiredFields();
         

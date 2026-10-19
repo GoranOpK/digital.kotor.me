@@ -17,7 +17,6 @@ use App\Security\JmbEncryptedReadException;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
-use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\Pib;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Support\UserType;
@@ -950,18 +949,6 @@ class ApplicationController extends Controller
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
         if ($kotorAddressError !== null) {
             return back()->withErrors(['error' => $kotorAddressError]);
-        }
-
-        $application->loadMissing('competition');
-        if ($application->isOmladinskoProfile()) {
-            $businessPlan = $application->businessPlan;
-            if (! KnOmladinskoDocumentPackage::hasPurchaseItem($businessPlan)) {
-                return back()->withErrors(['error' => 'Tabela nabavki mora sadržati najmanje jednu stavku.']);
-            }
-            $realizationError = KnOmladinskoDocumentPackage::realizationError($businessPlan);
-            if ($realizationError !== null) {
-                return back()->withErrors(['error' => $realizationError]);
-            }
         }
 
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.

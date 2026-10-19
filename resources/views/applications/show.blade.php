@@ -661,6 +661,13 @@
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($isReadyToSubmit && $competition?->is_open)
+                                @if($omladinskoPackage && $application->businessPlan && \App\Support\KnOmladinskoDocumentPackage::isContentIncomplete($application->businessPlan))
+                                    <div style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                        <p style="font-size: 12px; color: #92400e; margin: 0;">
+                                            Biznis plan nije kompletno popunjen. Prijavu možete podnijeti, ali će Komisija ocjenjivati isključivo dostavljeni sadržaj. Nakon podnošenja izmjene više neće biti moguće.
+                                        </p>
+                                    </div>
+                                @endif
                                 @if(! ($omladinskoPackage && session('omladinsko_confirm_missing_documents')))
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
                                     @csrf

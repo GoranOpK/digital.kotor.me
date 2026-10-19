@@ -531,27 +531,6 @@ class BusinessPlanController extends Controller
             ]);
         }
 
-        $application->loadMissing('competition');
-        if (! $isDraft && $application->isOmladinskoProfile()) {
-            $realizationType = (string) $request->input('realization_type', '');
-            if ($realizationType === '') {
-                throw ValidationException::withMessages([
-                    'realization_type' => 'Tačka 7 biznis plana mora imati tačno jedan odgovor.',
-                ]);
-            }
-            if ($realizationType === KnOmladinskoDocumentPackage::REALIZATION_DRUGO
-                && trim((string) $request->input('realization_other_text', '')) === '') {
-                throw ValidationException::withMessages([
-                    'realization_other_text' => 'Ako je u tački 7 izabrano „Drugo“, obavezno je tekstualno objašnjenje.',
-                ]);
-            }
-            if (KnOmladinskoDocumentPackage::filledPurchaseCount($request->input('funding_sources_table')) < 1) {
-                throw ValidationException::withMessages([
-                    'funding_sources_table' => 'Tabela nabavki mora sadržati najmanje jednu stavku.',
-                ]);
-            }
-        }
-
         $this->bpLog('BP_STORE: validation ok', [
             'application_id' => $application->id,
             'validated_keys' => array_keys($validated),
@@ -879,15 +858,24 @@ class BusinessPlanController extends Controller
             'redirect' => $isDraft ? 'dashboard' : 'applications.show',
         ]);
 
+        $application->loadMissing('competition');
+        $youthIncompleteNotice = $application->isOmladinskoProfile()
+            && KnOmladinskoDocumentPackage::isContentIncomplete($businessPlan);
+        $youthIncompleteMessage = 'Nacrt biznis plana je sačuvan. Biznis plan još nije kompletan. Nedostajuće podatke možete dopuniti prije konačnog podnošenja prijave.';
+
         // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
         if ($isDraft) {
             return redirect()->route('dashboard')
-                ->with('success', 'Biznis plan je sačuvan kao nacrt. Možete ga nastaviti popunjavati iz sekcije \"Moje prijave\".');
+                ->with('success', $youthIncompleteNotice
+                    ? $youthIncompleteMessage
+                    : 'Biznis plan je sačuvan kao nacrt. Možete ga nastaviti popunjavati iz sekcije \"Moje prijave\".');
         }
 
         // U suprotnom, vrati na prikaz prijave
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
+            ->with('success', $youthIncompleteNotice
+                ? $youthIncompleteMessage
+                : 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
     }
 }
 
