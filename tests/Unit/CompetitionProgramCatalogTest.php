@@ -33,7 +33,7 @@ class CompetitionProgramCatalogTest extends TestCase
         $this->assertArrayHasKey($canonical, $definitions);
         $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, $definitions[$canonical]['status']);
         $this->assertSame(
-            'Preduzetnici mikro, mala i srednja preduzeća',
+            'Podrška mikro, malim i srednjim preduzećima',
             $definitions[$canonical]['title']
         );
         $this->assertSame(
