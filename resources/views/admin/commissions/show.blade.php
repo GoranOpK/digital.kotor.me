@@ -528,7 +528,7 @@
                     <button type="submit" class="btn-sm btn-success">Dodaj člana</button>
                 </form>
             </div>
-            @elseif($hasStoredProfile)
+            @elseif($hasStoredProfile && $allowsSharedMembershipMutation)
                 <div class="alert alert-warning">
                     Komisija je popunjena ({{ $regularMembersCount }}/{{ $commissionSeatCount }} redovnih članova).
                     @if(!$hasActiveSubstituteMember)
