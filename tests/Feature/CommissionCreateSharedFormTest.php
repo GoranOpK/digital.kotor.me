@@ -343,6 +343,17 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertEqualsCanonicalizing([1, 2, 3], $commission->activeMembers->pluck('canonical_seat_no')->all());
         $this->assertTrue($commission->activeMembers->every(fn (CommissionMember $member) => $member->member_type === null));
         $this->assertSame($commission->id, $competition->fresh()->commission_id);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+        foreach ($commission->activeMembers()->orderBy('canonical_seat_no')->get() as $member) {
+            $this->assertStringContainsString($member->name, $html);
+        }
+        $this->assertStringNotContainsString('Nije dodijeljen', $html);
+        $this->assertStringNotContainsString('Možete dodati još <strong>1 zamjenskog člana</strong>', $html);
+
         Mail::assertSent(CommissionMemberAdded::class, 3);
     }
 
