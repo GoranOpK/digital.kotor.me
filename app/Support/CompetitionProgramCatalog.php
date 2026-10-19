@@ -95,7 +95,7 @@ final class CompetitionProgramCatalog
             ],
             'preduzetnici_mikro_mala_i_srednja_preduzeca' => [
                 'type' => 'preduzetnici_mikro_mala_i_srednja_preduzeca',
-                'title' => 'Preduzetnici mikro, mala i srednja preduzeća',
+                'title' => 'Podrška mikro, malim i srednjim preduzećima',
                 'description' => 'Profil je u implementaciji i još nije pušten korisnicima.',
                 'status' => self::STATUS_DEVELOPMENT,
                 'icon' => '🏢',
