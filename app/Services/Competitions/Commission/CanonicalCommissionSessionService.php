@@ -31,13 +31,13 @@ class CanonicalCommissionSessionService
 
     public const ATTENDANCE_MODE_INVALID_MESSAGE = 'Način prisustva nije dozvoljen (lično, daljinski, elektronski).';
 
-    public const INTERVIEW_BEFORE_FINAL_MESSAGE = 'Sjednica konačne odluke zahtijeva prethodno potvrđenu sjednicu intervjua.';
+    public const INTERVIEW_BEFORE_FINAL_MESSAGE = 'Treća sjednica zahtijeva prethodno potvrđenu sjednicu intervjua.';
 
-    public const RANKING_BEFORE_FINAL_MESSAGE = 'Sjednica konačne odluke zahtijeva formiranu i zaključanu preliminarnu rang-listu (završeni intervjui i bodovanje).';
+    public const RANKING_BEFORE_FINAL_MESSAGE = 'Treća sjednica zahtijeva formiranu i zaključanu preliminarnu rang-listu (završeni intervjui i bodovanje).';
 
     public const SESSION_LOCKED_MESSAGE = 'Potvrđena sjednica i prisustvo ne mogu se mijenjati.';
 
-    public const LATE_THIRD_SESSION_WARNING = 'Sjednica konačne odluke održana je nakon roka od 7 dana. Stvarni datum sjednice je sačuvan.';
+    public const LATE_THIRD_SESSION_WARNING = 'Treća sjednica održana je nakon roka od 7 dana. Stvarni datum sjednice je sačuvan.';
 
     public const STALE_ATTENDANCE_MESSAGE = 'Prisustvo sjednice uključuje člana koji više nije važeći (zamijenjen ili razriješen). Ažurirajte prisustvo trenutnih članova prije potvrde.';
 
@@ -49,7 +49,7 @@ class CanonicalCommissionSessionService
     public const PURPOSE_LABELS = [
         CanonicalCommissionGovernance::PURPOSE_ORDINARY => 'Redovna sjednica',
         CanonicalCommissionGovernance::PURPOSE_INTERVIEW => 'Sjednica intervjua',
-        CanonicalCommissionGovernance::PURPOSE_FINAL_DECISION => 'Sjednica konačne odluke (treća sjednica)',
+        CanonicalCommissionGovernance::PURPOSE_FINAL_DECISION => 'Treća sjednica – konačna rang-lista i predlog',
     ];
 
     /** @var array<string, string> */

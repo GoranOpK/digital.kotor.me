@@ -70,7 +70,7 @@ class CanonicalCommissionSessionUiTest extends TestCase
             ->assertOk()
             ->assertSee('Sjednice kanonske Komisije', false)
             ->assertSee('Sjednica intervjua', false)
-            ->assertSee('Sjednica konačne odluke (treća sjednica)', false)
+            ->assertSee('Treća sjednica – konačna rang-lista i predlog', false)
             ->assertSee('Mjesto 1:', false)
             ->assertSee('Evidentiraj sjednicu', false)
             ->assertSee(S::INTERVIEW_BEFORE_FINAL_MESSAGE, false)

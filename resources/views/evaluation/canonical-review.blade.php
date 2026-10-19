@@ -51,7 +51,7 @@
     </p>
 
     @if($readOnly)
-        <div style="{{ $warn }}">Pregled za administratora: samo čitanje. Potpunost evidentira i o prigovoru odlučuje isključivo predsjednik kanonske Komisije.</div>
+        <div style="{{ $warn }}">Pregled za administratora: samo čitanje. Potpunost evidentira predsjednik kanonske Komisije, a o prigovoru odlučuje Komisija.</div>
     @endif
     @if($closed)
         <div style="{{ $warn }}">Poziv je zatvoren. Evidencija je dostupna samo za čitanje.</div>

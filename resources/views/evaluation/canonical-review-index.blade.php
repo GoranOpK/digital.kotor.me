@@ -9,8 +9,7 @@
 <div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Provjera potpunosti i prigovori</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
-        {{ $competition->title }}. Provjera se vrši nad zamrznutim podnesenim dosijeom. Potpunost evidentira i o prigovoru odlučuje
-        isključivo predsjednik kanonske Komisije.
+        {{ $competition->title }}. Provjera se vrši nad zamrznutim podnesenim dosijeom. Potpunost evidentira predsjednik kanonske Komisije, a o prigovoru odlučuje Komisija.
     </p>
     @if($readOnly)
         <div style="{{ $warn }}">Pregled za administratora: samo čitanje. Radnje provjere i odluke o prigovoru vrši isključivo Komisija.</div>

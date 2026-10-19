@@ -13,7 +13,7 @@
 <div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Sjednice kanonske Komisije</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
-        {{ $competition->title }}. Sjednicu evidentira i potvrđuje predsjednik Komisije. Intervju i konačna odluka zahtijevaju prisustvo sva 3 važeća člana
+        {{ $competition->title }}. Sjednicu evidentira i potvrđuje predsjednik Komisije. Intervju i treća sjednica zahtijevaju prisustvo sva 3 važeća člana
         (lično, daljinski ili elektronski); redovna sjednica najmanje 2 od 3. Potvrđena sjednica je zaključana.
     </p>
     @if($readOnly)
@@ -69,7 +69,7 @@
             </p>
 
             @if($purpose === $G::PURPOSE_FINAL_DECISION && $finalDueAt)
-                <p>Rok za sjednicu konačne odluke (7 dana od potvrde intervjua, tačno vrijeme): {{ $fmt($finalDueAt) }}</p>
+                <p>Rok za treću sjednicu (7 dana od potvrde intervjua, tačno vrijeme): {{ $fmt($finalDueAt) }}</p>
                 @if($finalOverdueNow)
                     <div style="{{ $warn }}">Rok je istekao. Sjednica se i dalje evidentira, uz trajno upozorenje o kašnjenju.</div>
                 @endif
