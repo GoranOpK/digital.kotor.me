@@ -2483,7 +2483,7 @@ class AdminController extends Controller
     {
         $commission->loadMissing('members');
 
-        if ($commission->assignedProfileType() === 'omladinsko') {
+        if (CommissionProfileConfig::usesThreeSeatSharedForm($commission->assignedProfileType())) {
             return $commission->members
                 ->filter(function (CommissionMember $member) use ($slot, $onlyActive) {
                     if (! empty($member->is_substitute)) {
