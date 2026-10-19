@@ -51,7 +51,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
         $response->assertSee('Podrška preduzetništvu mladih', false);
         $response->assertSee('Podrška ženskom preduzetništvu', false);
-        $response->assertSee('Preduzetnici mikro, mala i srednja preduzeća', false);
+        $response->assertSee('Podrška mikro, malim i srednjim preduzećima', false);
         $this->assertStringContainsString('Aktivan modul', $text);
         $this->assertSame(2, substr_count($text, 'Aktivan modul'));
         // Only the canonical MMSP card remains DEVELOPMENT on the hub.
