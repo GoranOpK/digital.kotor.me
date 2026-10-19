@@ -96,6 +96,9 @@
 @php
     $selectedCompetitionType = $selectedCompetitionType ?? null;
     $commissionFormTypes = $commissionFormTypes ?? [];
+    $isOmladinskoCommissionForm = !empty($isOmladinskoCommissionForm);
+    $isCanonicalCommissionForm = !empty($isCanonicalCommissionForm);
+    $isThreeSeatCommissionForm = !empty($isThreeSeatCommissionForm);
     $statusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
     $oldCompetitionIds = old('competition_ids', isset($targetCompetition) && $targetCompetition ? [$targetCompetition->id] : []);
 @endphp
@@ -206,7 +209,9 @@
                     @if($competitions->count() > 0)
                         <div class="form-group">
                             <label class="form-label">
-                                @if(!empty($isOmladinskoCommissionForm))
+                                @if(!empty($isCanonicalCommissionForm))
+                                    Izaberite Poziv za podršku mikro, malim i srednjim preduzećima (opciono)
+                                @elseif(!empty($isOmladinskoCommissionForm))
                                     Izaberite omladinski Poziv (opciono)
                                 @else
                                     Izaberi konkurs(e) za ovu komisiju (opciono)
@@ -235,7 +240,9 @@
                             </div>
                             <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
                                 Poziv nije obavezan pri kreiranju. Možete ostaviti prazno ili izabrati jedan ili više Poziva izabranog profila.
-                                @if(!empty($isOmladinskoCommissionForm))
+                                @if(!empty($isCanonicalCommissionForm))
+                                    Ponuđeni su samo Pozivi za podršku mikro, malim i srednjim preduzećima.
+                                @elseif(!empty($isOmladinskoCommissionForm))
                                     Ponuđeni su samo omladinski Pozivi.
                                 @endif
                             </div>
@@ -250,7 +257,7 @@
                     @error('members')
                         <div class="error-message" style="margin-bottom: 12px;">{{ $message }}</div>
                     @enderror
-                    @if(!empty($isOmladinskoCommissionForm))
+                    @if(!empty($isThreeSeatCommissionForm))
                         @include('admin.commissions.partials.create-omladinsko-members')
                     @else
                         @include('admin.commissions.partials.create-zensko-members')

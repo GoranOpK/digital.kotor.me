@@ -8,6 +8,7 @@ use App\Models\Competition;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -384,6 +385,61 @@ class CommissionUpdateSharedFormTest extends TestCase
         $this->assertStringNotContainsString($zensko->title, $html);
     }
 
+    public function test_mmsp_edit_form_offers_only_mmsp_calls_and_keeps_profile(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $mmsp = $this->makeMmspDraft();
+        $otherMmsp = $this->makeMmspDraft();
+        $youth = $this->makeOmladinskoDraft();
+        $zensko = $this->makeZenskoDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($mmsp))
+            ->assertSessionHasNoErrors();
+        $commission = $mmsp->fresh()->commission;
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.edit', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($mmsp->title, $html);
+        $this->assertStringContainsString($otherMmsp->title, $html);
+        $this->assertStringNotContainsString($youth->title, $html);
+        $this->assertStringNotContainsString($zensko->title, $html);
+        $this->assertStringNotContainsString('Dodaj zamjenskog člana', $html);
+
+        $this->actingAs($admin)
+            ->put(route('admin.commissions.update', $commission), array_merge(
+                $this->updatePayload($commission, [$mmsp->id, $otherMmsp->id]),
+                ['name' => 'MMSP izmijenjena']
+            ))
+            ->assertRedirect(route('admin.commissions.show', $commission))
+            ->assertSessionHasNoErrors();
+
+        $commission->refresh();
+        $this->assertSame('MMSP izmijenjena', $commission->name);
+        $this->assertSame(CompetitionProfileResolver::TYPE_CANONICAL, $commission->profile_type);
+        $this->assertSame($commission->id, $mmsp->fresh()->commission_id);
+        $this->assertSame($commission->id, $otherMmsp->fresh()->commission_id);
+        $this->assertSame(3, $commission->activeMembers()->count());
+        $this->assertSame(1, $commission->activeMembers()->where('position', 'predsjednik')->count());
+
+        $forged = $this->updatePayload($commission, [$mmsp->id]);
+        $forged['competition_type'] = 'omladinsko';
+        $this->actingAs($admin)
+            ->from(route('admin.commissions.edit', $commission))
+            ->put(route('admin.commissions.update', $commission), $forged)
+            ->assertRedirect()
+            ->assertSessionHasErrors('competition_type');
+        $this->assertSame(
+            CommissionProfileConfig::PROFILE_CHANGE_REJECTED_MESSAGE,
+            session('errors')->first('competition_type')
+        );
+        $this->assertSame(CompetitionProfileResolver::TYPE_CANONICAL, $commission->fresh()->profile_type);
+
+        $this->assertUpdateRejected($admin, $commission, [$youth->id], 'competition_ids', $mmsp, $youth);
+        $this->assertUpdateRejected($admin, $commission, [$zensko->id], 'competition_ids', $mmsp, $zensko);
+    }
+
     public function test_competition_paths_cannot_attach_commission_to_ostalo(): void
     {
         Mail::fake();
@@ -625,6 +681,27 @@ class CommissionUpdateSharedFormTest extends TestCase
             'competition_ids' => [$competition->id],
             'members' => $members,
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, string>>  $overridesBySeat
+     * @return array<string, mixed>
+     */
+    private function mmspCommissionPayload(Competition $competition, array $overridesBySeat = []): array
+    {
+        $payload = $this->youthCommissionPayload($competition, $overridesBySeat);
+        $payload['name'] = 'Komisija MMSP update '.uniqid();
+        $payload['competition_type'] = CompetitionProfileResolver::TYPE_CANONICAL;
+
+        return $payload;
+    }
+
+    private function makeMmspDraft(?string $title = null): Competition
+    {
+        return $this->makeDraftCompetition(
+            CompetitionProfileResolver::TYPE_CANONICAL,
+            $title ?? 'MMSP update '.uniqid()
+        );
     }
 
     private function makeOmladinskoDraft(?string $title = null): Competition

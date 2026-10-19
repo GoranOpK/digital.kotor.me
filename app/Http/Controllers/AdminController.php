@@ -1503,7 +1503,7 @@ class AdminController extends Controller
             : null;
 
         $commissionFormTypes = [];
-        foreach (['zensko' => 'Žensko preduzetništvo', 'omladinsko' => 'Podrška preduzetništvu mladih'] as $type => $label) {
+        foreach (CommissionProfileConfig::sharedFormTypeLabels() as $type => $label) {
             if (CommissionProfileConfig::for($type)->providesCommission) {
                 $commissionFormTypes[$type] = $label;
             }
@@ -1522,7 +1522,9 @@ class AdminController extends Controller
             }
         }
 
-        $isOmladinskoCommissionForm = $selectedCompetitionType === 'omladinsko';
+        $isOmladinskoCommissionForm = $selectedCompetitionType === CommissionProfileConfig::PROFILE_OMLADINSKO;
+        $isCanonicalCommissionForm = $selectedCompetitionType === CommissionProfileConfig::PROFILE_CANONICAL;
+        $isThreeSeatCommissionForm = CommissionProfileConfig::usesThreeSeatSharedForm($selectedCompetitionType);
 
         $competitions = collect();
         if ($selectedCompetitionType !== null) {
@@ -1538,6 +1540,8 @@ class AdminController extends Controller
             'competitions',
             'targetCompetition',
             'isOmladinskoCommissionForm',
+            'isCanonicalCommissionForm',
+            'isThreeSeatCommissionForm',
             'selectedCompetitionType',
             'commissionFormTypes'
         ));
@@ -1582,13 +1586,6 @@ class AdminController extends Controller
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
-        $targetTypes = $requestedCompetitionIds->isEmpty()
-            ? collect()
-            : Competition::query()->whereIn('id', $requestedCompetitionIds)->pluck('type');
-        if ($targetTypes->contains(CompetitionProfileResolver::TYPE_CANONICAL)) {
-            return back()->withErrors(['competition_ids' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
-        }
-
         $requestedProfile = CommissionProfileConfig::assertSupportedStoredProfile($request->input('competition_type'));
         if ($requestedProfile['error']) {
             return back()->withErrors(['competition_type' => $requestedProfile['error']])->withInput();
@@ -1602,15 +1599,16 @@ class AdminController extends Controller
             return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
         }
 
-        $isOmladinskoForm = $requestedProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
+        $isThreeSeatForm = CommissionProfileConfig::usesThreeSeatSharedForm($requestedProfile['type']);
         $profileConfig = CommissionProfileConfig::for($requestedProfile['type']);
         $maxMembers = $profileConfig->seatCount;
         $lastMemberIndex = $maxMembers - 1;
-        $incompleteMessage = $isOmladinskoForm
-            ? CommissionProfileConfig::INCOMPLETE_OMLADINSKO_CREATE_MESSAGE
-            : CommissionProfileConfig::INCOMPLETE_ZENSKO_CREATE_MESSAGE;
+        $incompleteMessage = CommissionProfileConfig::incompleteCreateMessage($requestedProfile['type']);
+        $invalidSeatMessage = CommissionProfileConfig::invalidSeatMessage($requestedProfile['type']);
+        $memberTypeRejectedMessage = CommissionProfileConfig::memberTypeRejectedMessage($requestedProfile['type']);
+        $presidentCountMessage = CommissionProfileConfig::presidentCountMessage($requestedProfile['type']);
 
-        if ($isOmladinskoForm) {
+        if ($isThreeSeatForm) {
             foreach ($membersData as $index => $member) {
                 if (empty($member['email'])) {
                     continue;
@@ -1620,12 +1618,12 @@ class AdminController extends Controller
                     : 0;
                 if ((int) $index >= 3 || ($seat !== 0 && ! $profileConfig->allowsSeat($seat))) {
                     return back()->withErrors([
-                        'members.'.$index.'.canonical_seat_no' => CommissionProfileConfig::INVALID_YOUTH_SEAT_MESSAGE,
+                        'members.'.$index.'.canonical_seat_no' => $invalidSeatMessage,
                     ])->withInput();
                 }
                 if (array_key_exists('member_type', $member) && $member['member_type'] !== null && $member['member_type'] !== '') {
                     return back()->withErrors([
-                        'members.'.$index.'.member_type' => CommissionProfileConfig::YOUTH_MEMBER_TYPE_REJECTED_MESSAGE,
+                        'members.'.$index.'.member_type' => $memberTypeRejectedMessage,
                     ])->withInput();
                 }
             }
@@ -1647,7 +1645,7 @@ class AdminController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'members' => 'required|array|size:'.$maxMembers,
-            'competition_type' => 'required|in:zensko,omladinsko',
+            'competition_type' => 'required|in:'.implode(',', CommissionProfileConfig::SUPPORTED_STORED_PROFILES),
             'competition_ids' => 'nullable|array',
             'competition_ids.*' => 'exists:competitions,id',
         ];
@@ -1658,7 +1656,7 @@ class AdminController extends Controller
             $rules["members.{$i}.password"] = 'nullable|string|min:8';
             $rules["members.{$i}.position"] = 'required|in:predsjednik,clan';
             $rules["members.{$i}.organization"] = 'nullable|string|max:255';
-            if ($isOmladinskoForm) {
+            if ($isThreeSeatForm) {
                 $rules["members.{$i}.canonical_seat_no"] = 'required|integer|in:1,2,3';
             } else {
                 $rules["members.{$i}.member_type"] = 'required|in:opstina,udruzenje,zene_mreza';
@@ -1673,9 +1671,7 @@ class AdminController extends Controller
             'end_date.after' => 'Datum završetka mora biti posle datuma početka.',
             'members.required' => $incompleteMessage,
             'members.size' => $incompleteMessage,
-            'members.max' => $isOmladinskoForm
-                ? 'Komisija mladih može imati najviše 3 člana.'
-                : 'Komisija može imati najviše 5 članova.',
+            'members.max' => CommissionProfileConfig::membersMaxMessage($requestedProfile['type']),
             'competition_type.required' => CommissionProfileConfig::PROFILE_REQUIRED_MESSAGE,
             'competition_type.in' => CommissionProfileConfig::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE,
             'competition_ids.*.exists' => CommissionProfileConfig::UNKNOWN_COMPETITION_ASSIGNMENT_MESSAGE,
@@ -1689,14 +1685,14 @@ class AdminController extends Controller
             $messages["members.{$i}.position.required"] = 'Pozicija člana je obavezna.';
             $messages["members.{$i}.member_type.required"] = 'Tip člana je obavezan.';
             $messages["members.{$i}.canonical_seat_no.required"] = 'Kanonsko mjesto člana je obavezno.';
-            $messages["members.{$i}.canonical_seat_no.in"] = CommissionProfileConfig::INVALID_YOUTH_SEAT_MESSAGE;
+            $messages["members.{$i}.canonical_seat_no.in"] = $invalidSeatMessage;
             $messages["members.{$i}.organization.required_if"] = 'Organizacija je obavezna za člana iz udruženja.';
         }
 
         $validated = $request->validate($rules, $messages);
 
         // Custom validacija: organizacija je obavezna za člana iz udruženja ako je član popunjen
-        if (! $isOmladinskoForm && ! empty($validated['members'][3]['email']) &&
+        if (! $isThreeSeatForm && ! empty($validated['members'][3]['email']) &&
             isset($validated['members'][3]['member_type']) &&
             $validated['members'][3]['member_type'] === 'udruzenje' &&
             empty($validated['members'][3]['organization'])) {
@@ -1718,7 +1714,7 @@ class AdminController extends Controller
             }
         }
 
-        if ($isOmladinskoForm) {
+        if ($isThreeSeatForm) {
             $usedSeats = [];
             foreach ($validated['members'] as $index => $memberData) {
                 if (empty($memberData['email'])) {
@@ -1727,7 +1723,7 @@ class AdminController extends Controller
                 $seat = (int) ($memberData['canonical_seat_no'] ?? 0);
                 if (! $profileConfig->allowsSeat($seat)) {
                     return back()->withErrors([
-                        "members.{$index}.canonical_seat_no" => CommissionProfileConfig::INVALID_YOUTH_SEAT_MESSAGE,
+                        "members.{$index}.canonical_seat_no" => $invalidSeatMessage,
                     ])->withInput();
                 }
                 if (isset($usedSeats[$seat])) {
@@ -1749,7 +1745,7 @@ class AdminController extends Controller
             }
             if ($presidentCount !== 1) {
                 return back()->withErrors([
-                    'members' => CommissionProfileConfig::YOUTH_PRESIDENT_COUNT_MESSAGE,
+                    'members' => $presidentCountMessage,
                 ])->withInput();
             }
         }
@@ -1777,7 +1773,7 @@ class AdminController extends Controller
         [$commission, $createdMembers, $createdMemberModels, $usersNeedingVerification] = DB::transaction(function () use (
             $validated,
             $endDate,
-            $isOmladinskoForm,
+            $isThreeSeatForm,
             $requestedProfile,
             $komisijaRole
         ) {
@@ -1818,9 +1814,9 @@ class AdminController extends Controller
                     'user_id' => $user->id,
                     'name' => $memberData['name'],
                     'position' => $memberData['position'],
-                    'member_type' => $isOmladinskoForm ? null : ($memberData['member_type'] ?? null),
+                    'member_type' => $isThreeSeatForm ? null : ($memberData['member_type'] ?? null),
                     'organization' => $memberData['organization'] ?? null,
-                    'canonical_seat_no' => $isOmladinskoForm ? (int) $memberData['canonical_seat_no'] : null,
+                    'canonical_seat_no' => $isThreeSeatForm ? (int) $memberData['canonical_seat_no'] : null,
                     'status' => 'active',
                 ]);
 
@@ -1886,12 +1882,11 @@ class AdminController extends Controller
 
         $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
         $hasStoredProfile = $existingProfile['type'] !== null;
-        $isOmladinskoCommission = $existingProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
-        $commissionSeatCount = match ($existingProfile['type']) {
-            CommissionProfileConfig::PROFILE_OMLADINSKO => 3,
-            CommissionProfileConfig::PROFILE_ZENSKO => 5,
-            default => 0,
-        };
+        $isOmladinskoCommission = CommissionProfileConfig::usesThreeSeatSharedForm($existingProfile['type']);
+        $allowsSharedMembershipMutation = $hasStoredProfile && ! $commission->isCanonicalProfile();
+        $commissionSeatCount = $hasStoredProfile
+            ? CommissionProfileConfig::for($existingProfile['type'])->seatCount
+            : 0;
         $compositionSlots = $hasStoredProfile
             ? $this->buildCommissionCompositionSlots($commission)
             : [];
@@ -1901,6 +1896,7 @@ class AdminController extends Controller
             'users',
             'compositionSlots',
             'isOmladinskoCommission',
+            'allowsSharedMembershipMutation',
             'commissionSeatCount',
             'hasStoredProfile'
         ));
@@ -1912,7 +1908,7 @@ class AdminController extends Controller
     protected function buildCommissionCompositionSlots(Commission $commission): array
     {
         $profile = $commission->assignedProfileType();
-        if ($profile === CommissionProfileConfig::PROFILE_OMLADINSKO) {
+        if (CommissionProfileConfig::usesThreeSeatSharedForm($profile)) {
             $slotLabels = [
                 1 => '1. Mjesto Komisije',
                 2 => '2. Mjesto Komisije',
@@ -1955,14 +1951,11 @@ class AdminController extends Controller
      */
     public function editCommission(Commission $commission)
     {
-        if ($commission->isCanonicalProfile()) {
-            abort(403, CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE);
-        }
-
         $commission->load(['members', 'competitions']);
         $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
-        $isOmladinskoCommission = $existingProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
+        $isOmladinskoCommission = CommissionProfileConfig::usesThreeSeatSharedForm($existingProfile['type']);
         $hasStoredProfile = $existingProfile['type'] !== null;
+        $allowsSharedMembershipMutation = $hasStoredProfile && ! $commission->isCanonicalProfile();
         $supportedTypes = in_array($existingProfile['type'], CommissionProfileConfig::SUPPORTED_STORED_PROFILES, true)
             ? [$existingProfile['type']]
             : [];
@@ -1984,6 +1977,7 @@ class AdminController extends Controller
             'commission',
             'competitions',
             'isOmladinskoCommission',
+            'allowsSharedMembershipMutation',
             'hasStoredProfile'
         ));
     }
@@ -1993,10 +1987,6 @@ class AdminController extends Controller
      */
     public function updateCommission(Request $request, Commission $commission)
     {
-        if ($commission->isCanonicalProfile()) {
-            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
-        }
-
         // Automatski izračunaj datum završetka (1 godina od početka)
         $startDate = $request->input('start_date');
         $endDate = null;

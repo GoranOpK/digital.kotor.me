@@ -237,6 +237,7 @@
             $hasStoredProfile = !empty($hasStoredProfile);
             $commissionSeatCount = $hasStoredProfile ? ($commissionSeatCount ?? 5) : 0;
             $isOmladinskoCommission = $hasStoredProfile && !empty($isOmladinskoCommission);
+            $allowsSharedMembershipMutation = $hasStoredProfile && !empty($allowsSharedMembershipMutation);
         @endphp
         <div class="page-header">
             <h1>{{ $commission->name }}</h1>
@@ -244,11 +245,13 @@
                 @if($hasStoredProfile)
                     <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmijeni</a>
                 @endif
+                @if(!$commission->isCanonicalProfile())
                 <form action="{{ route('admin.commissions.destroy', $commission) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu komisiju? Ova akcija je nepovratna.');">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Obriši</button>
                 </form>
+                @endif
             </div>
         </div>
 
@@ -400,6 +403,7 @@
                                 <br>E-mail: {{ $regularMember->user->email }}
                             @endif
                         </div>
+                        @if($allowsSharedMembershipMutation)
                         <div class="composition-slot-actions">
                             <form method="POST" action="{{ route('admin.commissions.members.delete', $regularMember) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                 @csrf
@@ -407,6 +411,7 @@
                                 <button type="submit" class="btn-sm btn-danger">Obriši</button>
                             </form>
                         </div>
+                        @endif
                     @else
                         <div class="composition-slot-name" style="color: #9ca3af; font-weight: 500;">Nije dodijeljen</div>
                     @endif
@@ -419,7 +424,7 @@
                 $regularMembersCount = $commission->members->reject(fn($m) => !empty($m->is_substitute))->count();
                 $hasActiveSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
             @endphp
-            @if($hasStoredProfile && $regularMembersCount < $commissionSeatCount)
+            @if($allowsSharedMembershipMutation && $regularMembersCount < $commissionSeatCount)
             <div class="form-card">
                 <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Dodaj novog člana</h3>
                 <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}">

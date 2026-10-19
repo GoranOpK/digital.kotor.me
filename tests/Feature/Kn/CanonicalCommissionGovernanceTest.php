@@ -272,8 +272,9 @@ class CanonicalCommissionGovernanceTest extends TestCase
                 'name' => 'X', 'year' => 2026, 'start_date' => '2026-01-01', 'end_date' => '2027-01-01',
                 'status' => 'active', 'competition_ids' => [$women->id],
             ])
-            ->assertSessionHasErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+            ->assertSessionHasErrors(['competition_ids' => CommissionProfileConfig::COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE]);
         $this->assertNull($women->fresh()->commission_id);
+        $this->assertSame(self::CANONICAL, $canonicalCommission->fresh()->profile_type);
 
         $this->actingAs($admin)
             ->post(route('admin.commissions.store'), [
@@ -281,7 +282,8 @@ class CanonicalCommissionGovernanceTest extends TestCase
                 'members' => [['email' => 'legacy-form@example.test', 'name' => 'L']],
                 'competition_ids' => [$canonical->id],
             ])
-            ->assertSessionHasErrors(['competition_ids' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+            ->assertSessionHasErrors('competition_type');
+        $this->assertNull($canonical->fresh()->commission_id);
 
         $this->actingAs($admin)
             ->post(route('admin.commissions.members.add', $canonicalCommission), ['name' => 'N', 'position' => 'clan'])

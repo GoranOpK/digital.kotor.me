@@ -1,5 +1,14 @@
+@php
+    $isCanonicalMemberForm = !empty($isCanonicalCommissionForm);
+    $threeSeatHeading = $isCanonicalMemberForm
+        ? 'Sastav komisije za podršku mikro, malim i srednjim preduzećima'
+        : 'Sastav komisije mladih';
+    $threeSeatNote = $isCanonicalMemberForm
+        ? 'Komisija za podršku mikro, malim i srednjim preduzećima ima tri mjesta i sva tri se popunjavaju pri kreiranju. Predsjednik može biti na mjestu 1, 2 ili 3, ali mora biti tačno jedan. Zamjenski član se ne može koristiti umjesto redovnog mjesta.'
+        : 'Komisija mladih ima tri mjesta i sva tri se popunjavaju pri kreiranju. Predsjednik može biti na mjestu 1, 2 ili 3, ali mora biti tačno jedan. Zamjenski član se ne može koristiti umjesto redovnog mjesta.';
+@endphp
 <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin: 24px 0;">
-    <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">Sastav komisije mladih</h3>
+    <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">{{ $threeSeatHeading }}</h3>
     <p style="font-size: 14px; color: #374151; margin: 0;">Pri kreiranju moraju biti popunjena sva 3 redovna mjesta. Predsjednik je jedan od ta tri člana. Mjesta 4 i 5 nijesu dozvoljena. Zamjenski član se ne može koristiti umjesto redovnog mjesta.</p>
 </div>
 <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
@@ -45,6 +54,6 @@
 </div>
 <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-left: 4px solid var(--primary); border-radius: 4px;">
     <p style="font-size: 13px; color: #374151; margin: 0;">
-        <strong>Napomena:</strong> Komisija mladih ima tri mjesta i sva tri se popunjavaju pri kreiranju. Predsjednik može biti na mjestu 1, 2 ili 3, ali mora biti tačno jedan. Zamjenski član se ne može koristiti umjesto redovnog mjesta.
+        <strong>Napomena:</strong> {{ $threeSeatNote }}
     </p>
 </div>

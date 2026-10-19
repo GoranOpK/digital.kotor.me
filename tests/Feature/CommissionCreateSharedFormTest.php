@@ -10,6 +10,7 @@ use App\Models\Competition;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,6 +38,17 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringContainsString('1. Vrsta konkursa', $html);
         $this->assertStringContainsString('Žensko preduzetništvo', $html);
         $this->assertStringContainsString('Podrška preduzetništvu mladih', $html);
+        $this->assertStringContainsString('Podrška mikro, malim i srednjim preduzećima', $html);
+        $this->assertLessThan(
+            strpos($html, 'Podrška preduzetništvu mladih'),
+            strpos($html, 'Žensko preduzetništvo')
+        );
+        $this->assertLessThan(
+            strpos($html, 'Podrška mikro, malim i srednjim preduzećima'),
+            strpos($html, 'Podrška preduzetništvu mladih')
+        );
+        $this->assertStringContainsString('value="'.CompetitionProfileResolver::TYPE_CANONICAL.'"', $html);
+        $this->assertStringNotContainsString('value="canonical"', $html);
         $this->assertStringNotContainsString('name="members[3]', $html);
         $this->assertStringNotContainsString('Ženske političke mreže', $html);
         $this->assertStringNotContainsString('youth', strtolower($html));
@@ -99,6 +111,32 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertMatchesRegularExpression('/name="members\[0\]\[name\]"[^>]*required/', $html);
         $this->assertMatchesRegularExpression('/name="members\[2\]\[email\]"[^>]*required/', $html);
         $this->assertMatchesRegularExpression('/name="members\[2\]\[position\]"[^>]*required/', $html);
+    }
+
+    public function test_mmsp_profile_shows_three_seats_without_womens_categories(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft('MMSP prikaz '.uniqid());
+        $html = $this->actingAs($admin)->get(route('admin.commissions.create', [
+            'competition_type' => CompetitionProfileResolver::TYPE_CANONICAL,
+        ]))->assertOk()->getContent();
+
+        $this->assertStringContainsString($competition->title, $html);
+        $this->assertStringContainsString('Podrška mikro, malim i srednjim preduzećima', $html);
+        $this->assertStringContainsString('value="'.CompetitionProfileResolver::TYPE_CANONICAL.'"', $html);
+        $this->assertStringNotContainsString('value="canonical"', $html);
+        $this->assertStringContainsString('name="members[0][position]"', $html);
+        $this->assertStringContainsString('name="members[2][canonical_seat_no]"', $html);
+        $this->assertStringNotContainsString('name="members[3]', $html);
+        $this->assertStringNotContainsString('name="members[4]', $html);
+        $this->assertStringNotContainsString('member_type', $html);
+        $this->assertStringNotContainsString('Ženske političke mreže', $html);
+        $this->assertStringNotContainsString('Udruženja preduzetnica', $html);
+        $this->assertStringNotContainsString('zene_mreza', $html);
+        $this->assertEquals(3, substr_count($html, 'value="predsjednik"'));
+        $this->assertStringContainsString('sva 3 redovna mjesta', $html);
+        $this->assertMatchesRegularExpression('/name="members\[0\]\[name\]"[^>]*required/', $html);
+        $this->assertMatchesRegularExpression('/name="members\[2\]\[email\]"[^>]*required/', $html);
     }
 
     public function test_create_rejects_incomplete_composition_and_substitute_in_regular_seat(): void
@@ -286,6 +324,113 @@ class CommissionCreateSharedFormTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasErrors();
         $this->assertNull($youth->fresh()->commission_id);
+        $this->assertSame(0, Commission::query()->count());
+    }
+
+    public function test_mmsp_commission_is_created_with_three_members_and_one_president(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft('MMSP kreiranje '.uniqid());
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $commission = Commission::query()->latest('id')->first();
+        $this->assertSame(CompetitionProfileResolver::TYPE_CANONICAL, $commission->profile_type);
+        $this->assertSame(3, $commission->activeMembers()->count());
+        $this->assertSame(1, $commission->activeMembers()->where('position', 'predsjednik')->count());
+        $this->assertEqualsCanonicalizing([1, 2, 3], $commission->activeMembers->pluck('canonical_seat_no')->all());
+        $this->assertTrue($commission->activeMembers->every(fn (CommissionMember $member) => $member->member_type === null));
+        $this->assertSame($commission->id, $competition->fresh()->commission_id);
+        Mail::assertSent(CommissionMemberAdded::class, 3);
+    }
+
+    public function test_mmsp_commission_can_be_created_without_a_call(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload())
+            ->assertSessionHasNoErrors();
+
+        $commission = Commission::query()->latest('id')->first();
+        $this->assertSame(CompetitionProfileResolver::TYPE_CANONICAL, $commission->profile_type);
+        $this->assertSame(3, $commission->activeMembers()->count());
+        $this->assertSame(0, $commission->competitions()->count());
+        Mail::assertSent(CommissionMemberAdded::class, 3);
+        Mail::assertNotSent(CommissionAssignedToCompetition::class);
+    }
+
+    public function test_mmsp_rejects_seats_four_and_five_and_wrong_president_count(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft();
+        $payload = $this->mmspCommissionPayload($competition);
+        $payload['members'][3] = [
+            'name' => 'Nedozvoljeno Cetvrto',
+            'email' => 'mmsp4.'.uniqid().'@kotor.me',
+            'password' => 'password12',
+            'position' => 'clan',
+            'canonical_seat_no' => 4,
+        ];
+        $payload['members'][4] = [
+            'name' => 'Nedozvoljeno Peto',
+            'email' => 'mmsp5.'.uniqid().'@kotor.me',
+            'password' => 'password12',
+            'position' => 'clan',
+            'canonical_seat_no' => 5,
+        ];
+        $this->assertStoreRejected($admin, $payload, 'members.3.canonical_seat_no', $competition);
+        $this->assertSame(
+            CommissionProfileConfig::INVALID_CANONICAL_SEAT_MESSAGE,
+            session('errors')->first('members.3.canonical_seat_no')
+        );
+
+        $withoutPresident = $this->makeMmspDraft();
+        $this->assertStoreRejected($admin, $this->mmspCommissionPayload($withoutPresident, [
+            1 => ['name' => 'Clan Jedan', 'email' => 'mnp1.'.uniqid().'@kotor.me', 'position' => 'clan'],
+            2 => ['name' => 'Clan Dva', 'email' => 'mnp2.'.uniqid().'@kotor.me', 'position' => 'clan'],
+            3 => ['name' => 'Clan Tri', 'email' => 'mnp3.'.uniqid().'@kotor.me', 'position' => 'clan'],
+        ]), 'members', $withoutPresident);
+        $this->assertSame(
+            CommissionProfileConfig::CANONICAL_PRESIDENT_COUNT_MESSAGE,
+            session('errors')->first('members')
+        );
+
+        $twoPresidents = $this->makeMmspDraft();
+        $this->assertStoreRejected($admin, $this->mmspCommissionPayload($twoPresidents, [
+            1 => ['name' => 'Predsjednik A', 'email' => 'mtp1.'.uniqid().'@kotor.me', 'position' => 'predsjednik'],
+            2 => ['name' => 'Predsjednik B', 'email' => 'mtp2.'.uniqid().'@kotor.me', 'position' => 'predsjednik'],
+            3 => ['name' => 'Clan Tri', 'email' => 'mtp3.'.uniqid().'@kotor.me', 'position' => 'clan'],
+        ]), 'members', $twoPresidents);
+    }
+
+    public function test_mmsp_rejects_member_type_and_non_mmsp_calls(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $mmsp = $this->makeMmspDraft();
+        $withMemberType = $this->mmspCommissionPayload($mmsp);
+        $withMemberType['members'][0]['member_type'] = 'opstina';
+        $this->assertStoreRejected($admin, $withMemberType, 'members.0.member_type', $mmsp);
+        $this->assertSame(
+            CommissionProfileConfig::CANONICAL_MEMBER_TYPE_REJECTED_MESSAGE,
+            session('errors')->first('members.0.member_type')
+        );
+
+        $youth = $this->makeOmladinskoDraft();
+        $zensko = $this->makeZenskoDraft();
+        $mmspToYouth = $this->mmspCommissionPayload($youth);
+        $this->assertStoreRejected($admin, $mmspToYouth, 'competition_ids', $youth);
+        $mmspToWomen = $this->mmspCommissionPayload($zensko);
+        $this->assertStoreRejected($admin, $mmspToWomen, 'competition_ids', $zensko);
+
+        $youthToMmsp = $this->youthCommissionPayload($mmsp);
+        $this->assertStoreRejected($admin, $youthToMmsp, 'competition_ids', $mmsp);
+        $this->assertSame(
+            CommissionProfileConfig::CANONICAL_COMMISSION_REQUIRED_MESSAGE,
+            session('errors')->first('competition_ids')
+        );
         $this->assertSame(0, Commission::query()->count());
     }
 
@@ -702,6 +847,27 @@ class CommissionCreateSharedFormTest extends TestCase
             'competition_ids' => $competition ? [$competition->id] : [],
             'members' => $members,
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, string>>  $overridesBySeat
+     * @return array<string, mixed>
+     */
+    private function mmspCommissionPayload(?Competition $competition = null, array $overridesBySeat = []): array
+    {
+        $payload = $this->youthCommissionPayload($competition, $overridesBySeat);
+        $payload['name'] = 'Komisija MMSP forma '.uniqid();
+        $payload['competition_type'] = CompetitionProfileResolver::TYPE_CANONICAL;
+
+        return $payload;
+    }
+
+    private function makeMmspDraft(?string $title = null): Competition
+    {
+        return $this->makeDraftCompetition(
+            CompetitionProfileResolver::TYPE_CANONICAL,
+            $title ?? 'MMSP nacrt '.uniqid()
+        );
     }
 
     private function makeOmladinskoDraft(?string $title = null): Competition

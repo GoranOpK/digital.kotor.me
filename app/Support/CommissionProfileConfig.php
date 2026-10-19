@@ -15,8 +15,14 @@ final class CommissionProfileConfig
 
     public const PROFILE_OMLADINSKO = 'omladinsko';
 
+    public const PROFILE_CANONICAL = CompetitionProfileResolver::TYPE_CANONICAL;
+
     /** @var list<string> */
-    public const SUPPORTED_STORED_PROFILES = ['zensko', 'omladinsko'];
+    public const SUPPORTED_STORED_PROFILES = [
+        self::PROFILE_ZENSKO,
+        self::PROFILE_OMLADINSKO,
+        CompetitionProfileResolver::TYPE_CANONICAL,
+    ];
 
     public const MIXED_PROFILE_ASSIGNMENT_MESSAGE = 'Ista Komisija ne može biti dodijeljena Pozivima ženskog i omladinskog profila.';
 
@@ -26,11 +32,13 @@ final class CommissionProfileConfig
 
     public const UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE = 'Komisija se može povezati samo sa Pozivima jednog podržanog profila.';
 
-    public const PROFILE_REQUIRED_MESSAGE = 'Morate izabrati vrstu konkursa: žensko preduzetništvo ili podrška preduzetništvu mladih.';
+    public const PROFILE_REQUIRED_MESSAGE = 'Morate izabrati vrstu konkursa: žensko preduzetništvo, podrška preduzetništvu mladih ili podrška mikro, malim i srednjim preduzećima.';
 
     public const INCOMPLETE_ZENSKO_CREATE_MESSAGE = 'Komisija ženskog profila mora pri kreiranju imati svih 5 redovnih članova.';
 
     public const INCOMPLETE_OMLADINSKO_CREATE_MESSAGE = 'Komisija mladih mora pri kreiranju imati sva 3 redovna člana.';
+
+    public const INCOMPLETE_CANONICAL_CREATE_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima mora pri kreiranju imati sva 3 redovna člana.';
 
     public const PROFILE_CHANGE_REJECTED_MESSAGE = 'Profil postojeće Komisije nije moguće promijeniti. Kreirajte novu Komisiju za izabrani tip konkursa.';
 
@@ -46,11 +54,17 @@ final class CommissionProfileConfig
 
     public const YOUTH_PRESIDENT_COUNT_MESSAGE = 'Komisija mladih mora imati tačno jednog predsjednika.';
 
+    public const CANONICAL_PRESIDENT_COUNT_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima mora imati tačno jednog predsjednika.';
+
     public const YOUTH_MEMBER_TYPE_REJECTED_MESSAGE = 'Komisija mladih ne koristi kategorije članova ženskog profila.';
+
+    public const CANONICAL_MEMBER_TYPE_REJECTED_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima ne koristi kategorije članova ženskog profila.';
 
     public const OMLADINSKO_INCOMPLETE_PUBLISH_WARNING = 'Komisija još nije formalno kompletirana. Administrativna provjera (M3) ne može početi dok sva tri mjesta nijesu popunjena.';
 
     public const INVALID_YOUTH_SEAT_MESSAGE = 'Komisija mladih može koristiti samo kanonska mjesta 1, 2 i 3.';
+
+    public const INVALID_CANONICAL_SEAT_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima može koristiti samo kanonska mjesta 1, 2 i 3.';
 
     public const DUPLICATE_SEAT_MESSAGE = 'Svako kanonsko mjesto Komisije može biti popunjeno samo jednom.';
 
@@ -106,7 +120,7 @@ final class CommissionProfileConfig
 
     public const CANONICAL_COMMISSION_REQUIRED_MESSAGE = 'Kanonski MMSP Poziv može koristiti samo Komisiju evidentiranu kao kanonsku.';
 
-    public const CANONICAL_LEGACY_FORM_MESSAGE = 'Kanonska MMSP Komisija se ne formira kroz ženski/omladinski obrazac. Evidentira se kroz kanonsko evidentiranje imenovanja.';
+    public const CANONICAL_LEGACY_FORM_MESSAGE = 'Članstvo kanonske MMSP Komisije se ne mijenja kroz ovaj obrazac. Evidentira se kroz kanonsko evidentiranje imenovanja.';
 
     public const CANONICAL_SESSION_ROUTE_MESSAGE = 'Kanonska MMSP Komisija koristi kanonsku politiku sjednica, ne omladinski tok prve/druge sjednice.';
 
@@ -116,6 +130,64 @@ final class CommissionProfileConfig
         'omladinsko',
         CompetitionProfileResolver::TYPE_CANONICAL,
     ];
+
+    /**
+     * Radio opcije zajedničke forme. Redoslijed je dio ugovora forme.
+     *
+     * @return array<string, string>
+     */
+    public static function sharedFormTypeLabels(): array
+    {
+        return [
+            self::PROFILE_ZENSKO => 'Žensko preduzetništvo',
+            self::PROFILE_OMLADINSKO => 'Podrška preduzetništvu mladih',
+            self::PROFILE_CANONICAL => 'Podrška mikro, malim i srednjim preduzećima',
+        ];
+    }
+
+    public static function usesThreeSeatSharedForm(?string $type): bool
+    {
+        return in_array($type, [self::PROFILE_OMLADINSKO, self::PROFILE_CANONICAL], true);
+    }
+
+    public static function incompleteCreateMessage(string $type): string
+    {
+        return match ($type) {
+            self::PROFILE_OMLADINSKO => self::INCOMPLETE_OMLADINSKO_CREATE_MESSAGE,
+            self::PROFILE_CANONICAL => self::INCOMPLETE_CANONICAL_CREATE_MESSAGE,
+            default => self::INCOMPLETE_ZENSKO_CREATE_MESSAGE,
+        };
+    }
+
+    public static function presidentCountMessage(string $type): string
+    {
+        return $type === self::PROFILE_CANONICAL
+            ? self::CANONICAL_PRESIDENT_COUNT_MESSAGE
+            : self::YOUTH_PRESIDENT_COUNT_MESSAGE;
+    }
+
+    public static function invalidSeatMessage(string $type): string
+    {
+        return $type === self::PROFILE_CANONICAL
+            ? self::INVALID_CANONICAL_SEAT_MESSAGE
+            : self::INVALID_YOUTH_SEAT_MESSAGE;
+    }
+
+    public static function memberTypeRejectedMessage(string $type): string
+    {
+        return $type === self::PROFILE_CANONICAL
+            ? self::CANONICAL_MEMBER_TYPE_REJECTED_MESSAGE
+            : self::YOUTH_MEMBER_TYPE_REJECTED_MESSAGE;
+    }
+
+    public static function membersMaxMessage(string $type): string
+    {
+        return match ($type) {
+            self::PROFILE_OMLADINSKO => 'Komisija mladih može imati najviše 3 člana.',
+            self::PROFILE_CANONICAL => 'Komisija za podršku mikro, malim i srednjim preduzećima može imati najviše 3 člana.',
+            default => 'Komisija može imati najviše 5 članova.',
+        };
+    }
 
     private function __construct(
         public readonly ?string $type,
@@ -192,7 +264,7 @@ final class CommissionProfileConfig
 
     /**
      * Kanonski tip forme iz već učitanih tipova Poziva.
-     * Prihvata samo jedinstveni `zensko` ili `omladinsko`.
+     * Prihvata jedinstveni podržani profil, uključujući MMSP.
      *
      * @param  iterable<int|string|null>  $types
      * @return array{type: ?string, error: ?string}
@@ -226,9 +298,6 @@ final class CommissionProfileConfig
         }
 
         $type = $unique->first();
-        if ($type === CompetitionProfileResolver::TYPE_CANONICAL) {
-            return ['type' => null, 'error' => self::CANONICAL_LEGACY_FORM_MESSAGE];
-        }
         if (! in_array($type, self::SUPPORTED_STORED_PROFILES, true)) {
             return ['type' => null, 'error' => self::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE];
         }
@@ -266,18 +335,14 @@ final class CommissionProfileConfig
     }
 
     /**
-     * Profil ženske/omladinske forme iz sačuvanog `commissions.profile_type`.
+     * Profil forme iz sačuvanog `commissions.profile_type`.
      * Ne nagađa iz Poziva, broja mjesta, member_type ni request payload-a.
-     * Kanonska MMSP Komisija nije dostupna kroz ovu formu.
      *
      * @return array{type: ?string, error: ?string}
      */
     public static function storedCanonicalFormType(Commission $commission): array
     {
         $type = $commission->profile_type;
-        if ($type === CompetitionProfileResolver::TYPE_CANONICAL) {
-            return ['type' => null, 'error' => self::CANONICAL_LEGACY_FORM_MESSAGE];
-        }
         if (! is_string($type) || ! in_array($type, self::SUPPORTED_STORED_PROFILES, true)) {
             return ['type' => null, 'error' => self::UNDETERMINED_COMMISSION_PROFILE_MESSAGE];
         }
@@ -320,7 +385,7 @@ final class CommissionProfileConfig
             ->whereIn('id', $ids)
             ->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
             ->exists();
-        if ($hasCanonicalCall) {
+        if ($hasCanonicalCall && $profile !== CompetitionProfileResolver::TYPE_CANONICAL) {
             return self::CANONICAL_COMMISSION_REQUIRED_MESSAGE;
         }
 

@@ -566,14 +566,7 @@ class CanonicalCommissionGovernanceUiTest extends TestCase
         $before = $commission->fresh()->only(['name', 'year', 'start_date', 'end_date', 'status', 'mandate_starts_at']);
         $memberCount = CommissionMember::query()->count();
 
-        $this->actingAs($admin)->get(route('admin.commissions.edit', $commission))->assertForbidden();
-
-        $this->actingAs($admin)
-            ->put(route('admin.commissions.update', $commission), [
-                'name' => 'Preimenovana', 'year' => 2030, 'start_date' => '2030-01-01', 'end_date' => '2031-01-01',
-                'status' => 'inactive', 'competition_ids' => [],
-            ])
-            ->assertSessionHasErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        $this->actingAs($admin)->get(route('admin.commissions.edit', $commission))->assertOk();
 
         $this->actingAs($admin)
             ->delete(route('admin.commissions.destroy', $commission))
@@ -589,7 +582,7 @@ class CanonicalCommissionGovernanceUiTest extends TestCase
                 'members' => [['email' => 'legacy@example.test', 'name' => 'L']],
                 'competition_ids' => [$call->id],
             ])
-            ->assertSessionHasErrors(['competition_ids' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+            ->assertSessionHasErrors('competition_type');
 
         $this->actingAs($admin)
             ->post(route('admin.commissions.members.update-status', $members[G::ROLE_SEKRETAR]), ['status' => 'dismissed'])
@@ -604,7 +597,23 @@ class CanonicalCommissionGovernanceUiTest extends TestCase
         $this->assertSame(1, Commission::query()->count());
         $this->assertSame('active', $members[G::ROLE_SEKRETAR]->fresh()->status);
         $this->assertSame($commission->id, $call->fresh()->commission_id);
+        $this->assertSame(self::CANONICAL, $commission->fresh()->profile_type);
         Mail::assertNothingSent();
+
+        $this->actingAs($admin)
+            ->put(route('admin.commissions.update', $commission), [
+                'name' => 'Preimenovana MMSP',
+                'year' => $commission->year,
+                'start_date' => $commission->start_date->toDateString(),
+                'end_date' => $commission->end_date->toDateString(),
+                'status' => $commission->status,
+                'competition_ids' => [$call->id],
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Preimenovana MMSP', $commission->fresh()->name);
+        $this->assertSame(self::CANONICAL, $commission->fresh()->profile_type);
+        $this->assertSame($commission->id, $call->fresh()->commission_id);
+        $this->assertSame($memberCount, CommissionMember::query()->count());
     }
 
     // ---------------------------------------------------------------- H. Profile safety

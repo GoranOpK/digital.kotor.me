@@ -213,7 +213,7 @@
 
             </form>
 
-            @if($hasStoredProfile)
+            @if($hasStoredProfile && !empty($allowsSharedMembershipMutation))
             <div style="margin-top: 36px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
                 <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 16px;">Dodaj zamjenskog člana</h2>
                 <p style="font-size: 13px; color: #6b7280; margin: 0 0 16px;">
