@@ -7,7 +7,7 @@
         {{ $competition->title }} — prijava #{{ $application->redni_broj ?? $application->id }}
         ({{ $application->business_plan_name ?? $application->founder_name }})
     </p>
-    <p style="margin-bottom: 12px;"><a href="{{ route('evaluation.canonical-sessions.show', $competition) }}">Sjednice Komisije (intervju, konačna odluka)</a></p>
+    <p style="margin-bottom: 12px;"><a href="{{ route('evaluation.canonical-sessions.show', $competition) }}">Sjednice Komisije (intervju, treća sjednica)</a></p>
     <p style="margin-bottom: 12px;"><a href="{{ route('evaluation.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori</a></p>
 
     @if(session('success'))
