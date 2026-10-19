@@ -14,7 +14,7 @@ final class CanonicalMmspPolicy extends CompetitionProfilePolicy
 
     public function displayName(): string
     {
-        return 'Preduzetnici mikro, mala i srednja preduzeća';
+        return 'Podrška mikro, malim i srednjim preduzećima';
     }
 
     public function requiresKotorAddress(): bool
