@@ -12,6 +12,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -294,6 +295,87 @@ class DocumentLibraryStorageAndLimitsTest extends TestCase
         Bus::assertNotDispatched(ProcessDocumentJob::class);
         $this->assertDatabaseCount('user_documents', 0);
         $this->assertFalse(Storage::disk('local')->exists($mergedPath));
+    }
+
+    public function test_deleting_library_document_with_mega_path_removes_record_files_and_quota(): void
+    {
+        $kept = UserDocument::create([
+            'user_id' => $this->user->id,
+            'category' => 'Ostali dokumenti',
+            'name' => 'Kept',
+            'file_path' => null,
+            'cloud_path' => 'https://mega.nz/file/kept',
+            'file_size' => 1000,
+            'status' => 'processed',
+            'processed_at' => now(),
+        ]);
+        $processedPath = 'documents/user_'.$this->user->id.'/processed.pdf';
+        $originalPath = 'documents/user_'.$this->user->id.'/original.jpg';
+        Storage::disk('local')->put($processedPath, str_repeat('p', 4000));
+        Storage::disk('local')->put($originalPath, str_repeat('o', 500));
+        $this->user->update(['used_storage_bytes' => 5500]);
+
+        $document = UserDocument::create([
+            'user_id' => $this->user->id,
+            'category' => 'Ostali dokumenti',
+            'name' => 'Mega local',
+            'file_path' => $processedPath,
+            'original_file_path' => $originalPath,
+            'cloud_path' => 'https://mega.nz/file/abc',
+            'mega_file_name' => '7-20261019-abcdef12.pdf',
+            'file_size' => 4500,
+            'status' => 'processed',
+            'processed_at' => now(),
+        ]);
+
+        $this->actingAs($this->user)
+            ->from(route('documents.index'))
+            ->delete(route('documents.destroy', $document))
+            ->assertRedirect(route('documents.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('user_documents', ['id' => $document->id]);
+        $this->assertDatabaseHas('user_documents', ['id' => $kept->id]);
+        $this->assertFalse(Storage::disk('local')->exists($processedPath));
+        $this->assertFalse(Storage::disk('local')->exists($originalPath));
+        $this->user->refresh();
+        $this->assertSame(1000, (int) $this->user->used_storage_bytes);
+    }
+
+    public function test_library_delete_removes_record_when_quota_cleanup_fails(): void
+    {
+        Log::spy();
+        $path = 'documents/user_'.$this->user->id.'/still-deleted.pdf';
+        Storage::disk('local')->put($path, str_repeat('x', 2000));
+        $document = UserDocument::create([
+            'user_id' => $this->user->id,
+            'category' => 'Ostali dokumenti',
+            'name' => 'Quota fail',
+            'file_path' => $path,
+            'cloud_path' => 'https://mega.nz/file/quota-fail',
+            'mega_file_name' => 'quota-fail.pdf',
+            'file_size' => 2000,
+            'status' => 'processed',
+            'processed_at' => now(),
+        ]);
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldReceive('updateUserStorage')->andThrow(new \RuntimeException('quota update failed'));
+            $mock->shouldReceive('recalculateUserStorage')->andThrow(new \RuntimeException('quota recalc failed'));
+        });
+
+        $this->actingAs($this->user)
+            ->from(route('documents.index'))
+            ->delete(route('documents.destroy', $document))
+            ->assertRedirect(route('documents.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('user_documents', ['id' => $document->id]);
+        $this->assertFalse(Storage::disk('local')->exists($path));
+        Log::shouldHaveReceived('warning')->withArgs(function (string $message) {
+            return str_contains($message, 'Failed to update storage after processed file delete')
+                || str_contains($message, 'Failed to recalculate user storage after document delete');
+        })->atLeast()->once();
     }
 
     public function test_processing_banner_message_after_reload(): void
