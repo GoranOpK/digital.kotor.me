@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\CommissionProfileConfig;
+use App\Support\CompetitionProgramCatalog;
 use App\Support\RichText;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
@@ -24,6 +25,7 @@ class Competition extends Model
         'type',
         'call_number',
         'status',
+        'is_test_preview',
         'competition_number',
         'year',
         'budget',
@@ -54,11 +56,45 @@ class Competition extends Model
         'year' => 'integer',
         'call_number' => 'integer',
         'deadline_days' => 'integer',
+        'is_test_preview' => 'boolean',
     ];
 
     public function isOmladinskoProfile(): bool
     {
         return $this->type === 'omladinsko';
+    }
+
+    /**
+     * Kontrolisani produkcijski test kanonskog MMSP toka.
+     * Konkurs ostaje draft i ne troši službeni publication claim.
+     */
+    public function isCanonicalTestPreview(): bool
+    {
+        return $this->type === CompetitionProfileResolver::TYPE_CANONICAL
+            && $this->status === 'draft'
+            && (bool) $this->is_test_preview;
+    }
+
+    /**
+     * Javno dostupan za pregled/prijavu: redovno objavljen aktivan profil
+     * ili eksplicitno označen kanonski MMSP testni preview.
+     */
+    public function isPubliclyAccessibleForApplications(): bool
+    {
+        if ($this->isCanonicalTestPreview()) {
+            return true;
+        }
+
+        return $this->status === 'published'
+            && CompetitionProgramCatalog::isPubliclyAvailable($this->type);
+    }
+
+    /**
+     * Status dozvoljava vremenski prozor prijava.
+     */
+    public function hasApplicationWindowStatus(): bool
+    {
+        return $this->status === 'published' || $this->isCanonicalTestPreview();
     }
 
     public function profile(): CompetitionProfilePolicy
@@ -191,7 +227,7 @@ class Competition extends Model
      */
     public function getIsOpenAttribute()
     {
-        if ($this->status !== 'published') {
+        if (! $this->hasApplicationWindowStatus()) {
             return false;
         }
 
@@ -211,7 +247,7 @@ class Competition extends Model
      */
     public function getIsUpcomingAttribute()
     {
-        if ($this->status !== 'published' || !$this->start_date) {
+        if (! $this->hasApplicationWindowStatus() || !$this->start_date) {
             return false;
         }
 
@@ -283,7 +319,7 @@ class Competition extends Model
      */
     public function getDaysUntilApplicationDeadline(): ?int
     {
-        if ($this->status !== 'published') {
+        if (! $this->hasApplicationWindowStatus()) {
             return null;
         }
 
@@ -301,7 +337,7 @@ class Competition extends Model
      */
     public function isApplicationDeadlinePassed(): bool
     {
-        if ($this->status !== 'published') {
+        if (! $this->hasApplicationWindowStatus()) {
             return false;
         }
 
