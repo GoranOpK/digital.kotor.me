@@ -132,7 +132,7 @@ class CanonicalApplicantController extends Controller
             abort(404);
         }
 
-        if (! CompetitionProgramCatalog::isPubliclyAvailable($competition->type)) {
+        if (! $competition->isPubliclyAccessibleForApplications()) {
             return redirect()->route('competitions.index')
                 ->withErrors(['error' => CompetitionProgramCatalog::PROFILE_UNAVAILABLE_FOR_APPLICATIONS_MESSAGE]);
         }
