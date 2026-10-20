@@ -1451,7 +1451,7 @@ class ApplicationController extends Controller
 
     private function redirectIfCompetitionProfileUnavailable(Competition $competition): ?RedirectResponse
     {
-        if (CompetitionProgramCatalog::isPubliclyAvailable($competition->type)) {
+        if ($competition->isPubliclyAccessibleForApplications()) {
             return null;
         }
 
