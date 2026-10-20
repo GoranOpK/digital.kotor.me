@@ -87,7 +87,7 @@ class ApplicationController extends Controller
             abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
         }
 
-        if ($competition->status !== 'published') {
+        if (! $competition->isPubliclyAccessibleForApplications()) {
             abort(404, 'Konkurs nije pronađen ili nije objavljen.');
         }
 
