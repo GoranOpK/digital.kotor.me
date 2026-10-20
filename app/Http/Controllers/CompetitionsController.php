@@ -6,6 +6,8 @@ use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Support\CompetitionProgramCatalog;
+use App\Support\CanonicalDocumentCatalog;
+use App\Support\CanonicalLegalForm;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\KnApplicationClassification;
 use App\Support\KnOmladinskoDocumentPackage;
@@ -287,6 +289,29 @@ class CompetitionsController extends Controller
             }
         }
 
+        // Javni MMSP preview koristi isključivo kanonski katalog dokumentacije iz Odluke čl. 14.
+        // Ne koristi legacy ženski/omladinski preview.
+        $canonicalDocumentPreviewMaps = [];
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            foreach (CanonicalLegalForm::codes() as $legalForm) {
+                $catalog = CanonicalDocumentCatalog::forLegalForm($legalForm, (int) $competition->year);
+                $canonicalDocumentPreviewMaps[$legalForm] = array_map(
+                    static function (array $item): string {
+                        $label = $item['label'];
+                        if (! empty($item['condition'])) {
+                            $label .= ' — '.$item['condition'];
+                        }
+                        if (! empty($item['supplement'])) {
+                            $label .= ' Dodatno: '.$item['supplement']['label'].' — '.$item['supplement']['condition'];
+                        }
+
+                        return $label;
+                    },
+                    $catalog->items()
+                );
+            }
+        }
+
         return view('competitions.show', compact(
             'competition',
             'deadline',
@@ -305,7 +330,8 @@ class CompetitionsController extends Controller
             'knFormApplicantType',
             'knAllowsRazvoj',
             'knSupportsOmladinskoDraft',
-            'omladinskoPreviewMaps'
+            'omladinskoPreviewMaps',
+            'canonicalDocumentPreviewMaps'
         ));
     }
 }
