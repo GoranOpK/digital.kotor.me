@@ -738,9 +738,15 @@
                                         Pregled konkursa
                                     </a>
                                     @if($competition->isRankingFormed())
-                                        <a href="{{ route('admin.competitions.ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
-                                            Rang lista
-                                        </a>
+                                        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                                            <a href="{{ route('evaluation.canonical-outcome.show', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
+                                                Rang lista
+                                            </a>
+                                        @else
+                                            <a href="{{ route('admin.competitions.ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
+                                                Rang lista
+                                            </a>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
