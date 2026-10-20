@@ -145,8 +145,17 @@
             @endif
             <p style="margin-top: 8px;">
                 @if($predlogBlockReason === null && $predlog)
-                    Predlog je spreman (interni skup podataka, nije objavljen).
-                    <a href="{{ route('evaluation.canonical-administrative.show', $competition) }}">Finalizacija Predloga, predaja Sekretarijatu i zatvaranje</a>
+                    <span>Predlog je spreman (interni skup podataka, nije objavljen).</span>
+                    @if($isChair)
+                        <a href="{{ route('evaluation.canonical-administrative.show', $competition) }}"
+                           style="display:inline-block; margin-left:8px; padding:8px 12px; background:#0b3d91; color:#fff; border-radius:6px; text-decoration:none; font-weight:600;">
+                            Finalizacija Predloga, predaja Sekretarijatu i zatvaranje
+                        </a>
+                    @else
+                        <span style="display:block; margin-top:6px; color:#6b7280;">
+                            Finalizaciju Predloga nastavlja predsjednik Komisije.
+                        </span>
+                    @endif
                 @else
                     {{ $predlogBlockReason }}
                 @endif
