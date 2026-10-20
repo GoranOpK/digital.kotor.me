@@ -62,6 +62,22 @@
                 – {{ $commission->mandate_ends_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
                 — <strong>{{ $mandateValid ? 'važeći' : 'nije važeći' }}</strong>
             </p>
+            @if($commission->appointment_reference === null
+                && $commission->appointed_at === null
+                && $commission->mandate_starts_at === null
+                && $commission->mandate_ends_at === null)
+                @unless($callBlock)
+                    <form method="POST" action="{{ route('admin.competitions.canonical-commission.establish', $competition) }}" style="margin-bottom: 12px;">
+                        @csrf
+                        <input type="hidden" name="name" value="{{ $commission->name }}">
+                        <strong>Evidentiraj akt o obrazovanju i mandat postojeće Komisije</strong><br>
+                        <label>Akt o obrazovanju Komisije <input type="text" name="appointment_reference" required></label>
+                        <label>Datum akta <input type="date" name="appointed_on" required max="{{ $today }}"></label>
+                        <label>Početak mandata <input type="date" name="mandate_starts_on" required value="{{ optional($commission->start_date)->format('Y-m-d') }}"></label>
+                        <button type="submit" class="btn btn-primary">Evidentiraj akt i mandat</button>
+                    </form>
+                @endunless
+            @endif
             @if($structuralBlock)
                 <div style="{{ $warn }}">Komisija još nije spremna za rad: {{ $structuralBlock }}</div>
             @else
@@ -90,7 +106,42 @@
                         <div style="{{ $warn }}">Član ne može obavljati radnje Komisije: {{ $seat['actionBlock'] }}</div>
                     @endif
 
-                    @unless($callBlock)
+                    @if($member->canonical_seat === null)
+                        @if(!$mandateValid)
+                            <div style="{{ $warn }}">Prvo evidentirajte akt o obrazovanju i važeći mandat Komisije.</div>
+                        @elseif(!$callBlock)
+                            <form method="POST" action="{{ route('admin.competitions.canonical-commission.appoint', $competition) }}" style="margin-bottom: 12px;">
+                                @csrf
+                                <input type="hidden" name="email" value="{{ $member->user?->email }}">
+                                <input type="hidden" name="seat_no" value="{{ $seatNo }}">
+                                <strong>Evidentiraj imenovanje postojećeg člana</strong><br>
+                                <label>Uloga
+                                    <select name="role" required>
+                                        @foreach($roles as $value => $label)
+                                            @if(($member->position === 'predsjednik' && $value === $G::ROLE_PREDSJEDNIK)
+                                                || ($member->position !== 'predsjednik' && $value !== $G::ROLE_PREDSJEDNIK && !in_array($value, $usedRoles, true)))
+                                                <option value="{{ $value }}">{{ $label }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label>Kategorija (samo spoljašnji član)
+                                    <select name="external_category">
+                                        <option value="">—</option>
+                                        @foreach($externalCategories as $value => $label)
+                                            <option value="{{ $value }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label>Akt o imenovanju <input type="text" name="appointment_reference" required></label>
+                                <label>Datum akta <input type="date" name="appointed_on" required max="{{ $today }}"></label>
+                                <label>PIB društva koje član predstavlja (opciono) <input type="text" name="represented_company_pib" maxlength="32"></label>
+                                <button type="submit" class="btn btn-primary">Evidentiraj imenovanje</button>
+                            </form>
+                        @endif
+                    @endif
+
+                    @if(!$callBlock && $member->canonical_seat !== null)
                         @unless($seat['declarationsSigned'])
                             <form method="POST" action="{{ route('admin.competitions.canonical-commission.declarations', [$competition, $member]) }}" style="margin-bottom: 8px;">
                                 @csrf
@@ -112,7 +163,7 @@
                             <label>Nastanak upražnjenosti <input type="datetime-local" name="triggered_at" required></label>
                             <button type="submit" class="btn btn-danger">Evidentiraj upražnjenost</button>
                         </form>
-                    @endunless
+                    @endif
                 @elseif($seat['state'] === 'vacant')
                     <p>
                         Prethodni član: {{ $seat['vacatedMember']?->name ?? '—' }} ({{ $G::roleLabel($seat['vacancy']->canonical_seat) }}),
