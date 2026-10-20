@@ -130,8 +130,13 @@
                                 {{ $commission->end_date->format('d.m.Y') }}
                             </td>
                             <td>
-                                @php $storedProfile = $commission->assignedProfileType(); @endphp
-                                {{ $commission->active_members_count }}@if($storedProfile) / {{ $storedProfile === 'omladinsko' ? 3 : 5 }}@endif aktivnih
+                                @php
+                                    $storedProfile = $commission->assignedProfileType();
+                                    $expectedMembers = $storedProfile
+                                        ? \App\Support\CommissionProfileConfig::for($storedProfile)->seatCount
+                                        : null;
+                                @endphp
+                                {{ $commission->active_members_count }}@if($expectedMembers) / {{ $expectedMembers }}@endif aktivnih
                             </td>
                             <td>
                                 <span class="status-badge status-{{ $commission->status }}">
