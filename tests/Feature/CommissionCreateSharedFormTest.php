@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Support\CommissionProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -355,6 +356,75 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringNotContainsString('Možete dodati još <strong>1 zamjenskog člana</strong>', $html);
 
         Mail::assertSent(CommissionMemberAdded::class, 3);
+    }
+
+    public function test_mmsp_shared_commission_can_be_completed_in_canonical_governance(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft('MMSP governance '.uniqid());
+
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $commission = Commission::query()->latest('id')->firstOrFail();
+        $today = now()->toDateString();
+
+        $this->actingAs($admin)
+            ->post(route('admin.competitions.canonical-commission.establish', $competition), [
+                'name' => $commission->name,
+                'appointment_reference' => 'Akt o obrazovanju TEST',
+                'appointed_on' => $today,
+                'mandate_starts_on' => $today,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $commission->refresh();
+        $this->assertNotNull($commission->appointment_reference);
+        $this->assertNotNull($commission->mandate_starts_at);
+        $this->assertNotNull($commission->mandate_ends_at);
+
+        $members = $commission->activeMembers()->with('user')->orderBy('canonical_seat_no')->get();
+        $nonPresidentRoles = [
+            CanonicalCommissionGovernance::ROLE_SEKRETAR,
+            CanonicalCommissionGovernance::ROLE_SPOLJASNJI,
+        ];
+        $nonPresidentIndex = 0;
+
+        foreach ($members as $member) {
+            $role = $member->position === 'predsjednik'
+                ? CanonicalCommissionGovernance::ROLE_PREDSJEDNIK
+                : $nonPresidentRoles[$nonPresidentIndex++];
+
+            $payload = [
+                'email' => $member->user->email,
+                'seat_no' => $member->canonical_seat_no,
+                'role' => $role,
+                'appointment_reference' => 'Akt člana '.$member->canonical_seat_no,
+                'appointed_on' => $today,
+            ];
+            if ($role === CanonicalCommissionGovernance::ROLE_SPOLJASNJI) {
+                $payload['external_category'] = 'biznis';
+            }
+
+            $this->actingAs($admin)
+                ->post(route('admin.competitions.canonical-commission.appoint', $competition), $payload)
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(3, $commission->activeMembers()->count());
+        $this->assertEqualsCanonicalizing(
+            CanonicalCommissionGovernance::ROLES,
+            $commission->activeMembers()->pluck('canonical_seat')->all()
+        );
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.competitions.canonical-commission.show', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Komisija je strukturno potpuna.', $html);
+        $this->assertStringNotContainsString('Nepoznata uloga', $html);
     }
 
     public function test_mmsp_commission_can_be_created_without_a_call(): void

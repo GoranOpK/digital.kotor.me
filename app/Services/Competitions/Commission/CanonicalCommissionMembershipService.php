@@ -261,17 +261,33 @@ class CanonicalCommissionMembershipService
         }
 
         $active = $locked->activeMembers()->lockForUpdate()->get();
+        $existingSharedMember = $active->first(fn (CommissionMember $member) =>
+            (int) $member->user_id === (int) $user->id
+            && (int) $member->canonical_seat_no === $seatNo
+            && $member->canonical_seat === null
+            && $member->appointment_reference === null
+            && $member->appointed_at === null
+        );
 
-        if ($active->count() >= $this->governance->commissionConfig()->seatCount) {
+        if ($active->count() >= $this->governance->commissionConfig()->seatCount && $existingSharedMember === null) {
             return [ProcessWriteResult::failed(CanonicalCommissionGovernance::FOURTH_SEAT_MESSAGE), null];
         }
 
-        if ($active->contains(fn (CommissionMember $member) => (int) $member->user_id === (int) $user->id)) {
+        if ($existingSharedMember !== null) {
+            $legacyPresident = $existingSharedMember->position === 'predsjednik';
+            $canonicalPresident = $role === CanonicalCommissionGovernance::ROLE_PREDSJEDNIK;
+            if ($legacyPresident !== $canonicalPresident) {
+                return [ProcessWriteResult::failed(CanonicalCommissionGovernance::SEAT_INVALID_MESSAGE), null];
+            }
+        }
+
+        if ($active->contains(fn (CommissionMember $member) => $member->id !== $existingSharedMember?->id
+            && (int) $member->user_id === (int) $user->id)) {
             return [ProcessWriteResult::failed(CanonicalCommissionGovernance::SAME_USER_MESSAGE), null];
         }
 
-        if ($active->contains(fn (CommissionMember $member) => (int) $member->canonical_seat_no === $seatNo
-            || $member->canonical_seat === $role)) {
+        if ($active->contains(fn (CommissionMember $member) => $member->id !== $existingSharedMember?->id
+            && ((int) $member->canonical_seat_no === $seatNo || $member->canonical_seat === $role))) {
             return [ProcessWriteResult::failed(CanonicalCommissionGovernance::SEAT_DUPLICATE_MESSAGE), null];
         }
 
@@ -301,6 +317,22 @@ class CanonicalCommissionMembershipService
             }
 
             return [ProcessWriteResult::failed(CanonicalCommissionGovernance::PIB_CONFLICT_MESSAGE), null];
+        }
+
+        if ($existingSharedMember !== null) {
+            $existingSharedMember->update([
+                'position' => $role === CanonicalCommissionGovernance::ROLE_PREDSJEDNIK ? 'predsjednik' : 'clan',
+                'canonical_seat' => $role,
+                'external_category' => $externalCategory,
+                'represented_company_pib' => $normalizedPib,
+                'appointment_reference' => $appointmentReference,
+                'appointed_at' => $appointedAt,
+                'canonical_active_user_id' => $user->id,
+                'canonical_active_seat' => $role,
+                'canonical_active_seat_no' => $seatNo,
+            ]);
+
+            return [ProcessWriteResult::ok($existingSharedMember->id), $existingSharedMember->fresh()];
         }
 
         $member = CommissionMember::query()->create([
