@@ -272,27 +272,41 @@ class HomeController extends Controller
 
         // Ako je konkurs admin, pripremi podatke za admin dashboard
 
-        // Ako je član komisije, pripremi podatke za dashboard komisije
+        // Ako je član komisije, pripremi podatke za sve njegove aktivne komisije.
         if ($isKomisija) {
-            // Pronađi člana komisije
-            $commissionMember = \App\Models\CommissionMember::activeMembershipForUser($user->id);
+            $commissionMemberships = \App\Models\CommissionMember::query()
+                ->where('user_id', $user->id)
+                ->where('status', 'active')
+                ->with(['commission.competitions'])
+                ->get()
+                ->filter(fn ($membership) => $membership->commission !== null)
+                ->values();
 
-            if ($commissionMember) {
-                // Učitaj komisiju sa njenim konkursima
+            if ($commissionMemberships->isNotEmpty()) {
+                // Zadržavamo prvi zapis radi kompatibilnosti sa postojećim dijelovima view-a,
+                // ali lista konkursa i evaluacija obuhvata sva aktivna članstva.
+                $commissionMember = $commissionMemberships->first();
                 $commission = $commissionMember->commission;
-                $commission->load('competitions');
 
-                $competitionIds = $commission->competitions->pluck('id');
+                $commissionCompetitions = $commissionMemberships
+                    ->flatMap(fn ($membership) => $membership->commission->competitions)
+                    ->unique('id')
+                    ->values();
 
-                // Sekcija "Prijave za ocjenjivanje" vidljiva je komisiji tek nakon isteka roka za prijavljivanje
-                $competitionsWithDeadlinePassed = $commission->competitions->filter(function ($c) {
-                    return in_array($c->status, ['closed', 'completed']) || $c->isApplicationDeadlinePassed();
+                $competitionIds = $commissionCompetitions->pluck('id');
+
+                // Sekcija "Prijave za ocjenjivanje" vidljiva je tek nakon isteka roka / zatvaranja.
+                $competitionsWithDeadlinePassed = $commissionCompetitions->filter(function ($competition) {
+                    return in_array($competition->status, ['closed', 'completed'], true)
+                        || $competition->isApplicationDeadlinePassed();
                 });
                 $showEvaluationSection = $competitionsWithDeadlinePassed->isNotEmpty();
                 $competitionIdsForEvaluation = $competitionsWithDeadlinePassed->pluck('id');
 
-                // Pronađi prijave za konkurse gdje je rok istekao – samo prijave koje član JOŠ NIJE ocjenio
-                $evaluatedApplicationIds = \App\Models\EvaluationScore::where('commission_member_id', $commissionMember->id)
+                $membershipByCommissionId = $commissionMemberships->keyBy('commission_id');
+                $membershipIds = $commissionMemberships->pluck('id');
+
+                $evaluatedApplicationIds = \App\Models\EvaluationScore::whereIn('commission_member_id', $membershipIds)
                     ->whereCompletedFinal()
                     ->pluck('application_id')
                     ->toArray();
@@ -307,31 +321,41 @@ class HomeController extends Controller
                 }
 
                 $applications = $applicationsQuery->latest()->get();
-                $applications->each(function ($app) use ($commissionMember) {
+                $applications->each(function ($app) use ($membershipByCommissionId) {
                     if ($app->isEliminatedFromScoring()) {
                         $app->is_evaluated_by_member = true;
-
                         return;
                     }
-                    $app->is_evaluated_by_member = \App\Models\EvaluationScore::where('application_id', $app->id)
-                        ->where('commission_member_id', $commissionMember->id)
-                        ->whereCompletedFinal()
-                        ->exists();
+
+                    $membership = $membershipByCommissionId->get($app->competition?->commission_id);
+                    $app->is_evaluated_by_member = $membership
+                        ? \App\Models\EvaluationScore::where('application_id', $app->id)
+                            ->where('commission_member_id', $membership->id)
+                            ->whereCompletedFinal()
+                            ->exists()
+                        : false;
                 });
 
-                // Moje prijave - samo prijave koje je korisnik lično podneo
                 $myApplications = Application::where('user_id', $user->id)
                     ->whereIn('competition_id', $competitionIds)
                     ->with('competition', 'businessPlan')
                     ->latest()
                     ->get();
 
-                // Učitaj konkursi za prikaz preostalog vremena
-                $competitions = \App\Models\Competition::whereIn('id', $competitionIds->toArray())
-                    ->whereIn('status', ['published', 'closed', 'completed'])
-                    ->get();
+                // Prikaži sve konkurse dodijeljene svim komisijama, uključujući kanonski TEST draft-preview.
+                $competitions = \App\Models\Competition::whereIn('id', $competitionIds)->get();
 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'myApplications', 'competitions', 'showEvaluationSection'));
+                return view('dashboard', compact(
+                    'applications',
+                    'commissionMember',
+                    'commission',
+                    'commissionMemberships',
+                    'commissionCompetitions',
+                    'isKomisija',
+                    'myApplications',
+                    'competitions',
+                    'showEvaluationSection'
+                ));
             }
 
             return view('dashboard', compact('isKomisija', 'isSuperAdmin'));
