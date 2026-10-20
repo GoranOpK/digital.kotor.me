@@ -69,7 +69,7 @@ class CanonicalCommissionAdministrationService
         string $appointmentReference,
         string $appointedOn,
     ): ProcessWriteResult {
-        $reason = $this->callBlockReason($competition);
+        $reason = $this->callBlockReason($competition, requireUnassigned: false);
         if ($reason !== null) {
             return ProcessWriteResult::failed($reason);
         }
@@ -84,14 +84,34 @@ class CanonicalCommissionAdministrationService
             return ProcessWriteResult::failed(self::MANDATE_ALREADY_EXPIRED_MESSAGE);
         }
 
-        return DB::transaction(function () use ($competition, $actor, $name, $start, $appointmentReference, $appointedAt) {
+        return DB::transaction(function () use ($competition, $actor, $name, $start, $end, $appointmentReference, $appointedAt) {
             $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
-            if ($locked->commission_id !== null) {
-                return ProcessWriteResult::failed(self::ALREADY_ASSIGNED_MESSAGE);
-            }
 
-            $commission = $this->membership->establish($name, $start, $appointmentReference, $appointedAt);
-            $locked->forceFill(['commission_id' => $commission->id])->save();
+            if ($locked->commission_id === null) {
+                $commission = $this->membership->establish($name, $start, $appointmentReference, $appointedAt);
+                $locked->forceFill(['commission_id' => $commission->id])->save();
+            } else {
+                $commission = Commission::query()->whereKey($locked->commission_id)->lockForUpdate()->firstOrFail();
+                if (! $commission->isCanonicalProfile()) {
+                    return ProcessWriteResult::failed(CanonicalCommissionGovernance::NOT_CANONICAL_MESSAGE);
+                }
+                if ($commission->appointment_reference !== null
+                    || $commission->appointed_at !== null
+                    || $commission->mandate_starts_at !== null
+                    || $commission->mandate_ends_at !== null) {
+                    return ProcessWriteResult::failed(self::ALREADY_ASSIGNED_MESSAGE);
+                }
+
+                $commission->update([
+                    'year' => (int) $start->year,
+                    'start_date' => $start->toDateString(),
+                    'end_date' => $end->toDateString(),
+                    'appointment_reference' => $appointmentReference,
+                    'appointed_at' => $appointedAt,
+                    'mandate_starts_at' => $start,
+                    'mandate_ends_at' => $end,
+                ]);
+            }
 
             $this->gate->audit($locked, CanonicalAdministrativeEvent::COMMISSION_ESTABLISHED, $actor, $commission, [
                 'commission_id' => $commission->id,
