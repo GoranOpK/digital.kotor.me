@@ -6,6 +6,7 @@ use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Support\CompetitionProgramCatalog;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\KnApplicationClassification;
 use App\Support\KnOmladinskoDocumentPackage;
 use Illuminate\Http\Request;
@@ -20,8 +21,17 @@ class CompetitionsController extends Controller
     public function index(): View
     {
         $now = now();
-        $competitions = Competition::where('status', 'published')
-            ->whereIn('type', CompetitionProgramCatalog::publiclyAvailableTypes())
+        $competitions = Competition::query()
+            ->where(function ($query) {
+                $query->where(function ($published) {
+                    $published->where('status', 'published')
+                        ->whereIn('type', CompetitionProgramCatalog::publiclyAvailableTypes());
+                })->orWhere(function ($preview) {
+                    $preview->where('status', 'draft')
+                        ->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
+                        ->where('is_test_preview', true);
+                });
+            })
             ->where(function ($query) use ($now) {
                 // Konkurs je vidljiv korisnicima samo ako je datum početka danas ili u prošlosti
                 $query->where('start_date', '<=', $now->toDateString())
@@ -58,10 +68,9 @@ class CompetitionsController extends Controller
     {
         $now = now();
         
-        // Proveri da li je konkurs objavljen, da li je počeo i da li je profil javno dostupan.
-        if ($competition->status !== 'published'
-            || ($competition->start_date && $competition->start_date->startOfDay() > $now)
-            || ! CompetitionProgramCatalog::isPubliclyAvailable($competition->type)) {
+        // Redovno objavljen aktivan profil ili eksplicitni kanonski MMSP testni preview.
+        if (! $competition->isPubliclyAccessibleForApplications()
+            || ($competition->start_date && $competition->start_date->startOfDay() > $now)) {
             abort(404, 'Konkurs nije pronađen ili još uvijek nije počeo.');
         }
 
