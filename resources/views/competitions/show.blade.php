@@ -358,7 +358,7 @@
                     }
                 }
                 $showApplicantDocumentation = !$isCommissionMemberForThisCompetition && !$isCompetitionAdmin;
-                $showZenskoStartChooser = $competition->type !== 'omladinsko'
+                $showZenskoStartChooser = $competition->type === 'zensko'
                     && auth()->check()
                     && $applicantType
                     && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident')));
@@ -376,7 +376,23 @@
                         Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
                     </p>
                     
-                    @if($showStartChooser)
+                    @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                    <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
+                        <label style="display:block; font-weight:600; margin-bottom:12px; color:#374151;">
+                            Pravna forma podnosioca
+                        </label>
+                        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                            <label style="display:flex; align-items:center; cursor:pointer;">
+                                <input type="radio" name="canonical_legal_form_preview" value="preduzetnik" checked style="margin-right:8px;">
+                                <span>Preduzetnik — Obrazac P1a</span>
+                            </label>
+                            <label style="display:flex; align-items:center; cursor:pointer;">
+                                <input type="radio" name="canonical_legal_form_preview" value="drustvo" style="margin-right:8px;">
+                                <span>Društvo (mikro, malo ili srednje preduzeće) — Obrazac P1b</span>
+                            </label>
+                        </div>
+                    </div>
+                    @elseif($showStartChooser)
                     <!-- Izbor faze biznisa -->
                     <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
                         @if(!empty($knCanChoosePlannedForm))
@@ -461,9 +477,15 @@
                     @endif
                     
                     <ul class="documents-list" id="documents-list">
-                        @foreach($requiredDocuments as $document)
-                            <li>{{ $document }}</li>
-                        @endforeach
+                        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                            @foreach(($canonicalDocumentPreviewMaps['preduzetnik'] ?? []) as $document)
+                                <li>{{ $document }}</li>
+                            @endforeach
+                        @else
+                            @foreach($requiredDocuments as $document)
+                                <li>{{ $document }}</li>
+                            @endforeach
+                        @endif
                     </ul>
                 </div>
             @else
@@ -545,6 +567,33 @@
         @endif
     </div>
 </div>
+
+@if(($competition->type ?? '') === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const maps = @json($canonicalDocumentPreviewMaps ?? []);
+    const list = document.getElementById('documents-list');
+    const radios = document.querySelectorAll('input[name="canonical_legal_form_preview"]');
+
+    function renderCanonicalDocuments() {
+        const selected = document.querySelector('input[name="canonical_legal_form_preview"]:checked')?.value || 'preduzetnik';
+        const items = maps[selected] || [];
+        if (list) {
+            list.innerHTML = items.map(function (item) {
+                const li = document.createElement('li');
+                li.textContent = item;
+                return li.outerHTML;
+            }).join('');
+        }
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener('change', renderCanonicalDocuments);
+    });
+    renderCanonicalDocuments();
+});
+</script>
+@endif
 
 @if(!empty($showStartChooser))
 <script>
