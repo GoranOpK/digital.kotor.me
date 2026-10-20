@@ -226,6 +226,24 @@
                     </div>
                 </div>
 
+                @if($isAdmin
+                    && $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL
+                    && $competition->status === 'draft')
+                    <div class="form-group" style="padding: 14px 16px; border: 1px solid #f59e0b; background: #fffbeb; border-radius: 8px;">
+                        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
+                            <input type="hidden" name="is_test_preview" value="0">
+                            <input type="checkbox" name="is_test_preview" value="1" {{ old('is_test_preview', $competition->is_test_preview) ? 'checked' : '' }} style="margin-top:3px;">
+                            <span>
+                                <strong>Testni MMSP preview</strong><br>
+                                <span style="font-size:12px; color:#6b7280;">
+                                    Omogućava javni prikaz i testiranje prijave dok Poziv ostaje Nacrt.
+                                    Ne pokreće službenu objavu i ne zauzima godišnji MMSP publication slot.
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                @endif
+
                 <div class="form-group">
                     <label class="form-label">Informacije o roku</label>
                     <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151;">
