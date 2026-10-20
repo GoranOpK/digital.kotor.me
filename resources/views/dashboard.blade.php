@@ -617,7 +617,8 @@
         <!-- Dashboard za članove komisije -->
         @if ($isKomisija && isset($commissionMember) && isset($commission))
             @php
-                $activeCompetitions = $commission->competitions->whereNotIn('status', ['closed', 'completed']);
+                $activeCompetitions = collect($commissionCompetitions ?? $commission->competitions)
+                    ->whereNotIn('status', ['closed', 'completed']);
             @endphp
             <div class="top-grid">
                 <div class="info-card">
@@ -655,31 +656,25 @@
 
                 <div class="info-card">
                     <div class="info-card-header">
-                        <h2>Informacije o komisiji</h2>
+                        <h2>Moje komisije</h2>
                     </div>
                     <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
-                        <div class="info-item">
-                            <span class="info-label">Naziv komisije</span>
-                            <span class="info-value">{{ $commission->name }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Godina</span>
-                            <span class="info-value">{{ $commission->year }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Mandat</span>
-                            <span class="info-value">{{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Pozicija</span>
-                            <span class="info-value">{{ $commissionMember->position === 'predsjednik' ? 'Predsjednik' : 'Član' }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Status</span>
-                            <span class="info-value" style="color: {{ $commission->status === 'active' ? '#10b981' : '#6b7280' }};">
-                                {{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}
-                            </span>
-                        </div>
+                        @foreach(($commissionMemberships ?? collect([$commissionMember])) as $membership)
+                            @php $memberCommission = $membership->commission; @endphp
+                            @if($memberCommission)
+                                <div class="info-item" style="padding-bottom: 12px; border-bottom: 1px solid #e5e7eb;">
+                                    <span class="info-label">{{ $memberCommission->name }}</span>
+                                    <span class="info-value">
+                                        {{ $memberCommission->year }} ·
+                                        {{ $membership->position === 'predsjednik' ? 'Predsjednik' : 'Član' }} ·
+                                        {{ $memberCommission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}
+                                    </span>
+                                    <span style="display:block; margin-top:4px; color:#6b7280; font-size:12px;">
+                                        Mandat: {{ $memberCommission->start_date->format('d.m.Y') }} - {{ $memberCommission->end_date->format('d.m.Y') }}
+                                    </span>
+                                </div>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
 
