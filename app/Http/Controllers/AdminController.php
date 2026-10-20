@@ -973,6 +973,7 @@ class AdminController extends Controller
             'start_date' => 'nullable|date',
             'status' => 'required|in:draft,published,completed',
             'commission_id' => 'nullable|exists:commissions,id',
+            'is_test_preview' => 'nullable|boolean',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
@@ -1049,6 +1050,19 @@ class AdminController extends Controller
             'commission_id' => $validated['commission_id'] ?? null,
             'deadline_days' => $windowLocked ? $competition->deadline_days : 20,
         ];
+
+        // Test-preview je dozvoljen isključivo za kanonski MMSP nacrt i samo administratorskim ulogama.
+        if ($validated['type'] === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $data['is_test_preview'] = $isAdmin && $validated['status'] === 'draft'
+                ? $request->boolean('is_test_preview')
+                : (bool) $competition->is_test_preview;
+
+            if ($validated['status'] !== 'draft') {
+                $data['is_test_preview'] = false;
+            }
+        } else {
+            $data['is_test_preview'] = false;
+        }
 
         if ($isOmladinsko) {
             $data['call_number'] = $competition->call_number;
