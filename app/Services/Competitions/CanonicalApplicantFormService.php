@@ -59,7 +59,7 @@ final class CanonicalApplicantFormService
         if ($competition->type !== CompetitionProfileResolver::TYPE_CANONICAL) {
             return self::NOT_CANONICAL_MESSAGE;
         }
-        if ($competition->status !== 'published') {
+        if (! $competition->isPubliclyAccessibleForApplications()) {
             return 'Javni poziv nije objavljen.';
         }
         if (CanonicalAdministrativeGate::isClosed($competition)) {
