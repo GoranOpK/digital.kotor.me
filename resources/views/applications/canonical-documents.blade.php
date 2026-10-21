@@ -1,10 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $fieldStyle = 'padding: 6px; border: 1px solid #d1d5db; border-radius: 6px;';
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1100px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Prateća dokumentacija (čl.14 Odluke)</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         {{ $application->competition->title }} — prilozi se učitavaju elektronski u PDF formatu. Uvjerenja i potvrde označene rokom ne smiju biti starije od 30 dana na dan konačne predaje.
