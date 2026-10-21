@@ -24,6 +24,7 @@ use App\Models\CanonicalApplicantForm;
 use App\Services\Competitions\CanonicalApplicantFormService;
 use App\Services\Competitions\CanonicalBeneficiaryApplications;
 use App\Services\Competitions\CanonicalDocumentService;
+use App\Services\Competitions\ComplaintService;
 use App\Services\Competitions\FinalSubmissionService;
 use App\Support\CanonicalSubsidyType;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
@@ -1453,6 +1454,7 @@ class ApplicationController extends Controller
                     ->orderBy('name')
                     ->get(['id', 'name', 'file_path'])
                 : collect(),
+            'canonicalReview' => app(ComplaintService::class)->applicantStatus($application),
         ]);
     }
 
