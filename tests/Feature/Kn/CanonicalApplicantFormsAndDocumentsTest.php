@@ -134,7 +134,9 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
         $html = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $application))
             ->assertOk()
-            ->assertSee('Obrazac P1a — Prijava na Javni poziv')
+            ->assertSee('Obrazac P1a')
+            ->assertSee('PRIJAVA')
+            ->assertSee('na javni poziv za podršku mikro, malim i srednjim preduzećima')
             ->assertSee('PREDUZETNIK')
             ->assertDontSee((string) $owner->jmb)
             ->getContent();
@@ -230,7 +232,9 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
         $html = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $application))
             ->assertOk()
-            ->assertSee('Obrazac P1b — Prijava na Javni poziv')
+            ->assertSee('Obrazac P1b')
+            ->assertSee('PRIJAVA')
+            ->assertSee('na javni poziv za podršku mikro, malim i srednjim preduzećima')
             ->assertSee('DRUŠTVO (DOO)')
             ->getContent();
         $form = $this->formSection($html, route('applications.canonical-p1.update', $application));
