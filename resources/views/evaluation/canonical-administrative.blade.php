@@ -9,7 +9,12 @@
 <div class="container mx-auto px-4 py-6" style="max-width: 1000px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Predlog → Sekretarijat → formalna Odluka → objava → zatvaranje</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
-        {{ $competition->title }}. Interni prikaz. Javno se objavljuje isključivo potpisani primjerak formalne Odluke.
+        {{ $competition->title }}. Interni prikaz.
+        @if($competition->isCanonicalTestMode())
+            <strong>TESTNI MMSP:</strong> završna „objava“ služi samo za testiranje toka i ne kreira javni rezultat niti javno Obavještenje.
+        @else
+            Javno se objavljuje isključivo potpisani primjerak formalne Odluke.
+        @endif
         Ugovori, isplate i praćenje korisnika nijesu dio ovog toka.
     </p>
 
@@ -88,14 +93,23 @@
 
     <div style="{{ $box }}">
         <h2 style="font-size: 18px; font-weight: 600;">4. Objava</h2>
-        @if($publicResult)
+        @if($testPublication)
+            <div style="background:#ecfdf5; border:1px solid #10b981; padding:10px; border-radius:8px;">
+                TESTNA objava je evidentirana {{ $testPublication->created_at?->format('d.m.Y H:i') }}.
+                <strong>Nije kreiran javni rezultat niti javno Obavještenje.</strong>
+            </div>
+        @elseif($publicResult)
             <p>Objavljeno. <a href="{{ route('competitions.canonical-result', $competition) }}">Javni rezultat</a></p>
         @elseif($publishBlock)
             <div style="{{ $warn }}">{{ $publishBlock }}</div>
         @elseif(! $isCommission)
             <form method="POST" action="{{ route('admin.competitions.canonical-decision.publish', $competition) }}">
                 @csrf
-                <button type="submit" class="btn btn-success">Objavi potpisani primjerak (jednokratno)</button>
+                @if($competition->isCanonicalTestMode())
+                    <button type="submit" class="btn btn-success">Evidentiraj TESTNU objavu (nije javno)</button>
+                @else
+                    <button type="submit" class="btn btn-success">Objavi potpisani primjerak (jednokratno)</button>
+                @endif
             </form>
         @endif
     </div>
