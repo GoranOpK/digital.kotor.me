@@ -1,12 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $formCode = $form ? $form->formCode() : 'P1a/P1b';
     $statusLabels = ['draft' => 'Nacrt (nije konačno podnesena)', 'submitted' => 'Konačno podnesena'];
     $uploadRows = collect($checklist)->where('source', \App\Support\CanonicalDocumentCatalog::SOURCE_UPLOAD);
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 1000px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1000px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Prijava na javni poziv — {{ $competition->title }}</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         Status: <strong>{{ $statusLabels[$application->status] ?? $application->status }}</strong>
