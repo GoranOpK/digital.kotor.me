@@ -8,11 +8,16 @@
     $uploadRows = collect($checklist)->where('source', \App\Support\CanonicalDocumentCatalog::SOURCE_UPLOAD);
 @endphp
 <div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1000px;">
-    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Prijava na javni poziv — {{ $competition->title }}</h1>
-    <p style="color: #4b5563; margin-bottom: 16px;">
+    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Prijava na javni poziv — Podrška mikro, malim i srednjim preduzećima</h1>
+    <p style="color: rgba(255,255,255,0.9); margin-bottom: 4px;"><strong>Konkurs: {{ $competition->title }}</strong></p>
+    <p style="color: rgba(255,255,255,0.9); margin-bottom: 16px;">
         Status: <strong>{{ $statusLabels[$application->status] ?? $application->status }}</strong>
         @if($application->redni_broj) · Redni broj prijave: {{ $application->redni_broj }} @endif
-        @if($form) · Pravna forma: <strong>{{ \App\Support\CanonicalLegalForm::label($form->legal_form) }}</strong> (Obrazac {{ $formCode }}) @endif
+        @if($form)
+            · Tip prijave:
+            <strong>{{ $form->legal_form === \App\Support\CanonicalLegalForm::PREDUZETNIK ? 'Preduzetnik' : 'Privredno društvo' }}</strong>
+            (Obrazac {{ $formCode }})
+        @endif
     </p>
 
     @foreach(['success' => ['#ecfdf5', '#10b981'], 'info' => ['#eff6ff', '#3b82f6']] as $key => [$bg, $border])
