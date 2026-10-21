@@ -383,16 +383,23 @@
                     
                     @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
                     <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
-                        <label style="display:block; font-weight:600; margin-bottom:12px; color:#374151;">
-                            Tip prijave <span style="color:#dc2626;">*</span>
+                        <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                            Tip prijave <span style="color: #dc2626;">*</span>
                         </label>
                         @if(!empty($canonicalLegalForm))
-                            <label style="display:flex; align-items:center;">
-                                <input type="radio" checked disabled style="margin-right:8px;">
-                                <span>{{ $canonicalApplicantTypeLabel }}</span>
-                            </label>
-                            <div style="font-size:12px; color:#6b7280; margin-top:8px;">
-                                Tip prijave je određen prema registrovanom tipu korisnika na vašem nalogu, u skladu sa MMSP Odlukom.
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; cursor: default;">
+                                    <input
+                                        type="radio"
+                                        checked
+                                        tabindex="-1"
+                                        aria-readonly="true"
+                                        onclick="return false;"
+                                        onkeydown="return false;"
+                                        style="margin-right: 8px; cursor: default; pointer-events: none;"
+                                    >
+                                    <span>{{ $canonicalApplicantTypeLabel }}</span>
+                                </label>
                             </div>
                         @else
                             <div style="padding:12px 14px; background:#fffbeb; border:1px solid #f59e0b; border-radius:8px; color:#92400e;">
