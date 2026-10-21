@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $box = 'border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff;';
     $warn = 'background: #fffbeb; border: 1px solid #f59e0b; padding: 10px; border-radius: 8px; margin-bottom: 8px;';
@@ -8,11 +9,15 @@
     $ok = 'background: #ecfdf5; border: 1px solid #10b981; padding: 10px; border-radius: 8px; margin-bottom: 8px;';
     $fmt = fn ($at) => $at ? \Carbon\CarbonImmutable::parse($at)->timezone($review['timezone'])->format('d.m.Y H:i:s') : '—';
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 900px;">
-    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Status provjere potpunosti prijave</h1>
-    <p style="color: #4b5563; margin-bottom: 16px;">
-        {{ $application->competition?->title }}@if($application->redni_broj) · redni broj {{ $application->redni_broj }}@endif
-    </p>
+<div class="canonical-ui-page mmsp-form-page"><div class="container mx-auto px-4" style="max-width: 1200px;">
+    <div class="mmsp-page-header">
+        <h1>Status provjere potpunosti prijave</h1>
+        <p>
+            Podrška mikro, malim i srednjim preduzećima<br>
+            <strong>Konkurs: {{ $application->competition?->title }}</strong>
+            @if($application->redni_broj) · redni broj {{ $application->redni_broj }} @endif
+        </p>
+    </div>
 
     @if(session('success'))
         <div style="{{ $ok }}">{{ session('success') }}</div>
@@ -36,7 +41,7 @@
     </div>
 
     @if($review['incompleteReason'] !== null)
-        <div style="{{ $box }}" data-section="applicant-review-incomplete">
+        <div class="mmsp-form-card" data-section="applicant-review-incomplete">
             <h2 style="font-size: 18px; font-weight: 600;">Nalaz o nepotpunosti</h2>
             <p>Obrazloženje Komisije: {{ $review['incompleteReason'] }}</p>
             <p>Obavještenje poslato: {{ $fmt($review['noticeSentAt']) }}</p>
@@ -46,7 +51,7 @@
     @endif
 
     @if($review['complaintSubmittedAt'])
-        <div style="{{ $box }}" data-section="applicant-review-complaint">
+        <div class="mmsp-form-card" data-section="applicant-review-complaint">
             <h2 style="font-size: 18px; font-weight: 600;">Vaš prigovor</h2>
             <p>Podnesen: {{ $fmt($review['complaintSubmittedAt']) }}</p>
             @if($review['complaintDecision'] === null)
@@ -63,7 +68,7 @@
             @endif
         </div>
     @elseif($review['complaintOpen'])
-        <div style="{{ $box }}" data-section="applicant-review-complaint-form">
+        <div class="mmsp-form-card" data-section="applicant-review-complaint-form">
             <h2 style="font-size: 18px; font-weight: 600;">Podnošenje prigovora</h2>
             <p>Prigovor se podnosi jednom. Nakon podnošenja ne može se mijenjati ni povući.</p>
             <form method="POST" action="{{ route('applications.complaint', $application) }}">
@@ -71,11 +76,11 @@
                 <label>Obrazloženje prigovora
                     <textarea name="body" rows="5" maxlength="5000" required style="width: 100%;">{{ old('body') }}</textarea>
                 </label>
-                <button type="submit" class="btn btn-primary">Podnesi prigovor</button>
+                <button type="submit" class="btn-primary">Podnesi prigovor</button>
             </form>
         </div>
     @endif
 
-    <p><a href="{{ route('applications.show', $application) }}">Nazad na prijavu</a></p>
-</div>
+    <div class="mmsp-actions"><a class="mmsp-btn-secondary" href="{{ route('applications.show', $application) }}">← Nazad na prijavu</a></div>
+</div></div>
 @endsection
