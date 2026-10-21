@@ -115,22 +115,13 @@ class CanonicalApplicantController extends Controller
             ->with('success', 'Obrazac P1 je sačuvan.');
     }
 
-    public function documents(Request $request, Application $application): View
+    public function documents(Request $request, Application $application): RedirectResponse
     {
         $this->authorizeOwnerOnCanonical($request, $application);
 
-        $readOnly = $application->isApplicantContentWriteLocked();
-
-        return view('applications.canonical-documents', [
-            'application' => $application,
-            'checklist' => $this->documents->checklist($application, now()),
-            'readOnly' => $readOnly,
-            'libraryDocuments' => $readOnly ? collect() : UserDocument::query()
-                ->where('user_id', $request->user()->id)
-                ->attachable()
-                ->orderBy('name')
-                ->get(['id', 'name', 'file_path']),
-        ]);
+        // Kao kod ženskog i mladih: dokumentacija se dodaje i pregleda na ekranu
+        // "Status prijave", bez posebnog MMSP korisničkog ekrana.
+        return redirect()->to(route('applications.show', $application).'#application-documents');
     }
 
     /**
