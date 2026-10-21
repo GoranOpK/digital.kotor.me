@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
+@include('partials.canonical-ui')
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1100px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Bodovanje plana ulaganja (P3)</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         {{ $competition->title }} — prijava #{{ $application->redni_broj ?? $application->id }}
