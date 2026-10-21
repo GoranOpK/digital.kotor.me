@@ -36,6 +36,10 @@ final class CanonicalResultPublicationService
 
     public const ALREADY_PUBLISHED_MESSAGE = 'Rezultat je već objavljen. Ponovna objava, zamjena ili korekcija nijesu dozvoljene.';
 
+    public const TEST_ALREADY_PUBLISHED_MESSAGE = 'TESTNA objava je već evidentirana. Nije kreiran javni rezultat niti javno Obavještenje.';
+
+    public const TEST_PUBLICATION_REQUIRED_MESSAGE = 'Zatvaranje TEST poziva zahtijeva evidentiranu testnu objavu potpisanog primjerka formalne Odluke.';
+
     public function __construct(
         private readonly CanonicalAdministrativeGate $gate,
         private readonly CanonicalPredlogService $predlogs,
@@ -56,6 +60,10 @@ final class CanonicalResultPublicationService
         $decision = $this->decisions->decisionFor($competition);
         if ($decision === null) {
             return CanonicalFormalDecisionService::DECISION_REQUIRED_MESSAGE;
+        }
+
+        if ($competition->isCanonicalTestMode() && $this->testPublicationEvent($competition) !== null) {
+            return self::TEST_ALREADY_PUBLISHED_MESSAGE;
         }
 
         if ($decision->isPublished() || CompetitionOfficialDecisionCopy::competitionHasPublishedSignedCopy($competition->id)) {
@@ -94,6 +102,20 @@ final class CanonicalResultPublicationService
             $decision = $this->decisions->decisionFor($locked);
             $copy = CompetitionOfficialDecisionCopy::query()->findOrFail($decision->official_decision_copy_id);
             $publishedOn = CarbonImmutable::now($this->governance->policy()->publicationTimezone())->toDateString();
+
+            // Kontrolisani MMSP TEST završava isti interni workflow, ali nikada ne kreira
+            // javno Obavještenje, ne označava potpisani PDF kao javno objavljen i ne puni
+            // published_* polja formalne Odluke. Jedini trajni zapis je append-only audit.
+            if ($locked->isCanonicalTestMode()) {
+                $event = $this->gate->audit($locked, CanonicalAdministrativeEvent::RESULT_TEST_PUBLISHED, $actor, $decision, [
+                    'test_preview' => true,
+                    'official_decision_copy_id' => (int) $copy->id,
+                    'tested_on' => $publishedOn,
+                ]);
+
+                return ProcessWriteResult::ok($event->id);
+            }
+
             $title = CanonicalFormalDecisionService::businessTitle($decision);
 
             $copy->business_published_on = $publishedOn;
@@ -137,6 +159,19 @@ final class CanonicalResultPublicationService
             return CanonicalFormalDecisionService::DECISION_REQUIRED_MESSAGE;
         }
 
+        if ($competition->isCanonicalTestMode()) {
+            if ($this->testPublicationEvent($competition) === null) {
+                return self::TEST_PUBLICATION_REQUIRED_MESSAGE;
+            }
+
+            $chainReason = $this->chainBlockReason($competition, $decision);
+            if ($chainReason !== null) {
+                return $chainReason;
+            }
+
+            return $this->signedCopyBlockReason($competition, $decision);
+        }
+
         if (! $decision->isPublished()) {
             return 'Zatvaranje zahtijeva objavljen potpisani primjerak formalne Odluke.';
         }
@@ -165,7 +200,7 @@ final class CanonicalResultPublicationService
      */
     public function publicResult(Competition $competition): ?array
     {
-        if (! $this->gate->isCanonical($competition)) {
+        if (! $this->gate->isCanonical($competition) || $competition->isCanonicalTestMode()) {
             return null;
         }
 
@@ -187,6 +222,19 @@ final class CanonicalResultPublicationService
             'published_at' => $decision->published_at->toIso8601String(),
             'signed_copy_url' => route('notices.public-content', $notice),
         ];
+    }
+
+    public function testPublicationEvent(Competition $competition): ?CanonicalAdministrativeEvent
+    {
+        if (! $competition->isCanonicalTestMode()) {
+            return null;
+        }
+
+        return CanonicalAdministrativeEvent::query()
+            ->where('competition_id', $competition->id)
+            ->where('action', CanonicalAdministrativeEvent::RESULT_TEST_PUBLISHED)
+            ->orderByDesc('id')
+            ->first();
     }
 
     private function chainBlockReason(Competition $competition, CanonicalFormalDecision $decision): ?string
