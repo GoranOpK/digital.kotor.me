@@ -378,6 +378,51 @@ class CanonicalFormalDecisionAndCloseTest extends TestCase
         $this->assertThrows(fn () => $decision->fresh()->forceFill(['published_at' => now()->addDay()])->save(), LogicException::class);
     }
 
+    public function test_e_test_preview_publication_is_audited_but_never_public_and_can_close(): void
+    {
+        $ctx = $this->flow('attached');
+        $competition = $ctx['competition'];
+        $admin = $this->secretariat();
+        $chair = $ctx['members'][G::ROLE_PREDSJEDNIK]->user;
+
+        DB::table('competitions')->where('id', $competition->id)->update([
+            'status' => 'draft',
+            'is_test_preview' => true,
+        ]);
+        $competition = $competition->fresh();
+
+        $publication = app(CanonicalResultPublicationService::class);
+        $this->ok($publication->publish($competition, $admin));
+
+        $decision = CanonicalFormalDecision::query()->firstOrFail();
+        $copy = CompetitionOfficialDecisionCopy::query()->firstOrFail();
+
+        $this->assertNull($decision->published_notice_id);
+        $this->assertNull($decision->published_at);
+        $this->assertNull($copy->business_published_on);
+        $this->assertSame(0, Notice::query()->count());
+        $this->assertNull($publication->publicResult($competition));
+        $this->get(route('competitions.canonical-result', $competition))->assertNotFound();
+
+        $event = CanonicalAdministrativeEvent::query()
+            ->where('competition_id', $competition->id)
+            ->where('action', CanonicalAdministrativeEvent::RESULT_TEST_PUBLISHED)
+            ->firstOrFail();
+        $this->assertTrue((bool) ($event->payload['test_preview'] ?? false));
+        $this->assertSame((int) $copy->id, (int) ($event->payload['official_decision_copy_id'] ?? 0));
+
+        $this->assertSame(
+            CanonicalResultPublicationService::TEST_ALREADY_PUBLISHED_MESSAGE,
+            $publication->publish($competition, $admin)->error,
+        );
+        $this->assertNull($publication->publishedBlockReason($competition));
+
+        $this->ok(app(CanonicalCloseService::class)->close($competition, $chair));
+        $this->assertSame('completed', $competition->fresh()->status);
+        $this->assertSame(0, Notice::query()->count());
+        $this->assertNull($publication->publicResult($competition->fresh()));
+    }
+
     public function test_e_generic_official_decision_actions_are_closed_for_canonical(): void
     {
         $ctx = $this->flow('published');
