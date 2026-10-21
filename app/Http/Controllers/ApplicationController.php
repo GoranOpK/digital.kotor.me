@@ -1446,6 +1446,13 @@ class ApplicationController extends Controller
             'canSubmit' => $isDraft && ! $writeLocked && $blockers === [],
             'canStartAnother' => $canStartAnother,
             'subsidyLabels' => CanonicalSubsidyType::labels(),
+            'libraryDocuments' => $isDraft && ! $writeLocked
+                ? UserDocument::query()
+                    ->where('user_id', $user->id)
+                    ->attachable()
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'file_path'])
+                : collect(),
         ]);
     }
 
