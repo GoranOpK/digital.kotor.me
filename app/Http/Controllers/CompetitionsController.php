@@ -100,6 +100,8 @@ class CompetitionsController extends Controller
         $knFormApplicantType = null;
         $knAllowsRazvoj = false;
         $knSupportsOmladinskoDraft = false;
+        $canonicalLegalForm = null;
+        $canonicalApplicantTypeLabel = null;
         if (auth()->check()) {
             $user = auth()->user();
             $identity = app(CurrentIdentityResolver::class)->viewFor($user);
@@ -122,6 +124,23 @@ class CompetitionsController extends Controller
             $knFormApplicantType = $identity->hasCurrentSubjectIdentity() && $kn->allowedApplicantTypes !== []
                 ? $kn->defaultFormApplicantType()
                 : null;
+
+            if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+                $storedCanonicalForm = $userApplication?->canonicalApplicantForm?->legal_form;
+                $canonicalLegalForm = CanonicalLegalForm::isValid($storedCanonicalForm)
+                    ? $storedCanonicalForm
+                    : CanonicalLegalForm::forUserType($userType);
+
+                if ($canonicalLegalForm === CanonicalLegalForm::PREDUZETNIK) {
+                    $canonicalApplicantTypeLabel = 'Preduzetnik — Obrazac P1a';
+                } elseif ($canonicalLegalForm === CanonicalLegalForm::DRUSTVO) {
+                    $companyCode = \App\Support\UserType::canonicalCode($userType);
+                    $companySuffix = in_array($companyCode, ['DOO', 'AD', 'OD', 'KD'], true)
+                        ? ' ('.$companyCode.')'
+                        : '';
+                    $canonicalApplicantTypeLabel = 'Privredno društvo'.$companySuffix.' — Obrazac P1b';
+                }
+            }
         }
 
         // Dokument labels za mapiranje
@@ -331,7 +350,9 @@ class CompetitionsController extends Controller
             'knAllowsRazvoj',
             'knSupportsOmladinskoDraft',
             'omladinskoPreviewMaps',
-            'canonicalDocumentPreviewMaps'
+            'canonicalDocumentPreviewMaps',
+            'canonicalLegalForm',
+            'canonicalApplicantTypeLabel'
         ));
     }
 }
