@@ -392,4 +392,28 @@
         .canonical-ui-page .mmsp-obrazac-contact { text-align:left; }
     }
 
+
+    /* P2 uses the same visual rhythm as the existing Women/Youth business-plan form. */
+    .canonical-ui-page.mmsp-business-plan .mmsp-form-group { margin-bottom: 16px; }
+    .canonical-ui-page.mmsp-business-plan .mmsp-form-control {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: inherit;
+    }
+    .canonical-ui-page.mmsp-business-plan .mmsp-form-row,
+    .canonical-ui-page.mmsp-business-plan .mmsp-form-row-3 { gap: 16px; }
+    .canonical-ui-page .mmsp-section-number {
+        display: inline-block;
+        width: 28px;
+        height: 28px;
+        background: var(--canonical-primary);
+        color: #fff;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 28px;
+        font-weight: 700;
+        font-size: 14px;
+        margin-right: 12px;
+        vertical-align: middle;
+    }
 </style>
