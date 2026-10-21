@@ -1363,7 +1363,7 @@
                                 {{ $financesNoticeConfirmed ? 'checked' : '' }}
                                 @if($readOnly ?? false) disabled @endif
                             >
-                            <span>Potvrđujem da sam pročitala napomenu: <span class="required">*</span></span>
+                            <span>Potvrđujem da je napomena pročitana: <span class="required">*</span></span>
                         </label>
                         @error('finances_notice_confirmed')
                             <div class="form-error" style="margin-top: 8px;">{{ $message }}</div>
@@ -2376,7 +2376,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     financesNoticeConfirmWrap.classList.add('has-error');
                     financesNoticeConfirmWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                alert('Potrebno je potvrditi da ste pročitala napomenu prije unosa iznosa podrške (pitanje 22 i dalje).');
+                alert('Potvrdite da je napomena pročitana prije unosa iznosa podrške (pitanje 22 i dalje).');
                 return;
             }
 

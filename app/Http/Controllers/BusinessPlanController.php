@@ -512,7 +512,7 @@ class BusinessPlanController extends Controller
             'applicant_email.required' => 'E-mail je obavezan.',
             'summary.required' => 'Rezime je obavezno.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
-            'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da ste pročitali napomenu u dijelu IV. Finansije.',
+            'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da je napomena u dijelu IV. Finansije pročitana.',
         ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->bpLog('BP_STORE: validation failed', [
