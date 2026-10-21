@@ -12,7 +12,7 @@
     $brojPrijave = $upBroj.'/'.$redniBroj;
 @endphp
 
-<div class="canonical-ui-page mmsp-form-page">
+<div class="canonical-ui-page mmsp-form-page mmsp-business-plan">
     <div class="container mx-auto px-4" style="max-width: 1200px;">
         <div class="mmsp-obrazac-zaglavlje">
             <div class="mmsp-obrazac-top">
@@ -39,8 +39,9 @@
             </div>
             <h1 class="mmsp-obrazac-title">PLAN ULAGANJA</h1>
             <p class="mmsp-obrazac-subtitle">
-                na javni poziv za podršku mikro, malim i srednjim preduzećima<br>
-                @if($competition?->title)<strong>Konkurs: {{ $competition->title }}</strong>@endif
+                na javni konkurs za raspodjelu bespovratnih sredstava<br>
+                namijenjenih za podršku mikro, malim i srednjim preduzećima<br>
+                @if($competition?->title)<strong>{{ $competition->title }}</strong>@endif
             </p>
         </div>
 
@@ -70,7 +71,7 @@
 
                 <div class="mmsp-form-card">
                     <div class="mmsp-form-section">
-                        <h2>I. Osnovni podaci</h2>
+                        <h2><span class="mmsp-section-number">I</span> OSNOVNI PODACI</h2>
                         <div class="mmsp-form-group">
                             <label class="mmsp-form-label" for="subsidy_type">Vrsta subvencije za koju se aplicira <span class="mmsp-required">*</span></label>
                             <select id="subsidy_type" name="subsidy_type" class="mmsp-form-control @error('subsidy_type') error @enderror">
@@ -89,7 +90,7 @@
 
                 <div class="mmsp-form-card">
                     <div class="mmsp-form-section">
-                        <h2>III. Finansijski okvir ulaganja</h2>
+                        <h2><span class="mmsp-section-number">III</span> FINANSIJSKI OKVIR ULAGANJA</h2>
                         <p class="mmsp-form-text" style="margin-bottom:16px;">
                             Unesite planirane troškove. Zbir stavki mora biti jednak ukupnoj vrijednosti ulaganja. Iznosi se unose u EUR, sa najviše dvije decimale.
                         </p>
