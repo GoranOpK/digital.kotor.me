@@ -205,8 +205,8 @@
         <div class="page-header">
             <div class="page-header-main">
                 @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-                    <h1>Podrška mikro, malim i srednjim preduzećima</h1>
-                    <p style="color: rgba(255,255,255,0.9); margin: 0;">Konkurs: <strong>{{ $competition->title }}</strong></p>
+                    <h1>{{ $competition->title }}</h1>
+                    <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku mikro, malim i srednjim preduzećima</p>
                 @else
                     <h1>{{ $competition->title }}</h1>
                     <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku {{ $competition->type === 'omladinsko' ? 'preduzetništvu mladih' : 'ženskom preduzetništvu' }}</p>
