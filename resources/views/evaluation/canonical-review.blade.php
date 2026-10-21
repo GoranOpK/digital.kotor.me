@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $box = 'border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff;';
     $warn = 'background: #fffbeb; border: 1px solid #f59e0b; padding: 10px; border-radius: 8px; margin-bottom: 8px;';
@@ -44,7 +45,7 @@
     $canRecord = ! $readOnly && $recordBlock === null;
     $canDecide = ! $readOnly && $complaint && $decideBlock === null;
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1100px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Provjera potpunosti — prijava {{ $identity['redni_broj'] ?? ('#'.$application->id) }}</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         {{ $competition->title }}. Stanje: <strong data-review-state="{{ $state }}">{{ $labels[$state] ?? '—' }}</strong>
