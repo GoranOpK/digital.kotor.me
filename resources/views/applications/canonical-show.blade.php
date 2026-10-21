@@ -424,7 +424,7 @@
                             <span class="info-value">{{ $uploadedRequired }} od {{ $requiredUploads->count() }} priloženo</span>
                         </div>
                         <div class="info-item">
-                            <a href="{{ route('applications.canonical-documents.index', $application) }}" class="btn btn-primary" style="text-align:center;">Pregled dokumentacije</a>
+                            <a href="{{ route('applications.show', $application) }}#application-documents" class="btn btn-primary" style="text-align:center;">Pregled dokumentacije</a>
                         </div>
                     </div>
                 @endif
@@ -465,7 +465,7 @@
                             @if($uploaded)
                                 <a class="btn btn-primary" target="_blank" href="{{ route('applications.document.view', [$application, $row['document']]) }}">Pregled</a>
                             @elseif($canManage)
-                                <a class="btn btn-primary" href="{{ route('applications.canonical-documents.index', $application) }}">Priloži</a>
+                                <a class="btn btn-primary" href="{{ route('applications.show', $application) }}#application-documents">Priloži</a>
                             @endif
                         </div>
                     </li>
