@@ -473,7 +473,7 @@ class Competition extends Model
 
     /**
      * Nakon isteka roka (ili zatvaranja) postupak Komisije ostaje blokiran dok Komisija nije potpuna i valjana.
-     * Za omladinsko dodatno zahtijeva potvrđenu prvu sjednicu sa kvorumom.
+     * Omladinska prva sjednica ostaje poslovna obaveza Komisije, ali nije elektronska kapija za M3.
      * Ne uvodi novo lifecycle stanje.
      */
     public function isCommissionProcessingBlocked(): bool
@@ -489,18 +489,10 @@ class Competition extends Model
             return false;
         }
 
-        if (! $this->hasCompleteValidCommission()) {
-            return true;
-        }
-
-        if ($this->type === 'omladinsko') {
-            return ! $this->hasConfirmedFirstSessionQuorum();
-        }
-
-        return false;
+        return ! $this->hasCompleteValidCommission();
     }
 
-    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Komisija nije formalno kompletna, ili dok prva sjednica nije potvrđena sa potrebnim kvorumom.';
+    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Komisija nije formalno kompletna.';
 
     public const WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE = 'Nakon isteka roka za Prijave nije dozvoljena obična zamjena cijele dodijeljene Komisije.';
 

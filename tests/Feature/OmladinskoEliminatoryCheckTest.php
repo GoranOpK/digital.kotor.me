@@ -8,6 +8,8 @@ use App\Models\ApplicationEliminatoryCheck;
 use App\Models\ApplicationEliminatoryNotice;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\CommissionSession;
+use App\Models\CommissionSessionAttendance;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
 use App\Models\Role;
@@ -43,30 +45,47 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertM3Blocked($ctx['chairman']->user, $ctx['application']);
     }
 
-    public function test_m3_is_blocked_without_confirmed_first_session(): void
+    public function test_m3_is_allowed_without_recorded_first_session(): void
     {
         $ctx = $this->makeYouthContext(complete: true, confirmSession: false);
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-        $this->assertTrue($ctx['competition']->fresh()->firstCommissionSession()->isDraft());
-        $this->assertM3Blocked($ctx['chairman']->user, $ctx['application']);
+        $this->assertNull($ctx['competition']->fresh()->firstCommissionSession());
+        $this->assertFalse($ctx['competition']->fresh()->isCommissionProcessingBlocked());
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->assertSee('id="eliminatoryForm"', false)
+            ->assertSee('dokumentacija je nepotpuna', false)
+            ->assertSee('raniji korisnik nije dostavio M4/M4a', false)
+            ->assertSee('biznis plan nije povezan sa prioritetnim oblastima člana 12 Odluke o mladima', false);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.store', $ctx['application']), $this->youthPayload())
+            ->assertRedirect(route('evaluation.create', $ctx['application']));
+        $this->assertNotNull($ctx['application']->fresh()->eliminatoryCheck);
+        $this->assertNull($ctx['application']->fresh()->eliminatoryCheck->confirmed_at);
+        $this->assertNull($ctx['competition']->fresh()->firstCommissionSession());
     }
 
-    public function test_m3_is_blocked_with_quorum_of_one(): void
+    public function test_youth_show_hides_first_session_link_and_legacy_get_does_not_show_form(): void
     {
-        $ctx = $this->makeYouthContext(complete: true, confirmSession: false);
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id])
-        )->assertSessionHasNoErrors();
+        $ctx = $this->makeYouthReadyContext();
+
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.first.edit', $ctx['competition']))
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertTrue($ctx['competition']->fresh()->firstCommissionSession()->isDraft());
-        $this->assertM3Blocked($ctx['chairman']->user, $ctx['application']);
+            ->get(route('admin.competitions.show', $ctx['competition']))
+            ->assertOk()
+            ->assertDontSee('Evidentiraj prvu sjednicu Komisije', false)
+            ->assertDontSee(route('commission-sessions.first.edit', $ctx['competition']), false);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('commission-sessions.first.edit', $ctx['competition']))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']))
+            ->assertDontSee('Evidencija prve sjednice', false);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.first.store', $ctx['competition']), $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id]))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertNull($ctx['competition']->fresh()->firstCommissionSession());
     }
 
     public function test_m3_is_allowed_with_quorum_of_two(): void
@@ -470,17 +489,6 @@ class OmladinskoEliminatoryCheckTest extends TestCase
     private function makeYouthReadyContext(?User $chairmanUser = null, int $presidentSeat = 1): array
     {
         $ctx = $this->makeYouthContext(complete: true, confirmSession: false, chairmanUser: $chairmanUser, presidentSeat: $presidentSeat);
-        $present = [
-            $ctx['members'][0]->id,
-            $ctx['members'][1]->id,
-        ];
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload($present)
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
         $this->assertFalse($ctx['competition']->fresh()->isCommissionProcessingBlocked());
 
         return $ctx;
@@ -560,13 +568,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $chairman = collect($members)->firstWhere('position', 'predsjednik');
 
         if ($confirmSession) {
-            $this->actingAs($chairman->user)->post(
-                route('commission-sessions.first.store', $competition),
-                $this->sessionPayload([$members[0]->id, $members[1]->id])
-            )->assertSessionHasNoErrors();
-            $this->actingAs($chairman->user)
-                ->post(route('commission-sessions.first.confirm', $competition))
-                ->assertSessionHasNoErrors();
+            $this->recordHistoricalFirstSession($competition, $chairman, [$members[0]->id, $members[1]->id]);
         }
 
         return [
@@ -639,6 +641,30 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             'chairman' => $members[0]->fresh('user'),
             'application' => $application,
         ];
+    }
+
+    /**
+     * @param  list<int>  $presentIds
+     */
+    private function recordHistoricalFirstSession(Competition $competition, CommissionMember $chairman, array $presentIds): void
+    {
+        $competition->load(['commission.activeMembers']);
+        $session = CommissionSession::create([
+            'competition_id' => $competition->id,
+            'commission_id' => $competition->commission_id,
+            'session_type' => CommissionSession::TYPE_FIRST,
+            'held_at' => now()->subDay(),
+            'completed_at' => now()->subDay(),
+            'recorded_by_user_id' => $chairman->user_id,
+            'notes' => 'Istorijska prva sjednica',
+        ]);
+        foreach ($competition->commission->activeMembers as $member) {
+            CommissionSessionAttendance::create([
+                'commission_session_id' => $session->id,
+                'commission_member_id' => $member->id,
+                'present' => in_array($member->id, $presentIds, true),
+            ]);
+        }
     }
 
     /**

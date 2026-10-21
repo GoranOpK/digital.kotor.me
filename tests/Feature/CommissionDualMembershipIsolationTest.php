@@ -170,51 +170,19 @@ class CommissionDualMembershipIsolationTest extends TestCase
         $this->actingAs($youthOnly['user'])->get(route('admin.competitions.show', $zenskoCompetition))->assertForbidden();
         $this->actingAs($youthOnly['user'])->get(route('admin.competitions.show', $youthOnly['competition']))->assertOk();
 
-        $this->actingAs($womenOnly)->post(
-            route('commission-sessions.first.store', $youthCompetition),
-            $this->sessionPayload([$youthMembership->id])
-        )->assertForbidden();
-
-        $this->actingAs($president)->post(
-            route('commission-sessions.first.store', $youthCompetition),
-            $this->sessionPayload([
-                $youthMembership->id,
-                CommissionMember::activeForCompetition(
-                    User::where('email', $shared[2]['email'])->firstOrFail()->id,
-                    $youthCompetition
-                )->id,
-                CommissionMember::activeForCompetition($womenOnly->id, $zenskoCompetition)->id,
-            ])
-        )->assertSessionHasErrors('present_member_ids');
-
-        $this->actingAs($president)->post(
-            route('commission-sessions.first.store', $youthCompetition),
-            $this->sessionPayload([
-                $youthMembership->id,
-                CommissionMember::activeForCompetition(
-                    User::where('email', $shared[2]['email'])->firstOrFail()->id,
-                    $youthCompetition
-                )->id,
-            ])
-        )->assertSessionHasNoErrors();
-
+        $this->actingAs($womenOnly)
+            ->get(route('commission-sessions.first.edit', $youthCompetition))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition));
         $this->actingAs($president)
-            ->post(route('commission-sessions.first.confirm', $youthCompetition))
-            ->assertSessionHasNoErrors();
-
-        $youthSession = $youthCompetition->fresh()->firstCommissionSession();
-        $this->assertNotNull($youthSession);
-        $this->assertSame($youthCompetition->id, $youthSession->competition_id);
-        $this->assertSame($youthCommissionId, (int) $youthSession->commission_id);
+            ->get(route('commission-sessions.first.edit', $youthCompetition))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition))
+            ->assertDontSee('Evidencija prve sjednice', false);
+        $this->actingAs($president)
+            ->post(route('commission-sessions.first.store', $youthCompetition), $this->sessionPayload([$youthMembership->id]))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition));
+        $this->assertNull($youthCompetition->fresh()->firstCommissionSession());
         $this->assertNull($zenskoCompetition->fresh()->firstCommissionSession());
         $this->assertSame(0, CommissionSession::query()->where('competition_id', $zenskoCompetition->id)->count());
-        $this->assertSame(
-            0,
-            $youthSession->attendances()->whereIn(
-                'commission_member_id',
-                CommissionMember::where('commission_id', $zenskoCommissionId)->pluck('id')
-            )->count()
-        );
 
         $this->actingAs($president)->get(route('evaluation.create', $youthApplication))->assertOk();
         $this->actingAs($president)->get(route('evaluation.create', $zenskoApplication))->assertOk();
@@ -301,7 +269,9 @@ class CommissionDualMembershipIsolationTest extends TestCase
 
         $this->actingAs($president)->get(route('admin.competitions.show', $youthCompetition))->assertOk();
         $this->actingAs($president)->get(route('admin.competitions.show', $zenskoCompetition))->assertOk();
-        $this->actingAs($president)->get(route('commission-sessions.first.edit', $youthCompetition))->assertOk();
+        $this->actingAs($president)
+            ->get(route('commission-sessions.first.edit', $youthCompetition))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition));
     }
 
     public function test_deactivation_and_replacement_do_not_cross_commissions(): void

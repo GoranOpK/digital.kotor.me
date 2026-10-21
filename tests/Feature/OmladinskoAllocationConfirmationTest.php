@@ -775,20 +775,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
 
     private function makeYouthReadyContext(int $callNumber = 1, ?int $year = null): array
     {
-        $ctx = $this->makeYouthContext($callNumber, $year);
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            [
-                'held_at' => now()->subDays(2)->format('Y-m-d H:i:s'),
-                'notes' => 'Prva sjednica',
-                'present_member_ids' => [$ctx['members'][0]->id, $ctx['members'][1]->id],
-            ]
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        return $ctx;
+        return $this->makeYouthContext($callNumber, $year);
     }
 
     private function makeYouthContext(int $callNumber = 1, ?int $year = null): array

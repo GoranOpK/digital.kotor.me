@@ -41,6 +41,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
     {
         $ctx = $this->youthWithPassedM3();
         $competition = $ctx['competition'];
+        $this->assertNull($competition->fresh()->firstCommissionSession());
         $two = $this->secondPayload([$ctx['members'][0]->id, $ctx['members'][1]->id]);
 
         $this->actingAs($ctx['chairman']->user)
@@ -200,13 +201,6 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
                 $member->update(['position' => ($index + 1) === $chairSeat ? 'predsjednik' : 'clan']);
             }
             $chairman = $ctx['members'][$chairSeat - 1]->fresh('user');
-            $this->actingAs($chairman->user)->post(
-                route('commission-sessions.first.store', $ctx['competition']),
-                $this->firstPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-            )->assertSessionHasNoErrors();
-            $this->actingAs($chairman->user)
-                ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-                ->assertSessionHasNoErrors();
             $this->actingAs($chairman->user)
                 ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $this->youthPassPayload())
                 ->assertRedirect();
@@ -495,8 +489,15 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
     public function test_seven_day_deadline_is_displayed_and_late_entry_is_allowed(): void
     {
         $ctx = $this->youthWithPassedM3();
-        $first = $ctx['competition']->firstCommissionSession();
-        $first->update(['held_at' => now()->subDays(10)]);
+        $first = CommissionSession::create([
+            'competition_id' => $ctx['competition']->id,
+            'commission_id' => $ctx['competition']->commission_id,
+            'session_type' => CommissionSession::TYPE_FIRST,
+            'held_at' => now()->subDays(10),
+            'completed_at' => now()->subDays(10),
+            'recorded_by_user_id' => $ctx['chairman']->user_id,
+            'notes' => 'Istorijska prva sjednica',
+        ]);
         $deadline = $first->fresh()->held_at->copy()->addDays(7)->format('d.m.Y H:i');
 
         $this->actingAs($ctx['chairman']->user)
@@ -523,6 +524,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             ->assertOk();
         $response->assertSeeText('Druga sjednica: nije evidentirana');
         $response->assertSee('Evidentiraj drugu sjednicu i usmeno predstavljanje', false);
+        $response->assertDontSee('Evidentiraj prvu sjednicu Komisije', false);
 
         $zensko = $this->makeZenskoCompetition();
         $this->actingAs($zensko['chairman']->user)
@@ -602,16 +604,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
      */
     private function makeYouthReadyContext(): array
     {
-        $ctx = $this->makeYouthContext();
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->firstPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        return $ctx;
+        return $this->makeYouthContext();
     }
 
     /**

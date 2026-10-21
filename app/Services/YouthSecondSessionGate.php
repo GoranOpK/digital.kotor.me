@@ -22,9 +22,8 @@ class YouthSecondSessionGate
             return CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE;
         }
 
-        $first = $competition->firstCommissionSession();
-        if ($first === null || ! $first->isConfirmed()) {
-            return CommissionProfileConfig::SESSION_SECOND_REQUIRES_FIRST_MESSAGE;
+        if (! $competition->hasCompleteValidCommission()) {
+            return CommissionProfileConfig::SESSION_SECOND_INCOMPLETE_COMMISSION_MESSAGE;
         }
 
         $applications = $competition->applications()

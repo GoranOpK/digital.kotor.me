@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.10
-**Datum:** 2026-09-21
+**Verzija:** 1.0.11
+**Datum:** 2026-10-21
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.39** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.40** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.6** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.7** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -50,6 +50,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.8 | 2026-09-17 | KN-PATCH-FS-013 — Kapija usmenog predstavljanja i druge sjednice nije sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. Dozvoljeno je samo kada je prijava `submitted`, M3 potvrđen, nema konačno aktivnog razloga, rok za prigovor nije otvoren i nema neriješenog blagovremenog prigovora; dva puta: nijedan razlog nije aktiviran, ili je svaki preostali razlog otklonjen konačnom odlukom po prigovoru. M3 ostaje istorijski nepromijenjen. Precizirani 15.7.1 i povezana mjesta; indeks ostaje 142/142. Živi pokazivači usklađeni na KN-BM-002 v1.0.10, KN-TS-002 v1.0.4 i KN-RG-001 v1.0.32. Ženski tok nije diran. |
 | 1.0.9 | 2026-09-21 | KN-PATCH-FS-014 — Precizirana konačna raspodjela mladih bez novih prihvatnih identifikatora: 30% samo za potvrđeni inovativni tehnološki start-up (čl. 19) iz posebne evidencije; 20%/15% iz posebne evidencije ranijeg youth finansiranja, ne iz `business_stage`, +3 ni M3; prednost otpočinjanja nad razvojem, zatim glas 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom; `remaining_after_first` tek od `approved`; nema ženskog roka od 45 dana. Prenosi se procesni princip, ne ženski procenti, broj članova ni način evidencije glasanja. Indeks ostaje 142/142. Živi pokazivači: KN-BM-002 v1.0.11, KN-TS-002 v1.0.5, KN-RG-001 v1.0.38, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.10 | 2026-09-21 | KN-PATCH-FS-015 — Precizirano glasanje izjednačene grupe bez novih prihvatnih identifikatora: predmet je kompletan, budžetski validan predlog raspodjele, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv`; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Indeks ostaje 142/142. Živi pokazivači: KN-BM-002 v1.0.12, KN-TS-002 v1.0.6, KN-RG-001 v1.0.39, KN-FS-003 v1.0.17. Ženski tok nije diran. |
+| 1.0.11 | 2026-10-21 | KN-PATCH-FS-016 — Prva sjednica ostaje obaveza Komisije po Odluci (rok i kvorum), ali Platforma ne traži njen elektronski zapis da bi otvorila M3 ili drugu sjednicu. M3 i dalje zahtijeva kompletnu Komisiju i tačno tri omladinska kriterijuma. Ženski tok nije diran. |
 
 Napomena:
 
@@ -2541,7 +2542,7 @@ Elektronski M3 prikazuje **tačno tri eliminatorna kriterijuma** kao tri odvojen
 
 Prva sjednica može se održati uz kvorum od **najmanje dva** prisutna člana, ako su sva tri mjesta formalno popunjena (`BM-ML-002`; F-02).
 
-Evidentiraju se **stvarno prisutni** članovi. Bez najmanje dva prisutna člana sjednica i administrativna provjera se blokiraju odnosno odlažu. Platforma **ne** odlaže sjednicu automatski umjesto Komisije i **ne** mijenja rok.
+Evidentiraju se **stvarno prisutni** članovi. Bez najmanje dva prisutna člana sjednica se poslovno odlaže. Platforma **ne** odlaže sjednicu automatski umjesto Komisije, **ne** mijenja rok i **ne** traži elektronski zapis prve sjednice da bi otvorila M3. Administrativna provjera na Platformi zahtijeva kompletnu i valjanu Komisiju.
 
 Prva sjednica **ne** zahtijeva prisustvo sva tri člana. Sva tri člana potrebna su za prigovor, intervju i konačno ocjenjivanje (`BM-ML-003`).
 

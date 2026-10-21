@@ -301,17 +301,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             'end_date' => now()->subDay()->toDateString(),
         ]);
         $competition = $application->competition->fresh();
-        $this->actingAs($members[0]->user)->post(
-            route('commission-sessions.first.store', $competition),
-            [
-                'held_at' => now()->subDays(2)->format('Y-m-d H:i:s'),
-                'notes' => 'Prva sjednica',
-                'present_member_ids' => [$members[0]->id, $members[1]->id],
-            ]
-        )->assertSessionHasNoErrors();
-        $this->actingAs($members[0]->user)
-            ->post(route('commission-sessions.first.confirm', $competition))
-            ->assertSessionHasNoErrors();
 
         $html = $this->actingAs($members[0]->user)
             ->get(route('applications.business-plan.create', $application))

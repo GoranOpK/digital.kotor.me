@@ -6,8 +6,8 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.39
-**Datum:** 2026-09-21
+**Verzija:** 1.0.40
+**Datum:** 2026-10-21
 
 ---
 
@@ -121,8 +121,8 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 | **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.12) |
 | **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.22) |
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
-| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.10) |
-| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.6) |
+| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.11) |
+| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.7) |
 | **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.17) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
@@ -259,7 +259,8 @@ Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** rest
 | 1.0.37 | 2026-09-18 | Administrativno usklađivanje pokazivača: KN-BM-003 v1.0.22 i KN-FS-003 v1.0.17 (ŽP V1 **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera). Katalog skraćenica KEEP. Bez novih Document ID-eva. KN-TS-001 ostaje NACRT. Status ostaje USVOJENO. |
 | 1.0.38 | 2026-09-21 | Evidentirani KN-PATCH-BM-020 za KN-BM-002 v1.0.11, KN-PATCH-FS-014 za KN-FS-002 v1.0.9 i KN-PATCH-TS-005 za KN-TS-002 v1.0.5: konačna raspodjela mladih — 30% samo za potvrđeni inovativni tehnološki start-up (čl. 19) iz posebne evidencije; 20%/15% iz posebne evidencije ranijeg youth finansiranja; prednost otpočinjanja pa glas 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom; `remaining_after_first` tek od `approved`; nema ženskog roka od 45 dana. Prenosi se procesni princip, ne ženski procenti, broj članova ni način evidencije glasanja. Usklađeni živi pokazivači: BM v1.0.11, FS v1.0.9, TS v1.0.5, RG v1.0.38, KN-FS-003 v1.0.17. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.39 | 2026-09-21 | Evidentirani KN-PATCH-BM-021 za KN-BM-002 v1.0.12, KN-PATCH-FS-015 za KN-FS-002 v1.0.10 i KN-PATCH-TS-006 za KN-TS-002 v1.0.6: predmet glasa kod izjednačenih bodova je kompletan, budžetski validan predlog raspodjele grupe, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv`; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Usklađeni živi pokazivači: BM v1.0.12, FS v1.0.10, TS v1.0.6, RG v1.0.39, KN-FS-003 v1.0.17; živi FS §1.1 pokazivač `KN-BM-001` usklađen na v0.2.11. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
+| 1.0.40 | 2026-10-21 | Evidentirani KN-PATCH-FS-016 za KN-FS-002 v1.0.11 i KN-PATCH-TS-007 za KN-TS-002 v1.0.7: omladinska prva sjednica ostaje poslovna obaveza Komisije, ali nije elektronska kapija za M3 ni za drugu sjednicu; postojeći zapisi ostaju istorijski. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.39**
+**Kraj dokumenta KN-RG-001 v1.0.40**

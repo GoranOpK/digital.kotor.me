@@ -226,9 +226,6 @@
         @endif
 
         @if(!empty($isChairman) && $competition->isOmladinskoProfile() && ($competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed'], true)))
-            <div style="background: #eff6ff; border: 1px solid #3b82f6; color: #1e3a8a; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                <a href="{{ route('commission-sessions.first.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Evidentiraj prvu sjednicu Komisije</a>
-            </div>
             @php
                 $secondSession = $competition->secondCommissionSession();
                 $secondStatus = $secondSession === null

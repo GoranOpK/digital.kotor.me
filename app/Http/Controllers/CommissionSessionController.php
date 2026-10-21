@@ -25,8 +25,12 @@ class CommissionSessionController extends Controller
         protected YouthSecondSessionGate $gate,
     ) {}
 
-    public function editFirst(Competition $competition): View
+    public function editFirst(Competition $competition): View|RedirectResponse
     {
+        if ($redirect = $this->redirectOmladinskoAwayFromFirstSession($competition)) {
+            return $redirect;
+        }
+
         $chairman = $this->authorizeFirstSessionAccess($competition);
         $session = $competition->firstCommissionSession();
         $session?->load('attendances');
@@ -43,6 +47,10 @@ class CommissionSessionController extends Controller
 
     public function storeFirst(Request $request, Competition $competition): RedirectResponse
     {
+        if ($redirect = $this->redirectOmladinskoAwayFromFirstSession($competition)) {
+            return $redirect;
+        }
+
         $chairman = $this->authorizeFirstSessionAccess($competition);
 
         if ($competition->firstCommissionSession() !== null) {
@@ -88,6 +96,10 @@ class CommissionSessionController extends Controller
 
     public function updateFirst(Request $request, Competition $competition): RedirectResponse
     {
+        if ($redirect = $this->redirectOmladinskoAwayFromFirstSession($competition)) {
+            return $redirect;
+        }
+
         $chairman = $this->authorizeFirstSessionAccess($competition);
         $session = $this->requireDraftFirstSession($competition);
         $payload = $this->validatedDraftPayload($request, $competition);
@@ -109,6 +121,10 @@ class CommissionSessionController extends Controller
 
     public function confirmFirst(Competition $competition): RedirectResponse
     {
+        if ($redirect = $this->redirectOmladinskoAwayFromFirstSession($competition)) {
+            return $redirect;
+        }
+
         $this->authorizeFirstSessionAccess($competition);
 
         DB::transaction(function () use ($competition) {
@@ -323,6 +339,15 @@ class CommissionSessionController extends Controller
         return redirect()
             ->route('commission-sessions.second.edit', $competition)
             ->with('success', 'Druga sjednica je potvrđena.');
+    }
+
+    protected function redirectOmladinskoAwayFromFirstSession(Competition $competition): ?RedirectResponse
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return null;
+        }
+
+        return redirect()->route('admin.competitions.show', $competition);
     }
 
     protected function authorizeFirstSessionAccess(Competition $competition): CommissionMember
