@@ -538,11 +538,15 @@
                     {{ \App\Services\KnApplicationStartContextFactory::UNSUPPORTED_OMLADINSKO_IDENTITY_MESSAGE }}
                 </p>
             @elseif($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
-                <form method="POST" action="{{ route('applications.start', $competition) }}" id="applyStartForm" style="display: inline;">
+                <form method="POST" action="{{ $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL ? route('applications.canonical.start', $competition) : route('applications.start', $competition) }}" id="applyStartForm" style="display: inline;">
                     @csrf
-                    <input type="hidden" name="planned_intent" id="apply_planned_intent" value="">
-                    <input type="hidden" name="planned_company_form" id="apply_planned_company_form" value="">
-                    <input type="hidden" name="business_stage" id="apply_business_stage" value="započinjanje">
+                    @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                        <input type="hidden" name="legal_form" id="apply_canonical_legal_form" value="preduzetnik">
+                    @else
+                        <input type="hidden" name="planned_intent" id="apply_planned_intent" value="">
+                        <input type="hidden" name="planned_company_form" id="apply_planned_company_form" value="">
+                        <input type="hidden" name="business_stage" id="apply_business_stage" value="započinjanje">
+                    @endif
                     <button type="submit" class="btn-primary" id="applyBtn" data-applicant-type="{{ $knFormApplicantType ?? $applicantType ?? '' }}">
                         Prijavi se na konkurs
                     </button>
@@ -587,10 +591,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function syncCanonicalApplyForm() {
+        const selected = document.querySelector('input[name="canonical_legal_form_preview"]:checked')?.value || 'preduzetnik';
+        const input = document.getElementById('apply_canonical_legal_form');
+        if (input) {
+            input.value = selected;
+        }
+    }
+
     radios.forEach(function (radio) {
-        radio.addEventListener('change', renderCanonicalDocuments);
+        radio.addEventListener('change', function () {
+            renderCanonicalDocuments();
+            syncCanonicalApplyForm();
+        });
     });
     renderCanonicalDocuments();
+    syncCanonicalApplyForm();
 });
 </script>
 @endif
