@@ -3,90 +3,146 @@
 @section('content')
 @include('partials.canonical-ui')
 @php
+    $competition = $application->competition;
     $lines = old('expense_lines', $plan?->expenseLines() ?? []);
     $lines = is_array($lines) ? array_values($lines) : [];
     $rowCount = $readOnly ? max(count($lines), 1) : max(count($lines) + 3, 5);
-    $fieldStyle = 'width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;';
+    $upBroj = $competition?->upNumber?->number ?? '—';
+    $redniBroj = $application->redni_broj ?? '—';
+    $brojPrijave = $upBroj.'/'.$redniBroj;
 @endphp
-<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1000px;">
-    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Plan ulaganja — Obrazac P2</h1>
-    <p style="color: #4b5563; margin-bottom: 16px;">
-        {{ $application->competition->title }} — {{ $application->business_plan_name ?? 'prijava #'.$application->id }}
-    </p>
 
-    @if(session('success'))
-        <div style="background: #ecfdf5; border: 1px solid #10b981; padding: 12px; border-radius: 8px; margin-bottom: 16px;">{{ session('success') }}</div>
-    @endif
-    @if($errors->any())
-        <div style="background: #fef2f2; border: 1px solid #ef4444; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-            @foreach($errors->all() as $error)
-                <div>{{ $error }}</div>
-            @endforeach
-        </div>
-    @endif
-    @if($readOnly)
-        <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-            {{ $plan?->isFrozen() ? \App\Models\CanonicalInvestmentPlan::FROZEN_MESSAGE : 'Prijava je zaključana i plan ulaganja više nije moguće mijenjati.' }}
-        </div>
-    @endif
-
-    <form method="POST" action="{{ route('applications.canonical-p2.update', $application) }}">
-        @csrf
-        @method('PUT')
-
-        <fieldset @disabled($readOnly) style="border: 0; padding: 0; margin: 0;">
-            <h2 style="font-size: 18px; font-weight: 600; margin: 16px 0 8px;">I. Osnovni podaci — vrsta subvencije za koju se aplicira</h2>
-            <p style="color: #6b7280; font-size: 13px; margin-bottom: 8px;">
-                Jedna prijava odnosi se na jednu vrstu subvencije. Na isti javni poziv možete podnijeti najviše dvije prijave, za različite vrste subvencija; podrška se može dobiti samo za jednu.
-            </p>
-            <select name="subsidy_type" style="{{ $fieldStyle }}">
-                <option value="">— izaberite vrstu subvencije —</option>
-                @foreach($subsidyTypes as $code => $label)
-                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type) === $code)>{{ $label }}</option>
-                @endforeach
-            </select>
-
-            <h2 style="font-size: 18px; font-weight: 600; margin: 24px 0 8px;">III. Finansijski okvir ulaganja</h2>
-            <p style="color: #6b7280; font-size: 13px; margin-bottom: 8px;">
-                Zbir iznosa stavki troškova mora biti jednak ukupnoj vrijednosti ulaganja. Iznosi u EUR, najviše dvije decimale.
-            </p>
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-                <thead>
-                    <tr>
-                        <th style="text-align: left; padding: 6px;">Vrsta troška</th>
-                        <th style="text-align: left; padding: 6px;">Opis</th>
-                        <th style="text-align: left; padding: 6px; width: 160px;">Iznos (EUR)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for($i = 0; $i < $rowCount; $i++)
-                        <tr>
-                            <td style="padding: 4px;"><input type="text" name="expense_lines[{{ $i }}][cost_type]" value="{{ $lines[$i]['cost_type'] ?? '' }}" style="{{ $fieldStyle }}"></td>
-                            <td style="padding: 4px;"><input type="text" name="expense_lines[{{ $i }}][description]" value="{{ $lines[$i]['description'] ?? '' }}" style="{{ $fieldStyle }}"></td>
-                            <td style="padding: 4px;"><input type="text" inputmode="decimal" name="expense_lines[{{ $i }}][amount]" value="{{ $lines[$i]['amount'] ?? '' }}" style="{{ $fieldStyle }}"></td>
-                        </tr>
-                    @endfor
-                </tbody>
-            </table>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                <label>Ukupna vrijednost ulaganja (EUR)
-                    <input type="text" inputmode="decimal" name="total_investment" value="{{ old('total_investment', $plan?->total_investment) }}" style="{{ $fieldStyle }}">
-                </label>
-                <label>Sopstveno učešće (EUR)
-                    <input type="text" inputmode="decimal" name="own_contribution" value="{{ old('own_contribution', $plan?->own_contribution) }}" style="{{ $fieldStyle }}">
-                </label>
-                <label>Očekivani iznos subvencije (EUR)
-                    <input type="text" inputmode="decimal" name="expected_subsidy" value="{{ old('expected_subsidy', $plan?->expected_subsidy) }}" style="{{ $fieldStyle }}">
-                </label>
+<div class="canonical-ui-page mmsp-form-page">
+    <div class="container mx-auto px-4" style="max-width: 1200px;">
+        <div class="mmsp-obrazac-zaglavlje">
+            <div class="mmsp-obrazac-top">
+                <div class="mmsp-obrazac-grb">
+                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';">
+                </div>
+                <div class="mmsp-obrazac-org">
+                    <p><strong>Crna Gora</strong></p>
+                    <p>Opština Kotor</p>
+                    <p>Sekretarijat za razvoj preduzetništva</p>
+                    <p>komunalne poslove i saobraćaj</p>
+                </div>
+                <div class="mmsp-obrazac-contact">
+                    <p>Stari grad 317</p>
+                    <p>85330 Kotor, Crna Gora</p>
+                    <p>tel. +382(0)32 325 865</p>
+                    <p>privreda@kotor.me</p>
+                    <p>www.kotor.me</p>
+                </div>
             </div>
+            <div class="mmsp-obrazac-meta">
+                <div class="mmsp-obrazac-number">Broj prijave: {{ $brojPrijave }}</div>
+                <div class="mmsp-obrazac-code">Obrazac P2</div>
+            </div>
+            <h1 class="mmsp-obrazac-title">PLAN ULAGANJA</h1>
+            <p class="mmsp-obrazac-subtitle">
+                na javni poziv za podršku mikro, malim i srednjim preduzećima<br>
+                @if($competition?->title)<strong>Konkurs: {{ $competition->title }}</strong>@endif
+            </p>
+        </div>
 
-            @unless($readOnly)
-                <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Sačuvaj plan ulaganja</button>
-            @endunless
-        </fieldset>
-    </form>
+        @if(session('success'))
+            <div class="mmsp-alert mmsp-alert-success">{{ session('success') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="mmsp-alert mmsp-alert-error">
+                <strong>Plan ulaganja nije sačuvan. Ispravite sljedeće greške:</strong>
+                <ul style="margin:8px 0 0; padding-left:20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        @if($readOnly)
+            <div class="mmsp-alert mmsp-alert-info">
+                {{ $plan?->isFrozen() ? \App\Models\CanonicalInvestmentPlan::FROZEN_MESSAGE : 'Prijava je zaključana i plan ulaganja više nije moguće mijenjati.' }}
+            </div>
+        @endif
 
-    <p style="margin-top: 20px;"><a href="{{ route('applications.show', $application) }}">← Nazad na prijavu</a></p>
+        <form method="POST" action="{{ route('applications.canonical-p2.update', $application) }}">
+            @csrf
+            @method('PUT')
+            <fieldset @disabled($readOnly) style="border:0; padding:0; margin:0;">
+
+                <div class="mmsp-form-card">
+                    <div class="mmsp-form-section">
+                        <h2>I. Osnovni podaci</h2>
+                        <div class="mmsp-form-group">
+                            <label class="mmsp-form-label" for="subsidy_type">Vrsta subvencije za koju se aplicira <span class="mmsp-required">*</span></label>
+                            <select id="subsidy_type" name="subsidy_type" class="mmsp-form-control @error('subsidy_type') error @enderror">
+                                <option value="">— izaberite vrstu subvencije —</option>
+                                @foreach($subsidyTypes as $code => $label)
+                                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type) === $code)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            <div class="mmsp-form-text">
+                                Jedna prijava odnosi se na jednu vrstu subvencije. Izbor mora biti isti kao u Obrascu {{ $application->canonicalApplicantForm?->formCode() ?? 'P1a/P1b' }}.
+                            </div>
+                            @error('subsidy_type')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mmsp-form-card">
+                    <div class="mmsp-form-section">
+                        <h2>III. Finansijski okvir ulaganja</h2>
+                        <p class="mmsp-form-text" style="margin-bottom:16px;">
+                            Unesite planirane troškove. Zbir stavki mora biti jednak ukupnoj vrijednosti ulaganja. Iznosi se unose u EUR, sa najviše dvije decimale.
+                        </p>
+
+                        <div style="overflow-x:auto;">
+                            <table class="mmsp-dynamic-table">
+                                <thead>
+                                    <tr>
+                                        <th>Vrsta troška</th>
+                                        <th>Opis</th>
+                                        <th style="width:180px;">Iznos (EUR)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for($i = 0; $i < $rowCount; $i++)
+                                        <tr>
+                                            <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][cost_type]" value="{{ $lines[$i]['cost_type'] ?? '' }}"></td>
+                                            <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][description]" value="{{ $lines[$i]['description'] ?? '' }}"></td>
+                                            <td><input class="mmsp-form-control" type="text" inputmode="decimal" name="expense_lines[{{ $i }}][amount]" value="{{ $lines[$i]['amount'] ?? '' }}"></td>
+                                        </tr>
+                                    @endfor
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mmsp-form-row-3">
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="total_investment">Ukupna vrijednost ulaganja (EUR) <span class="mmsp-required">*</span></label>
+                                <input id="total_investment" class="mmsp-form-control @error('total_investment') error @enderror" type="text" inputmode="decimal" name="total_investment" value="{{ old('total_investment', $plan?->total_investment) }}">
+                                @error('total_investment')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="own_contribution">Sopstveno učešće (EUR) <span class="mmsp-required">*</span></label>
+                                <input id="own_contribution" class="mmsp-form-control @error('own_contribution') error @enderror" type="text" inputmode="decimal" name="own_contribution" value="{{ old('own_contribution', $plan?->own_contribution) }}">
+                                @error('own_contribution')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="expected_subsidy">Očekivani iznos subvencije (EUR) <span class="mmsp-required">*</span></label>
+                                <input id="expected_subsidy" class="mmsp-form-control @error('expected_subsidy') error @enderror" type="text" inputmode="decimal" name="expected_subsidy" value="{{ old('expected_subsidy', $plan?->expected_subsidy) }}">
+                                @error('expected_subsidy')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mmsp-actions">
+                    @unless($readOnly)
+                        <button type="submit" class="btn-primary">Sačuvaj plan ulaganja</button>
+                    @endunless
+                    <a class="mmsp-btn-secondary" href="{{ route('applications.show', $application) }}">← Nazad na prijavu</a>
+                </div>
+            </fieldset>
+        </form>
+    </div>
 </div>
 @endsection
