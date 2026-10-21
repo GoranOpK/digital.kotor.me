@@ -505,7 +505,7 @@
         <nav class="mmsp-p1-nav" aria-label="Navigacija obrasca">
             <a href="{{ route('applications.show', $application) }}">Nazad na prijavu</a>
             <a href="{{ route('applications.canonical-p2.edit', $application) }}">Plan ulaganja (Obrazac P2)</a>
-            <a href="{{ route('applications.canonical-documents.index', $application) }}">Prateća dokumentacija</a>
+            <a href="{{ route('applications.show', $application) }}#application-documents">Prateća dokumentacija</a>
         </nav>
     </div>
 </div>
