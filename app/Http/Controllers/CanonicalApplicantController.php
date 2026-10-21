@@ -39,10 +39,10 @@ class CanonicalApplicantController extends Controller
             return $redirect;
         }
 
-        return view('applications.canonical-legal-form', [
-            'competition' => $competition,
-            'legalForms' => CanonicalLegalForm::labels(),
-        ]);
+        // MMSP više nema poseban ekran za ručni izbor tipa prijave.
+        // Tip se prikazuje na konkursu i određuje iz registrovanog identiteta korisnika.
+        return redirect()->route('competitions.show', $competition)
+            ->with('info', 'Tip prijave i potrebna dokumentacija određuju se prema registrovanom tipu korisnika.');
     }
 
     public function start(Request $request, Competition $competition): RedirectResponse
