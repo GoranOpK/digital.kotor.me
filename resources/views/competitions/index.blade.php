@@ -89,7 +89,13 @@
         font-size: 20px;
         font-weight: 700;
         color: var(--primary);
-        margin: 0 0 12px;
+        margin: 0 0 6px;
+    }
+    .competition-program {
+        font-size: 13px;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 12px;
     }
     .competition-meta {
         display: flex;
@@ -167,6 +173,15 @@
                 @foreach($competitions as $competition)
                     <a href="{{ route('competitions.show', $competition) }}" class="competition-card">
                         <h3>{{ $competition->title }}</h3>
+                        @php
+                            $programLabel = match ($competition->type) {
+                                'zensko' => 'Podrška ženskom preduzetništvu',
+                                'omladinsko' => 'Podrška preduzetništvu mladih',
+                                \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL => 'Podrška mikro, malim i srednjim preduzećima',
+                                default => 'Program podrške preduzetništvu',
+                            };
+                        @endphp
+                        <div class="competition-program">Program: {{ $programLabel }}</div>
                         
                         <div class="competition-meta">
                             <div class="meta-item">
