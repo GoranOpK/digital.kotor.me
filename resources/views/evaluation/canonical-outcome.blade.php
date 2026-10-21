@@ -1,12 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $reasonLabels = \App\Models\CanonicalOutcome::REASON_LABELS;
     $isChair = $member->canonical_seat === \App\Services\Competitions\Commission\CanonicalCommissionGovernance::ROLE_PREDSJEDNIK;
     $confirmed = $finalRanking !== null;
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 1200px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1200px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Treća sjednica Komisije — ishod, iznosi i konačna rang lista</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         {{ $competition->title }} — budžet Poziva {{ number_format((float) $competition->budget, 2, ',', '.') }} €.
