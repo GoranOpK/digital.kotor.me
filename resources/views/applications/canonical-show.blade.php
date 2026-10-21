@@ -20,6 +20,13 @@
         : '—';
     $p1Complete = $form && app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
     $p2Complete = $plan && app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
+    $uploadRowMetadata = $uploadRows->whereNull('document')->values()->map(function ($row) {
+        return [
+            'key' => $row['key'],
+            'variants' => $row['variants'],
+            'needs_issue_date' => $row['needs_issue_date'],
+        ];
+    })->all();
 @endphp
 
 <style>
@@ -491,13 +498,7 @@
 
 <script>
 (function () {
-    const rows = @json($uploadRows->whereNull('document')->values()->map(function ($row) {
-        return [
-            'key' => $row['key'],
-            'variants' => $row['variants'],
-            'needs_issue_date' => $row['needs_issue_date'],
-        ];
-    })->all());
+    const rows = @json($uploadRowMetadata);
 
     const typeSelect = document.getElementById('canonical_document_type');
     const evidenceBox = document.getElementById('canonical_evidence_box');
