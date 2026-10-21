@@ -98,13 +98,14 @@ class ApplicationProcessController extends Controller
     /**
      * Applicant: own canonical application only.
      */
-    public function applicantStatus(Request $request, Application $application): View
+    public function applicantStatus(Request $request, Application $application): RedirectResponse
     {
         abort_unless((int) $application->user_id === (int) $request->user()->id, 403, 'Status provjere vidi samo podnosilac prijave.');
-        $review = $this->complaints->applicantStatus($application);
-        abort_if($review === null, 404);
+        abort_if($this->complaints->applicantStatus($application) === null, 404);
 
-        return view('applications.canonical-review', ['application' => $application, 'review' => $review]);
+        // Kao kod ženskog i mladih: status, obavještenje i prigovor su dio
+        // jedinstvenog korisničkog ekrana "Status prijave".
+        return redirect()->to(route('applications.show', $application).'#application-review');
     }
 
     public function commissionIndex(Request $request, Competition $competition): View
