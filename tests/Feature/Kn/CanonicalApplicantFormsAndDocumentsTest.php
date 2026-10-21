@@ -28,6 +28,7 @@ use App\Support\CanonicalDocumentCatalog as Catalog;
 use App\Support\CanonicalLegalForm;
 use App\Support\CanonicalSubsidyType;
 use App\Support\CompetitionProgramCatalog;
+use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -106,9 +107,9 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
     // ---------------------------------------------------------------- 1. P1a fields and wording
 
-    public function test_preduzetnik_starts_through_explicit_legal_form_and_gets_obrazac_p1a(): void
+    public function test_preduzetnik_profile_starts_obrazac_p1a_without_manual_type_chooser(): void
     {
-        $owner = $this->makeOwner();
+        $owner = $this->makeOwner(UserType::ENTREPRENEUR);
         $call = $this->openCall();
 
         $this->actingAs($owner)->post(route('applications.start', $call))
@@ -117,13 +118,10 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertRedirect(route('applications.canonical.legal-form', $call));
 
         $this->actingAs($owner)->get(route('applications.canonical.legal-form', $call))
-            ->assertOk()
-            ->assertSee('name="legal_form" value="preduzetnik"', false)
-            ->assertSee('name="legal_form" value="drustvo"', false)
-            ->assertSee('Obrazac P1a')
-            ->assertSee('Obrazac P1b');
+            ->assertRedirect(route('competitions.show', $call));
 
-        $response = $this->actingAs($owner)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::PREDUZETNIK]);
+        // Browser payload cannot override the registered account type.
+        $response = $this->actingAs($owner)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::DRUSTVO]);
         $application = Application::query()->where('user_id', $owner->id)->sole();
         $response->assertRedirect(route('applications.canonical-p1.edit', $application));
 
@@ -302,23 +300,28 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame('draft', $application->fresh()->status);
     }
 
-    public function test_legal_form_must_be_chosen_explicitly_and_legacy_paths_stay_closed(): void
+    public function test_registered_identity_determines_mmsp_form_and_legacy_paths_stay_closed(): void
     {
-        $owner = $this->makeOwner();
         $call = $this->openCall();
 
-        foreach ([null, '', 'preduzetnica', 'privredno_drustvo', 'fizicko_lice', ['preduzetnik']] as $choice) {
-            $payload = $choice === null ? [] : ['legal_form' => $choice];
-            $this->actingAs($owner)->post(route('applications.canonical.start', $call), $payload)
-                ->assertRedirect(route('applications.canonical.legal-form', $call))
-                ->assertSessionHasErrors(['legal_form' => CanonicalApplicantFormService::LEGAL_FORM_REQUIRED_MESSAGE]);
-        }
+        $physical = $this->makeOwner(UserType::PHYSICAL_PERSON);
+        $this->actingAs($physical)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::PREDUZETNIK])
+            ->assertRedirect(route('competitions.show', $call))
+            ->assertSessionHasErrors(['error' => CanonicalLegalForm::eligibilityMessage()]);
+        $this->assertSame(0, Application::query()->where('competition_id', $call->id)->count());
 
+        $company = $this->makeOwner(UserType::LIMITED_LIABILITY_COMPANY);
+        $this->actingAs($company)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::PREDUZETNIK])
+            ->assertSessionHasNoErrors();
+        $companyApplication = Application::query()->where('user_id', $company->id)->sole();
+        $this->assertSame('privredno_drustvo', $companyApplication->applicant_type);
+        $this->assertSame(CanonicalLegalForm::DRUSTVO, $companyApplication->canonicalApplicantForm->legal_form);
+
+        $owner = $this->makeOwner(UserType::ENTREPRENEUR);
         $this->actingAs($owner)->post(route('applications.store', $call), [
             'applicant_type' => 'preduzetnik',
             'business_plan_name' => 'Legacy',
         ])->assertSessionHasErrors(['error' => ApplicationController::CANONICAL_OBRAZAC_1_MESSAGE]);
-        $this->assertSame(0, Application::query()->where('competition_id', $call->id)->count());
 
         $formless = Application::create([
             'competition_id' => $call->id,
@@ -1073,9 +1076,10 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         ], $overrides))->fresh();
     }
 
-    private function makeOwner(): User
+    private function makeOwner(?string $userType = null): User
     {
         $this->jmbSequence++;
+        $userType ??= UserType::ENTREPRENEUR;
 
         return User::factory()->create([
             'email' => 'p1-owner-'.uniqid().'@example.com',
@@ -1087,12 +1091,18 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
             'phone' => '067000000',
-            'user_type' => 'Fizičko lice',
+            'user_type' => $userType,
         ]);
     }
 
     private function startedDraft(User $owner, Competition $call, string $legalForm): Application
     {
+        $owner->forceFill([
+            'user_type' => $legalForm === CanonicalLegalForm::DRUSTVO
+                ? UserType::LIMITED_LIABILITY_COMPANY
+                : UserType::ENTREPRENEUR,
+        ])->save();
+
         $before = Application::query()->where('user_id', $owner->id)->pluck('id')->all();
         $this->actingAs($owner)->post(route('applications.canonical.start', $call), ['legal_form' => $legalForm])
             ->assertSessionHasNoErrors();
