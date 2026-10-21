@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $G = \App\Services\Competitions\Commission\CanonicalCommissionGovernance::class;
     $box = 'border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #fff;';
@@ -10,7 +11,7 @@
     $fmt = fn ($at) => $at ? $at->copy()->timezone($timezone)->format('d.m.Y H:i:s') : '—';
     $canAct = ! $readOnly && $actionBlock === null;
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1100px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Sjednice kanonske Komisije</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         {{ $competition->title }}. Sjednicu evidentira i potvrđuje predsjednik Komisije. Intervju i treća sjednica zahtijevaju prisustvo sva 3 važeća člana
