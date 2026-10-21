@@ -24,7 +24,7 @@
         padding: 24px 0 40px;
     }
     .mmsp-p1-wrap {
-        max-width: 1200px;
+        max-width: 100%;
         margin: 0 auto;
         padding: 0 16px;
     }
@@ -303,7 +303,8 @@
             </div>
             <h1 class="mmsp-p1-title">PRIJAVA</h1>
             <p class="mmsp-p1-subtitle">
-                na javni poziv za podršku mikro, malim i srednjim preduzećima<br>
+                na javni konkurs za raspodjelu bespovratnih sredstava<br>
+                namijenjenih za podršku mikro, malim i srednjim preduzećima<br>
                 Tip prijave: <strong>{{ $isEntrepreneur ? 'PREDUZETNIK' : 'PRIVREDNO DRUŠTVO (DOO)' }}</strong>
             </p>
             @if($competition?->title)
