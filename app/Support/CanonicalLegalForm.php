@@ -69,6 +69,30 @@ final class CanonicalLegalForm
     }
 
     /**
+     * MMSP prijavni obrazac se određuje iz registrovanog tipa korisnika.
+     * Odluka poznaje podnosioca kao preduzetnika ili društvo; neregistrovano
+     * fizičko lice i ostali tipovi nijesu automatski svrstani u P1a/P1b.
+     */
+    public static function forUserType(?string $userType): ?string
+    {
+        if (UserType::isEntrepreneur($userType) || $userType === 'Preduzetnica') {
+            return self::PREDUZETNIK;
+        }
+
+        if (KnCommercialCompanyForm::fromUserType($userType) !== null) {
+            return self::DRUSTVO;
+        }
+
+        return null;
+    }
+
+    public static function eligibilityMessage(): string
+    {
+        return 'Prema MMSP Odluci prijavu može podnijeti registrovani preduzetnik ili privredno društvo. '
+            .'Tip korisnika na vašem nalogu ne odgovara prihvatljivom podnosiocu za ovaj javni poziv.';
+    }
+
+    /**
      * @return array{label: string, form: string, applicant_type: string}
      */
     private static function definition(string $code): array
