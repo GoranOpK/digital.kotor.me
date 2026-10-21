@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.11
+**Verzija:** 1.0.12
 **Datum:** 2026-10-21
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.40** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.41** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.7** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.8** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -51,6 +51,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.9 | 2026-09-21 | KN-PATCH-FS-014 — Precizirana konačna raspodjela mladih bez novih prihvatnih identifikatora: 30% samo za potvrđeni inovativni tehnološki start-up (čl. 19) iz posebne evidencije; 20%/15% iz posebne evidencije ranijeg youth finansiranja, ne iz `business_stage`, +3 ni M3; prednost otpočinjanja nad razvojem, zatim glas 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom; `remaining_after_first` tek od `approved`; nema ženskog roka od 45 dana. Prenosi se procesni princip, ne ženski procenti, broj članova ni način evidencije glasanja. Indeks ostaje 142/142. Živi pokazivači: KN-BM-002 v1.0.11, KN-TS-002 v1.0.5, KN-RG-001 v1.0.38, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.10 | 2026-09-21 | KN-PATCH-FS-015 — Precizirano glasanje izjednačene grupe bez novih prihvatnih identifikatora: predmet je kompletan, budžetski validan predlog raspodjele, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv`; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Indeks ostaje 142/142. Živi pokazivači: KN-BM-002 v1.0.12, KN-TS-002 v1.0.6, KN-RG-001 v1.0.39, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.11 | 2026-10-21 | KN-PATCH-FS-016 — Prva sjednica ostaje obaveza Komisije po Odluci (rok i kvorum), ali Platforma ne traži njen elektronski zapis da bi otvorila M3 ili drugu sjednicu. M3 i dalje zahtijeva kompletnu Komisiju i tačno tri omladinska kriterijuma. Ženski tok nije diran. |
+| 1.0.12 | 2026-10-21 | KN-PATCH-FS-017 — Sjednice Komisije ostaju van Platforme: Digital ne vodi zapise prve, druge ni treće sjednice, niti prisustvo i kvorum. Prva faza ostaje M3 sa tri omladinska kriterijuma i prigovor. Naredna faza (ocjenjivanje i postojeće usmeno) otvara se tek kada istekne rok za prigovor i kada su svi blagovremeno podneseni prigovori riješeni. Kriterijumi, rokovi, bodovanje i tok odluka nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 
 Napomena:
 
@@ -865,7 +866,7 @@ Detaljni ekran, potvrda i prihvatni kriterijumi arhiviranja razrađuju se u Pogl
 
 Ova tabela je mapa stanja. Detalji tokova razrađuju se u navedenim poglavljima. Godišnja instanca, konfiguracija, objavljivanje i rok razrađuju se u Poglavljima 5 i 6. Prijava, obrasci, dokumentacija i podnošenje razrađuju se u Poglavljima 7–10. Privatnost, istek roka, prva sjednica i prigovori razrađuju se u Poglavljima 11–14. Usmeno obrazloženje, individualno ocjenjivanje i dodatni bodovi razrađuju se u Poglavljima 15–17. Eliminatorni kriterijumi, obračun i prag, rangiranje i raspodjela razrađuju se u Poglavljima 18–21. Drugi Poziv i zaključivanje odnosno arhiviranje razrađuju se u Poglavljima 22 i 23. Funkcionalne zabrane, granica V1, objedinjeni prihvatni kriterijumi, matrica sljedivosti i odložene teme razrađuju se u Poglavljima 24–28.
 
-Poslovni rokovi sjednica (`BM-ML-034`) evidentiraju se kao sljedeće činjenice. Platforma **ne** zakazuje sjednice automatski. Prva i druga sjednica već imaju elektronsku evidenciju prisustva. Treća sjednica **nije** obavezni elektronski `TYPE_THIRD`: poslovni događaj može biti van Platforme; Platforma evidentira zaključke, glasove i konačnu potvrdu.
+Poslovni rokovi sjednica (`BM-ML-034`) ostaju obaveza Komisije. Platforma **ne** zakazuje sjednice automatski i **ne** vodi elektronsku evidenciju prve, druge ni treće sjednice, niti prisustvo i kvorum. Treća sjednica **nije** obavezni elektronski `TYPE_THIRD`: poslovni događaj je van Platforme; Platforma evidentira zaključke, glasove i konačnu potvrdu.
 
 * prva sjednica: najkasnije sedam dana od isteka roka za prijave;
 * druga sjednica i usmena obrazloženja: najkasnije sedam dana od prve sjednice;
@@ -2858,11 +2859,11 @@ Izvor: `BM-ML-037`.
 
 ### 14.6.9 — Druga sjednica čeka prigovor
 
-**Ako:** postoji bilo koji blagovremen neriješen prigovor.
+**Ako:** postoji otvoren rok za prigovor ili bilo koji blagovremen neriješen prigovor.
 
-**Kada:** se pokuša održati druga sjednica.
+**Kada:** se pokuša preći na narednu fazu omladinskog postupka (ocjenjivanje i usmeno).
 
-**Onda:** druga sjednica se ne održava dok Komisija ne odluči o tom prigovoru.
+**Onda:** naredna faza ostaje zatvorena. Platforma **ne** traži elektronski zapis druge sjednice. Faza se otvara tek kada istekne rok za prigovor i kada su svi blagovremeno podneseni prigovori riješeni.
 
 Izvor: `BM-ML-034`.
 
@@ -2930,7 +2931,7 @@ Ne uvodi se videokonferencijska integracija, kalendarska integracija, SMS ni dru
 
 ## 15.1. Zakazivanje
 
-Usmeno predstavljanje i druga sjednica dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi:
+Usmeno predstavljanje i ocjenjivanje dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi. Poslovna druga sjednica ostaje obaveza Komisije van Platforme; Digital **ne** vodi njen datum, prisustvo ni kvorum.
 
 * prijava ima status `submitted`;
 * M3 je potvrđen;

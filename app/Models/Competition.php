@@ -473,7 +473,9 @@ class Competition extends Model
 
     /**
      * Nakon isteka roka (ili zatvaranja) postupak Komisije ostaje blokiran dok Komisija nije potpuna i valjana.
-     * Omladinska prva sjednica ostaje poslovna obaveza Komisije, ali nije elektronska kapija za M3.
+     * Omladinske sjednice su van Digitala: potvrđena prva sjednica i kvorum nijesu uslov ove kapije,
+     * niti blokiraju pregled biznis plana ili M3. Ocjenjivanje i usmeno ostaju na posebnoj kapiji
+     * (M3, istek roka za prigovor i riješeni blagovremeni prigovori).
      * Ne uvodi novo lifecycle stanje.
      */
     public function isCommissionProcessingBlocked(): bool

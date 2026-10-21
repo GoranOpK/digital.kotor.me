@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.7
+**Verzija:** 1.0.8
 **Datum:** 2026-10-21
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.40** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.41** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.11** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.12** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -45,6 +45,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.5 | 2026-09-21 | KN-PATCH-TS-005 — Predložena youth-only audit polja za konačnu raspodjelu, bez ženskih kolona i bez obaveznog `TYPE_THIRD`: posebne evidencije inovativnog tehnološkog start-upa i ranijeg youth finansiranja; evidencija glasova 2 od 3; potvrda cijele liste; `remaining_after_first` samo od `approved`. Prenosi se procesni princip, ne ženski procenti, 5 članova ni ženski model glasova. Živi pokazivači: KN-BM-002 v1.0.11, KN-FS-002 v1.0.9, KN-RG-001 v1.0.38, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.6 | 2026-09-21 | KN-PATCH-TS-006 — Predložen youth-only konceptualni model izjednačene grupe, kruga/predloga raspodjele, članstva prijava sa nacrtnim iznosima, tri pojedinačna glasa po kanonskom mjestu i zaključavanja kruga; nije migracija ni implementacija. Predmet glasa je kompletan predlog, ne pojedinačna prijava. Živi pokazivači: KN-BM-002 v1.0.12, KN-FS-002 v1.0.10, KN-RG-001 v1.0.39, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.7 | 2026-10-21 | KN-PATCH-TS-007 — Omladinska prva sjednica ostaje poslovna obaveza Komisije (rok i kvorum najmanje dva člana), ali Platforma **ne** vodi je kao elektronsku kapiju. M3 i početak druge sjednice zahtijevaju kompletnu i valjanu Komisiju, ne red `session_type = first`. Stara GET adresa `/competitions/{id}/commission-sessions/first` ne prikazuje omladinski obrazac. Postojeći zapisi prve sjednice ostaju istorijski podaci. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
+| 1.0.8 | 2026-10-21 | KN-PATCH-TS-008 — Omladinske sjednice ostaju van Platforme. Rute prve i druge sjednice **ne** upisuju omladinski datum, prisustvo ni kvorum. Kapija naredne faze je istek roka za prigovor i rješavanje svih blagovremenih prigovora; tada se otvaraju ocjenjivanje i postojeće usmeno. Nema nove tabele ni migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 
 Napomena:
 
@@ -2204,11 +2205,11 @@ Ponovo se koriste postojeći:
 
 Ženski tok ostaje nepromijenjen. Profil mladih parametrizuje broj članova, katalog kriterijuma, dodatne bodove, prag i kapiju završetka ocjene.
 
-Prva sjednica već koristi `commission_sessions` i `commission_session_attendances`. Usmeno i druga sjednica su **proširenje tog postojećeg modela**, ne poseban sistem samo za profil mladih. Fizički nazivi ostaju Poglavlju 13.
+Tabele `commission_sessions` i `commission_session_attendances` **već postoje**. Omladinski tok **ne** vodi elektronsku evidenciju sjednica ni prisustva; postojeći redovi ostaju istorijski. Usmeno koristi postojeći model, bez nove tabele i bez paralelnog sistema sjednica. Fizički nazivi ostaju Poglavlju 13.
 
 ## 10.2. Zakazivanje usmenog obrazloženja
 
-Usmeno predstavljanje i druga sjednica dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi:
+Usmeno predstavljanje i ocjenjivanje dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi. Platforma **ne** traži elektronski zapis druge sjednice, prisustvo ni kvorum:
 
 * prijava ima status `submitted`;
 * M3 je potvrđen;
@@ -3037,7 +3038,7 @@ Ponovo se koriste `commissions` i `commission_members`. Broj mjesta parametrizuj
 
 `replaces_member_number` 1–5 ostaje na šemi; za `omladinsko` servis dozvoljava samo mjesta 1–3. Ženski `member_type` katalog se **ne** prenosi kao obavezna struktura mladih.
 
-Tabele `commission_sessions` i `commission_session_attendances` **već postoje**. Za omladinski tok **druga sjednica i usmeno** koriste taj model. Red `session_type = first` **nije** kapija za M3 ni za početak druge sjednice; ako postoji, tretira se kao istorijski podatak i **ne** briše se. Unique `(competition_id, session_type)` daje jednu sjednicu datog tipa po Pozivu. Stored tipovi `first`, `second` i `third` postoje kao konstante. **Konstanta `third` / `TYPE_THIRD` nije obavezna kapija** za youth treću sjednicu. Poslovni događaj može biti van Platforme. Platforma evidentira zaključke, glasove i konačnu potvrdu bez uslova da postoji elektronski red `session_type = third`. Prisustvo: `commission_session_id`, `commission_member_id`, `present`; UNIQUE `(commission_session_id, commission_member_id)`.
+Tabele `commission_sessions` i `commission_session_attendances` **već postoje**. Za omladinski tok Platforma **ne** vodi elektronsku evidenciju prve, druge ni treće sjednice kao kapiju. Red `session_type = first` **nije** kapija za M3 ni za narednu fazu; ako postoji, tretira se kao istorijski podatak i **ne** briše se. Usmeno ostaje na postojećoj tabeli, bez nove migracije. Unique `(competition_id, session_type)` daje jednu sjednicu datog tipa po Pozivu. Stored tipovi `first`, `second` i `third` postoje kao konstante. **Konstanta `third` / `TYPE_THIRD` nije obavezna kapija** za youth treću sjednicu. Poslovni događaj može biti van Platforme. Platforma evidentira zaključke, glasove i konačnu potvrdu bez uslova da postoji elektronski red `session_type = third`. Prisustvo: `commission_session_id`, `commission_member_id`, `present`; UNIQUE `(commission_session_id, commission_member_id)`.
 
 Naredna implementacija usmenog predstavljanja i druge sjednice **proširuje ovaj postojeći model**. **Ne** uvodi se paralelni sistem sjednica. **Ne** uvodi se nova tabela sjednica samo za mlade, ako se postojeća šema može bezbjedno proširiti. **Ne** uvodi se automatsko zakazivanje.
 

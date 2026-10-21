@@ -55,13 +55,11 @@ class YouthSecondSessionGate
             return CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE;
         }
 
-        if ($secondSession !== null) {
-            if ($secondSession->session_type !== CommissionSession::TYPE_SECOND) {
-                return CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE;
-            }
-            if ((int) $secondSession->competition_id !== (int) $application->competition_id) {
-                return CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE;
-            }
+        $phaseMessage = $this->secondSessionBlockMessage($application->competition);
+        if ($phaseMessage !== null) {
+            return $phaseMessage === CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE
+                ? $phaseMessage
+                : CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE;
         }
 
         if ($application->status !== 'submitted') {
@@ -183,11 +181,6 @@ class YouthSecondSessionGate
     public function youthLockEvidenceBlockMessage(Application $application): ?string
     {
         $application->loadMissing(['competition', 'oralPresentation']);
-
-        $second = $application->competition?->secondCommissionSession();
-        if ($second === null || ! $second->isConfirmed()) {
-            return \App\Support\ScoringProfileConfig::YOUTH_SECOND_SESSION_REQUIRED_FOR_LOCK_MESSAGE;
-        }
 
         $oral = $application->oralPresentation;
         if ($oral === null || ! $oral->isCompleted() || $oral->applicant_attended === null) {

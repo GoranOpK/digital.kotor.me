@@ -86,17 +86,17 @@ final class CommissionProfileConfig
 
     public const SESSION_SECOND_QUORUM_MESSAGE = 'Druga sjednica može se potvrditi samo uz prisustvo sva 3 aktivna člana Komisije, uključujući predsjednika.';
 
-    public const SESSION_SECOND_INCOMPLETE_COMMISSION_MESSAGE = 'Druga sjednica može se potvrditi tek kada su sva tri mjesta Komisije formalno popunjena.';
+    public const SESSION_SECOND_INCOMPLETE_COMMISSION_MESSAGE = 'Ocjenjivanje i usmeno predstavljanje mogu početi tek kada su sva tri mjesta Komisije formalno popunjena.';
 
     public const SESSION_SECOND_EXISTS_MESSAGE = 'Poziv već ima drugu sjednicu Komisije.';
 
     public const SESSION_SECOND_CONFLICT_MESSAGE = 'Druga sjednica za ovaj Poziv već postoji.';
 
-    public const SESSION_SECOND_NOT_YOUTH_MESSAGE = 'Druga sjednica i usmeno predstavljanje dostupni su samo za omladinski Poziv.';
+    public const SESSION_SECOND_NOT_YOUTH_MESSAGE = 'Usmeno predstavljanje dostupno je samo za omladinski Poziv.';
 
     public const SESSION_SECOND_REQUIRES_FIRST_MESSAGE = 'Druga sjednica može početi tek nakon potvrđene prve sjednice.';
 
-    public const SESSION_SECOND_APPEAL_GATE_MESSAGE = 'Druga sjednica ne može početi dok postoji otvoren rok za prigovor ili neriješen prigovor.';
+    public const SESSION_SECOND_APPEAL_GATE_MESSAGE = 'Ocjenjivanje i usmeno predstavljanje ne mogu početi dok postoji otvoren rok za prigovor ili neriješen prigovor.';
 
     public const ORAL_EXISTS_MESSAGE = 'Prijava već ima evidenciju usmenog predstavljanja.';
 

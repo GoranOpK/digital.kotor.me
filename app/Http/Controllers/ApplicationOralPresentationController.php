@@ -28,18 +28,17 @@ class ApplicationOralPresentationController extends Controller
     public function edit(Competition $competition, Application $application): View
     {
         $chairman = $this->authorizeOralAccess($competition, $application);
-        $session = $competition->secondCommissionSession();
         $oral = $application->oralPresentation;
+        $eligible = $this->gate->oralPresentationIsAllowed($application);
 
         return view('commission-sessions.oral', [
             'competition' => $competition,
             'application' => $application,
-            'session' => $session,
             'oral' => $oral,
             'chairman' => $chairman,
             'readonly' => $oral?->isCompleted() ?? false,
-            'sessionConfirmed' => $session?->isConfirmed() ?? false,
-            'eligible' => $this->gate->oralPresentationIsAllowed($application, $session),
+            'sessionConfirmed' => $eligible,
+            'eligible' => $eligible,
         ]);
     }
 
@@ -51,19 +50,8 @@ class ApplicationOralPresentationController extends Controller
         try {
             DB::transaction(function () use ($competition, $application, $chairman, $payload) {
                 $lockedApplication = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
-                $session = CommissionSession::query()
-                    ->where('competition_id', $competition->id)
-                    ->where('session_type', CommissionSession::TYPE_SECOND)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($session === null) {
-                    throw ValidationException::withMessages([
-                        'oral' => CommissionProfileConfig::SESSION_SECOND_REQUIRED_FOR_ORAL_MESSAGE,
-                    ]);
-                }
-
-                $this->assertOralMayBeDrafted($lockedApplication, $session);
+                $this->assertOralMayBeDrafted($lockedApplication);
+                $session = $this->lockOralAttachmentParent($competition, $chairman);
 
                 if ($lockedApplication->oralPresentation()->exists()) {
                     throw ValidationException::withMessages([
@@ -71,14 +59,12 @@ class ApplicationOralPresentationController extends Controller
                     ]);
                 }
 
-                $this->rejectHeldFieldsBeforeConfirm($session, $payload);
-
                 ApplicationOralPresentation::create([
                     'commission_session_id' => $session->id,
                     'application_id' => $lockedApplication->id,
                     'scheduled_at' => $payload['scheduled_at'],
-                    'held_at' => $session->isConfirmed() ? $payload['held_at'] : null,
-                    'applicant_attended' => $session->isConfirmed() ? $payload['applicant_attended'] : null,
+                    'held_at' => $payload['held_at'],
+                    'applicant_attended' => $payload['applicant_attended'],
                     'notes' => $payload['notes'],
                     'completed_at' => null,
                     'recorded_by_user_id' => $chairman->user_id,
@@ -98,17 +84,9 @@ class ApplicationOralPresentationController extends Controller
         $chairman = $this->authorizeOralAccess($competition, $application);
         $payload = $this->validatedDraftPayload($request, requireHeldFields: false);
 
-        DB::transaction(function () use ($competition, $application, $chairman, $payload) {
+        DB::transaction(function () use ($application, $chairman, $payload) {
             $lockedApplication = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
-            $session = CommissionSession::query()
-                ->where('competition_id', $competition->id)
-                ->where('session_type', CommissionSession::TYPE_SECOND)
-                ->lockForUpdate()
-                ->first();
-
-            if ($session === null) {
-                abort(404);
-            }
+            $this->assertOralMayBeDrafted($lockedApplication);
 
             $oral = ApplicationOralPresentation::query()
                 ->where('application_id', $lockedApplication->id)
@@ -125,13 +103,10 @@ class ApplicationOralPresentationController extends Controller
                 ]);
             }
 
-            $this->assertOralMayBeDrafted($lockedApplication, $session);
-            $this->rejectHeldFieldsBeforeConfirm($session, $payload);
-
             $oral->update([
                 'scheduled_at' => $payload['scheduled_at'],
-                'held_at' => $session->isConfirmed() ? $payload['held_at'] : $oral->held_at,
-                'applicant_attended' => $session->isConfirmed() ? $payload['applicant_attended'] : $oral->applicant_attended,
+                'held_at' => $payload['held_at'],
+                'applicant_attended' => $payload['applicant_attended'],
                 'notes' => $payload['notes'],
                 'recorded_by_user_id' => $chairman->user_id,
             ]);
@@ -147,29 +122,9 @@ class ApplicationOralPresentationController extends Controller
         $chairman = $this->authorizeOralAccess($competition, $application);
         $payload = $this->validatedCompletePayload($request);
 
-        DB::transaction(function () use ($competition, $application, $chairman, $payload) {
+        DB::transaction(function () use ($application, $chairman, $payload) {
             $lockedApplication = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
-
-            $session = CommissionSession::query()
-                ->where('competition_id', $competition->id)
-                ->where('session_type', CommissionSession::TYPE_SECOND)
-                ->lockForUpdate()
-                ->first();
-
-            if ($session === null) {
-                abort(404);
-            }
-
-            $session->unsetRelation('attendances');
-            $session->load(['attendances.member']);
-
-            if (! $session->isConfirmed() || ! $session->meetsSecondSessionAttendance($competition)) {
-                throw ValidationException::withMessages([
-                    'oral' => CommissionProfileConfig::ORAL_SESSION_NOT_CONFIRMED_MESSAGE,
-                ]);
-            }
-
-            $this->assertOralMayBeDrafted($lockedApplication, $session);
+            $this->assertOralMayBeDrafted($lockedApplication);
 
             $oral = ApplicationOralPresentation::query()
                 ->where('application_id', $lockedApplication->id)
@@ -240,9 +195,9 @@ class ApplicationOralPresentationController extends Controller
         return $member;
     }
 
-    protected function assertOralMayBeDrafted(Application $application, CommissionSession $session): void
+    protected function assertOralMayBeDrafted(Application $application): void
     {
-        $message = $this->gate->oralPresentationBlockMessage($application, $session);
+        $message = $this->gate->oralPresentationBlockMessage($application);
         if ($message !== null) {
             throw ValidationException::withMessages([
                 'oral' => $message,
@@ -251,18 +206,51 @@ class ApplicationOralPresentationController extends Controller
     }
 
     /**
-     * @param  array{scheduled_at: ?string, held_at: ?string, applicant_attended: ?bool, notes: ?string}  $payload
+     * Existing oral rows require commission_session_id. This parent is not a recorded
+     * commission meeting: no attendance, no quorum, and no user-facing session form.
      */
-    protected function rejectHeldFieldsBeforeConfirm(CommissionSession $session, array $payload): void
+    protected function lockOralAttachmentParent(Competition $competition, CommissionMember $chairman): CommissionSession
     {
-        if ($session->isConfirmed()) {
-            return;
+        Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
+
+        $existing = CommissionSession::query()
+            ->where('competition_id', $competition->id)
+            ->where('session_type', CommissionSession::TYPE_SECOND)
+            ->lockForUpdate()
+            ->first();
+
+        if ($existing !== null) {
+            return $existing;
         }
 
-        if ($payload['held_at'] !== null || $payload['applicant_attended'] !== null) {
-            throw ValidationException::withMessages([
-                'held_at' => CommissionProfileConfig::ORAL_HELD_AT_BEFORE_CONFIRM_MESSAGE,
+        try {
+            return CommissionSession::create([
+                'competition_id' => $competition->id,
+                'commission_id' => $competition->commission_id,
+                'session_type' => CommissionSession::TYPE_SECOND,
+                'held_at' => now(),
+                'completed_at' => now(),
+                'recorded_by_user_id' => $chairman->user_id,
+                'notes' => null,
             ]);
+        } catch (UniqueConstraintViolationException|QueryException $e) {
+            if ($e instanceof QueryException
+                && ! NamedMysqlUniqueViolation::matches($e, CommissionProfileConfig::SESSION_COMPETITION_TYPE_UNIQUE)
+                && (int) ($e->errorInfo[1] ?? 0) !== 1062) {
+                throw $e;
+            }
+
+            $again = CommissionSession::query()
+                ->where('competition_id', $competition->id)
+                ->where('session_type', CommissionSession::TYPE_SECOND)
+                ->lockForUpdate()
+                ->first();
+
+            if ($again !== null) {
+                return $again;
+            }
+
+            throw $e;
         }
     }
 

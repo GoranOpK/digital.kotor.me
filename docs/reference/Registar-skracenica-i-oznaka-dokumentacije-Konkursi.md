@@ -6,7 +6,7 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.40
+**Verzija:** 1.0.41
 **Datum:** 2026-10-21
 
 ---
@@ -260,7 +260,8 @@ Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** rest
 | 1.0.38 | 2026-09-21 | Evidentirani KN-PATCH-BM-020 za KN-BM-002 v1.0.11, KN-PATCH-FS-014 za KN-FS-002 v1.0.9 i KN-PATCH-TS-005 za KN-TS-002 v1.0.5: konačna raspodjela mladih — 30% samo za potvrđeni inovativni tehnološki start-up (čl. 19) iz posebne evidencije; 20%/15% iz posebne evidencije ranijeg youth finansiranja; prednost otpočinjanja pa glas 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom; `remaining_after_first` tek od `approved`; nema ženskog roka od 45 dana. Prenosi se procesni princip, ne ženski procenti, broj članova ni način evidencije glasanja. Usklađeni živi pokazivači: BM v1.0.11, FS v1.0.9, TS v1.0.5, RG v1.0.38, KN-FS-003 v1.0.17. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.39 | 2026-09-21 | Evidentirani KN-PATCH-BM-021 za KN-BM-002 v1.0.12, KN-PATCH-FS-015 za KN-FS-002 v1.0.10 i KN-PATCH-TS-006 za KN-TS-002 v1.0.6: predmet glasa kod izjednačenih bodova je kompletan, budžetski validan predlog raspodjele grupe, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv`; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Usklađeni živi pokazivači: BM v1.0.12, FS v1.0.10, TS v1.0.6, RG v1.0.39, KN-FS-003 v1.0.17; živi FS §1.1 pokazivač `KN-BM-001` usklađen na v0.2.11. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.40 | 2026-10-21 | Evidentirani KN-PATCH-FS-016 za KN-FS-002 v1.0.11 i KN-PATCH-TS-007 za KN-TS-002 v1.0.7: omladinska prva sjednica ostaje poslovna obaveza Komisije, ali nije elektronska kapija za M3 ni za drugu sjednicu; postojeći zapisi ostaju istorijski. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
+| 1.0.41 | 2026-10-21 | Evidentirani KN-PATCH-FS-017 za KN-FS-002 v1.0.12 i KN-PATCH-TS-008 za KN-TS-002 v1.0.8: omladinske sjednice ostaju van Digitala; naredna faza (ocjenjivanje i usmeno) otvara se nakon isteka roka za prigovor i rješavanja svih blagovremenih prigovora. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.40**
+**Kraj dokumenta KN-RG-001 v1.0.41**

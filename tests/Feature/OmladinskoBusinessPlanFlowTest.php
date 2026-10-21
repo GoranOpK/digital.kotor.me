@@ -301,8 +301,13 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             'end_date' => now()->subDay()->toDateString(),
         ]);
         $competition = $application->competition->fresh();
+        $this->assertNull($competition->firstCommissionSession());
+        $this->assertFalse($competition->hasConfirmedFirstSessionQuorum());
+        $this->assertTrue($competition->hasCompleteValidCommission());
+        $this->assertFalse($competition->isCommissionProcessingBlocked());
 
-        $html = $this->actingAs($members[0]->user)
+        $member = $members[1]->fresh('user');
+        $html = $this->actingAs($member->user)
             ->get(route('applications.business-plan.create', $application))
             ->assertOk()
             ->assertViewHas('readOnly', true)
@@ -312,9 +317,43 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->assertNull($application->businessPlan->fresh()->summary);
         $this->assertSame(0, KnOmladinskoDocumentPackage::filledPurchaseCount($application->businessPlan->fresh()->funding_sources_table));
 
-        $this->actingAs($members[0]->user)
+        $this->actingAs($member->user)
             ->get(route('evaluation.create', $application))
             ->assertOk();
+
+        $incomplete = Commission::create([
+            'name' => 'Omladinska nepotpuna komisija',
+            'year' => (int) now()->year,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+            'profile_type' => 'omladinsko',
+        ]);
+        $incompleteMembers = [];
+        for ($seat = 1; $seat <= 2; $seat++) {
+            $user = User::factory()->create([
+                'role_id' => $komisijaRole->id,
+                'activation_status' => 'active',
+                'email_verified_at' => now(),
+            ]);
+            $incompleteMembers[] = CommissionMember::create([
+                'commission_id' => $incomplete->id,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'position' => $seat === 1 ? 'predsjednik' : 'clan',
+                'member_type' => null,
+                'canonical_seat_no' => $seat,
+                'status' => 'active',
+            ]);
+        }
+        $application->competition->update(['commission_id' => $incomplete->id]);
+        $this->assertTrue($application->competition->fresh()->isCommissionProcessingBlocked());
+        $this->actingAs($incompleteMembers[0]->fresh('user')->user)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertForbidden();
+        $this->actingAs($incompleteMembers[0]->fresh('user')->user)
+            ->get(route('evaluation.create', $application))
+            ->assertForbidden();
     }
 
     public function test_second_call_creates_new_application_without_copying_m1_m2_or_documents(): void

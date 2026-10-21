@@ -18,12 +18,12 @@
             {{ $competition->title }} — {{ $application->business_plan_name }}
         </p>
         <p style="margin-bottom:16px;">
-            <a href="{{ route('commission-sessions.second.edit', $competition) }}">Nazad na drugu sjednicu</a>
+            <a href="{{ route('commission-sessions.second.edit', $competition) }}">Nazad na usmeno predstavljanje</a>
         </p>
 
-        @if(! $sessionConfirmed)
+        @if(! $eligible)
             <div style="background:#fef3c7; border:1px solid #f59e0b; color:#92400e; padding:12px; border-radius:8px; margin-bottom:16px;">
-                Usmeno se može završiti tek nakon potvrđene druge sjednice sa sva 3 člana. Planirani termin može se unijeti u nacrtu.
+                Usmeno predstavljanje nije dozvoljeno dok traje rok za prigovor, dok postoji neriješen prigovor ili dok prijava ne ispunjava kapiju nakon M3.
             </div>
         @endif
 
@@ -57,7 +57,7 @@
             @if($oral->notes)
                 <p><strong>Napomena:</strong> {{ $oral->notes }}</p>
             @endif
-        @else
+        @elseif($eligible)
             <form method="POST" action="{{ $oral ? route('commission-sessions.oral.update', [$competition, $application]) : route('commission-sessions.oral.store', [$competition, $application]) }}">
                 @csrf
                 @if($oral)

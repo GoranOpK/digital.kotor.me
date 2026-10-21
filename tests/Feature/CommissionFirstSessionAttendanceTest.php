@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\BusinessPlan;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\CommissionSession;
@@ -13,10 +14,12 @@ use App\Models\UpNumber;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\MakesCanonicalUsers;
 use Tests\TestCase;
 
 class CommissionFirstSessionAttendanceTest extends TestCase
 {
+    use MakesCanonicalUsers;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -69,11 +72,50 @@ class CommissionFirstSessionAttendanceTest extends TestCase
         $complete = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2029);
         $this->assertTrue($complete['competition']->hasCompleteValidCommission());
         $this->assertNull($complete['competition']->firstCommissionSession());
+        $this->assertFalse($complete['competition']->hasConfirmedFirstSessionQuorum());
         $this->assertFalse($complete['competition']->isCommissionProcessingBlocked());
         $this->actingAs($complete['chairman']->user)
             ->get(route('evaluation.create', $complete['application']))
             ->assertOk();
         $this->assertNull($complete['application']->fresh()->eliminatoryCheck);
+    }
+
+    public function test_youth_commission_member_can_open_submitted_business_plan_after_deadline_without_first_session(): void
+    {
+        $complete = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2030);
+        $owner = $this->makeKorisnik();
+        $complete['application']->update([
+            'user_id' => $owner->id,
+            'physical_person_name' => $owner->name,
+            'physical_person_email' => $owner->email,
+            'physical_person_phone' => $owner->phone,
+            'physical_person_address' => 'Njegoševa 12, 85330 Kotor',
+        ]);
+        $this->attachBusinessPlan($complete['application']);
+        $member = $complete['members'][1]->fresh('user');
+
+        $this->assertNull($complete['competition']->firstCommissionSession());
+        $this->assertFalse($complete['competition']->hasConfirmedFirstSessionQuorum());
+        $this->assertTrue($complete['competition']->hasCompleteValidCommission());
+        $this->assertFalse($complete['competition']->isCommissionProcessingBlocked());
+
+        $this->actingAs($member->user)
+            ->get(route('applications.business-plan.create', $complete['application']))
+            ->assertOk()
+            ->assertSee('Omladinska ideja', false);
+        $this->actingAs($member->user)
+            ->get(route('evaluation.create', $complete['application']))
+            ->assertOk();
+
+        $incomplete = $this->makeYouthContext(complete: false, deadlinePassed: true, year: 2031);
+        $this->attachBusinessPlan($incomplete['application']);
+        $this->assertTrue($incomplete['competition']->isCommissionProcessingBlocked());
+        $this->actingAs($incomplete['chairman']->user)
+            ->get(route('applications.business-plan.create', $incomplete['application']))
+            ->assertForbidden();
+        $this->actingAs($incomplete['chairman']->user)
+            ->get(route('evaluation.create', $incomplete['application']))
+            ->assertForbidden();
     }
 
     public function test_historical_first_session_row_is_kept_and_does_not_open_the_form(): void
@@ -242,6 +284,19 @@ class CommissionFirstSessionAttendanceTest extends TestCase
             'notes' => 'Prva sjednica',
             'present_member_ids' => $presentIds,
         ];
+    }
+
+    private function attachBusinessPlan(Application $application): void
+    {
+        BusinessPlan::create([
+            'application_id' => $application->id,
+            'business_idea_name' => 'Omladinska ideja',
+            'applicant_name' => 'Podnosilac',
+            'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+            'applicant_phone' => '067000000',
+            'applicant_email' => 'plan@example.com',
+            'finances_notice_confirmed' => true,
+        ]);
     }
 
     private function userWithRole(string $role): User

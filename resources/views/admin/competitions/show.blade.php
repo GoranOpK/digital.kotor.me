@@ -226,15 +226,8 @@
         @endif
 
         @if(!empty($isChairman) && $competition->isOmladinskoProfile() && ($competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed'], true)))
-            @php
-                $secondSession = $competition->secondCommissionSession();
-                $secondStatus = $secondSession === null
-                    ? 'nije evidentirana'
-                    : ($secondSession->isConfirmed() ? 'potvrđena' : 'nacrt');
-            @endphp
             <div style="background: #eff6ff; border: 1px solid #3b82f6; color: #1e3a8a; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                <p style="margin: 0 0 8px;">Druga sjednica: <strong>{{ $secondStatus }}</strong></p>
-                <a href="{{ route('commission-sessions.second.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Evidentiraj drugu sjednicu i usmeno predstavljanje</a>
+                <a href="{{ route('commission-sessions.second.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Usmeno predstavljanje</a>
             </div>
         @endif
 
