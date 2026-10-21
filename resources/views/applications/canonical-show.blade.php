@@ -162,6 +162,79 @@
     .document-name { font-weight:600; color:#111827; margin-bottom:4px; }
     .document-type { font-size:12px; color:#6b7280; }
     .document-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .upload-section {
+        background:#f9fafb;
+        padding:15px;
+        border-radius:8px;
+        margin-top:0;
+    }
+    .form-group { margin-bottom:12px; }
+    .form-label {
+        display:block;
+        font-size:13px;
+        font-weight:600;
+        color:#374151;
+        margin-bottom:8px;
+    }
+    .form-control {
+        width:100%;
+        padding:8px 12px;
+        border:1px solid #d1d5db;
+        border-radius:8px;
+        font-size:13px;
+        background:#fff;
+        box-sizing:border-box;
+    }
+    .form-control:focus {
+        outline:none;
+        border-color:var(--primary);
+        box-shadow:0 0 0 3px rgba(11,61,145,.1);
+    }
+    .file-input-wrapper {
+        position:relative;
+        display:block;
+        width:100%;
+        min-height:40px;
+    }
+    .file-input-wrapper input[type="file"] {
+        position:absolute;
+        opacity:0;
+        width:100%;
+        height:40px;
+        cursor:pointer;
+        z-index:2;
+        top:0;
+        left:0;
+    }
+    .file-input-label-custom {
+        display:inline-block;
+        background:var(--primary);
+        color:#fff;
+        padding:8px 16px;
+        border-radius:6px;
+        cursor:pointer;
+        font-size:14px;
+        font-weight:600;
+    }
+    .upload-info-box {
+        background:#eff6ff;
+        border-left:4px solid #3b82f6;
+        padding:14px 16px;
+        border-radius:6px;
+        color:#1e40af;
+        font-size:12px;
+        line-height:1.6;
+        margin:12px 0;
+    }
+    .canonical-evidence-box {
+        display:none;
+        margin:10px 0;
+        padding:10px 12px;
+        border:1px solid #dbeafe;
+        border-radius:8px;
+        background:#f8fafc;
+        font-size:12px;
+    }
     @media (max-width: 700px) {
         .document-item { align-items:flex-start; flex-direction:column; }
     }
@@ -277,27 +350,77 @@
 
             <div class="info-card" id="application-documents">
                 <h2>Dodaj dokument</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Obavezni prilozi</span>
-                        <span class="info-value">{{ $uploadedRequired }} od {{ $requiredUploads->count() }} priloženo</span>
-                        @php
-                            $docPercent = $requiredUploads->count() > 0
-                                ? (int) round(($uploadedRequired / $requiredUploads->count()) * 100)
-                                : 100;
-                        @endphp
-                        <div class="progress-bar"><div class="progress-fill" style="width:{{ $docPercent }}%;"></div></div>
+
+                @if($canManage)
+                    <div class="upload-section">
+                        <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data" id="canonical-status-upload-form">
+                            @csrf
+
+                            <div class="form-group">
+                                <label class="form-label" for="canonical_document_type">Tip dokumenta</label>
+                                <select name="document_type" id="canonical_document_type" class="form-control" required>
+                                    <option value="">Izaberite tip</option>
+                                    @foreach($uploadRows->whereNull('document') as $row)
+                                        <option value="{{ $row['key'] }}">{{ $row['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div id="canonical_evidence_box" class="canonical-evidence-box">
+                                <div id="canonical_variant_wrap" style="display:none; margin-bottom:10px;">
+                                    <div class="form-label">Vrsta priloga</div>
+                                    <div id="canonical_variant_options"></div>
+                                </div>
+                                <div id="canonical_issued_on_wrap" style="display:none;">
+                                    <label class="form-label" for="canonical_issued_on">Datum izdavanja</label>
+                                    <input id="canonical_issued_on" type="date" name="issued_on" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Fajl</label>
+                                <div class="file-input-wrapper">
+                                    <input id="canonical_status_files" type="file" name="files[]" accept="application/pdf" multiple>
+                                    <label for="canonical_status_files" class="file-input-label-custom">Izaberi fajlove (možete izabrati više)</label>
+                                </div>
+                                <div id="canonical_file_names" style="font-size:12px; color:#6b7280; margin-top:6px;"></div>
+                            </div>
+
+                            <div class="upload-info-box">
+                                <strong style="display:block; font-size:14px; margin-bottom:6px;">ℹ️ Važno:</strong>
+                                Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> redosledom kojim su izabrani.
+                                MMSP prilozi se dostavljaju u PDF formatu.
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="canonical_library_document" style="font-weight:400;">Ili iz biblioteke</label>
+                                <select name="user_document_id" id="canonical_library_document" class="form-control">
+                                    <option value="">Izaberi...</option>
+                                    @foreach($libraryDocuments as $libraryDocument)
+                                        <option value="{{ $libraryDocument->id }}">{{ $libraryDocument->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#4b5563; margin:14px 0;">
+                                <input type="checkbox" name="save_to_library" value="1">
+                                <span>Sačuvaj dokument i u moju biblioteku</span>
+                            </label>
+
+                            <button type="submit" class="btn btn-primary" style="width:100%; text-align:center;">Priloži dokument</button>
+                        </form>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Nedostaje</span>
-                        <span class="info-value">{{ $missingRequired }} obaveznih priloga</span>
+                @else
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Obavezni prilozi</span>
+                            <span class="info-value">{{ $uploadedRequired }} od {{ $requiredUploads->count() }} priloženo</span>
+                        </div>
+                        <div class="info-item">
+                            <a href="{{ route('applications.canonical-documents.index', $application) }}" class="btn btn-primary" style="text-align:center;">Pregled dokumentacije</a>
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <a href="{{ route('applications.canonical-documents.index', $application) }}" class="btn btn-primary" style="text-align:center;">
-                            {{ $canManage ? 'Dodaj / uredi dokumente' : 'Pregled dokumentacije' }}
-                        </a>
-                    </div>
-                </div>
+                @endif
             </div>
         </div>
 
@@ -365,5 +488,79 @@
             <a href="{{ route('competitions.show', $competition) }}" class="btn btn-primary" style="margin-left:8px;">Nazad na konkurs</a>
         </div>
     </div>
+
+<script>
+(function () {
+    const rows = @json($uploadRows->whereNull('document')->values()->map(function ($row) {
+        return [
+            'key' => $row['key'],
+            'variants' => $row['variants'],
+            'needs_issue_date' => $row['needs_issue_date'],
+        ];
+    })->all());
+
+    const typeSelect = document.getElementById('canonical_document_type');
+    const evidenceBox = document.getElementById('canonical_evidence_box');
+    const variantWrap = document.getElementById('canonical_variant_wrap');
+    const variantOptions = document.getElementById('canonical_variant_options');
+    const issuedWrap = document.getElementById('canonical_issued_on_wrap');
+    const issuedInput = document.getElementById('canonical_issued_on');
+    const filesInput = document.getElementById('canonical_status_files');
+    const fileNames = document.getElementById('canonical_file_names');
+
+    function updateEvidence() {
+        if (!typeSelect) return;
+        const row = rows.find(r => r.key === typeSelect.value);
+        if (!row) {
+            evidenceBox.style.display = 'none';
+            variantWrap.style.display = 'none';
+            issuedWrap.style.display = 'none';
+            variantOptions.innerHTML = '';
+            if (issuedInput) issuedInput.required = false;
+            return;
+        }
+
+        const variantEntries = Object.entries(row.variants || {});
+        const hasVariants = variantEntries.length > 0;
+        const needsDate = !!row.needs_issue_date;
+        evidenceBox.style.display = (hasVariants || needsDate) ? 'block' : 'none';
+        variantWrap.style.display = hasVariants ? 'block' : 'none';
+        issuedWrap.style.display = needsDate ? 'block' : 'none';
+
+        variantOptions.innerHTML = '';
+        variantEntries.forEach(([value, label]) => {
+            const el = document.createElement('label');
+            el.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;';
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = 'document_variant';
+            input.value = value;
+            input.required = true;
+            const span = document.createElement('span');
+            span.textContent = label;
+            el.appendChild(input);
+            el.appendChild(span);
+            variantOptions.appendChild(el);
+        });
+
+        if (issuedInput) issuedInput.required = needsDate;
+    }
+
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateEvidence);
+        updateEvidence();
+    }
+
+    if (filesInput && fileNames) {
+        filesInput.addEventListener('change', function () {
+            const files = Array.from(filesInput.files || []);
+            fileNames.textContent = files.length
+                ? 'Izabrano: ' + files.map(f => f.name).join(', ')
+                : '';
+        });
+    }
+})();
+</script>
+
 </div>
 @endsection
