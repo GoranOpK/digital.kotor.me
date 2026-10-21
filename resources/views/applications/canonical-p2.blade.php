@@ -1,13 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $lines = old('expense_lines', $plan?->expenseLines() ?? []);
     $lines = is_array($lines) ? array_values($lines) : [];
     $rowCount = $readOnly ? max(count($lines), 1) : max(count($lines) + 3, 5);
     $fieldStyle = 'width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;';
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 1000px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 1000px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Plan ulaganja — Obrazac P2</h1>
     <p style="color: #4b5563; margin-bottom: 16px;">
         {{ $application->competition->title }} — {{ $application->business_plan_name ?? 'prijava #'.$application->id }}
