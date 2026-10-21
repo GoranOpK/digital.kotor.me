@@ -54,6 +54,8 @@ class CanonicalAdministrativeEvent extends Model
 
     public const RESULT_PUBLISHED = 'result_published';
 
+    public const RESULT_TEST_PUBLISHED = 'result_test_published';
+
     public const COMPETITION_CLOSED = 'competition_closed';
 
     public const UPDATED_AT = null;
