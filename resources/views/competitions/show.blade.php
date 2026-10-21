@@ -388,7 +388,7 @@
                             </label>
                             <label style="display:flex; align-items:center; cursor:pointer;">
                                 <input type="radio" name="canonical_legal_form_preview" value="drustvo" style="margin-right:8px;">
-                                <span>Društvo (mikro, malo ili srednje preduzeće) — Obrazac P1b</span>
+                                <span>Društvo (DOO – mikro, malo ili srednje preduzeće) — Obrazac P1b</span>
                             </label>
                         </div>
                     </div>
