@@ -20,17 +20,17 @@
     </div>
 
     @if(session('success'))
-        <div style="{{ $ok }}">{{ session('success') }}</div>
+        <div class="mmsp-alert mmsp-alert-success">{{ session('success') }}</div>
     @endif
     @if($errors->any())
-        <div style="{{ $bad }}">
+        <div class="mmsp-alert mmsp-alert-error">
             @foreach($errors->all() as $error)
                 <div>{{ $error }}</div>
             @endforeach
         </div>
     @endif
 
-    <div style="{{ $box }}" data-section="applicant-review-status" data-status="{{ $review['status'] }}">
+    <div class="mmsp-form-card" data-section="applicant-review-status" data-status="{{ $review['status'] }}">
         <h2 style="font-size: 18px; font-weight: 600;">Trenutni status</h2>
         <p><strong>{{ $review['label'] }}</strong></p>
         @if($review['closed'])
