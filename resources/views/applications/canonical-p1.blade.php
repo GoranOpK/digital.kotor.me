@@ -1,13 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $isEntrepreneur = $form->isEntrepreneur();
     $code = $form->formCode();
     $fieldStyle = 'width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;';
     $value = fn (string $field) => old($field, $field === 'registration_date' ? $form->registration_date?->toDateString() : $form->{$field});
 @endphp
-<div class="container mx-auto px-4 py-6" style="max-width: 900px;">
+<div class="container mx-auto px-4 py-6 canonical-ui-page" style="max-width: 900px;">
     <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Obrazac {{ $code }} — Prijava na Javni poziv</h1>
     <p style="color: #4b5563; margin-bottom: 4px;">
         Oblik registracije: <strong>{{ $isEntrepreneur ? 'PREDUZETNIK' : 'DRUŠTVO (DOO)' }}</strong>
