@@ -109,7 +109,11 @@ class CanonicalAdministrativeController extends Controller
     {
         $this->canonicalOrAbort($competition);
 
-        return $this->respond($this->publication->publish($competition, $request->user()), 'Potpisani primjerak formalne Odluke je objavljen.');
+        $success = $competition->isCanonicalTestMode()
+            ? 'TESTNA objava je evidentirana. Nije kreiran javni rezultat niti javno Obavještenje.'
+            : 'Potpisani primjerak formalne Odluke je objavljen.';
+
+        return $this->respond($this->publication->publish($competition, $request->user()), $success);
     }
 
     public function close(Request $request, Competition $competition): RedirectResponse
@@ -133,6 +137,7 @@ class CanonicalAdministrativeController extends Controller
             'publishBlock' => $this->publication->blockReason($competition),
             'closeBlock' => $this->closer->blockReason($competition),
             'publicResult' => $this->publication->publicResult($competition),
+            'testPublication' => $this->publication->testPublicationEvent($competition),
             'events' => CanonicalAdministrativeEvent::query()->where('competition_id', $competition->id)->orderBy('id')->get(),
         ]);
     }
