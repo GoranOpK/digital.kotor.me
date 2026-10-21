@@ -65,14 +65,24 @@ class Competition extends Model
     }
 
     /**
+     * Stabilna oznaka kontrolisanog kanonskog MMSP testa.
+     * Ostaje tačna i nakon završetka testnog toka, kako testni rezultat
+     * nikada ne bi postao javni sadržaj samo zbog promjene statusa.
+     */
+    public function isCanonicalTestMode(): bool
+    {
+        return $this->type === CompetitionProfileResolver::TYPE_CANONICAL
+            && (bool) $this->is_test_preview;
+    }
+
+    /**
      * Kontrolisani produkcijski test kanonskog MMSP toka.
      * Konkurs ostaje draft i ne troši službeni publication claim.
      */
     public function isCanonicalTestPreview(): bool
     {
-        return $this->type === CompetitionProfileResolver::TYPE_CANONICAL
-            && $this->status === 'draft'
-            && (bool) $this->is_test_preview;
+        return $this->status === 'draft'
+            && $this->isCanonicalTestMode();
     }
 
     /**
