@@ -27,6 +27,9 @@
             'needs_issue_date' => $row['needs_issue_date'],
         ];
     })->all();
+    $reviewAt = fn ($at) => $at
+        ? \Carbon\CarbonImmutable::parse($at)->timezone($canonicalReview['timezone'] ?? 'Europe/Belgrade')->format('d.m.Y. H:i')
+        : '—';
 @endphp
 
 <style>
@@ -472,6 +475,70 @@
                 @endforeach
             </ul>
         </div>
+
+        @if($canonicalReview !== null)
+            <div class="info-card" id="application-review">
+                <h2>Obavještenje i Prigovor</h2>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Provjera potpunosti</span>
+                        <span class="info-value"><strong>{{ $canonicalReview['label'] }}</strong></span>
+                    </div>
+
+                    @if($canonicalReview['incompleteReason'] !== null)
+                        <div class="info-item">
+                            <span class="info-label">Nalaz Komisije</span>
+                            <span class="info-value">{{ $canonicalReview['incompleteReason'] }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Obavještenje poslato</span>
+                            <span class="info-value">{{ $reviewAt($canonicalReview['noticeSentAt']) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Rok za Prigovor</span>
+                            <span class="info-value">{{ $reviewAt($canonicalReview['complaintDeadline']) }}</span>
+                        </div>
+                        <p style="font-size:13px; color:#4b5563; line-height:1.5; margin:0;">
+                            Prigovor ne otvara prijavu za izmjenu niti omogućava naknadno dostavljanje dokumenata.
+                            Komisija odlučuje na osnovu podnesenog dosijea.
+                        </p>
+                    @endif
+
+                    @if($canonicalReview['complaintSubmittedAt'])
+                        <div class="info-item">
+                            <span class="info-label">Vaš Prigovor</span>
+                            <span class="info-value">Podnesen {{ $reviewAt($canonicalReview['complaintSubmittedAt']) }}</span>
+                        </div>
+                        @if($canonicalReview['complaintDecision'] === null)
+                            <div class="alert alert-info" style="margin:0;">Prigovor čeka odluku Komisije.</div>
+                        @else
+                            <div class="alert {{ $canonicalReview['complaintDecision'] === \App\Models\ApplicationComplaint::ACCEPTED ? 'alert-success' : 'alert-warning' }}" style="margin:0;">
+                                Odluka Komisije: prigovor je
+                                <strong>{{ $canonicalReview['complaintDecision'] === \App\Models\ApplicationComplaint::ACCEPTED ? 'prihvaćen' : 'odbijen' }}</strong>
+                                ({{ $reviewAt($canonicalReview['complaintDecidedAt']) }}).
+                                @if(filled($canonicalReview['complaintDecisionNotes']))
+                                    <div style="margin-top:8px;"><strong>Obrazloženje:</strong> {{ $canonicalReview['complaintDecisionNotes'] }}</div>
+                                @endif
+                            </div>
+                        @endif
+                    @elseif($canonicalReview['complaintOpen'])
+                        <form method="POST" action="{{ route('applications.complaint', $application) }}">
+                            @csrf
+                            <div class="form-group">
+                                <label class="form-label" for="canonical_complaint_body">Obrazloženje Prigovora</label>
+                                <textarea id="canonical_complaint_body" name="body" rows="5" maxlength="5000" required class="form-control" style="min-height:140px;">{{ old('body') }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Podnesi Prigovor</button>
+                        </form>
+                    @elseif($canonicalReview['incompleteReason'] !== null)
+                        <div class="info-item">
+                            <span class="info-value">Prigovor nije podnesen ili je rok istekao.</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         @if($application->status === 'draft' && $canManage)
             <div style="margin-bottom:24px;">
