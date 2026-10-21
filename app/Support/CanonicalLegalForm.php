@@ -19,7 +19,7 @@ final class CanonicalLegalForm
             'applicant_type' => 'preduzetnik',
         ],
         self::DRUSTVO => [
-            'label' => 'Društvo (mikro, malo ili srednje preduzeće)',
+            'label' => 'Društvo (DOO – mikro, malo ili srednje preduzeće)',
             'form' => 'P1b',
             'applicant_type' => 'privredno_drustvo',
         ],
