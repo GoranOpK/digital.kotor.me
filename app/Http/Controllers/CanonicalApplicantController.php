@@ -51,10 +51,20 @@ class CanonicalApplicantController extends Controller
             return $redirect;
         }
 
-        $result = $this->forms->start($competition, $request->user(), $request->input('legal_form'));
+        $identity = app(CurrentIdentityResolver::class)->viewFor($request->user());
+        $legalForm = CanonicalLegalForm::forUserType($identity->userType);
+        if ($legalForm === null) {
+            return redirect()->route('competitions.show', $competition)
+                ->withErrors(['error' => CanonicalLegalForm::eligibilityMessage()]);
+        }
+
+        // Autoritativni tip prijave dolazi iz registrovanog korisničkog identiteta,
+        // ne iz browser payload-a. Time MMSP prati isti UX princip kao ostali moduli,
+        // dok P1a/P1b i dokumentacija ostaju po MMSP Odluci.
+        $result = $this->forms->start($competition, $request->user(), $legalForm);
         if (! $result->succeeded) {
-            return redirect()->route('applications.canonical.legal-form', $competition)
-                ->withErrors(['legal_form' => $result->error]);
+            return redirect()->route('competitions.show', $competition)
+                ->withErrors(['error' => $result->error]);
         }
 
         return redirect()->route('applications.canonical-p1.edit', $result->recordId)
