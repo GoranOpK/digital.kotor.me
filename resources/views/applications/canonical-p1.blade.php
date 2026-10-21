@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.canonical-ui')
 @php
     $isEntrepreneur = $form->isEntrepreneur();
     $code = $form->formCode();
@@ -23,7 +24,7 @@
         padding: 24px 0 40px;
     }
     .mmsp-p1-wrap {
-        max-width: 980px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 0 16px;
     }
@@ -275,7 +276,7 @@
     }
 </style>
 
-<div class="mmsp-p1">
+<div class="mmsp-p1 canonical-ui-page mmsp-form-page">
     <div class="mmsp-p1-wrap">
         <div class="mmsp-p1-header">
             <div class="mmsp-p1-header-top">
@@ -303,7 +304,7 @@
             <h1 class="mmsp-p1-title">PRIJAVA</h1>
             <p class="mmsp-p1-subtitle">
                 na javni poziv za podršku mikro, malim i srednjim preduzećima<br>
-                Oblik registracije: <strong>{{ $isEntrepreneur ? 'PREDUZETNIK' : 'DRUŠTVO (DOO)' }}</strong>
+                Tip prijave: <strong>{{ $isEntrepreneur ? 'PREDUZETNIK' : 'PRIVREDNO DRUŠTVO (DOO)' }}</strong>
             </p>
             @if($competition?->title)
                 <p class="mmsp-p1-call">{{ $competition->title }}</p>
