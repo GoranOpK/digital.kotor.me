@@ -885,7 +885,7 @@ class ApplicationController extends Controller
 
         $competition = $application->competition;
 
-        if (!$competition || !$competition->published_at) {
+        if (!$competition || (!$competition->published_at && !$competition->isCanonicalTestMode())) {
             return redirect()->route('dashboard')
                 ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
         }
