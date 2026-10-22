@@ -23,11 +23,10 @@
         : '—';
     $p1Complete = $form && app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
     $p2Complete = $plan && app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
-    $applicationSubmitted = $application->status !== 'draft' || $application->submitted_at !== null || $application->finalClaim !== null;
-    $p1StatusLabel = $applicationSubmitted ? 'predat' : ($p1Complete ? 'popunjen' : 'Nacrt');
-    $p2StatusLabel = $applicationSubmitted ? 'predat' : ($p2Complete ? 'popunjen' : 'Nacrt');
-    $p1StatusClass = $applicationSubmitted ? 'status-submitted' : ($p1Complete ? 'status-evaluated' : 'status-draft');
-    $p2StatusClass = $applicationSubmitted ? 'status-submitted' : ($p2Complete ? 'status-evaluated' : 'status-draft');
+    $p1StatusLabel = $p1Complete ? 'popunjen' : 'Nacrt';
+    $p2StatusLabel = $p2Complete ? 'popunjen' : 'Nacrt';
+    $p1StatusClass = $p1Complete ? 'status-evaluated' : 'status-draft';
+    $p2StatusClass = $p2Complete ? 'status-evaluated' : 'status-draft';
     $uploadRowMetadata = $uploadRows->whereNull('document')->values()->map(function ($row) {
         return [
             'key' => $row['key'],
