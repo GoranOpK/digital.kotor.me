@@ -107,9 +107,9 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
     // ---------------------------------------------------------------- 1. P1a fields and wording
 
-    public function test_preduzetnik_profile_starts_obrazac_p1a_without_manual_type_chooser(): void
+    public function test_user_explicitly_chooses_obrazac_p1a_independently_of_account_type(): void
     {
-        $owner = $this->makeOwner(UserType::ENTREPRENEUR);
+        $owner = $this->makeOwner(UserType::LIMITED_LIABILITY_COMPANY);
         $call = $this->openCall();
 
         $this->actingAs($owner)->post(route('applications.start', $call))
@@ -120,8 +120,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.canonical.legal-form', $call))
             ->assertRedirect(route('competitions.show', $call));
 
-        // Browser payload cannot override the registered account type.
-        $response = $this->actingAs($owner)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::DRUSTVO]);
+        // MMSP izbor P1a/P1b je eksplicitan i nezavisan od tipa naloga na Digitalu.
+        $response = $this->actingAs($owner)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::PREDUZETNIK]);
         $application = Application::query()->where('user_id', $owner->id)->sole();
         $response->assertRedirect(route('applications.canonical-p1.edit', $application));
 
@@ -134,7 +134,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertOk()
             ->assertSee('Obrazac P1a')
             ->assertSee('PRIJAVA')
-            ->assertSee('na javni poziv za podršku mikro, malim i srednjim preduzećima')
+            ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
             ->assertSee('PREDUZETNIK')
             ->assertDontSee((string) $owner->jmb)
             ->getContent();
@@ -300,22 +300,28 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame('draft', $application->fresh()->status);
     }
 
-    public function test_registered_identity_determines_mmsp_form_and_legacy_paths_stay_closed(): void
+    public function test_explicit_mmsp_form_choice_is_independent_of_registered_identity_and_legacy_paths_stay_closed(): void
     {
         $call = $this->openCall();
 
         $physical = $this->makeOwner(UserType::PHYSICAL_PERSON);
-        $this->actingAs($physical)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::PREDUZETNIK])
-            ->assertRedirect(route('competitions.show', $call))
-            ->assertSessionHasErrors(['error' => CanonicalLegalForm::eligibilityMessage()]);
-        $this->assertSame(0, Application::query()->where('competition_id', $call->id)->count());
+        $this->actingAs($physical)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::DRUSTVO])
+            ->assertSessionHasNoErrors();
+        $physicalApplication = Application::query()->where('user_id', $physical->id)->sole();
+        $this->assertSame('privredno_drustvo', $physicalApplication->applicant_type);
+        $this->assertSame(CanonicalLegalForm::DRUSTVO, $physicalApplication->canonicalApplicantForm->legal_form);
 
         $company = $this->makeOwner(UserType::LIMITED_LIABILITY_COMPANY);
         $this->actingAs($company)->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::PREDUZETNIK])
             ->assertSessionHasNoErrors();
         $companyApplication = Application::query()->where('user_id', $company->id)->sole();
-        $this->assertSame('privredno_drustvo', $companyApplication->applicant_type);
-        $this->assertSame(CanonicalLegalForm::DRUSTVO, $companyApplication->canonicalApplicantForm->legal_form);
+        $this->assertSame('preduzetnik', $companyApplication->applicant_type);
+        $this->assertSame(CanonicalLegalForm::PREDUZETNIK, $companyApplication->canonicalApplicantForm->legal_form);
+
+        $invalid = $this->makeOwner(UserType::ENTREPRENEUR);
+        $this->actingAs($invalid)->post(route('applications.canonical.start', $call), ['legal_form' => 'nepoznato'])
+            ->assertRedirect(route('competitions.show', $call))
+            ->assertSessionHasErrors(['legal_form' => CanonicalApplicantFormService::LEGAL_FORM_REQUIRED_MESSAGE]);
 
         $owner = $this->makeOwner(UserType::ENTREPRENEUR);
         $this->actingAs($owner)->post(route('applications.store', $call), [
