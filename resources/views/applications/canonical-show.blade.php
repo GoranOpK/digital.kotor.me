@@ -477,17 +477,22 @@
                     @php $uploaded = $row['document'] !== null; @endphp
                     <li class="document-item {{ $uploaded ? 'uploaded' : ($row['required_now'] ? 'required' : '') }}">
                         <div class="document-info">
-                            <div class="document-name">{{ $row['label'] }}</div>
-                            <div class="document-type">
-                                @if($uploaded)
-                                    Priloženo
-                                    @if($row['issued_on']) · izdano {{ \Carbon\Carbon::parse($row['issued_on'])->format('d.m.Y.') }} @endif
-                                @elseif($row['required_now'])
-                                    Nedostaje — obavezno
-                                @else
-                                    Nije obavezno u vašem slučaju
+                            <div class="document-name">
+                                {{ $row['label'] }}
+                                @if(!$uploaded)
+                                    @if($row['required_now'])
+                                        <span style="color:#ef4444; font-size:12px; margin-left:8px;">(Obavezno)</span>
+                                    @else
+                                        <span style="color:#92400e; font-size:12px; margin-left:8px;">(Opciono)</span>
+                                    @endif
                                 @endif
                             </div>
+                            @if($uploaded)
+                                <div class="document-type">
+                                    Upload-ovano
+                                    @if($row['issued_on']) · izdano {{ \Carbon\Carbon::parse($row['issued_on'])->format('d.m.Y.') }} @endif
+                                </div>
+                            @endif
                         </div>
                         @if($uploaded)
                             <div class="document-actions">
