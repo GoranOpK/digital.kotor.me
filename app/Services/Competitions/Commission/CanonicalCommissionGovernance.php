@@ -360,7 +360,11 @@ class CanonicalCommissionGovernance
      */
     public function commissionProcessBlockReason(Competition $competition): ?string
     {
-        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+        if (
+            ! $competition->isCanonicalTestMode()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)
+        ) {
             return self::APPLICATION_DEADLINE_OPEN_MESSAGE;
         }
 
