@@ -228,6 +228,70 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
             ->assertDontSee('id="submitBtn"', false);
     }
 
+    public function test_owner_locked_obrazac_links_back_to_application_show(): void
+    {
+        [$owner, $application] = $this->createReadyDraft(financesNotice: true);
+        $this->actingAs($owner)->post(route('applications.final-submit', $application));
+        $application->refresh();
+        $this->assertSame('submitted', $application->status);
+
+        $ownerUrl = route('applications.show', $application);
+        $adminUrl = route('admin.applications.show', $application);
+        $url = route('applications.create', $application->competition).'?application_id='.$application->id;
+
+        $html = $this->actingAs($owner)
+            ->get($url)
+            ->assertOk()
+            ->assertViewHas('readOnly', true)
+            ->assertViewHas('applicationReviewUrl', $ownerUrl)
+            ->getContent();
+
+        $this->assertStringContainsString('← Nazad na pregled prijave', $html);
+        $this->assertStringContainsString('class="no-print"', $html);
+        $this->assertStringContainsString('href="'.$ownerUrl.'"', $html);
+        $this->assertStringNotContainsString('href="'.$adminUrl.'"', $html);
+
+        $this->actingAs($owner)
+            ->get($ownerUrl)
+            ->assertOk();
+    }
+
+    public function test_commission_readonly_obrazac_links_back_to_admin_application_show(): void
+    {
+        [$owner, $application] = $this->createReadyDraft(financesNotice: true);
+        $this->actingAs($owner)->post(route('applications.final-submit', $application));
+        $application->refresh();
+        $this->assertSame('submitted', $application->status);
+
+        $commission = $this->createCommissionWithFiveMembers();
+        $application->competition->update([
+            'commission_id' => $commission->id,
+            'status' => 'closed',
+            'end_date' => now()->subDay()->toDateString(),
+        ]);
+        $member = $commission->fresh(['activeMembers.user'])->activeMembers->firstWhere('position', 'clan');
+        $this->assertNotNull($member);
+
+        $adminUrl = route('admin.applications.show', $application);
+        $ownerUrl = route('applications.show', $application);
+        $url = route('applications.create', $application->competition).'?application_id='.$application->id;
+
+        $html = $this->actingAs($member->user)
+            ->get($url)
+            ->assertOk()
+            ->assertViewHas('readOnly', true)
+            ->assertViewHas('applicationReviewUrl', $adminUrl)
+            ->getContent();
+
+        $this->assertStringContainsString('← Nazad na pregled prijave', $html);
+        $this->assertStringContainsString('href="'.$adminUrl.'"', $html);
+        $this->assertStringNotContainsString('href="'.$ownerUrl.'"', $html);
+
+        $this->actingAs($member->user)
+            ->get($adminUrl)
+            ->assertOk();
+    }
+
     public function test_owner_sees_readonly_obrazac_for_draft_after_deadline(): void
     {
         [$owner, $application] = $this->createReadyDraft(financesNotice: true, deadlinePassed: true);

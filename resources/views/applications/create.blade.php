@@ -392,7 +392,19 @@
             $knSnap = function (mixed $saved, ?string $profile) use ($existingApplicationModel): string {
                 return \App\Models\Application::formSnapshotDisplay($existingApplicationModel, $saved, $profile);
             };
+            $applicationReviewUrl = $applicationReviewUrl ?? (
+                $existingApplicationModel
+                    ? (auth()->id() === $existingApplicationModel->user_id
+                        ? route('applications.show', $existingApplicationModel)
+                        : route('admin.applications.show', $existingApplicationModel))
+                    : null
+            );
         @endphp
+        @if(! empty($applicationReviewUrl))
+            <p class="no-print">
+                <a href="{{ $applicationReviewUrl }}">← Nazad na pregled prijave</a>
+            </p>
+        @endif
         <div class="obrazac-zaglavlje">
             <div class="obrazac-zaglavlje-top">
                 <div class="obrazac-grb">

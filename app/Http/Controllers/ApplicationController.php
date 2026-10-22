@@ -1765,6 +1765,13 @@ class ApplicationController extends Controller
         $knStartTargetForm = $presentation['knStartTargetForm'];
         $applicantTypeLocked = true;
 
+        $applicationReviewUrl = null;
+        if ($existingApplication) {
+            $applicationReviewUrl = (int) Auth::id() === (int) $existingApplication->user_id
+                ? route('applications.show', $existingApplication)
+                : route('admin.applications.show', $existingApplication);
+        }
+
         return view('applications.create', compact(
             'competition',
             'user',
@@ -1781,7 +1788,8 @@ class ApplicationController extends Controller
             'lockedRegistrationForm',
             'lockedCommercialForm',
             'knStartTargetForm',
-            'applicantTypeLocked'
+            'applicantTypeLocked',
+            'applicationReviewUrl'
         ));
     }
 
