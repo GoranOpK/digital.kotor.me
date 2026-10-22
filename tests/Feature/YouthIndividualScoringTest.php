@@ -567,6 +567,108 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $zensko['application']->id)->count());
     }
 
+    public function test_completed_youth_member_sees_own_ten_criteria_sum(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_1' => 5]))
+            ->assertSessionHasNoErrors();
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('id="youth-member-criteria-sum"', $html);
+        $this->assertStringContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
+        $this->assertStringContainsString('32 / 50', $html);
+        $this->assertStringNotContainsString('Zbir trenutno sačuvanih ocjena', $html);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
+        $this->assertStringNotContainsString('Sačuvaj izmjene', $html);
+        $this->assertStringNotContainsString('Otkaži', $html);
+    }
+
+    public function test_incomplete_youth_score_is_labeled_as_saved_sum_not_final(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), [
+                'save_as_draft' => '1',
+                'criterion_1' => 5,
+                'notes' => 'Nepotpun nacrt',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('id="youth-member-criteria-sum"', $html);
+        $this->assertStringContainsString('Zbir trenutno sačuvanih ocjena', $html);
+        $this->assertStringContainsString('5 / 50', $html);
+        $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
+        $this->assertStringContainsString('Sačuvaj nacrt', $html);
+        $this->assertStringContainsString('Otkaži', $html);
+    }
+
+    public function test_youth_commission_final_score_appears_only_after_cycle_and_confirmed_bonuses(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $this->lockThreeSeats($ctx);
+
+        $beforeBonuses = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Zbir vaših ocjena za 10 kriterijuma', $beforeBonuses);
+        $this->assertStringContainsString('30 / 50', $beforeBonuses);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $beforeBonuses);
+        $this->assertStringNotContainsString(' / 56', $beforeBonuses);
+        $this->assertStringNotContainsString('Sačuvaj izmjene', $beforeBonuses);
+        $this->assertStringNotContainsString('Otkaži', $beforeBonuses);
+
+        $this->confirmYouthBonuses($ctx);
+
+        $afterBonuses = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('id="youth-commission-final-score"', $afterBonuses);
+        $this->assertStringContainsString('Konačna ocjena Komisije: 30.00 / 56', $afterBonuses);
+        $this->assertStringContainsString('Zbir vaših ocjena za 10 kriterijuma', $afterBonuses);
+        $this->assertStringContainsString('30 / 50', $afterBonuses);
+        $this->assertStringNotContainsString('Sačuvaj izmjene', $afterBonuses);
+        $this->assertStringNotContainsString('Otkaži', $afterBonuses);
+    }
+
+    public function test_zensko_completed_form_keeps_save_cancel_and_does_not_show_youth_totals(): void
+    {
+        $zensko = $this->zenskoReadyToScore();
+        $this->actingAs($zensko['chairman']->user)
+            ->post(route('evaluation.store', $zensko['application']), $this->finalPayload(['criterion_1' => 5]))
+            ->assertSessionHasNoErrors();
+
+        $html = $this->actingAs($zensko['chairman']->user)
+            ->get(route('evaluation.create', $zensko['application']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Sačuvaj izmjene', $html);
+        $this->assertStringContainsString('Otkaži', $html);
+        $this->assertStringContainsString('KONAČNA OCJENA', $html);
+        $this->assertStringNotContainsString('id="youth-member-criteria-sum"', $html);
+        $this->assertStringNotContainsString('id="youth-commission-final-score"', $html);
+        $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
+        $this->assertStringNotContainsString('Zbir trenutno sačuvanih ocjena', $html);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
+        $this->assertStringNotContainsString('32 / 50', $html);
+        $this->assertStringContainsString('Podaci o podnositeljki prijave', $html);
+        $this->assertStringContainsString('Zavoda za zapošljavanje', $html);
+    }
+
     private function markEvaluationDeadlinePassed(Competition $competition): void
     {
         $competition->update(['closed_at' => now()->subDays(46)]);
@@ -588,6 +690,33 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertFalse($fresh->isApplicationDeadlinePassed());
 
         return $fresh;
+    }
+
+    /**
+     * @param  array{application: Application, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
+     * @param  array<int, array<string, int>>  $bySeat
+     */
+    private function lockThreeSeats(array $ctx, array $bySeat = []): void
+    {
+        foreach ([1, 2, 3] as $seat) {
+            $member = $ctx['members'][$seat - 1];
+            $this->actingAs($member->fresh('user')->user)
+                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($bySeat[$seat] ?? []))
+                ->assertSessionHasNoErrors();
+        }
+    }
+
+    /**
+     * @param  array{application: Application, chairman: CommissionMember}  $ctx
+     * @param  array<string, string>  $flags
+     */
+    private function confirmYouthBonuses(array $ctx, array $flags = []): void
+    {
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), array_merge([
+                'youth_bonus_action' => 'confirm',
+            ], $flags))
+            ->assertSessionHasNoErrors();
     }
 
     /**

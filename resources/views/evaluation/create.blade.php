@@ -885,6 +885,27 @@
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     @endfor
+
+                    @if($isOmladinskoScoring && $commissionMember)
+                        @php
+                            $youthMemberScoreForSum = $existingScore ?? $allScores->get($commissionMember->id);
+                            $youthMemberCriteriaSum = 0;
+                            if ($youthMemberScoreForSum) {
+                                for ($criterionNo = 1; $criterionNo <= 10; $criterionNo++) {
+                                    $criterionValue = $youthMemberScoreForSum->{"criterion_{$criterionNo}"};
+                                    if ($criterionValue !== null && $criterionValue !== '') {
+                                        $youthMemberCriteriaSum += (int) $criterionValue;
+                                    }
+                                }
+                            }
+                            $youthMemberSumLabel = ($hasCompletedEvaluation ?? false)
+                                ? 'Zbir vaših ocjena za 10 kriterijuma'
+                                : 'Zbir trenutno sačuvanih ocjena';
+                        @endphp
+                        <div id="youth-member-criteria-sum" style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #1f2937; font-weight: 600;">
+                            {{ $youthMemberSumLabel }}: {{ $youthMemberCriteriaSum }} / 50
+                        </div>
+                    @endif
                 </div>
 
                 <div class="print-segment-bonus-page">
@@ -1094,6 +1115,11 @@
                     </div>
                     @else
                         @include('evaluation.partials.youth_bonus_form')
+                        @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
+                            <div id="youth-commission-final-score" style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #1f2937; font-weight: 600;">
+                                Konačna ocjena Komisije: {{ $youthFinalScoreDisplay }} / 56
+                            </div>
+                        @endif
                     @endif
 
                 <!-- 5. Ostale napomene -->
@@ -1270,12 +1296,24 @@
                             </a>
                         @endif
                     @elseif($isChairman && $hasCompletedEvaluation)
-                        {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
-                        @if($canPrintNow)
-                            <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                        {{-- Predsjednik kada je već ocjenio - ženski tok i dalje može mijenjati sekciju 2 --}}
+                        @if($isOmladinskoScoring)
+                            <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
+                                Individualna ocjena je zaključana i ne može se mijenjati.
+                            </div>
+                            @if($canPrintNow)
+                                <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                            @endif
+                            <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                                Nazad na listu
+                            </a>
+                        @else
+                            @if($canPrintNow)
+                                <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                            @endif
+                            <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
+                            <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                         @endif
-                        <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
-                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
                         {{-- Član koji je već ocjenio ali može editovati napomene --}}
                         {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
