@@ -60,6 +60,29 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertTrue($application->competition->fresh()->isRankingFormed());
     }
 
+    public function test_youth_bonus_table_shows_four_fields_without_zavod(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('evaluation-table-bonus', $html);
+        $this->assertStringContainsString('name="bonus_info_day"', $html);
+        $this->assertStringContainsString('name="bonus_training"', $html);
+        $this->assertStringContainsString('name="bonus_new_business"', $html);
+        $this->assertStringContainsString('name="bonus_green_innovative"', $html);
+        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $html);
+        $this->assertStringContainsString('Potvrdi i zaključaj bonuse', $html);
+        $this->assertStringContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $html);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $html);
+        $this->assertStringContainsString('Član 1', $html);
+        $this->assertStringNotContainsString('name="bonus_zavod_nezaposleni"', $html);
+        $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
+        $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
+    }
+
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
     {
         $onlyInfo = $this->youthReadyToLock();
