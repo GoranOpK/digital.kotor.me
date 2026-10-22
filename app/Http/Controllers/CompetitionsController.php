@@ -129,16 +129,12 @@ class CompetitionsController extends Controller
                 $storedCanonicalForm = $userApplication?->canonicalApplicantForm?->legal_form;
                 $canonicalLegalForm = CanonicalLegalForm::isValid($storedCanonicalForm)
                     ? $storedCanonicalForm
-                    : CanonicalLegalForm::forUserType($userType);
+                    : null;
 
                 if ($canonicalLegalForm === CanonicalLegalForm::PREDUZETNIK) {
                     $canonicalApplicantTypeLabel = 'Preduzetnik — Obrazac P1a';
                 } elseif ($canonicalLegalForm === CanonicalLegalForm::DRUSTVO) {
-                    $companyCode = \App\Support\UserType::canonicalCode($userType);
-                    $companySuffix = in_array($companyCode, ['DOO', 'AD', 'OD', 'KD'], true)
-                        ? ' ('.$companyCode.')'
-                        : '';
-                    $canonicalApplicantTypeLabel = 'Privredno društvo'.$companySuffix.' — Obrazac P1b';
+                    $canonicalApplicantTypeLabel = 'Privredno društvo (DOO) — Obrazac P1b';
                 }
             }
         }
