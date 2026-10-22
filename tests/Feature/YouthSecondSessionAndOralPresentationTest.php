@@ -15,6 +15,7 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Support\CommissionProfileConfig;
+use App\Support\ScoringProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -66,7 +67,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->assertSame(0, CommissionSession::query()->where('competition_id', $competition->id)->count());
     }
 
-    public function test_open_appeal_window_keeps_scoring_and_oral_phase_closed(): void
+    public function test_m3_pass_opens_scoring_while_sibling_appeal_window_is_open(): void
     {
         $ctx = $this->youthWithPassedM3();
         $failed = $this->addSubmittedApplication($ctx['competition']);
@@ -85,6 +86,33 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->assertFalse($gate->oralPresentationIsAllowed($failed->fresh()));
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
         $this->assertFalse($gate->oralPresentationIsAllowed($ctx['application']->fresh()));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->assertDontSee(ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE, false)
+            ->assertDontSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.create', $ctx['application']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->where('commission_member_id', $ctx['chairman']->id)
+                ->whereNull('completed_at')
+                ->first()
+        );
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $failed))
+            ->assertOk()
+            ->assertSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $failed))
+            ->post(route('evaluation.store', $failed), $this->draftPayload())
+            ->assertForbidden();
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('commission-sessions.oral.edit', [$ctx['competition'], $ctx['application']]))
@@ -122,7 +150,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
     }
 
-    public function test_unresolved_prigovor_keeps_scoring_and_oral_phase_closed(): void
+    public function test_unresolved_prigovor_on_sibling_does_not_block_draft_but_blocks_oral(): void
     {
         $ctx = $this->youthWithPassedM3();
         $failed = $this->addSubmittedApplication($ctx['competition']);
@@ -143,11 +171,73 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->assertFalse($gate->oralPresentationIsAllowed($ctx['application']->fresh()));
 
         $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.create', $ctx['application']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->whereNull('completed_at')
+                ->first()
+        );
+
+        $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
                 'scheduled_at' => now()->format('Y-m-d H:i:s'),
             ])
             ->assertSessionHasErrors('oral');
         $this->assertSame(0, ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
+    }
+
+    public function test_active_eliminatory_reason_blocks_scoring_until_accepted_prigovor_lifts_all_reasons(): void
+    {
+        $ctx = $this->confirmYouthFail();
+        $application = $ctx['application']->fresh();
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.store', $application), $this->draftPayload())
+            ->assertForbidden();
+
+        $this->actingAs($application->user)->post(route('applications.prigovor.store', $application), [
+            'contested' => [1, 2],
+            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+        ])->assertRedirect();
+        $this->assertTrue($application->fresh()->prigovor->isPodnesen());
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $application), $this->draftPayload())
+            ->assertForbidden();
+
+        $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $application), [
+            'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
+            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+        ])->assertRedirect();
+
+        $application = $application->fresh();
+        $this->assertTrue($application->prigovor->liftsEliminatoryBar());
+        $this->assertTrue(app(\App\Services\YouthSecondSessionGate::class)->appealWindowIsOpen($application));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertDontSee(ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.store', $application), $this->draftPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.create', $application));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $application->id)
+                ->whereNull('completed_at')
+                ->first()
+        );
     }
 
     public function test_favorable_final_prigovor_opens_scoring_and_oral_without_session_record(): void
@@ -731,6 +821,20 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         }
 
         return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function draftPayload(array $overrides = []): array
+    {
+        $payload = ['save_as_draft' => '1', 'notes' => 'Nacrt'];
+        for ($i = 1; $i <= 10; $i++) {
+            $payload["criterion_{$i}"] = 3;
+        }
+
+        return array_merge($payload, $overrides);
     }
 
     /**

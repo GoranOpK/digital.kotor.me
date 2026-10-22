@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.8
-**Datum:** 2026-10-21
+**Verzija:** 1.0.9
+**Datum:** 2026-10-22
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.41** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.42** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.12** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.13** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -46,6 +46,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.6 | 2026-09-21 | KN-PATCH-TS-006 — Predložen youth-only konceptualni model izjednačene grupe, kruga/predloga raspodjele, članstva prijava sa nacrtnim iznosima, tri pojedinačna glasa po kanonskom mjestu i zaključavanja kruga; nije migracija ni implementacija. Predmet glasa je kompletan predlog, ne pojedinačna prijava. Živi pokazivači: KN-BM-002 v1.0.12, KN-FS-002 v1.0.10, KN-RG-001 v1.0.39, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.7 | 2026-10-21 | KN-PATCH-TS-007 — Omladinska prva sjednica ostaje poslovna obaveza Komisije (rok i kvorum najmanje dva člana), ali Platforma **ne** vodi je kao elektronsku kapiju. M3 i početak druge sjednice zahtijevaju kompletnu i valjanu Komisiju, ne red `session_type = first`. Stara GET adresa `/competitions/{id}/commission-sessions/first` ne prikazuje omladinski obrazac. Postojeći zapisi prve sjednice ostaju istorijski podaci. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.8 | 2026-10-21 | KN-PATCH-TS-008 — Omladinske sjednice ostaju van Platforme. Rute prve i druge sjednice **ne** upisuju omladinski datum, prisustvo ni kvorum. Kapija naredne faze je istek roka za prigovor i rješavanje svih blagovremenih prigovora; tada se otvaraju ocjenjivanje i postojeće usmeno. Nema nove tabele ni migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
+| 1.0.9 | 2026-10-22 | KN-PATCH-TS-009 — Omladinsko bodovanje se otvara po prijavi: `youthDraftScoringBlockMessage` prati ženski `scoringIsAllowed` (M3 prolaz ili lift svih razloga) plus kompletnu Komisiju. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira nacrt ni formu te prijave; usmeno ostaje na konkursnoj `secondSessionBlockMessage`. Završna ocjena i dalje zahtijeva `youthLockEvidenceIsComplete` za tu prijavu. Rangiranje i dalje čeka prigovorni postupak. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 
 Napomena:
 
@@ -130,11 +131,11 @@ Tehnička specifikacija **ne smije** uvesti poslovno pravilo kojih nema u `KN-BM
 |----|-------|---------|--------|-------------------|
 | DK-DS-001 | Digital Kotor Documentation Standard | 1.0.0 | USVOJENO | Document ID, tipovi, statusi, sljedivost, folderi |
 | METHODOLOGY.md | Metodologija dokumentacije | 1.0 | AKTIVAN | BM → FS → TS → implementacija; kod nije izvor pravila |
-| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.39 | USVOJENO | evidencija Document ID-a ovog dokumenta |
+| KN-RG-001 | Registar skraćenica i oznaka dokumentacije Konkursa | 1.0.42 | USVOJENO | evidencija Document ID-a ovog dokumenta |
 | KN-BM-001 | Poslovni model Konkursa | 0.2.11 | USVOJENO | zajednička poslovna pravila modula Konkursi |
 | KN-BM-002 | Poslovni profil konkursa za podršku preduzetništvu mladih | 1.0.12 | USVOJEN | **SSOT** poslovnih pravila mladih; `BM-ML-001`–`BM-ML-058` |
 | KN-FS-001 | Funkcionalna specifikacija Konkursa | 0.2.13 | USVOJENO | zajednički funkcionalni sloj modula Konkursi |
-| KN-FS-002 | Funkcionalna specifikacija konkursa za podršku preduzetništvu mladih | 1.0.10 | USVOJEN | **SSOT** funkcionalnog ponašanja mladih; 142 prihvatna kriterijuma |
+| KN-FS-002 | Funkcionalna specifikacija konkursa za podršku preduzetništvu mladih | 1.0.13 | USVOJEN | **SSOT** funkcionalnog ponašanja mladih; 142 prihvatna kriterijuma |
 | KN-TS-001 | Tehnička specifikacija Konkursa | 0.1.0 | NACRT | zajednička tehnička specifikacija; nije SSOT profila mladih |
 | KN-FS-003 | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | 1.0.17 | USVOJEN | samo tehnički/strukturni obrazac; nije SSOT profila mladih |
 
@@ -2209,7 +2210,7 @@ Tabele `commission_sessions` i `commission_session_attendances` **već postoje**
 
 ## 10.2. Zakazivanje usmenog obrazloženja
 
-Usmeno predstavljanje i ocjenjivanje dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi. Platforma **ne** traži elektronski zapis druge sjednice, prisustvo ni kvorum:
+Usmeno predstavljanje je dozvoljeno samo kada su ispunjeni svi sljedeći uslovi. Platforma **ne** traži elektronski zapis druge sjednice, prisustvo ni kvorum. Individualno bodovanje se otvara zasebno po prijavi (`youthDraftScoringBlockMessage`; §10.6) i **ne** nasljeđuje ovu konkursnu kapiju:
 
 * prijava ima status `submitted`;
 * M3 je potvrđen;
@@ -2217,7 +2218,7 @@ Usmeno predstavljanje i ocjenjivanje dozvoljeni su samo kada su ispunjeni svi sl
 * rok za prigovor nije otvoren;
 * nema neriješenog blagovremenog prigovora.
 
-Dozvoljena su dva puta: M3 nije aktivirao nijedan razlog; ili je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Istorijski M3, uključujući kriterijum 1 `Potpuna` / `Nepotpuna`, ostaje nepromijenjen. Kapija **ne** zahtijeva da kriterijum 1 i dalje bude `Potpuna` nakon uspješnog prigovora.
+Dozvoljena su dva puta: M3 nije aktivirao nijedan razlog; ili je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Istorijski M3, uključujući kriterijum 1 `Potpuna` / `Nepotpuna`, ostaje nepromijenjen. Kapija **ne** zahtijeva da kriterijum 1 i dalje bude `Potpuna` nakon uspješnog prigovora. Kapija usmenog je **konkursna** (`secondSessionBlockMessage`): otvoren rok ili neriješen blagovremen prigovor na bilo kojoj relevantnoj prijavi drži zakazivanje usmenog zatvorenim.
 
 Predsjednik, za prijave koje ispunjavaju tu kapiju:
 
@@ -2275,6 +2276,16 @@ Svaki od tri člana daje **jednu kompletnu ocjenu** svih deset kriterijuma.
 Izvor: `BM-ML-038`.
 
 ## 10.6. Nacrt individualne ocjene
+
+Nacrt i prikaz forme otvaraju se **po prijavi** kada su ispunjeni:
+
+* prijava ima status `submitted` ili `evaluated`;
+* M3 je potvrđen;
+* nema konačno aktivnog eliminatornog razloga;
+* M3 nije aktivirao nijedan razlog, ili je konačnom odlukom po prigovoru svaki preostali razlog otklonjen;
+* Komisija je kompletna i važeća.
+
+Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira nacrt ni serversku akciju nacrta. Prijava sa konačno aktivnim razlogom ostaje blokirana dok lift ne ukloni sve razloge. Ženski `scoringIsAllowed` ostaje nepromijenjen.
 
 Član može sačuvati i mijenjati nacrt dok ne potvrdi završetak. Platforma **ne** blokira unos nacrta prije usmenog i **ne** uvodi posebno otključavanje kriterijuma 10.
 
@@ -2464,7 +2475,7 @@ Izvori: `KN-BM-002` `BM-ML-044`–`BM-ML-052`; `KN-FS-002` Poglavlja 20–22; ov
 
 Koristi se postojeći tok rang-liste kao jedan objekat sa dvije faze.
 
-Preliminarna lista nastaje tek kada sva tri člana završe ocjenjivanje **svih** prijava u ciklusu. Završetak jedne prijave je ne stvara.
+Preliminarna lista nastaje tek kada sva tri člana završe ocjenjivanje **svih** prijava u ciklusu i kada je omladinski prigovorni postupak završen (nema otvorenog roka ni neriješenog blagovremenog prigovora na prijavama `submitted`/`evaluated`). Završetak jedne prijave je ne stvara. Ciklus bodovanja **ne** čeka rok na drugoj prijavi.
 
 Sadrži identitet prijave u dozvoljenom obimu, punu konačnu ocjenu i rang-poziciju. **Ne** sadrži odobrene iznose. Nije konačna odluka. Ne mijenja se proizvoljnim ručnim unosom bodova.
 
@@ -3711,4 +3722,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.6**
+**Kraj dokumenta KN-TS-002 v1.0.9**

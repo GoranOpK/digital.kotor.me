@@ -11,6 +11,8 @@ use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
+use App\Services\YouthSecondSessionGate;
+use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\ScoringProfileConfig;
 use Database\Seeders\RoleSeeder;
@@ -36,6 +38,91 @@ class YouthIndividualScoringTest extends TestCase
     {
         $this->travelBack();
         parent::tearDown();
+    }
+
+    public function test_m3_pass_opens_scoring_while_sibling_appeal_window_is_open(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $failed = $this->addSubmittedApplication($ctx['competition']);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
+            ->assertRedirect();
+
+        $gate = app(YouthSecondSessionGate::class);
+        $this->assertTrue($gate->appealWindowIsOpen($failed->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse($gate->oralPresentationIsAllowed($ctx['application']->fresh()));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->assertDontSee(ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.create', $ctx['application']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->whereNull('completed_at')
+                ->first()
+        );
+    }
+
+    public function test_unresolved_sibling_prigovor_does_not_block_draft_but_blocks_oral(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $failed = $this->addSubmittedApplication($ctx['competition']);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
+            ->assertRedirect();
+        $this->actingAs($failed->user)->post(route('applications.prigovor.store', $failed), [
+            'contested' => [1, 2],
+            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+        ])->assertRedirect();
+        $failed->fresh()->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
+        $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
+
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse(app(YouthSecondSessionGate::class)->oralPresentationIsAllowed($ctx['application']->fresh()));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasNoErrors();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
+                'scheduled_at' => now()->format('Y-m-d H:i:s'),
+            ])
+            ->assertSessionHasErrors('oral');
+        $this->assertSame(CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE, session('errors')->first('oral'));
+    }
+
+    public function test_final_score_is_blocked_until_this_application_oral_is_completed(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasNoErrors();
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+            ->assertForbidden();
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
+
+        $this->storeAndCompleteOral($ctx, true);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_10' => 4]))
+            ->assertSessionHasNoErrors();
+        $score = EvaluationScore::query()
+            ->where('application_id', $ctx['application']->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $this->assertNotNull($score->completed_at);
+        $this->assertSame(4, (int) $score->criterion_10);
+        $this->assertSame('submitted', $ctx['application']->fresh()->status);
     }
 
     public function test_draft_is_allowed_before_oral_and_may_be_incomplete(): void
@@ -560,6 +647,37 @@ class YouthIndividualScoringTest extends TestCase
             'chairman' => $members[0]->fresh('user'),
             'members' => $members,
             'application' => $application,
+        ];
+    }
+
+    private function addSubmittedApplication(Competition $competition): Application
+    {
+        return Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $this->userWithRole('korisnik')->id,
+            'business_plan_name' => 'Drugi plan',
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'status' => 'submitted',
+            'submitted_at' => now()->subDays(25),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function youthFailPayload(): array
+    {
+        return [
+            'criterion_1' => '0',
+            'criterion_2' => '0',
+            'criterion_3' => '1',
+            'criterion_notes' => [
+                1 => 'Nedostaje izvod',
+                2 => 'Nema M4',
+                3 => '',
+            ],
+            'confirmation_acknowledged' => '1',
         ];
     }
 

@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.12
-**Datum:** 2026-10-21
+**Verzija:** 1.0.13
+**Datum:** 2026-10-22
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.41** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.42** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.8** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.9** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -52,6 +52,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.10 | 2026-09-21 | KN-PATCH-FS-015 — Precizirano glasanje izjednačene grupe bez novih prihvatnih identifikatora: predmet je kompletan, budžetski validan predlog raspodjele, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv`; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Indeks ostaje 142/142. Živi pokazivači: KN-BM-002 v1.0.12, KN-TS-002 v1.0.6, KN-RG-001 v1.0.39, KN-FS-003 v1.0.17. Ženski tok nije diran. |
 | 1.0.11 | 2026-10-21 | KN-PATCH-FS-016 — Prva sjednica ostaje obaveza Komisije po Odluci (rok i kvorum), ali Platforma ne traži njen elektronski zapis da bi otvorila M3 ili drugu sjednicu. M3 i dalje zahtijeva kompletnu Komisiju i tačno tri omladinska kriterijuma. Ženski tok nije diran. |
 | 1.0.12 | 2026-10-21 | KN-PATCH-FS-017 — Sjednice Komisije ostaju van Platforme: Digital ne vodi zapise prve, druge ni treće sjednice, niti prisustvo i kvorum. Prva faza ostaje M3 sa tri omladinska kriterijuma i prigovor. Naredna faza (ocjenjivanje i postojeće usmeno) otvara se tek kada istekne rok za prigovor i kada su svi blagovremeno podneseni prigovori riješeni. Kriterijumi, rokovi, bodovanje i tok odluka nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
+| 1.0.13 | 2026-10-22 | KN-PATCH-FS-018 — Omladinsko individualno bodovanje otvara se po prijavi, po principu ženskog toka: M3 potvrđen bez aktivnog eliminatornog razloga, ili konačna odluka po prigovoru koja otkloni sve razloge. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira bodovanje M3-prošle prijave. Usmeno i dalje čeka konkursne rokove i blagovremene prigovore. Završna ocjena i dalje zahtijeva deset unosa, potvrdu i završeno usmeno te prijave. Rangiranje i dalje čeka završetak omladinskog prigovornog postupka. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana nijesu preuzeti. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 
 Napomena:
 
@@ -2931,7 +2932,7 @@ Ne uvodi se videokonferencijska integracija, kalendarska integracija, SMS ni dru
 
 ## 15.1. Zakazivanje
 
-Usmeno predstavljanje i ocjenjivanje dozvoljeni su samo kada su ispunjeni svi sljedeći uslovi. Poslovna druga sjednica ostaje obaveza Komisije van Platforme; Digital **ne** vodi njen datum, prisustvo ni kvorum.
+Usmeno predstavljanje je dozvoljeno samo kada su ispunjeni svi sljedeći uslovi. Poslovna druga sjednica ostaje obaveza Komisije van Platforme; Digital **ne** vodi njen datum, prisustvo ni kvorum. Individualno bodovanje se otvara zasebno po prijavi (Poglavlje 16) i **ne** čeka ovu konkursnu kapiju.
 
 * prijava ima status `submitted`;
 * M3 je potvrđen;
@@ -2944,7 +2945,7 @@ Dozvoljena su dva puta:
 1. M3 nije aktivirao nijedan razlog;
 2. M3 je aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen.
 
-Kapija **nije** sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. M3 ostaje nepromijenjen istorijski zapis, uključujući slučaj u kojem je prvi razlog nakon uspješnog prigovora otklonjen.
+Kapija usmenog je **konkursna**: otvoren rok ili neriješen blagovremen prigovor na bilo kojoj relevantnoj prijavi drži zakazivanje usmenog zatvorenim. Kapija **nije** sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. M3 ostaje nepromijenjen istorijski zapis, uključujući slučaj u kojem je prvi razlog nakon uspješnog prigovora otklonjen.
 
 Predsjednik Komisije, za prijave koje ispunjavaju tu kapiju, na Platformi:
 
@@ -3148,7 +3149,7 @@ Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Izvorni zapi
 
 **Ne** uvode se ponderi. Opciona napomena **ne** donosi bodove.
 
-U ocjenjivanje ulaze samo prijave za koje nijedan eliminatorni razlog nije konačno aktivan i za koje ne traje rok ni neriješen blagovremen prigovor. To uključuje prijave kod kojih M3 nije aktivirao nijedan razlog, i prijave kod kojih je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Istorijski M3 se ne mijenja. Kapija ocjenjivanja **nije** sirova istorijska vrijednost `Potpuna`.
+Bodovanje se otvara **po prijavi**, po istom principu kao ženski tok, uz omladinska pravila. U ocjenjivanje ulazi prijava za koju je M3 potvrđen i za koju nijedan eliminatorni razlog nije konačno aktivan. To uključuje prijave kod kojih M3 nije aktivirao nijedan razlog, i prijave kod kojih je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Ako je M3 aktivirao razlog, ta prijava ostaje blokirana dok konačna odluka po prigovoru ne ukloni sve aktivne razloge. Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira bodovanje prijave koja je prošla M3. Prijava sa konačno aktivnim eliminatornim razlogom ostaje blokirana. Nepotpuna ili nevažeća Komisija ostaje blokada. Istorijski M3 se ne mijenja. Kapija ocjenjivanja **nije** sirova istorijska vrijednost `Potpuna`. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana **ne** prenose se.
 
 ## 16.2. Nacrt
 
@@ -3770,7 +3771,7 @@ Platforma je priprema **automatski** tek kada su ispunjeni svi sljedeći uslovi:
 * postoje tačno tri kompletne ocjene po prijavi u ciklusu;
 * dodatni bodovi su potvrđeni;
 * konačne ocjene su izračunate;
-* nema neriješenih uslova koji blokiraju rangiranje, uključujući bilo koji neriješen blagovremen prigovor;
+* nema neriješenih uslova koji blokiraju rangiranje, uključujući otvoren rok za prigovor ili bilo koji neriješen blagovremen prigovor na prijavama `submitted`/`evaluated`;
 * nema prijave u ciklusu sa konačno aktivnim eliminatornim razlogom.
 
 Preliminarna lista:
@@ -5512,4 +5513,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.10**
+**Kraj dokumenta KN-FS-002 v1.0.13**

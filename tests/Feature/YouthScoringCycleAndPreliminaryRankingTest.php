@@ -12,6 +12,7 @@ use App\Models\EvaluationScore;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\YouthSecondSessionGate;
 use App\Support\CompetitionProgramCatalog;
@@ -79,6 +80,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
 
         $service = app(CanonicalIndividualScoringService::class);
         $competition = $ctx['competition']->fresh();
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($failed->fresh()));
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($competition));
         $this->assertFalse($service->isYouthPreliminaryRankingReady($competition));
         $this->assertSame(
@@ -108,6 +111,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ])
             ->assertRedirect();
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
         $this->assertSame(
             CanonicalIndividualScoringService::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE,
             $service->youthPreliminaryRankingBlockReason($ctx['competition']->fresh())

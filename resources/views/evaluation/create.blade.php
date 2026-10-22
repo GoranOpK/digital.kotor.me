@@ -1325,9 +1325,9 @@
                 </div>
                 </div>
 
-                @if(($scoringIsAllowed || ($hasCompletedEvaluation ?? false)) && ! ($isApplicant ?? false))
+                @if(! ($isApplicant ?? false))
                     @include('evaluation.partials.youth_individual_scoring_form')
-                    @if($isChairman ?? false)
+                    @if(($scoringIsAllowed || ($hasCompletedEvaluation ?? false)) && ($isChairman ?? false))
                         @include('evaluation.partials.youth_bonus_form')
                     @endif
                 @endif
