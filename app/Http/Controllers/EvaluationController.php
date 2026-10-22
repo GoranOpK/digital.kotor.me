@@ -1434,34 +1434,40 @@ class EvaluationController extends Controller
                 'criterion_1' => 'required|boolean',
                 'criterion_2' => 'required|boolean',
                 'criterion_3' => 'required|boolean',
+                'note' => 'nullable|string|max:5000',
                 'criterion_notes' => 'nullable|array',
                 'criterion_notes.1' => 'nullable|string|max:2000',
                 'criterion_notes.2' => 'nullable|string|max:2000',
                 'criterion_notes.3' => 'nullable|string|max:2000',
             ]);
 
-            $explanations = [
-                1 => trim((string) $request->input('criterion_notes.1', '')),
-                2 => trim((string) $request->input('criterion_notes.2', '')),
-                3 => trim((string) $request->input('criterion_notes.3', '')),
-            ];
-
             $passedByNumber = [1 => $criterion1, 2 => $criterion2, 3 => $criterion3];
-            $errors = [];
-            foreach ($passedByNumber as $number => $passed) {
-                if ($requireNotesIfFail && ! $passed && $explanations[$number] === '') {
-                    $errors['criterion_notes.'.$number] = EliminatoryProfileConfig::YOUTH_EXPLANATION_REQUIRED_MESSAGE;
-                }
+
+            if ($request->exists('note')) {
+                $composedNote = EliminatoryProfileConfig::composeYouthNotesFromShared(
+                    (string) $request->input('note', ''),
+                    $passedByNumber
+                );
+            } else {
+                $composedNote = EliminatoryProfileConfig::composeYouthNotes([
+                    1 => trim((string) $request->input('criterion_notes.1', '')),
+                    2 => trim((string) $request->input('criterion_notes.2', '')),
+                    3 => trim((string) $request->input('criterion_notes.3', '')),
+                ]);
             }
-            if ($errors !== []) {
-                throw \Illuminate\Validation\ValidationException::withMessages($errors);
+
+            if ($requireNotesIfFail && (! $criterion1 || ! $criterion2 || ! $criterion3)
+                && EliminatoryProfileConfig::youthSharedNote($composedNote) === '') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'note' => EliminatoryProfileConfig::NOTE_REQUIRED_ON_FAIL_MESSAGE,
+                ]);
             }
 
             return [
                 'criterion_1' => $criterion1,
                 'criterion_2' => $criterion2,
                 'criterion_3' => $criterion3,
-                'note' => EliminatoryProfileConfig::composeYouthNotes($explanations),
+                'note' => $composedNote,
             ];
         }
 
@@ -1477,7 +1483,7 @@ class EvaluationController extends Controller
 
         if ($requireNotesIfFail && (! $criterion1 || ! $criterion2 || ! $criterion3) && $note === null) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'note' => 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.',
+                'note' => EliminatoryProfileConfig::NOTE_REQUIRED_ON_FAIL_MESSAGE,
             ]);
         }
 

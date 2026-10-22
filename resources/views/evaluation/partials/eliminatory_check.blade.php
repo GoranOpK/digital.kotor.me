@@ -3,7 +3,7 @@
 @php
     $eliminatoryProfile = $eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type);
     $eliminatoryCheck = $eliminatoryCheck ?? $application->eliminatoryCheck;
-    $youthDraftNotes = \App\Support\EliminatoryProfileConfig::youthDraftExplanations($eliminatoryCheck?->note);
+    $youthSharedNote = \App\Support\EliminatoryProfileConfig::youthSharedNote($eliminatoryCheck?->note);
     $mode = $mode ?? 'readonly';
 @endphp
 
@@ -22,43 +22,50 @@
                 <span>{{ $criterion['fail_label'] }}</span>
             </label>
         </div>
-        <p style="margin: 6px 0 0; font-size: 12px; color: #6b7280;">
-            {{ $criterion['pass_label'] }} = prolaz (razlog nije aktiviran).
-            {{ $criterion['fail_label'] }} = eliminatorni razlog je aktiviran.
-        </p>
         @error('criterion_'.$number)
             <div class="error-message">{{ $message }}</div>
         @enderror
-
-        <label class="form-label" style="margin-top: 8px;">Obrazloženje kriterijuma {{ $number }}</label>
-        <textarea name="criterion_notes[{{ $number }}]" class="form-control" rows="3" placeholder="Obrazloženje ako je razlog aktiviran">{{ old('criterion_notes.'.$number, $youthDraftNotes[$number] ?? '') }}</textarea>
-        @error('criterion_notes.'.$number)
-            <div class="error-message">{{ $message }}</div>
-        @enderror
     @endforeach
+
+    <p style="margin-top: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE }}</p>
+
+    <label class="form-label" style="margin-top: 16px;">Napomena</label>
+    <textarea name="note" class="form-control" rows="4" placeholder="Napomena Obrasca 3">{{ old('note', $youthSharedNote) }}</textarea>
+    @error('note')
+        <div class="error-message">{{ $message }}</div>
+    @enderror
     @error('confirmation_acknowledged')
         <div class="error-message">{{ $message }}</div>
     @enderror
 @else
     @foreach($eliminatoryProfile->criteria as $number => $criterion)
-        <div style="margin-bottom: 8px; font-weight: 600;">@if($number === 1) 3. @endif{{ $criterion['statement'] }}</div>
-        <div style="margin-bottom: 12px;">
-            <strong>{{ $eliminatoryCheck
-                ? $eliminatoryProfile->displayValue(
-                    $number,
-                    $eliminatoryCheck->{'criterion_'.$number},
-                    $eliminatoryCheck->criterionIsTrue($eliminatoryCheck->{'criterion_'.$number}),
-                    $eliminatoryCheck->criterionIsFalse($eliminatoryCheck->{'criterion_'.$number})
-                )
-                : 'Nije označeno' }}</strong>
-        </div>
-        @php
-            $shownExplanation = \App\Support\EliminatoryProfileConfig::youthExplanation($eliminatoryCheck?->note, $number);
-            $reasonActivated = $eliminatoryCheck && $eliminatoryCheck->criterionIsFalse($eliminatoryCheck->{'criterion_'.$number});
-        @endphp
-        @if($reasonActivated || $shownExplanation !== '')
-            <div style="margin-bottom: 8px; font-weight: 600;">Obrazloženje kriterijuma {{ $number }}</div>
-            <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $shownExplanation !== '' ? $shownExplanation : '—' }}</div>
+        @if($number === 1)
+            <label class="form-label form-label-large">3. {{ $criterion['statement'] }}</label>
+            <div style="margin-bottom: 12px; margin-top: 12px;">
+                <strong>{{ $eliminatoryCheck
+                    ? $eliminatoryProfile->displayValue(
+                        $number,
+                        $eliminatoryCheck->{'criterion_'.$number},
+                        $eliminatoryCheck->criterionIsTrue($eliminatoryCheck->{'criterion_'.$number}),
+                        $eliminatoryCheck->criterionIsFalse($eliminatoryCheck->{'criterion_'.$number})
+                    )
+                    : 'Nije označeno' }}</strong>
+            </div>
+        @else
+            <div style="margin-bottom: 8px; font-weight: 600;">{{ $criterion['statement'] }}</div>
+            <div style="margin-bottom: 12px;">
+                <strong>{{ $eliminatoryCheck
+                    ? $eliminatoryProfile->displayValue(
+                        $number,
+                        $eliminatoryCheck->{'criterion_'.$number},
+                        $eliminatoryCheck->criterionIsTrue($eliminatoryCheck->{'criterion_'.$number}),
+                        $eliminatoryCheck->criterionIsFalse($eliminatoryCheck->{'criterion_'.$number})
+                    )
+                    : 'Nije označeno' }}</strong>
+            </div>
         @endif
     @endforeach
+    <p style="margin-bottom: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE }}</p>
+    <div style="margin-bottom: 8px; font-weight: 600;">Napomena</div>
+    <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $youthSharedNote !== '' ? $youthSharedNote : '—' }}</div>
 @endif

@@ -55,9 +55,9 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->assertSee('id="eliminatoryForm"', false)
-            ->assertSee('dokumentacija je nepotpuna', false)
-            ->assertSee('raniji korisnik nije dostavio M4/M4a', false)
-            ->assertSee('biznis plan nije povezan sa prioritetnim oblastima člana 12 Odluke o mladima', false);
+            ->assertSee('Dostavljena je potpuna dokumentacija?', false)
+            ->assertSee('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', false)
+            ->assertSee('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', false);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.store', $ctx['application']), $this->youthPayload())
@@ -162,18 +162,18 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $pos1 = strpos($html, 'dokumentacija je nepotpuna');
-        $pos2 = strpos($html, 'raniji korisnik nije dostavio M4/M4a');
-        $pos3 = strpos($html, 'biznis plan nije povezan sa prioritetnim oblastima člana 12 Odluke o mladima');
+        $pos1 = strpos($html, 'Dostavljena je potpuna dokumentacija?');
+        $pos2 = strpos($html, 'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?');
+        $pos3 = strpos($html, 'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?');
         $this->assertNotFalse($pos1);
         $this->assertNotFalse($pos2);
         $this->assertNotFalse($pos3);
         $this->assertTrue($pos1 < $pos2 && $pos2 < $pos3);
 
-        $this->assertStringContainsString('Potpuna', $html);
-        $this->assertStringContainsString('Nepotpuna', $html);
-        $this->assertStringContainsString('Razlog nije aktiviran', $html);
-        $this->assertStringContainsString('Razlog aktiviran', $html);
+        $this->assertStringContainsString('>Da</span>', $html);
+        $this->assertStringContainsString('>Ne*</span>', $html);
+        $this->assertStringContainsString(e(\App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE), $html);
+        $this->assertStringContainsString('Napomena', $html);
         $this->assertMatchesRegularExpression('/name="criterion_1"[^>]*value="1"[^>]*checked/', $html);
         $this->assertDoesNotMatchRegularExpression('/name="criterion_1"[^>]*value="0"[^>]*checked/', $html);
 
@@ -182,10 +182,12 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertStringNotContainsString('ženskom preduzetništvu', $html);
         $this->assertStringNotContainsString('Obrasci 4 i 4a', $html);
         $this->assertStringNotContainsString('Da / Da / Da', $html);
-        $this->assertStringNotContainsString('name="note"', $html);
-        $this->assertStringContainsString('name="criterion_notes[1]"', $html);
-        $this->assertStringContainsString('name="criterion_notes[2]"', $html);
-        $this->assertStringContainsString('name="criterion_notes[3]"', $html);
+        $this->assertStringNotContainsString('Razlog nije aktiviran', $html);
+        $this->assertStringNotContainsString('Razlog aktiviran', $html);
+        $this->assertStringContainsString('name="note"', $html);
+        $this->assertStringNotContainsString('name="criterion_notes[1]"', $html);
+        $this->assertStringNotContainsString('name="criterion_notes[2]"', $html);
+        $this->assertStringNotContainsString('name="criterion_notes[3]"', $html);
 
         $this->assertSame(
             CompetitionProgramCatalog::STATUS_ACTIVE,
@@ -193,59 +195,84 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         );
     }
 
-    public function test_each_activated_reason_requires_its_own_explanation(): void
+    public function test_confirm_requires_shared_note_when_any_criterion_is_ne(): void
     {
         $ctx = $this->makeYouthReadyContext();
         $payload = $this->youthPayload([
             'criterion_1' => '0',
             'criterion_2' => '1',
             'criterion_3' => '1',
-            'criterion_notes' => [1 => '', 2 => 'ne treba', 3 => ''],
+            'note' => '',
         ]);
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $payload)
             ->assertRedirect(route('evaluation.create', $ctx['application']))
-            ->assertSessionHasErrors('criterion_notes.1')
-            ->assertSessionDoesntHaveErrors(['criterion_notes.2', 'criterion_notes.3']);
+            ->assertSessionHasErrors('note');
 
         $this->assertNull($ctx['application']->fresh()->eliminatoryCheck?->confirmed_at);
     }
 
-    public function test_multiple_activated_reasons_require_multiple_explanations(): void
+    public function test_draft_allows_ne_without_note(): void
     {
         $ctx = $this->makeYouthReadyContext();
-        $payload = $this->youthPayload([
-            'criterion_1' => '0',
-            'criterion_2' => '0',
-            'criterion_3' => '1',
-            'criterion_notes' => [1 => 'Dokazi nedostaju', 2 => '', 3 => ''],
-            'confirmation_acknowledged' => '1',
-        ]);
-
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $payload)
+            ->post(route('evaluation.eliminatory.store', $ctx['application']), $this->youthPayload([
+                'criterion_1' => '0',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => '',
+            ]))
             ->assertRedirect(route('evaluation.create', $ctx['application']))
-            ->assertSessionHasErrors('criterion_notes.2')
-            ->assertSessionDoesntHaveErrors(['criterion_notes.1', 'criterion_notes.3']);
+            ->assertSessionDoesntHaveErrors();
+
+        $check = $ctx['application']->fresh()->eliminatoryCheck;
+        $this->assertNotNull($check);
+        $this->assertNull($check->confirmed_at);
+        $this->assertFalse((bool) $check->criterion_1);
+        $this->assertSame('', EliminatoryProfileConfig::youthSharedNote($check->note));
     }
 
-    public function test_server_recomputes_activated_criteria_and_ignores_browser_notes(): void
+    public function test_one_shared_note_covers_every_activated_criterion(): void
     {
         $ctx = $this->makeYouthReadyContext();
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $this->youthPayload([
+                'criterion_1' => '0',
+                'criterion_2' => '0',
+                'criterion_3' => '1',
+                'note' => 'Dokazi nedostaju',
+                'confirmation_acknowledged' => '1',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors();
+
+        $check = $ctx['application']->fresh()->eliminatoryCheck;
+        $this->assertTrue($check->isConfirmedFail());
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($check->note);
+        $this->assertSame('Dokazi nedostaju', $parsed[1]);
+        $this->assertSame('Dokazi nedostaju', $parsed[2]);
+        $this->assertSame('', $parsed[3]);
+    }
+
+    public function test_shared_note_is_copied_only_onto_activated_criteria(): void
+    {
+        $ctx = $this->makeYouthReadyContext();
+        $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $this->youthPayload([
                 'criterion_1' => '1',
                 'criterion_2' => '0',
                 'criterion_3' => '0',
-                'criterion_notes' => [1 => 'Ovo nije aktivirano', 2 => '', 3 => 'Član 12 nije vezan'],
+                'note' => 'Član 12 nije vezan',
                 'confirmation_acknowledged' => '1',
             ]))
-            ->assertSessionHasErrors('criterion_notes.2')
-            ->assertSessionDoesntHaveErrors('criterion_notes.1');
+            ->assertSessionDoesntHaveErrors();
+
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($ctx['application']->fresh()->eliminatoryCheck->note);
+        $this->assertSame('', $parsed[1]);
+        $this->assertSame('Član 12 nije vezan', $parsed[2]);
+        $this->assertSame('Član 12 nije vezan', $parsed[3]);
     }
 
     public function test_structured_note_is_composed_redisplayed_and_preserved_in_draft(): void
@@ -256,11 +283,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
                 'criterion_1' => '0',
                 'criterion_2' => '1',
                 'criterion_3' => '0',
-                'criterion_notes' => [
-                    1 => 'Nedostaje izvod',
-                    2 => 'Nacrt za drugi',
-                    3 => 'Nije član 12',
-                ],
+                'note' => 'Nedostaje izvod',
             ]))
             ->assertRedirect(route('evaluation.create', $ctx['application']));
 
@@ -273,16 +296,40 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertStringStartsWith(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX, (string) $check->note);
         $parsed = EliminatoryProfileConfig::parseYouthNotes($check->note);
         $this->assertSame('Nedostaje izvod', $parsed[1]);
-        $this->assertSame('Nacrt za drugi', $parsed[2]);
-        $this->assertSame('Nije član 12', $parsed[3]);
+        $this->assertSame('', $parsed[2]);
+        $this->assertSame('Nedostaje izvod', $parsed[3]);
+        $this->assertSame('Nedostaje izvod', EliminatoryProfileConfig::youthSharedNote($check->note));
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('Nedostaje izvod', $html);
-        $this->assertStringContainsString('Nacrt za drugi', $html);
-        $this->assertStringContainsString('Nije član 12', $html);
+        $this->assertStringContainsString('name="note"', $html);
+        $this->assertStringNotContainsString(trim(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX), $html);
+    }
+
+    public function test_legacy_per_criterion_notes_remain_readable_in_shared_field(): void
+    {
+        $ctx = $this->makeYouthReadyContext();
+        $legacy = EliminatoryProfileConfig::composeYouthNotes([
+            1 => 'Nedostaje izvod',
+            2 => 'Nema M4',
+            3 => '',
+        ]);
+        $ctx['application']->eliminatoryCheck()->create([
+            'criterion_1' => false,
+            'criterion_2' => false,
+            'criterion_3' => true,
+            'note' => $legacy,
+        ]);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Nedostaje izvod', $html);
+        $this->assertStringContainsString('Nema M4', $html);
         $this->assertStringNotContainsString(trim(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX), $html);
     }
 
@@ -304,7 +351,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.store', $ctx['application']), $this->youthPayload([
                 'criterion_1' => '0',
-                'criterion_notes' => [1 => 'kasnija izmjena', 2 => '', 3 => ''],
+                'note' => 'kasnija izmjena',
             ]))
             ->assertForbidden();
 
@@ -345,11 +392,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
                 'criterion_1' => '0',
                 'criterion_2' => '0',
                 'criterion_3' => '1',
-                'criterion_notes' => [
-                    1 => 'Dokumentacija nepotpuna',
-                    2 => 'Nema M4/M4a',
-                    3 => '',
-                ],
+                'note' => "Dokumentacija nepotpuna\nNema M4/M4a",
                 'confirmation_acknowledged' => '1',
             ]))
             ->assertRedirect();
@@ -370,7 +413,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('Dokumentacija nepotpuna', $html);
         $this->assertStringContainsString('Nema M4/M4a', $html);
-        $this->assertStringContainsString('dokumentacija je nepotpuna', $html);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
         $this->assertStringNotContainsString('biće odbijena', $html);
         $this->assertStringNotContainsString('dopuna dokumentacije', $html);
         $this->assertStringNotContainsString('članu 10', $html);
@@ -384,7 +427,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $this->youthPayload([
                 'criterion_1' => '0',
-                'criterion_notes' => [1 => 'Nedostaju prilozi', 2 => '', 3 => ''],
+                'note' => 'Nedostaju prilozi',
                 'confirmation_acknowledged' => '1',
             ]))
             ->assertRedirect();
@@ -448,6 +491,19 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             2 => '',
             3 => '',
         ], EliminatoryProfileConfig::parseYouthNotes('slobodan tekst'));
+        $this->assertSame("A\n\nC", EliminatoryProfileConfig::youthSharedNote($composed));
+
+        $shared = EliminatoryProfileConfig::composeYouthNotesFromShared('Zajednička napomena', [
+            1 => false,
+            2 => true,
+            3 => false,
+        ]);
+        $this->assertSame([
+            1 => 'Zajednička napomena',
+            2 => '',
+            3 => 'Zajednička napomena',
+        ], EliminatoryProfileConfig::parseYouthNotes($shared));
+        $this->assertSame('Zajednička napomena', EliminatoryProfileConfig::youthSharedNote($shared));
     }
 
     private function assertM3Blocked(User $user, Application $application): void
@@ -690,7 +746,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             'criterion_1' => '1',
             'criterion_2' => '1',
             'criterion_3' => '1',
-            'criterion_notes' => [1 => '', 2 => '', 3 => ''],
+            'note' => '',
         ], $overrides);
     }
 

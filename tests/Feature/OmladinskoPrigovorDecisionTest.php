@@ -182,8 +182,8 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->assertTrue($prigovor->criterionRemainingIsTrue(2));
         $this->assertNull($prigovor->criterion_3_remaining);
         $this->assertSame('rejected', $application->status);
-        $this->assertStringContainsString('raniji korisnik nije dostavio M4/M4a', (string) $application->rejection_reason);
-        $this->assertStringNotContainsString('dokumentacija je nepotpuna', (string) $application->rejection_reason);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', (string) $application->rejection_reason);
+        $this->assertStringNotContainsString('Dostavljena je potpuna dokumentacija?', (string) $application->rejection_reason);
         $this->assertSame($m3Before, $this->m3Snapshot($application));
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
     }
@@ -260,7 +260,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->assertTrue($prigovor->criterionRemainingIsTrue(2));
         $this->assertNull($prigovor->criterion_3_remaining);
         $this->assertSame('rejected', $application->status);
-        $this->assertSame('raniji korisnik nije dostavio M4/M4a', $application->rejection_reason);
+        $this->assertSame('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $application->rejection_reason);
         $this->assertSame($m3Before, $this->m3Snapshot($application));
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
     }
@@ -323,7 +323,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
             $this->assertTrue($mail->application->is($application));
             $this->assertTrue($mail->isYouth);
             $this->assertStringContainsString('Prihvaćen', $html);
-            $this->assertStringContainsString('dokumentacija je nepotpuna', $html);
+            $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
             $this->assertStringContainsString('Otklonjen', $html);
             $this->assertStringContainsString('Svi osporeni razlozi su otklonjeni.', $html);
             $this->assertStringContainsString('Komisija za podršku preduzetništvu mladih', $html);
