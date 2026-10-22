@@ -184,16 +184,11 @@ class CommissionSessionController extends Controller
             ->with('success', 'Prva sjednica je potvrđena.');
     }
 
-    public function editSecond(Competition $competition): View
+    public function editSecond(Competition $competition): RedirectResponse
     {
-        $chairman = $this->authorizeSecondSessionAccess($competition);
+        $this->authorizeSecondSessionAccess($competition);
 
-        return view('commission-sessions.second', [
-            'competition' => $competition,
-            'chairman' => $chairman,
-            'gateMessage' => $this->gate->secondSessionBlockMessage($competition),
-            'eligibleApplications' => $this->gate->eligibleOralApplications($competition),
-        ]);
+        return redirect()->route('admin.competitions.show', $competition);
     }
 
     public function storeSecond(Request $request, Competition $competition): RedirectResponse
@@ -224,7 +219,7 @@ class CommissionSessionController extends Controller
     {
         $this->authorizeSecondSessionAccess($competition);
 
-        return redirect()->route('commission-sessions.second.edit', $competition);
+        return redirect()->route('admin.competitions.show', $competition);
     }
 
     protected function authorizeFirstSessionAccess(Competition $competition): CommissionMember

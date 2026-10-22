@@ -288,7 +288,7 @@ class CanonicalIndividualScoringService
     {
         return $competition->applications()
             ->whereIn('status', ['submitted', 'evaluated'])
-            ->with(['user', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation', 'evaluationScores.commissionMember.commission.members', 'competition'])
+            ->with(['user', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'evaluationScores.commissionMember.commission.members', 'competition'])
             ->orderBy('id')
             ->get()
             ->filter(fn (Application $application) => $this->youthSecondSessionGate->youthDraftScoringIsAllowed($application))
@@ -309,7 +309,7 @@ class CanonicalIndividualScoringService
 
         return $competition->applications()
             ->whereIn('status', ['submitted', 'evaluated', 'approved', 'rejected'])
-            ->with(['user', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation', 'evaluationScores.commissionMember.commission.members', 'competition'])
+            ->with(['user', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'evaluationScores.commissionMember.commission.members', 'competition'])
             ->orderBy('id')
             ->get()
             ->filter(fn (Application $application) => $this->applicationBelongsToYouthScoringCycle($application))
@@ -800,11 +800,6 @@ class CanonicalIndividualScoringService
             abort(403, ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE);
         }
 
-        $lockMessage = $this->youthSecondSessionGate->youthLockEvidenceBlockMessage($application);
-        if ($lockMessage !== null) {
-            abort(403, $lockMessage);
-        }
-
         if (! $confirmed) {
             throw ValidationException::withMessages([
                 'scoring_confirmed' => self::CONFIRMATION_REQUIRED_MESSAGE,
@@ -827,12 +822,8 @@ class CanonicalIndividualScoringService
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                $lockedApplication->load(['oralPresentation', 'competition', 'eliminatoryCheck', 'prigovor']);
+                $lockedApplication->load(['competition', 'eliminatoryCheck', 'prigovor']);
                 $this->assertYouthDraftGates($lockedApplication, $member);
-                $lockMessage = $this->youthSecondSessionGate->youthLockEvidenceBlockMessage($lockedApplication);
-                if ($lockMessage !== null) {
-                    abort(403, $lockMessage);
-                }
 
                 $lockedScores = EvaluationScore::query()
                     ->where('application_id', $application->id)
@@ -1928,7 +1919,6 @@ class CanonicalIndividualScoringService
             'eliminatoryCheck',
             'eliminatoryNotice',
             'prigovor',
-            'oralPresentation',
             'evaluationScores.commissionMember.commission.members',
             'competition',
         ]);
@@ -1952,11 +1942,6 @@ class CanonicalIndividualScoringService
         $passPath = $application->eliminatoryCheck->isConfirmedPass();
         $liftPath = $application->prigovor?->liftsEliminatoryBar() === true;
         if (! $passPath && ! $liftPath) {
-            return false;
-        }
-
-        $oral = $application->oralPresentation;
-        if ($oral === null || ! $oral->isCompleted() || $oral->applicant_attended === null) {
             return false;
         }
 

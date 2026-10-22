@@ -225,12 +225,6 @@
             </div>
         @endif
 
-        @if(!empty($isChairman) && $competition->isOmladinskoProfile() && ($competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed'], true)))
-            <div style="background: #eff6ff; border: 1px solid #3b82f6; color: #1e3a8a; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                <a href="{{ route('commission-sessions.second.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Usmeno predstavljanje</a>
-            </div>
-        @endif
-
         @if($errors->any())
             <div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
                 <ul style="margin: 0; padding-left: 20px;">

@@ -744,18 +744,13 @@ class OmladinskoAllocationConfirmationTest extends TestCase
                 'criterion_notes' => [1 => '', 2 => '', 3 => ''],
             ])
             ->assertRedirect();
-        $this->storeAndCompleteOral($ctx, true, $application);
 
         return $application->fresh('user');
     }
 
     private function youthReadyToLock(int $callNumber = 1, ?int $year = null): array
     {
-        $ctx = $this->youthWithPassedM3($callNumber, $year);
-        $this->storeAndConfirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, true);
-
-        return $ctx;
+        return $this->youthWithPassedM3($callNumber, $year);
     }
 
     private function youthWithPassedM3(int $callNumber = 1, ?int $year = null): array
@@ -844,40 +839,6 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             'members' => $members,
             'application' => $application->fresh('user'),
         ];
-    }
-
-    private function storeAndConfirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Druga sjednica',
-                'present_member_ids' => array_map(fn (CommissionMember $member) => $member->id, $ctx['members']),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    private function storeAndCompleteOral(array $ctx, bool $attended, ?Application $application = null): void
-    {
-        $application ??= $ctx['application'];
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $application]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-            ])->assertSessionHasNoErrors();
-        $payload = [
-            'scheduled_at' => now()->format('Y-m-d H:i:s'),
-            'applicant_attended' => $attended ? '1' : '0',
-            'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-        ];
-        if ($attended) {
-            $payload['held_at'] = now()->format('Y-m-d H:i:s');
-        }
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $application]), $payload)
-            ->assertSessionHasNoErrors();
     }
 
     private function completeZenskoApplication(): array

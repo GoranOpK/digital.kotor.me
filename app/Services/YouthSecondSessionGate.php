@@ -136,7 +136,7 @@ class YouthSecondSessionGate
      * Omladinsko bodovanje se otvara po prijavi, po istom principu kao ženski tok:
      * M3 potvrđen bez aktivnog eliminatornog razloga, ili konačna odluka po prigovoru
      * koja otkloni sve razloge. Otvoren rok ili neriješen prigovor na drugoj prijavi
-     * ne blokira ovu prijavu. Usmeno i rangiranje ostaju konkursne kapije.
+     * ne blokira ovu prijavu. Rangiranje ostaje konkursna kapija prigovora.
      */
     public function youthDraftScoringBlockMessage(Application $application): ?string
     {
@@ -166,23 +166,6 @@ class YouthSecondSessionGate
 
         if (! $application->competition->hasCompleteValidCommission()) {
             return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
-        }
-
-        return null;
-    }
-
-    public function youthLockEvidenceIsComplete(Application $application): bool
-    {
-        return $this->youthLockEvidenceBlockMessage($application) === null;
-    }
-
-    public function youthLockEvidenceBlockMessage(Application $application): ?string
-    {
-        $application->loadMissing(['competition', 'oralPresentation']);
-
-        $oral = $application->oralPresentation;
-        if ($oral === null || ! $oral->isCompleted() || $oral->applicant_attended === null) {
-            return \App\Support\ScoringProfileConfig::YOUTH_ORAL_REQUIRED_FOR_LOCK_MESSAGE;
         }
 
         return null;

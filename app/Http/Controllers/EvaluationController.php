@@ -17,7 +17,6 @@ use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
 use App\Support\ScoringProfileConfig;
-use App\Services\YouthSecondSessionGate;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +30,6 @@ class EvaluationController extends Controller
         protected ApplicationPrigovorService $prigovors,
         protected CanonicalIndividualScoringService $canonicalScoring,
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
-        protected YouthSecondSessionGate $youthSecondSessionGate,
         protected YouthAllocationDraftService $youthAllocationDrafts,
         protected YouthEqualScoreVotingService $youthEqualScoreVoting,
         protected YouthAllocationListConfirmationService $youthAllocationListConfirmation,
@@ -432,7 +430,7 @@ class EvaluationController extends Controller
             ? 0
             : ($aggregate['base_score'] ?? 0);
 
-        $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'oralPresentation']);
+        $application->load(['user', 'competition', 'businessPlan', 'documents', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
 
         $eliminatoryCheck = $application->eliminatoryCheck;
         $eliminatoryProfile = EliminatoryProfileConfig::for($application->competition?->type);
@@ -441,9 +439,6 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
-        $youthOralPresentation = $isOmladinskoScoring ? $application->oralPresentation : null;
-        $youthLockEvidenceReady = $isOmladinskoScoring
-            && $this->youthSecondSessionGate->youthLockEvidenceIsComplete($application);
         $scoringLockedMessage = $isOmladinskoScoring
             ? ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE
             : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE;
@@ -482,8 +477,6 @@ class EvaluationController extends Controller
             'canDecidePrigovor',
             'scoringProfile',
             'isOmladinskoScoring',
-            'youthOralPresentation',
-            'youthLockEvidenceReady',
             'scoringLockedMessage',
             'youthPlannedRegistrationBonusEligible',
             'youthBonusesLocked',

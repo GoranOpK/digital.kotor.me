@@ -1,6 +1,5 @@
 @php
     $scoringProfile = $scoringProfile ?? \App\Support\ScoringProfileConfig::for($application->competition?->type);
-    $youthOral = $youthOralPresentation ?? $application->oralPresentation;
     $criteria = $scoringProfile->criteria;
     $scoreInputsLocked = ! $scoringIsAllowed || ($isRejected ?? false) || ($isApplicant ?? false) || ($hasCompletedEvaluation ?? false);
 @endphp
@@ -24,20 +23,6 @@
         <div class="no-print" style="margin-bottom: 12px; color: #374151; font-size: 13px;">
             Skala: 1 — {{ \App\Support\ScoringProfileConfig::SCALE_MIN_LABEL }}; 5 — {{ \App\Support\ScoringProfileConfig::SCALE_MAX_LABEL }}. Vrijednosti 2, 3 i 4 su međuvrijednosti.
         </div>
-        @if($youthOral && $youthOral->isCompleted())
-            <div class="no-print" style="background: #eff6ff; border: 1px solid #93c5fd; color: #1e3a8a; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
-                @if($youthOral->applicantAttended())
-                    Usmeno predstavljanje je završeno. Podnosilac je prisustvovao. Prisustvo ne postavlja automatski ocjenu kriterijuma 10.
-                @else
-                    Usmeno predstavljanje je završeno. Evidentiran je nedolazak. Nedolazak nije eliminacija i ne postavlja automatski ocjenu kriterijuma 10.
-                @endif
-            </div>
-        @else
-            <div class="no-print" style="background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;">
-                Nacrt ocjene je dozvoljen. Završetak ocjenjivanja je moguć tek nakon završene evidencije usmenog predstavljanja ove prijave.
-            </div>
-        @endif
-
         <table class="evaluation-table evaluation-table-criteria">
             <thead>
                 <tr>
@@ -103,12 +88,7 @@
             <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">Nazad na listu</a>
         @else
             <button type="submit" name="save_as_draft" value="1" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj nacrt</button>
-            <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed || ! ($youthLockEvidenceReady ?? false)) disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;" @else style="margin-left: 12px;" @endif>Završi ocjenjivanje</button>
-            @if(! ($youthLockEvidenceReady ?? false))
-                <div style="margin-top: 12px; color: #9a3412; font-size: 13px;">
-                    Završetak ocjenjivanja je onemogućen dok usmeno predstavljanje ove prijave nije evidentirano kao završeno.
-                </div>
-            @endif
+            <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;" @else style="margin-left: 12px;" @endif>Završi ocjenjivanje</button>
             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
         @endif
     </div>

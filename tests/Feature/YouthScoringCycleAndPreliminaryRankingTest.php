@@ -62,7 +62,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertStringNotContainsString('Napomena mjesta 1', $html);
         $this->assertStringContainsString('Napomena mjesta 2', $html);
 
-        $this->storeAndCompleteOral($ctx, true, $extra);
         $this->lockThreeSeats($ctx, [], $extra);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $extra]);
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
@@ -98,8 +97,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
         $this->assertStringContainsString('Napomena mjesta 3', $memberHtml);
         $this->assertStringContainsString('Predsjednik', $memberHtml);
-        $this->assertStringContainsString('Član mjesta 2', $memberHtml);
-        $this->assertStringContainsString('Član mjesta 3', $memberHtml);
+        $this->assertStringContainsString('Član 1', $memberHtml);
+        $this->assertStringContainsString('Član 2', $memberHtml);
         $this->assertGreaterThan(10, substr_count($memberHtml, 'class="score-display"'));
         $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE, $memberHtml);
         $this->assertStringNotContainsString('Preliminarna rang-lista', $memberHtml);
@@ -131,7 +130,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertNull($failed->fresh()->ranking_position);
     }
 
-    public function test_favorable_prigovor_enters_scoring_set_and_incomplete_oral_blocks_cycle(): void
+    public function test_favorable_prigovor_enters_scoring_set_and_incomplete_scores_block_cycle(): void
     {
         $ctx = $this->youthReadyToLock();
         $failed = $this->addFailedApplication($ctx);
@@ -167,9 +166,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             $service->youthPositiveScoringApplications($ctx['competition']->fresh())->contains('id', $failed->id)
         );
         $this->assertNull($failed->fresh('oralPresentation')->oralPresentation?->completed_at);
-        $this->assertFalse($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
-
-        $this->storeAndCompleteOral($ctx, true, $failed);
         $this->assertFalse($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
 
         $this->lockThreeSeats($ctx, [], $failed);
@@ -619,7 +615,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
                 'criterion_notes' => [1 => '', 2 => '', 3 => ''],
             ])
             ->assertRedirect();
-        $this->storeAndCompleteOral($ctx, true, $application);
 
         return $application->fresh('user');
     }
@@ -660,11 +655,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
      */
     private function youthReadyToLock(int $callNumber = 1, ?int $year = null): array
     {
-        $ctx = $this->youthWithPassedM3($callNumber, $year);
-        $this->storeAndConfirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, true);
-
-        return $ctx;
+        return $this->youthWithPassedM3($callNumber, $year);
     }
 
     /**
@@ -835,46 +826,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             'members' => $members,
             'application' => $application->fresh(),
         ];
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
-     */
-    private function storeAndConfirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Druga sjednica',
-                'present_member_ids' => array_map(fn (CommissionMember $member) => $member->id, $ctx['members']),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember}  $ctx
-     */
-    private function storeAndCompleteOral(array $ctx, bool $attended, ?Application $application = null): void
-    {
-        $application ??= $ctx['application'];
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $application]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-            ])->assertSessionHasNoErrors();
-        $payload = [
-            'scheduled_at' => now()->format('Y-m-d H:i:s'),
-            'applicant_attended' => $attended ? '1' : '0',
-            'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-        ];
-        if ($attended) {
-            $payload['held_at'] = now()->format('Y-m-d H:i:s');
-        }
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $application]), $payload)
-            ->assertSessionHasNoErrors();
     }
 
     private function userWithRole(string $role): User

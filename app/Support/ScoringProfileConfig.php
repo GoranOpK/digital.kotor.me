@@ -13,10 +13,6 @@ final class ScoringProfileConfig
 {
     public const YOUTH_SCORING_LOCKED_MESSAGE = 'Individualno bodovanje nije dostupno dok prijava ne ispunjava kapiju ocjenjivanja mladih.';
 
-    public const YOUTH_ORAL_REQUIRED_FOR_LOCK_MESSAGE = 'Završetak ocjenjivanja je dozvoljen tek nakon završene evidencije usmenog predstavljanja konkretne prijave.';
-
-    public const YOUTH_SECOND_SESSION_REQUIRED_FOR_LOCK_MESSAGE = 'Završetak ocjenjivanja je dozvoljen tek nakon potvrđene druge sjednice Komisije.';
-
     public const YOUTH_SCORE_CONFLICT_MESSAGE = 'Ocjena za ovo mjesto Komisije već postoji.';
 
     public const WOMEN_EVALUATION_OPENS_AFTER_APPLICATION_DEADLINE_MESSAGE = 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.';

@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.14
+**Verzija:** 1.0.15
 **Datum:** 2026-10-22
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.43** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.44** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.13** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.10** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.11** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -54,6 +54,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.12 | 2026-10-21 | KN-PATCH-FS-017 — Sjednice Komisije ostaju van Platforme: Digital ne vodi zapise prve, druge ni treće sjednice, niti prisustvo i kvorum. Prva faza ostaje M3 sa tri omladinska kriterijuma i prigovor. Naredna faza (ocjenjivanje i postojeće usmeno) otvara se tek kada istekne rok za prigovor i kada su svi blagovremeno podneseni prigovori riješeni. Kriterijumi, rokovi, bodovanje i tok odluka nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 | 1.0.13 | 2026-10-22 | KN-PATCH-FS-018 — Omladinsko individualno bodovanje otvara se po prijavi, po principu ženskog toka: M3 potvrđen bez aktivnog eliminatornog razloga, ili konačna odluka po prigovoru koja otkloni sve razloge. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira bodovanje M3-prošle prijave. Usmeno i dalje čeka konkursne rokove i blagovremene prigovore. Završna ocjena i dalje zahtijeva deset unosa, potvrdu i završeno usmeno te prijave. Rangiranje i dalje čeka završetak omladinskog prigovornog postupka. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana nijesu preuzeti. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 | 1.0.14 | 2026-10-22 | KN-PATCH-FS-019 — Kriterijum 6 individualnog bodovanja mladih glasi: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne prikazuje. Ženski katalog, broj članova i ostali omladinski kriterijumi nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
+| 1.0.15 | 2026-10-22 | KN-PATCH-FS-020 — Usmeno obrazloženje mladih ostaje poslovna obaveza Komisije i ocjenjuje se kroz omladinski kriterijum 10, ali Digital **ne** vodi zasebnu evidenciju termina, prisustva, nedolaska ni završetka. Nacrt i konačna ocjena prate ženski tok: nacrt nakon M3 prolaza ili lift svih razloga i kompletne Komisije; `Završi ocjenjivanje` zahtijeva svih 10 kriterijuma i potvrdu člana, bez kapije `youthLockEvidence*`. Kriterijum 10 ostaje omladinski tekst. Rangiranje i dalje čeka prigovorni postupak. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 
 Napomena:
 
@@ -902,7 +903,7 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje | — | zabranjeno; nema `rejected` → `submitted`; isti ciklus se ne ponavlja | svi | `BM-ML-037` |
 | Admin. rezultat / M3 | najmanje jedan aktiviran kriterijum | istek 3 dana bez prigovora | obavještenje poslato | svi prethodno aktivirani kriterijumi konačni; prijava `rejected` uz sve aktivne razloge | sistem | `BM-ML-036` |
 | Individualna ocjena | — | unos nacrta | prijava ide u ocjenjivanje; važeći član | nacrt | član ili zamjenski član | `BM-ML-039` |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | unesena svih 10 kriterijuma; evidentirano završeno usmeno obrazloženje te prijave | zaključana | isto lice | `BM-ML-039`; Poglavlje 16 |
+| Individualna ocjena | nacrt | Završi ocjenjivanje | unesena svih 10 kriterijuma; izričita potvrda člana | zaključana | isto lice | `BM-ML-039`; Poglavlje 16 |
 | Prijava | `submitted` | završene tri kompletne ocjene i obračun | prijava u ocjenjivanju | `evaluated` | sistem | `BM-ML-039`; `BM-ML-044` |
 | Ciklus ocjenjivanja | nije završen | treći član zaključi sve potrebne ocjene | tri zaključane ocjene po prijavi u ciklusu | ciklus završen; otvara se međusobni uvid | sistem | `BM-ML-003`; `BM-ML-040` |
 | Rang-lista | — | nastanak preliminarne | ciklus završen | preliminarna | sistem / Komisija | `BM-ML-045` |
@@ -2925,9 +2926,9 @@ Izvor: `BM-ML-036`; `BM-ML-037`.
 
 Status poglavlja: USVOJENO
 
-Ovo poglavlje određuje zakazivanje, uslove održavanja i evidenciju usmenog obrazloženja (`BM-ML-003`; `BM-ML-034`; `BM-ML-038`).
+Ovo poglavlje određuje uslove održavanja usmenog obrazloženja (`BM-ML-003`; `BM-ML-034`; `BM-ML-038`).
 
-Obrazac ženskog profila iz `KN-FS-003` Poglavlja 12 koristi se samo gdje nije suprotan pravilima mladih. `KN-FS-003` usmeno obrazloženje vodi van Platforme i **ne** uvodi zakazivanje, evidenciju prisustva, nedolazak, zapisnik ni tehničku kapiju kriterijuma 10. Za mlade Platforma **evidentira** termin, održavanje i završetak, jer `BM-ML-003` i `BM-ML-039` zahtijevaju da se konačno ocjenjivanje završi tek nakon usmenog obrazloženja.
+Obrazac ženskog profila iz `KN-FS-003` Poglavlja 12 koristi se za granicu Platforme: usmeno obrazloženje se **održava van Digitala**. Digital **ne** zakazuje termin, **ne** evidentira prisustvo, nedolazak, zapisnik ni završetak, i **ne** uvodi tehničku kapiju kriterijuma 10. Komisija i dalje ocjenjuje usmeno obrazloženje kroz omladinski kriterijum 10. Poslovna obaveza da se konačni bodovi dodijele nakon usmenog obrazloženja ostaje na Komisiji (`BM-ML-039`); Platforma taj redoslijed **ne** nameće zasebnim zapisom.
 
 Ne uvodi se videokonferencijska integracija, kalendarska integracija, SMS ni drugi kanal koji nije odobren. Ne uvodi se javni tok službenih akata. Platforma **ne** vodi sjednicu kao poseban poslovni objekat (`BM-ML-034`).
 
@@ -2948,20 +2949,13 @@ Dozvoljena su dva puta:
 
 Kapija usmenog je **konkursna**: otvoren rok ili neriješen blagovremen prigovor na bilo kojoj relevantnoj prijavi drži zakazivanje usmenog zatvorenim. Kapija **nije** sirova istorijska vrijednost M3 kriterijuma 1 `Potpuna`. M3 ostaje nepromijenjen istorijski zapis, uključujući slučaj u kojem je prvi razlog nakon uspješnog prigovora otklonjen.
 
-Predsjednik Komisije, za prijave koje ispunjavaju tu kapiju, na Platformi:
+Predsjednik Komisije, za prijave koje ispunjavaju tu kapiju, **van Platforme**:
 
 * određuje datum i vrijeme usmenog obrazloženja;
-* evidentira mjesto ili način održavanja kao poslovni podatak, bez tehničke integracije;
-* potvrđuje poziv podnosiocu.
+* određuje mjesto ili način održavanja;
+* poziva podnosioca.
 
-Nakon potvrde poziva Platforma šalje obavještenje na **registrovanu e-mail adresu** podnosioca na digitalnom servisu, prema usvojenom toku Poglavlja 14. Ne uvodi se širi e-mail lifecycle, status isporuke ni automatsko ponovno slanje.
-
-Promjena termina **mora** imati evidentiran razlog. Čuvaju se:
-
-* prvobitni termin;
-* novi termin;
-* odgovorno lice;
-* datum i vrijeme promjene.
+Digital **ne** čuva termin, mjesto, poziv ni istoriju izmjene termina. Ne uvodi se širi e-mail lifecycle, status isporuke ni automatsko ponovno slanje zbog usmenog.
 
 Platforma **ne** mijenja termin automatski i **ne** određuje termin umjesto Komisije (`BM-ML-034`).
 
@@ -2971,7 +2965,7 @@ Druga sjednica i usmena obrazloženja poslovno se zakazuju najkasnije sedam dana
 
 Za usmeno obrazloženje potrebna su **sva tri člana** Komisije (`BM-ML-003`). Predsjednik je **jedan od ta tri člana**.
 
-Ako nijesu prisutna sva tri člana, usmeno obrazloženje **ne** može se evidentirati kao pravilno održano.
+Ako nijesu prisutna sva tri člana, usmeno obrazloženje **nije** pravilno održano. Digital **ne** vodi tu evidenciju.
 
 Zamjenski član sa važećim ovlašćenjem može učestvovati umjesto člana kojeg mijenja (`BM-ML-007`).
 
@@ -2981,19 +2975,17 @@ Usmeno obrazloženje **nije** izmjena ni dopuna zaključane prijave.
 
 ## 15.3. Evidentiranje održavanja
 
-Predsjednik evidentira:
+Digital **ne** vodi obrazac „Evidencija usmenog“ i **ne** upisuje:
 
 * da je usmeno obrazloženje održano;
 * stvarni datum i vrijeme;
 * mjesto ili način održavanja;
 * prisutna tri člana Komisije;
 * podnosioca ili ovlašćenog predstavnika;
-* eventualnu službenu napomenu;
+* službenu napomenu usmenog;
 * završetak usmenog obrazloženja.
 
-Tek nakon **evidentiranog završetka** može se završiti konačno individualno ocjenjivanje svih deset kriterijuma. Detalj: Poglavlje 16.
-
-Nacrti ocjena mogu se unositi **ranije**. Platforma **ne** zaključava unos nacrta prije usmenog obrazloženja (`BM-ML-039`).
+Konačno individualno ocjenjivanje svih deset kriterijuma, uključujući kriterijum 10, otvara se prema Poglavlju 16, bez zapisa usmenog. Nacrti ocjena mogu se unositi **ranije**. Platforma **ne** zaključava unos nacrta prije usmenog obrazloženja i **ne** uvodi posebno otključavanje kriterijuma 10 (`BM-ML-039`).
 
 ## 15.4. Nedolazak podnosioca
 
@@ -3006,13 +2998,7 @@ Ovaj dokument **ne** izmišlja dodatne posljedice. Nedolazak **ne** znači:
 * automatsku zabranu novog termina;
 * novo osnovno stanje prijave.
 
-Predsjednik može evidentirati nedolazak. Evidentira se:
-
-* ko bilježi nedolazak;
-* stvarni termin;
-* razlog, **samo ako je poznat**.
-
-Novi termin **nije** automatska posljedica nedolaska. Ženski profil u `KN-FS-003` taj tok **ne uređuje**. Odsustvo pravila u ženskom profilu **nije** zabrana. Za mlade se **ne** izmišlja posljedica nedolaska niti automatski novi termin bez posebnog pravila. Eventualna izmjena termina ostaje samo opšta radnja iz §15.1, sa evidentiranim razlogom i istorijom.
+Predsjednik **ne** evidentira nedolazak u Digitalu. Novi termin **nije** automatska posljedica nedolaska. Ženski profil u `KN-FS-003` taj tok **ne uređuje**. Za mlade se **ne** izmišlja posljedica nedolaska niti automatski novi termin. Eventualna izmjena termina ostaje poslovna radnja van Platforme.
 
 ## 15.5. Zapisnik ili službena bilješka
 
@@ -3020,7 +3006,7 @@ Novi termin **nije** automatska posljedica nedolaska. Ženski profil u `KN-FS-00
 
 Ovaj dokument **ne** proširuje taj obim. Poseban tok zapisnika, prilog zapisnika i evidencija pitanja i odgovora **nijesu** uvedeni.
 
-Jedini dozvoljeni tekstualni unos u tom obimu je **službena napomena** iz §15.3. Povezana je sa konkretnom prijavom. Čuva se revizijski trag.
+Poseban tekstualni unos usmenog **nije** uveden. Ocjenjivanje i opciona napomena ocjene ostaju u Poglavlju 16.
 
 Službena napomena **ne** omogućava:
 
@@ -3034,13 +3020,13 @@ Službena napomena **ne** omogućava:
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Termin | Kapija §15.1 / 15.7.1 | zakazivanje | predsjednik; datum, vrijeme, mjesto ili način; nema automatskog zakazivanja | termin evidentiran; poziv potvrđen | predsjednik | `BM-ML-034` |
-| Obavještenje | poziv potvrđen | slanje | registrovana e-mail adresa | obavještenje poslato; bez lifecycle-a | sistem | Poglavlje 14; `BM-ML-036` |
-| Termin | postoji | izmjena | evidentiran razlog | novi termin; čuvaju se stari, novi, lice i vrijeme; nije automatski | predsjednik | `BM-ML-034` |
-| Usmeno | zakazano | evidencija održavanja | nijesu prisutna sva tri člana | nije pravilno održano | sistem | `BM-ML-003` |
-| Usmeno | zakazano | evidencija održavanja | prisutna sva tri člana; podnosilac ili ovlašćeno lice | održano; evidentiran završetak | predsjednik | `BM-ML-003`; `BM-ML-038` |
-| Usmeno | zakazano | nedolazak | predsjednik bilježi | evidentiran nedolazak; nema eliminacije ni automatske ocjene | predsjednik | `KN-FS-003` §12 granica |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | usmeno nije evidentirano kao završeno | blokirano | član | `BM-ML-039` |
+| Termin | Kapija §15.1 / 15.7.1 | zakazivanje | predsjednik van Platforme; nema automatskog zakazivanja | Digital ne čuva termin ni poziv | predsjednik | `BM-ML-034` |
+| Obavještenje | poziv van Platforme | slanje | — | Digital ne šalje posebno obavještenje usmenog | sistem | Poglavlje 14; `BM-ML-036` |
+| Termin | postoji van Platforme | izmjena | razlog Komisije | Digital ne čuva istoriju termina | predsjednik | `BM-ML-034` |
+| Usmeno | zakazano van Platforme | održavanje | nijesu prisutna sva tri člana | nije pravilno održano; Digital ne vodi zapis | Komisija | `BM-ML-003` |
+| Usmeno | zakazano van Platforme | održavanje | prisutna sva tri člana; podnosilac ili ovlašćeno lice | održano van Platforme; ocjena kroz kriterijum 10 | Komisija | `BM-ML-003`; `BM-ML-038` |
+| Usmeno | zakazano van Platforme | nedolazak | predsjednik bilježi van Platforme | nema Digital zapisa; nema eliminacije ni automatske ocjene | predsjednik | `KN-FS-003` §12 granica |
+| Individualna ocjena | nacrt | Završi ocjenjivanje | nema svih 10 ocjena ili nema potvrde | blokirano | član | `BM-ML-039` |
 
 ## 15.7. Prihvatni kriterijumi — usmeno obrazloženje
 
@@ -3055,9 +3041,9 @@ Dozvoljena su dva puta do ove kapije:
 
 Istorijski M3, uključujući kriterijum 1 vrijednost `Potpuna` ili `Nepotpuna`, ostaje nepromijenjen zapis. Kapija **ne** zahtijeva da kriterijum 1 i dalje ima vrijednost `Potpuna` nakon uspješnog prigovora.
 
-**Kada:** predsjednik odredi termin i potvrdi poziv.
+**Kada:** predsjednik odredi termin i pozove podnosioca.
 
-**Onda:** Platforma čuva datum, vrijeme i mjesto ili način, i šalje obavještenje na registrovanu e-mail adresu. Ne uvodi se videokonferencija, kalendar ni SMS. Platforma **ne** zakazuje termin automatski.
+**Onda:** Digital **ne** čuva datum, vrijeme ni mjesto, i **ne** šalje posebno obavještenje usmenog. Ne uvodi se videokonferencija, kalendar ni SMS. Platforma **ne** zakazuje termin automatski.
 
 Izvor: `BM-ML-034`; `BM-ML-035`–`BM-ML-037`; `BM-ML-043`.
 
@@ -3067,7 +3053,7 @@ Izvor: `BM-ML-034`; `BM-ML-035`–`BM-ML-037`; `BM-ML-043`.
 
 **Kada:** predsjednik ga izmijeni.
 
-**Onda:** izmjena zahtijeva razlog. Čuvaju se prvobitni i novi termin, lice i vrijeme. Platforma **ne** mijenja termin automatski.
+**Onda:** izmjena ostaje poslovna radnja van Platforme. Digital **ne** čuva prvobitni ni novi termin. Platforma **ne** mijenja termin automatski.
 
 Izvor: `BM-ML-034`.
 
@@ -3075,19 +3061,19 @@ Izvor: `BM-ML-034`.
 
 **Ako:** nijesu prisutna sva tri člana, uključujući važećeg zamjenskog člana na mjestu odsutnog.
 
-**Kada:** se pokuša evidentirati pravilno održano usmeno obrazloženje.
+**Kada:** se pokuša evidentirati pravilno održano usmeno obrazloženje u Digitalu.
 
-**Onda:** Platforma blokira tu evidenciju.
+**Onda:** Platforma **ne** prima tu evidenciju. Usmeno ostaje van Platforme.
 
 Izvor: `BM-ML-003`; `BM-ML-007`.
 
 ### 15.7.4 — Završetak prije konačnog ocjenjivanja
 
-**Ako:** usmeno obrazloženje nije evidentirano kao završeno.
+**Ako:** usmeno obrazloženje nije evidentirano u Digitalu.
 
 **Kada:** član pokuša `Završi ocjenjivanje`.
 
-**Onda:** Platforma blokira završavanje. Unos nacrta ostaje dozvoljen.
+**Onda:** Platforma **ne** blokira završavanje zbog odsustva zapisa usmenog. Unos nacrta ostaje dozvoljen. Konačna ocjena i dalje zahtijeva svih deset kriterijuma i potvrdu člana.
 
 Izvor: `BM-ML-039`.
 
@@ -3095,9 +3081,9 @@ Izvor: `BM-ML-039`.
 
 **Ako:** podnosilac ne dođe.
 
-**Kada:** predsjednik evidentira nedolazak.
+**Kada:** podnosilac ne dođe na usmeno obrazloženje.
 
-**Onda:** čuvaju se lice koje bilježi, stvarni termin i razlog ako je poznat. Prijava **ne** biva eliminisana, kriterijum 10 **ne** dobija automatsku ocjenu, a novi termin **nije** automatski.
+**Onda:** Digital **ne** čuva nedolazak. Prijava **ne** biva eliminisana, kriterijum 10 **ne** dobija automatsku ocjenu, a novi termin **nije** automatski.
 
 Izvor: granica `KN-FS-003` §12; `BM-ML-038`.
 
@@ -3119,7 +3105,7 @@ Status poglavlja: USVOJENO
 
 Ovo poglavlje određuje individualno ocjenjivanje, nacrt, završavanje, zamjenu člana, tajnost i prosjek (`BM-ML-003`; `BM-ML-007`; `BM-ML-038`–`BM-ML-041`; O-01).
 
-Strukturni obrazac nacrta, eksplicitnog završavanja, tajnosti i opcione napomene usklađen je sa `KN-FS-003` Poglavljem 13, uz **tačno tri člana** i pravila mladih. Ne preuzima se pet članova. Ne preuzima se odsustvo kapije za završavanje: za mlade `Završi ocjenjivanje` zahtijeva evidentiran završetak usmenog obrazloženja.
+Strukturni obrazac nacrta, eksplicitnog završavanja, tajnosti i opcione napomene usklađen je sa `KN-FS-003` Poglavljem 13, uz **tačno tri člana** i pravila mladih. Ne preuzima se pet članova. `Završi ocjenjivanje` zahtijeva svih deset omladinskih kriterijuma i potvrdu člana, kao ženski tok, **bez** zasebne evidencije usmenog.
 
 Ne određuje eliminatorne kriterijume, prag, rang-listu ni raspodjelu. To pripada Poglavljima 18–21.
 
@@ -3162,7 +3148,7 @@ Dok član **nije** odabrao `Završi ocjenjivanje`, njegovo ocjenjivanje ostaje *
 * može unositi i mijenjati nacrt;
 * može sačuvati djelimično popunjene ocjene;
 * može unositi nacrt **prije** usmenog obrazloženja;
-* **ne** može završiti ocjenjivanje dok usmeno obrazloženje te prijave nije evidentirano kao završeno;
+* **ne** čeka Digital zapis usmenog da bi završio ocjenjivanje;
 * **ne** može završiti dok nije unio svih deset ocjena;
 * prije završavanja dobija jasno upozorenje da će ocjene biti zaključane.
 
@@ -3174,8 +3160,8 @@ Predsjednik **nema** privilegovan uvid u ocjene drugih članova tokom ciklusa. A
 
 Radnja `Završi ocjenjivanje`:
 
-* zahtijeva svih deset ocjena;
-* zahtijeva evidentirano završeno usmeno obrazloženje te prijave;
+* zahtijeva svih deset ocjena, uključujući kriterijum 10;
+* **ne** zahtijeva Digital zapis usmenog obrazloženja;
 * zahtijeva izričitu potvrdu člana;
 * zaključava ocjene i napomenu;
 * **ne** dozvoljava izmjenu ni vraćanje u nacrt;
@@ -3246,8 +3232,8 @@ Detalj praga i rangiranja: Poglavlja 19 i 20.
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
 | Individualna ocjena | — | unos nacrta | prijava ide u ocjenjivanje; važeći član | nacrt; dozvoljen i prije usmenog | član ili zamjenski član | `BM-ML-039` |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | nema svih 10 ocjena ili usmeno nije završeno | blokirano | član | `BM-ML-039` |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | svih 10 ocjena; usmeno završeno; izričita potvrda | zaključana; evidentirani član, datum i vrijeme | isto lice | `BM-ML-039` |
+| Individualna ocjena | nacrt | Završi ocjenjivanje | nema svih 10 ocjena ili nema potvrde | blokirano | član | `BM-ML-039` |
+| Individualna ocjena | nacrt | Završi ocjenjivanje | svih 10 ocjena; izričita potvrda | zaključana; evidentirani član, datum i vrijeme | isto lice | `BM-ML-039` |
 | Individualna ocjena | zaključana | izmjena ili povratak u nacrt | — | zabranjeno | svi | `BM-ML-039` |
 | Mjesto Komisije | zamjena; prethodni nacrt nije zaključen | ocjenjivanje zamjenskog člana | O-01 | nacrt prethodnog van obračuna; zamjena ocjenjuje svih 10 | zamjenski član | `BM-ML-007`; `BM-ML-039` |
 | Mjesto Komisije | zamjena; prethodna ocjena zaključana | ocjenjivanje zamjenskog člana | O-01 | prethodna ocjena ostaje; ne ponavlja se | zamjenski član | `BM-ML-039` |
@@ -3270,17 +3256,17 @@ Izvor: `BM-ML-038`.
 
 ### 16.8.2 — Nacrt prije usmenog obrazloženja
 
-**Ako:** usmeno obrazloženje još nije evidentirano kao završeno.
+**Ako:** usmeno obrazloženje još nije evidentirano u Digitalu.
 
 **Kada:** član unosi ocjene.
 
-**Onda:** Platforma dozvoljava nacrt, uključujući kriterijum 10. `Završi ocjenjivanje` ostaje blokiran.
+**Onda:** Platforma dozvoljava nacrt, uključujući kriterijum 10. `Završi ocjenjivanje` **nije** blokiran zbog odsustva zapisa usmenog.
 
 Izvor: `BM-ML-039`.
 
 ### 16.8.3 — Završavanje
 
-**Ako:** su unesene sve ocjene, usmeno je završeno i član potvrdi upozorenje.
+**Ako:** su unesene sve ocjene i član potvrdi upozorenje.
 
 **Kada:** izvrši `Završi ocjenjivanje`.
 
@@ -4740,11 +4726,11 @@ Izvori: Poglavlja 10 i 14; `BM-ML-023`; `BM-ML-034`; `BM-ML-036`; `BM-ML-037`.
 Platforma **ne** smije:
 
 * zakazati usmeno ili drugu sjednicu samo zbog istorijske M3 vrijednosti `Potpuna`, ili dok prijava nije `submitted`, M3 nije potvrđen, traje rok za prigovor, postoji neriješen blagovremen prigovor ili postoji konačno aktivan razlog;
-* evidentirati pravilno održano usmeno obrazloženje bez sva tri člana;
+* uvesti zasebnu Digital evidenciju usmenog termina, prisustva, nedolaska ili završetka;
 * nedolazak podnosioca automatski pretvoriti u eliminaciju ili ocjenu kriterijuma 10;
 * zapisnik koristiti za dopunu prijave;
 * blokirati čuvanje nacrta ocjena prije usmenog obrazloženja;
-* dozvoliti završavanje ocjena prije evidentiranog završetka usmenog obrazloženja;
+* zahtijevati Digital zapis usmenog kao kapiju nacrta ili konačne ocjene;
 * dozvoliti završavanje bez svih deset ocjena;
 * omogućiti izmjenu zaključane ocjene;
 * spojiti djelimične ocjene prethodnog i zamjenskog člana;
@@ -5514,4 +5500,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.14**
+**Kraj dokumenta KN-FS-002 v1.0.15**

@@ -494,11 +494,7 @@ class YouthAggregateAndBonusTest extends TestCase
      */
     private function youthReadyToLock(): array
     {
-        $ctx = $this->youthWithPassedM3();
-        $this->storeAndConfirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, true);
-
-        return $ctx;
+        return $this->youthWithPassedM3();
     }
 
     /**
@@ -666,45 +662,6 @@ class YouthAggregateAndBonusTest extends TestCase
             'members' => $members,
             'application' => $application->fresh(),
         ];
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
-     */
-    private function storeAndConfirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Druga sjednica',
-                'present_member_ids' => array_map(fn (CommissionMember $member) => $member->id, $ctx['members']),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, application: Application}  $ctx
-     */
-    private function storeAndCompleteOral(array $ctx, bool $attended): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-            ])->assertSessionHasNoErrors();
-        $payload = [
-            'scheduled_at' => now()->format('Y-m-d H:i:s'),
-            'applicant_attended' => $attended ? '1' : '0',
-            'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-        ];
-        if ($attended) {
-            $payload['held_at'] = now()->format('Y-m-d H:i:s');
-        }
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $payload)
-            ->assertSessionHasNoErrors();
     }
 
     private function userWithRole(string $role): User

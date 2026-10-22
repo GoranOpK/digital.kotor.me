@@ -12,7 +12,6 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\YouthSecondSessionGate;
-use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\ScoringProfileConfig;
 use Database\Seeders\RoleSeeder;
@@ -95,25 +94,20 @@ class YouthIndividualScoringTest extends TestCase
             ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
                 'scheduled_at' => now()->format('Y-m-d H:i:s'),
             ])
-            ->assertSessionHasErrors('oral');
-        $this->assertSame(CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE, session('errors')->first('oral'));
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
     }
 
-    public function test_final_score_is_blocked_until_this_application_oral_is_completed(): void
+    public function test_final_score_is_allowed_without_oral_record(): void
     {
         $ctx = $this->youthWithPassedM3();
+        $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
             ->assertSessionHasNoErrors();
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
-            ->assertForbidden();
-        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
-
-        $this->storeAndCompleteOral($ctx, true);
-        $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_10' => 4]))
             ->assertSessionHasNoErrors();
         $score = EvaluationScore::query()
@@ -123,6 +117,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertNotNull($score->completed_at);
         $this->assertSame(4, (int) $score->criterion_10);
         $this->assertSame('submitted', $ctx['application']->fresh()->status);
+        $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
     }
 
     public function test_draft_is_allowed_before_oral_and_may_be_incomplete(): void
@@ -159,7 +154,7 @@ class YouthIndividualScoringTest extends TestCase
     {
         $ctx = $this->youthWithPassedM3();
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
-        $this->assertFalse(app(YouthSecondSessionGate::class)->youthLockEvidenceIsComplete($ctx['application']->fresh()));
+        $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
@@ -203,14 +198,16 @@ class YouthIndividualScoringTest extends TestCase
             '/<input\b[^>]*\bname="criterion_1"[^>]*\bvalue="4"/',
             $reloadHtml
         );
-        $this->assertMatchesRegularExpression(
+        $this->assertDoesNotMatchRegularExpression(
             '/id="youth-finish-scoring"[^>]*disabled/',
             $html
         );
-        $this->assertMatchesRegularExpression(
+        $this->assertDoesNotMatchRegularExpression(
             '/id="youth-finish-scoring"[^>]*disabled/',
             $reloadHtml
         );
+        $this->assertStringNotContainsString('završene evidencije usmenog', $html);
+        $this->assertStringNotContainsString('Evidencija usmenog', $html);
     }
 
     public function test_full_draft_is_not_automatically_final(): void
@@ -230,56 +227,47 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertSame('submitted', $ctx['application']->fresh()->status);
     }
 
-    public function test_final_is_rejected_before_second_session_and_before_oral(): void
+    public function test_final_is_allowed_after_m3_without_second_session_or_oral_record(): void
     {
         $ctx = $this->youthWithPassedM3();
+        $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
-            ->assertForbidden();
-        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
-
-        $this->storeAndConfirmSecond($ctx);
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
-            ->assertForbidden();
-        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_10' => 5]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+        $score = EvaluationScore::query()
+            ->where('application_id', $ctx['application']->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $this->assertNotNull($score?->completed_at);
+        $this->assertSame(5, (int) $score->criterion_10);
         $this->assertSame('submitted', $ctx['application']->fresh()->status);
+        $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
     }
 
-    public function test_completed_oral_with_attendance_or_no_show_allows_final_without_auto_score(): void
+    public function test_criterion_ten_stays_required_and_is_not_auto_scored(): void
     {
-        $attended = $this->youthWithPassedM3();
-        $this->storeAndConfirmSecond($attended);
-        $this->storeAndCompleteOral($attended, true);
-        $this->actingAs($attended['chairman']->user)
-            ->post(route('evaluation.store', $attended['application']), $this->finalPayload(['criterion_10' => 4]))
-            ->assertSessionHasNoErrors();
-        $attendedScore = EvaluationScore::query()
-            ->where('application_id', $attended['application']->id)
-            ->where('commission_member_id', $attended['chairman']->id)
-            ->first();
-        $this->assertNotNull($attendedScore->completed_at);
-        $this->assertSame(4, (int) $attendedScore->criterion_10);
-        $this->assertSame('submitted', $attended['application']->fresh()->status);
+        $ctx = $this->youthWithPassedM3();
+        $incomplete = $this->finalPayload();
+        unset($incomplete['criterion_10']);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $incomplete)
+            ->assertSessionHasErrors('criterion_10');
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
 
-        $noShow = $this->youthWithPassedM3();
-        $this->storeAndConfirmSecond($noShow);
-        $this->storeAndCompleteOral($noShow, false);
-        $this->actingAs($noShow['chairman']->user)
-            ->post(route('evaluation.store', $noShow['application']), $this->finalPayload(['criterion_10' => 2]))
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_10' => 2]))
             ->assertSessionHasNoErrors();
-        $noShowApp = $noShow['application']->fresh();
-        $this->assertSame('submitted', $noShowApp->status);
-        $this->assertNotSame('rejected', $noShowApp->status);
-        $this->assertNull($noShowApp->final_score);
-        $noShowScore = EvaluationScore::query()
-            ->where('application_id', $noShow['application']->id)
-            ->where('commission_member_id', $noShow['chairman']->id)
+        $score = EvaluationScore::query()
+            ->where('application_id', $ctx['application']->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
             ->first();
-        $this->assertSame(2, (int) $noShowScore->criterion_10);
-        $this->assertNotSame(0, (int) $noShowScore->criterion_10);
+        $this->assertSame(2, (int) $score->criterion_10);
+        $this->assertNotSame(0, (int) $score->criterion_10);
+        $this->assertSame('submitted', $ctx['application']->fresh()->status);
+        $this->assertNotSame('rejected', $ctx['application']->fresh()->status);
     }
 
     public function test_youth_labels_scale_and_no_zensko_bonus_markup(): void
@@ -607,11 +595,7 @@ class YouthIndividualScoringTest extends TestCase
      */
     private function youthReadyToLock(): array
     {
-        $ctx = $this->youthWithPassedM3();
-        $this->storeAndConfirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, true);
-
-        return $ctx;
+        return $this->youthWithPassedM3();
     }
 
     /**
@@ -810,45 +794,6 @@ class YouthIndividualScoringTest extends TestCase
             'members' => $members,
             'application' => $application->fresh(),
         ];
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
-     */
-    private function storeAndConfirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Druga sjednica',
-                'present_member_ids' => array_map(fn (CommissionMember $member) => $member->id, $ctx['members']),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, application: Application}  $ctx
-     */
-    private function storeAndCompleteOral(array $ctx, bool $attended): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-            ])->assertSessionHasNoErrors();
-        $payload = [
-            'scheduled_at' => now()->format('Y-m-d H:i:s'),
-            'applicant_attended' => $attended ? '1' : '0',
-            'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-        ];
-        if ($attended) {
-            $payload['held_at'] = now()->format('Y-m-d H:i:s');
-        }
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $payload)
-            ->assertSessionHasNoErrors();
     }
 
     /**
