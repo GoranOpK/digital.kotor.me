@@ -159,8 +159,43 @@
     }
     .mmsp-p1-alert-info {
         background: #dbeafe;
-        border-color: #3b82f6;
+        border-color: #93c5fd;
         color: #1e40af;
+    }
+    .mmsp-p1-type-card {
+        background:#fff;
+        border-radius:16px;
+        padding:28px 32px;
+        box-shadow:0 1px 3px rgba(0,0,0,.1);
+        margin-bottom:24px;
+    }
+    .mmsp-p1-type-note {
+        color:#6b7280;
+        font-size:13px;
+        margin:0 0 14px;
+        line-height:1.5;
+    }
+    .mmsp-p1-radio-group {
+        display:flex;
+        gap:24px;
+        flex-wrap:wrap;
+        align-items:center;
+    }
+    .mmsp-p1-radio-option {
+        display:flex;
+        align-items:center;
+        gap:8px;
+        font-size:14px;
+        color:#374151;
+    }
+    .mmsp-p1-radio-option input {
+        width:16px;
+        height:16px;
+    }
+    .mmsp-p1-section-divider {
+        border-top:1px solid #e5e7eb;
+        padding-top:20px;
+        margin-top:8px;
     }
     .mmsp-p1-header {
         background: #fff;
@@ -312,7 +347,11 @@
             @endif
         </div>
 
-        @if(session('success'))
+        @if(!$readOnly)
+            <div class="mmsp-p1-alert mmsp-p1-alert-info">
+                <strong>Nastavak popunjavanja:</strong> Već imate započetu prijavu. Možete je nastaviti popunjavati.
+            </div>
+        @elseif(session('success'))
             <div class="mmsp-p1-alert mmsp-p1-alert-success">{{ session('success') }}</div>
         @endif
         @if($errors->any())
@@ -331,13 +370,37 @@
             </div>
         @endif
 
+        @unless($readOnly)
+            <div class="mmsp-p1-type-card">
+                <label class="mmsp-p1-label" style="margin-bottom:8px;">
+                    Tip podnosioca prijave <span class="mmsp-p1-req">*</span>
+                </label>
+                <p class="mmsp-p1-type-note">
+                    <strong>Napomena:</strong> Tip prijave birate na stranici konkursa i zaključan je za ovu prijavu.
+                </p>
+                <div class="mmsp-p1-radio-group">
+                    <label class="mmsp-p1-radio-option">
+                        <input type="radio" disabled @checked($isEntrepreneur)>
+                        <span>Preduzetnik — Obrazac P1a</span>
+                    </label>
+                    <label class="mmsp-p1-radio-option">
+                        <input type="radio" disabled @checked(!$isEntrepreneur)>
+                        <span>Privredno društvo (DOO) — Obrazac P1b</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mmsp-p1-alert mmsp-p1-alert-info">
+                <strong>Važno:</strong> Odabrani tip prijave određuje Obrazac {{ $code }} i pripadajuću dokumentaciju prema MMSP Odluci.
+            </div>
+        @endunless
+
         <form method="POST" action="{{ route('applications.canonical-p1.update', $application) }}">
             @csrf
             @method('PUT')
 
             <fieldset @disabled($readOnly) style="border: 0; padding: 0; margin: 0;">
                 <div class="mmsp-p1-card">
-                    <h2>Podaci prijave</h2>
                     <p class="mmsp-p1-hint">Polja označena <span class="mmsp-p1-req">*</span> obavezna su za konačnu predaju. Obrazac se može sačuvati i dok nijesu sva popunjena.</p>
 
                     <div class="mmsp-p1-full">
@@ -477,11 +540,9 @@
                             </div>
                         </div>
                     @endunless
-                </div>
 
-                <div class="mmsp-p1-card">
-                    <h2>Izjava o tačnosti podataka</h2>
-                    <div class="mmsp-p1-check">
+                    <div class="mmsp-p1-section-divider">
+                        <div class="mmsp-p1-check">
                         <input id="accuracy_confirmed" type="checkbox" name="accuracy_confirmed" value="1" @checked(old('accuracy_confirmed', $form->accuracy_confirmed_at !== null)) @disabled($readOnly)>
                         <label for="accuracy_confirmed">
                             @if(in_array('accuracy_confirmed', $required, true))<span class="mmsp-p1-req">*</span>@endif
@@ -495,10 +556,13 @@
                         @endif
                     </div>
                     @error('accuracy_confirmed')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
+                    </div>
                 </div>
 
                 @unless($readOnly)
-                    <button type="submit" class="mmsp-p1-submit">Sačuvaj Obrazac {{ $code }}</button>
+                    <div style="text-align:center;">
+                        <button type="submit" class="mmsp-p1-submit">Sačuvaj kao nacrt</button>
+                    </div>
                 @endunless
             </fieldset>
         </form>
