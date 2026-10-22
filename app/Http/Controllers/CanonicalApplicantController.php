@@ -39,10 +39,8 @@ class CanonicalApplicantController extends Controller
             return $redirect;
         }
 
-        // MMSP više nema poseban ekran za ručni izbor tipa prijave.
-        // Tip se prikazuje na konkursu i određuje iz registrovanog identiteta korisnika.
-        return redirect()->route('competitions.show', $competition)
-            ->with('info', 'Tip prijave i potrebna dokumentacija određuju se prema registrovanom tipu korisnika.');
+        // Izbor P1a/P1b se radi na stranici MMSP konkursa.
+        return redirect()->route('competitions.show', $competition);
     }
 
     public function start(Request $request, Competition $competition): RedirectResponse
@@ -51,16 +49,14 @@ class CanonicalApplicantController extends Controller
             return $redirect;
         }
 
-        $identity = app(CurrentIdentityResolver::class)->viewFor($request->user());
-        $legalForm = CanonicalLegalForm::forUserType($identity->userType);
-        if ($legalForm === null) {
+        $legalForm = $request->input('legal_form');
+        if (! CanonicalLegalForm::isValid($legalForm)) {
             return redirect()->route('competitions.show', $competition)
-                ->withErrors(['error' => CanonicalLegalForm::eligibilityMessage()]);
+                ->withErrors(['legal_form' => CanonicalApplicantFormService::LEGAL_FORM_REQUIRED_MESSAGE]);
         }
 
-        // Autoritativni tip prijave dolazi iz registrovanog korisničkog identiteta,
-        // ne iz browser payload-a. Time MMSP prati isti UX princip kao ostali moduli,
-        // dok P1a/P1b i dokumentacija ostaju po MMSP Odluci.
+        // Za MMSP korisnik bira da li podnosi prijavu kao preduzetnik (P1a)
+        // ili privredno društvo (P1b), nezavisno od tipa naloga na Digitalu.
         $result = $this->forms->start($competition, $request->user(), $legalForm);
         if (! $result->succeeded) {
             return redirect()->route('competitions.show', $competition)
