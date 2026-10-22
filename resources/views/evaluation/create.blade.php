@@ -487,6 +487,12 @@
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
+        @if(session('success'))
+            <div class="alert no-print" role="status" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                {{ session('success') }}
+            </div>
+        @endif
+
         @include('evaluation._youth_preliminary_ranking', [
             'youthRankingView' => $youthRankingView ?? null,
             'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
@@ -762,9 +768,12 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" data-needs-final-confirm="{{ ($scoringIsAllowed && !($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false)) ? '1' : '0' }}" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @elseif(! $scoringIsAllowed) onsubmit="if (!event.submitter || event.submitter.getAttribute('name') !== 'youth_bonus_action') { event.preventDefault(); return false; }" @endif>
+            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" data-needs-final-confirm="{{ ($scoringIsAllowed && !($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false)) ? '1' : '0' }}" data-scoring-allowed="{{ $scoringIsAllowed ? '1' : '0' }}" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
                 <input type="hidden" name="scoring_confirmed" value="0">
+                @if($isOmladinskoScoring && !($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false))
+                    <button type="submit" name="save_as_draft" value="1" form="evaluationForm" hidden class="no-print" tabindex="-1" aria-hidden="true" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled @endif>Sačuvaj nacrt</button>
+                @endif
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section form-section-scores">
@@ -845,6 +854,7 @@
                                                     <input 
                                                         type="number" 
                                                         name="criterion_{{ $num }}" 
+                                                        form="evaluationForm"
                                                         class="score-input" 
                                                         min="1" 
                                                         max="5" 
@@ -1197,6 +1207,7 @@
                                     {{-- Trenutni član može editovati svoju napomenu --}}
                                     <textarea 
                                         name="notes" 
+                                        form="evaluationForm"
                                         class="form-control" 
                                         rows="6" 
                                         placeholder="Unesite dodatne napomene..."
@@ -1223,6 +1234,7 @@
                             </label>
                             <textarea 
                                 name="notes" 
+                                form="evaluationForm"
                                 class="form-control" 
                                 rows="6" 
                                 placeholder="Unesite dodatne napomene..."
@@ -1290,6 +1302,11 @@
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && ($canViewOtherMembersScores ?? false))
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
+                        @if($isOmladinskoScoring)
+                            <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
+                                Individualna ocjena je zaključana i ne može se mijenjati.
+                            </div>
+                        @endif
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         @endif
@@ -1298,6 +1315,11 @@
                         </a>
                     @elseif($hasCompletedEvaluation)
                         {{-- Član je završio ocjenjivanje — ocjene su nepromjenjive --}}
+                        @if($isOmladinskoScoring)
+                            <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
+                                Individualna ocjena je zaključana i ne može se mijenjati.
+                            </div>
+                        @endif
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         @endif
@@ -1307,18 +1329,12 @@
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
                         @if($isOmladinskoScoring)
-                            @if($hasCompletedEvaluation)
-                                <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
-                                    Individualna ocjena je zaključana i ne može se mijenjati.
+                            <button type="submit" name="save_as_draft" value="1" form="evaluationForm" id="youth-save-score-draft" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj nacrt</button>
+                            <button type="submit" form="evaluationForm" id="youth-finish-scoring" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed || ! ($youthLockEvidenceReady ?? false)) disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;" @else style="margin-left: 12px;" @endif>Završi ocjenjivanje</button>
+                            @if(! ($youthLockEvidenceReady ?? false))
+                                <div style="margin-top: 12px; color: #9a3412; font-size: 13px;">
+                                    Završetak ocjenjivanja je onemogućen dok usmeno predstavljanje ove prijave nije evidentirano kao završeno.
                                 </div>
-                            @else
-                                <button type="submit" name="save_as_draft" value="1" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj nacrt</button>
-                                <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed || ! ($youthLockEvidenceReady ?? false)) disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;" @else style="margin-left: 12px;" @endif>Završi ocjenjivanje</button>
-                                @if(! ($youthLockEvidenceReady ?? false))
-                                    <div style="margin-top: 12px; color: #9a3412; font-size: 13px;">
-                                        Završetak ocjenjivanja je onemogućen dok usmeno predstavljanje ove prijave nije evidentirano kao završeno.
-                                    </div>
-                                @endif
                             @endif
                             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                         @else
@@ -1376,18 +1392,29 @@
 
     document.getElementById('evaluationForm')?.addEventListener('submit', function (event) {
         const submitter = event.submitter;
-        if (submitter && submitter.getAttribute('name') === 'youth_bonus_action') {
-            const confirmed = this.querySelector('[name="scoring_confirmed"]');
+        const submitterName = submitter ? (submitter.getAttribute('name') || '') : '';
+        const confirmed = this.querySelector('[name="scoring_confirmed"]');
+        const scoringAllowed = this.dataset.scoringAllowed === '1';
+
+        if (submitterName === 'youth_bonus_action') {
             if (confirmed) {
                 confirmed.value = '0';
             }
             return;
         }
-        if (submitter && submitter.getAttribute('name') === 'save_as_draft') {
-            const confirmed = this.querySelector('[name="scoring_confirmed"]');
+
+        if (submitterName === 'save_as_draft') {
             if (confirmed) {
                 confirmed.value = '0';
             }
+            if (! scoringAllowed) {
+                event.preventDefault();
+            }
+            return;
+        }
+
+        if (! scoringAllowed) {
+            event.preventDefault();
             return;
         }
 
@@ -1395,7 +1422,6 @@
             return;
         }
 
-        const confirmed = this.querySelector('[name="scoring_confirmed"]');
         if (!window.confirm('Ovim potvrđujete unesene ocjene i napomenu. Nakon potvrde individualno bodovanje ove prijave više nije moguće mijenjati. Da li želite da završite bodovanje?')) {
             event.preventDefault();
             if (confirmed) {

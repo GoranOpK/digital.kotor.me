@@ -155,6 +155,64 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertNull($ctx['application']->fresh()->ranking_position);
     }
 
+    public function test_chairman_partial_draft_from_real_form_persists_on_reload(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse(app(YouthSecondSessionGate::class)->youthLockEvidenceIsComplete($ctx['application']->fresh()));
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+
+        $payload = $this->youthDraftPayloadFromRenderedForm($html, ['criterion_1' => '4']);
+        $this->assertSame('1', $payload['save_as_draft']);
+        $this->assertSame('4', $payload['criterion_1']);
+        $this->assertArrayNotHasKey('criterion_2', $payload);
+        $this->assertArrayNotHasKey('youth_bonus_action', $payload);
+        $this->assertSame('0', $payload['scoring_confirmed'] ?? '0');
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $payload)
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success', 'Nacrt ocjene je sačuvan.')
+            ->assertRedirect(route('evaluation.create', $ctx['application']));
+
+        $score = EvaluationScore::query()
+            ->where('application_id', $ctx['application']->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $this->assertNotNull($score);
+        $this->assertNull($score->completed_at);
+        $this->assertNull($score->canonical_seat_no);
+        $this->assertNull($score->final_score);
+        $this->assertSame(4, (int) $score->criterion_1);
+        $this->assertNull($score->criterion_2);
+        $this->assertSame('submitted', $ctx['application']->fresh()->status);
+        $this->assertNull($ctx['application']->fresh()->final_score);
+        $this->assertNull($ctx['application']->fresh()->evaluated_at);
+
+        $reload = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk();
+        $reloadHtml = $reload->getContent();
+        $this->assertStringContainsString('Nacrt ocjene je sačuvan.', $reloadHtml);
+        $this->assertMatchesRegularExpression(
+            '/<input\b[^>]*\bname="criterion_1"[^>]*\bvalue="4"/',
+            $reloadHtml
+        );
+        $this->assertMatchesRegularExpression(
+            '/id="youth-finish-scoring"[^>]*disabled/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/id="youth-finish-scoring"[^>]*disabled/',
+            $reloadHtml
+        );
+    }
+
     public function test_full_draft_is_not_automatically_final(): void
     {
         $ctx = $this->youthWithPassedM3();
@@ -791,6 +849,110 @@ class YouthIndividualScoringTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $payload)
             ->assertSessionHasNoErrors();
+    }
+
+    /**
+     * Build a browser-like POST from the rendered chairman form, using the real
+     * "Sačuvaj nacrt" button associated with evaluationForm.
+     *
+     * @param  array<string, string>  $criteria
+     * @return array<string, string>
+     */
+    private function youthDraftPayloadFromRenderedForm(string $html, array $criteria): array
+    {
+        $dom = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $dom->loadHTML($html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $xpath = new \DOMXPath($dom);
+        $form = $xpath->query('//form[@id="evaluationForm"]')->item(0);
+        $this->assertNotNull($form, 'Forma evaluationForm mora postojati.');
+
+        $draftButton = $xpath->query('.//*[@id="youth-save-score-draft"]', $form)->item(0)
+            ?? $xpath->query('//*[@id="youth-save-score-draft"][@form="evaluationForm"]')->item(0);
+        $this->assertNotNull($draftButton, 'Dugme Sačuvaj nacrt mora biti povezano sa evaluationForm.');
+        $this->assertSame('submit', $draftButton->getAttribute('type'));
+        $this->assertSame('save_as_draft', $draftButton->getAttribute('name'));
+        $this->assertSame('1', $draftButton->getAttribute('value'));
+        $this->assertSame('evaluationForm', $draftButton->getAttribute('form'));
+        $this->assertFalse($draftButton->hasAttribute('disabled'));
+
+        $payload = [];
+        foreach ($xpath->query('//input|//textarea|//select') as $control) {
+            if (! $control instanceof \DOMElement) {
+                continue;
+            }
+            if (! $this->htmlControlBelongsToEvaluationForm($control, $form)) {
+                continue;
+            }
+            if ($control->hasAttribute('disabled')) {
+                continue;
+            }
+
+            $nodeName = strtolower($control->nodeName);
+            $type = strtolower($control->getAttribute('type') ?: $nodeName);
+            $name = $control->getAttribute('name');
+            if ($name === '') {
+                continue;
+            }
+            if (in_array($type, ['submit', 'button', 'image', 'reset'], true)) {
+                continue;
+            }
+            if (in_array($type, ['checkbox', 'radio'], true) && ! $control->hasAttribute('checked')) {
+                continue;
+            }
+
+            $payload[$name] = $nodeName === 'textarea'
+                ? $control->textContent
+                : $control->getAttribute('value');
+        }
+
+        foreach (array_keys($payload) as $name) {
+            if (preg_match('/^criterion_\d+$/', $name) && ($payload[$name] === '' || $payload[$name] === null)) {
+                unset($payload[$name]);
+            }
+        }
+
+        foreach (array_keys($criteria) as $key) {
+            $criterionInput = $xpath->query('//input[@name="'.$key.'"]')->item(0);
+            $this->assertNotNull($criterionInput, 'Polje '.$key.' mora postojati na formi.');
+            $this->assertInstanceOf(\DOMElement::class, $criterionInput);
+            $this->assertTrue(
+                $this->htmlControlBelongsToEvaluationForm($criterionInput, $form),
+                $key.' mora pripadati evaluationForm.'
+            );
+            $this->assertFalse($criterionInput->hasAttribute('disabled'));
+        }
+
+        $payload['save_as_draft'] = '1';
+        unset($payload['youth_bonus_action']);
+        foreach ($criteria as $name => $value) {
+            $payload[$name] = $value;
+        }
+
+        return $payload;
+    }
+
+    private function htmlControlBelongsToEvaluationForm(\DOMElement $control, \DOMElement $form): bool
+    {
+        if ($control->getAttribute('form') === 'evaluationForm') {
+            return true;
+        }
+        if ($control->hasAttribute('form')) {
+            return false;
+        }
+
+        $ancestor = $control->parentNode;
+        while ($ancestor instanceof \DOMElement) {
+            if ($ancestor->isSameNode($form)) {
+                return true;
+            }
+            $ancestor = $ancestor->parentNode;
+        }
+
+        return false;
     }
 
     /**

@@ -553,6 +553,10 @@ class EvaluationController extends Controller
             : false;
 
         if ($competition?->isOmladinskoProfile()) {
+            if ($request->boolean('save_as_draft')) {
+                return $this->storeYouthScore($request, $application, $commissionMember, $alreadyFinal);
+            }
+
             if ($request->filled('youth_bonus_action')) {
                 return $this->storeYouthBonuses($request, $application, $commissionMember);
             }
