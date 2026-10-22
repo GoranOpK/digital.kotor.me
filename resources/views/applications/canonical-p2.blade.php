@@ -13,7 +13,7 @@
 @endphp
 
 <div class="canonical-ui-page mmsp-form-page mmsp-business-plan">
-    <div class="container mx-auto px-4" style="max-width: 1200px;">
+    <div class="container mx-auto px-4">
         <div class="mmsp-obrazac-zaglavlje">
             <div class="mmsp-obrazac-top">
                 <div class="mmsp-obrazac-grb">
@@ -37,13 +37,20 @@
                 <div class="mmsp-obrazac-number">Broj prijave: {{ $brojPrijave }}</div>
                 <div class="mmsp-obrazac-code">Obrazac P2</div>
             </div>
-            <h1 class="mmsp-obrazac-title">PLAN ULAGANJA</h1>
-            <p class="mmsp-obrazac-subtitle">
-                na javni konkurs za raspodjelu bespovratnih sredstava<br>
-                namijenjenih za podršku mikro, malim i srednjim preduzećima<br>
-                @if($competition?->title)<strong>{{ $competition->title }}</strong>@endif
-            </p>
+            <h1 class="mmsp-obrazac-title">FORMA ZA PLAN ULAGANJA</h1>
         </div>
+
+        <p style="margin:0 0 18px;">
+            <a href="{{ route('applications.show', $application) }}" style="color:#0B3D91; font-weight:600; text-decoration:none;">
+                ← Nazad na pregled prijave
+            </a>
+        </p>
+
+        @unless($readOnly)
+            <div class="mmsp-alert mmsp-alert-info">
+                Obrazac {{ $application->canonicalApplicantForm?->formCode() ?? 'P1a/P1b' }} je dostupan. Popunite Plan ulaganja (Obrazac P2).
+            </div>
+        @endunless
 
         @if(session('success'))
             <div class="mmsp-alert mmsp-alert-success">{{ session('success') }}</div>
@@ -136,14 +143,32 @@
                     </div>
                 </div>
 
-                <div class="mmsp-actions">
-                    @unless($readOnly)
-                        <button type="submit" class="btn-primary">Sačuvaj plan ulaganja</button>
-                    @endunless
-                    <a class="mmsp-btn-secondary" href="{{ route('applications.show', $application) }}">← Nazad na prijavu</a>
-                </div>
+                @unless($readOnly)
+                    <div class="mmsp-form-card" style="text-align:center;">
+                        <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+                            <button type="submit"
+                                    style="background:#6b7280; color:#fff; padding:12px 24px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
+                                Sačuvaj Nacrt plana
+                            </button>
+                        </div>
+                    </div>
+                @endunless
             </fieldset>
         </form>
+
+        <p style="margin:0 0 18px;">
+            <a href="{{ route('applications.show', $application) }}" style="color:#0B3D91; font-weight:600; text-decoration:none;">
+                ← Nazad na pregled prijave
+            </a>
+        </p>
+
+        <div class="mmsp-form-card" style="text-align:center; margin-top:8px; margin-bottom:24px;">
+            <button type="button"
+                    onclick="window.print();"
+                    style="background:#0B3D91; color:#fff; padding:10px 24px; min-width:180px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
+                Štampaj
+            </button>
+        </div>
     </div>
 </div>
 @endsection
