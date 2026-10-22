@@ -23,6 +23,11 @@
         : '—';
     $p1Complete = $form && app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
     $p2Complete = $plan && app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
+    $applicationSubmitted = $application->status !== 'draft' || $application->submitted_at !== null || $application->finalClaim !== null;
+    $p1StatusLabel = $applicationSubmitted ? 'predat' : ($p1Complete ? 'popunjen' : 'Nacrt');
+    $p2StatusLabel = $applicationSubmitted ? 'predat' : ($p2Complete ? 'popunjen' : 'Nacrt');
+    $p1StatusClass = $applicationSubmitted ? 'status-submitted' : ($p1Complete ? 'status-evaluated' : 'status-draft');
+    $p2StatusClass = $applicationSubmitted ? 'status-submitted' : ($p2Complete ? 'status-evaluated' : 'status-draft');
     $uploadRowMetadata = $uploadRows->whereNull('document')->values()->map(function ($row) {
         return [
             'key' => $row['key'],
@@ -318,8 +323,8 @@
                         <span class="info-label">Obrazac {{ $formCode }}</span>
                         <span class="info-value">
                             <a href="{{ route('applications.canonical-p1.edit', $application) }}"
-                               class="status-badge {{ $p1Complete ? 'status-evaluated' : 'status-draft' }}">
-                                Obrazac {{ $formCode }} - {{ $p1Complete ? 'popunjen' : 'Nacrt' }}
+                               class="status-badge {{ $p1StatusClass }}">
+                                Obrazac {{ $formCode }} - {{ $p1StatusLabel }}
                             </a>
                         </span>
                     </div>
@@ -327,8 +332,8 @@
                         <span class="info-label">Plan ulaganja</span>
                         <span class="info-value">
                             <a href="{{ route('applications.canonical-p2.edit', $application) }}"
-                               class="status-badge {{ $p2Complete ? 'status-evaluated' : 'status-draft' }}">
-                                Obrazac P2 - {{ $p2Complete ? 'popunjen' : 'Nacrt' }}
+                               class="status-badge {{ $p2StatusClass }}">
+                                Obrazac P2 - {{ $p2StatusLabel }}
                             </a>
                         </span>
                     </div>
