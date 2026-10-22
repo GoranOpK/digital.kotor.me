@@ -24,9 +24,7 @@
         padding: 24px 0 40px;
     }
     .mmsp-p1-wrap {
-        max-width: 100%;
         margin: 0 auto;
-        padding: 0 16px;
     }
     .mmsp-p1-card {
         background: #fff;
@@ -312,7 +310,7 @@
 </style>
 
 <div class="mmsp-p1 canonical-ui-page mmsp-form-page">
-    <div class="mmsp-p1-wrap">
+    <div class="mmsp-p1-wrap container mx-auto px-4">
         <div class="mmsp-p1-header">
             <div class="mmsp-p1-header-top">
                 <div class="mmsp-p1-crest">
@@ -560,18 +558,17 @@
                 </div>
 
                 @unless($readOnly)
-                    <div style="text-align:center;">
-                        <button type="submit" class="mmsp-p1-submit">Sačuvaj kao nacrt</button>
+                    <div class="mmsp-p1-card" style="text-align:center; padding:32px;">
+                        <div style="display:flex; justify-content:center; flex-wrap:wrap;">
+                            <button type="submit" class="mmsp-p1-submit" style="background:#6b7280; padding:12px 24px; font-size:14px; margin:0;">
+                                Sačuvaj kao nacrt
+                            </button>
+                        </div>
                     </div>
                 @endunless
             </fieldset>
         </form>
 
-        <nav class="mmsp-p1-nav" aria-label="Navigacija obrasca">
-            <a href="{{ route('applications.show', $application) }}">Nazad na prijavu</a>
-            <a href="{{ route('applications.canonical-p2.edit', $application) }}">Plan ulaganja (Obrazac P2)</a>
-            <a href="{{ route('applications.show', $application) }}#application-documents">Prateća dokumentacija</a>
-        </nav>
     </div>
 </div>
 @endsection
