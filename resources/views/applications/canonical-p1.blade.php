@@ -569,6 +569,15 @@
             </fieldset>
         </form>
 
+        <div class="mmsp-p1-card" style="text-align:center; margin-top:8px; margin-bottom:24px;">
+            <button type="button"
+                    class="mmsp-p1-submit"
+                    onclick="window.print();"
+                    style="padding:10px 24px; font-size:14px; min-width:180px; margin:0;">
+                Štampaj
+            </button>
+        </div>
+
     </div>
 </div>
 @endsection
