@@ -12,7 +12,9 @@
     $youthBonusPreview = min(6, $attendancePoints + $newBusinessPoints + $greenPoints);
     $canEditYouthBonuses = ! $youthBonusesLocked
         && ! ($isApplicant ?? false)
-        && ! ($isRejected ?? false);
+        && ! ($isRejected ?? false)
+        && ($isChairman ?? false)
+        && (($scoringIsAllowed ?? false) || ($hasCompletedEvaluation ?? false));
     $allMembers = $allMembers ?? collect();
 @endphp
 
@@ -38,11 +40,9 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('evaluation.store', $application) }}">
-        @csrf
-        @if(! $youthPlannedRegistrationBonusEligible)
-            <input type="hidden" name="bonus_new_business" value="0">
-        @endif
+    @if(! $youthPlannedRegistrationBonusEligible)
+        <input type="hidden" name="bonus_new_business" value="0">
+    @endif
         <table class="evaluation-table evaluation-table-bonus">
             <thead>
                 <tr>
@@ -239,9 +239,8 @@
 
         @if($canEditYouthBonuses)
             <div class="no-print" style="margin-top: 16px; text-align: center;">
-                <button type="submit" name="youth_bonus_action" value="draft" class="btn-primary">Sačuvaj nacrt bonusa</button>
-                <button type="submit" name="youth_bonus_action" value="confirm" class="btn-primary" style="margin-left: 12px;">Potvrdi i zaključaj bonuse</button>
+                <button type="submit" name="youth_bonus_action" value="draft" class="btn-primary" form="evaluationForm">Sačuvaj nacrt bonusa</button>
+                <button type="submit" name="youth_bonus_action" value="confirm" class="btn-primary" style="margin-left: 12px;" form="evaluationForm">Potvrdi i zaključaj bonuse</button>
             </div>
         @endif
-    </form>
 </div>

@@ -68,19 +68,27 @@ class YouthAggregateAndBonusTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('evaluation-table-bonus', $html);
-        $this->assertStringContainsString('name="bonus_info_day"', $html);
-        $this->assertStringContainsString('name="bonus_training"', $html);
-        $this->assertStringContainsString('name="bonus_new_business"', $html);
-        $this->assertStringContainsString('name="bonus_green_innovative"', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $html);
-        $this->assertStringContainsString('Potvrdi i zaključaj bonuse', $html);
-        $this->assertStringContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $html);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $html);
-        $this->assertStringContainsString('Član 1', $html);
-        $this->assertStringNotContainsString('name="bonus_zavod_nezaposleni"', $html);
-        $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
-        $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
+        $this->assertMatchesRegularExpression('/<form\b[^>]*\bid="evaluationForm"/', $html);
+        $this->assertTrue((bool) preg_match('/<form\b[^>]*\bid="evaluationForm"[^>]*>(.*)<\/form>/s', $html, $formMatch));
+        $mainForm = $formMatch[1];
+        $this->assertStringNotContainsString('<form', $mainForm);
+        $this->assertStringContainsString('evaluation-table-bonus', $mainForm);
+        $this->assertStringContainsString('name="bonus_info_day"', $mainForm);
+        $this->assertStringContainsString('name="bonus_training"', $mainForm);
+        $this->assertStringContainsString('name="bonus_new_business"', $mainForm);
+        $this->assertStringContainsString('name="bonus_green_innovative"', $mainForm);
+        $this->assertStringContainsString('name="youth_bonus_action"', $mainForm);
+        $this->assertStringContainsString('value="draft"', $mainForm);
+        $this->assertStringContainsString('value="confirm"', $mainForm);
+        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $mainForm);
+        $this->assertStringContainsString('Potvrdi i zaključaj bonuse', $mainForm);
+        $this->assertStringContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $mainForm);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $mainForm);
+        $this->assertStringContainsString('>Bodovi</th>', $mainForm);
+        $this->assertStringContainsString('Član 1', $mainForm);
+        $this->assertStringNotContainsString('name="bonus_zavod_nezaposleni"', $mainForm);
+        $this->assertStringNotContainsString('Zavoda za zapošljavanje', $mainForm);
+        $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $mainForm);
     }
 
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
