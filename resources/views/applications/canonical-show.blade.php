@@ -21,8 +21,15 @@
     $tipPrijave = $form
         ? ($form->legal_form === \App\Support\CanonicalLegalForm::PREDUZETNIK ? 'Preduzetnik' : 'Privredno društvo')
         : '—';
-    $p1Complete = $form && app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
-    $p2Complete = $plan && app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
+    $isFinallySubmitted = $application->finalClaim !== null || $application->submitted_at !== null || $application->status !== 'draft';
+    $p1Complete = $form && (
+        $isFinallySubmitted
+        || app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null
+    );
+    $p2Complete = $plan && (
+        $isFinallySubmitted
+        || app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null
+    );
     $p1StatusLabel = $p1Complete ? 'popunjen' : 'Nacrt';
     $p2StatusLabel = $p2Complete ? 'popunjen' : 'Nacrt';
     $p1StatusClass = $p1Complete ? 'status-evaluated' : 'status-draft';
