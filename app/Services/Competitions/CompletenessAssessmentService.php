@@ -126,7 +126,9 @@ class CompletenessAssessmentService
             return self::STAGE_LOCKED_MESSAGE;
         }
 
-        $phase = $this->governance->commissionProcessBlockReason($competition);
+        $phase = $competition->isCanonicalTestMode()
+            ? $this->governance->ordinarySessionBlockReason($competition)
+            : $this->governance->commissionProcessBlockReason($competition);
         if ($phase !== null) {
             return $phase;
         }
