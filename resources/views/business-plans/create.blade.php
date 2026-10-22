@@ -111,6 +111,18 @@
     .btn-primary:hover {
         background: var(--primary-dark);
     }
+    .bp-back-to-application {
+        margin: 0 0 16px;
+    }
+    .bp-back-to-application a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .bp-back-to-application a:hover {
+        text-decoration: underline;
+    }
     .btn-secondary {
         background: #6b7280;
         color: #fff;
@@ -604,6 +616,17 @@
             </div>
             <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
         </div>
+
+        @php
+            $applicationReviewUrl = $applicationReviewUrl ?? (
+                auth()->id() === $application->user_id
+                    ? route('applications.show', $application)
+                    : route('admin.applications.show', $application)
+            );
+        @endphp
+        <p class="no-print bp-back-to-application">
+            <a href="{{ $applicationReviewUrl }}">← Nazad na pregled prijave</a>
+        </p>
 
         @if(session('success'))
             <div class="alert alert-info no-print">
@@ -1744,6 +1767,10 @@
                 </div>
             @endif
         </form>
+
+        <p class="no-print bp-back-to-application">
+            <a href="{{ $applicationReviewUrl }}">← Nazad na pregled prijave</a>
+        </p>
 
         @php
             // Dugme "Štampaj" – vidljivo kandidatu koji popunjava obrazac ili predsjedniku komisije

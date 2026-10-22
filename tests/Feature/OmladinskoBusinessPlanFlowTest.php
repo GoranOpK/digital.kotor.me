@@ -90,6 +90,27 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->assertSame('Opis promocije nacrta', $application->fresh()->businessPlan->promotion);
     }
 
+    public function test_owner_business_plan_form_links_back_to_application_show(): void
+    {
+        [$owner, $application] = $this->createOmladinskoApplicationWithoutPlan();
+        $ownerUrl = route('applications.show', $application);
+        $adminUrl = route('admin.applications.show', $application);
+
+        $html = $this->actingAs($owner)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->assertViewHas('applicationReviewUrl', $ownerUrl)
+            ->getContent();
+
+        $this->assertSame(2, substr_count($html, '← Nazad na pregled prijave'));
+        $this->assertStringContainsString('href="'.$ownerUrl.'"', $html);
+        $this->assertStringNotContainsString('href="'.$adminUrl.'"', $html);
+
+        $this->actingAs($owner)
+            ->get($ownerUrl)
+            ->assertOk();
+    }
+
     public function test_omladinsko_rejects_invalid_email_format_on_draft(): void
     {
         [$owner, $application] = $this->createOmladinskoApplicationWithoutPlan();
@@ -307,13 +328,22 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->assertFalse($competition->isCommissionProcessingBlocked());
 
         $member = $members[1]->fresh('user');
+        $adminUrl = route('admin.applications.show', $application);
+        $ownerUrl = route('applications.show', $application);
         $html = $this->actingAs($member->user)
             ->get(route('applications.business-plan.create', $application))
             ->assertOk()
             ->assertViewHas('readOnly', true)
+            ->assertViewHas('applicationReviewUrl', $adminUrl)
             ->getContent();
         $this->assertStringContainsString('Dostavljeni sadržaj za Komisiju', $html);
         $this->assertStringContainsString('Ideja', $html);
+        $this->assertSame(2, substr_count($html, '← Nazad na pregled prijave'));
+        $this->assertStringContainsString('href="'.$adminUrl.'"', $html);
+        $this->assertStringNotContainsString('href="'.$ownerUrl.'"', $html);
+        $this->actingAs($member->user)
+            ->get($adminUrl)
+            ->assertOk();
         $this->assertNull($application->businessPlan->fresh()->summary);
         $this->assertSame(0, KnOmladinskoDocumentPackage::filledPurchaseCount($application->businessPlan->fresh()->funding_sources_table));
 

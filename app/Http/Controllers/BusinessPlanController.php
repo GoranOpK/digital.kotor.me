@@ -340,7 +340,18 @@ class BusinessPlanController extends Controller
             abort(403, 'Članovi komisije mogu samo pregledati biznis planove u read-only modu.');
         }
 
-        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData', 'readOnly', 'resolvedPib'));
+        $applicationReviewUrl = $isOwner
+            ? route('applications.show', $application)
+            : route('admin.applications.show', $application);
+
+        return view('business-plans.create', compact(
+            'application',
+            'businessPlan',
+            'defaultData',
+            'readOnly',
+            'resolvedPib',
+            'applicationReviewUrl'
+        ));
     }
 
     /**
