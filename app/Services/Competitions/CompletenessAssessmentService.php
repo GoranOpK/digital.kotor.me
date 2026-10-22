@@ -261,13 +261,21 @@ class CompletenessAssessmentService
         $policy = $application->competition->profile();
 
         try {
+            $snapshot = $assessment->evidence_snapshot ?: $this->basis->snapshot($application);
+            $p1 = (array) ($snapshot['canonical_p1'] ?? []);
+            $identity = (array) ($snapshot['application'] ?? []);
+            $applicationNumber = (string) ($application->competition?->competition_number ?? $application->competition?->upNumber?->number ?? '—')
+                .'/'.(string) ($identity['redni_broj'] ?? $application->redni_broj ?? '—');
+
             Mail::to($recipient)->send(new IncompleteDocumentationNoticeMail(
                 $application,
-                $this->frozenApplicantName($application),
-                (string) ($application->competition?->title ?? ''),
-                (string) ($application->business_plan_name ?? ''),
+                (string) ($application->user?->name ?? 'podnosioče'),
+                $this->frozenApplicantName($application, $snapshot),
+                (string) ($application->competition?->title ?? '—'),
+                $applicationNumber,
+                (string) ($p1['subsidy_type'] ?? '—'),
                 $policy->complaintWindowDays() ?? 0,
-                (string) ($policy->documentCatalogHook() ?? ''),
+                'Komisija za sprovođenje javnog konkursa za podršku preduzetnicima i mikro, malim i srednjim preduzećima',
                 route('applications.canonical-review.show', $application),
                 $policy->complaintWindowEndsAt($assessment->notice_sent_at),
                 (string) $assessment->notes,
@@ -286,9 +294,19 @@ class CompletenessAssessmentService
         $assessment->forceFill(['mail_sent_at' => now(), 'mail_failed_at' => null])->save();
     }
 
-    private function frozenApplicantName(Application $application): string
+    private function frozenApplicantName(Application $application, ?array $snapshot = null): string
     {
-        foreach ([$application->founder_name, $application->physical_person_name, $application->director_name] as $name) {
+        $snapshot ??= $this->basis->snapshot($application);
+        $p1 = (array) ($snapshot['canonical_p1'] ?? []);
+
+        foreach ([
+            $p1['company_name'] ?? null,
+            $p1['person_name'] ?? null,
+            $application->founder_name,
+            $application->physical_person_name,
+            $application->director_name,
+            $application->user?->name,
+        ] as $name) {
             if (is_string($name) && trim($name) !== '') {
                 return trim($name);
             }
