@@ -15,6 +15,9 @@
     $requiredUploads = $uploadRows->where('required_now', true);
     $uploadedRequired = $requiredUploads->whereNotNull('document')->count();
     $missingRequired = $requiredUploads->whereNull('document')->count();
+    $uploadedUploads = $uploadRows->whereNotNull('document')->count();
+    $totalUploads = $uploadRows->count();
+    $uploadProgress = $totalUploads > 0 ? (int) round(($uploadedUploads / $totalUploads) * 100) : 0;
     $tipPrijave = $form
         ? ($form->legal_form === \App\Support\CanonicalLegalForm::PREDUZETNIK ? 'Preduzetnik' : 'Privredno društvo')
         : '—';
@@ -340,6 +343,32 @@
                         </div>
                     @endif
 
+                    <div class="info-item">
+                        <span class="info-label">Datum podnošenja</span>
+                        <span class="info-value">{{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}</span>
+                    </div>
+
+                    @if($application->status === 'draft' && $canManage)
+                        <div class="info-item" style="margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb;">
+                            <span class="info-label">Akcije nad prijavom</span>
+                            <div class="info-value" style="display:block; margin-top:4px;">
+                                <p style="font-size:13px; color:#4b5563; margin:0 0 8px;">
+                                    Prijavu možete obrisati najkasnije do isteka roka za prijavu na konkurs.
+                                </p>
+                                <form method="POST" action="{{ route('applications.destroy', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati ovu prijavu? Ova akcija se ne može poništiti.');" style="display:inline-block; margin-right:12px;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn" style="background:#dc2626; color:#fff;">Obriši prijavu</button>
+                                </form>
+                                @if($competition?->deadline)
+                                    <span style="display:inline-block; font-size:12px; color:#6b7280; margin-top:4px;">
+                                        Rok za prijave: {{ $competition->deadline->format('d.m.Y. H:i') }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     @if($application->status === 'draft')
                         <div class="info-item" style="margin-top:4px;">
                             @if($canSubmit)
@@ -434,19 +463,15 @@
             </div>
         </div>
 
-        @if($application->status === 'draft' && $blockers !== [])
-            <div class="alert alert-warning">
-                <strong>Prije konačne predaje potrebno je:</strong>
-                <ul style="margin:8px 0 0; padding-left:20px;">
-                    @foreach($blockers as $blocker)
-                        <li>{{ $blocker }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="info-card">
             <h2>Priložena dokumentacija</h2>
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px; font-size:13px; color:#374151;">
+                <span>Dokumenti: <strong>{{ $uploadedUploads }} / {{ $totalUploads }}</strong></span>
+                <span>{{ $uploadProgress }}%</span>
+            </div>
+            <div class="progress-bar" style="margin:0 0 20px;">
+                <div class="progress-fill" style="width:{{ $uploadProgress }}%;"></div>
+            </div>
             <ul class="documents-list">
                 @foreach($uploadRows as $row)
                     @php $uploaded = $row['document'] !== null; @endphp
@@ -464,19 +489,17 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="document-actions">
-                            @if($uploaded)
+                        @if($uploaded)
+                            <div class="document-actions">
                                 <a class="btn btn-primary" target="_blank" href="{{ route('applications.document.view', [$application, $row['document']]) }}">Pregled</a>
-                            @elseif($canManage)
-                                <a class="btn btn-primary" href="{{ route('applications.show', $application) }}#application-documents">Priloži</a>
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     </li>
                 @endforeach
             </ul>
         </div>
 
-        @if($canonicalReview !== null)
+        @if($canonicalReview !== null && $application->status !== 'draft')
             <div class="info-card" id="application-review">
                 <h2>Obavještenje i Prigovor</h2>
 
@@ -540,16 +563,6 @@
             </div>
         @endif
 
-        @if($application->status === 'draft' && $canManage)
-            <div style="margin-bottom:24px;">
-                <form method="POST" action="{{ route('applications.destroy', $application) }}" style="display:inline-block;" onsubmit="return confirm('Obrisati nacrt prijave?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-secondary">Obriši nacrt prijave</button>
-                </form>
-            </div>
-        @endif
-
         @if($canStartAnother)
             <div class="alert alert-info">
                 Na isti javni poziv možete podnijeti još jednu prijavu za drugu vrstu subvencije.
@@ -557,9 +570,11 @@
             </div>
         @endif
 
-        <div style="margin-bottom:24px;">
+        <div class="info-card" style="text-align:center; padding:20px;">
             <a href="{{ route('dashboard') }}" class="btn btn-secondary">Nazad na Moj panel</a>
-            <a href="{{ route('competitions.show', $competition) }}" class="btn btn-primary" style="margin-left:8px;">Nazad na konkurs</a>
+            @if($application->status === 'draft' && !$p1Complete)
+                <span style="font-size:12px; color:#6b7280; margin-left:8px;">Popunite Obrazac {{ $formCode }} prvo</span>
+            @endif
         </div>
     </div>
 
