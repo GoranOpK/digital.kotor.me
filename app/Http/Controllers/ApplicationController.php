@@ -890,6 +890,25 @@ class ApplicationController extends Controller
                 ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
         }
 
+        // U kanonskom TEST preview režimu čistimo sve nacrte istog korisnika za isti
+        // testni konkurs. Ovo služi isključivo za reset test scenarija i ne utiče
+        // na pravi MMSP konkurs niti na žensko/mlade.
+        if ($competition->isCanonicalTestMode()) {
+            $drafts = Application::query()
+                ->where('competition_id', $competition->id)
+                ->where('user_id', $user->id)
+                ->where('status', 'draft')
+                ->orderBy('id')
+                ->get();
+
+            foreach ($drafts as $draft) {
+                $draft->delete();
+            }
+
+            return redirect()->route('competitions.show', $competition)
+                ->with('success', 'Testni nacrt prijave je obrisan. Možete započeti novu MMSP prijavu.');
+        }
+
         // Obriši prijavu (i kaskadno povezane podatke prema definisanim relacionim pravilima)
         $application->delete();
 
