@@ -10,6 +10,7 @@
     $upBroj = $competition?->upNumber?->number ?? '—';
     $redniBroj = $application->redni_broj ?? '—';
     $brojPrijave = $upBroj.'/'.$redniBroj;
+    $p1Complete = app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
 @endphp
 
 <div class="canonical-ui-page mmsp-form-page mmsp-business-plan">
@@ -48,7 +49,11 @@
 
         @unless($readOnly)
             <div class="mmsp-alert mmsp-alert-info">
-                Obrazac {{ $application->canonicalApplicantForm?->formCode() ?? 'P1a/P1b' }} je dostupan. Popunite Plan ulaganja (Obrazac P2).
+                @if($p1Complete)
+                    Obrazac {{ $application->canonicalApplicantForm?->formCode() ?? 'P1a/P1b' }} je kompletno popunjen. Sada popunite Plan ulaganja (Obrazac P2).
+                @else
+                    Nastavite sa popunjavanjem Plana ulaganja (Obrazac P2). Obrazac {{ $application->canonicalApplicantForm?->formCode() ?? 'P1a/P1b' }} još nije kompletan.
+                @endif
             </div>
         @endunless
 
