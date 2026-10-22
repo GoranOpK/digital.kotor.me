@@ -386,24 +386,33 @@
                         <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
                             Tip prijave <span style="color: #dc2626;">*</span>
                         </label>
+
                         @if(!empty($canonicalLegalForm))
                             <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                                 <label style="display: flex; align-items: center; cursor: default;">
-                                    <input
-                                        type="radio"
-                                        checked
-                                        tabindex="-1"
-                                        aria-readonly="true"
-                                        onclick="return false;"
-                                        onkeydown="return false;"
-                                        style="margin-right: 8px; cursor: default; pointer-events: none;"
-                                    >
+                                    <input type="radio" checked tabindex="-1" aria-readonly="true"
+                                           onclick="return false;" onkeydown="return false;"
+                                           style="margin-right: 8px; cursor: default; pointer-events: none;">
                                     <span>{{ $canonicalApplicantTypeLabel }}</span>
                                 </label>
                             </div>
                         @else
-                            <div style="padding:12px 14px; background:#fffbeb; border:1px solid #f59e0b; border-radius:8px; color:#92400e;">
-                                {{ \App\Support\CanonicalLegalForm::eligibilityMessage() }}
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="radio"
+                                           name="canonical_legal_form_preview"
+                                           value="{{ \App\Support\CanonicalLegalForm::PREDUZETNIK }}"
+                                           checked
+                                           style="margin-right: 8px; cursor: pointer;">
+                                    <span>Preduzetnik — Obrazac P1a</span>
+                                </label>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="radio"
+                                           name="canonical_legal_form_preview"
+                                           value="{{ \App\Support\CanonicalLegalForm::DRUSTVO }}"
+                                           style="margin-right: 8px; cursor: pointer;">
+                                    <span>Privredno društvo (DOO) — Obrazac P1b</span>
+                                </label>
                             </div>
                         @endif
                     </div>
@@ -493,11 +502,12 @@
                     
                     <ul class="documents-list" id="documents-list">
                         @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-                            @if(!empty($canonicalLegalForm))
-                                @foreach(($canonicalDocumentPreviewMaps[$canonicalLegalForm] ?? []) as $document)
-                                    <li>{{ $document }}</li>
-                                @endforeach
-                            @endif
+                            @php
+                                $canonicalPreviewForm = $canonicalLegalForm ?: \App\Support\CanonicalLegalForm::PREDUZETNIK;
+                            @endphp
+                            @foreach(($canonicalDocumentPreviewMaps[$canonicalPreviewForm] ?? []) as $document)
+                                <li>{{ $document }}</li>
+                            @endforeach
                         @else
                             @foreach($requiredDocuments as $document)
                                 <li>{{ $document }}</li>
@@ -554,17 +564,14 @@
                 <p style="color: #6b7280; margin-bottom: 0;">
                     {{ \App\Services\KnApplicationStartContextFactory::UNSUPPORTED_OMLADINSKO_IDENTITY_MESSAGE }}
                 </p>
-            @elseif($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition
-                && $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL
-                && empty($canonicalLegalForm))
-                <p style="color:#92400e; margin-bottom:0;">
-                    {{ \App\Support\CanonicalLegalForm::eligibilityMessage() }}
-                </p>
             @elseif($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
                 <form method="POST" action="{{ $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL ? route('applications.canonical.start', $competition) : route('applications.start', $competition) }}" id="applyStartForm" style="display: inline;">
                     @csrf
                     @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-                        <input type="hidden" name="legal_form" value="{{ $canonicalLegalForm }}">
+                        <input type="hidden"
+                               name="legal_form"
+                               id="apply_canonical_legal_form"
+                               value="{{ $canonicalLegalForm ?: \App\Support\CanonicalLegalForm::PREDUZETNIK }}">
                     @else
                         <input type="hidden" name="planned_intent" id="apply_planned_intent" value="">
                         <input type="hidden" name="planned_company_form" id="apply_planned_company_form" value="">
@@ -594,6 +601,39 @@
         @endif
     </div>
 </div>
+
+@if(($competition->type ?? '') === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL && empty($canonicalLegalForm))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const maps = @json($canonicalDocumentPreviewMaps ?? []);
+    const radios = document.querySelectorAll('input[name="canonical_legal_form_preview"]');
+    const documentsList = document.getElementById('documents-list');
+    const hiddenLegalForm = document.getElementById('apply_canonical_legal_form');
+
+    function syncCanonicalPreview() {
+        const selected = document.querySelector('input[name="canonical_legal_form_preview"]:checked')?.value;
+        if (!selected) return;
+
+        if (hiddenLegalForm) {
+            hiddenLegalForm.value = selected;
+        }
+
+        if (documentsList) {
+            const documents = maps[selected] || [];
+            documentsList.innerHTML = documents.map(function (documentLabel) {
+                return '<li>' + documentLabel + '</li>';
+            }).join('');
+        }
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener('change', syncCanonicalPreview);
+    });
+
+    syncCanonicalPreview();
+});
+</script>
+@endif
 
 @if(!empty($showStartChooser))
 <script>
