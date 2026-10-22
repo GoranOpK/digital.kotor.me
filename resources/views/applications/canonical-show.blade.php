@@ -515,7 +515,15 @@
             </ul>
         </div>
 
-        @if($canonicalReview !== null && $application->status !== 'draft')
+        @if(
+            $canonicalReview !== null
+            && $application->status !== 'draft'
+            && (
+                $canonicalReview['incompleteReason'] !== null
+                || $canonicalReview['complaintSubmittedAt']
+                || $canonicalReview['complaintOpen']
+            )
+        )
             <div class="info-card" id="application-review">
                 <h2>Obavještenje i Prigovor</h2>
 
