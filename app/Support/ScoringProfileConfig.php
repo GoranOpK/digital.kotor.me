@@ -171,7 +171,7 @@ final class ScoringProfileConfig
     }
 
     /**
-     * BM-ML-038 vjerno, uključujući niz tačaka u kriterijumu 6.
+     * BM-ML-038: deset pozitivnih kriterijuma mladih. Kriterijum 6 je puna formulacija, bez niza tačaka.
      *
      * @return array<int, string>
      */
@@ -183,7 +183,7 @@ final class ScoringProfileConfig
             3 => 'Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor.',
             4 => 'Prepoznata je i navedena konkurencija kao i slabosti i snage iste.',
             5 => 'Jasno su navedeni potrebni resursi i identifikovani dobavljači.',
-            6 => 'Biznis ideja je ....................... finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).',
+            6 => 'Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).',
             7 => 'Podaci o preduzetniku (fizičko lice/preduzetnik posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
             8 => 'Preduzetnik planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
             9 => 'Razvijena matrica rizika je jasna i logična.',

@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.12
-**Datum:** 2026-09-21
+**Verzija:** 1.0.13
+**Datum:** 2026-10-22
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.39** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.43** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.10** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.14** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.6** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.10** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -66,6 +66,7 @@ Povezani dokumenti:
 | 1.0.10 | 2026-09-17 | KN-PATCH-BM-019 — Usklađeni kanonski pokazivači povezanih dokumenata zbog FS/TS PATCH-a kapije usmenog: KN-RG-001 v1.0.32, KN-FS-002 v1.0.8, KN-TS-002 v1.0.4. Poslovna pravila BM-ML-001–BM-ML-058 nijesu mijenjana. Ženski tok nije diran. |
 | 1.0.11 | 2026-09-21 | KN-PATCH-BM-020 — Precizirana konačna raspodjela mladih: 30% samo za potvrđeni inovativni tehnološki start-up u smislu čl. 19; 20%/15% prema posebnoj evidenciji ranijeg youth finansiranja; prednost otpočinjanja nad razvojem i glasanje 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni elektronski `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom. Ženski procenti, 5 članova i ženski način evidencije glasanja se ne prenose. Identifikatori BM-ML-001–BM-ML-058 ostaju. |
 | 1.0.12 | 2026-09-21 | KN-PATCH-BM-021 — Preciziran predmet glasa kod izjednačenih bodova: kompletan, budžetski validan predlog raspodjele relevantne grupe, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv` u ime Komisije; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Identifikatori BM-ML-001–BM-ML-058 ostaju. Ženski tok nije diran. |
+| 1.0.13 | 2026-10-22 | KN-PATCH-BM-022 — Kriterijum 6 u `BM-ML-038` glasi: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne zadržava. Identifikatori BM-ML-001–BM-ML-058 ostaju. Ženski tok nije diran. |
 
 Napomena:
 
@@ -1541,7 +1542,7 @@ Pozitivni kriterijumi su:
 3) Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor;
 4) Prepoznata je i navedena konkurencija kao i slabosti i snage iste;
 5) Jasno su navedeni potrebni resursi i identifikovani dobavljači;
-6) Biznis ideja je ....................... finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja);
+6) Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja);
 7) Podaci o preduzetniku (fizičko lice/preduzetnik posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti);
 8) Preduzetnik planira raspored poslova uz identifikaciju osoba za njihovo obavljanje;
 9) Razvijena matrica rizika je jasna i logična;
@@ -1551,7 +1552,7 @@ Kriterijum 1 ostaje jedan kriterijum i obuhvata detaljno popunjen obrazac i jasn
 
 Kriterijum 9 je matrica rizika. Kriterijum 10 je usmeno obrazloženje biznis plana.
 
-Izvorni zapis kriterijuma 6 prenosi se vjerno, uključujući mjesto u kojem Odluka sadrži niz tačaka. Nedostajuća riječ se ne dopunjava pretpostavkom.
+Kriterijum 6 glasi: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne zadržava.
 
 Za svaki kriterijum koristi se skala od 1 do 5 bodova:
 
@@ -2702,4 +2703,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.12**
+**Kraj dokumenta KN-BM-002 v1.0.13**

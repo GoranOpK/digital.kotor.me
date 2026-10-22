@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.13
+**Verzija:** 1.0.14
 **Datum:** 2026-10-22
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.42** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.43** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.13** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.9** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.10** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -53,6 +53,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.11 | 2026-10-21 | KN-PATCH-FS-016 — Prva sjednica ostaje obaveza Komisije po Odluci (rok i kvorum), ali Platforma ne traži njen elektronski zapis da bi otvorila M3 ili drugu sjednicu. M3 i dalje zahtijeva kompletnu Komisiju i tačno tri omladinska kriterijuma. Ženski tok nije diran. |
 | 1.0.12 | 2026-10-21 | KN-PATCH-FS-017 — Sjednice Komisije ostaju van Platforme: Digital ne vodi zapise prve, druge ni treće sjednice, niti prisustvo i kvorum. Prva faza ostaje M3 sa tri omladinska kriterijuma i prigovor. Naredna faza (ocjenjivanje i postojeće usmeno) otvara se tek kada istekne rok za prigovor i kada su svi blagovremeno podneseni prigovori riješeni. Kriterijumi, rokovi, bodovanje i tok odluka nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 | 1.0.13 | 2026-10-22 | KN-PATCH-FS-018 — Omladinsko individualno bodovanje otvara se po prijavi, po principu ženskog toka: M3 potvrđen bez aktivnog eliminatornog razloga, ili konačna odluka po prigovoru koja otkloni sve razloge. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira bodovanje M3-prošle prijave. Usmeno i dalje čeka konkursne rokove i blagovremene prigovore. Završna ocjena i dalje zahtijeva deset unosa, potvrdu i završeno usmeno te prijave. Rangiranje i dalje čeka završetak omladinskog prigovornog postupka. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana nijesu preuzeti. Ženski tok, MMSP i kanonski tok nijesu dirani. |
+| 1.0.14 | 2026-10-22 | KN-PATCH-FS-019 — Kriterijum 6 individualnog bodovanja mladih glasi: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne prikazuje. Ženski katalog, broj članova i ostali omladinski kriterijumi nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 
 Napomena:
 
@@ -3139,13 +3140,13 @@ Svih deset kriterijuma mora biti prikazano. Kriterijumi se preuzimaju vjerno iz 
 3. Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor.
 4. Prepoznata je i navedena konkurencija kao i slabosti i snage iste.
 5. Jasno su navedeni potrebni resursi i identifikovani dobavljači.
-6. Biznis ideja je ....................... finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).
+6. Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).
 7. Podaci o preduzetniku (fizičko lice/preduzetnik posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).
 8. Preduzetnik planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.
 9. Razvijena matrica rizika je jasna i logična.
 10. Usmeno obrazloženje biznis plana (preduzetnik je uvjerljivi siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovora na sva pitanja).
 
-Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Izvorni zapis kriterijuma 6 prenosi se vjerno, uključujući niz tačaka. Nedostajuća riječ se **ne** dopunjava.
+Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Kriterijum 6 se prikazuje kao puna formulacija, bez niza tačaka.
 
 **Ne** uvode se ponderi. Opciona napomena **ne** donosi bodove.
 
@@ -5513,4 +5514,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.13**
+**Kraj dokumenta KN-FS-002 v1.0.14**

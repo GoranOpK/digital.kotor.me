@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.9
+**Verzija:** 1.0.10
 **Datum:** 2026-10-22
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.42** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.43** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.12** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.13** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.13** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.14** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -47,6 +47,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.7 | 2026-10-21 | KN-PATCH-TS-007 — Omladinska prva sjednica ostaje poslovna obaveza Komisije (rok i kvorum najmanje dva člana), ali Platforma **ne** vodi je kao elektronsku kapiju. M3 i početak druge sjednice zahtijevaju kompletnu i valjanu Komisiju, ne red `session_type = first`. Stara GET adresa `/competitions/{id}/commission-sessions/first` ne prikazuje omladinski obrazac. Postojeći zapisi prve sjednice ostaju istorijski podaci. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.8 | 2026-10-21 | KN-PATCH-TS-008 — Omladinske sjednice ostaju van Platforme. Rute prve i druge sjednice **ne** upisuju omladinski datum, prisustvo ni kvorum. Kapija naredne faze je istek roka za prigovor i rješavanje svih blagovremenih prigovora; tada se otvaraju ocjenjivanje i postojeće usmeno. Nema nove tabele ni migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.9 | 2026-10-22 | KN-PATCH-TS-009 — Omladinsko bodovanje se otvara po prijavi: `youthDraftScoringBlockMessage` prati ženski `scoringIsAllowed` (M3 prolaz ili lift svih razloga) plus kompletnu Komisiju. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira nacrt ni formu te prijave; usmeno ostaje na konkursnoj `secondSessionBlockMessage`. Završna ocjena i dalje zahtijeva `youthLockEvidenceIsComplete` za tu prijavu. Rangiranje i dalje čeka prigovorni postupak. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
+| 1.0.10 | 2026-10-22 | KN-PATCH-TS-010 — Katalog omladinskog bodovanja prikazuje kriterijum 6 kao punu formulaciju: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne prikazuje. Ženski katalog ostaje nepromijenjen. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 
 Napomena:
 
@@ -2265,7 +2266,7 @@ Izvor: `KN-FS-002` §15.3–15.4; `BM-ML-039`.
 
 ## 10.5. Deset kriterijuma i skala
 
-Koristi se postojeći unos po kriterijumu. Katalog za `omladinsko` je deset pozitivnih kriterijuma iz `BM-ML-038`. Kriterijum 1 ostaje jedan. Kriterijum 10 je usmeno obrazloženje.
+Koristi se postojeći unos po kriterijumu. Katalog za `omladinsko` je deset pozitivnih kriterijuma iz `BM-ML-038`. Kriterijum 1 ostaje jedan. Kriterijum 6 je puna formulacija, bez niza tačaka. Kriterijum 10 je usmeno obrazloženje.
 
 Skala svakog kriterijuma: **1–5**. Nema pondera. Odluka ne daje posebne opise za 2, 3 i 4; dodatni opisi se ne uvode.
 
@@ -3722,4 +3723,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.9**
+**Kraj dokumenta KN-TS-002 v1.0.10**

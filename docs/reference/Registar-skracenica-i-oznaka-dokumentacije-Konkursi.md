@@ -6,7 +6,7 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.42
+**Verzija:** 1.0.43
 **Datum:** 2026-10-22
 
 ---
@@ -118,11 +118,11 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 
 | Oznaka | Dokument | Putanja | Uloga | Status u izvornom zaglavlju |
 |--------|----------|---------|-------|------------------------------|
-| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.12) |
+| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.13) |
 | **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.22) |
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
-| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.13) |
-| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.9) |
+| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.14) |
+| **KN-TS-002** | Tehnička specifikacija profila konkursa za podršku preduzetništvu mladih | `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` | Usvojena tehnička realizacija usvojenog poslovnog i funkcionalnog profila mladih; nije univerzalni KN SSOT | USVOJEN (v1.0.10) |
 | **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.17) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
@@ -262,7 +262,8 @@ Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** rest
 | 1.0.40 | 2026-10-21 | Evidentirani KN-PATCH-FS-016 za KN-FS-002 v1.0.11 i KN-PATCH-TS-007 za KN-TS-002 v1.0.7: omladinska prva sjednica ostaje poslovna obaveza Komisije, ali nije elektronska kapija za M3 ni za drugu sjednicu; postojeći zapisi ostaju istorijski. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.41 | 2026-10-21 | Evidentirani KN-PATCH-FS-017 za KN-FS-002 v1.0.12 i KN-PATCH-TS-008 za KN-TS-002 v1.0.8: omladinske sjednice ostaju van Digitala; naredna faza (ocjenjivanje i usmeno) otvara se nakon isteka roka za prigovor i rješavanja svih blagovremenih prigovora. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.42 | 2026-10-22 | Evidentirani KN-PATCH-FS-018 za KN-FS-002 v1.0.13 i KN-PATCH-TS-009 za KN-TS-002 v1.0.9: omladinsko bodovanje se otvara po prijavi (M3 prolaz ili lift svih razloga); otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira bodovanje M3-prošle prijave; usmeno i rangiranje i dalje čekaju konkursni prigovorni postupak. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
+| 1.0.43 | 2026-10-22 | Evidentirani KN-PATCH-BM-022 za KN-BM-002 v1.0.13, KN-PATCH-FS-019 za KN-FS-002 v1.0.14 i KN-PATCH-TS-010 za KN-TS-002 v1.0.10: kriterijum 6 individualnog bodovanja mladih glasi „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“; niz tačaka se ne zadržava. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.42**
+**Kraj dokumenta KN-RG-001 v1.0.43**

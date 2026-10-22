@@ -233,7 +233,8 @@ class YouthIndividualScoringTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString(ScoringProfileConfig::youthCriteria()[6], $html);
-        $this->assertStringContainsString('.......................', $html);
+        $this->assertStringContainsString('Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).', $html);
+        $this->assertStringNotContainsString('.......................', $html);
         $this->assertStringContainsString(ScoringProfileConfig::youthCriteria()[10], $html);
         $this->assertStringContainsString('preduzetnik je uvjerljivi siguran', $html);
         $this->assertStringContainsString('Sačuvaj nacrt', $html);
