@@ -50,6 +50,10 @@ class ApplicationPrigovorService
 
     public const NOT_SUBMITTED_MESSAGE = 'Prigovor je moguć samo dok je prijava u stanju submitted.';
 
+    public const OWNER_ONLY_MESSAGE = 'Samo podnositeljka može podnijeti Prigovor za ovu prijavu.';
+
+    public const YOUTH_OWNER_ONLY_MESSAGE = 'Samo lice koje je podnijelo prijavu može podnijeti Prigovor za ovu prijavu.';
+
     public function __construct(
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
     ) {}
@@ -81,6 +85,15 @@ class ApplicationPrigovorService
         return $application->eliminatoryCheck?->isConfirmedFail() === true;
     }
 
+    private function ownerOnlyAbortMessage(Application $application): string
+    {
+        $application->loadMissing('competition');
+
+        return $application->competition?->isOmladinskoProfile() === true
+            ? self::YOUTH_OWNER_ONLY_MESSAGE
+            : self::OWNER_ONLY_MESSAGE;
+    }
+
     /**
      * @param  list<int|string>  $contestedNumbers
      * @param  array<int|string, string|null>  $explanationsByCriterion
@@ -96,7 +109,7 @@ class ApplicationPrigovorService
         LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
 
         if ((int) $application->user_id !== (int) $applicant->id) {
-            abort(403, 'Samo podnositeljka može podnijeti Prigovor za ovu prijavu.');
+            abort(403, $this->ownerOnlyAbortMessage($application));
         }
 
         $windowClosed = false;
@@ -119,7 +132,7 @@ class ApplicationPrigovorService
                 $locked->load('competition');
 
                 if ((int) $locked->user_id !== (int) $applicant->id) {
-                    abort(403, 'Samo podnositeljka može podnijeti Prigovor za ovu prijavu.');
+                    abort(403, $this->ownerOnlyAbortMessage($locked));
                 }
 
                 $isYouth = $locked->competition?->isOmladinskoProfile() === true;

@@ -340,6 +340,31 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         });
     }
 
+    public function test_youth_decision_mail_fallback_is_gender_neutral(): void
+    {
+        $ctx = $this->submittedYouthPrigovor();
+        $application = $ctx['application'];
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.prigovor.decide', $application), $this->liftAllContestedPayload())
+            ->assertRedirect();
+
+        $application = $application->fresh(['competition', 'eliminatoryCheck', 'prigovor']);
+        $application->setRelation('user', null);
+
+        $mail = new ApplicationPrigovorDecisionMail($application, $application->prigovor);
+        $this->assertTrue($mail->isYouth);
+        $this->assertFalse($mail->hasNamedRecipient);
+        $this->assertSame('lice koje je podnijelo prijavu', $mail->recipientName);
+        $html = $mail->render();
+        $this->assertStringContainsString('Poštovanje, lice koje je podnijelo prijavu', $html);
+        $this->assertStringNotContainsString('Poštovani/a', $html);
+        $this->assertStringNotContainsString('podnosilac prijave', $html);
+        $this->assertStringNotContainsString('podnositeljka', $html);
+        $this->assertStringNotContainsString('preduzetnica', $html);
+        $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
+    }
+
     public function test_failed_mail_does_not_rollback_decision(): void
     {
         $ctx = $this->submittedYouthPrigovor();
@@ -546,5 +571,13 @@ class OmladinskoPrigovorDecisionTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    private function assertYouthCopyHasNoGenderedApplicantTerms(string $text): void
+    {
+        $lower = mb_strtolower($text);
+        $this->assertStringNotContainsString('podnositeljk', $lower);
+        $this->assertStringNotContainsString('preduzetnica', $lower);
+        $this->assertStringNotContainsString('podnosioče', $lower);
     }
 }

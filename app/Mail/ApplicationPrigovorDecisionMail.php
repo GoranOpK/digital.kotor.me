@@ -19,6 +19,8 @@ class ApplicationPrigovorDecisionMail extends Mailable
 
     public string $recipientName;
 
+    public bool $hasNamedRecipient;
+
     public string $decisionLabel;
 
     public string $applicationUrl;
@@ -46,7 +48,15 @@ class ApplicationPrigovorDecisionMail extends Mailable
         $this->application = $application;
         $this->prigovor = $prigovor;
         $this->isYouth = $application->competition?->isOmladinskoProfile() === true;
-        $this->recipientName = $application->user?->name ?? ($this->isYouth ? 'podnosioče' : 'podnositeljko');
+        $namedRecipient = $application->user?->name;
+        $this->hasNamedRecipient = is_string($namedRecipient) && $namedRecipient !== '';
+        if ($this->hasNamedRecipient) {
+            $this->recipientName = $namedRecipient;
+        } elseif ($this->isYouth) {
+            $this->recipientName = 'lice koje je podnijelo prijavu';
+        } else {
+            $this->recipientName = 'podnositeljko';
+        }
         $this->decisionLabel = $prigovor->statusLabel();
         $this->applicationUrl = route('applications.show', $application);
 

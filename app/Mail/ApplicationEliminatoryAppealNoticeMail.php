@@ -40,7 +40,7 @@ class ApplicationEliminatoryAppealNoticeMail extends Mailable
 
         $this->application = $application;
         $this->notice = $notice;
-        $this->recipientName = $application->user?->name ?? 'podnosioče';
+        $this->recipientName = $application->user?->name ?? 'podnosilac prijave';
         $this->competitionTitle = $application->competition?->title ?? '—';
         $this->businessPlanName = $application->business_plan_name ?? '—';
 
