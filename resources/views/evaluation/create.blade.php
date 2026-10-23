@@ -1309,6 +1309,9 @@
                             <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
                                 Individualna ocjena je zaključana i ne može se mijenjati.
                             </div>
+                            @if(! ($youthBonusesLocked ?? false))
+                                <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
+                            @endif
                             @if($canPrintNow)
                                 <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                                 @include('evaluation.partials.youth_print_hint')
@@ -1425,17 +1428,8 @@
     }
 
     document.getElementById('evaluationForm')?.addEventListener('submit', function (event) {
-        const submitter = event.submitter;
-        const submitterName = submitter ? (submitter.getAttribute('name') || '') : '';
         const confirmed = this.querySelector('[name="scoring_confirmed"]');
         const scoringAllowed = this.dataset.scoringAllowed === '1';
-
-        if (submitterName === 'youth_bonus_action') {
-            if (confirmed) {
-                confirmed.value = '0';
-            }
-            return;
-        }
 
         if (! scoringAllowed) {
             event.preventDefault();

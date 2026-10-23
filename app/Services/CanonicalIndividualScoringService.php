@@ -1291,6 +1291,39 @@ class CanonicalIndividualScoringService
     }
 
     /**
+     * Chairman "Sačuvaj ocjene" locks the personal score and youth bonuses together.
+     * Bonus confirmation/audit are written from the server member record, not the request.
+     *
+     * @param  array<string, mixed>  $criteria
+     * @param  array<string, mixed>  $flags
+     */
+    public function recordYouthChairmanFinalScoreAndBonuses(
+        Application $application,
+        CommissionMember $member,
+        array $criteria,
+        ?string $notes,
+        bool $confirmed,
+        array $flags,
+    ): EvaluationScore {
+        return DB::transaction(function () use ($application, $member, $criteria, $notes, $confirmed, $flags) {
+            $recorded = $this->recordYouthFinalScore(
+                $application,
+                $member,
+                $criteria,
+                $notes,
+                $confirmed,
+            );
+
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            if ($locked->bonuses_confirmed_at === null) {
+                $this->saveYouthBonuses($locked, $member, $flags, true);
+            }
+
+            return $recorded;
+        });
+    }
+
+    /**
      * @param  array<string, mixed>  $flags
      */
     public function saveYouthBonuses(

@@ -20,7 +20,7 @@
 @endphp
 
 <tr>
-    <td class="criterion-col">Info dan</td>
+    <td class="criterion-col">Info dan i obuka (+1)</td>
     @foreach($allMembers as $member)
         @php
             $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
@@ -28,9 +28,21 @@
         @endphp
         <td style="text-align: center;">
             @if($canEditYouthBonuses && $isCurrentMember && $isChairmanMember)
-                <input type="checkbox" name="bonus_info_day" value="1" form="evaluationForm" {{ $infoDay ? 'checked' : '' }}>
-            @elseif($infoDay && $isChairmanMember)
-                ✓
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                        <input type="checkbox" name="bonus_info_day" value="1" form="evaluationForm" {{ $infoDay ? 'checked' : '' }}>
+                        Info dan
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                        <input type="checkbox" name="bonus_training" value="1" form="evaluationForm" {{ $training ? 'checked' : '' }}>
+                        Obuka
+                    </label>
+                </div>
+            @elseif($isChairmanMember)
+                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+                    <span>Info dan: {{ $infoDay ? '✓' : '—' }}</span>
+                    <span>Obuka: {{ $training ? '✓' : '—' }}</span>
+                </div>
             @else
                 —
             @endif
@@ -39,7 +51,7 @@
     <td class="average-col">
         @if($attendancePoints === 1)
             1.00
-        @elseif($infoDay)
+        @elseif($infoDay || $training)
             0
         @else
             —
@@ -53,34 +65,6 @@
         </td>
     </tr>
 @enderror
-
-<tr>
-    <td class="criterion-col">Obuka</td>
-    @foreach($allMembers as $member)
-        @php
-            $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-            $isChairmanMember = $member->position === 'predsjednik';
-        @endphp
-        <td style="text-align: center;">
-            @if($canEditYouthBonuses && $isCurrentMember && $isChairmanMember)
-                <input type="checkbox" name="bonus_training" value="1" form="evaluationForm" {{ $training ? 'checked' : '' }}>
-            @elseif($training && $isChairmanMember)
-                ✓
-            @else
-                —
-            @endif
-        </td>
-    @endforeach
-    <td class="average-col">
-        @if($attendancePoints === 1)
-            —
-        @elseif($training)
-            0
-        @else
-            —
-        @endif
-    </td>
-</tr>
 @error('bonus_training')
     <tr>
         <td colspan="{{ 2 + $allMembers->count() }}" class="criterion-col">

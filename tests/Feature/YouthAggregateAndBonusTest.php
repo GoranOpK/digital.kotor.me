@@ -79,8 +79,10 @@ class YouthAggregateAndBonusTest extends TestCase
         foreach (ScoringProfileConfig::youthCriteria() as $criterionName) {
             $this->assertStringContainsString($criterionName, $list);
         }
-        $this->assertStringContainsString('Info dan', $list);
-        $this->assertStringContainsString('Obuka', $list);
+        $this->assertStringContainsString('Info dan i obuka (+1)', $list);
+        $this->assertSame(1, substr_count($list, 'Info dan i obuka (+1)'));
+        $this->assertStringNotContainsString('>Info dan</td>', $list);
+        $this->assertStringNotContainsString('>Obuka</td>', $list);
         $this->assertStringContainsString('Planirana registracija', $list);
         $this->assertStringContainsString('Inovativno/zeleno poslovanje', $list);
         $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $list);
@@ -90,13 +92,11 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertStringContainsString('name="bonus_training"', $list);
         $this->assertStringContainsString('name="bonus_new_business"', $list);
         $this->assertStringContainsString('name="bonus_green_innovative"', $list);
-        $this->assertStringNotContainsString('name="youth_bonus_action"', $list);
-        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $list);
-        $this->assertStringContainsString('name="youth_bonus_action"', $mainForm);
-        $this->assertStringContainsString('value="draft"', $mainForm);
-        $this->assertStringContainsString('value="confirm"', $mainForm);
-        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $mainForm);
-        $this->assertStringContainsString('Potvrdi i zaključaj bonuse', $mainForm);
+        $this->assertStringContainsString('Sačuvaj ocjene', $mainForm);
+        $this->assertSame(1, substr_count($mainForm, '>Sačuvaj ocjene<'));
+        $this->assertStringNotContainsString('name="youth_bonus_action"', $mainForm);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $mainForm);
+        $this->assertStringNotContainsString('Potvrdi i zaključaj bonuse', $mainForm);
         $this->assertStringNotContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $mainForm);
         $this->assertStringNotContainsString('>Bodovi</th>', $mainForm);
         $this->assertStringNotContainsString('name="notes"', $mainForm);
@@ -110,7 +110,7 @@ class YouthAggregateAndBonusTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $memberHtml);
-        $this->assertStringContainsString('Info dan', $memberHtml);
+        $this->assertStringContainsString('Info dan i obuka (+1)', $memberHtml);
         $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_training"', $memberHtml);
@@ -126,26 +126,31 @@ class YouthAggregateAndBonusTest extends TestCase
     {
         $onlyInfo = $this->youthReadyToLock();
         $this->actingAs($onlyInfo['chairman']->user)
-            ->post(route('evaluation.store', $onlyInfo['application']), $this->bonusPayload(['bonus_info_day' => '1'], 'draft'))
+            ->post(route('evaluation.store', $onlyInfo['application']), $this->finalPayload(['bonus_info_day' => '1']))
             ->assertSessionHasNoErrors();
-        $this->assertTrue((bool) $onlyInfo['application']->fresh()->bonus_info_day);
-        $this->assertFalse((bool) $onlyInfo['application']->fresh()->bonus_training);
-        $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($onlyInfo['application']->fresh()));
+        $onlyInfoApp = $onlyInfo['application']->fresh();
+        $this->assertTrue((bool) $onlyInfoApp->bonus_info_day);
+        $this->assertFalse((bool) $onlyInfoApp->bonus_training);
+        $this->assertNotNull($onlyInfoApp->bonuses_confirmed_at);
+        $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($onlyInfoApp));
+        $this->assertNotNull(EvaluationScore::query()->where('application_id', $onlyInfoApp->id)->where('commission_member_id', $onlyInfo['chairman']->id)->first()?->completed_at);
 
         $onlyTraining = $this->youthReadyToLock();
         $this->actingAs($onlyTraining['chairman']->user)
-            ->post(route('evaluation.store', $onlyTraining['application']), $this->bonusPayload(['bonus_training' => '1'], 'draft'))
+            ->post(route('evaluation.store', $onlyTraining['application']), $this->finalPayload(['bonus_training' => '1']))
             ->assertSessionHasNoErrors();
         $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($onlyTraining['application']->fresh()));
+        $this->assertNotNull($onlyTraining['application']->fresh()->bonuses_confirmed_at);
 
         $both = $this->youthReadyToLock();
         $this->actingAs($both['chairman']->user)
-            ->post(route('evaluation.store', $both['application']), $this->bonusPayload([
+            ->post(route('evaluation.store', $both['application']), $this->finalPayload([
                 'bonus_info_day' => '1',
                 'bonus_training' => '1',
-            ], 'draft'))
+            ]))
             ->assertSessionHasNoErrors();
         $this->assertSame(1, app(CanonicalIndividualScoringService::class)->youthBonusScore($both['application']->fresh()));
+        $this->assertNotNull($both['application']->fresh()->bonuses_confirmed_at);
     }
 
     public function test_planned_registration_bonus_is_plus_two_only_for_eligible_category(): void
@@ -153,9 +158,10 @@ class YouthAggregateAndBonusTest extends TestCase
         $eligible = $this->youthReadyToLock();
         $this->assertTrue(app(CanonicalIndividualScoringService::class)->youthQualifiesForPlannedRegistrationBonus($eligible['application']));
         $this->actingAs($eligible['chairman']->user)
-            ->post(route('evaluation.store', $eligible['application']), $this->bonusPayload(['bonus_new_business' => '1'], 'draft'))
+            ->post(route('evaluation.store', $eligible['application']), $this->finalPayload(['bonus_new_business' => '1']))
             ->assertSessionHasNoErrors();
         $this->assertTrue((bool) $eligible['application']->fresh()->bonus_new_business);
+        $this->assertNotNull($eligible['application']->fresh()->bonuses_confirmed_at);
         $this->assertSame(2, app(CanonicalIndividualScoringService::class)->youthBonusScore($eligible['application']->fresh()));
 
         $ineligible = $this->youthReadyToLock();
@@ -165,25 +171,26 @@ class YouthAggregateAndBonusTest extends TestCase
         ])->save();
         $this->actingAs($ineligible['chairman']->user)
             ->from(route('evaluation.create', $ineligible['application']))
-            ->post(route('evaluation.store', $ineligible['application']), $this->bonusPayload(['bonus_new_business' => '1'], 'draft'))
+            ->post(route('evaluation.store', $ineligible['application']), $this->finalPayload(['bonus_new_business' => '1']))
             ->assertSessionHasErrors('bonus_new_business');
         $this->assertFalse((bool) $ineligible['application']->fresh()->bonus_new_business);
+        $this->assertNull($ineligible['application']->fresh()->bonuses_confirmed_at);
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ineligible['application']->id)->count());
         $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($ineligible['application']->fresh()));
     }
 
     public function test_green_is_plus_three_and_all_bonuses_cap_at_six_and_fifty_six(): void
     {
         $ctx = $this->youthReadyToLock();
-        $this->lockThreeSeats($ctx, [
-            1 => $this->allCriteria(5),
-            2 => $this->allCriteria(5),
-            3 => $this->allCriteria(5),
-        ]);
         $ctx['application']->forceFill([
             'bonus_zavod_nezaposleni' => true,
             'is_registered' => false,
         ])->save();
-        $this->confirmYouthBonuses($ctx, [
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(5),
+            2 => $this->allCriteria(5),
+            3 => $this->allCriteria(5),
+        ], [
             'bonus_info_day' => '1',
             'bonus_training' => '1',
             'bonus_new_business' => '1',
@@ -204,56 +211,105 @@ class YouthAggregateAndBonusTest extends TestCase
     public function test_draft_confirm_lock_and_unauthorized_actors(): void
     {
         $ctx = $this->youthReadyToLock();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'draft'))
-            ->assertSessionHasNoErrors()
-            ->assertRedirect(route('evaluation.create', $ctx['application']));
-        $draft = $ctx['application']->fresh();
-        $this->assertTrue((bool) $draft->bonus_green_innovative);
-        $this->assertNull($draft->bonuses_confirmed_at);
-        $this->assertNull($draft->final_score);
-
         $this->actingAs($this->userWithRole('admin'))
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'confirm'))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['bonus_green_innovative' => '1']))
             ->assertForbidden();
         $konkursAdmin = $this->actingAs($this->userWithRole('konkurs_admin'))
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'confirm'));
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['bonus_green_innovative' => '1']));
         $konkursAdmin->assertRedirect(route('admin.dashboard'));
         $this->actingAs($ctx['members'][1]->fresh('user')->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'confirm'))
-            ->assertForbidden();
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['bonus_green_innovative' => '1']))
+            ->assertSessionHasNoErrors();
+        $this->assertFalse((bool) $ctx['application']->fresh()->bonus_green_innovative);
+        $this->assertNull($ctx['application']->fresh()->bonuses_confirmed_at);
 
         $other = $this->youthReadyToLock();
         $this->actingAs($other['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'confirm'))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['bonus_green_innovative' => '1']))
             ->assertForbidden();
 
         $inactive = $this->youthReadyToLock();
         $inactive['chairman']->update(['status' => 'inactive']);
         $this->actingAs($inactive['chairman']->fresh('user')->user)
-            ->post(route('evaluation.store', $inactive['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'confirm'))
+            ->post(route('evaluation.store', $inactive['application']), $this->finalPayload(['bonus_green_innovative' => '1']))
             ->assertForbidden();
         $this->assertNull($inactive['application']->fresh()->bonuses_confirmed_at);
 
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload([
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload([
                 'bonus_green_innovative' => '1',
                 'bonuses_confirmed_by_name' => 'Lažni auditor',
                 'bonuses_confirmed_by_user_id' => 999999,
-            ], 'confirm'))
+            ]))
             ->assertSessionHasNoErrors();
         $locked = $ctx['application']->fresh();
+        $this->assertTrue((bool) $locked->bonus_green_innovative);
         $this->assertNotNull($locked->bonuses_confirmed_at);
         $this->assertSame($ctx['chairman']->id, (int) $locked->bonuses_confirmed_by_commission_member_id);
         $this->assertSame($ctx['chairman']->user_id, (int) $locked->bonuses_confirmed_by_user_id);
         $this->assertSame($ctx['chairman']->name, $locked->bonuses_confirmed_by_name);
         $this->assertNotSame('Lažni auditor', $locked->bonuses_confirmed_by_name);
+        $chairmanScore = EvaluationScore::query()
+            ->where('application_id', $locked->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $this->assertNotNull($chairmanScore?->completed_at);
 
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload(['bonus_info_day' => '1'], 'draft'))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload([
+                'criterion_1' => 5,
+                'bonus_info_day' => '1',
+            ]))
             ->assertForbidden();
         $this->assertTrue((bool) $ctx['application']->fresh()->bonus_green_innovative);
         $this->assertFalse((bool) $ctx['application']->fresh()->bonus_info_day);
+        $this->assertSame(3, (int) $chairmanScore->fresh()->criterion_1);
+    }
+
+    public function test_locked_chairman_score_can_still_lock_bonuses_without_changing_scores(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        foreach ([2, 3] as $seat) {
+            $this->actingAs($ctx['members'][$seat - 1]->fresh('user')->user)
+                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_1' => 4]))
+                ->assertSessionHasNoErrors();
+        }
+        EvaluationScore::query()->create(array_merge($this->allCriteria(3), [
+            'application_id' => $ctx['application']->id,
+            'commission_member_id' => $ctx['chairman']->id,
+            'canonical_seat_no' => 1,
+            'completed_at' => now(),
+            'notes' => 'Zaključano ranije',
+        ]));
+        $this->assertNull($ctx['application']->fresh()->bonuses_confirmed_at);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertSame(1, substr_count($html, '>Sačuvaj ocjene<'));
+        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $html);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), [
+                'criterion_1' => 5,
+                'bonus_green_innovative' => '1',
+                'bonuses_confirmed_by_name' => 'Lažni auditor',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $application = $ctx['application']->fresh();
+        $score = EvaluationScore::query()
+            ->where('application_id', $application->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $this->assertSame(3, (int) $score->criterion_1);
+        $this->assertSame('Zaključano ranije', $score->notes);
+        $this->assertTrue((bool) $application->bonus_green_innovative);
+        $this->assertNotNull($application->bonuses_confirmed_at);
+        $this->assertSame($ctx['chairman']->name, $application->bonuses_confirmed_by_name);
+        $this->assertNotSame('Lažni auditor', $application->bonuses_confirmed_by_name);
     }
 
     public function test_final_score_requires_both_three_scores_and_confirmed_bonuses_in_either_order(): void
@@ -269,17 +325,19 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertSame(1, (int) $afterA->ranking_position);
 
         $orderB = $this->youthReadyToLock();
-        $this->lockThreeSeats($orderB);
+        foreach ([2, 3] as $seat) {
+            $this->actingAs($orderB['members'][$seat - 1]->fresh('user')->user)
+                ->post(route('evaluation.store', $orderB['application']), $this->finalPayload())
+                ->assertSessionHasNoErrors();
+        }
         $beforeConfirm = $orderB['application']->fresh();
-        $this->assertSame('evaluated', $beforeConfirm->status);
-        $this->assertNotNull($beforeConfirm->evaluated_at);
+        $this->assertSame('submitted', $beforeConfirm->status);
         $this->assertNull($beforeConfirm->final_score);
         $this->assertNull($beforeConfirm->ranking_position);
-        $evaluatedAt = $beforeConfirm->evaluated_at->toDateTimeString();
         $this->confirmYouthBonuses($orderB, ['bonus_green_innovative' => '1']);
         $afterB = $orderB['application']->fresh();
+        $this->assertNotNull($afterB->evaluated_at);
         $this->assertSame('33.00', $afterB->final_score);
-        $this->assertSame($evaluatedAt, $afterB->evaluated_at->toDateTimeString());
         $this->assertSame('evaluated', $afterB->status);
         $this->assertSame(1, (int) $afterB->ranking_position);
         $this->assertSame($afterA->final_score, $afterB->final_score);
@@ -317,17 +375,17 @@ class YouthAggregateAndBonusTest extends TestCase
     {
         $ctx = $this->youthReadyToLock();
         $this->actingAs($ctx['members'][0]->fresh('user')->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($this->allCriteria(5) + ['notes' => 'Napomena mjesta 1']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($this->allCriteria(5) + [
+                'notes' => 'Napomena mjesta 1',
+                'bonus_info_day' => '1',
+                'bonus_training' => '1',
+                'bonus_new_business' => '1',
+                'bonus_green_innovative' => '1',
+            ]))
             ->assertSessionHasNoErrors();
         $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($this->allCriteria(5) + ['notes' => 'Napomena mjesta 2']))
             ->assertSessionHasNoErrors();
-        $this->confirmYouthBonuses($ctx, [
-            'bonus_info_day' => '1',
-            'bonus_training' => '1',
-            'bonus_new_business' => '1',
-            'bonus_green_innovative' => '1',
-        ]);
         $this->assertNull($ctx['application']->fresh()->final_score);
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
@@ -373,7 +431,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $zensko['chairman']->update(['user_id' => $sharedUser->id, 'name' => $sharedUser->name]);
 
         $this->actingAs($sharedUser)
-            ->post(route('evaluation.store', $youth['application']), $this->bonusPayload(['bonus_green_innovative' => '1'], 'confirm'))
+            ->post(route('evaluation.store', $youth['application']), $this->finalPayload(['bonus_green_innovative' => '1']))
             ->assertSessionHasNoErrors();
         $this->assertTrue((bool) $youth['application']->fresh()->bonus_green_innovative);
         $this->assertFalse((bool) $zensko['application']->fresh()->bonus_green_innovative);
@@ -468,12 +526,28 @@ class YouthAggregateAndBonusTest extends TestCase
      * @param  array{application: Application, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
      * @param  array<int, array<string, int>>  $bySeat
      */
-    private function lockThreeSeats(array $ctx, array $bySeat = []): void
+    /**
+     * @param  array{application: Application, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
+     * @param  array<int, array<string, int>>  $bySeat
+     * @param  array<string, string>  $bonusFlags
+     */
+    private function lockThreeSeats(array $ctx, array $bySeat = [], array $bonusFlags = []): void
     {
         foreach ([1, 2, 3] as $seat) {
             $member = $ctx['members'][$seat - 1];
+            $existing = EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->where('commission_member_id', $member->id)
+                ->first();
+            if ($existing && $existing->completed_at !== null) {
+                continue;
+            }
+            $payload = $this->finalPayload($bySeat[$seat] ?? []);
+            if ($seat === 1) {
+                $payload = array_merge($payload, $bonusFlags);
+            }
             $this->actingAs($member->fresh('user')->user)
-                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload($bySeat[$seat] ?? []))
+                ->post(route('evaluation.store', $ctx['application']), $payload)
                 ->assertSessionHasNoErrors();
         }
     }
@@ -484,20 +558,20 @@ class YouthAggregateAndBonusTest extends TestCase
      */
     private function confirmYouthBonuses(array $ctx, array $flags = []): void
     {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->bonusPayload($flags, 'confirm'))
-            ->assertSessionHasNoErrors();
-    }
+        $application = $ctx['application']->fresh();
+        $chairmanScore = EvaluationScore::query()
+            ->where('application_id', $application->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $alreadyFinal = $chairmanScore && $chairmanScore->completed_at !== null;
+        if ($alreadyFinal && $application->bonuses_confirmed_at !== null) {
+            return;
+        }
 
-    /**
-     * @param  array<string, mixed>  $overrides
-     * @return array<string, mixed>
-     */
-    private function bonusPayload(array $overrides = [], string $action = 'draft'): array
-    {
-        return array_merge([
-            'youth_bonus_action' => $action,
-        ], $overrides);
+        $payload = $alreadyFinal ? $flags : array_merge($this->finalPayload(), $flags);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $application), $payload)
+            ->assertSessionHasNoErrors();
     }
 
     /**

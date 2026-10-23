@@ -643,7 +643,22 @@ class EvaluationController extends Controller
         CommissionMember $commissionMember,
         bool $alreadyFinal,
     ): RedirectResponse {
+        $isChairman = $commissionMember->position === 'predsjednik';
+        $bonusesLocked = $application->bonuses_confirmed_at !== null;
+
         if ($alreadyFinal) {
+            if ($isChairman && ! $bonusesLocked) {
+                $this->canonicalScoring->saveYouthBonuses(
+                    $application,
+                    $commissionMember,
+                    $this->youthBonusFlagsFromRequest($request),
+                    true,
+                );
+
+                return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                    ->with('success', 'Dodatni bodovi su potvrđeni i zaključani.');
+            }
+
             abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
         }
 
@@ -670,13 +685,24 @@ class EvaluationController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
-        $this->canonicalScoring->recordYouthFinalScore(
-            $application,
-            $commissionMember,
-            $validated,
-            $validated['notes'] ?? null,
-            $request->boolean('scoring_confirmed'),
-        );
+        if ($isChairman && ! $bonusesLocked) {
+            $this->canonicalScoring->recordYouthChairmanFinalScoreAndBonuses(
+                $application,
+                $commissionMember,
+                $validated,
+                $validated['notes'] ?? null,
+                $request->boolean('scoring_confirmed'),
+                $this->youthBonusFlagsFromRequest($request),
+            );
+        } else {
+            $this->canonicalScoring->recordYouthFinalScore(
+                $application,
+                $commissionMember,
+                $validated,
+                $validated['notes'] ?? null,
+                $request->boolean('scoring_confirmed'),
+            );
+        }
 
         return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
             ->with('success', 'Ocjena je uspješno sačuvana.');
@@ -817,6 +843,19 @@ class EvaluationController extends Controller
     {
         $flags = [];
         foreach (CanonicalIndividualScoringService::BONUS_FLAG_KEYS as $key) {
+            $flags[$key] = $request->boolean($key);
+        }
+
+        return $flags;
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    protected function youthBonusFlagsFromRequest(Request $request): array
+    {
+        $flags = [];
+        foreach (CanonicalIndividualScoringService::YOUTH_BONUS_FLAG_KEYS as $key) {
             $flags[$key] = $request->boolean($key);
         }
 
