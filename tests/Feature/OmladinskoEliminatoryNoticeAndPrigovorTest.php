@@ -94,6 +94,54 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         Mail::assertNotSent(ApplicationEliminatoryRejectionMail::class);
     }
 
+    public function test_youth_m3_corrects_popunu_dokumentaciju_before_notice(): void
+    {
+        $shared = $this->makeYouthReadyContext();
+        $this->actingAs($shared['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $shared['application']), [
+                'criterion_1' => '0',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => 'Nije dostavio popunu dokumentaciju. Nema M4.',
+                'confirmation_acknowledged' => '1',
+            ])
+            ->assertRedirect();
+
+        $sharedApplication = $shared['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice']);
+        $sharedParsed = EliminatoryProfileConfig::parseYouthNotes($sharedApplication->eliminatoryCheck->note);
+        $this->assertSame('Nije dostavio potpunu dokumentaciju. Nema M4.', $sharedParsed[1]);
+        $this->assertSame('', $sharedParsed[2]);
+        $this->assertSame('', $sharedParsed[3]);
+        $this->assertStringContainsString('Nije dostavio potpunu dokumentaciju', (string) $sharedApplication->eliminatoryNotice->note_snapshot);
+        $this->assertStringContainsString('Nema M4.', (string) $sharedApplication->eliminatoryNotice->note_snapshot);
+        $this->assertStringNotContainsString('popunu dokumentaciju', mb_strtolower((string) $sharedApplication->eliminatoryNotice->note_snapshot));
+        $this->assertStringNotContainsString('popunu dokumentaciju', mb_strtolower((string) $sharedApplication->eliminatoryCheck->note));
+
+        $perCriterion = $this->makeYouthReadyContext();
+        $this->actingAs($perCriterion['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $perCriterion['application']), [
+                'criterion_1' => '0',
+                'criterion_2' => '0',
+                'criterion_3' => '1',
+                'criterion_notes' => [
+                    1 => 'Nije dostavio POPUNU DOKUMENTACIJU',
+                    2 => 'M4 ostaje nepromijenjen.',
+                    3 => '',
+                ],
+                'confirmation_acknowledged' => '1',
+            ])
+            ->assertRedirect();
+
+        $perApplication = $perCriterion['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice']);
+        $perParsed = EliminatoryProfileConfig::parseYouthNotes($perApplication->eliminatoryCheck->note);
+        $this->assertSame('Nije dostavio potpunu dokumentaciju', $perParsed[1]);
+        $this->assertSame('M4 ostaje nepromijenjen.', $perParsed[2]);
+        $this->assertSame('', $perParsed[3]);
+        $this->assertStringContainsString('Nije dostavio potpunu dokumentaciju', (string) $perApplication->eliminatoryNotice->note_snapshot);
+        $this->assertStringContainsString('M4 ostaje nepromijenjen.', (string) $perApplication->eliminatoryNotice->note_snapshot);
+        $this->assertStringNotContainsString('popunu dokumentaciju', mb_strtolower((string) $perApplication->eliminatoryNotice->note_snapshot));
+    }
+
     public function test_pass_does_not_create_notice(): void
     {
         $ctx = $this->makeYouthReadyContext();
