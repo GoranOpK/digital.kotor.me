@@ -1257,10 +1257,11 @@
                     @php
                         $rejectedForDocuments = ! empty($eliminatoryIsConfirmedFail);
                         $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
-                        // Štampanje je dozvoljeno kada:
-                        // - sve prijave na konkursu ocijene svi članovi (rang lista spremna), ILI
-                        // - prijava ne prolazi potvrđenu eliminatornu provjeru
-                        $canPrintNow = ($canViewOtherMembersScores ?? false) || $rejectedForDocuments;
+                        // Omladinsko: lična završena ocjena ili M3 odbijanje.
+                        // Ženski/ostali tok: ciklus svih članova ili M3 odbijanje.
+                        $canPrintNow = ($isOmladinskoScoring ?? false)
+                            ? (($hasCompletedEvaluation ?? false) || $rejectedForDocuments)
+                            : (($canViewOtherMembersScores ?? false) || $rejectedForDocuments);
                     @endphp
 
                     @if($isRejected)

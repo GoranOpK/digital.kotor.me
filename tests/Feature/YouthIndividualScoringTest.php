@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
+use App\Services\CanonicalIndividualScoringService;
 use App\Services\YouthSecondSessionGate;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\ScoringProfileConfig;
@@ -669,6 +670,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringContainsString('Potvrdio:', $html);
         $this->assertStringContainsString('Datum i vrijeme:', $html);
+        $this->assertStringNotContainsString('>Štampaj</button>', $html);
         $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $html);
         $this->assertStringNotContainsString('id="youth-bonus-locked-banner"', $html);
 
@@ -731,46 +733,58 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString($eliminatory->confirmed_at->format('d.m.Y. H:i'), $show);
     }
 
-    public function test_youth_print_hint_appears_only_when_print_button_is_available(): void
+    public function test_youth_print_is_available_after_personal_completion_before_cycle(): void
     {
         $ctx = $this->youthReadyToLock();
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), [
+                'save_as_draft' => '1',
+                'criterion_1' => 5,
+                'notes' => 'Nacrt',
+            ])
             ->assertSessionHasNoErrors();
 
-        $beforeCycle = $this->actingAs($ctx['chairman']->user)
+        $draftCreate = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $beforeCycle);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeCycle);
-        $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $beforeCycle);
+        $this->assertStringNotContainsString('>Štampaj</button>', $draftCreate);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $draftCreate);
 
-        $beforeShow = $this->actingAs($ctx['chairman']->user)
+        $draftShow = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.show', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $beforeShow);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeShow);
-        $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $beforeShow);
+        $this->assertStringNotContainsString('>Štampaj</button>', $draftShow);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $draftShow);
 
-        foreach ([1, 2] as $index) {
-            $this->actingAs($ctx['members'][$index]->fresh('user')->user)
-                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
-                ->assertSessionHasNoErrors();
-        }
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_1' => 5]))
+            ->assertSessionHasNoErrors();
 
-        $afterCycle = $this->actingAs($ctx['chairman']->user)
+        $personalCreate = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertYouthPrintHintBesideButton($afterCycle);
+        $this->assertYouthPrintHintBesideButton($personalCreate);
+        $this->assertYouthOthersRemainHiddenBeforeCycle($personalCreate);
 
-        $afterShow = $this->actingAs($ctx['chairman']->user)
+        $personalShow = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.show', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertYouthPrintHintBesideButton($afterShow);
+        $this->assertYouthPrintHintBesideButton($personalShow);
+        $this->assertYouthOthersRemainHiddenBeforeCycle($personalShow);
+
+        $otherCreate = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('>Štampaj</button>', $otherCreate);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $otherCreate);
+        $this->assertStringNotContainsString('>5</span>', $otherCreate);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $otherCreate);
     }
 
     private function assertYouthPrintHintBesideButton(string $html): void
@@ -783,6 +797,16 @@ class YouthIndividualScoringTest extends TestCase
             'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
             $html
         );
+    }
+
+    private function assertYouthOthersRemainHiddenBeforeCycle(string $html): void
+    {
+        $this->assertStringContainsString(
+            CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE,
+            $html
+        );
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
+        $this->assertStringNotContainsString('id="youth-commission-final-score"', $html);
     }
 
     private function markEvaluationDeadlinePassed(Competition $competition): void

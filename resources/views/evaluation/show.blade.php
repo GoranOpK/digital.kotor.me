@@ -668,7 +668,7 @@
                 </div>
                 <div style="margin-top: 32px; text-align: center;" class="no-print">
                     @php
-                        $youthShowPrintShown = ($canViewOtherMembersScores ?? false)
+                        $youthShowPrintShown = (($evaluationScore->completed_at ?? null) !== null)
                             || ($eliminatoryCheck && $eliminatoryCheck->isConfirmedFail());
                     @endphp
                     <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
