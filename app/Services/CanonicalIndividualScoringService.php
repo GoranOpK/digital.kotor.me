@@ -857,6 +857,11 @@ class CanonicalIndividualScoringService
             return self::CANONICAL_RANKING_FROZEN_MESSAGE;
         }
 
+        $deadlineBlock = $this->canonicalIndividualScoreDeadlineBlockReason($application->competition);
+        if ($deadlineBlock !== null) {
+            return $deadlineBlock;
+        }
+
         $reason = $this->canonicalGovernance()->scoreWriteBlockReason($user, $application);
         if ($reason !== null) {
             return $reason;
@@ -865,6 +870,22 @@ class CanonicalIndividualScoringService
         return $this->canonicalRowsAreCorrupt($application, $this->canonicalScoreRows($application))
             ? self::CANONICAL_CORRUPT_ROW_MESSAGE
             : null;
+    }
+
+    /**
+     * Individual scoring before the application deadline is allowed only for an MMSP draft
+     * with the test preview flag. Ranking formation keeps its own deadline gate.
+     */
+    private function canonicalIndividualScoreDeadlineBlockReason(?Competition $competition): ?string
+    {
+        if ($competition === null
+            || $competition->isCanonicalTestPreview()
+            || in_array($competition->status, ['closed', 'completed'], true)
+            || $competition->isApplicationDeadlinePassed()) {
+            return null;
+        }
+
+        return CanonicalCommissionGovernance::APPLICATION_DEADLINE_OPEN_MESSAGE;
     }
 
     /**

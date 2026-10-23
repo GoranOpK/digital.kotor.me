@@ -885,7 +885,9 @@ class AdminController extends Controller
         if ($isCommissionMember && ! $isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
-            if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'])) {
+            if (! $competition->isCanonicalTestPreview()
+                && ! $competition->isApplicationDeadlinePassed()
+                && ! in_array($competition->status, ['closed', 'completed'])) {
                 $applicationsQuery->whereRaw('1 = 0'); // prazna lista
             }
         }
@@ -1481,9 +1483,13 @@ class AdminController extends Controller
             if ($application->status === 'draft') {
                 abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
             }
-            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
+            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana).
+            // Izuzetak je isključivo MMSP draft sa uključenim testnim preview režimom.
             $competition = $application->competition;
-            if ($competition && ! in_array($competition->status, ['closed', 'completed']) && ! $competition->isApplicationDeadlinePassed()) {
+            if ($competition
+                && ! $competition->isCanonicalTestPreview()
+                && ! in_array($competition->status, ['closed', 'completed'])
+                && ! $competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
