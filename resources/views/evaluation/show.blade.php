@@ -561,8 +561,8 @@
                         @endforeach
                         @if($isOmladinskoScoring)
                             @include('evaluation.partials.youth_bonus_rows', ['youthBonusEditable' => false])
-                        @endif
-                        <tr class="final-score-row" @if($isOmladinskoScoring) id="youth-final-score-row" @endif>
+                        @else
+                        <tr class="final-score-row">
                             <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
                                 <strong>KONAČNA OCJENA:</strong>
                             </td>
@@ -571,36 +571,24 @@
                                     @php
                                         $memberScore = $allScores->get($member->id);
                                         $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-                                        $memberScoreIsFinal = $memberScore && $memberScore->completed_at !== null;
-                                        $memberTotal = ($isOmladinskoScoring && ! $memberScoreIsFinal)
-                                            ? 0
-                                            : ($memberScore ? $memberScore->calculateTotalScore() : 0);
-                                        $showScore = $isOmladinskoScoring
-                                            ? (($isCurrentMember && $memberScoreIsFinal) || (($canViewOtherMembersScores ?? false) && $memberScoreIsFinal))
-                                            : ($isCurrentMember || ($canViewOtherMembersScores ?? false));
+                                        $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
+                                        $showScore = $isCurrentMember || ($canViewOtherMembersScores ?? false);
                                     @endphp
                                     <strong @if(!$showScore) style="color: #d1d5db;" @endif>{{ $showScore && $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                 </td>
                             @endforeach
                             <td class="average-col" style="font-weight: bold !important;">
-                                @if($isOmladinskoScoring)
-                                    @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
-                                        <strong>{{ $youthFinalScoreDisplay }} / 56</strong>
-                                    @else
-                                        <strong>—</strong>
-                                    @endif
+                                @php
+                                    $bonusScore = $application->getBonusScore();
+                                @endphp
+                                @if($canViewOtherMembersScores ?? false)
+                                    <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
                                 @else
-                                    @php
-                                        $bonusScore = $application->getBonusScore();
-                                    @endphp
-                                    @if($canViewOtherMembersScores ?? false)
-                                        <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
-                                    @else
-                                        <strong>—</strong>
-                                    @endif
+                                    <strong>—</strong>
                                 @endif
                             </td>
                         </tr>
+                        @endif
                     </tbody>
                 </table>
 

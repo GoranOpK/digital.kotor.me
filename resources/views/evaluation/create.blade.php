@@ -873,35 +873,6 @@
                             @endforeach
                             @if($isOmladinskoScoring)
                                 @include('evaluation.partials.youth_bonus_rows')
-                                <tr class="final-score-row" id="youth-final-score-row">
-                                    <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
-                                        <strong>KONAČNA OCJENA:</strong>
-                                    </td>
-                                    @foreach($allMembers as $member)
-                                        <td style="font-weight: bold !important;">
-                                            @php
-                                                $memberScore = $allScores->get($member->id);
-                                                $memberScoreIsFinal = $memberScore && $memberScore->completed_at !== null;
-                                                $memberTotal = $memberScoreIsFinal ? $memberScore->calculateTotalScore() : 0;
-                                                $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-                                            @endphp
-                                            @if($isCurrentMember && $memberScoreIsFinal)
-                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
-                                            @elseif(! $isCurrentMember && ($canViewOtherMembersScores ?? false) && $memberScoreIsFinal)
-                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
-                                            @else
-                                                <strong style="color: #d1d5db;">—</strong>
-                                            @endif
-                                        </td>
-                                    @endforeach
-                                    <td class="average-col" id="final_score" style="font-weight: bold !important;">
-                                        @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
-                                            <strong>{{ $youthFinalScoreDisplay }} / 56</strong>
-                                        @else
-                                            <strong>—</strong>
-                                        @endif
-                                    </td>
-                                </tr>
                             @endif
                         </tbody>
                     </table>

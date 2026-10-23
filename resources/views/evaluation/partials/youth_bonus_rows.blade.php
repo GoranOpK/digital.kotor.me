@@ -11,7 +11,9 @@
     $attendancePoints = ($infoDay && $training) ? 1 : 0;
     $newBusinessPoints = ($newBusiness && $youthPlannedRegistrationBonusEligible) ? 2 : 0;
     $greenPoints = $green ? 3 : 0;
-    $youthBonusPreview = min(6, $attendancePoints + $newBusinessPoints + $greenPoints);
+    $youthConfirmedBonusPoints = $youthBonusesLocked
+        ? app(\App\Services\CanonicalIndividualScoringService::class)->youthBonusScore($application)
+        : 0;
     $canEditYouthBonuses = $youthBonusEditable
         ?? (! $youthBonusesLocked
             && ! ($isApplicant ?? false)
@@ -19,6 +21,7 @@
             && ($isChairman ?? false)
             && (($scoringIsAllowed ?? false) || ($hasCompletedEvaluation ?? false)));
     $allMembers = $allMembers ?? collect();
+    $allScores = $allScores ?? collect();
 @endphp
 
 <tr>
@@ -136,14 +139,35 @@
     </tr>
 @enderror
 
-<tr class="youth-bonus-sum-row">
+<tr class="final-score-row" id="youth-final-score-row">
     <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
-        <strong>UKUPAN ZBIR (maksimum 6):</strong>
+        <strong>UKUPAN ZBIR (10 kriterijuma + bonusi)</strong>
     </td>
     @foreach($allMembers as $member)
-        <td>—</td>
+        <td style="font-weight: bold !important;">
+            @php
+                $memberScore = $allScores->get($member->id);
+                $memberScoreIsFinal = $memberScore && $memberScore->completed_at !== null;
+                $memberCriteriaTotal = $memberScoreIsFinal ? $memberScore->calculateTotalScore() : 0;
+                $memberCombinedTotal = $memberCriteriaTotal > 0
+                    ? $memberCriteriaTotal + $youthConfirmedBonusPoints
+                    : 0;
+                $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+            @endphp
+            @if($isCurrentMember && $memberScoreIsFinal)
+                <strong>{{ $memberCombinedTotal > 0 ? $memberCombinedTotal : '—' }}</strong>
+            @elseif(! $isCurrentMember && ($canViewOtherMembersScores ?? false) && $memberScoreIsFinal)
+                <strong>{{ $memberCombinedTotal > 0 ? $memberCombinedTotal : '—' }}</strong>
+            @else
+                <strong style="color: #d1d5db;">—</strong>
+            @endif
+        </td>
     @endforeach
-    <td class="average-col" style="font-weight: bold !important;">
-        <strong>{{ number_format($youthBonusPreview, 2) }}</strong>
+    <td class="average-col" id="final_score" style="font-weight: bold !important;">
+        @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
+            <strong>{{ $youthFinalScoreDisplay }} / 56</strong>
+        @else
+            <strong>—</strong>
+        @endif
     </td>
 </tr>

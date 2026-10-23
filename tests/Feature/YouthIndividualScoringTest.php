@@ -336,8 +336,9 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('name="bonus_training"', $html);
         $this->assertStringContainsString('Planirana registracija', $html);
         $this->assertStringContainsString('Inovativno/zeleno poslovanje', $html);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $html);
-        $this->assertStringContainsString('KONAČNA OCJENA', $html);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $html);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $html);
+        $this->assertStringNotContainsString('KONAČNA OCJENA', $html);
         $this->assertStringNotContainsString('class="evaluation-table evaluation-table-bonus"', $html);
         $this->assertStringNotContainsString('name="notes"', $html);
         $this->assertStringNotContainsString('Ostale napomene', $html);
@@ -767,11 +768,63 @@ class YouthIndividualScoringTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $afterShow);
         $this->assertStringContainsString('Info dan i obuka (+1)', $afterShow);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $afterShow);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
         $this->assertStringContainsString('30.00 / 56', $afterShow);
         $this->assertStringNotContainsString('evaluation-table-bonus', $afterShow);
         $this->assertStringNotContainsString('Ostale napomene', $afterShow);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $afterShow);
+    }
+
+    public function test_youth_combined_sum_adds_confirmed_bonuses_once(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $fives = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $fives["criterion_{$i}"] = 5;
+        }
+        foreach ([1, 2, 3] as $seat) {
+            EvaluationScore::query()->create(array_merge($fives, [
+                'application_id' => $ctx['application']->id,
+                'commission_member_id' => $ctx['members'][$seat - 1]->id,
+                'canonical_seat_no' => $seat,
+                'completed_at' => now(),
+            ]));
+        }
+        $ctx['application']->forceFill([
+            'bonus_info_day' => true,
+            'bonus_training' => true,
+            'bonus_new_business' => true,
+            'bonus_green_innovative' => true,
+        ])->save();
+
+        $before = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertYouthFinalScoreRowShowsMemberTotal($before, '50');
+        $this->assertYouthFinalScoreRowDoesNotShowMemberTotal($before, '56');
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $before);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $before);
+        $this->assertStringNotContainsString('56.00 / 56', $before);
+
+        $this->confirmYouthBonuses($ctx, [
+            'bonus_info_and_training' => '1',
+            'bonus_new_business' => '1',
+            'bonus_green_innovative' => '1',
+        ]);
+
+        $after = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $afterRow = $this->youthFinalScoreRowHtml($after);
+        $this->assertYouthFinalScoreRowShowsMemberTotal($after, '56');
+        $this->assertStringContainsString('56.00 / 56', $afterRow);
+        $this->assertStringNotContainsString('62.00', $after);
+        $this->assertStringNotContainsString('68.00', $after);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $after);
+        $this->assertStringNotContainsString('KONAČNA OCJENA', $after);
     }
 
     public function test_zensko_completed_form_keeps_save_cancel_and_does_not_show_youth_totals(): void

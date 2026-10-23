@@ -85,8 +85,9 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertStringNotContainsString('>Obuka</td>', $list);
         $this->assertStringContainsString('Planirana registracija', $list);
         $this->assertStringContainsString('Inovativno/zeleno poslovanje', $list);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $list);
-        $this->assertStringContainsString('KONAČNA OCJENA', $list);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $list);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $list);
+        $this->assertStringNotContainsString('KONAČNA OCJENA', $list);
         $this->assertStringContainsString('Član 1', $list);
         $this->assertStringContainsString('name="bonus_info_and_training"', $list);
         $this->assertSame(1, substr_count($list, 'type="checkbox" name="bonus_info_and_training"'));
@@ -113,7 +114,8 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $memberHtml);
         $this->assertStringContainsString('Info dan i obuka (+1)', $memberHtml);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $memberHtml);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_info_and_training"', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_training"', $memberHtml);
@@ -123,6 +125,73 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
         $this->assertStringNotContainsString('name="notes"', $memberHtml);
         $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
+    }
+
+    public function test_youth_list_shows_one_combined_sum_without_double_counting_bonuses(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $this->seedCompletedYouthScores($ctx, $this->allCriteria(5));
+        $ctx['application']->forceFill([
+            'bonus_info_day' => true,
+            'bonus_training' => true,
+            'bonus_new_business' => true,
+            'bonus_green_innovative' => true,
+        ])->save();
+        $this->assertNull($ctx['application']->fresh()->bonuses_confirmed_at);
+        $this->assertSame(6, app(CanonicalIndividualScoringService::class)->youthBonusScore($ctx['application']->fresh()));
+
+        $before = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $beforeRow = $this->youthFinalScoreRowHtml($before);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $beforeRow);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $before);
+        $this->assertStringNotContainsString('KONAČNA OCJENA', $before);
+        $this->assertMatchesRegularExpression('/<strong>\s*50\s*<\/strong>/', $beforeRow);
+        $this->assertDoesNotMatchRegularExpression('/<strong>\s*56\s*<\/strong>/', $beforeRow);
+        $this->assertStringNotContainsString('56.00 / 56', $before);
+        $this->assertStringNotContainsString('6.00', $beforeRow);
+
+        $this->confirmYouthBonuses($ctx, [
+            'bonus_info_and_training' => '1',
+            'bonus_new_business' => '1',
+            'bonus_green_innovative' => '1',
+        ]);
+        $this->assertSame('56.00', $ctx['application']->fresh()->final_score);
+
+        $after = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $afterRow = $this->youthFinalScoreRowHtml($after);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $afterRow);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $after);
+        $this->assertSame(3, preg_match_all('/<strong>\s*56\s*<\/strong>/', $afterRow));
+        $this->assertStringContainsString('56.00 / 56', $afterRow);
+        $this->assertDoesNotMatchRegularExpression('/<strong>\s*50\s*<\/strong>/', $afterRow);
+        $this->assertStringNotContainsString('62.00', $after);
+        $this->assertStringNotContainsString('68.00', $after);
+        $this->assertStringNotContainsString('74.00', $after);
+
+        $afterShow = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $showRow = $this->youthFinalScoreRowHtml($afterShow);
+        $this->assertSame(3, preg_match_all('/<strong>\s*56\s*<\/strong>/', $showRow));
+        $this->assertStringContainsString('56.00 / 56', $showRow);
+        $this->assertStringNotContainsString('62.00', $afterShow);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
+
+        $other = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $otherRow = $this->youthFinalScoreRowHtml($other);
+        $this->assertSame(3, preg_match_all('/<strong>\s*56\s*<\/strong>/', $otherRow));
+        $this->assertStringContainsString('56.00 / 56', $otherRow);
+        $this->assertStringNotContainsString('62.00', $other);
     }
 
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
@@ -804,6 +873,33 @@ class YouthAggregateAndBonusTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    /**
+     * @param  array{application: Application, members: list<CommissionMember>}  $ctx
+     * @param  array<string, int>  $criteria
+     */
+    private function seedCompletedYouthScores(array $ctx, array $criteria): void
+    {
+        foreach ([1, 2, 3] as $seat) {
+            EvaluationScore::query()->create(array_merge($criteria, [
+                'application_id' => $ctx['application']->id,
+                'commission_member_id' => $ctx['members'][$seat - 1]->id,
+                'canonical_seat_no' => $seat,
+                'completed_at' => now(),
+            ]));
+        }
+    }
+
+    private function youthFinalScoreRowHtml(string $html): string
+    {
+        $this->assertTrue((bool) preg_match(
+            '/<tr\b[^>]*\bid="youth-final-score-row"[^>]*>.*?<\/tr>/s',
+            $html,
+            $match
+        ));
+
+        return $match[0];
     }
 
     private function youthScoringListHtml(string $html): string
