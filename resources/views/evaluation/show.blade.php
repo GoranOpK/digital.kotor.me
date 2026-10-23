@@ -674,13 +674,9 @@
                     <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
                     @if($youthShowPrintShown)
                         <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
+                        @include('evaluation.partials.youth_print_hint')
                     @endif
                     <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
-                    @if($youthShowPrintShown)
-                        <p id="evaluation-print-hint" style="margin: 16px auto 0; max-width: 560px; color: #4b5563; font-size: 13px; font-weight: 400; line-height: 1.5;">
-                            Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.
-                        </p>
-                    @endif
                 </div>
             @endif
         </div>

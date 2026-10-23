@@ -764,22 +764,24 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('>Štampaj</button>', $afterCycle);
-        $this->assertStringContainsString('id="evaluation-print-hint"', $afterCycle);
-        $this->assertStringContainsString(
-            'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
-            $afterCycle
-        );
+        $this->assertYouthPrintHintBesideButton($afterCycle);
 
         $afterShow = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.show', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('>Štampaj</button>', $afterShow);
-        $this->assertStringContainsString('id="evaluation-print-hint"', $afterShow);
+        $this->assertYouthPrintHintBesideButton($afterShow);
+    }
+
+    private function assertYouthPrintHintBesideButton(string $html): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/>Štampaj<\/button>\s*<span\b[^>]*\bid="evaluation-print-hint"/',
+            $html
+        );
         $this->assertStringContainsString(
             'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
-            $afterShow
+            $html
         );
     }
 

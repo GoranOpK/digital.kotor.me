@@ -1261,9 +1261,6 @@
                         // - sve prijave na konkursu ocijene svi članovi (rang lista spremna), ILI
                         // - prijava ne prolazi potvrđenu eliminatornu provjeru
                         $canPrintNow = ($canViewOtherMembersScores ?? false) || $rejectedForDocuments;
-                        $printButtonShown = $isRejected
-                            ? $rejectedForDocuments
-                            : (($hasCompletedEvaluation ?? false) && $canPrintNow);
                     @endphp
 
                     @if($isRejected)
@@ -1280,6 +1277,9 @@
                         </div>
                         @if($rejectedForDocuments)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                            @if($isOmladinskoScoring)
+                                @include('evaluation.partials.youth_print_hint')
+                            @endif
                         @endif
                         @if($isApplicant)
                             <a href="{{ route('applications.show', $application) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
@@ -1298,6 +1298,7 @@
                             </div>
                             @if($canPrintNow)
                                 <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                                @include('evaluation.partials.youth_print_hint')
                             @endif
                             <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                                 Nazad na listu
@@ -1314,6 +1315,9 @@
                         {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                            @if($isOmladinskoScoring)
+                                @include('evaluation.partials.youth_print_hint')
+                            @endif
                         @endif
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
@@ -1326,6 +1330,9 @@
                         @endif
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                            @if($isOmladinskoScoring)
+                                @include('evaluation.partials.youth_print_hint')
+                            @endif
                         @endif
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
@@ -1339,6 +1346,9 @@
                         @endif
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                            @if($isOmladinskoScoring)
+                                @include('evaluation.partials.youth_print_hint')
+                            @endif
                         @endif
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
@@ -1353,11 +1363,6 @@
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                         @endif
-                    @endif
-                    @if(($isOmladinskoScoring ?? false) && $printButtonShown)
-                        <p id="evaluation-print-hint" style="margin: 16px auto 0; max-width: 560px; color: #4b5563; font-size: 13px; font-weight: 400; line-height: 1.5;">
-                            Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.
-                        </p>
                     @endif
                 </div>
             </form>
