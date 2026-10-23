@@ -42,10 +42,10 @@ class HomeController extends Controller
     protected function getLandingCategories(): array
     {
         $defaultCategories = [
-            ['label' => 'Plaćanja', 'url' => route('payments.index')],
-            ['label' => 'Konkursi', 'url' => route('competitions.index')],
-            ['label' => 'Tenderi', 'url' => route('tenders.index')],
-            ['label' => 'Kalendar kulture', 'url' => route('cultural-calendar.index')],
+            ['label' => 'Plaćanja', 'url' => route('payments.index'), 'icon' => 'placanja.png'],
+            ['label' => 'Konkursi', 'url' => route('competitions.index'), 'icon' => 'konkursi.png'],
+            ['label' => 'Tenderi', 'url' => route('tenders.index'), 'icon' => 'tenderi.png'],
+            ['label' => 'Kalendar kulture', 'url' => route('cultural-calendar.index'), 'icon' => 'kalendar.png'],
         ];
 
         $user = auth()->user();
@@ -55,10 +55,10 @@ class HomeController extends Controller
 
         return match ($user->role->name) {
             'konkurs_admin' => [
-                ['label' => 'Konkursi', 'url' => route('admin.dashboard')],
+                ['label' => 'Konkursi', 'url' => route('admin.dashboard'), 'icon' => 'konkursi.png'],
             ],
             'komisija' => [
-                ['label' => 'Konkursi', 'url' => $this->getCommissionMemberCompetitionUrl($user)],
+                ['label' => 'Konkursi', 'url' => $this->getCommissionMemberCompetitionUrl($user), 'icon' => 'konkursi.png'],
             ],
             default => $defaultCategories,
         };
