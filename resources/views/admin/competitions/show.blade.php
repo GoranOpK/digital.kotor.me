@@ -586,7 +586,7 @@
                             @empty
                                 <tr>
                                     <td colspan="8" style="padding:40px; text-align:center; color:#6b7280;">
-                                        @if($isCommissionMember && !$isAdmin && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
+                                        @if($isCommissionMember && !$isAdmin && !$competition->isCanonicalTestMode() && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
                                             Prijave će biti prikazane nakon isteka roka za prijavljivanje na konkurs.
                                         @else
                                             Nema prijava na ovaj konkurs.
