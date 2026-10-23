@@ -784,7 +784,7 @@
                         $criteria = $scoringProfile->criteria;
                     @endphp
 
-                    <table class="evaluation-table evaluation-table-criteria">
+                    <table class="evaluation-table evaluation-table-criteria" @if($isOmladinskoScoring) id="youth-scoring-list" @endif>
                         <thead>
                             <tr>
                                 <th class="criterion-col">KRITERIJUMI ZA OCJENU</th>
@@ -871,6 +871,38 @@
                             </td>
                                 </tr>
                             @endforeach
+                            @if($isOmladinskoScoring)
+                                @include('evaluation.partials.youth_bonus_rows')
+                                <tr class="final-score-row" id="youth-final-score-row">
+                                    <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
+                                        <strong>KONAČNA OCJENA:</strong>
+                                    </td>
+                                    @foreach($allMembers as $member)
+                                        <td style="font-weight: bold !important;">
+                                            @php
+                                                $memberScore = $allScores->get($member->id);
+                                                $memberScoreIsFinal = $memberScore && $memberScore->completed_at !== null;
+                                                $memberTotal = $memberScoreIsFinal ? $memberScore->calculateTotalScore() : 0;
+                                                $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                            @endphp
+                                            @if($isCurrentMember && $memberScoreIsFinal)
+                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                            @elseif(! $isCurrentMember && ($canViewOtherMembersScores ?? false) && $memberScoreIsFinal)
+                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                            @else
+                                                <strong style="color: #d1d5db;">—</strong>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                    <td class="average-col" id="final_score" style="font-weight: bold !important;">
+                                        @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
+                                            <strong>{{ $youthFinalScoreDisplay }} / 56</strong>
+                                        @else
+                                            <strong>—</strong>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
 
@@ -880,25 +912,8 @@
                         @enderror
                     @endfor
 
-                    @if($isOmladinskoScoring && $commissionMember)
-                        @php
-                            $youthMemberScoreForSum = $existingScore ?? $allScores->get($commissionMember->id);
-                            $youthMemberCriteriaSum = 0;
-                            if ($youthMemberScoreForSum) {
-                                for ($criterionNo = 1; $criterionNo <= 10; $criterionNo++) {
-                                    $criterionValue = $youthMemberScoreForSum->{"criterion_{$criterionNo}"};
-                                    if ($criterionValue !== null && $criterionValue !== '') {
-                                        $youthMemberCriteriaSum += (int) $criterionValue;
-                                    }
-                                }
-                            }
-                            $youthMemberSumLabel = ($hasCompletedEvaluation ?? false)
-                                ? 'Zbir vaših ocjena za 10 kriterijuma'
-                                : 'Zbir trenutno sačuvanih ocjena';
-                        @endphp
-                        <div id="youth-member-criteria-sum" style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #1f2937; font-weight: 600;">
-                            {{ $youthMemberSumLabel }}: {{ $youthMemberCriteriaSum }} / 50
-                        </div>
+                    @if($isOmladinskoScoring)
+                        @include('evaluation.partials.youth_bonus_form')
                     @endif
                 </div>
 
@@ -1107,15 +1122,9 @@
                     <div class="warning-box notes-info-box" style="margin-top: 16px;">
                         <strong>Napomena:</strong> Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.
                     </div>
-                    @else
-                        @include('evaluation.partials.youth_bonus_form')
-                        @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
-                            <div id="youth-commission-final-score" style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #1f2937; font-weight: 600;">
-                                Konačna ocjena Komisije: {{ $youthFinalScoreDisplay }} / 56
-                            </div>
-                        @endif
                     @endif
 
+                @if(! $isOmladinskoScoring)
                 <!-- 5. Ostale napomene -->
                 <div class="form-section form-section-notes">
                     <label class="form-label form-label-large">5. Ostale napomene:</label>
@@ -1246,6 +1255,7 @@
                         </div>
                     @endif
                 </div>
+                @endif
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;" class="no-print">

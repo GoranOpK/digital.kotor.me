@@ -219,8 +219,11 @@ class YouthIndividualScoringTest extends TestCase
             $html
         );
         $this->assertStringContainsString('id="youth-save-scores"', $html);
-        $this->assertStringContainsString('Zbir trenutno sačuvanih ocjena', $html);
-        $this->assertStringContainsString('4 / 50', $html);
+        $this->assertStringContainsString('id="youth-scoring-list"', $html);
+        $this->assertYouthFinalScoreRowDoesNotShowMemberTotal($html, '4');
+        $this->assertStringNotContainsString('4 / 50', $html);
+        $this->assertStringNotContainsString('id="youth-member-criteria-sum"', $html);
+        $this->assertStringNotContainsString('Zbir trenutno sačuvanih ocjena', $html);
         $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
         $this->assertStringNotContainsString('id="youth-finish-scoring"', $html);
         $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
@@ -322,6 +325,17 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('preduzetnica je uvjerljiva', $html);
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
+        $this->assertStringContainsString('id="youth-scoring-list"', $html);
+        $this->assertStringContainsString('Info dan', $html);
+        $this->assertStringContainsString('Obuka', $html);
+        $this->assertStringContainsString('Planirana registracija', $html);
+        $this->assertStringContainsString('Inovativno/zeleno poslovanje', $html);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $html);
+        $this->assertStringContainsString('KONAČNA OCJENA', $html);
+        $this->assertStringNotContainsString('class="evaluation-table evaluation-table-bonus"', $html);
+        $this->assertStringNotContainsString('name="notes"', $html);
+        $this->assertStringNotContainsString('Ostale napomene', $html);
+        $this->assertStringNotContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $html);
         $this->assertStringNotContainsString('članu 10', $html);
         $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
     }
@@ -490,7 +504,12 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString(ScoringProfileConfig::zenskoCriteria()[6], $html);
         $this->assertStringContainsString('Podaci o podnositeljki prijave', $html);
         $this->assertStringContainsString('Zavoda za zapošljavanje', $html);
+        $this->assertStringContainsString('evaluation-table-bonus', $html);
+        $this->assertStringContainsString('name="bonus_zavod_nezaposleni"', $html);
+        $this->assertStringContainsString('5. Ostale napomene', $html);
         $this->assertStringContainsString('>Ocijeni<', $html);
+        $this->assertStringNotContainsString('id="youth-scoring-list"', $html);
+        $this->assertStringNotContainsString('id="youth-final-score-row"', $html);
         $this->assertStringNotContainsString('.......................', $html);
         $this->assertStringNotContainsString('Sačuvaj nacrt', $html);
         $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
@@ -610,11 +629,15 @@ class YouthIndividualScoringTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('id="youth-member-criteria-sum"', $html);
-        $this->assertStringContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
-        $this->assertStringContainsString('32 / 50', $html);
+        $this->assertStringContainsString('id="youth-scoring-list"', $html);
+        $this->assertStringContainsString('id="youth-final-score-row"', $html);
+        $this->assertYouthFinalScoreRowShowsMemberTotal($html, '32');
+        $this->assertStringNotContainsString('32 / 50', $html);
+        $this->assertStringNotContainsString('id="youth-member-criteria-sum"', $html);
+        $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
         $this->assertStringNotContainsString('Zbir trenutno sačuvanih ocjena', $html);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
+        $this->assertStringNotContainsString(' / 56', $html);
         $this->assertStringNotContainsString('Sačuvaj izmjene', $html);
         $this->assertStringNotContainsString('Otkaži', $html);
     }
@@ -673,9 +696,11 @@ class YouthIndividualScoringTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('id="youth-member-criteria-sum"', $html);
-        $this->assertStringContainsString('Zbir trenutno sačuvanih ocjena', $html);
-        $this->assertStringContainsString('5 / 50', $html);
+        $this->assertStringContainsString('id="youth-scoring-list"', $html);
+        $this->assertYouthFinalScoreRowDoesNotShowMemberTotal($html, '5');
+        $this->assertStringNotContainsString('5 / 50', $html);
+        $this->assertStringNotContainsString('id="youth-member-criteria-sum"', $html);
+        $this->assertStringNotContainsString('Zbir trenutno sačuvanih ocjena', $html);
         $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
         $this->assertStringContainsString('Sačuvaj ocjene', $html);
@@ -692,9 +717,11 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Zbir vaših ocjena za 10 kriterijuma', $beforeBonuses);
-        $this->assertStringContainsString('30 / 50', $beforeBonuses);
+        $this->assertStringContainsString('id="youth-scoring-list"', $beforeBonuses);
+        $this->assertYouthFinalScoreRowShowsMemberTotal($beforeBonuses, '30');
+        $this->assertStringNotContainsString('30 / 50', $beforeBonuses);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $beforeBonuses);
+        $this->assertStringNotContainsString('id="youth-commission-final-score"', $beforeBonuses);
         $this->assertStringNotContainsString(' / 56', $beforeBonuses);
         $this->assertStringNotContainsString('Sačuvaj izmjene', $beforeBonuses);
         $this->assertStringNotContainsString('Otkaži', $beforeBonuses);
@@ -705,12 +732,25 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('id="youth-commission-final-score"', $afterBonuses);
-        $this->assertStringContainsString('Konačna ocjena Komisije: 30.00 / 56', $afterBonuses);
-        $this->assertStringContainsString('Zbir vaših ocjena za 10 kriterijuma', $afterBonuses);
-        $this->assertStringContainsString('30 / 50', $afterBonuses);
+        $this->assertYouthFinalScoreRowShowsMemberTotal($afterBonuses, '30');
+        $this->assertStringContainsString('30.00 / 56', $afterBonuses);
+        $this->assertStringNotContainsString('id="youth-commission-final-score"', $afterBonuses);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $afterBonuses);
+        $this->assertStringNotContainsString('30 / 50', $afterBonuses);
         $this->assertStringNotContainsString('Sačuvaj izmjene', $afterBonuses);
         $this->assertStringNotContainsString('Otkaži', $afterBonuses);
+
+        $afterShow = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('id="youth-scoring-list"', $afterShow);
+        $this->assertStringContainsString('Info dan', $afterShow);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
+        $this->assertStringContainsString('30.00 / 56', $afterShow);
+        $this->assertStringNotContainsString('evaluation-table-bonus', $afterShow);
+        $this->assertStringNotContainsString('Ostale napomene', $afterShow);
+        $this->assertStringNotContainsString('Konačna ocjena Komisije', $afterShow);
     }
 
     public function test_zensko_completed_form_keeps_save_cancel_and_does_not_show_youth_totals(): void
@@ -728,6 +768,11 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString('Sačuvaj izmjene', $html);
         $this->assertStringContainsString('Otkaži', $html);
         $this->assertStringContainsString('KONAČNA OCJENA', $html);
+        $this->assertStringContainsString('evaluation-table-bonus', $html);
+        $this->assertStringContainsString('name="bonus_zavod_nezaposleni"', $html);
+        $this->assertStringContainsString('5. Ostale napomene', $html);
+        $this->assertStringNotContainsString('id="youth-scoring-list"', $html);
+        $this->assertStringNotContainsString('id="youth-final-score-row"', $html);
         $this->assertStringNotContainsString('id="youth-member-criteria-sum"', $html);
         $this->assertStringNotContainsString('id="youth-commission-final-score"', $html);
         $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
@@ -1178,5 +1223,38 @@ class YouthIndividualScoringTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    private function youthFinalScoreRowHtml(string $html): string
+    {
+        $this->assertTrue((bool) preg_match(
+            '/<tr\b[^>]*\bid="youth-final-score-row"[^>]*>.*?<\/tr>/s',
+            $html,
+            $match
+        ));
+
+        return $match[0];
+    }
+
+    private function assertYouthFinalScoreRowShowsMemberTotal(string $html, string $total): void
+    {
+        $row = $this->youthFinalScoreRowHtml($html);
+        $this->assertMatchesRegularExpression(
+            '/<strong>\s*'.preg_quote($total, '/').'\s*<\/strong>/',
+            $row
+        );
+        $this->assertStringNotContainsString($total.' / 50', $row);
+        $this->assertStringNotContainsString($total.' / 56', $row);
+    }
+
+    private function assertYouthFinalScoreRowDoesNotShowMemberTotal(string $html, string $total): void
+    {
+        $row = $this->youthFinalScoreRowHtml($html);
+        $this->assertDoesNotMatchRegularExpression(
+            '/<strong>\s*'.preg_quote($total, '/').'\s*<\/strong>/',
+            $row
+        );
+        $this->assertStringContainsString('—', $row);
+        $this->assertStringNotContainsString($total.' / 50', $html);
     }
 }

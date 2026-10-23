@@ -460,165 +460,6 @@
                     </div>
                 </div>
                 </div>
-
-            <!-- 4. Ocjena biznis plana u brojkama -->
-            <div class="form-section form-section-scores print-segment-table">
-                <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
-                
-                @php
-                    $scoringProfile = $scoringProfile ?? \App\Support\ScoringProfileConfig::for($application->competition?->type);
-                    $isOmladinskoScoring = $isOmladinskoScoring ?? $scoringProfile->isOmladinsko();
-                    $criteria = $scoringProfile->criteria;
-                @endphp
-
-                <table class="evaluation-table">
-                    <thead>
-                        <tr>
-                            <th class="criterion-col">KRITERIJUMI ZA OCJENU</th>
-                            @foreach($allMembers as $member)
-                                <th style="font-size: 11px;">
-                                    {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član ' . ($loop->index) }}
-                                </th>
-                            @endforeach
-                            <th class="average-col">Prosječna ocjena*</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($criteria as $num => $name)
-                            <tr>
-                                <td class="criterion-col">
-                                    <strong>{{ $num }}.</strong> {{ $name }}
-                                </td>
-                                @foreach($allMembers as $member)
-                                    <td>
-                                        @php
-                                            $memberScore = $allScores->get($member->id);
-                                            $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
-                                            $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-                                            $showScore = $isCurrentMember || ($canViewOtherMembersScores ?? false);
-                                        @endphp
-                                        <span class="score-display" @if(!$showScore) style="color: #d1d5db;" @endif>
-                                            {{ $showScore ? ($currentValue ? $currentValue : '—') : '—' }}
-                                        </span>
-                                    </td>
-                                @endforeach
-                                <td class="average-col">
-                                    @if($canViewOtherMembersScores ?? false)
-                                        {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
-                                    @else
-                                        —
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                        <tr class="final-score-row">
-                            <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
-                                <strong>KONAČNA OCJENA:</strong>
-                            </td>
-                            @foreach($allMembers as $member)
-                                <td style="font-weight: bold !important;">
-                                    @php
-                                        $memberScore = $allScores->get($member->id);
-                                        $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
-                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-                                        $showScore = $isCurrentMember || ($canViewOtherMembersScores ?? false);
-                                    @endphp
-                                    <strong @if(!$showScore) style="color: #d1d5db;" @endif>{{ $showScore && $memberTotal > 0 ? $memberTotal : '—' }}</strong>
-                                </td>
-                            @endforeach
-                            <td class="average-col" style="font-weight: bold !important;">
-                                @if($isOmladinskoScoring)
-                                    @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
-                                        <strong>{{ $youthFinalScoreDisplay }}</strong>
-                                    @else
-                                        <strong>—</strong>
-                                    @endif
-                                @else
-                                    @php
-                                        $bonusScore = $application->getBonusScore();
-                                    @endphp
-                                    @if($canViewOtherMembersScores ?? false)
-                                        <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
-                                    @else
-                                        <strong>—</strong>
-                                    @endif
-                                @endif
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                @if(! $isOmladinskoScoring)
-                <div class="info-box notes-info-box" style="margin-top: 16px; background: #fef3c7; border-left-color: #f59e0b;">
-                    <strong>Napomena:</strong> Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.
-                </div>
-                @endif
-            </div>
-
-            <!-- 4. Zaključak komisije -->
-            <div class="form-section commission-decision-section">
-                <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
-                <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
-                    @php
-                        $decisionLabels = [
-                            'podrzava_potpuno' => 'a. Podržava u potpunosti',
-                            'odbija' => 'b. Odbija'
-                        ];
-                        $currentDecision = $application->commission_decision;
-                    @endphp
-                    <div style="margin-bottom: 12px;">
-                        <strong>{{ $currentDecision ? ($decisionLabels[$currentDecision] ?? 'Nije doneseno') : 'Nije doneseno' }}</strong>
-                    </div>
-                    @if($application->approved_amount)
-                        <div>
-                            <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- 5. Obrazloženje -->
-            <div class="form-section justification-section">
-                <label class="form-label form-label-large">5. Obrazloženje:</label>
-                <div class="readonly-value">
-                    {{ $evaluationScore->justification ?? $application->commission_justification ?? 'Nema obrazloženja' }}
-                </div>
-            </div>
-
-            <!-- 4. Ostale napomene -->
-                <div class="form-section print-segment-notes">
-                    <label class="form-label form-label-large">4. Ostale napomene:</label>
-                <div class="readonly-value">
-                    {{ $evaluationScore->notes ?? 'Nema napomena' }}
-                </div>
-            </div>
-
-            <!-- Potpisi -->
-            <div class="signature-section">
-                <div style="text-align: right; margin-bottom: 24px; font-size: 14px;">
-                    Kotor, {{ $application->commission_decision_date ? $application->commission_decision_date->format('d.m.Y') : '_______________' }} god.
-                </div>
-                <div class="signature-row">
-                    @foreach($allMembers as $member)
-                        <div class="signature-item">
-                            <div style="font-weight: 600; margin-bottom: 8px; text-align: center;">
-                                {{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . ($loop->index) }}:
-                            </div>
-                            <div style="margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 8px; text-align: center;">
-                                {{ $member->name }}
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <div style="margin-top: 32px; text-align: center;" class="no-print">
-                <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
-                @if($commissionMember->position === 'predsjednik')
-                    <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
-                @endif
-                <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
-            </div>
             @else
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
                     Obrazac 3
@@ -666,6 +507,178 @@
                     </div>
                 </div>
                 </div>
+            @endif
+
+            <!-- 4. Ocjena biznis plana u brojkama -->
+            <div class="form-section form-section-scores print-segment-table">
+                <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
+                
+                @php
+                    $scoringProfile = $scoringProfile ?? \App\Support\ScoringProfileConfig::for($application->competition?->type);
+                    $isOmladinskoScoring = $isOmladinskoScoring ?? $scoringProfile->isOmladinsko();
+                    $criteria = $scoringProfile->criteria;
+                @endphp
+
+                <table class="evaluation-table" @if($isOmladinskoScoring) id="youth-scoring-list" @endif>
+                    <thead>
+                        <tr>
+                            <th class="criterion-col">KRITERIJUMI ZA OCJENU</th>
+                            @foreach($allMembers as $member)
+                                <th style="font-size: 11px;">
+                                    {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član ' . ($loop->index) }}
+                                </th>
+                            @endforeach
+                            <th class="average-col">Prosječna ocjena*</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($criteria as $num => $name)
+                            <tr>
+                                <td class="criterion-col">
+                                    <strong>{{ $num }}.</strong> {{ $name }}
+                                </td>
+                                @foreach($allMembers as $member)
+                                    <td>
+                                        @php
+                                            $memberScore = $allScores->get($member->id);
+                                            $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
+                                            $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                            $showScore = $isCurrentMember || ($canViewOtherMembersScores ?? false);
+                                        @endphp
+                                        <span class="score-display" @if(!$showScore) style="color: #d1d5db;" @endif>
+                                            {{ $showScore ? ($currentValue ? $currentValue : '—') : '—' }}
+                                        </span>
+                                    </td>
+                                @endforeach
+                                <td class="average-col">
+                                    @if($canViewOtherMembersScores ?? false)
+                                        {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                        @if($isOmladinskoScoring)
+                            @include('evaluation.partials.youth_bonus_rows', ['youthBonusEditable' => false])
+                        @endif
+                        <tr class="final-score-row" @if($isOmladinskoScoring) id="youth-final-score-row" @endif>
+                            <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
+                                <strong>KONAČNA OCJENA:</strong>
+                            </td>
+                            @foreach($allMembers as $member)
+                                <td style="font-weight: bold !important;">
+                                    @php
+                                        $memberScore = $allScores->get($member->id);
+                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                        $memberScoreIsFinal = $memberScore && $memberScore->completed_at !== null;
+                                        $memberTotal = ($isOmladinskoScoring && ! $memberScoreIsFinal)
+                                            ? 0
+                                            : ($memberScore ? $memberScore->calculateTotalScore() : 0);
+                                        $showScore = $isOmladinskoScoring
+                                            ? (($isCurrentMember && $memberScoreIsFinal) || (($canViewOtherMembersScores ?? false) && $memberScoreIsFinal))
+                                            : ($isCurrentMember || ($canViewOtherMembersScores ?? false));
+                                    @endphp
+                                    <strong @if(!$showScore) style="color: #d1d5db;" @endif>{{ $showScore && $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                </td>
+                            @endforeach
+                            <td class="average-col" style="font-weight: bold !important;">
+                                @if($isOmladinskoScoring)
+                                    @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
+                                        <strong>{{ $youthFinalScoreDisplay }} / 56</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
+                                @else
+                                    @php
+                                        $bonusScore = $application->getBonusScore();
+                                    @endphp
+                                    @if($canViewOtherMembersScores ?? false)
+                                        <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
+                                @endif
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                @if(! $isOmladinskoScoring)
+                <div class="info-box notes-info-box" style="margin-top: 16px; background: #fef3c7; border-left-color: #f59e0b;">
+                    <strong>Napomena:</strong> Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.
+                </div>
+                @endif
+            </div>
+
+            @if(! ($eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type))->usesStructuredNotes)
+            <!-- 4. Zaključak komisije -->
+            <div class="form-section commission-decision-section">
+                <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
+                <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
+                    @php
+                        $decisionLabels = [
+                            'podrzava_potpuno' => 'a. Podržava u potpunosti',
+                            'odbija' => 'b. Odbija'
+                        ];
+                        $currentDecision = $application->commission_decision;
+                    @endphp
+                    <div style="margin-bottom: 12px;">
+                        <strong>{{ $currentDecision ? ($decisionLabels[$currentDecision] ?? 'Nije doneseno') : 'Nije doneseno' }}</strong>
+                    </div>
+                    @if($application->approved_amount)
+                        <div>
+                            <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- 5. Obrazloženje -->
+            <div class="form-section justification-section">
+                <label class="form-label form-label-large">5. Obrazloženje:</label>
+                <div class="readonly-value">
+                    {{ $evaluationScore->justification ?? $application->commission_justification ?? 'Nema obrazloženja' }}
+                </div>
+            </div>
+
+            @if(! $isOmladinskoScoring)
+            <!-- 4. Ostale napomene -->
+                <div class="form-section print-segment-notes">
+                    <label class="form-label form-label-large">4. Ostale napomene:</label>
+                <div class="readonly-value">
+                    {{ $evaluationScore->notes ?? 'Nema napomena' }}
+                </div>
+            </div>
+            @endif
+
+            <!-- Potpisi -->
+            <div class="signature-section">
+                <div style="text-align: right; margin-bottom: 24px; font-size: 14px;">
+                    Kotor, {{ $application->commission_decision_date ? $application->commission_decision_date->format('d.m.Y') : '_______________' }} god.
+                </div>
+                <div class="signature-row">
+                    @foreach($allMembers as $member)
+                        <div class="signature-item">
+                            <div style="font-weight: 600; margin-bottom: 8px; text-align: center;">
+                                {{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . ($loop->index) }}:
+                            </div>
+                            <div style="margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 8px; text-align: center;">
+                                {{ $member->name }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div style="margin-top: 32px; text-align: center;" class="no-print">
+                <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
+                @if($commissionMember->position === 'predsjednik')
+                    <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
+                @endif
+                <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
+            </div>
+            @else
                 <div style="margin-top: 32px; text-align: center;" class="no-print">
                     @php
                         $youthShowPrintShown = (($evaluationScore->completed_at ?? null) !== null)

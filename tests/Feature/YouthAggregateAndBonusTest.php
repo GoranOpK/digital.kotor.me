@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\CanonicalIndividualScoringService;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
+use App\Support\ScoringProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -72,23 +73,53 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertTrue((bool) preg_match('/<form\b[^>]*\bid="evaluationForm"[^>]*>(.*)<\/form>/s', $html, $formMatch));
         $mainForm = $formMatch[1];
         $this->assertStringNotContainsString('<form', $mainForm);
-        $this->assertStringContainsString('evaluation-table-bonus', $mainForm);
-        $this->assertStringContainsString('name="bonus_info_day"', $mainForm);
-        $this->assertStringContainsString('name="bonus_training"', $mainForm);
-        $this->assertStringContainsString('name="bonus_new_business"', $mainForm);
-        $this->assertStringContainsString('name="bonus_green_innovative"', $mainForm);
+        $this->assertSame(1, substr_count($mainForm, 'id="youth-scoring-list"'));
+        $this->assertStringNotContainsString('evaluation-table-bonus', $mainForm);
+        $list = $this->youthScoringListHtml($mainForm);
+        foreach (ScoringProfileConfig::youthCriteria() as $criterionName) {
+            $this->assertStringContainsString($criterionName, $list);
+        }
+        $this->assertStringContainsString('Info dan', $list);
+        $this->assertStringContainsString('Obuka', $list);
+        $this->assertStringContainsString('Planirana registracija', $list);
+        $this->assertStringContainsString('Inovativno/zeleno poslovanje', $list);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $list);
+        $this->assertStringContainsString('KONAČNA OCJENA', $list);
+        $this->assertStringContainsString('Član 1', $list);
+        $this->assertStringContainsString('name="bonus_info_day"', $list);
+        $this->assertStringContainsString('name="bonus_training"', $list);
+        $this->assertStringContainsString('name="bonus_new_business"', $list);
+        $this->assertStringContainsString('name="bonus_green_innovative"', $list);
+        $this->assertStringNotContainsString('name="youth_bonus_action"', $list);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $list);
         $this->assertStringContainsString('name="youth_bonus_action"', $mainForm);
         $this->assertStringContainsString('value="draft"', $mainForm);
         $this->assertStringContainsString('value="confirm"', $mainForm);
         $this->assertStringContainsString('Sačuvaj nacrt bonusa', $mainForm);
         $this->assertStringContainsString('Potvrdi i zaključaj bonuse', $mainForm);
-        $this->assertStringContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $mainForm);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $mainForm);
-        $this->assertStringContainsString('>Bodovi</th>', $mainForm);
-        $this->assertStringContainsString('Član 1', $mainForm);
+        $this->assertStringNotContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $mainForm);
+        $this->assertStringNotContainsString('>Bodovi</th>', $mainForm);
+        $this->assertStringNotContainsString('name="notes"', $mainForm);
+        $this->assertStringNotContainsString('Ostale napomene', $mainForm);
         $this->assertStringNotContainsString('name="bonus_zavod_nezaposleni"', $mainForm);
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $mainForm);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $mainForm);
+
+        $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('id="youth-scoring-list"', $memberHtml);
+        $this->assertStringContainsString('Info dan', $memberHtml);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_training"', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_new_business"', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_green_innovative"', $memberHtml);
+        $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
+        $this->assertStringNotContainsString('name="notes"', $memberHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
     }
 
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
@@ -305,9 +336,12 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $memberHtml);
         $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
-        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringNotContainsString('name="notes"', $memberHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
         $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
         $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $memberHtml);
 
         $chairmanHtml = $this->actingAs($ctx['chairman']->user)
@@ -316,6 +350,8 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $chairmanHtml);
         $this->assertStringNotContainsString('Napomena mjesta 2', $chairmanHtml);
+        $this->assertStringNotContainsString('name="notes"', $chairmanHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $chairmanHtml);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $chairmanHtml);
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $chairmanHtml);
 
@@ -673,5 +709,16 @@ class YouthAggregateAndBonusTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    private function youthScoringListHtml(string $html): string
+    {
+        $this->assertTrue((bool) preg_match(
+            '/<table\b[^>]*\bid="youth-scoring-list"[^>]*>.*?<\/table>/s',
+            $html,
+            $match
+        ));
+
+        return $match[0];
     }
 }

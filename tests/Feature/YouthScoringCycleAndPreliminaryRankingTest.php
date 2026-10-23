@@ -60,7 +60,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->getContent();
         $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
         $this->assertStringNotContainsString('Napomena mjesta 1', $html);
-        $this->assertStringContainsString('Napomena mjesta 2', $html);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $html);
+        $this->assertStringNotContainsString('Ostale napomene', $html);
 
         $this->lockThreeSeats($ctx, [], $extra);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $extra]);
@@ -93,9 +94,10 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Napomena mjesta 1', $memberHtml);
-        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
-        $this->assertStringContainsString('Napomena mjesta 3', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 3', $memberHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
         $this->assertStringContainsString('Predsjednik', $memberHtml);
         $this->assertStringContainsString('Član 1', $memberHtml);
         $this->assertStringContainsString('Član 2', $memberHtml);
@@ -190,9 +192,10 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
                 ->get(route('evaluation.create', $ctx['application']))
                 ->assertOk()
                 ->getContent();
-            $this->assertStringContainsString('Napomena mjesta 1', $html);
-            $this->assertStringContainsString('Napomena mjesta 2', $html);
-            $this->assertStringContainsString('Napomena mjesta 3', $html);
+            $this->assertStringNotContainsString('Napomena mjesta 1', $html);
+            $this->assertStringNotContainsString('Napomena mjesta 2', $html);
+            $this->assertStringNotContainsString('Napomena mjesta 3', $html);
+            $this->assertStringNotContainsString('Ostale napomene', $html);
             $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $html);
             $this->assertStringNotContainsString('Preliminarna rang-lista', $html);
         }
@@ -228,7 +231,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Napomena mjesta 1', $html);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $html);
+        $this->assertStringNotContainsString('Ostale napomene', $html);
         $otherHtml = $this->actingAs($sharedUser)
             ->get(route('evaluation.create', $other['application']))
             ->assertOk()
