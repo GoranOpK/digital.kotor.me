@@ -885,7 +885,7 @@ class AdminController extends Controller
         if ($isCommissionMember && ! $isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
-            if (! $competition->isCanonicalTestMode()
+            if (! $competition->isCanonicalTestPreview()
                 && ! $competition->isApplicationDeadlinePassed()
                 && ! in_array($competition->status, ['closed', 'completed'])) {
                 $applicationsQuery->whereRaw('1 = 0'); // prazna lista
