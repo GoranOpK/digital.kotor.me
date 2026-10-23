@@ -89,14 +89,14 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             ->assertDontSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('evaluation.create', $ctx['application']));
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
         $this->assertNotNull(
             EvaluationScore::query()
                 ->where('application_id', $ctx['application']->id)
                 ->where('commission_member_id', $ctx['chairman']->id)
-                ->whereNull('completed_at')
+                ->whereNotNull('completed_at')
                 ->first()
         );
 
@@ -168,13 +168,13 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('evaluation.create', $ctx['application']));
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
         $this->assertNotNull(
             EvaluationScore::query()
                 ->where('application_id', $ctx['application']->id)
-                ->whereNull('completed_at')
+                ->whereNotNull('completed_at')
                 ->first()
         );
 
@@ -225,13 +225,13 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             ->assertDontSee(ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE, false);
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $application))
-            ->post(route('evaluation.store', $application), $this->draftPayload())
+            ->post(route('evaluation.store', $application), $this->finalPayload())
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('evaluation.create', $application));
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
         $this->assertNotNull(
             EvaluationScore::query()
                 ->where('application_id', $application->id)
-                ->whereNull('completed_at')
+                ->whereNotNull('completed_at')
                 ->first()
         );
     }
@@ -809,6 +809,20 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
     private function draftPayload(array $overrides = []): array
     {
         $payload = ['save_as_draft' => '1', 'notes' => 'Nacrt'];
+        for ($i = 1; $i <= 10; $i++) {
+            $payload["criterion_{$i}"] = 3;
+        }
+
+        return array_merge($payload, $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function finalPayload(array $overrides = []): array
+    {
+        $payload = ['scoring_confirmed' => '1', 'notes' => null];
         for ($i = 1; $i <= 10; $i++) {
             $payload["criterion_{$i}"] = 3;
         }

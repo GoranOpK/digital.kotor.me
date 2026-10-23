@@ -29,6 +29,8 @@ class CanonicalIndividualScoringService
 
     public const CONFIRMATION_REQUIRED_MESSAGE = 'Prije završetka bodovanja morate potvrditi da je ocjena konačna.';
 
+    public const YOUTH_INDIVIDUAL_DRAFT_NOT_ALLOWED_MESSAGE = 'Privremeno čuvanje nacrta individualne ocjene nije dozvoljeno. Unesite svih 10 kriterijuma i sačuvajte konačne ocjene.';
+
     public const INVALID_SEAT_MESSAGE = 'Ne može se utvrditi kanonsko mjesto Komisije za bodovanje.';
 
     public const RANKING_LOCKED_MESSAGE = 'Rang lista i zbirni rezultati dostupni su tek kada svih pet kanonskih mjesta Komisije završi individualno bodovanje svih prijava koje su ušle u bodovanje.';
@@ -741,47 +743,6 @@ class CanonicalIndividualScoringService
         }
 
         return $recorded;
-    }
-
-    /**
-     * @param  array<string, mixed>  $criteria
-     */
-    public function recordYouthDraftScore(
-        Application $application,
-        CommissionMember $member,
-        array $criteria,
-        ?string $notes,
-    ): EvaluationScore {
-        $this->assertYouthDraftGates($application, $member);
-
-        try {
-            return DB::transaction(function () use ($application, $member, $criteria, $notes) {
-                Application::query()->whereKey($application->id)->lockForUpdate()->first();
-
-                $own = EvaluationScore::query()
-                    ->where('application_id', $application->id)
-                    ->where('commission_member_id', $member->id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($this->isFinalCompleted($own)) {
-                    abort(403, self::SCORE_IMMUTABLE_MESSAGE);
-                }
-
-                $payload = $this->youthDraftPayload($application, $member, $criteria, $notes);
-
-                if ($own) {
-                    $own->fill($payload);
-                    $own->save();
-
-                    return $own->fresh();
-                }
-
-                return EvaluationScore::query()->create($payload);
-            });
-        } catch (UniqueConstraintViolationException $e) {
-            abort(403, ScoringProfileConfig::YOUTH_SCORE_CONFLICT_MESSAGE);
-        }
     }
 
     /**
@@ -1850,33 +1811,6 @@ class CanonicalIndividualScoringService
         }
 
         return $seat;
-    }
-
-    /**
-     * @param  array<string, mixed>  $criteria
-     * @return array<string, mixed>
-     */
-    private function youthDraftPayload(
-        Application $application,
-        CommissionMember $member,
-        array $criteria,
-        ?string $notes,
-    ): array {
-        $payload = [
-            'application_id' => $application->id,
-            'commission_member_id' => $member->id,
-            'canonical_seat_no' => null,
-            'notes' => $notes,
-            'completed_at' => null,
-            'final_score' => null,
-        ];
-
-        for ($i = 1; $i <= 10; $i++) {
-            $raw = $criteria["criterion_{$i}"] ?? null;
-            $payload["criterion_{$i}"] = $raw === null || $raw === '' ? null : (int) $raw;
-        }
-
-        return $payload;
     }
 
     /**

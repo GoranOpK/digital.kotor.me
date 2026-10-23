@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.11
-**Datum:** 2026-10-22
+**Verzija:** 1.0.12
+**Datum:** 2026-10-23
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.44** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.45** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.13** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.14** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.15** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.16** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -49,6 +49,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.9 | 2026-10-22 | KN-PATCH-TS-009 — Omladinsko bodovanje se otvara po prijavi: `youthDraftScoringBlockMessage` prati ženski `scoringIsAllowed` (M3 prolaz ili lift svih razloga) plus kompletnu Komisiju. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira nacrt ni formu te prijave; usmeno ostaje na konkursnoj `secondSessionBlockMessage`. Završna ocjena i dalje zahtijeva `youthLockEvidenceIsComplete` za tu prijavu. Rangiranje i dalje čeka prigovorni postupak. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.10 | 2026-10-22 | KN-PATCH-TS-010 — Katalog omladinskog bodovanja prikazuje kriterijum 6 kao punu formulaciju: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne prikazuje. Ženski katalog ostaje nepromijenjen. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.11 | 2026-10-22 | KN-PATCH-TS-011 — Digital **ne** vodi omladinsku evidenciju usmenog predstavljanja. Rute `commission-sessions.oral.*` i `commission-sessions.second.*` ne upisuju termin, prisustvo, nedolazak ni završetak. `youthLockEvidence*` nije kapija nacrta, konačne ocjene, ciklusa ni rangiranja. Konačna ocjena zahtijeva svih 10 omladinskih kriterijuma i potvrdu člana, kao ženski tok. Kriterijum 10 ostaje omladinski tekst. Stari redovi `application_oral_presentations` ostaju istorijski; nema migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
+| 1.0.12 | 2026-10-23 | KN-PATCH-TS-012 — HTTP tok omladinske individualne ocjene nema `save_as_draft`. `storeYouthScore` odbija `save_as_draft` i nepotpunih 10 kriterijuma bez upisa. Forma ima jedno dugme `Sačuvaj ocjene` sa potvrdom; odustanak ne šalje zahtjev. Raniji redovi sa `completed_at` null ostaju; nijesu konačni dok isti član ne sačuva svih 10. `youth_bonus_action` draft ostaje. Kapije M3, prigovora, statusa i kompletne Komisije ostaju. Nema migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 
 Napomena:
 
@@ -2248,7 +2249,7 @@ Izvor: `BM-ML-003`; ovaj dokument §8.7.
 
 Digital **ne** vodi evidenciju održavanja usmenog: nema obrasca za stvarni datum i vrijeme, mjesto, prisutna tri člana, podnosioca, napomenu ni **završetak**. Rute `commission-sessions.oral.*` ne upisuju red u `application_oral_presentations`.
 
-Nacrt ocjene smije se unositi **prije** usmenog. Radnja `Završi ocjenjivanje` **nije** blokirana zbog odsustva zapisa usmenog.
+Individualna ocjena smije se sačuvati **prije** usmenog, ali samo kao konačan unos svih 10 kriterijuma. Radnja `Sačuvaj ocjene` **nije** blokirana zbog odsustva zapisa usmenog. Nema HTTP nacrta individualne ocjene.
 
 Nedolazak podnosioca predsjednik **ne** evidentira u Digitalu.
 
@@ -2275,9 +2276,9 @@ Svaki od tri člana daje **jednu kompletnu ocjenu** svih deset kriterijuma.
 
 Izvor: `BM-ML-038`.
 
-## 10.6. Nacrt individualne ocjene
+## 10.6. Unos individualne ocjene
 
-Nacrt i prikaz forme otvaraju se **po prijavi** kada su ispunjeni:
+Forma i serverski unos otvaraju se **po prijavi** kada su ispunjeni:
 
 * prijava ima status `submitted` ili `evaluated`;
 * M3 je potvrđen;
@@ -2285,26 +2286,28 @@ Nacrt i prikaz forme otvaraju se **po prijavi** kada su ispunjeni:
 * M3 nije aktivirao nijedan razlog, ili je konačnom odlukom po prigovoru svaki preostali razlog otklonjen;
 * Komisija je kompletna i važeća.
 
-Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira nacrt ni serversku akciju nacrta. Prijava sa konačno aktivnim razlogom ostaje blokirana dok lift ne ukloni sve razloge. Ženski `scoringIsAllowed` ostaje nepromijenjen.
+Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira unos ni `Sačuvaj ocjene`. Prijava sa konačno aktivnim razlogom ostaje blokirana dok lift ne ukloni sve razloge. Ženski `scoringIsAllowed` ostaje nepromijenjen.
 
-Član može sačuvati i mijenjati nacrt dok ne potvrdi završetak. Platforma **ne** blokira unos nacrta prije usmenog i **ne** uvodi posebno otključavanje kriterijuma 10.
+Nema HTTP nacrta individualne ocjene. `storeYouthScore` odbija `save_as_draft` i nepotpunih deset kriterijuma **prije** upisa. Platforma **ne** uvodi posebno otključavanje kriterijuma 10.
 
-Opciona individualna napomena ostaje prema postojećem obrascu (`BM-ML-039`; `KN-FS-002` Poglavlje 16): nije obavezna, ne donosi bodove, zaključava se sa ocjenama.
+Raniji redovi `evaluation_scores` sa `completed_at` null ostaju; nijesu konačni i ne ulaze u obračun dok isti član ne sačuva svih deset. Nema migracije ni brisanja.
+
+Opciona individualna napomena ostaje prema postojećem obrascu (`BM-ML-039`; `KN-FS-002` Poglavlje 16): nije obavezna, ne donosi bodove, zaključava se sa ocjenama. Nacrt dodatnih bodova (`youth_bonus_action`) ostaje zaseban.
 
 Izvor: `BM-ML-039`.
 
-## 10.7. Završavanje i zaključavanje ocjene
+## 10.7. Čuvanje i zaključavanje ocjene
 
-`Završi ocjenjivanje` dozvoljeno je samo kada:
+`Sačuvaj ocjene` dozvoljeno je samo kada:
 
 * unesena su svih deset vrijednosti 1–5, uključujući kriterijum 10;
 * član izričito potvrdi zaključavanje.
 
 Digital zapis usmenog **nije** preduslov. Kapija `youthLockEvidence*` **nije** u upotrebi.
 
-Prije potvrde prikazuje se upozorenje da izmjena više nije moguća.
+Prije potvrde prikazuje se upozorenje da izmjena više nije moguća. Odustanak ne šalje zahtjev i ne čuva podatke.
 
-Nakon potvrde ocjena je zaključana. Član, predsjednik i administrator je ne mijenjaju. Nema povratka u nacrt.
+Nakon potvrde ocjena je zaključana. Član, predsjednik i administrator je ne mijenjaju. Nema povratka u nacrt. Ponovni POST na zaključanu ocjenu vraća 403 i ne mijenja sačuvane vrijednosti.
 
 Ocjenjivanje prijave nije konačno dok sva tri člana ne potvrde kompletne ocjene.
 
@@ -2392,9 +2395,8 @@ Izvor: `BM-ML-044`; ovaj dokument §7.9.
 | Usmeno | zakazivanje | nema konačnog eliminatora | van Platforme; Digital ne čuva termin | `KN-FS-002` §15.1 |
 | Usmeno | održavanje | sva tri člana prisutna | van Platforme; ocjena kroz kriterijum 10 | `BM-ML-003` |
 | Usmeno | nedolazak | predsjednik bilježi van Platforme | nema Digital zapisa; nema eliminacije ni automatske ocjene | `KN-FS-002` §15.4 |
-| Nacrt ocjene | čuvanje | član; prijava u ocjenjivanju | nacrt; smije prije usmenog | `BM-ML-039` |
-| Ocjena | `Završi ocjenjivanje` | 10 vrijednosti; potvrda člana | zaključano | `BM-ML-039` |
-| Ocjena | `Završi ocjenjivanje` | nema svih 10 vrijednosti ili nema potvrde | blokirano | `BM-ML-039` |
+| Ocjena | `Sačuvaj ocjene` | 10 vrijednosti; potvrda člana | zaključano | `BM-ML-039` |
+| Ocjena | `Sačuvaj ocjene` | nema svih 10 vrijednosti, nema potvrde ili `save_as_draft` | blokirano; nema upisa | `BM-ML-039` |
 | Zamjena | nezavršena ocjena | važeće ovlašćenje | nacrt isključen; zamjena unosi 10 | `BM-ML-039` |
 | Uvid | otvaranje | sve tri ocjene svih prijava ciklusa | čitanje; bez izmjene | `BM-ML-040` |
 | Dodatni bodovi | potvrda | dozvoljene vrijednosti; zbir ≤ 6 | evidentirano; nije odluka Platforme | `BM-ML-042` |
@@ -2409,7 +2411,7 @@ Izvor: `BM-ML-044`; ovaj dokument §7.9.
 
 **Kada:** se bira tehnički nosilac.
 
-**Onda:** koriste se postojeći `EvaluationScore`, unos, nacrt, zaključavanje i prikaz. Ne uvodi se paralelni sistem.
+**Onda:** koriste se postojeći `EvaluationScore`, unos, zaključavanje i prikaz. Ne uvodi se paralelni sistem ni HTTP nacrt individualne ocjene.
 
 Izvor: ovaj dokument §10.1.
 
@@ -2425,11 +2427,11 @@ Izvor: `BM-ML-038`; `BM-ML-039`.
 
 ### 10.14.3 — Kapija usmenog
 
-**Ako:** član pokrene `Završi ocjenjivanje`.
+**Ako:** član pokrene `Sačuvaj ocjene`.
 
 **Kada:** usmeno te prijave nije evidentirano u Digitalu.
 
-**Onda:** radnja **nije** blokirana zbog odsustva zapisa usmenog. Nacrt smije ostati sačuvan. Konačna ocjena i dalje zahtijeva svih deset kriterijuma i potvrdu.
+**Onda:** radnja **nije** blokirana zbog odsustva zapisa usmenog. Nema HTTP nacrta individualne ocjene. Konačna ocjena i dalje zahtijeva svih deset kriterijuma i potvrdu.
 
 Izvor: `BM-ML-039`; `KN-FS-002` §15.3.
 
@@ -3501,7 +3503,7 @@ Izvor: `KN-FS-002` Poglavlja 13–14; ovaj dokument Poglavlje 9.
 * usmeno i druga sjednica ostaju van Digitala; rute ne upisuju zapis;
 * sva tri aktivna člana za usmeno kao poslovno pravilo;
 * nema automatskog zakazivanja;
-* `Završi ocjenjivanje` zahtijeva svih 10 kriterijuma i potvrdu, bez `youthLockEvidence*`;
+* `Sačuvaj ocjene` zahtijeva svih 10 kriterijuma i potvrdu, bez `youthLockEvidence*` i bez `save_as_draft`;
 * nedolazak bez automatske ocjene;
 * dodatni 1+2+3, maksimum 6, ukupno 56, prag 30, puna vrijednost.
 
@@ -3724,4 +3726,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.11**
+**Kraj dokumenta KN-TS-002 v1.0.12**

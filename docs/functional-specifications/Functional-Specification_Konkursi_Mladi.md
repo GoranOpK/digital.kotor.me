@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.15
-**Datum:** 2026-10-22
+**Verzija:** 1.0.16
+**Datum:** 2026-10-23
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.44** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.45** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.13** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.14** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.11** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.12** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -55,6 +55,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.13 | 2026-10-22 | KN-PATCH-FS-018 — Omladinsko individualno bodovanje otvara se po prijavi, po principu ženskog toka: M3 potvrđen bez aktivnog eliminatornog razloga, ili konačna odluka po prigovoru koja otkloni sve razloge. Otvoren rok ili neriješen prigovor na drugoj prijavi ne blokira bodovanje M3-prošle prijave. Usmeno i dalje čeka konkursne rokove i blagovremene prigovore. Završna ocjena i dalje zahtijeva deset unosa, potvrdu i završeno usmeno te prijave. Rangiranje i dalje čeka završetak omladinskog prigovornog postupka. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana nijesu preuzeti. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 | 1.0.14 | 2026-10-22 | KN-PATCH-FS-019 — Kriterijum 6 individualnog bodovanja mladih glasi: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne prikazuje. Ženski katalog, broj članova i ostali omladinski kriterijumi nijesu mijenjani. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 | 1.0.15 | 2026-10-22 | KN-PATCH-FS-020 — Usmeno obrazloženje mladih ostaje poslovna obaveza Komisije i ocjenjuje se kroz omladinski kriterijum 10, ali Digital **ne** vodi zasebnu evidenciju termina, prisustva, nedolaska ni završetka. Nacrt i konačna ocjena prate ženski tok: nacrt nakon M3 prolaza ili lift svih razloga i kompletne Komisije; `Završi ocjenjivanje` zahtijeva svih 10 kriterijuma i potvrdu člana, bez kapije `youthLockEvidence*`. Kriterijum 10 ostaje omladinski tekst. Rangiranje i dalje čeka prigovorni postupak. Ženski tok, MMSP i kanonski tok nijesu dirani. |
+| 1.0.16 | 2026-10-23 | KN-PATCH-FS-021 — Individualna ocjena mladih nema privremeni nacrt ni dugme `Sačuvaj nacrt`. Forma ima jedno dugme `Sačuvaj ocjene`: svih 10 kriterijuma je obavezno, potvrda zaključava ocjenu, odustanak ne šalje ni ne čuva. Serverska validacija odbija nepotpun unos i `save_as_draft` bez upisa. Raniji djelimični unosi ostaju u tragu i nijesu konačni dok isti član ne sačuva svih deset. Nacrt dodatnih bodova ostaje zaseban. Kapije M3, prigovora, statusa prijave i kompletne Komisije ostaju. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 
 Napomena:
 
@@ -902,8 +903,8 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Prigovor | Podnesen | odluka Komisije | sva tri člana; odluka po svakom osporenom kriterijumu | ako nijedan razlog nije konačno aktivan → `submitted`; ako makar jedan ostane konačno aktivan → `rejected` uz sve konačne aktivne razloge | Komisija | `BM-ML-003`; `BM-ML-036`; `BM-ML-037` |
 | Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje | — | zabranjeno; nema `rejected` → `submitted`; isti ciklus se ne ponavlja | svi | `BM-ML-037` |
 | Admin. rezultat / M3 | najmanje jedan aktiviran kriterijum | istek 3 dana bez prigovora | obavještenje poslato | svi prethodno aktivirani kriterijumi konačni; prijava `rejected` uz sve aktivne razloge | sistem | `BM-ML-036` |
-| Individualna ocjena | — | unos nacrta | prijava ide u ocjenjivanje; važeći član | nacrt | član ili zamjenski član | `BM-ML-039` |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | unesena svih 10 kriterijuma; izričita potvrda člana | zaključana | isto lice | `BM-ML-039`; Poglavlje 16 |
+| Individualna ocjena | — | Sačuvaj ocjene | prijava ide u ocjenjivanje; važeći član; svih 10 kriterijuma; izričita potvrda | zaključana | član ili zamjenski član | `BM-ML-039`; Poglavlje 16 |
+| Individualna ocjena | — | nepotpun unos ili `save_as_draft` | prijava ide u ocjenjivanje | odbijeno; nema upisa | član | `BM-ML-039`; Poglavlje 16 |
 | Prijava | `submitted` | završene tri kompletne ocjene i obračun | prijava u ocjenjivanju | `evaluated` | sistem | `BM-ML-039`; `BM-ML-044` |
 | Ciklus ocjenjivanja | nije završen | treći član zaključi sve potrebne ocjene | tri zaključane ocjene po prijavi u ciklusu | ciklus završen; otvara se međusobni uvid | sistem | `BM-ML-003`; `BM-ML-040` |
 | Rang-lista | — | nastanak preliminarne | ciklus završen | preliminarna | sistem / Komisija | `BM-ML-045` |
@@ -2985,7 +2986,7 @@ Digital **ne** vodi obrazac „Evidencija usmenog“ i **ne** upisuje:
 * službenu napomenu usmenog;
 * završetak usmenog obrazloženja.
 
-Konačno individualno ocjenjivanje svih deset kriterijuma, uključujući kriterijum 10, otvara se prema Poglavlju 16, bez zapisa usmenog. Nacrti ocjena mogu se unositi **ranije**. Platforma **ne** zaključava unos nacrta prije usmenog obrazloženja i **ne** uvodi posebno otključavanje kriterijuma 10 (`BM-ML-039`).
+Konačno individualno ocjenjivanje svih deset kriterijuma, uključujući kriterijum 10, otvara se prema Poglavlju 16, bez zapisa usmenog. Nema privremenog nacrta individualne ocjene. Platforma **ne** uvodi posebno otključavanje kriterijuma 10 (`BM-ML-039`).
 
 ## 15.4. Nedolazak podnosioca
 
@@ -3026,7 +3027,7 @@ Službena napomena **ne** omogućava:
 | Usmeno | zakazano van Platforme | održavanje | nijesu prisutna sva tri člana | nije pravilno održano; Digital ne vodi zapis | Komisija | `BM-ML-003` |
 | Usmeno | zakazano van Platforme | održavanje | prisutna sva tri člana; podnosilac ili ovlašćeno lice | održano van Platforme; ocjena kroz kriterijum 10 | Komisija | `BM-ML-003`; `BM-ML-038` |
 | Usmeno | zakazano van Platforme | nedolazak | predsjednik bilježi van Platforme | nema Digital zapisa; nema eliminacije ni automatske ocjene | predsjednik | `KN-FS-003` §12 granica |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | nema svih 10 ocjena ili nema potvrde | blokirano | član | `BM-ML-039` |
+| Individualna ocjena | — | Sačuvaj ocjene | nema svih 10 ocjena, nema potvrde ili `save_as_draft` | blokirano; nema upisa | član | `BM-ML-039` |
 
 ## 15.7. Prihvatni kriterijumi — usmeno obrazloženje
 
@@ -3071,9 +3072,9 @@ Izvor: `BM-ML-003`; `BM-ML-007`.
 
 **Ako:** usmeno obrazloženje nije evidentirano u Digitalu.
 
-**Kada:** član pokuša `Završi ocjenjivanje`.
+**Kada:** član pokuša `Sačuvaj ocjene`.
 
-**Onda:** Platforma **ne** blokira završavanje zbog odsustva zapisa usmenog. Unos nacrta ostaje dozvoljen. Konačna ocjena i dalje zahtijeva svih deset kriterijuma i potvrdu člana.
+**Onda:** Platforma **ne** blokira čuvanje zbog odsustva zapisa usmenog. Nema privremenog nacrta. Konačna ocjena i dalje zahtijeva svih deset kriterijuma i potvrdu člana.
 
 Izvor: `BM-ML-039`.
 
@@ -3103,9 +3104,9 @@ Izvor: `BM-ML-023`; granica `KN-FS-003` §12.3.
 
 Status poglavlja: USVOJENO
 
-Ovo poglavlje određuje individualno ocjenjivanje, nacrt, završavanje, zamjenu člana, tajnost i prosjek (`BM-ML-003`; `BM-ML-007`; `BM-ML-038`–`BM-ML-041`; O-01).
+Ovo poglavlje određuje individualno ocjenjivanje, zaključavanje, zamjenu člana, tajnost i prosjek (`BM-ML-003`; `BM-ML-007`; `BM-ML-038`–`BM-ML-041`; O-01).
 
-Strukturni obrazac nacrta, eksplicitnog završavanja, tajnosti i opcione napomene usklađen je sa `KN-FS-003` Poglavljem 13, uz **tačno tri člana** i pravila mladih. Ne preuzima se pet članova. `Završi ocjenjivanje` zahtijeva svih deset omladinskih kriterijuma i potvrdu člana, kao ženski tok, **bez** zasebne evidencije usmenog.
+Strukturni obrazac obaveznog unosa svih deset kriterijuma, izričite potvrde, tajnosti i opcione napomene usklađen je sa `KN-FS-003` Poglavljem 13, uz **tačno tri člana** i pravila mladih. Ne preuzima se pet članova. `Sačuvaj ocjene` zahtijeva svih deset omladinskih kriterijuma i potvrdu člana, **bez** zasebne evidencije usmenog i **bez** privremenog nacrta individualne ocjene. Nacrt dodatnih bodova ostaje zaseban.
 
 Ne određuje eliminatorne kriterijume, prag, rang-listu ni raspodjelu. To pripada Poglavljima 18–21.
 
@@ -3138,27 +3139,28 @@ Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Kriterijum 6
 
 Bodovanje se otvara **po prijavi**, po istom principu kao ženski tok, uz omladinska pravila. U ocjenjivanje ulazi prijava za koju je M3 potvrđen i za koju nijedan eliminatorni razlog nije konačno aktivan. To uključuje prijave kod kojih M3 nije aktivirao nijedan razlog, i prijave kod kojih je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Ako je M3 aktivirao razlog, ta prijava ostaje blokirana dok konačna odluka po prigovoru ne ukloni sve aktivne razloge. Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira bodovanje prijave koja je prošla M3. Prijava sa konačno aktivnim eliminatornim razlogom ostaje blokirana. Nepotpuna ili nevažeća Komisija ostaje blokada. Istorijski M3 se ne mijenja. Kapija ocjenjivanja **nije** sirova istorijska vrijednost `Potpuna`. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana **ne** prenose se.
 
-## 16.2. Nacrt
+## 16.2. Unos i obaveznost
 
-Dok član **nije** odabrao `Završi ocjenjivanje`, njegovo ocjenjivanje ostaje **nacrt**.
+Nema privremenog čuvanja nacrta individualne ocjene. Forma ima jedno dugme `Sačuvaj ocjene`. Nema dugmeta `Sačuvaj nacrt` ni `Završi ocjenjivanje`.
 
 Član Komisije:
 
 * vidi samo svoje ocjene i napomene;
-* može unositi i mijenjati nacrt;
-* može sačuvati djelimično popunjene ocjene;
-* može unositi nacrt **prije** usmenog obrazloženja;
-* **ne** čeka Digital zapis usmenog da bi završio ocjenjivanje;
-* **ne** može završiti dok nije unio svih deset ocjena;
-* prije završavanja dobija jasno upozorenje da će ocjene biti zaključane.
+* unosi svih deset kriterijuma odjednom;
+* **ne** čuva djelimične ocjene;
+* **ne** čeka Digital zapis usmenog da bi sačuvao ocjene;
+* **ne** može sačuvati dok nije unio svih deset ocjena;
+* prije čuvanja dobija jasno upozorenje da će ocjene biti zaključane.
 
-Platforma **ne** zaključava unos nacrta prije usmenog obrazloženja i **ne** uvodi posebno otključavanje kriterijuma 10 (`BM-ML-039`).
+Platforma **ne** uvodi posebno otključavanje kriterijuma 10 (`BM-ML-039`). Serverska validacija odbija nepotpun unos i `save_as_draft` bez upisa.
 
-Predsjednik **nema** privilegovan uvid u ocjene drugih članova tokom ciklusa. Administrator i podnosilac **nemaju** pristup individualnim ocjenama.
+Ako postoji ranije sačuvani djelimični unos, zapis ostaje u tragu, nije konačan i ne ulazi u obračun dok isti član ne sačuva svih deset kriterijuma.
 
-## 16.3. Završavanje
+Predsjednik **nema** privilegovan uvid u ocjene drugih članova tokom ciklusa. Administrator i podnosilac **nemaju** pristup individualnim ocjenama. Nacrt dodatnih bodova ostaje zaseban (`youth_bonus_action`).
 
-Radnja `Završi ocjenjivanje`:
+## 16.3. Čuvanje i zaključavanje
+
+Radnja `Sačuvaj ocjene`:
 
 * zahtijeva svih deset ocjena, uključujući kriterijum 10;
 * **ne** zahtijeva Digital zapis usmenog obrazloženja;
@@ -3167,7 +3169,7 @@ Radnja `Završi ocjenjivanje`:
 * **ne** dozvoljava izmjenu ni vraćanje u nacrt;
 * evidentira člana, datum i vrijeme završavanja.
 
-Član može odustati od potvrde i vratiti se na nacrt.
+Član može odustati od potvrde. Odustanak **ne** šalje i **ne** čuva podatke.
 
 Prijava **nema** kompletno završeno ocjenjivanje dok ne postoje **tačno tri** kompletne zaključane ocjene (`BM-ML-003`).
 
@@ -3231,9 +3233,8 @@ Detalj praga i rangiranja: Poglavlja 19 i 20.
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Individualna ocjena | — | unos nacrta | prijava ide u ocjenjivanje; važeći član | nacrt; dozvoljen i prije usmenog | član ili zamjenski član | `BM-ML-039` |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | nema svih 10 ocjena ili nema potvrde | blokirano | član | `BM-ML-039` |
-| Individualna ocjena | nacrt | Završi ocjenjivanje | svih 10 ocjena; izričita potvrda | zaključana; evidentirani član, datum i vrijeme | isto lice | `BM-ML-039` |
+| Individualna ocjena | — | Sačuvaj ocjene | prijava ide u ocjenjivanje; važeći član; svih 10 ocjena; izričita potvrda | zaključana; evidentirani član, datum i vrijeme | član ili zamjenski član | `BM-ML-039` |
+| Individualna ocjena | — | nepotpun unos ili `save_as_draft` | prijava ide u ocjenjivanje | blokirano; nema upisa | član | `BM-ML-039` |
 | Individualna ocjena | zaključana | izmjena ili povratak u nacrt | — | zabranjeno | svi | `BM-ML-039` |
 | Mjesto Komisije | zamjena; prethodni nacrt nije zaključen | ocjenjivanje zamjenskog člana | O-01 | nacrt prethodnog van obračuna; zamjena ocjenjuje svih 10 | zamjenski član | `BM-ML-007`; `BM-ML-039` |
 | Mjesto Komisije | zamjena; prethodna ocjena zaključana | ocjenjivanje zamjenskog člana | O-01 | prethodna ocjena ostaje; ne ponavlja se | zamjenski član | `BM-ML-039` |
@@ -3254,23 +3255,23 @@ Detalj praga i rangiranja: Poglavlja 19 i 20.
 
 Izvor: `BM-ML-038`.
 
-### 16.8.2 — Nacrt prije usmenog obrazloženja
+### 16.8.2 — Čuvanje bez zapisa usmenog
 
 **Ako:** usmeno obrazloženje još nije evidentirano u Digitalu.
 
 **Kada:** član unosi ocjene.
 
-**Onda:** Platforma dozvoljava nacrt, uključujući kriterijum 10. `Završi ocjenjivanje` **nije** blokiran zbog odsustva zapisa usmenog.
+**Onda:** Platforma dozvoljava `Sačuvaj ocjene`, uključujući kriterijum 10. Radnja **nije** blokirana zbog odsustva zapisa usmenog. Nema privremenog nacrta individualne ocjene.
 
 Izvor: `BM-ML-039`.
 
-### 16.8.3 — Završavanje
+### 16.8.3 — Zaključavanje
 
 **Ako:** su unesene sve ocjene i član potvrdi upozorenje.
 
-**Kada:** izvrši `Završi ocjenjivanje`.
+**Kada:** izvrši `Sačuvaj ocjene`.
 
-**Onda:** ocjene i napomena se zaključavaju. Izmjena i povratak u nacrt nijesu dozvoljeni. Evidentiraju se član, datum i vrijeme.
+**Onda:** ocjene i napomena se zaključavaju. Izmjena i povratak u nacrt nijesu dozvoljeni. Evidentiraju se član, datum i vrijeme. Odustanak ne šalje ni ne čuva podatke.
 
 Izvor: `BM-ML-039`.
 
@@ -5180,23 +5181,23 @@ Izvor: 14.6.1; 14.6.3; `BM-ML-036`.
 
 Izvor: 10.5.6; 14.6.4; `BM-ML-023`; `BM-ML-036`.
 
-### 26.2.10 — Nacrt ocjena prije usmenog
+### 26.2.10 — Nema nacrta individualne ocjene
 
-**Ako:** usmeno obrazloženje još nije završeno.
+**Ako:** član unosi individualne ocjene mladih.
 
-**Kada:** član čuva ocjene.
+**Kada:** pokuša nepotpun unos ili `save_as_draft`.
 
-**Onda:** čuvanje nacrta je dozvoljeno.
+**Onda:** unos je odbijen i djelimične ocjene se ne upisuju.
 
 Izvor: 16.8.2; `BM-ML-039`.
 
-### 26.2.11 — Zabrana završavanja prije usmenog
+### 26.2.11 — Čuvanje bez zapisa usmenog
 
-**Ako:** usmeno obrazloženje prijave nije evidentirano kao završeno.
+**Ako:** usmeno obrazloženje prijave nije evidentirano u Digitalu.
 
-**Kada:** član pokrene Završi ocjenjivanje.
+**Kada:** član pokrene `Sačuvaj ocjene`.
 
-**Onda:** završavanje je blokirano.
+**Onda:** čuvanje **nije** blokirano zbog odsustva zapisa usmenog. Svih 10 kriterijuma i potvrda ostaju obavezni.
 
 Izvor: 15.7.4; 16.8.3; `BM-ML-039`.
 
@@ -5500,4 +5501,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.15**
+**Kraj dokumenta KN-FS-002 v1.0.16**

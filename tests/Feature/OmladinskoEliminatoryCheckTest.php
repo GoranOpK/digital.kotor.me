@@ -359,7 +359,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertNotNull($ctx['application']->fresh()->eliminatoryCheck->confirmed_at);
     }
 
-    public function test_pass_opens_draft_scoring_but_not_womens_final_button(): void
+    public function test_pass_opens_scoring_but_not_womens_final_button(): void
     {
         $ctx = $this->makeYouthReadyContext();
         $this->actingAs($ctx['chairman']->user)
@@ -377,11 +377,20 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertStringNotContainsString('>Ocijeni<', $html);
         $this->assertStringNotContainsString('Da / Da / Da', $html);
         $this->assertStringContainsString('4. Ocjena biznis plana u brojkama', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt', $html);
+        $this->assertStringContainsString('Sačuvaj ocjene', $html);
+        $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
+        $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.store', $application), $this->scorePayload())
-            ->assertForbidden();
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $application->id)
+                ->whereNotNull('completed_at')
+                ->first()
+        );
     }
 
     public function test_fail_sends_youth_notice_keeps_submitted_and_does_not_open_scoring(): void

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class EvaluationController extends Controller
@@ -646,40 +647,28 @@ class EvaluationController extends Controller
             abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
         }
 
-        $saveAsDraft = $request->boolean('save_as_draft');
+        if ($request->boolean('save_as_draft')) {
+            throw ValidationException::withMessages([
+                'save_as_draft' => CanonicalIndividualScoringService::YOUTH_INDIVIDUAL_DRAFT_NOT_ALLOWED_MESSAGE,
+            ]);
+        }
+
         $messages = [
             'scoring_confirmed.accepted' => CanonicalIndividualScoringService::CONFIRMATION_REQUIRED_MESSAGE,
         ];
         $rules = [
             'notes' => 'nullable|string|max:5000',
+            'scoring_confirmed' => 'accepted',
         ];
 
         for ($i = 1; $i <= 10; $i++) {
             $messages["criterion_{$i}.min"] = "Kriterijum {$i} mora biti najmanje 1 poen.";
             $messages["criterion_{$i}.max"] = "Kriterijum {$i} može biti najviše 5 poena.";
             $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
-            $rules["criterion_{$i}"] = $saveAsDraft
-                ? 'nullable|integer|min:1|max:5'
-                : 'required|integer|min:1|max:5';
-        }
-
-        if (! $saveAsDraft) {
-            $rules['scoring_confirmed'] = 'accepted';
+            $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
         }
 
         $validated = $request->validate($rules, $messages);
-
-        if ($saveAsDraft) {
-            $this->canonicalScoring->recordYouthDraftScore(
-                $application,
-                $commissionMember,
-                $validated,
-                $validated['notes'] ?? null,
-            );
-
-            return redirect()->route('evaluation.create', $application)
-                ->with('success', 'Nacrt ocjene je sačuvan.');
-        }
 
         $this->canonicalScoring->recordYouthFinalScore(
             $application,

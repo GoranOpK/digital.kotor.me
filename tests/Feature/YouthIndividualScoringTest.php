@@ -60,17 +60,24 @@ class YouthIndividualScoringTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasErrors('save_as_draft');
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('evaluation.create', $ctx['application']));
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
         $this->assertNotNull(
             EvaluationScore::query()
                 ->where('application_id', $ctx['application']->id)
-                ->whereNull('completed_at')
+                ->where('commission_member_id', $ctx['chairman']->id)
+                ->whereNotNull('completed_at')
                 ->first()
         );
     }
 
-    public function test_unresolved_sibling_prigovor_does_not_block_draft_but_blocks_oral(): void
+    public function test_unresolved_sibling_prigovor_does_not_block_scoring_but_blocks_oral(): void
     {
         $ctx = $this->youthWithPassedM3();
         $failed = $this->addSubmittedApplication($ctx['competition']);
@@ -89,8 +96,15 @@ class YouthIndividualScoringTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
             ->assertSessionHasNoErrors();
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->where('commission_member_id', $ctx['chairman']->id)
+                ->whereNotNull('completed_at')
+                ->first()
+        );
         $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
                 'scheduled_at' => now()->format('Y-m-d H:i:s'),
@@ -105,10 +119,6 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
-            ->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_10' => 4]))
             ->assertSessionHasNoErrors();
         $score = EvaluationScore::query()
@@ -121,7 +131,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
     }
 
-    public function test_draft_is_allowed_before_oral_and_may_be_incomplete(): void
+    public function test_save_as_draft_and_incomplete_youth_score_are_rejected_without_write(): void
     {
         $ctx = $this->youthWithPassedM3();
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
@@ -133,25 +143,33 @@ class YouthIndividualScoringTest extends TestCase
                 'criterion_1' => 3,
                 'notes' => 'Nacrt prije usmenog',
             ])
-            ->assertSessionHasNoErrors()
-            ->assertRedirect(route('evaluation.create', $ctx['application']));
+            ->assertSessionHasErrors('save_as_draft');
+        $this->assertSame(
+            CanonicalIndividualScoringService::YOUTH_INDIVIDUAL_DRAFT_NOT_ALLOWED_MESSAGE,
+            session('errors')->first('save_as_draft')
+        );
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
 
-        $score = EvaluationScore::query()
-            ->where('application_id', $ctx['application']->id)
-            ->where('commission_member_id', $ctx['chairman']->id)
-            ->first();
-        $this->assertNotNull($score);
-        $this->assertNull($score->completed_at);
-        $this->assertNull($score->canonical_seat_no);
-        $this->assertSame(3, (int) $score->criterion_1);
-        $this->assertNull($score->criterion_2);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->assertSessionHasErrors('save_as_draft');
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
+
+        $incomplete = $this->finalPayload();
+        unset($incomplete['criterion_2'], $incomplete['criterion_10']);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $incomplete)
+            ->assertSessionHasErrors(['criterion_2', 'criterion_10']);
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
         $this->assertSame('submitted', $ctx['application']->fresh()->status);
         $this->assertNull($ctx['application']->fresh()->final_score);
         $this->assertNull($ctx['application']->fresh()->evaluated_at);
         $this->assertNull($ctx['application']->fresh()->ranking_position);
     }
 
-    public function test_chairman_partial_draft_from_real_form_persists_on_reload(): void
+    public function test_youth_form_has_single_save_scores_button_and_keeps_bonus_draft(): void
     {
         $ctx = $this->youthWithPassedM3();
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
@@ -162,70 +180,81 @@ class YouthIndividualScoringTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $payload = $this->youthDraftPayloadFromRenderedForm($html, ['criterion_1' => '4']);
-        $this->assertSame('1', $payload['save_as_draft']);
-        $this->assertSame('4', $payload['criterion_1']);
-        $this->assertArrayNotHasKey('criterion_2', $payload);
-        $this->assertArrayNotHasKey('youth_bonus_action', $payload);
-        $this->assertSame('0', $payload['scoring_confirmed'] ?? '0');
+        $this->assertMatchesRegularExpression('/id="youth-save-scores"[^>]*>Sačuvaj ocjene</', $html);
+        $this->assertSame(1, substr_count($html, '>Sačuvaj ocjene<'));
+        $this->assertStringNotContainsString('id="youth-save-score-draft"', $html);
+        $this->assertStringNotContainsString('id="youth-finish-scoring"', $html);
+        $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
+        $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
+        $this->assertStringContainsString('Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.', $html);
+        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $html);
+        $this->assertStringContainsString('name="youth_bonus_action"', $html);
+        $this->assertStringContainsString('value="draft"', $html);
+        $this->assertStringNotContainsString('završene evidencije usmenog', $html);
+        $this->assertStringNotContainsString('Evidencija usmenog', $html);
+        $this->assertDoesNotMatchRegularExpression(
+            '/id="youth-save-scores"[^>]*disabled/',
+            $html
+        );
+    }
+
+    public function test_leftover_partial_youth_score_is_prefilled_but_not_final(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $leftover = $this->seedLeftoverYouthDraft($ctx['application'], $ctx['chairman'], [
+            'criterion_1' => 4,
+            'notes' => 'Istorijski nacrt',
+        ]);
+
+        $this->assertNull($leftover->completed_at);
+        $this->assertFalse(app(CanonicalIndividualScoringService::class)->isFinalCompleted($leftover));
+        $this->assertSame('submitted', $ctx['application']->fresh()->status);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertMatchesRegularExpression(
+            '/<input\b[^>]*\bname="criterion_1"[^>]*\bvalue="4"/',
+            $html
+        );
+        $this->assertStringContainsString('id="youth-save-scores"', $html);
+        $this->assertStringContainsString('Zbir trenutno sačuvanih ocjena', $html);
+        $this->assertStringContainsString('4 / 50', $html);
+        $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
+        $this->assertStringNotContainsString('id="youth-finish-scoring"', $html);
+        $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), $payload)
-            ->assertSessionHasNoErrors()
-            ->assertSessionHas('success', 'Nacrt ocjene je sačuvan.')
-            ->assertRedirect(route('evaluation.create', $ctx['application']));
+            ->post(route('evaluation.store', $ctx['application']), [
+                'save_as_draft' => '1',
+                'criterion_1' => 5,
+                'notes' => 'Ne smije se upisati',
+            ])
+            ->assertSessionHasErrors('save_as_draft');
 
-        $score = EvaluationScore::query()
-            ->where('application_id', $ctx['application']->id)
-            ->where('commission_member_id', $ctx['chairman']->id)
-            ->first();
-        $this->assertNotNull($score);
-        $this->assertNull($score->completed_at);
-        $this->assertNull($score->canonical_seat_no);
-        $this->assertNull($score->final_score);
-        $this->assertSame(4, (int) $score->criterion_1);
-        $this->assertNull($score->criterion_2);
-        $this->assertSame('submitted', $ctx['application']->fresh()->status);
-        $this->assertNull($ctx['application']->fresh()->final_score);
-        $this->assertNull($ctx['application']->fresh()->evaluated_at);
+        $unchanged = $leftover->fresh();
+        $this->assertSame(4, (int) $unchanged->criterion_1);
+        $this->assertNull($unchanged->criterion_2);
+        $this->assertNull($unchanged->completed_at);
+        $this->assertSame('Istorijski nacrt', $unchanged->notes);
 
-        $reload = $this->actingAs($ctx['chairman']->user)
-            ->get(route('evaluation.create', $ctx['application']))
-            ->assertOk();
-        $reloadHtml = $reload->getContent();
-        $this->assertStringContainsString('Nacrt ocjene je sačuvan.', $reloadHtml);
-        $this->assertMatchesRegularExpression(
-            '/<input\b[^>]*\bname="criterion_1"[^>]*\bvalue="4"/',
-            $reloadHtml
-        );
-        $this->assertDoesNotMatchRegularExpression(
-            '/id="youth-finish-scoring"[^>]*disabled/',
-            $html
-        );
-        $this->assertDoesNotMatchRegularExpression(
-            '/id="youth-finish-scoring"[^>]*disabled/',
-            $reloadHtml
-        );
-        $this->assertStringNotContainsString('završene evidencije usmenog', $html);
-        $this->assertStringNotContainsString('Evidencija usmenog', $html);
-    }
-
-    public function test_full_draft_is_not_automatically_final(): void
-    {
-        $ctx = $this->youthWithPassedM3();
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), $this->draftPayload())
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload([
+                'criterion_1' => 5,
+                'notes' => 'Dopunjen istorijski unos',
+            ]))
             ->assertSessionHasNoErrors();
 
-        $score = EvaluationScore::query()
-            ->where('application_id', $ctx['application']->id)
-            ->where('commission_member_id', $ctx['chairman']->id)
-            ->first();
-        $this->assertNotNull($score);
-        $this->assertNull($score->completed_at);
-        $this->assertFalse(app(\App\Services\CanonicalIndividualScoringService::class)->isFinalCompleted($score));
-        $this->assertSame('submitted', $ctx['application']->fresh()->status);
+        $completed = $unchanged->fresh();
+        $this->assertSame($leftover->id, $completed->id);
+        $this->assertSame(5, (int) $completed->criterion_1);
+        $this->assertSame(3, (int) $completed->criterion_2);
+        $this->assertNotNull($completed->completed_at);
+        $this->assertSame('Dopunjen istorijski unos', $completed->notes);
+        $this->assertSame(1, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
     }
 
     public function test_final_is_allowed_after_m3_without_second_session_or_oral_record(): void
@@ -256,7 +285,7 @@ class YouthIndividualScoringTest extends TestCase
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.store', $ctx['application']), $incomplete)
             ->assertSessionHasErrors('criterion_10');
-        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_10' => 2]))
@@ -284,8 +313,9 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('.......................', $html);
         $this->assertStringContainsString(ScoringProfileConfig::youthCriteria()[10], $html);
         $this->assertStringContainsString('preduzetnik je uvjerljivi siguran', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt', $html);
-        $this->assertStringContainsString('Završi ocjenjivanje', $html);
+        $this->assertStringContainsString('Sačuvaj ocjene', $html);
+        $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
+        $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
         $this->assertStringContainsString(ScoringProfileConfig::SCALE_MIN_LABEL, $html);
         $this->assertStringNotContainsString('>Ocijeni<', $html);
         $this->assertStringNotContainsString('Podaci o podnositeljki prijave', $html);
@@ -481,10 +511,10 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('45 dana', $html);
         $this->assertStringNotContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs', $html);
         $this->assertStringNotContainsString('onsubmit="event.preventDefault(); return false;"', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt', $html);
-        $this->assertStringContainsString('Završi ocjenjivanje', $html);
-        $this->assertStringNotContainsString('name="save_as_draft" value="1" class="btn-primary" disabled', $html);
-        $this->assertStringNotContainsString('class="btn-primary" disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;">Završi ocjenjivanje', $html);
+        $this->assertStringContainsString('Sačuvaj ocjene', $html);
+        $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
+        $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
+        $this->assertStringNotContainsString('id="youth-save-scores" class="btn-primary" disabled', $html);
     }
 
     public function test_youth_does_not_claim_forty_five_days_before_applications_close(): void
@@ -522,7 +552,7 @@ class YouthIndividualScoringTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('45 dana', $html);
         $this->assertStringNotContainsString('Rok za ocjenjivanje i donošenje odluke je istekao', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt', $html);
+        $this->assertStringContainsString('Sačuvaj ocjene', $html);
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
     }
 
@@ -589,17 +619,54 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('Otkaži', $html);
     }
 
-    public function test_incomplete_youth_score_is_labeled_as_saved_sum_not_final(): void
+    public function test_successful_youth_save_locks_all_ten_and_later_change_is_rejected(): void
     {
         $ctx = $this->youthWithPassedM3();
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), [
-                'save_as_draft' => '1',
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload([
+                'criterion_1' => 2,
+                'notes' => 'Konačno',
+            ]))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+
+        $original = EvaluationScore::query()
+            ->where('application_id', $ctx['application']->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $this->assertNotNull($original?->completed_at);
+        $this->assertTrue(app(CanonicalIndividualScoringService::class)->isFinalCompleted($original));
+        for ($i = 1; $i <= 10; $i++) {
+            $this->assertNotNull($original->{"criterion_{$i}"});
+        }
+        $this->assertSame(2, (int) $original->criterion_1);
+        $this->assertSame(3, (int) $original->criterion_2);
+        $this->assertSame('Konačno', $original->notes);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload([
                 'criterion_1' => 5,
-                'notes' => 'Nepotpun nacrt',
-            ])
-            ->assertSessionHasNoErrors();
+                'notes' => 'Izmjena',
+            ]))
+            ->assertForbidden();
+
+        $fresh = $original->fresh();
+        $this->assertSame(2, (int) $fresh->criterion_1);
+        $this->assertSame(3, (int) $fresh->criterion_2);
+        $this->assertSame('Konačno', $fresh->notes);
+        $this->assertEquals($original->completed_at?->toDateTimeString(), $fresh->completed_at?->toDateTimeString());
+        $this->assertSame(1, EvaluationScore::query()->where('application_id', $ctx['application']->id)->count());
+    }
+
+    public function test_incomplete_youth_score_is_labeled_as_saved_sum_not_final(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $this->seedLeftoverYouthDraft($ctx['application'], $ctx['chairman'], [
+            'criterion_1' => 5,
+            'notes' => 'Nepotpun istorijski unos',
+        ]);
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
@@ -611,7 +678,8 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString('5 / 50', $html);
         $this->assertStringNotContainsString('Zbir vaših ocjena za 10 kriterijuma', $html);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt', $html);
+        $this->assertStringContainsString('Sačuvaj ocjene', $html);
+        $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
         $this->assertStringContainsString('Otkaži', $html);
     }
 
@@ -736,28 +804,16 @@ class YouthIndividualScoringTest extends TestCase
     public function test_youth_print_is_available_after_personal_completion_before_cycle(): void
     {
         $ctx = $this->youthReadyToLock();
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.store', $ctx['application']), [
-                'save_as_draft' => '1',
-                'criterion_1' => 5,
-                'notes' => 'Nacrt',
-            ])
-            ->assertSessionHasNoErrors();
-
-        $draftCreate = $this->actingAs($ctx['chairman']->user)
+        $beforeCreate = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $draftCreate);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $draftCreate);
+        $this->assertStringNotContainsString('>Štampaj</button>', $beforeCreate);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeCreate);
 
-        $draftShow = $this->actingAs($ctx['chairman']->user)
+        $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.show', $ctx['application']))
-            ->assertOk()
-            ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $draftShow);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $draftShow);
+            ->assertRedirect(route('evaluation.create', $ctx['application']));
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.store', $ctx['application']), $this->finalPayload(['criterion_1' => 5]))
@@ -1066,107 +1122,23 @@ class YouthIndividualScoringTest extends TestCase
     }
 
     /**
-     * Build a browser-like POST from the rendered chairman form, using the real
-     * "Sačuvaj nacrt" button associated with evaluationForm.
-     *
-     * @param  array<string, string>  $criteria
-     * @return array<string, string>
+     * @param  array<string, mixed>  $criteria
      */
-    private function youthDraftPayloadFromRenderedForm(string $html, array $criteria): array
+    private function seedLeftoverYouthDraft(Application $application, CommissionMember $member, array $criteria = []): EvaluationScore
     {
-        $dom = new \DOMDocument();
-        $previous = libxml_use_internal_errors(true);
-        $dom->loadHTML($html);
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
-
-        $xpath = new \DOMXPath($dom);
-        $form = $xpath->query('//form[@id="evaluationForm"]')->item(0);
-        $this->assertNotNull($form, 'Forma evaluationForm mora postojati.');
-
-        $draftButton = $xpath->query('.//*[@id="youth-save-score-draft"]', $form)->item(0)
-            ?? $xpath->query('//*[@id="youth-save-score-draft"][@form="evaluationForm"]')->item(0);
-        $this->assertNotNull($draftButton, 'Dugme Sačuvaj nacrt mora biti povezano sa evaluationForm.');
-        $this->assertSame('submit', $draftButton->getAttribute('type'));
-        $this->assertSame('save_as_draft', $draftButton->getAttribute('name'));
-        $this->assertSame('1', $draftButton->getAttribute('value'));
-        $this->assertSame('evaluationForm', $draftButton->getAttribute('form'));
-        $this->assertFalse($draftButton->hasAttribute('disabled'));
-
-        $payload = [];
-        foreach ($xpath->query('//input|//textarea|//select') as $control) {
-            if (! $control instanceof \DOMElement) {
-                continue;
-            }
-            if (! $this->htmlControlBelongsToEvaluationForm($control, $form)) {
-                continue;
-            }
-            if ($control->hasAttribute('disabled')) {
-                continue;
-            }
-
-            $nodeName = strtolower($control->nodeName);
-            $type = strtolower($control->getAttribute('type') ?: $nodeName);
-            $name = $control->getAttribute('name');
-            if ($name === '') {
-                continue;
-            }
-            if (in_array($type, ['submit', 'button', 'image', 'reset'], true)) {
-                continue;
-            }
-            if (in_array($type, ['checkbox', 'radio'], true) && ! $control->hasAttribute('checked')) {
-                continue;
-            }
-
-            $payload[$name] = $nodeName === 'textarea'
-                ? $control->textContent
-                : $control->getAttribute('value');
+        $payload = [
+            'application_id' => $application->id,
+            'commission_member_id' => $member->id,
+            'canonical_seat_no' => null,
+            'completed_at' => null,
+            'final_score' => null,
+            'notes' => $criteria['notes'] ?? 'Istorijski nacrt',
+        ];
+        for ($i = 1; $i <= 10; $i++) {
+            $payload["criterion_{$i}"] = $criteria["criterion_{$i}"] ?? null;
         }
 
-        foreach (array_keys($payload) as $name) {
-            if (preg_match('/^criterion_\d+$/', $name) && ($payload[$name] === '' || $payload[$name] === null)) {
-                unset($payload[$name]);
-            }
-        }
-
-        foreach (array_keys($criteria) as $key) {
-            $criterionInput = $xpath->query('//input[@name="'.$key.'"]')->item(0);
-            $this->assertNotNull($criterionInput, 'Polje '.$key.' mora postojati na formi.');
-            $this->assertInstanceOf(\DOMElement::class, $criterionInput);
-            $this->assertTrue(
-                $this->htmlControlBelongsToEvaluationForm($criterionInput, $form),
-                $key.' mora pripadati evaluationForm.'
-            );
-            $this->assertFalse($criterionInput->hasAttribute('disabled'));
-        }
-
-        $payload['save_as_draft'] = '1';
-        unset($payload['youth_bonus_action']);
-        foreach ($criteria as $name => $value) {
-            $payload[$name] = $value;
-        }
-
-        return $payload;
-    }
-
-    private function htmlControlBelongsToEvaluationForm(\DOMElement $control, \DOMElement $form): bool
-    {
-        if ($control->getAttribute('form') === 'evaluationForm') {
-            return true;
-        }
-        if ($control->hasAttribute('form')) {
-            return false;
-        }
-
-        $ancestor = $control->parentNode;
-        while ($ancestor instanceof \DOMElement) {
-            if ($ancestor->isSameNode($form)) {
-                return true;
-            }
-            $ancestor = $ancestor->parentNode;
-        }
-
-        return false;
+        return EvaluationScore::create($payload);
     }
 
     /**

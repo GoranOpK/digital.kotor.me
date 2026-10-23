@@ -763,9 +763,6 @@
             <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" data-needs-final-confirm="{{ ($scoringIsAllowed && !($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false)) ? '1' : '0' }}" data-scoring-allowed="{{ $scoringIsAllowed ? '1' : '0' }}" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
                 <input type="hidden" name="scoring_confirmed" value="0">
-                @if($isOmladinskoScoring && !($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false))
-                    <button type="submit" name="save_as_draft" value="1" form="evaluationForm" hidden class="no-print" tabindex="-1" aria-hidden="true" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled @endif>Sačuvaj nacrt</button>
-                @endif
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section form-section-scores">
@@ -774,6 +771,11 @@
                         <div class="no-print" style="margin-bottom: 12px; color: #374151; font-size: 13px;">
                             Skala: 1 — {{ \App\Support\ScoringProfileConfig::SCALE_MIN_LABEL }}; 5 — {{ \App\Support\ScoringProfileConfig::SCALE_MAX_LABEL }}. Vrijednosti 2, 3 i 4 su međuvrijednosti.
                         </div>
+                        @if(!($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false))
+                            <div class="no-print" style="margin-bottom: 16px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e; font-size: 13px;">
+                                Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.
+                            </div>
+                        @endif
                     @endif
 
                     @php
@@ -825,7 +827,7 @@
                                                     {{-- Može unijeti ili mijenjati --}}
                                                     @php
                                                         $scoreInputsLocked = ! $scoringIsAllowed || $isRejected || ($isApplicant ?? false);
-                                                        $scoreInputRequired = ! $scoreInputsLocked && ! $isOmladinskoScoring;
+                                                        $scoreInputRequired = ! $scoreInputsLocked;
                                                     @endphp
                                                     <input 
                                                         type="number" 
@@ -1357,8 +1359,7 @@
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
                         @if($isOmladinskoScoring)
-                            <button type="submit" name="save_as_draft" value="1" form="evaluationForm" id="youth-save-score-draft" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj nacrt</button>
-                            <button type="submit" form="evaluationForm" id="youth-finish-scoring" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed; margin-left: 12px;" @else style="margin-left: 12px;" @endif>Završi ocjenjivanje</button>
+                            <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
                             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                         @else
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
@@ -1422,16 +1423,6 @@
         if (submitterName === 'youth_bonus_action') {
             if (confirmed) {
                 confirmed.value = '0';
-            }
-            return;
-        }
-
-        if (submitterName === 'save_as_draft') {
-            if (confirmed) {
-                confirmed.value = '0';
-            }
-            if (! scoringAllowed) {
-                event.preventDefault();
             }
             return;
         }

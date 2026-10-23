@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.13
-**Datum:** 2026-10-22
+**Verzija:** 1.0.14
+**Datum:** 2026-10-23
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.43** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.45** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.14** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.16** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.10** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.12** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -67,6 +67,7 @@ Povezani dokumenti:
 | 1.0.11 | 2026-09-21 | KN-PATCH-BM-020 — Precizirana konačna raspodjela mladih: 30% samo za potvrđeni inovativni tehnološki start-up u smislu čl. 19; 20%/15% prema posebnoj evidenciji ranijeg youth finansiranja; prednost otpočinjanja nad razvojem i glasanje 2 od 3 uz evidenciju sva tri glasa; treća sjednica nije obavezni elektronski `TYPE_THIRD`; predsjednik potvrđuje cijelu listu odjednom. Ženski procenti, 5 članova i ženski način evidencije glasanja se ne prenose. Identifikatori BM-ML-001–BM-ML-058 ostaju. |
 | 1.0.12 | 2026-09-21 | KN-PATCH-BM-021 — Preciziran predmet glasa kod izjednačenih bodova: kompletan, budžetski validan predlog raspodjele relevantne grupe, ne pojedinačna prijava; predsjednik evidentira sva tri glasa `za`/`protiv` u ime Komisije; većina 2 od 3 tek poslije sva tri glasa; ponovljeni krugovi čuvaju istoriju; prednost otpočinjanja prije glasanja. Identifikatori BM-ML-001–BM-ML-058 ostaju. Ženski tok nije diran. |
 | 1.0.13 | 2026-10-22 | KN-PATCH-BM-022 — Kriterijum 6 u `BM-ML-038` glasi: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne zadržava. Identifikatori BM-ML-001–BM-ML-058 ostaju. Ženski tok nije diran. |
+| 1.0.14 | 2026-10-23 | KN-PATCH-BM-023 — Individualna ocjena mladih nema privremeni nacrt. Član unosi svih deset kriterijuma i radnjom `Sačuvaj ocjene` odmah zaključava ocjenu, uz izričitu potvrdu. Odustanak ne šalje ni ne čuva podatke. Serverska validacija odbija nepotpun unos i `save_as_draft` bez upisa. Ranije sačuvani djelimični unosi ostaju u tragu i nijesu konačni dok isti član ne sačuva svih deset. Identifikatori BM-ML-001–BM-ML-058 ostaju. Dodatni bodovi zadržavaju zaseban nacrt. Ženski tok, MMSP i kanonsko bodovanje nijesu dirani. |
 
 Napomena:
 
@@ -1568,20 +1569,18 @@ Nakon usmenih obrazloženja na drugoj sjednici svaki član dodjeljuje bodove za 
 
 ## 11.2. Individualno ocjenjivanje
 
-### BM-ML-039 — Nacrt i završavanje individualnog ocjenjivanja
+### BM-ML-039 — Individualno ocjenjivanje i zaključavanje
 
 Svaki od tri člana Komisije samostalno unosi svoje ocjene za svaki biznis plan koji je ispunio uslove za pozitivno ocjenjivanje.
 
-Član može sačuvati nacrt ocjena i mijenjati ga dok ne potvrdi završetak.
+Nema privremenog čuvanja nacrta individualne ocjene. Član unosi svih deset kriterijuma i radnjom `Sačuvaj ocjene` šalje konačnu ocjenu. Svih deset kriterijuma je obavezno. Serverska validacija odbija nepotpun unos i zahtjev sa `save_as_draft`, bez upisa djelimičnih ocjena.
 
-Platforma ne blokira raniji unos nacrta prije usmenog obrazloženja i ne uvodi posebno tehničko otključavanje kriterijuma 10. Poslovna obaveza članova ostaje da konačne bodove za svih deset kriterijuma dodijele nakon usmenog obrazloženja, prema članu 21.
+Platforma ne uvodi posebno tehničko otključavanje kriterijuma 10 i ne zahtijeva Digital zapis usmenog. Poslovna obaveza članova ostaje da konačne bodove za svih deset kriterijuma dodijele nakon usmenog obrazloženja, prema članu 21.
 
-Član može izvršiti radnju `Završi ocjenjivanje` samo kada je unio ocjene za svih deset kriterijuma.
+Prije slanja platforma upozorava da ocjene više neće moći biti izmijenjene. Član može:
 
-Prije potvrde završetka platforma upozorava da ocjene više neće moći biti izmijenjene. Član može:
-
-- odustati i vratiti se na nacrt;
-- potvrditi završetak.
+- odustati, bez slanja i bez čuvanja;
+- potvrditi i zaključati ocjene.
 
 Nakon potvrde:
 
@@ -1591,11 +1590,18 @@ Nakon potvrde:
 - administrator ih ne može mijenjati;
 - ocjenjivanje se ne može vratiti u nacrt.
 
+Ako u podacima postoji ranije sačuvani djelimični unos (istorijski nacrt):
+
+- zapis se ne briše i ne migrira;
+- nije konačna ocjena i ne ulazi u obračun;
+- forma može prikazati sačuvane vrijednosti;
+- isti član završava unos svih deset kriterijuma radnjom `Sačuvaj ocjene`.
+
 Svaki član može unijeti opcionu individualnu napomenu. Napomena:
 
 - ne donosi dodatne bodove;
 - nije obavezna;
-- mijenja se dok je ocjenjivanje u nacrtu;
+- unosi se uz konačne ocjene;
 - zaključava se zajedno sa ocjenama;
 - ne zamjenjuje obrazloženje Komisije o odbijanju biznis plana.
 
@@ -2680,7 +2686,7 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-036 | Podnošenje i dejstvo prigovora | 10.5 | Odluka, član 18; Poglavlje 4, pitanje 11; KN-PATCH-BM-015 | USVOJENO |
 | BM-ML-037 | Konačnost ishoda prigovora | 10.5 | Projektna odluka; KN-PATCH-BM-015 | USVOJENO |
 | BM-ML-038 | Deset pozitivnih kriterijuma i skala | 11.1 | Odluka, članovi 20 i 21 | USVOJENO |
-| BM-ML-039 | Nacrt i završavanje individualnog ocjenjivanja | 11.2 | Odluka, članovi 7, 20 i 21; projektna odluka; Poglavlje 4.1, riješena zavisnost O-01 | USVOJENO |
+| BM-ML-039 | Individualno ocjenjivanje i zaključavanje | 11.2 | Odluka, članovi 7, 20 i 21; projektna odluka; Poglavlje 4.1, riješena zavisnost O-01; KN-PATCH-BM-023 | USVOJENO |
 | BM-ML-040 | Tajnost i međusobni uvid | 11.3 | Odluka, član 21; projektna odluka | USVOJENO |
 | BM-ML-041 | Prosjek i preciznost obračuna | 11.4 | Odluka, član 21; projektna odluka | USVOJENO |
 | BM-ML-042 | Dodatni bodovi | 11.5 | Odluka, članovi 20 i 21; projektna odluka; KN-PATCH-BM-020 | USVOJENO |
@@ -2703,4 +2709,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.13**
+**Kraj dokumenta KN-BM-002 v1.0.14**
