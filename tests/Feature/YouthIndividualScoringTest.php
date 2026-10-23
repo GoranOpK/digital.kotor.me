@@ -667,8 +667,21 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('32 / 50', $html);
         $this->assertStringContainsString('Podaci o podnositeljki prijave', $html);
         $this->assertStringContainsString('Zavoda za zapošljavanje', $html);
+        $this->assertStringContainsString('Potvrdio:', $html);
+        $this->assertStringContainsString('Datum i vrijeme:', $html);
         $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $html);
         $this->assertStringNotContainsString('id="youth-bonus-locked-banner"', $html);
+
+        $show = $this->actingAs($zensko['chairman']->user)
+            ->get(route('evaluation.show', $zensko['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Potvrdio:', $show);
+        $this->assertStringContainsString('Datum i vrijeme:', $show);
+        $this->assertStringContainsString('Ispunjava eliminatorne kriterijume', $show);
+        $this->assertStringContainsString('>Štampaj</button>', $show);
+        $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $show);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $show);
     }
 
     public function test_locked_youth_bonuses_hide_confirmer_name_and_timestamp(): void
@@ -699,10 +712,23 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString($ctx['chairman']->name, $banner[0]);
         $this->assertStringNotContainsString($locked->bonuses_confirmed_at->format('d.m.Y. H:i'), $banner[0]);
 
-        $this->assertStringContainsString('Potvrdio: '.$ctx['chairman']->name, $html);
-        $eliminatoryAt = $locked->eliminatoryCheck?->confirmed_at?->format('d.m.Y. H:i');
-        $this->assertNotNull($eliminatoryAt);
-        $this->assertStringContainsString('Datum i vrijeme: '.$eliminatoryAt, $html);
+        $eliminatory = $locked->eliminatoryCheck;
+        $this->assertNotNull($eliminatory);
+        $this->assertNotNull($eliminatory->confirmed_at);
+        $this->assertSame($ctx['chairman']->name, $eliminatory->confirmed_by_name);
+        $this->assertStringContainsString('Ispunjava eliminatorne kriterijume', $html);
+        $this->assertStringNotContainsString('Potvrdio:', $html);
+        $this->assertStringNotContainsString('Datum i vrijeme:', $html);
+        $this->assertStringNotContainsString($eliminatory->confirmed_at->format('d.m.Y. H:i'), $html);
+
+        $show = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Ispunjava eliminatorne kriterijume', $show);
+        $this->assertStringNotContainsString('Potvrdio:', $show);
+        $this->assertStringNotContainsString('Datum i vrijeme:', $show);
+        $this->assertStringNotContainsString($eliminatory->confirmed_at->format('d.m.Y. H:i'), $show);
     }
 
     public function test_youth_print_hint_appears_only_when_print_button_is_available(): void
@@ -720,6 +746,14 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeCycle);
         $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $beforeCycle);
 
+        $beforeShow = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('>Štampaj</button>', $beforeShow);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeShow);
+        $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $beforeShow);
+
         foreach ([1, 2] as $index) {
             $this->actingAs($ctx['members'][$index]->fresh('user')->user)
                 ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
@@ -735,6 +769,17 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString(
             'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
             $afterCycle
+        );
+
+        $afterShow = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('>Štampaj</button>', $afterShow);
+        $this->assertStringContainsString('id="evaluation-print-hint"', $afterShow);
+        $this->assertStringContainsString(
+            'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
+            $afterShow
         );
     }
 

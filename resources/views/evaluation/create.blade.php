@@ -743,14 +743,6 @@
                                     Ne ispunjava eliminatorne kriterijume
                                 @endif
                             </div>
-                            @if($eliminatoryCheck && $eliminatoryCheck->isConfirmed())
-                                <div style="margin-top: 8px;">
-                                    Potvrdio: {{ $eliminatoryCheck->confirmed_by_name }}
-                                </div>
-                                <div>
-                                    Datum i vrijeme: {{ $eliminatoryCheck->confirmed_at?->format('d.m.Y. H:i') }}
-                                </div>
-                            @endif
                         </div>
                     @endif
                 </div>
