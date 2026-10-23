@@ -94,7 +94,9 @@ class EvaluationController extends Controller
             ->get();
 
         $competitionIds = $assignedCompetitions->filter(function ($c) {
-            if (! in_array($c->status, ['closed', 'completed']) && ! $c->isApplicationDeadlinePassed()) {
+            if (! in_array($c->status, ['closed', 'completed'])
+                && ! $c->isApplicationDeadlinePassed()
+                && ! $c->isCanonicalTestPreview()) {
                 return false;
             }
 
@@ -757,7 +759,9 @@ class EvaluationController extends Controller
             abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
         }
 
-        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+        if (! $competition->isCanonicalTestPreview()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
         }
 
@@ -797,9 +801,17 @@ class EvaluationController extends Controller
 
     protected function storeCanonicalScore(Request $request, Application $application): RedirectResponse
     {
-        $profile = ScoringProfileConfig::for($application->competition?->type);
+        $application->loadMissing('competition');
+        $competition = $application->competition;
+        $profile = ScoringProfileConfig::for($competition?->type);
         $profile->assertScoringFormulaActive();
-        $this->abortIfCommissionProcessingBlocked($application->competition);
+        if ($competition
+            && ! $competition->isCanonicalTestPreview()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, $profile->evaluationOpensAfterApplicationDeadlineMessage());
+        }
+        $this->abortIfCommissionProcessingBlocked($competition);
 
         $rules = [
             'notes' => 'nullable|string|max:5000',
