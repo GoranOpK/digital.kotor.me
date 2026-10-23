@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CommissionAppointmentMailCopy;
 use App\Mail\CommissionAssignedToCompetition;
 use App\Mail\CommissionMemberAdded;
 use App\Models\Application;
@@ -20,6 +21,12 @@ use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
+use App\Services\Competitions\CallPublicationService;
+use App\Services\Competitions\Commission\CanonicalCommissionAdministrationService;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
+use App\Services\Competitions\Profile\CompetitionProfilePolicy;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
@@ -598,7 +605,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:zensko,omladinsko,ostalo',
+            'type' => CompetitionProfileResolver::validationRule(),
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => $isOmladinsko ? 'required|numeric|gt:0' : 'required|numeric|min:0',
@@ -759,6 +766,16 @@ class AdminController extends Controller
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
+        if (! empty($validated['commission_id'])) {
+            $assignedCommission = Commission::with('competitions')->find($validated['commission_id']);
+            $mixError = $assignedCommission
+                ? CommissionProfileConfig::conflictWithAssignedCompetitions($assignedCommission, (string) $competition->type)
+                : null;
+            if ($mixError) {
+                return back()->withErrors(['commission_id' => $mixError])->withInput();
+            }
+        }
+
         $instance = app(CompetitionAnnualInstance::class);
 
         try {
@@ -790,16 +807,6 @@ class AdminController extends Controller
                     'status' => 'draft',
                     'competition_number' => $validated['up_number'],
                 ];
-
-                if (! empty($validated['commission_id'])) {
-                    $assignedCommission = Commission::with('competitions')->find($validated['commission_id']);
-                    $mixError = $assignedCommission
-                        ? CommissionProfileConfig::conflictWithAssignedCompetitions($assignedCommission, (string) $first->type)
-                        : null;
-                    if ($mixError) {
-                        throw new DomainException($mixError);
-                    }
-                }
 
                 if (! empty($validated['start_date'])) {
                     $start = \Carbon\Carbon::parse($validated['start_date']);
@@ -898,8 +905,12 @@ class AdminController extends Controller
 
         $omladinskoAnnualOverview = $this->omladinskoAnnualOverviewForShow($competition);
 
+        $canonicalCommissionOverview = $isAdmin && $competition->type === CompetitionProfileResolver::TYPE_CANONICAL
+            ? app(CanonicalCommissionAdministrationService::class)->overview($competition)
+            : null;
+
         return view('admin.competitions.show', array_merge(
-            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView'),
+            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView', 'canonicalCommissionOverview'),
             $omladinskoAnnualOverview
         ));
     }
@@ -955,13 +966,14 @@ class AdminController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:zensko,omladinsko,ostalo',
+            'type' => CompetitionProfileResolver::validationRule(),
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => $budgetRule,
             'start_date' => 'nullable|date',
             'status' => 'required|in:draft,published,completed',
             'commission_id' => 'nullable|exists:commissions,id',
+            'is_test_preview' => 'nullable|boolean',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
@@ -991,6 +1003,43 @@ class AdminController extends Controller
             }
         }
 
+        $policy = CompetitionProfileResolver::resolve($validated['type']);
+        if (
+            $validated['status'] === 'published'
+            && $competition->status !== 'published'
+            && ($policy->isFailClosed() || $competition->profile()->isFailClosed())
+        ) {
+            return back()->withErrors([
+                'status' => 'Objava nije dozvoljena za ovaj profil.',
+            ])->withInput();
+        }
+
+        if (
+            $validated['status'] === 'published'
+            && $competition->status !== 'published'
+            && $policy->publicationMode() === CompetitionProfilePolicy::PUBLICATION_GUARDED
+        ) {
+            return back()->withErrors([
+                'status' => 'Objava je moguća samo kroz službenu akciju objave.',
+            ])->withInput();
+        }
+
+        if (
+            $validated['status'] === 'completed'
+            && ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL || $validated['type'] === CompetitionProfileResolver::TYPE_CANONICAL)
+        ) {
+            return back()->withErrors([
+                'status' => 'Kanonski Poziv se zatvara samo nakon objave potpisane formalne Odluke, kroz kanonsko zatvaranje.',
+            ])->withInput();
+        }
+
+        $lifecycle = app(PublishedCallLifecycleLock::class);
+        $lifecycleErrors = $lifecycle->editErrors($competition, $validated);
+        if ($lifecycleErrors !== []) {
+            return back()->withErrors($lifecycleErrors)->withInput();
+        }
+        $windowLocked = $lifecycle->locks($competition) && $competition->status !== 'draft';
+
         $data = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
@@ -999,8 +1048,21 @@ class AdminController extends Controller
             'budget' => $validated['budget'],
             'status' => $validated['status'],
             'commission_id' => $validated['commission_id'] ?? null,
-            'deadline_days' => 20,
+            'deadline_days' => $windowLocked ? $competition->deadline_days : 20,
         ];
+
+        // Test-preview je dozvoljen isključivo za kanonski MMSP nacrt i samo administratorskim ulogama.
+        if ($validated['type'] === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $data['is_test_preview'] = $isAdmin && $validated['status'] === 'draft'
+                ? $request->boolean('is_test_preview')
+                : (bool) $competition->is_test_preview;
+
+            if ($validated['status'] !== 'draft') {
+                $data['is_test_preview'] = false;
+            }
+        } else {
+            $data['is_test_preview'] = false;
+        }
 
         if ($isOmladinsko) {
             $data['call_number'] = $competition->call_number;
@@ -1101,7 +1163,7 @@ class AdminController extends Controller
     /**
      * Objavljivanje konkursa
      */
-    public function publishCompetition(Competition $competition)
+    public function publishCompetition(Competition $competition, CallPublicationService $publisher)
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
@@ -1109,6 +1171,20 @@ class AdminController extends Controller
         // Predsjednik komisije ne može objavljivati konkurse
         if (! $isAdmin) {
             abort(403, 'Nemate dozvolu za objavljivanje konkursa.');
+        }
+
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $result = $publisher->publish($competition, $user);
+
+            if (! $result->succeeded) {
+                return redirect()->back()->withErrors(['error' => $result->error]);
+            }
+
+            return redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
+        }
+
+        if ($competition->profile()->isFailClosed()) {
+            return redirect()->back()->withErrors(['error' => 'Objava nije dozvoljena za ovaj profil.']);
         }
 
         if ($competition->status !== 'draft') {
@@ -1169,6 +1245,14 @@ class AdminController extends Controller
      */
     public function closeCompetition(Competition $competition)
     {
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $result = app(\App\Services\Competitions\Decision\CanonicalCloseService::class)->close($competition, auth()->user());
+
+            return $result->succeeded
+                ? redirect()->back()->with('success', 'Poziv je zatvoren i arhiviran.')
+                : redirect()->back()->withErrors(['error' => $result->error]);
+        }
+
         // KN-FS-003 §15.4.1: zatvaranje je isključivo poslovna radnja Predsjednika Komisije.
         if (! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za zatvaranje konkursa. Samo predsjednik komisije može zatvarati konkurse.');
@@ -1255,24 +1339,32 @@ class AdminController extends Controller
         // da arhiva uvijek prikaže isti poredak kao zaključena rang lista.
         $competition->load('commission');
 
-        $rankableApplications = $competition->applications()
-            ->with(['evaluationScores', 'eliminatoryCheck', 'prigovor'])
-            ->get()
-            ->filter(function ($application) {
-                if ($application->isEliminatedFromScoring()) {
-                    return false;
-                }
+        if ($competition->isOmladinskoProfile()) {
+            $youthCloseBlock = app(\App\Services\CanonicalIndividualScoringService::class)
+                ->youthCloseFreezeBlockReason($competition);
+            if ($youthCloseBlock !== null) {
+                return redirect()->back()->withErrors(['error' => $youthCloseBlock]);
+            }
+        } else {
+            $rankableApplications = $competition->applications()
+                ->with(['evaluationScores', 'eliminatoryCheck', 'prigovor'])
+                ->get()
+                ->filter(function ($application) {
+                    if ($application->isEliminatedFromScoring()) {
+                        return false;
+                    }
 
-                if ($application->evaluationScores->count() === 0) {
-                    return false;
-                }
+                    if ($application->evaluationScores->count() === 0) {
+                        return false;
+                    }
 
-                return $application->meetsMinimumScore();
-            });
+                    return $application->meetsMinimumScore();
+                });
 
-        // KN-FS-003 §14.6: freeze shared competition ranks (not unique 1..n / id tie-break).
-        app(\App\Services\CanonicalIndividualScoringService::class)
-            ->assignAboveLineRankingPositions($rankableApplications);
+            // KN-FS-003 §14.6: freeze shared competition ranks (not unique 1..n / id tie-break).
+            app(\App\Services\CanonicalIndividualScoringService::class)
+                ->assignAboveLineRankingPositions($rankableApplications);
+        }
 
         $competition->update([
             'status' => 'completed',
@@ -1290,6 +1382,11 @@ class AdminController extends Controller
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+
+        $deleteBlockReason = app(PublishedCallLifecycleLock::class)->deleteBlockReason($competition);
+        if ($deleteBlockReason !== null) {
+            abort(403, $deleteBlockReason);
+        }
 
         // Privremeno: Administrator konkursa može brisati sve konkurse
         // Ostali ne mogu brisati završene konkurse
@@ -1418,19 +1515,49 @@ class AdminController extends Controller
         $targetCompetition = $request->filled('competition_id')
             ? Competition::find($request->integer('competition_id'))
             : null;
-        $isOmladinskoCommissionForm = $targetCompetition?->isOmladinskoProfile() ?? false;
 
-        $competitions = Competition::whereIn('status', ['draft', 'published'])
-            ->when($isOmladinskoCommissionForm, fn ($q) => $q->where('type', 'omladinsko'))
-            ->when($targetCompetition && $targetCompetition->type === 'zensko', fn ($q) => $q->where('type', 'zensko'))
-            ->orderBy('year', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $commissionFormTypes = [];
+        foreach (CommissionProfileConfig::sharedFormTypeLabels() as $type => $label) {
+            if (CommissionProfileConfig::for($type)->providesCommission) {
+                $commissionFormTypes[$type] = $label;
+            }
+        }
+
+        $selectedCompetitionType = null;
+        $postedType = old('competition_type', $request->query('competition_type'));
+        if (is_string($postedType) && isset($commissionFormTypes[$postedType])) {
+            $selectedCompetitionType = $postedType;
+        }
+
+        if ($selectedCompetitionType === null && $targetCompetition) {
+            $targetType = $targetCompetition->type;
+            if (is_string($targetType) && isset($commissionFormTypes[$targetType])) {
+                $selectedCompetitionType = $targetType;
+            }
+        }
+
+        $isOmladinskoCommissionForm = $selectedCompetitionType === CommissionProfileConfig::PROFILE_OMLADINSKO;
+        $isCanonicalCommissionForm = $selectedCompetitionType === CommissionProfileConfig::PROFILE_CANONICAL;
+        $isThreeSeatCommissionForm = CommissionProfileConfig::usesThreeSeatSharedForm($selectedCompetitionType);
+
+        $competitions = collect();
+        if ($selectedCompetitionType !== null) {
+            $competitions = Competition::whereIn('status', ['draft', 'published'])
+                ->where('type', $selectedCompetitionType)
+                ->with('commission')
+                ->orderBy('year', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         return view('admin.commissions.create', compact(
             'competitions',
             'targetCompetition',
-            'isOmladinskoCommissionForm'
+            'isOmladinskoCommissionForm',
+            'isCanonicalCommissionForm',
+            'isThreeSeatCommissionForm',
+            'selectedCompetitionType',
+            'commissionFormTypes'
         ));
     }
 
@@ -1445,6 +1572,7 @@ class AdminController extends Controller
         if ($startDate) {
             $start = \Carbon\Carbon::parse($startDate);
             $endDate = $start->copy()->addYears(1)->format('Y-m-d');
+            $request->merge(['end_date' => $endDate]);
         }
 
         // Proveri da li se email-ovi ponavljaju između članova
@@ -1467,35 +1595,62 @@ class AdminController extends Controller
             }
         }
 
-        // Proveri da li je dodato najmanje 1 član
-        if (count($filledMembers) < 1) {
-            return back()->withErrors(['members' => 'Morate dodati najmanje jednog člana komisije.'])->withInput();
-        }
-
         $requestedCompetitionIds = collect($request->input('competition_ids', []))
             ->filter(fn ($id) => $id !== null && $id !== '')
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
-        $mixError = CommissionProfileConfig::homogeneousCompetitionTypes($requestedCompetitionIds);
-        if ($mixError) {
-            return back()->withErrors(['competition_ids' => $mixError])->withInput();
+        $requestedProfile = CommissionProfileConfig::assertSupportedStoredProfile($request->input('competition_type'));
+        if ($requestedProfile['error']) {
+            return back()->withErrors(['competition_type' => $requestedProfile['error']])->withInput();
         }
 
-        $targetTypes = $requestedCompetitionIds->isEmpty()
-            ? collect()
-            : Competition::query()->whereIn('id', $requestedCompetitionIds)->pluck('type');
-        $isOmladinskoForm = $targetTypes->contains('omladinsko');
-        $profileConfig = CommissionProfileConfig::for($isOmladinskoForm ? 'omladinsko' : 'zensko');
-        $maxMembers = $isOmladinskoForm ? $profileConfig->seatCount : 5;
-        $lastMemberIndex = $maxMembers - 1;
+        $assignmentError = CommissionProfileConfig::selectedCompetitionsMatchProfile(
+            $requestedCompetitionIds,
+            $requestedProfile['type']
+        );
+        if ($assignmentError) {
+            return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
+        }
 
-        if (count($filledMembers) > $maxMembers) {
-            return back()->withErrors([
-                'members' => $isOmladinskoForm
-                    ? 'Komisija mladih može imati najviše 3 člana.'
-                    : 'Komisija može imati najviše 5 članova.',
-            ])->withInput();
+        $isThreeSeatForm = CommissionProfileConfig::usesThreeSeatSharedForm($requestedProfile['type']);
+        $profileConfig = CommissionProfileConfig::for($requestedProfile['type']);
+        $maxMembers = $profileConfig->seatCount;
+        $lastMemberIndex = $maxMembers - 1;
+        $incompleteMessage = CommissionProfileConfig::incompleteCreateMessage($requestedProfile['type']);
+        $invalidSeatMessage = CommissionProfileConfig::invalidSeatMessage($requestedProfile['type']);
+        $memberTypeRejectedMessage = CommissionProfileConfig::memberTypeRejectedMessage($requestedProfile['type']);
+        $presidentCountMessage = CommissionProfileConfig::presidentCountMessage($requestedProfile['type']);
+
+        if ($isThreeSeatForm) {
+            foreach ($membersData as $index => $member) {
+                if (empty($member['email'])) {
+                    continue;
+                }
+                $seat = isset($member['canonical_seat_no']) && $member['canonical_seat_no'] !== ''
+                    ? (int) $member['canonical_seat_no']
+                    : 0;
+                if ((int) $index >= 3 || ($seat !== 0 && ! $profileConfig->allowsSeat($seat))) {
+                    return back()->withErrors([
+                        'members.'.$index.'.canonical_seat_no' => $invalidSeatMessage,
+                    ])->withInput();
+                }
+                if (array_key_exists('member_type', $member) && $member['member_type'] !== null && $member['member_type'] !== '') {
+                    return back()->withErrors([
+                        'members.'.$index.'.member_type' => $memberTypeRejectedMessage,
+                    ])->withInput();
+                }
+            }
+        }
+
+        for ($seat = 0; $seat <= $lastMemberIndex; $seat++) {
+            if (empty($membersData[$seat]['email'])) {
+                return back()->withErrors(['members' => $incompleteMessage])->withInput();
+            }
+        }
+
+        if (count($filledMembers) !== $maxMembers) {
+            return back()->withErrors(['members' => $incompleteMessage])->withInput();
         }
 
         $rules = [
@@ -1503,21 +1658,22 @@ class AdminController extends Controller
             'year' => 'required|integer|min:2020|max:2100',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'members' => 'required|array|min:1|max:'.$maxMembers,
+            'members' => 'required|array|size:'.$maxMembers,
+            'competition_type' => 'required|in:'.implode(',', CommissionProfileConfig::SUPPORTED_STORED_PROFILES),
             'competition_ids' => 'nullable|array',
             'competition_ids.*' => 'exists:competitions,id',
         ];
 
         for ($i = 0; $i <= $lastMemberIndex; $i++) {
-            $rules["members.{$i}.name"] = 'nullable|required_with:members.'.$i.'.email|string|max:255';
-            $rules["members.{$i}.email"] = 'nullable|required_with:members.'.$i.'.name|email|max:255';
+            $rules["members.{$i}.name"] = 'required|string|max:255';
+            $rules["members.{$i}.email"] = 'required|email|max:255';
             $rules["members.{$i}.password"] = 'nullable|string|min:8';
-            $rules["members.{$i}.position"] = 'nullable|required_with:members.'.$i.'.email|in:predsjednik,clan';
+            $rules["members.{$i}.position"] = 'required|in:predsjednik,clan';
             $rules["members.{$i}.organization"] = 'nullable|string|max:255';
-            if ($isOmladinskoForm) {
-                $rules["members.{$i}.canonical_seat_no"] = 'nullable|required_with:members.'.$i.'.email|integer|in:1,2,3';
+            if ($isThreeSeatForm) {
+                $rules["members.{$i}.canonical_seat_no"] = 'required|integer|in:1,2,3';
             } else {
-                $rules["members.{$i}.member_type"] = 'nullable|required_with:members.'.$i.'.email|in:opstina,udruzenje,zene_mreza';
+                $rules["members.{$i}.member_type"] = 'required|in:opstina,udruzenje,zene_mreza';
             }
         }
 
@@ -1527,29 +1683,30 @@ class AdminController extends Controller
             'start_date.required' => 'Datum početka je obavezan.',
             'end_date.required' => 'Datum završetka je obavezan.',
             'end_date.after' => 'Datum završetka mora biti posle datuma početka.',
-            'members.required' => 'Morate dodati najmanje jednog člana komisije.',
-            'members.min' => 'Morate dodati najmanje jednog člana komisije.',
-            'members.max' => $isOmladinskoForm
-                ? 'Komisija mladih može imati najviše 3 člana.'
-                : 'Komisija može imati najviše 5 članova.',
+            'members.required' => $incompleteMessage,
+            'members.size' => $incompleteMessage,
+            'members.max' => CommissionProfileConfig::membersMaxMessage($requestedProfile['type']),
+            'competition_type.required' => CommissionProfileConfig::PROFILE_REQUIRED_MESSAGE,
+            'competition_type.in' => CommissionProfileConfig::UNSUPPORTED_PROFILE_ASSIGNMENT_MESSAGE,
+            'competition_ids.*.exists' => CommissionProfileConfig::UNKNOWN_COMPETITION_ASSIGNMENT_MESSAGE,
         ];
 
         for ($i = 0; $i <= $lastMemberIndex; $i++) {
-            $messages["members.{$i}.name.required_with"] = 'Ime i prezime člana je obavezno ako dodajete člana.';
-            $messages["members.{$i}.email.required_with"] = 'E-mail člana je obavezan ako dodajete člana.';
+            $messages["members.{$i}.name.required"] = 'Ime i prezime člana je obavezno.';
+            $messages["members.{$i}.email.required"] = 'E-mail člana je obavezan.';
             $messages["members.{$i}.email.email"] = 'E-mail člana mora biti validan.';
             $messages["members.{$i}.password.min"] = 'Password člana mora imati minimum 8 karaktera.';
-            $messages["members.{$i}.position.required_with"] = 'Pozicija člana je obavezna ako dodajete člana.';
-            $messages["members.{$i}.member_type.required_with"] = 'Tip člana je obavezan ako dodajete člana.';
-            $messages["members.{$i}.canonical_seat_no.required_with"] = 'Kanonsko mjesto člana je obavezno.';
-            $messages["members.{$i}.canonical_seat_no.in"] = CommissionProfileConfig::INVALID_YOUTH_SEAT_MESSAGE;
+            $messages["members.{$i}.position.required"] = 'Pozicija člana je obavezna.';
+            $messages["members.{$i}.member_type.required"] = 'Tip člana je obavezan.';
+            $messages["members.{$i}.canonical_seat_no.required"] = 'Kanonsko mjesto člana je obavezno.';
+            $messages["members.{$i}.canonical_seat_no.in"] = $invalidSeatMessage;
             $messages["members.{$i}.organization.required_if"] = 'Organizacija je obavezna za člana iz udruženja.';
         }
 
         $validated = $request->validate($rules, $messages);
 
         // Custom validacija: organizacija je obavezna za člana iz udruženja ako je član popunjen
-        if (! $isOmladinskoForm && ! empty($validated['members'][3]['email']) &&
+        if (! $isThreeSeatForm && ! empty($validated['members'][3]['email']) &&
             isset($validated['members'][3]['member_type']) &&
             $validated['members'][3]['member_type'] === 'udruzenje' &&
             empty($validated['members'][3]['organization'])) {
@@ -1571,7 +1728,7 @@ class AdminController extends Controller
             }
         }
 
-        if ($isOmladinskoForm) {
+        if ($isThreeSeatForm) {
             $usedSeats = [];
             foreach ($validated['members'] as $index => $memberData) {
                 if (empty($memberData['email'])) {
@@ -1580,7 +1737,7 @@ class AdminController extends Controller
                 $seat = (int) ($memberData['canonical_seat_no'] ?? 0);
                 if (! $profileConfig->allowsSeat($seat)) {
                     return back()->withErrors([
-                        "members.{$index}.canonical_seat_no" => CommissionProfileConfig::INVALID_YOUTH_SEAT_MESSAGE,
+                        "members.{$index}.canonical_seat_no" => $invalidSeatMessage,
                     ])->withInput();
                 }
                 if (isset($usedSeats[$seat])) {
@@ -1590,116 +1747,131 @@ class AdminController extends Controller
                 }
                 $usedSeats[$seat] = true;
             }
-        }
 
-        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
-            $newWouldBeComplete = count($filledMembers) === $maxMembers
-                && collect($filledMembers)->contains(fn ($m) => ($m['position'] ?? '') === 'predsjednik');
-
-            $targets = Competition::whereIn('id', $validated['competition_ids'])->get();
-            foreach ($targets as $assignedCompetition) {
-                if (! $assignedCompetition->profileProvidesCommission() || $assignedCompetition->commission_id === null) {
+            $presidentCount = 0;
+            foreach ($validated['members'] as $memberData) {
+                if (empty($memberData['email'])) {
                     continue;
                 }
-
-                $deadlinePassed = $assignedCompetition->isApplicationDeadlinePassed()
-                    || in_array($assignedCompetition->status, ['closed', 'completed'], true);
-
-                if ($deadlinePassed) {
-                    return back()->withErrors([
-                        'competition_ids' => Competition::WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE,
-                    ])->withInput();
+                if (($memberData['position'] ?? '') === 'predsjednik') {
+                    $presidentCount++;
                 }
-
-                if (! $newWouldBeComplete) {
-                    return back()->withErrors([
-                        'competition_ids' => Competition::WHOLE_COMMISSION_REPLACE_MUST_BE_VALID_MESSAGE,
-                    ])->withInput();
-                }
+            }
+            if ($presidentCount !== 1) {
+                return back()->withErrors([
+                    'members' => $presidentCountMessage,
+                ])->withInput();
             }
         }
 
-        $commission = Commission::create([
-            'name' => $validated['name'],
-            'year' => $validated['year'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $endDate ?? $validated['end_date'],
-            'status' => 'active',
-        ]);
+        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
+            $targets = Competition::whereIn('id', $validated['competition_ids'])->get();
+            foreach ($targets as $assignedCompetition) {
+                if ($assignedCompetition->commission_id === null) {
+                    continue;
+                }
 
-        // Pronađi rolu za komisiju
+                return back()->withErrors([
+                    'competition_ids' => CommissionProfileConfig::COMPETITION_ALREADY_ASSIGNED_MESSAGE,
+                ])->withInput();
+            }
+        }
+
         $komisijaRole = Role::where('name', 'komisija')->first();
         if (! $komisijaRole) {
             return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
         }
 
-        // Kreiraj samo popunjene članove komisije sa User nalozima
-        $createdMembers = 0;
-        foreach ($validated['members'] as $memberData) {
-            // Preskoči prazne članove (koji nisu popunjeni)
-            if (empty($memberData['name']) || empty($memberData['email'])) {
-                continue;
-            }
+        $appointmentMailCopy = CommissionAppointmentMailCopy::fromStoredCommissionProfile($requestedProfile['type']);
 
-            $normalizedEmail = strtolower($memberData['email']);
-            $user = User::where('email', $normalizedEmail)->first();
+        [$commission, $createdMembers, $createdMemberModels, $usersNeedingVerification] = DB::transaction(function () use (
+            $validated,
+            $endDate,
+            $isThreeSeatForm,
+            $requestedProfile,
+            $komisijaRole
+        ) {
+            $createdMembers = 0;
+            $createdMemberModels = [];
+            $usersNeedingVerification = [];
 
-            // Ako korisnik sa tim e-mailom ne postoji, kreiraj novi nalog
-            if (! $user) {
-                $user = User::create([
-                    'name' => $memberData['name'],
-                    'email' => $normalizedEmail,
-                    'password' => Hash::make($memberData['password']),
-                    'role_id' => $komisijaRole->id,
-                    'activation_status' => 'active',
-                ]);
-            }
-
-            $this->sendEmailVerificationToCommissionMember($user);
-
-            // Kreiraj člana komisije i poveži sa User nalogom
-            $member = CommissionMember::create([
-                'commission_id' => $commission->id,
-                'user_id' => $user->id,
-                'name' => $memberData['name'],
-                'position' => $memberData['position'],
-                'member_type' => $isOmladinskoForm ? null : ($memberData['member_type'] ?? null),
-                'organization' => $memberData['organization'] ?? null,
-                'canonical_seat_no' => $isOmladinskoForm ? (int) $memberData['canonical_seat_no'] : null,
+            $commission = Commission::create([
+                'name' => $validated['name'],
+                'year' => $validated['year'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $endDate ?? $validated['end_date'],
                 'status' => 'active',
+                'profile_type' => $requestedProfile['type'],
             ]);
 
-            // Pošalji e-mail o imenovanju u komisiju
+            foreach ($validated['members'] as $memberData) {
+                if (empty($memberData['name']) || empty($memberData['email'])) {
+                    continue;
+                }
+
+                $normalizedEmail = strtolower($memberData['email']);
+                $user = User::where('email', $normalizedEmail)->first();
+
+                if (! $user) {
+                    $user = User::create([
+                        'name' => $memberData['name'],
+                        'email' => $normalizedEmail,
+                        'password' => Hash::make($memberData['password']),
+                        'role_id' => $komisijaRole->id,
+                        'activation_status' => 'active',
+                    ]);
+                    $usersNeedingVerification[] = $user;
+                }
+
+                $member = CommissionMember::create([
+                    'commission_id' => $commission->id,
+                    'user_id' => $user->id,
+                    'name' => $memberData['name'],
+                    'position' => $memberData['position'],
+                    'member_type' => $isThreeSeatForm ? null : ($memberData['member_type'] ?? null),
+                    'organization' => $memberData['organization'] ?? null,
+                    'canonical_seat_no' => $isThreeSeatForm ? (int) $memberData['canonical_seat_no'] : null,
+                    'status' => 'active',
+                ]);
+
+                $createdMemberModels[] = $member;
+                $createdMembers++;
+            }
+
+            \App\Support\CommissionCanonicalSeat::persistForCommission($commission->fresh('members'));
+
+            if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
+                Competition::whereIn('id', $validated['competition_ids'])
+                    ->update(['commission_id' => $commission->id]);
+            }
+
+            return [$commission, $createdMembers, $createdMemberModels, $usersNeedingVerification];
+        });
+
+        foreach ($usersNeedingVerification as $user) {
+            $this->sendEmailVerificationToCommissionMember($user);
+        }
+
+        foreach ($createdMemberModels as $member) {
+            $user = $member->user ?? User::find($member->user_id);
+            if (! $user || ! $user->email) {
+                continue;
+            }
             try {
-                Mail::to($user->email)->send(new CommissionMemberAdded($member));
+                Mail::to($user->email)->send(new CommissionMemberAdded($member, $appointmentMailCopy));
             } catch (\Throwable $e) {
                 // Ne prekidaj tok zbog mail greške
             }
-
-            $createdMembers++;
         }
 
-        \App\Support\CommissionCanonicalSeat::persistForCommission($commission->fresh('members'));
-
-        // Dodijeli komisiju izabranim konkursima
         if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
-            Competition::whereIn('id', $validated['competition_ids'])
-                ->update(['commission_id' => $commission->id]);
-
-            // Obavijesti članove komisije o dodijeljenim konkursima
             $assignedCompetitions = Competition::whereIn('id', $validated['competition_ids'])->get();
             foreach ($assignedCompetitions as $assignedCompetition) {
                 $this->notifyCommissionMembersAboutCompetition($commission, $assignedCompetition);
             }
         }
 
-        $message = $createdMembers == 1
-            ? 'Komisija sa 1 članom je uspješno kreirana.'
-            : "Komisija sa {$createdMembers} članova je uspješno kreirana.";
-
-        if ($createdMembers < $maxMembers) {
-            $message .= ' Možete dodati ostale članove komisije.';
-        }
+        $message = "Komisija sa {$createdMembers} članova je uspješno kreirana.";
 
         if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             $count = count($validated['competition_ids']);
@@ -1722,16 +1894,25 @@ class AdminController extends Controller
             $query->where('name', 'komisija');
         })->get();
 
-        $compositionSlots = $this->buildCommissionCompositionSlots($commission);
-        $isOmladinskoCommission = $commission->assignedProfileType() === 'omladinsko';
-        $commissionSeatCount = $isOmladinskoCommission ? 3 : 5;
+        $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
+        $hasStoredProfile = $existingProfile['type'] !== null;
+        $isOmladinskoCommission = CommissionProfileConfig::usesThreeSeatSharedForm($existingProfile['type']);
+        $allowsSharedMembershipMutation = $hasStoredProfile && ! $commission->isCanonicalProfile();
+        $commissionSeatCount = $hasStoredProfile
+            ? CommissionProfileConfig::for($existingProfile['type'])->seatCount
+            : 0;
+        $compositionSlots = $hasStoredProfile
+            ? $this->buildCommissionCompositionSlots($commission)
+            : [];
 
         return view('admin.commissions.show', compact(
             'commission',
             'users',
             'compositionSlots',
             'isOmladinskoCommission',
-            'commissionSeatCount'
+            'allowsSharedMembershipMutation',
+            'commissionSeatCount',
+            'hasStoredProfile'
         ));
     }
 
@@ -1740,20 +1921,24 @@ class AdminController extends Controller
      */
     protected function buildCommissionCompositionSlots(Commission $commission): array
     {
-        $isOmladinskoCommission = $commission->assignedProfileType() === 'omladinsko';
-        $slotLabels = $isOmladinskoCommission
-            ? [
+        $profile = $commission->assignedProfileType();
+        if (CommissionProfileConfig::usesThreeSeatSharedForm($profile)) {
+            $slotLabels = [
                 1 => '1. Mjesto Komisije',
                 2 => '2. Mjesto Komisije',
                 3 => '3. Mjesto Komisije',
-            ]
-            : [
+            ];
+        } elseif ($profile === CommissionProfileConfig::PROFILE_ZENSKO) {
+            $slotLabels = [
                 1 => '1. Predsjednik — Predstavnik Opštine Kotor',
                 2 => '2. Član — Predstavnik Opštine Kotor (Sekretarijat)',
                 3 => '3. Član — Predstavnik Opštine Kotor (Sekretarijat)',
                 4 => '4. Član — Predstavnica udruženja preduzetnica / strukovnih udruženja / biznisa / akademske zajednice',
                 5 => '5. Član — Predstavnica Ženske političke mreže',
             ];
+        } else {
+            return [];
+        }
 
         $substitutes = $commission->members->filter(fn ($m) => ! empty($m->is_substitute));
         $slots = [];
@@ -1780,16 +1965,35 @@ class AdminController extends Controller
      */
     public function editCommission(Commission $commission)
     {
-        // Prikaži sve dostupne konkursa (draft i published)
-        $competitions = Competition::whereIn('status', ['draft', 'published'])
-            ->orderBy('year', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         $commission->load(['members', 'competitions']);
-        $isOmladinskoCommission = $commission->assignedProfileType() === 'omladinsko';
+        $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
+        $isOmladinskoCommission = CommissionProfileConfig::usesThreeSeatSharedForm($existingProfile['type']);
+        $hasStoredProfile = $existingProfile['type'] !== null;
+        $allowsSharedMembershipMutation = $hasStoredProfile && ! $commission->isCanonicalProfile();
+        $supportedTypes = in_array($existingProfile['type'], CommissionProfileConfig::SUPPORTED_STORED_PROFILES, true)
+            ? [$existingProfile['type']]
+            : [];
 
-        return view('admin.commissions.edit', compact('commission', 'competitions', 'isOmladinskoCommission'));
+        $competitions = $supportedTypes === []
+            ? collect()
+            : Competition::query()
+                ->whereIn('type', $supportedTypes)
+                ->where(function ($query) use ($commission) {
+                    $query->whereIn('status', ['draft', 'published'])
+                        ->orWhere('commission_id', $commission->id);
+                })
+                ->with('commission')
+                ->orderBy('year', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+        return view('admin.commissions.edit', compact(
+            'commission',
+            'competitions',
+            'isOmladinskoCommission',
+            'allowsSharedMembershipMutation',
+            'hasStoredProfile'
+        ));
     }
 
     /**
@@ -1803,6 +2007,35 @@ class AdminController extends Controller
         if ($startDate) {
             $start = \Carbon\Carbon::parse($startDate);
             $endDate = $start->copy()->addYears(1)->format('Y-m-d');
+            $request->merge(['end_date' => $endDate]);
+        }
+
+        $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
+        if ($existingProfile['error']) {
+            return back()->withErrors(['competition_type' => $existingProfile['error']])->withInput();
+        }
+
+        $forgedType = $request->input('competition_type');
+        if ($forgedType !== null && $forgedType !== '') {
+            if ((string) $forgedType !== $existingProfile['type']) {
+                return back()->withErrors([
+                    'competition_type' => CommissionProfileConfig::PROFILE_CHANGE_REJECTED_MESSAGE,
+                ])->withInput();
+            }
+        }
+        $request->request->remove('competition_type');
+
+        $requestedCompetitionIds = collect($request->input('competition_ids', []))
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+        $assignmentError = CommissionProfileConfig::selectedCompetitionsMatchProfile(
+            $requestedCompetitionIds,
+            $existingProfile['type']
+        );
+        if ($assignmentError) {
+            return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
         }
 
         $validated = $request->validate([
@@ -1813,17 +2046,14 @@ class AdminController extends Controller
             'status' => 'required|in:active,inactive',
             'competition_ids' => 'nullable|array',
             'competition_ids.*' => 'exists:competitions,id',
+        ], [
+            'competition_ids.*.exists' => CommissionProfileConfig::UNKNOWN_COMPETITION_ASSIGNMENT_MESSAGE,
         ]);
 
         $validated['end_date'] = $endDate ?? $validated['end_date'];
 
-        $newIds = collect($validated['competition_ids'] ?? [])->map(fn ($id) => (int) $id)->all();
+        $newIds = collect($validated['competition_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
         $currentlyAssigned = Competition::where('commission_id', $commission->id)->get();
-
-        $mixError = CommissionProfileConfig::homogeneousCompetitionTypes($newIds);
-        if ($mixError) {
-            return back()->withErrors(['competition_ids' => $mixError])->withInput();
-        }
 
         foreach ($currentlyAssigned as $assignedCompetition) {
             if (in_array((int) $assignedCompetition->id, $newIds, true)) {
@@ -1835,39 +2065,33 @@ class AdminController extends Controller
             }
         }
 
-        if ($newIds !== []) {
-            $targets = Competition::whereIn('id', $newIds)->get();
-            foreach ($targets as $assignedCompetition) {
-                $assignmentError = $assignedCompetition->commissionAssignmentChangeError((int) $commission->id);
-                if ($assignmentError) {
-                    return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
-                }
+        $targets = Competition::whereIn('id', $newIds)->get();
+        foreach ($targets as $assignedCompetition) {
+            $assignmentError = $assignedCompetition->commissionAssignmentChangeError((int) $commission->id);
+            if ($assignmentError) {
+                return back()->withErrors(['competition_ids' => $assignmentError])->withInput();
             }
         }
 
-        $commission->update([
-            'name' => $validated['name'],
-            'year' => $validated['year'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'status' => $validated['status'],
-        ]);
+        DB::transaction(function () use ($commission, $validated, $newIds) {
+            $commission->update([
+                'name' => $validated['name'],
+                'year' => $validated['year'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'status' => $validated['status'],
+            ]);
 
-        // Ažuriraj dodjelu konkursa
-        // Prvo ukloni dodjelu sa svih konkursa koji su bili dodijeljeni ovoj komisiji
-        Competition::where('commission_id', $commission->id)
-            ->update(['commission_id' => null]);
+            Competition::where('commission_id', $commission->id)
+                ->update(['commission_id' => null]);
 
-        // Zatim dodijeli izabrane konkursa ovoj komisiji
-        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
-            Competition::whereIn('id', $validated['competition_ids'])
+            Competition::whereIn('id', $newIds)
                 ->update(['commission_id' => $commission->id]);
+        });
 
-            // Obavijesti članove komisije o (ponovno) dodijeljenim konkursima
-            $assignedCompetitions = Competition::whereIn('id', $validated['competition_ids'])->get();
-            foreach ($assignedCompetitions as $assignedCompetition) {
-                $this->notifyCommissionMembersAboutCompetition($commission, $assignedCompetition);
-            }
+        $assignedCompetitions = Competition::whereIn('id', $newIds)->get();
+        foreach ($assignedCompetitions as $assignedCompetition) {
+            $this->notifyCommissionMembersAboutCompetition($commission->fresh('activeMembers.user'), $assignedCompetition);
         }
 
         return redirect()->route('admin.commissions.show', $commission)
@@ -1879,6 +2103,10 @@ class AdminController extends Controller
      */
     public function destroyCommission(Commission $commission)
     {
+        if ($commission->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        }
+
         // Brisanje komisije će automatski obrisati sve članove komisije zbog cascade delete
         // Takođe, treba proveriti da li postoje ocjene povezane sa ovom komisijom
         $commissionName = $commission->name;
@@ -1894,6 +2122,10 @@ class AdminController extends Controller
      */
     public function addCommissionMember(Request $request, Commission $commission)
     {
+        if ($commission->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
+        }
+
         $isSubstituteRequest = $request->input('member_type') === 'zamjenski';
         $mandateInactiveMessage = $isSubstituteRequest
             ? 'Mandat komisije nije aktivan. Nije moguće dodavanje zamjenskog člana.'
@@ -1905,7 +2137,11 @@ class AdminController extends Controller
         }
 
         $commission->loadMissing(['members', 'competitions']);
-        $isOmladinskoCommission = $commission->assignedProfileType() === 'omladinsko';
+        $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
+        if ($existingProfile['error']) {
+            return back()->withErrors(['error' => $existingProfile['error']])->withInput();
+        }
+        $isOmladinskoCommission = $existingProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
         $allowedSubstituteSlots = $isOmladinskoCommission ? '1,2,3' : '1,2,3,4,5';
         $maxRegulars = $isOmladinskoCommission ? 3 : 5;
 
@@ -2093,7 +2329,10 @@ class AdminController extends Controller
                 if ($isSubstitute && $replacedMember) {
                     $replacedForMail = $replacedMember;
                 }
-                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member, $replacedForMail));
+                $appointmentMailCopy = CommissionAppointmentMailCopy::fromStoredCommissionProfile(
+                    $commission->profile_type
+                );
+                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member, $appointmentMailCopy, $replacedForMail));
             } catch (\Throwable $e) {
                 // Ne prekidaj tok zbog mail greške
             }
@@ -2133,6 +2372,8 @@ class AdminController extends Controller
      */
     public function signDeclarations(CommissionMember $member)
     {
+        LegacyCommissionFlowGuard::abortUnlessCommissionAllowed($member->commission);
+
         return view('admin.commissions.sign-declarations', compact('member'));
     }
 
@@ -2141,6 +2382,8 @@ class AdminController extends Controller
      */
     public function storeDeclarations(Request $request, CommissionMember $member)
     {
+        LegacyCommissionFlowGuard::abortUnlessCommissionAllowed($member->commission);
+
         $validated = $request->validate([
             'confidentiality_declaration' => 'required|string',
             'conflict_of_interest_declaration' => 'required|string',
@@ -2164,6 +2407,10 @@ class AdminController extends Controller
      */
     public function updateMemberStatus(Request $request, CommissionMember $member)
     {
+        if ($member->commission?->isCanonicalProfile()) {
+            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        }
+
         if (! empty($member->is_substitute)) {
             return back()->withErrors([
                 'error' => 'Status zamjenskog člana nije moguće mijenjati ručno. Uklonite zamjenskog člana da biste završili zamjenu.',
@@ -2185,6 +2432,10 @@ class AdminController extends Controller
     public function deleteMember(CommissionMember $member)
     {
         $commission = $member->commission;
+        if ($commission->isCanonicalProfile()) {
+            return redirect()->route('admin.commissions.show', $commission)
+                ->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        }
         $commission->loadMissing(['members', 'competitions']);
 
         $isSubstitute = ! empty($member->is_substitute);
@@ -2246,7 +2497,7 @@ class AdminController extends Controller
     {
         $commission->loadMissing('members');
 
-        if ($commission->assignedProfileType() === 'omladinsko') {
+        if (CommissionProfileConfig::usesThreeSeatSharedForm($commission->assignedProfileType())) {
             return $commission->members
                 ->filter(function (CommissionMember $member) use ($slot, $onlyActive) {
                     if (! empty($member->is_substitute)) {
@@ -2391,6 +2642,10 @@ class AdminController extends Controller
     {
         if ($competition->isOmladinskoProfile()) {
             abort(403, \App\Services\CanonicalIndividualScoringService::YOUTH_ADMIN_RANKING_ROUTE_MESSAGE);
+        }
+
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::CANONICAL_ADMIN_RANKING_ROUTE_MESSAGE);
         }
 
         $competition->load('upNumber');
@@ -2545,6 +2800,14 @@ class AdminController extends Controller
      */
     public function selectWinners(Request $request, Competition $competition)
     {
+        if ($competition->isOmladinskoProfile()) {
+            abort(403, \App\Services\Competitions\YouthAllocationDraftService::WOMEN_SELECT_WINNERS_CLOSED_MESSAGE);
+        }
+
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE);
+        }
+
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
@@ -2637,6 +2900,14 @@ class AdminController extends Controller
      */
     public function generateDecision(Competition $competition)
     {
+        if ($competition->isOmladinskoProfile()) {
+            abort(403, \App\Services\Competitions\YouthAllocationDraftService::WOMEN_PREDLOG_CLOSED_MESSAGE);
+        }
+
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, \App\Services\CanonicalIndividualScoringService::CANONICAL_OUTCOME_NOT_ACTIVE_MESSAGE);
+        }
+
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';

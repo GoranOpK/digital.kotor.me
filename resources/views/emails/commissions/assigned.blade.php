@@ -2,15 +2,15 @@
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
-    <title>Imenovanje u Komisiju za podršku ženskom preduzetništvu</title>
+    <title>{{ $copy->htmlTitle() }}</title>
 </head>
 <body style="font-family: Arial, sans-serif; font-size: 14px; color: #111827;">
     <p>Poštovani/a {{ $member->name }},</p>
 
     <p>
         Obavještavamo Vas da ste imenovani za člana
-        <strong>Komisije za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu</strong>
-        za sljedeći konkurs:
+        <strong>{{ $copy->assignedCommissionPhrase() }}</strong>
+        {{ $copy->assignedCallPhrase() }}
     </p>
 
     <p style="margin-left: 16px;">
@@ -25,7 +25,7 @@
     </p>
 
     <p>
-        Molimo Vas da se prijavite na sistem za podršku ženskom preduzetništvu Opštine Kotor
+        Molimo Vas da se prijavite na {{ $copy->loginSystemPhrase() }}
         kako biste imali uvid u dodijeljene konkurse i prijave.
     </p>
 
@@ -35,8 +35,7 @@
 
     <p>Sa poštovanjem,<br>
         Opština Kotor<br>
-        Sistem za podršku ženskom preduzetništvu
+        {{ $copy->signatureSystemPhrase() }}
     </p>
 </body>
 </html>
-

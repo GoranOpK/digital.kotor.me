@@ -41,13 +41,28 @@ class EliminatoryProfileConfigTest extends TestCase
         $this->assertStringNotContainsString('članu 10 Odluke', $profile->statement(3));
     }
 
-    public function test_omladinsko_criterion_3_statement_unchanged(): void
+    public function test_omladinsko_criterion_3_statement_uses_article_12_question(): void
     {
         $profile = EliminatoryProfileConfig::for('omladinsko');
         $statement = $profile->statement(3);
 
-        $this->assertStringContainsString('člana 12 Odluke o mladima', $statement);
+        $this->assertSame(
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?',
+            $statement
+        );
         $this->assertStringNotContainsString('članu 11 Odluke', $statement);
         $this->assertStringNotContainsString('članu 10 Odluke', $statement);
+    }
+
+    public function test_omladinsko_criteria_use_da_ne_questions(): void
+    {
+        $profile = EliminatoryProfileConfig::for('omladinsko');
+
+        $this->assertSame('Dostavljena je potpuna dokumentacija?', $profile->statement(1));
+        $this->assertSame('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $profile->statement(2));
+        $this->assertSame('Da', $profile->optionPassLabel(1));
+        $this->assertSame('Ne*', $profile->optionFailLabel(1));
+        $this->assertSame('Da', $profile->passLabel);
+        $this->assertSame('Ne*', $profile->failLabel);
     }
 }

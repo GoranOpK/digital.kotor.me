@@ -233,15 +233,25 @@
 
 <div class="admin-page">
     <div class="container mx-auto px-4">
+        @php
+            $hasStoredProfile = !empty($hasStoredProfile);
+            $commissionSeatCount = $hasStoredProfile ? ($commissionSeatCount ?? 5) : 0;
+            $isOmladinskoCommission = $hasStoredProfile && !empty($isOmladinskoCommission);
+            $allowsSharedMembershipMutation = $hasStoredProfile && !empty($allowsSharedMembershipMutation);
+        @endphp
         <div class="page-header">
             <h1>{{ $commission->name }}</h1>
             <div>
-                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmijeni</a>
+                @if($hasStoredProfile)
+                    <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmijeni</a>
+                @endif
+                @if(!$commission->isCanonicalProfile())
                 <form action="{{ route('admin.commissions.destroy', $commission) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu komisiju? Ova akcija je nepovratna.');">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Obriši</button>
                 </form>
+                @endif
             </div>
         </div>
 
@@ -259,6 +269,12 @@
             </div>
         @endif
 
+        @if(!$hasStoredProfile)
+            <div class="alert alert-warning">
+                {{ \App\Support\CommissionProfileConfig::UNDETERMINED_COMMISSION_SHOW_MESSAGE }}
+            </div>
+        @endif
+
         <div class="info-grid">
             <!-- Osnovne informacije -->
             <div class="info-card">
@@ -268,7 +284,7 @@
                 <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
                 <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
                 <p><strong>Broj članova:</strong>
-                    {{ $commission->members->reject(fn($m) => !empty($m->is_substitute))->count() }} / 5
+                    {{ $commission->members->reject(fn($m) => !empty($m->is_substitute))->count() }}@if($hasStoredProfile) / {{ $commissionSeatCount }}@endif
                     @if($commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active')) + 1 zamjenski @endif
                 </p>
             </div>
@@ -312,6 +328,27 @@
         <div class="info-card">
             <h2>Sastav komisije</h2>
 
+            @if(!$hasStoredProfile)
+                @forelse($commission->members as $member)
+                    <div class="member-item">
+                        <div class="member-info">
+                            <div class="member-name">{{ $member->name }}</div>
+                            <div class="member-details">
+                                <div>Pozicija: {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član' }}</div>
+                                <div>Status: {{ $member->status === 'active' ? 'Aktivan' : $member->status }}</div>
+                                @if($member->organization)
+                                    <div>Organizacija: {{ $member->organization }}</div>
+                                @endif
+                                @if($member->user)
+                                    <div>E-mail: {{ $member->user->email }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <p style="color: #6b7280;">Nema sačuvanih članova.</p>
+                @endforelse
+            @else
             @foreach($compositionSlots as $compositionSlot)
                 @php
                     $regularMember = $compositionSlot['regular_member'];
@@ -366,6 +403,7 @@
                                 <br>E-mail: {{ $regularMember->user->email }}
                             @endif
                         </div>
+                        @if($allowsSharedMembershipMutation)
                         <div class="composition-slot-actions">
                             <form method="POST" action="{{ route('admin.commissions.members.delete', $regularMember) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                 @csrf
@@ -373,20 +411,20 @@
                                 <button type="submit" class="btn-sm btn-danger">Obriši</button>
                             </form>
                         </div>
+                        @endif
                     @else
                         <div class="composition-slot-name" style="color: #9ca3af; font-weight: 500;">Nije dodijeljen</div>
                     @endif
                 </div>
             @endforeach
+            @endif
 
             <!-- Forma za dodavanje člana -->
             @php
                 $regularMembersCount = $commission->members->reject(fn($m) => !empty($m->is_substitute))->count();
                 $hasActiveSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
-                $commissionSeatCount = $commissionSeatCount ?? 5;
-                $isOmladinskoCommission = $isOmladinskoCommission ?? false;
             @endphp
-            @if($regularMembersCount < $commissionSeatCount)
+            @if($allowsSharedMembershipMutation && $regularMembersCount < $commissionSeatCount)
             <div class="form-card">
                 <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Dodaj novog člana</h3>
                 <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}">
@@ -490,7 +528,7 @@
                     <button type="submit" class="btn-sm btn-success">Dodaj člana</button>
                 </form>
             </div>
-            @else
+            @elseif($hasStoredProfile && $allowsSharedMembershipMutation)
                 <div class="alert alert-warning">
                     Komisija je popunjena ({{ $regularMembersCount }}/{{ $commissionSeatCount }} redovnih članova).
                     @if(!$hasActiveSubstituteMember)

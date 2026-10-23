@@ -58,11 +58,11 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         );
 
         $snapshot = implode("\n", array_merge($notice->reasons_snapshot ?? [], [$notice->note_snapshot]));
-        $this->assertStringContainsString('dokumentacija je nepotpuna', $snapshot);
-        $this->assertStringContainsString('raniji korisnik nije dostavio M4/M4a', $snapshot);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $snapshot);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $snapshot);
         $this->assertStringContainsString('Nedostaje izvod', $snapshot);
         $this->assertStringContainsString('Nema M4', $snapshot);
-        $this->assertStringNotContainsString('biznis plan nije povezan', $snapshot);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $snapshot);
         $this->assertStringNotContainsString(trim(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX), $snapshot);
         $this->assertStringNotContainsString('{', (string) $notice->note_snapshot);
         $this->assertStringNotContainsString('član 10', $snapshot);
@@ -73,7 +73,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             $html = $mail->render();
 
             $this->assertTrue($mail->application->is($application));
-            $this->assertStringContainsString('dokumentacija je nepotpuna', $html);
+            $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
             $this->assertStringContainsString('Nedostaje izvod', $html);
             $this->assertStringContainsString('isključivo putem Platforme', $html);
             $this->assertStringContainsString('Prigovor nije dopuna prijave', $html);
@@ -118,7 +118,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('dokumentacija je nepotpuna', $html);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
         $this->assertStringContainsString('Nedostaje izvod', $html);
         $this->assertStringContainsString('name="contested[]"', $html);
         $this->assertStringContainsString('name="criterion_obrazlozenja[1]"', $html);
@@ -676,6 +676,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
@@ -790,20 +791,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
      */
     private function makeYouthReadyContext(): array
     {
-        $ctx = $this->makeYouthContext();
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Prva sjednica',
-                'present_member_ids' => [$ctx['members'][0]->id, $ctx['members'][1]->id],
-            ]
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        return $ctx;
+        return $this->makeYouthContext();
     }
 
     /**
@@ -818,6 +806,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];

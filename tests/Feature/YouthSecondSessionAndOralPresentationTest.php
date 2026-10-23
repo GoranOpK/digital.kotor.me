@@ -15,9 +15,9 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Support\CommissionProfileConfig;
+use App\Support\ScoringProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Database\QueryException;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use PDOException;
@@ -37,119 +37,274 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         Mail::fake();
     }
 
-    public function test_second_session_confirms_with_three_present_and_rejects_two(): void
+    public function test_youth_second_session_routes_do_not_record_session_or_attendance(): void
     {
         $ctx = $this->youthWithPassedM3();
         $competition = $ctx['competition'];
-        $two = $this->secondPayload([$ctx['members'][0]->id, $ctx['members'][1]->id]);
+        $payload = $this->secondPayload($this->allMemberIds($ctx));
 
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $competition), $two)
-            ->assertRedirect(route('commission-sessions.second.edit', $competition));
-
-        $session = $competition->fresh()->secondCommissionSession();
-        $this->assertNotNull($session);
-        $this->assertTrue($session->isDraft());
-        $this->assertSame(CommissionSession::TYPE_SECOND, $session->session_type);
+            ->get(route('commission-sessions.second.edit', $competition))
+            ->assertRedirect(route('admin.competitions.show', $competition));
 
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.second.edit', $competition))
-            ->post(route('commission-sessions.second.confirm', $competition))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_SECOND_QUORUM_MESSAGE, session('errors')->first('session'));
-        $this->assertTrue($session->fresh()->isDraft());
-
-        $this->actingAs($ctx['chairman']->user)->put(
-            route('commission-sessions.second.update', $competition),
-            $this->secondPayload($this->allMemberIds($ctx))
-        )->assertSessionHasNoErrors();
-
+            ->post(route('commission-sessions.second.store', $competition), $payload)
+            ->assertRedirect(route('admin.competitions.show', $competition));
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $competition))
-            ->assertSessionHasNoErrors();
+            ->put(route('commission-sessions.second.update', $competition), $payload)
+            ->assertRedirect(route('admin.competitions.show', $competition));
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.second.confirm', $competition), $payload)
+            ->assertRedirect(route('admin.competitions.show', $competition));
 
-        $session->refresh();
-        $this->assertTrue($session->isConfirmed());
-        $this->assertTrue($session->meetsSecondSessionAttendance($competition));
-        $this->assertSame(3, $session->validPresentCount($competition));
-        $this->assertSame(1, CommissionSession::query()->where('competition_id', $competition->id)->where('session_type', CommissionSession::TYPE_SECOND)->count());
-
-        $this->actingAs($ctx['chairman']->user)->put(
-            route('commission-sessions.second.update', $competition),
-            $this->secondPayload($this->allMemberIds($ctx))
-        )->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_LOCKED_MESSAGE, session('errors')->first('session'));
+        $this->assertNull($competition->fresh()->firstCommissionSession());
+        $this->assertNull($competition->fresh()->secondCommissionSession());
+        $this->assertSame(0, CommissionSession::query()->where('competition_id', $competition->id)->count());
     }
 
-    public function test_one_second_session_per_call_and_controlled_duplicate_message(): void
+    public function test_m3_pass_opens_scoring_while_sibling_appeal_window_is_open(): void
     {
         $ctx = $this->youthWithPassedM3();
+        $failed = $this->addSubmittedApplication($ctx['competition']);
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)))
-            ->assertSessionHasNoErrors();
+            ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
+            ->assertRedirect();
 
-        $duplicate = $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.second.edit', $ctx['competition']))
-            ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)));
-        $duplicate->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_SECOND_EXISTS_MESSAGE, session('errors')->first('session'));
-        $this->assertSame(1, CommissionSession::query()->where('competition_id', $ctx['competition']->id)->where('session_type', CommissionSession::TYPE_SECOND)->count());
+        $gate = app(\App\Services\YouthSecondSessionGate::class);
+        $this->assertTrue($gate->appealWindowIsOpen($failed->fresh()));
+        $this->assertFalse($gate->secondSessionMayStart($ctx['competition']->fresh()));
+        $this->assertSame(
+            CommissionProfileConfig::SESSION_SECOND_APPEAL_GATE_MESSAGE,
+            $gate->secondSessionBlockMessage($ctx['competition']->fresh())
+        );
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($failed->fresh()));
+        $this->assertFalse($gate->oralPresentationIsAllowed($failed->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse($gate->oralPresentationIsAllowed($ctx['application']->fresh()));
 
-        $race = $this->youthWithPassedM3();
-        $dispatcher = CommissionSession::getEventDispatcher();
-        $event = 'eloquent.creating: '.CommissionSession::class;
-        $listener = function () {
-            $previous = new PDOException(
-                'SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry for key \'commission_sessions_competition_type_unique\'',
-                23000
-            );
-            $previous->errorInfo = ['23000', 1062, 'Duplicate entry for key \'commission_sessions_competition_type_unique\''];
-            throw new UniqueConstraintViolationException('mysql', 'insert into `commission_sessions`', [], $previous);
-        };
-        $dispatcher->listen($event, $listener);
-        try {
-            $conflict = $this->actingAs($race['chairman']->user)
-                ->from(route('commission-sessions.second.edit', $race['competition']))
-                ->post(route('commission-sessions.second.store', $race['competition']), $this->secondPayload($this->allMemberIds($race)));
-            $conflict->assertStatus(302);
-            $conflict->assertSessionHasErrors('session');
-            $this->assertSame(CommissionProfileConfig::SESSION_SECOND_CONFLICT_MESSAGE, session('errors')->first('session'));
-            $this->assertSame(0, CommissionSession::query()->where('competition_id', $race['competition']->id)->where('session_type', CommissionSession::TYPE_SECOND)->count());
-        } finally {
-            $dispatcher->forget($event);
-        }
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->assertDontSee(ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE, false)
+            ->assertDontSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->where('commission_member_id', $ctx['chairman']->id)
+                ->whereNotNull('completed_at')
+                ->first()
+        );
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $failed))
+            ->assertOk()
+            ->assertSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $failed))
+            ->post(route('evaluation.store', $failed), $this->draftPayload())
+            ->assertForbidden();
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('commission-sessions.oral.edit', [$ctx['competition'], $ctx['application']]))
+            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
+                'scheduled_at' => now()->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertSame(0, ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('commission-sessions.second.edit', $ctx['competition']))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
     }
 
-    public function test_chairman_on_seats_one_two_or_three_can_confirm_second_session(): void
+    public function test_phase_opens_after_appeal_window_expires_without_prigovor(): void
     {
-        foreach ([1, 2, 3] as $chairSeat) {
-            $ctx = $this->makeYouthContext();
-            foreach ($ctx['members'] as $index => $member) {
-                $member->update(['position' => ($index + 1) === $chairSeat ? 'predsjednik' : 'clan']);
-            }
-            $chairman = $ctx['members'][$chairSeat - 1]->fresh('user');
-            $this->actingAs($chairman->user)->post(
-                route('commission-sessions.first.store', $ctx['competition']),
-                $this->firstPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-            )->assertSessionHasNoErrors();
-            $this->actingAs($chairman->user)
-                ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-                ->assertSessionHasNoErrors();
-            $this->actingAs($chairman->user)
-                ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $this->youthPassPayload())
-                ->assertRedirect();
+        $ctx = $this->youthWithPassedM3();
+        $failed = $this->addSubmittedApplication($ctx['competition']);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
+            ->assertRedirect();
+        $failed->fresh()->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
 
-            $this->actingAs($chairman->user)
-                ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)))
-                ->assertSessionHasNoErrors();
-            $this->actingAs($chairman->user)
-                ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-                ->assertSessionHasNoErrors();
-            $this->assertTrue($ctx['competition']->fresh()->secondCommissionSession()->isConfirmed());
-        }
+        $gate = app(\App\Services\YouthSecondSessionGate::class);
+        $this->assertFalse($gate->appealWindowIsOpen($failed->fresh()));
+        $this->assertTrue($gate->secondSessionMayStart($ctx['competition']->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertTrue($gate->oralPresentationIsAllowed($ctx['application']->fresh()));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
+                'scheduled_at' => now()->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertNull($ctx['application']->fresh()->oralPresentation);
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
     }
 
-    public function test_ordinary_admin_other_commission_inactive_chairman_and_zensko_cannot_mutate_second_session(): void
+    public function test_unresolved_prigovor_on_sibling_does_not_block_draft_but_blocks_oral(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $failed = $this->addSubmittedApplication($ctx['competition']);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
+            ->assertRedirect();
+        $this->actingAs($failed->user)->post(route('applications.prigovor.store', $failed), [
+            'contested' => [1, 2],
+            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+        ])->assertRedirect();
+        $failed->fresh()->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
+        $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
+
+        $gate = app(\App\Services\YouthSecondSessionGate::class);
+        $this->assertFalse($gate->secondSessionMayStart($ctx['competition']->fresh()));
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($failed->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse($gate->oralPresentationIsAllowed($ctx['application']->fresh()));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $ctx['application']->id)
+                ->whereNotNull('completed_at')
+                ->first()
+        );
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
+                'scheduled_at' => now()->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertSame(0, ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
+    }
+
+    public function test_active_eliminatory_reason_blocks_scoring_until_accepted_prigovor_lifts_all_reasons(): void
+    {
+        $ctx = $this->confirmYouthFail();
+        $application = $ctx['application']->fresh();
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertSee(ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.store', $application), $this->draftPayload())
+            ->assertForbidden();
+
+        $this->actingAs($application->user)->post(route('applications.prigovor.store', $application), [
+            'contested' => [1, 2],
+            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+        ])->assertRedirect();
+        $this->assertTrue($application->fresh()->prigovor->isPodnesen());
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $application), $this->draftPayload())
+            ->assertForbidden();
+
+        $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $application), [
+            'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
+            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+        ])->assertRedirect();
+
+        $application = $application->fresh();
+        $this->assertTrue($application->prigovor->liftsEliminatoryBar());
+        $this->assertTrue(app(\App\Services\YouthSecondSessionGate::class)->appealWindowIsOpen($application));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertDontSee(ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE, false);
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.store', $application), $this->finalPayload())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $application->id)
+                ->whereNotNull('completed_at')
+                ->first()
+        );
+    }
+
+    public function test_favorable_final_prigovor_opens_scoring_and_oral_without_session_record(): void
+    {
+        $ctx = $this->confirmYouthFail();
+        $this->actingAs($ctx['application']->user)->post(route('applications.prigovor.store', $ctx['application']), [
+            'contested' => [1, 2],
+            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+        ])->assertRedirect();
+        $ctx['application']->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
+        $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $ctx['application']), [
+            'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
+            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+        ])->assertRedirect();
+
+        $application = $ctx['application']->fresh();
+        $this->assertTrue($application->prigovor->liftsEliminatoryBar());
+        $this->assertSame('submitted', $application->status);
+        $this->assertTrue(app(\App\Services\YouthSecondSessionGate::class)->secondSessionMayStart($ctx['competition']->fresh()));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $application]), [
+                'scheduled_at' => now()->format('Y-m-d H:i:s'),
+                'applicant_attended' => '1',
+                'held_at' => now()->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertNull($application->fresh()->oralPresentation);
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
+        $this->assertSame(0, \App\Models\CommissionSessionAttendance::query()->count());
+    }
+
+    public function test_oral_completes_without_recorded_second_session_and_allows_multiple_orals(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $secondApp = $this->addSubmittedApplication($ctx['competition']);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $secondApp), $this->youthPassPayload())
+            ->assertRedirect();
+
+        $this->assertNull($ctx['competition']->fresh()->secondCommissionSession());
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
+                'scheduled_at' => now()->addDay()->format('Y-m-d H:i:s'),
+                'notes' => 'Plan',
+            ])
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $this->oralCompletePayload(true))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $secondApp]), [
+                'scheduled_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $secondApp]), $this->oralCompletePayload(true))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+
+        $this->assertSame(0, ApplicationOralPresentation::query()->count());
+        $this->assertNull($ctx['application']->fresh()->oralPresentation);
+        $this->assertNull($secondApp->fresh()->oralPresentation);
+        $this->assertSame(0, \App\Models\CommissionSessionAttendance::query()->count());
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+    }
+
+    public function test_ordinary_admin_other_commission_inactive_chairman_and_zensko_cannot_open_oral_hub(): void
     {
         $ctx = $this->youthWithPassedM3();
         $payload = $this->secondPayload($this->allMemberIds($ctx));
@@ -158,7 +313,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             ->post(route('commission-sessions.second.store', $ctx['competition']), $payload)
             ->assertForbidden();
         $this->actingAs($this->userWithRole('konkurs_admin'))
-            ->post(route('commission-sessions.second.store', $ctx['competition']), $payload)
+            ->get(route('commission-sessions.second.edit', $ctx['competition']))
             ->assertForbidden();
         $this->actingAs($ctx['members'][1]->user)
             ->post(route('commission-sessions.second.store', $ctx['competition']), $payload)
@@ -201,111 +356,45 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         ]);
 
         $this->actingAs($a['chairman']->user)
-            ->post(route('commission-sessions.second.store', $b['competition']), $this->secondPayload($this->allMemberIds($b)))
+            ->get(route('commission-sessions.second.edit', $b['competition']))
             ->assertForbidden();
-        $this->assertNull($b['competition']->fresh()->secondCommissionSession());
+        $this->actingAs($a['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$b['competition'], $b['application']]), ['notes' => 'idor'])
+            ->assertForbidden();
 
         $this->actingAs($a['chairman']->user)
-            ->post(route('commission-sessions.second.store', $a['competition']), $this->secondPayload($this->allMemberIds($a)))
-            ->assertSessionHasNoErrors();
-        $this->assertNotNull($a['competition']->fresh()->secondCommissionSession());
+            ->get(route('commission-sessions.second.edit', $a['competition']))
+            ->assertRedirect(route('admin.competitions.show', $a['competition']));
+        $this->actingAs($a['chairman']->user)
+            ->post(route('commission-sessions.oral.store', [$a['competition'], $a['application']]), ['notes' => 'svoje'])
+            ->assertRedirect(route('admin.competitions.show', $a['competition']));
+        $this->assertNull($a['application']->fresh()->oralPresentation);
+        $this->assertNull($b['application']->fresh()->oralPresentation);
+        $this->assertSame(0, ApplicationOralPresentation::query()->count());
     }
 
-    public function test_open_appeal_window_and_podnesen_prigovor_block_second_session(): void
+    public function test_chairman_on_seats_one_two_or_three_can_open_oral_hub(): void
     {
-        $open = $this->confirmYouthFail();
-        $this->assertTrue(app(\App\Services\YouthSecondSessionGate::class)->appealWindowIsOpen($open['application']->fresh()));
-        $this->actingAs($open['chairman']->user)
-            ->from(route('commission-sessions.second.edit', $open['competition']))
-            ->post(route('commission-sessions.second.store', $open['competition']), $this->secondPayload($this->allMemberIds($open)))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_SECOND_APPEAL_GATE_MESSAGE, session('errors')->first('session'));
-        $this->assertNull($open['competition']->fresh()->secondCommissionSession());
+        foreach ([1, 2, 3] as $chairSeat) {
+            $ctx = $this->makeYouthContext();
+            foreach ($ctx['members'] as $index => $member) {
+                $member->update(['position' => ($index + 1) === $chairSeat ? 'predsjednik' : 'clan']);
+            }
+            $chairman = $ctx['members'][$chairSeat - 1]->fresh('user');
+            $this->actingAs($chairman->user)
+                ->post(route('evaluation.eliminatory.confirm', $ctx['application']), $this->youthPassPayload())
+                ->assertRedirect();
 
-        $podnesen = $this->confirmYouthFail();
-        $this->actingAs($podnesen['application']->user)->post(route('applications.prigovor.store', $podnesen['application']), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
-        ])->assertRedirect();
-        $podnesen['application']->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
-        $this->assertTrue($podnesen['application']->fresh()->prigovor->isPodnesen());
-        $this->actingAs($podnesen['chairman']->user)
-            ->post(route('commission-sessions.second.store', $podnesen['competition']), $this->secondPayload($this->allMemberIds($podnesen)))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_SECOND_APPEAL_GATE_MESSAGE, session('errors')->first('session'));
-    }
-
-    public function test_favorable_final_prigovor_enables_oral_after_confirmed_second_session(): void
-    {
-        $ctx = $this->confirmYouthFail();
-        $this->actingAs($ctx['application']->user)->post(route('applications.prigovor.store', $ctx['application']), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
-        ])->assertRedirect();
-        $ctx['application']->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
-        $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $ctx['application']), [
-            'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
-            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
-        ])->assertRedirect();
-
-        $application = $ctx['application']->fresh();
-        $this->assertTrue($application->prigovor->liftsEliminatoryBar());
-        $this->assertSame('submitted', $application->status);
-
-        $this->confirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, attended: true);
-        $this->assertTrue($application->fresh()->oralPresentation->isCompleted());
-        $this->assertTrue($application->fresh()->oralPresentation->applicantAttended());
-        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
-    }
-
-    public function test_oral_requires_confirmed_second_session_and_allows_multiple_orals(): void
-    {
-        $ctx = $this->youthWithPassedM3();
-        $secondApp = $this->addSubmittedApplication($ctx['competition']);
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.eliminatory.confirm', $secondApp), $this->youthPassPayload())
-            ->assertRedirect();
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)))
-            ->assertSessionHasNoErrors();
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
-                'scheduled_at' => now()->addDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Plan',
-            ])->assertSessionHasNoErrors();
-
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.oral.edit', [$ctx['competition'], $ctx['application']]))
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $this->oralCompletePayload(true))
-            ->assertSessionHasErrors('oral');
-        $this->assertSame(CommissionProfileConfig::ORAL_SESSION_NOT_CONFIRMED_MESSAGE, session('errors')->first('oral'));
-        $this->assertTrue($ctx['application']->fresh()->oralPresentation->isDraft());
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-        $this->assertTrue($ctx['competition']->fresh()->secondCommissionSession()->isConfirmed());
-        $this->assertTrue($ctx['application']->fresh()->oralPresentation->isDraft());
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $this->oralCompletePayload(true))
-            ->assertSessionHasNoErrors();
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $secondApp]), [
-                'scheduled_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $secondApp]), $this->oralCompletePayload(true))
-            ->assertSessionHasNoErrors();
-
-        $sessionId = $ctx['competition']->fresh()->secondCommissionSession()->id;
-        $this->assertSame(2, ApplicationOralPresentation::query()->where('commission_session_id', $sessionId)->count());
-        $this->assertTrue($ctx['application']->fresh()->oralPresentation->isCompleted());
-        $this->assertTrue($secondApp->fresh()->oralPresentation->isCompleted());
+            $this->actingAs($chairman->user)
+                ->get(route('commission-sessions.second.edit', $ctx['competition']))
+                ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+            $this->actingAs($chairman->user)
+                ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
+                    'scheduled_at' => now()->format('Y-m-d H:i:s'),
+                ])
+                ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+            $this->assertSame(0, ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
+        }
     }
 
     public function test_attendance_and_no_show_do_not_reject_or_score_and_lock_completed_record(): void
@@ -314,19 +403,20 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $ctx['application']->update(['interview_scheduled_at' => '2026-04-01 10:00:00']);
         $interview = $ctx['application']->fresh()->interview_scheduled_at?->toDateTimeString();
 
-        $this->storeAndCompleteOral($ctx, attended: true);
-        $oral = $ctx['application']->fresh()->oralPresentation;
-        $this->assertTrue($oral->applicantAttended());
-        $this->assertNotNull($oral->held_at);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $this->oralCompletePayload(true))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertNull($ctx['application']->fresh()->oralPresentation);
         $this->assertSame('submitted', $ctx['application']->fresh()->status);
         $this->assertSame($interview, $ctx['application']->fresh()->interview_scheduled_at?->toDateTimeString());
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
 
         $noShow = $this->youthWithConfirmedSecond();
         $noShow['application']->update(['interview_scheduled_at' => '2026-05-01 09:00:00']);
-        $this->storeAndCompleteOral($noShow, attended: false);
-        $record = $noShow['application']->fresh()->oralPresentation;
-        $this->assertTrue($record->isNoShow());
+        $this->actingAs($noShow['chairman']->user)
+            ->post(route('commission-sessions.oral.complete', [$noShow['competition'], $noShow['application']]), $this->oralCompletePayload(false))
+            ->assertRedirect(route('admin.competitions.show', $noShow['competition']));
+        $this->assertNull($noShow['application']->fresh()->oralPresentation);
         $this->assertSame('submitted', $noShow['application']->fresh()->status);
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $noShow['application']->id)->count());
         $this->assertSame(0, ApplicationScore::query()->where('application_id', $noShow['application']->id)->count());
@@ -339,14 +429,11 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $this->actingAs($noShow['chairman']->user)->put(
             route('commission-sessions.oral.update', [$noShow['competition'], $noShow['application']]),
             ['notes' => 'kasnije']
-        )->assertSessionHasErrors('oral');
-        $this->assertSame(CommissionProfileConfig::ORAL_LOCKED_MESSAGE, session('errors')->first('oral'));
+        )->assertRedirect(route('admin.competitions.show', $noShow['competition']));
         $this->actingAs($noShow['chairman']->user)
             ->post(route('commission-sessions.oral.complete', [$noShow['competition'], $noShow['application']]), $this->oralCompletePayload(false))
-            ->assertSessionHasErrors('oral');
-        $this->assertSame(CommissionProfileConfig::ORAL_LOCKED_MESSAGE, session('errors')->first('oral'));
-        $this->assertSame('Usmeno locked', $noShow['application']->fresh()->oralPresentation->notes);
-        $this->assertTrue($noShow['application']->fresh()->oralPresentation->isCompleted());
+            ->assertRedirect(route('admin.competitions.show', $noShow['competition']));
+        $this->assertSame(0, ApplicationOralPresentation::query()->count());
     }
 
     public function test_duplicate_oral_idor_and_rejected_application_are_blocked(): void
@@ -354,34 +441,11 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $ctx = $this->youthWithConfirmedSecond();
         $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), ['notes' => 'prvi'])
-            ->assertSessionHasNoErrors();
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
         $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), ['notes' => 'drugi'])
-            ->assertSessionHasErrors('oral');
-        $this->assertSame(CommissionProfileConfig::ORAL_EXISTS_MESSAGE, session('errors')->first('oral'));
-        $this->assertSame(1, ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
-
-        $race = $this->youthWithConfirmedSecond();
-        $dispatcher = ApplicationOralPresentation::getEventDispatcher();
-        $event = 'eloquent.creating: '.ApplicationOralPresentation::class;
-        $listener = function () {
-            $previous = new PDOException(
-                'SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry for key \'application_oral_presentations_application_id_unique\'',
-                23000
-            );
-            $previous->errorInfo = ['23000', 1062, 'Duplicate entry for key \'application_oral_presentations_application_id_unique\''];
-            throw new UniqueConstraintViolationException('mysql', 'insert into `application_oral_presentations`', [], $previous);
-        };
-        $dispatcher->listen($event, $listener);
-        try {
-            $conflict = $this->actingAs($race['chairman']->user)
-                ->from(route('commission-sessions.oral.edit', [$race['competition'], $race['application']]))
-                ->post(route('commission-sessions.oral.store', [$race['competition'], $race['application']]), ['notes' => 'trka']);
-            $conflict->assertSessionHasErrors('oral');
-            $this->assertSame(CommissionProfileConfig::ORAL_CONFLICT_MESSAGE, session('errors')->first('oral'));
-        } finally {
-            $dispatcher->forget($event);
-        }
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertSame(0, ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
 
         $foreign = $this->youthWithConfirmedSecond();
         $this->actingAs($ctx['chairman']->user)
@@ -395,11 +459,11 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $rejected['application']->update(['status' => 'rejected']);
         $this->actingAs($rejected['chairman']->user)
             ->post(route('commission-sessions.oral.store', [$rejected['competition'], $rejected['application']]), ['notes' => 'odbijena'])
-            ->assertSessionHasErrors('oral');
-        $this->assertSame(0, ApplicationOralPresentation::query()->where('application_id', $rejected['application']->id)->count());
+            ->assertRedirect(route('admin.competitions.show', $rejected['competition']));
+        $this->assertSame(0, ApplicationOralPresentation::query()->count());
     }
 
-    public function test_unrecognized_database_errors_are_not_swallowed_for_oral_insert(): void
+    public function test_oral_routes_do_not_write_records_even_when_a_creating_listener_would_fail(): void
     {
         $otherError = $this->youthWithConfirmedSecond();
         $dispatcher = ApplicationOralPresentation::getEventDispatcher();
@@ -411,53 +475,86 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         };
         $dispatcher->listen($event, $otherListener);
         try {
-            $this->withoutExceptionHandling();
-            $this->expectException(QueryException::class);
             $this->actingAs($otherError['chairman']->user)
-                ->post(route('commission-sessions.oral.store', [$otherError['competition'], $otherError['application']]), ['notes' => 'db']);
+                ->post(route('commission-sessions.oral.store', [$otherError['competition'], $otherError['application']]), ['notes' => 'db'])
+                ->assertRedirect(route('admin.competitions.show', $otherError['competition']));
+            $this->assertSame(0, ApplicationOralPresentation::query()->count());
         } finally {
             $dispatcher->forget($event);
         }
     }
 
-    public function test_seven_day_deadline_is_displayed_and_late_entry_is_allowed(): void
+    public function test_historical_first_session_is_kept_and_does_not_open_session_form(): void
     {
         $ctx = $this->youthWithPassedM3();
-        $first = $ctx['competition']->firstCommissionSession();
-        $first->update(['held_at' => now()->subDays(10)]);
-        $deadline = $first->fresh()->held_at->copy()->addDays(7)->format('d.m.Y H:i');
+        CommissionSession::create([
+            'competition_id' => $ctx['competition']->id,
+            'commission_id' => $ctx['competition']->commission_id,
+            'session_type' => CommissionSession::TYPE_FIRST,
+            'held_at' => now()->subDays(10),
+            'completed_at' => now()->subDays(10),
+            'recorded_by_user_id' => $ctx['chairman']->user_id,
+            'notes' => 'Istorijska prva sjednica',
+        ]);
 
         $this->actingAs($ctx['chairman']->user)
             ->get(route('commission-sessions.second.edit', $ctx['competition']))
-            ->assertOk()
-            ->assertSee('Rok od 7 dana od prve sjednice', false)
-            ->assertSee($deadline, false)
-            ->assertSee('prekoračen', false);
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)))
-            ->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-        $this->assertTrue($ctx['competition']->fresh()->secondCommissionSession()->isConfirmed());
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->assertNull($ctx['competition']->fresh()->secondCommissionSession());
+        $this->assertNotNull($ctx['competition']->fresh()->firstCommissionSession());
     }
 
-    public function test_youth_call_show_exposes_second_session_status_and_zensko_show_does_not(): void
+    public function test_youth_call_show_exposes_oral_hub_and_zensko_show_does_not(): void
     {
         $ctx = $this->youthWithPassedM3();
         $response = $this->actingAs($ctx['chairman']->user)
             ->get(route('admin.competitions.show', $ctx['competition']))
             ->assertOk();
-        $response->assertSeeText('Druga sjednica: nije evidentirana');
-        $response->assertSee('Evidentiraj drugu sjednicu i usmeno predstavljanje', false);
+        $response->assertDontSee('Usmeno predstavljanje', false);
+        $response->assertDontSee('Evidencija usmenog', false);
+        $response->assertDontSee('Druga sjednica: nije evidentirana', false);
+        $response->assertDontSee('Evidentiraj drugu sjednicu', false);
+        $response->assertDontSee('Evidentiraj prvu sjednicu Komisije', false);
 
         $zensko = $this->makeZenskoCompetition();
         $this->actingAs($zensko['chairman']->user)
             ->get(route('admin.competitions.show', $zensko['competition']))
             ->assertOk()
-            ->assertDontSee('usmeno predstavljanje', false)
+            ->assertDontSee('Usmeno predstavljanje', false)
             ->assertDontSee('Druga sjednica', false);
+    }
+
+    public function test_zensko_first_session_recording_is_unchanged(): void
+    {
+        $zensko = $this->makeZenskoCompetition();
+        foreach ($zensko['members']->values() as $index => $member) {
+            $member->update(['canonical_seat_no' => $index + 1]);
+        }
+        $payload = $this->firstPayload($zensko['members']->pluck('id')->all());
+
+        $this->actingAs($zensko['chairman']->user)
+            ->get(route('commission-sessions.first.edit', $zensko['competition']))
+            ->assertOk()
+            ->assertSee('Evidencija prve sjednice', false);
+
+        $this->actingAs($zensko['chairman']->user)
+            ->post(route('commission-sessions.first.store', $zensko['competition']), $payload)
+            ->assertRedirect(route('commission-sessions.first.edit', $zensko['competition']))
+            ->assertSessionHasNoErrors();
+        $this->actingAs($zensko['chairman']->user)
+            ->post(route('commission-sessions.first.confirm', $zensko['competition']))
+            ->assertRedirect(route('commission-sessions.first.edit', $zensko['competition']))
+            ->assertSessionHasNoErrors();
+
+        $session = $zensko['competition']->fresh()->firstCommissionSession();
+        $this->assertNotNull($session);
+        $this->assertTrue($session->isConfirmed());
+        $this->assertSame(0, ApplicationOralPresentation::query()->count());
+        $this->assertNull($zensko['competition']->fresh()->secondCommissionSession());
     }
 
     /**
@@ -465,38 +562,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
      */
     private function youthWithConfirmedSecond(): array
     {
-        $ctx = $this->youthWithPassedM3();
-        $this->confirmSecond($ctx);
-
-        return $ctx;
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
-     */
-    private function confirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), $this->secondPayload($this->allMemberIds($ctx)))
-            ->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, application: Application}  $ctx
-     */
-    private function storeAndCompleteOral(array $ctx, bool $attended): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Usmeno locked',
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $this->oralCompletePayload($attended))
-            ->assertSessionHasNoErrors();
+        return $this->youthWithPassedM3();
     }
 
     /**
@@ -530,16 +596,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
      */
     private function makeYouthReadyContext(): array
     {
-        $ctx = $this->makeYouthContext();
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->firstPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        return $ctx;
+        return $this->makeYouthContext();
     }
 
     /**
@@ -554,6 +611,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];
@@ -621,6 +679,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
@@ -684,6 +743,22 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         return array_map(fn (CommissionMember $member) => $member->id, $ctx['members']);
     }
 
+    private function replaceSeat(CommissionMember $old, int $seat): CommissionMember
+    {
+        $old->update(['status' => 'inactive']);
+        $user = $this->userWithRole('komisija');
+
+        return CommissionMember::create([
+            'commission_id' => $old->commission_id,
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'position' => 'clan',
+            'member_type' => null,
+            'canonical_seat_no' => $seat,
+            'status' => 'active',
+        ]);
+    }
+
     /**
      * @param  list<int>  $presentIds
      * @return array<string, mixed>
@@ -725,6 +800,34 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         }
 
         return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function draftPayload(array $overrides = []): array
+    {
+        $payload = ['save_as_draft' => '1', 'notes' => 'Nacrt'];
+        for ($i = 1; $i <= 10; $i++) {
+            $payload["criterion_{$i}"] = 3;
+        }
+
+        return array_merge($payload, $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function finalPayload(array $overrides = []): array
+    {
+        $payload = ['scoring_confirmed' => '1', 'notes' => null];
+        for ($i = 1; $i <= 10; $i++) {
+            $payload["criterion_{$i}"] = 3;
+        }
+
+        return array_merge($payload, $overrides);
     }
 
     /**

@@ -610,23 +610,38 @@
 <script>
 async function handleDocumentDelete(event, form) {
     event.preventDefault();
-    if (!confirm('Da li ste sigurni da želite da obrišete ovaj dokument?')) return false;
+    if (form.dataset.deleting === '1') {
+        return false;
+    }
+    if (!confirm('Da li ste sigurni da želite da obrišete ovaj dokument?')) {
+        return false;
+    }
+    form.dataset.deleting = '1';
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Brisanje...';
+    }
     const isMega = form.dataset.isMega === '1';
     const megaFileName = (form.dataset.megaFileName || '').trim();
     if (isMega && megaFileName && window.megaUpload?.deleteFromMega) {
-        const btn = form.querySelector('button[type="submit"]');
-        const origText = btn?.textContent;
-        if (btn) { btn.disabled = true; btn.textContent = 'Brisanje...'; }
         try {
-            const r = await window.megaUpload.deleteFromMega(megaFileName);
-            if (!r.deleted && r.error) {
+            const timeoutMs = 8000;
+            let timer;
+            const timeout = new Promise((_, reject) => {
+                timer = setTimeout(() => reject(new Error('MEGA delete timeout')), timeoutMs);
+            });
+            const r = await Promise.race([
+                window.megaUpload.deleteFromMega(megaFileName),
+                timeout,
+            ]).finally(() => clearTimeout(timer));
+            if (r && !r.deleted && r.error) {
                 alert('Upozorenje: ' + r.error + '\nDokument će ipak biti uklonjen iz biblioteke.');
             }
         } catch (e) {
             console.error('MEGA delete failed:', e);
             alert('Greška pri brisanju sa MEGA. Dokument će biti uklonjen iz biblioteke.');
         }
-        if (btn) { btn.disabled = false; btn.textContent = origText; }
     }
     form.submit();
     return false;

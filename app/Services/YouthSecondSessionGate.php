@@ -22,9 +22,8 @@ class YouthSecondSessionGate
             return CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE;
         }
 
-        $first = $competition->firstCommissionSession();
-        if ($first === null || ! $first->isConfirmed()) {
-            return CommissionProfileConfig::SESSION_SECOND_REQUIRES_FIRST_MESSAGE;
+        if (! $competition->hasCompleteValidCommission()) {
+            return CommissionProfileConfig::SESSION_SECOND_INCOMPLETE_COMMISSION_MESSAGE;
         }
 
         $applications = $competition->applications()
@@ -56,13 +55,11 @@ class YouthSecondSessionGate
             return CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE;
         }
 
-        if ($secondSession !== null) {
-            if ($secondSession->session_type !== CommissionSession::TYPE_SECOND) {
-                return CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE;
-            }
-            if ((int) $secondSession->competition_id !== (int) $application->competition_id) {
-                return CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE;
-            }
+        $phaseMessage = $this->secondSessionBlockMessage($application->competition);
+        if ($phaseMessage !== null) {
+            return $phaseMessage === CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE
+                ? $phaseMessage
+                : CommissionProfileConfig::ORAL_NOT_ELIGIBLE_MESSAGE;
         }
 
         if ($application->status !== 'submitted') {
@@ -135,9 +132,15 @@ class YouthSecondSessionGate
         return $this->youthDraftScoringBlockMessage($application) === null;
     }
 
+    /**
+     * Omladinsko bodovanje se otvara po prijavi, po istom principu kao ženski tok:
+     * M3 potvrđen bez aktivnog eliminatornog razloga, ili konačna odluka po prigovoru
+     * koja otkloni sve razloge. Otvoren rok ili neriješen prigovor na drugoj prijavi
+     * ne blokira ovu prijavu. Rangiranje ostaje konkursna kapija prigovora.
+     */
     public function youthDraftScoringBlockMessage(Application $application): ?string
     {
-        $application->loadMissing(['competition', 'eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $application->loadMissing(['competition', 'eliminatoryCheck', 'prigovor']);
 
         if (! $application->competition?->isOmladinskoProfile()) {
             return CommissionProfileConfig::SESSION_SECOND_NOT_YOUTH_MESSAGE;
@@ -155,14 +158,6 @@ class YouthSecondSessionGate
             return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
         }
 
-        if ($this->appealWindowIsOpen($application)) {
-            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
-        }
-
-        if ($application->prigovor?->isPodnesen() === true) {
-            return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
-        }
-
         $passPath = $application->eliminatoryCheck->isConfirmedPass();
         $liftPath = $application->prigovor?->liftsEliminatoryBar() === true;
         if (! $passPath && ! $liftPath) {
@@ -171,28 +166,6 @@ class YouthSecondSessionGate
 
         if (! $application->competition->hasCompleteValidCommission()) {
             return \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE;
-        }
-
-        return null;
-    }
-
-    public function youthLockEvidenceIsComplete(Application $application): bool
-    {
-        return $this->youthLockEvidenceBlockMessage($application) === null;
-    }
-
-    public function youthLockEvidenceBlockMessage(Application $application): ?string
-    {
-        $application->loadMissing(['competition', 'oralPresentation']);
-
-        $second = $application->competition?->secondCommissionSession();
-        if ($second === null || ! $second->isConfirmed()) {
-            return \App\Support\ScoringProfileConfig::YOUTH_SECOND_SESSION_REQUIRED_FOR_LOCK_MESSAGE;
-        }
-
-        $oral = $application->oralPresentation;
-        if ($oral === null || ! $oral->isCompleted() || $oral->applicant_attended === null) {
-            return \App\Support\ScoringProfileConfig::YOUTH_ORAL_REQUIRED_FOR_LOCK_MESSAGE;
         }
 
         return null;

@@ -87,30 +87,32 @@ class CommissionDualMembershipIsolationTest extends TestCase
             $this->assertNotNull(CommissionMember::activeForCommission($user->id, $zenskoCommission->id));
         }
 
-        $incompleteYouth = $this->makeOmladinskoDraft(2028);
+        $completeYouth = $this->makeOmladinskoDraft(2028);
         $this->actingAs($admin)->post(
             route('admin.commissions.store'),
-            $this->youthCommissionPayload($incompleteYouth, [
-                1 => ['name' => 'Samo Predsjednik', 'email' => 'dup.pred.'.uniqid().'@kotor.me'],
-                2 => ['name' => 'Samo Clan Dva', 'email' => 'dup.c2.'.uniqid().'@kotor.me'],
+            $this->youthCommissionPayload($completeYouth, [
+                1 => ['name' => 'Samo Predsjednik', 'email' => 'dup.pred.'.uniqid().'@kotor.me', 'position' => 'predsjednik'],
+                2 => ['name' => 'Samo Clan Dva', 'email' => 'dup.c2.'.uniqid().'@kotor.me', 'position' => 'clan'],
+                3 => ['name' => 'Samo Clan Tri', 'email' => 'dup.c3.'.uniqid().'@kotor.me', 'position' => 'clan'],
             ])
         )->assertSessionHasNoErrors();
-        $incompleteCommission = $incompleteYouth->fresh()->commission;
-        $existingEmail = $incompleteCommission->activeMembers()->where('canonical_seat_no', 1)->first()->user->email;
+        $completeCommission = $completeYouth->fresh()->commission;
+        $existingEmail = $completeCommission->activeMembers()->where('canonical_seat_no', 1)->first()->user->email;
 
         $duplicateOnSameCommission = $this->actingAs($admin)->post(
-            route('admin.commissions.members.add', $incompleteCommission),
+            route('admin.commissions.members.add', $completeCommission),
             [
                 'name' => 'Ponovljeni',
                 'email' => $existingEmail,
                 'position' => 'clan',
-                'canonical_seat_no' => 3,
+                'member_type' => 'zamjenski',
+                'replaces_member_number' => 2,
             ]
         );
         $duplicateOnSameCommission->assertRedirect();
         $duplicateOnSameCommission->assertSessionHasErrors('error');
         $this->assertSame('Ovaj korisnik je već član komisije.', session('errors')->first('error'));
-        $this->assertSame(2, $incompleteCommission->fresh()->activeMembers()->count());
+        $this->assertSame(3, $completeCommission->fresh()->activeMembers()->count());
     }
 
     public function test_membership_access_sessions_and_scores_stay_scoped_to_each_commission(): void
@@ -168,51 +170,19 @@ class CommissionDualMembershipIsolationTest extends TestCase
         $this->actingAs($youthOnly['user'])->get(route('admin.competitions.show', $zenskoCompetition))->assertForbidden();
         $this->actingAs($youthOnly['user'])->get(route('admin.competitions.show', $youthOnly['competition']))->assertOk();
 
-        $this->actingAs($womenOnly)->post(
-            route('commission-sessions.first.store', $youthCompetition),
-            $this->sessionPayload([$youthMembership->id])
-        )->assertForbidden();
-
-        $this->actingAs($president)->post(
-            route('commission-sessions.first.store', $youthCompetition),
-            $this->sessionPayload([
-                $youthMembership->id,
-                CommissionMember::activeForCompetition(
-                    User::where('email', $shared[2]['email'])->firstOrFail()->id,
-                    $youthCompetition
-                )->id,
-                CommissionMember::activeForCompetition($womenOnly->id, $zenskoCompetition)->id,
-            ])
-        )->assertSessionHasErrors('present_member_ids');
-
-        $this->actingAs($president)->post(
-            route('commission-sessions.first.store', $youthCompetition),
-            $this->sessionPayload([
-                $youthMembership->id,
-                CommissionMember::activeForCompetition(
-                    User::where('email', $shared[2]['email'])->firstOrFail()->id,
-                    $youthCompetition
-                )->id,
-            ])
-        )->assertSessionHasNoErrors();
-
+        $this->actingAs($womenOnly)
+            ->get(route('commission-sessions.first.edit', $youthCompetition))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition));
         $this->actingAs($president)
-            ->post(route('commission-sessions.first.confirm', $youthCompetition))
-            ->assertSessionHasNoErrors();
-
-        $youthSession = $youthCompetition->fresh()->firstCommissionSession();
-        $this->assertNotNull($youthSession);
-        $this->assertSame($youthCompetition->id, $youthSession->competition_id);
-        $this->assertSame($youthCommissionId, (int) $youthSession->commission_id);
+            ->get(route('commission-sessions.first.edit', $youthCompetition))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition))
+            ->assertDontSee('Evidencija prve sjednice', false);
+        $this->actingAs($president)
+            ->post(route('commission-sessions.first.store', $youthCompetition), $this->sessionPayload([$youthMembership->id]))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition));
+        $this->assertNull($youthCompetition->fresh()->firstCommissionSession());
         $this->assertNull($zenskoCompetition->fresh()->firstCommissionSession());
         $this->assertSame(0, CommissionSession::query()->where('competition_id', $zenskoCompetition->id)->count());
-        $this->assertSame(
-            0,
-            $youthSession->attendances()->whereIn(
-                'commission_member_id',
-                CommissionMember::where('commission_id', $zenskoCommissionId)->pluck('id')
-            )->count()
-        );
 
         $this->actingAs($president)->get(route('evaluation.create', $youthApplication))->assertOk();
         $this->actingAs($president)->get(route('evaluation.create', $zenskoApplication))->assertOk();
@@ -299,7 +269,9 @@ class CommissionDualMembershipIsolationTest extends TestCase
 
         $this->actingAs($president)->get(route('admin.competitions.show', $youthCompetition))->assertOk();
         $this->actingAs($president)->get(route('admin.competitions.show', $zenskoCompetition))->assertOk();
-        $this->actingAs($president)->get(route('commission-sessions.first.edit', $youthCompetition))->assertOk();
+        $this->actingAs($president)
+            ->get(route('commission-sessions.first.edit', $youthCompetition))
+            ->assertRedirect(route('admin.competitions.show', $youthCompetition));
     }
 
     public function test_deactivation_and_replacement_do_not_cross_commissions(): void
@@ -396,7 +368,7 @@ class CommissionDualMembershipIsolationTest extends TestCase
         $response->assertRedirect(route('admin.competitions.edit', $zenskoCompetition));
         $response->assertSessionHasErrors('commission_id');
         $this->assertSame(
-            CommissionProfileConfig::MIXED_PROFILE_ASSIGNMENT_MESSAGE,
+            CommissionProfileConfig::COMMISSION_COMPETITION_PROFILE_MISMATCH_MESSAGE,
             session('errors')->first('commission_id')
         );
         $this->assertNull($zenskoCompetition->fresh()->commission_id);
@@ -440,6 +412,7 @@ class CommissionDualMembershipIsolationTest extends TestCase
             'year' => 2026,
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'omladinsko',
             'competition_ids' => [$competition->id],
             'members' => $members,
         ];
@@ -473,6 +446,7 @@ class CommissionDualMembershipIsolationTest extends TestCase
             'year' => 2026,
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
+            'competition_type' => 'zensko',
             'competition_ids' => [$competition->id],
             'members' => $members,
         ];
@@ -567,6 +541,7 @@ class CommissionDualMembershipIsolationTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $user = $this->userWithRole('komisija');
         CommissionMember::create([

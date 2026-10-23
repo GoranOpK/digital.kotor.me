@@ -200,8 +200,8 @@
 
                 <div class="form-group conditional-field" id="pib_group">
                     <label for="pib" class="form-label">PIB <span class="required">*</span></label>
-                    <input type="text" name="pib" id="pib" class="form-control" maxlength="8" inputmode="numeric" placeholder="8 cifara" value="{{ old('pib') }}">
-                    <div class="form-error" id="pib_error"></div>
+                    <input type="text" name="pib" id="pib" class="form-control{{ $errors->has('pib') ? ' error' : '' }}" maxlength="8" inputmode="numeric" placeholder="8 cifara" value="{{ old('pib') }}">
+                    <div class="form-error{{ $errors->has('pib') ? ' show' : '' }}" id="pib_error">{{ $errors->first('pib') }}</div>
                 </div>
 
                 <div class="form-group conditional-field" id="crps_group">
@@ -473,6 +473,14 @@
                 toggleField('representative_jmb_group', isDspd() && representativeIdType.value === 'jmb');
                 toggleField('representative_passport_group', isDspd() && representativeIdType.value === 'passport');
                 toggleField('representative_passport_country_group', isDspd() && representativeIdType.value === 'passport');
+
+                disableInactiveFields();
+            }
+
+            function disableInactiveFields() {
+                form.querySelectorAll('.conditional-field input, .conditional-field select, .conditional-field textarea').forEach(function (control) {
+                    control.disabled = control.style.display === 'none' || !!control.closest('.conditional-field:not(.show)');
+                });
             }
 
             function jmbChecksumOk(value) {

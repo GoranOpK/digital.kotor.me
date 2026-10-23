@@ -3,22 +3,23 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\BusinessPlan;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\CommissionSession;
+use App\Models\CommissionSessionAttendance;
 use App\Models\Competition;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
-use App\Support\CommissionProfileConfig;
 use Database\Seeders\RoleSeeder;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PDOException;
+use Tests\Support\MakesCanonicalUsers;
 use Tests\TestCase;
 
 class CommissionFirstSessionAttendanceTest extends TestCase
 {
+    use MakesCanonicalUsers;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -28,109 +29,39 @@ class CommissionFirstSessionAttendanceTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    public function test_only_assigned_chairman_can_record_and_confirm_first_session_with_quorum_two(): void
+    public function test_youth_first_session_form_is_no_longer_used_and_legacy_get_redirects(): void
     {
         $ctx = $this->makeYouthContext(complete: true, deadlinePassed: true);
         $payload = $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id]);
 
-        $this->actingAs($this->userWithRole('konkurs_admin'))
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
-            ->assertForbidden();
-
-        $this->actingAs($this->userWithRole('korisnik'))
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
-            ->assertForbidden();
-
-        $this->actingAs($ctx['members'][1]->user)
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
-            ->assertForbidden();
-
-        $other = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2027);
-        $this->actingAs($other['chairman']->user)
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
-            ->assertForbidden();
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('admin.competitions.show', $ctx['competition']))
+            ->assertOk()
+            ->assertDontSee('Evidentiraj prvu sjednicu Komisije', false);
 
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $this->sessionPayload([$ctx['members'][0]->id]))
-            ->assertRedirect(route('commission-sessions.first.edit', $ctx['competition']));
-
-        $session = $ctx['competition']->fresh()->firstCommissionSession();
-        $this->assertNotNull($session);
-        $this->assertTrue($session->isDraft());
-        $this->assertSame(CommissionSession::TYPE_FIRST, $session->session_type);
+            ->get(route('commission-sessions.first.edit', $ctx['competition']))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']))
+            ->assertDontSee('Evidencija prve sjednice', false);
 
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.first.edit', $ctx['competition']))
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertRedirect(route('commission-sessions.first.edit', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_QUORUM_MESSAGE, session('errors')->first('session'));
-        $this->assertTrue($session->fresh()->isDraft());
-
-        $this->actingAs($ctx['chairman']->user)->put(
-            route('commission-sessions.first.update', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-
+            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
+        $this->actingAs($ctx['chairman']->user)
+            ->put(route('commission-sessions.first.update', $ctx['competition']), $payload)
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
         $this->actingAs($ctx['chairman']->user)
             ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
 
-        $session->refresh();
-        $this->assertTrue($session->isConfirmed());
-        $this->assertTrue($ctx['competition']->fresh()->hasConfirmedFirstSessionQuorum());
+        $this->assertNull($ctx['competition']->fresh()->firstCommissionSession());
         $this->assertFalse($ctx['competition']->fresh()->isCommissionProcessingBlocked());
-        $this->assertSame(0, $ctx['competition']->applications()->whereHas('eliminatoryCheck')->count());
-
-        $this->actingAs($ctx['chairman']->user)->put(
-            route('commission-sessions.first.update', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id, $ctx['members'][2]->id])
-        )->assertSessionHasErrors('session');
-
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
-            ->assertSessionHasErrors('session');
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk();
     }
 
-    public function test_inactive_and_foreign_members_are_rejected_and_three_present_are_not_required(): void
-    {
-        $ctx = $this->makeYouthContext(complete: true, deadlinePassed: true);
-        $other = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2028);
-        $inactive = $ctx['members'][2];
-        $inactive->update(['status' => 'inactive']);
-
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $other['members'][0]->id])
-        )->assertSessionHasErrors('present_member_ids');
-
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $inactive->id])
-        )->assertSessionHasErrors('present_member_ids');
-
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(
-            CommissionProfileConfig::SESSION_INCOMPLETE_COMMISSION_MESSAGE,
-            session('errors')->first('session')
-        );
-
-        $inactive->update(['status' => 'active']);
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-        $this->assertTrue($ctx['competition']->fresh()->firstCommissionSession()->meetsFirstSessionQuorum($ctx['competition']));
-        $this->assertSame(2, $ctx['competition']->fresh()->firstCommissionSession()->validPresentCount($ctx['competition']));
-    }
-
-    public function test_processing_is_blocked_without_completeness_or_confirmed_quorum(): void
+    public function test_processing_is_blocked_without_complete_commission_but_not_without_first_session(): void
     {
         $incomplete = $this->makeYouthContext(complete: false, deadlinePassed: true);
         $this->assertTrue($incomplete['competition']->isCommissionProcessingBlocked());
@@ -139,24 +70,85 @@ class CommissionFirstSessionAttendanceTest extends TestCase
             ->assertForbidden();
 
         $complete = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2029);
-        $this->assertTrue($complete['competition']->isCommissionProcessingBlocked());
-        $this->actingAs($complete['chairman']->user)
-            ->get(route('evaluation.create', $complete['application']))
-            ->assertForbidden();
-
-        $this->actingAs($complete['chairman']->user)->post(
-            route('commission-sessions.first.store', $complete['competition']),
-            $this->sessionPayload([$complete['members'][0]->id, $complete['members'][1]->id])
-        )->assertSessionHasNoErrors();
-        $this->actingAs($complete['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $complete['competition']))
-            ->assertSessionHasNoErrors();
-
-        $this->assertFalse($complete['competition']->fresh()->isCommissionProcessingBlocked());
+        $this->assertTrue($complete['competition']->hasCompleteValidCommission());
+        $this->assertNull($complete['competition']->firstCommissionSession());
+        $this->assertFalse($complete['competition']->hasConfirmedFirstSessionQuorum());
+        $this->assertFalse($complete['competition']->isCommissionProcessingBlocked());
         $this->actingAs($complete['chairman']->user)
             ->get(route('evaluation.create', $complete['application']))
             ->assertOk();
         $this->assertNull($complete['application']->fresh()->eliminatoryCheck);
+    }
+
+    public function test_youth_commission_member_can_open_submitted_business_plan_after_deadline_without_first_session(): void
+    {
+        $complete = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2030);
+        $owner = $this->makeKorisnik();
+        $complete['application']->update([
+            'user_id' => $owner->id,
+            'physical_person_name' => $owner->name,
+            'physical_person_email' => $owner->email,
+            'physical_person_phone' => $owner->phone,
+            'physical_person_address' => 'Njegoševa 12, 85330 Kotor',
+        ]);
+        $this->attachBusinessPlan($complete['application']);
+        $member = $complete['members'][1]->fresh('user');
+
+        $this->assertNull($complete['competition']->firstCommissionSession());
+        $this->assertFalse($complete['competition']->hasConfirmedFirstSessionQuorum());
+        $this->assertTrue($complete['competition']->hasCompleteValidCommission());
+        $this->assertFalse($complete['competition']->isCommissionProcessingBlocked());
+
+        $this->actingAs($member->user)
+            ->get(route('applications.business-plan.create', $complete['application']))
+            ->assertOk()
+            ->assertSee('Omladinska ideja', false);
+        $this->actingAs($member->user)
+            ->get(route('evaluation.create', $complete['application']))
+            ->assertOk();
+
+        $incomplete = $this->makeYouthContext(complete: false, deadlinePassed: true, year: 2031);
+        $this->attachBusinessPlan($incomplete['application']);
+        $this->assertTrue($incomplete['competition']->isCommissionProcessingBlocked());
+        $this->actingAs($incomplete['chairman']->user)
+            ->get(route('applications.business-plan.create', $incomplete['application']))
+            ->assertForbidden();
+        $this->actingAs($incomplete['chairman']->user)
+            ->get(route('evaluation.create', $incomplete['application']))
+            ->assertForbidden();
+    }
+
+    public function test_historical_first_session_row_is_kept_and_does_not_open_the_form(): void
+    {
+        $ctx = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2034);
+        $session = CommissionSession::create([
+            'competition_id' => $ctx['competition']->id,
+            'commission_id' => $ctx['competition']->commission_id,
+            'session_type' => CommissionSession::TYPE_FIRST,
+            'held_at' => now()->subDays(3),
+            'completed_at' => now()->subDays(3),
+            'recorded_by_user_id' => $ctx['chairman']->user_id,
+            'notes' => 'Istorijska prva sjednica',
+        ]);
+        foreach ($ctx['members'] as $index => $member) {
+            CommissionSessionAttendance::create([
+                'commission_session_id' => $session->id,
+                'commission_member_id' => $member->id,
+                'present' => $index < 2,
+            ]);
+        }
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('commission-sessions.first.edit', $ctx['competition']))
+            ->assertRedirect(route('admin.competitions.show', $ctx['competition']))
+            ->assertDontSee('Evidencija prve sjednice', false);
+
+        $this->assertTrue($ctx['competition']->fresh()->firstCommissionSession()->isConfirmed());
+        $this->assertSame('Istorijska prva sjednica', $ctx['competition']->fresh()->firstCommissionSession()->notes);
+        $this->assertFalse($ctx['competition']->fresh()->isCommissionProcessingBlocked());
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk();
     }
 
     public function test_zensko_processing_does_not_require_a_recorded_session(): void
@@ -181,146 +173,6 @@ class CommissionFirstSessionAttendanceTest extends TestCase
         $this->assertNull($competition->firstCommissionSession());
     }
 
-    public function test_duplicate_and_unique_first_session_store_returns_controlled_message(): void
-    {
-        $ctx = $this->makeYouthContext(complete: true, deadlinePassed: true);
-        $payload = $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id]);
-        $payload['notes'] = 'Prvi nacrt ostaje';
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload)
-            ->assertSessionHasNoErrors();
-
-        $duplicate = $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.first.edit', $ctx['competition']))
-            ->post(route('commission-sessions.first.store', $ctx['competition']), $payload);
-
-        $duplicate->assertStatus(302);
-        $duplicate->assertSessionHasErrors('session');
-        $this->assertNotSame(500, $duplicate->getStatusCode());
-        $this->assertSame(1, CommissionSession::query()->where('competition_id', $ctx['competition']->id)->count());
-        $this->assertSame('Prvi nacrt ostaje', $ctx['competition']->fresh()->firstCommissionSession()->notes);
-
-        $race = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2031);
-        $dispatcher = CommissionSession::getEventDispatcher();
-        $event = 'eloquent.creating: '.CommissionSession::class;
-        $dispatcher->listen($event, function () {
-            $previous = new PDOException(
-                'SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry',
-                23000
-            );
-            $previous->errorInfo = ['23000', 1062, 'Duplicate entry'];
-
-            throw new UniqueConstraintViolationException(
-                'mysql',
-                'insert into `commission_sessions`',
-                [],
-                $previous
-            );
-        });
-
-        try {
-            $conflict = $this->actingAs($race['chairman']->user)
-                ->from(route('commission-sessions.first.edit', $race['competition']))
-                ->post(
-                    route('commission-sessions.first.store', $race['competition']),
-                    $this->sessionPayload([$race['members'][0]->id, $race['members'][1]->id])
-                );
-            $conflict->assertStatus(302);
-            $conflict->assertSessionHasErrors('session');
-            $this->assertSame(
-                CommissionProfileConfig::SESSION_FIRST_CONFLICT_MESSAGE,
-                session('errors')->first('session')
-            );
-            $this->assertSame(
-                0,
-                CommissionSession::query()->where('competition_id', $race['competition']->id)->count()
-            );
-        } finally {
-            $dispatcher->forget($event);
-        }
-    }
-
-    public function test_confirm_first_rechecks_lock_completeness_and_quorum(): void
-    {
-        $ctx = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2032);
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-
-        $session = $ctx['competition']->fresh()->firstCommissionSession();
-        $this->assertNotNull($session);
-        $this->assertNull($session->completed_at);
-
-        $ctx['members'][2]->update(['status' => 'inactive']);
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.first.edit', $ctx['competition']))
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(
-            CommissionProfileConfig::SESSION_INCOMPLETE_COMMISSION_MESSAGE,
-            session('errors')->first('session')
-        );
-        $this->assertNull($session->fresh()->completed_at);
-        $this->assertSame(3, $session->fresh()->attendances()->count());
-        $this->assertSame(2, $session->fresh()->attendances()->where('present', true)->count());
-
-        $ctx['members'][2]->update(['status' => 'active']);
-        $session->attendances()->update(['present' => false]);
-        $keepPresent = $session->attendances()->orderBy('id')->first();
-        $keepPresent->update(['present' => true]);
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.first.edit', $ctx['competition']))
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_QUORUM_MESSAGE, session('errors')->first('session'));
-        $this->assertNull($session->fresh()->completed_at);
-
-        $session->attendances()->update(['present' => true]);
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        $session->refresh();
-        $this->assertNotNull($session->completed_at);
-        $confirmedAt = $session->completed_at->toDateTimeString();
-        $this->assertSame(
-            1,
-            CommissionSession::query()
-                ->where('competition_id', $ctx['competition']->id)
-                ->whereNotNull('completed_at')
-                ->count()
-        );
-
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('commission-sessions.first.edit', $ctx['competition']))
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertSame(CommissionProfileConfig::SESSION_LOCKED_MESSAGE, session('errors')->first('session'));
-        $this->assertSame($confirmedAt, $session->fresh()->completed_at->toDateTimeString());
-    }
-
-    public function test_inactive_present_member_before_confirm_keeps_completed_at_null(): void
-    {
-        $ctx = $this->makeYouthContext(complete: true, deadlinePassed: true, year: 2033);
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            $this->sessionPayload([$ctx['members'][0]->id, $ctx['members'][1]->id])
-        )->assertSessionHasNoErrors();
-
-        $ctx['members'][1]->update(['status' => 'inactive']);
-        $session = $ctx['competition']->fresh()->firstCommissionSession();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasErrors('session');
-        $this->assertNull($session->fresh()->completed_at);
-        $this->assertSame(
-            $session->attendances()->count(),
-            $session->fresh()->attendances()->count()
-        );
-    }
-
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
      */
@@ -332,6 +184,7 @@ class CommissionFirstSessionAttendanceTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];
@@ -397,6 +250,7 @@ class CommissionFirstSessionAttendanceTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
@@ -430,6 +284,19 @@ class CommissionFirstSessionAttendanceTest extends TestCase
             'notes' => 'Prva sjednica',
             'present_member_ids' => $presentIds,
         ];
+    }
+
+    private function attachBusinessPlan(Application $application): void
+    {
+        BusinessPlan::create([
+            'application_id' => $application->id,
+            'business_idea_name' => 'Omladinska ideja',
+            'applicant_name' => 'Podnosilac',
+            'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+            'applicant_phone' => '067000000',
+            'applicant_email' => 'plan@example.com',
+            'finances_notice_confirmed' => true,
+        ]);
     }
 
     private function userWithRole(string $role): User

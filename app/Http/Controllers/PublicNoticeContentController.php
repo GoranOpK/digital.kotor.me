@@ -6,6 +6,7 @@ use App\Models\Competition;
 use App\Models\CompetitionOfficialDecisionCopy;
 use App\Models\Notice;
 use App\Services\Competitions\CompetitionDecisionDocumentBuilder;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -34,7 +35,8 @@ class PublicNoticeContentController extends Controller
     {
         $competition = Competition::query()->find($notice->source_id);
 
-        if (! $competition) {
+        // Canonical MMSP publishes only the signed formal Odluka copy, never a generated decision.
+        if (! $competition || $competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
             abort(404);
         }
 

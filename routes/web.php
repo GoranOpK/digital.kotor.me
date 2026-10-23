@@ -4,7 +4,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\CompetitionOfficialDecisionController;
 use App\Http\Controllers\CulturalActivityAdminController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\ApplicationProcessController;
 use App\Http\Controllers\BusinessPlanController;
+use App\Http\Controllers\CanonicalApplicantController;
+use App\Http\Controllers\CanonicalInvestmentPlanController;
 use App\Http\Controllers\CompetitionsController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
@@ -30,6 +33,7 @@ use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\CommissionSessionController;
+use App\Http\Controllers\CanonicalOutcomeController;
 use App\Http\Controllers\ApplicationOralPresentationController;
 use App\Http\Controllers\ApplicationPrigovorController;
 use App\Http\Controllers\HomeController;
@@ -37,6 +41,10 @@ use App\Http\Controllers\NewsletterPublicUnsubscribeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\PublicNoticeContentController;
+use App\Http\Controllers\CanonicalAdministrativeController;
+use App\Http\Controllers\CanonicalPublicResultController;
+use App\Http\Controllers\CanonicalCommissionController;
+use App\Http\Controllers\CanonicalSessionController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TendersController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +58,10 @@ Route::get('/', [HomeController::class, 'index'])->name('home'); // Prikaz poče
 // Javni sadržaj Obavještenja (FT-004) — bez auth / verified / role middleware
 Route::get('/obavjestenja/{notice}/sadrzaj', [PublicNoticeContentController::class, 'show'])
     ->name('notices.public-content');
+
+// Kanonski MMSP — javni rezultat: samo potpisani primjerak formalne Odluke (KN-SYNC-009)
+Route::get('/pozivi/{competition}/rezultat', [CanonicalPublicResultController::class, 'show'])
+    ->name('competitions.canonical-result');
 
 // NL-04 — odjava iz Newsletter e-maila (token; bez sesije)
 Route::get('/newsletter/odjava/{token}', [NewsletterPublicUnsubscribeController::class, 'show'])
@@ -438,6 +450,9 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::post('/competitions/{competition}/apply', [ApplicationController::class, 'store'])->name('applications.store'); // Snimi prijavu
     Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show'); // Prikaz detalja prijave
     Route::post('/applications/{application}/prigovor', [ApplicationPrigovorController::class, 'store'])->name('applications.prigovor.store');
+    Route::post('/applications/{application}/complaint', [ApplicationProcessController::class, 'submitComplaint'])->name('applications.complaint');
+    // Kanonski MMSP — status provjere potpunosti i prigovor podnosioca (KN-SYNC-014)
+    Route::get('/applications/{application}/provjera-potpunosti', [ApplicationProcessController::class, 'applicantStatus'])->name('applications.canonical-review.show');
     Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])->name('applications.destroy'); // Brisanje prijave
     Route::post('/applications/{application}/submit', [ApplicationController::class, 'submit'])->name('applications.final-submit'); // Konačno podnošenje prijave
     Route::post('/applications/{application}/upload', [ApplicationController::class, 'uploadDocument'])->name('applications.upload'); // Upload dokumenata
@@ -450,6 +465,17 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/applications/{application}/business-plan', [BusinessPlanController::class, 'create'])->name('applications.business-plan.create'); // Prikaz forme za biznis plan
     Route::post('/applications/{application}/business-plan', [BusinessPlanController::class, 'store'])->name('applications.business-plan.store'); // Snimi biznis plan
 
+    // Kanonski MMSP Obrazac P2 — vrsta subvencije + finansijski okvir ulaganja (KN-SYNC-008A)
+    Route::get('/applications/{application}/plan-ulaganja', [CanonicalInvestmentPlanController::class, 'edit'])->name('applications.canonical-p2.edit');
+    Route::put('/applications/{application}/plan-ulaganja', [CanonicalInvestmentPlanController::class, 'update'])->name('applications.canonical-p2.update');
+
+    // Kanonski MMSP — pravna forma, Obrazac P1a/P1b i prilozi čl.14 (KN-SYNC-015)
+    Route::get('/competitions/{competition}/kanonska-prijava', [CanonicalApplicantController::class, 'legalForm'])->name('applications.canonical.legal-form');
+    Route::post('/competitions/{competition}/kanonska-prijava', [CanonicalApplicantController::class, 'start'])->name('applications.canonical.start');
+    Route::get('/applications/{application}/obrazac-p1', [CanonicalApplicantController::class, 'editP1'])->name('applications.canonical-p1.edit');
+    Route::put('/applications/{application}/obrazac-p1', [CanonicalApplicantController::class, 'updateP1'])->name('applications.canonical-p1.update');
+    Route::get('/applications/{application}/prilozi', [CanonicalApplicantController::class, 'documents'])->name('applications.canonical-documents.index');
+
     // Evaluacija prijava (EvaluationController, dostupno komisiji/evaluatorima)
     Route::middleware('role:komisija')->group(function () {
         Route::prefix('evaluation')->name('evaluation.')->group(function () {
@@ -459,9 +485,35 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::post('/applications/{application}/eliminatory', [EvaluationController::class, 'storeEliminatory'])->name('eliminatory.store');
             Route::post('/applications/{application}/eliminatory/confirm', [EvaluationController::class, 'confirmEliminatory'])->name('eliminatory.confirm');
             Route::post('/applications/{application}/prigovor/decide', [EvaluationController::class, 'decidePrigovor'])->name('prigovor.decide');
+            Route::post('/applications/{application}/completeness', [ApplicationProcessController::class, 'recordCompleteness'])->name('completeness');
+            Route::post('/applications/{application}/complaints/{complaint}/decision', [ApplicationProcessController::class, 'decideComplaint'])->name('complaint-decision');
+            // Kanonski MMSP — provjera potpunosti nad zamrznutim dosijeom i odluka o prigovoru (KN-SYNC-014)
+            Route::get('/competitions/{competition}/canonical-review', [ApplicationProcessController::class, 'commissionIndex'])->name('canonical-review.index');
+            Route::get('/applications/{application}/canonical-review', [ApplicationProcessController::class, 'commissionShow'])->name('canonical-review.show');
             // Rute za predsjednika komisije
             Route::post('/applications/{application}/decision', [EvaluationController::class, 'storeDecision'])->name('store-decision');
+            Route::post('/applications/{application}/youth-allocation-draft', [EvaluationController::class, 'storeYouthAllocationDraft'])->name('youth-allocation-draft');
+            Route::post('/competitions/{competition}/youth-equal-score-round', [EvaluationController::class, 'storeYouthEqualScoreRound'])->name('youth-equal-score-round');
+            Route::post('/competitions/{competition}/youth-equal-score-rounds/{round}/lock', [EvaluationController::class, 'lockYouthEqualScoreRound'])->name('youth-equal-score-round.lock');
+            Route::post('/competitions/{competition}/youth-allocation-list', [EvaluationController::class, 'confirmYouthAllocationList'])->name('youth-allocation-list');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
+            // Kanonski MMSP — sjednice Komisije: redovna, intervju, treća sjednica (KN-SYNC-013)
+            Route::get('/competitions/{competition}/canonical-sessions', [CanonicalSessionController::class, 'show'])->name('canonical-sessions.show');
+            Route::post('/competitions/{competition}/canonical-sessions', [CanonicalSessionController::class, 'record'])->name('canonical-sessions.record');
+            Route::post('/competitions/{competition}/canonical-sessions/{session}/attendance', [CanonicalSessionController::class, 'updateAttendance'])->name('canonical-sessions.attendance');
+            Route::post('/competitions/{competition}/canonical-sessions/{session}/confirm', [CanonicalSessionController::class, 'confirm'])->name('canonical-sessions.confirm');
+            // Kanonski MMSP — treća sjednica: ishod, iznosi, jednak rang, potpisi 3/3 (KN-SYNC-008)
+            Route::get('/competitions/{competition}/canonical-outcome', [CanonicalOutcomeController::class, 'show'])->name('canonical-outcome.show');
+            Route::post('/competitions/{competition}/canonical-outcome/applications/{application}', [CanonicalOutcomeController::class, 'storeDraft'])->name('canonical-outcome.draft');
+            Route::post('/competitions/{competition}/canonical-outcome/confirm', [CanonicalOutcomeController::class, 'confirm'])->name('canonical-outcome.confirm');
+            Route::post('/competitions/{competition}/canonical-outcome/sign', [CanonicalOutcomeController::class, 'sign'])->name('canonical-outcome.sign');
+            Route::post('/competitions/{competition}/canonical-outcome/ties', [CanonicalOutcomeController::class, 'proposeTie'])->name('canonical-outcome.tie.propose');
+            Route::post('/competitions/{competition}/canonical-outcome/ties/{resolution}/vote', [CanonicalOutcomeController::class, 'voteTie'])->name('canonical-outcome.tie.vote');
+            // Kanonski MMSP — finalizacija Predloga, predaja Sekretarijatu, zatvaranje (KN-SYNC-009)
+            Route::get('/competitions/{competition}/canonical-administrative', [CanonicalAdministrativeController::class, 'commission'])->name('canonical-administrative.show');
+            Route::post('/competitions/{competition}/canonical-administrative/predlog/finalize', [CanonicalAdministrativeController::class, 'finalizePredlog'])->name('canonical-administrative.predlog.finalize');
+            Route::post('/competitions/{competition}/canonical-administrative/handoff', [CanonicalAdministrativeController::class, 'handOff'])->name('canonical-administrative.handoff');
+            Route::post('/competitions/{competition}/canonical-administrative/close', [CanonicalAdministrativeController::class, 'close'])->name('canonical-administrative.close');
         });
 
         Route::get('/competitions/{competition}/commission-sessions/first', [CommissionSessionController::class, 'editFirst'])->name('commission-sessions.first.edit');
@@ -606,6 +658,11 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
                 ->name('competitions.official-decision.republish');
             Route::post('/competitions/{competition}/official-decision/{copy}/permanent-delete', [CompetitionOfficialDecisionController::class, 'permanentlyDelete'])
                 ->name('competitions.official-decision.permanent-delete');
+            // Kanonski MMSP — formalna Odluka, potpisani primjerak, jednokratna objava (KN-SYNC-009)
+            Route::get('/competitions/{competition}/canonical-decision', [CanonicalAdministrativeController::class, 'secretariat'])->name('competitions.canonical-decision.show');
+            Route::post('/competitions/{competition}/canonical-decision', [CanonicalAdministrativeController::class, 'recordDecision'])->name('competitions.canonical-decision.record');
+            Route::post('/competitions/{competition}/canonical-decision/signed-copy', [CanonicalAdministrativeController::class, 'attachSignedCopy'])->name('competitions.canonical-decision.signed-copy');
+            Route::post('/competitions/{competition}/canonical-decision/publish', [CanonicalAdministrativeController::class, 'publish'])->name('competitions.canonical-decision.publish');
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
         });
     });
@@ -642,6 +699,18 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::post('/commissions/members/{member}/sign', [AdminController::class, 'storeDeclarations'])->name('commissions.members.store-declarations');
             Route::post('/commissions/members/{member}/status', [AdminController::class, 'updateMemberStatus'])->name('commissions.members.update-status');
             Route::delete('/commissions/members/{member}', [AdminController::class, 'deleteMember'])->name('commissions.members.delete');
+
+            // Kanonska MMSP Komisija — evidencija imenovanja, izjava, upražnjenosti i zamjena (KN-SYNC-012)
+            Route::get('/competitions/{competition}/canonical-commission', [CanonicalCommissionController::class, 'show'])->name('competitions.canonical-commission.show');
+            Route::post('/competitions/{competition}/canonical-commission', [CanonicalCommissionController::class, 'establish'])->name('competitions.canonical-commission.establish');
+            Route::post('/competitions/{competition}/canonical-commission/members', [CanonicalCommissionController::class, 'appoint'])->name('competitions.canonical-commission.appoint');
+            Route::post('/competitions/{competition}/canonical-commission/members/{member}/declarations', [CanonicalCommissionController::class, 'recordDeclarations'])->name('competitions.canonical-commission.declarations');
+            Route::post('/competitions/{competition}/canonical-commission/members/{member}/vacate', [CanonicalCommissionController::class, 'vacate'])->name('competitions.canonical-commission.vacate');
+            Route::post('/competitions/{competition}/canonical-commission/members/{member}/replace', [CanonicalCommissionController::class, 'replace'])->name('competitions.canonical-commission.replace');
+            Route::post('/competitions/{competition}/canonical-commission/conflicts', [CanonicalCommissionController::class, 'refreshConflicts'])->name('competitions.canonical-commission.conflicts');
+            Route::get('/competitions/{competition}/canonical-sessions', [CanonicalSessionController::class, 'adminShow'])->name('competitions.canonical-sessions.show');
+            Route::get('/competitions/{competition}/canonical-review', [ApplicationProcessController::class, 'adminIndex'])->name('competitions.canonical-review.index');
+            Route::get('/competitions/{competition}/canonical-review/{application}', [ApplicationProcessController::class, 'adminShow'])->name('competitions.canonical-review.show');
         });
     });
 });

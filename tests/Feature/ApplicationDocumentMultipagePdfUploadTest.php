@@ -179,6 +179,7 @@ class ApplicationDocumentMultipagePdfUploadTest extends TestCase
             'start_date' => now()->subYear()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
 
         $competition = Competition::create([

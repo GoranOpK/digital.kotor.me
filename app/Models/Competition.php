@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Support\CommissionProfileConfig;
+use App\Support\CompetitionProgramCatalog;
 use App\Support\RichText;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\Profile\CompetitionProfilePolicy;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +25,7 @@ class Competition extends Model
         'type',
         'call_number',
         'status',
+        'is_test_preview',
         'competition_number',
         'year',
         'budget',
@@ -32,6 +36,10 @@ class Competition extends Model
         'closed_at',
         'commission_id',
         'candidates_list_email_sent_at',
+        'youth_allocation_list_confirmed_at',
+        'youth_allocation_list_confirmed_by_user_id',
+        'youth_allocation_list_confirmed_by_commission_member_id',
+        'youth_allocation_list_confirmed_by_name',
     ];
 
     protected $casts = [
@@ -40,17 +48,68 @@ class Competition extends Model
         'published_at' => 'datetime',
         'closed_at' => 'datetime',
         'candidates_list_email_sent_at' => 'datetime',
+        'youth_allocation_list_confirmed_at' => 'datetime',
+        'canonical_ranking_formed_at' => 'datetime',
         'budget' => 'decimal:2',
         'annual_budget' => 'decimal:2',
         'max_support_percentage' => 'decimal:2',
         'year' => 'integer',
         'call_number' => 'integer',
         'deadline_days' => 'integer',
+        'is_test_preview' => 'boolean',
     ];
 
     public function isOmladinskoProfile(): bool
     {
         return $this->type === 'omladinsko';
+    }
+
+    /**
+     * Stabilna oznaka kontrolisanog kanonskog MMSP testa.
+     * Ostaje tačna i nakon završetka testnog toka, kako testni rezultat
+     * nikada ne bi postao javni sadržaj samo zbog promjene statusa.
+     */
+    public function isCanonicalTestMode(): bool
+    {
+        return $this->type === CompetitionProfileResolver::TYPE_CANONICAL
+            && (bool) $this->is_test_preview;
+    }
+
+    /**
+     * Kontrolisani produkcijski test kanonskog MMSP toka.
+     * Konkurs ostaje draft i ne troši službeni publication claim.
+     */
+    public function isCanonicalTestPreview(): bool
+    {
+        return $this->status === 'draft'
+            && $this->isCanonicalTestMode();
+    }
+
+    /**
+     * Javno dostupan za pregled/prijavu: redovno objavljen aktivan profil
+     * ili eksplicitno označen kanonski MMSP testni preview.
+     */
+    public function isPubliclyAccessibleForApplications(): bool
+    {
+        if ($this->isCanonicalTestPreview()) {
+            return true;
+        }
+
+        return $this->status === 'published'
+            && CompetitionProgramCatalog::isPubliclyAvailable($this->type);
+    }
+
+    /**
+     * Status dozvoljava vremenski prozor prijava.
+     */
+    public function hasApplicationWindowStatus(): bool
+    {
+        return $this->status === 'published' || $this->isCanonicalTestPreview();
+    }
+
+    public function profile(): CompetitionProfilePolicy
+    {
+        return CompetitionProfileResolver::resolve($this->type);
     }
 
     public function isFirstCall(): bool
@@ -100,6 +159,16 @@ class Competition extends Model
     public function commission()
     {
         return $this->belongsTo(Commission::class);
+    }
+
+    public function youthAllocationListConfirmedByUser()
+    {
+        return $this->belongsTo(User::class, 'youth_allocation_list_confirmed_by_user_id');
+    }
+
+    public function youthAllocationListConfirmedByCommissionMember()
+    {
+        return $this->belongsTo(CommissionMember::class, 'youth_allocation_list_confirmed_by_commission_member_id');
     }
 
     public function commissionSessions(): HasMany
@@ -168,7 +237,7 @@ class Competition extends Model
      */
     public function getIsOpenAttribute()
     {
-        if ($this->status !== 'published') {
+        if (! $this->hasApplicationWindowStatus()) {
             return false;
         }
 
@@ -188,7 +257,7 @@ class Competition extends Model
      */
     public function getIsUpcomingAttribute()
     {
-        if ($this->status !== 'published' || !$this->start_date) {
+        if (! $this->hasApplicationWindowStatus() || !$this->start_date) {
             return false;
         }
 
@@ -260,7 +329,7 @@ class Competition extends Model
      */
     public function getDaysUntilApplicationDeadline(): ?int
     {
-        if ($this->status !== 'published') {
+        if (! $this->hasApplicationWindowStatus()) {
             return null;
         }
 
@@ -278,7 +347,7 @@ class Competition extends Model
      */
     public function isApplicationDeadlinePassed(): bool
     {
-        if ($this->status !== 'published') {
+        if (! $this->hasApplicationWindowStatus()) {
             return false;
         }
 
@@ -330,6 +399,11 @@ class Competition extends Model
 
         if (! $config->providesCommission) {
             return true;
+        }
+
+        if ($type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return app(\App\Services\Competitions\Commission\CanonicalCommissionGovernance::class)
+                ->structuralCompletenessBlockReason($commission) === null;
         }
 
         $active = $commission->relationLoaded('activeMembers')
@@ -399,7 +473,9 @@ class Competition extends Model
 
     /**
      * Nakon isteka roka (ili zatvaranja) postupak Komisije ostaje blokiran dok Komisija nije potpuna i valjana.
-     * Za omladinsko dodatno zahtijeva potvrđenu prvu sjednicu sa kvorumom.
+     * Omladinske sjednice su van Digitala: potvrđena prva sjednica i kvorum nijesu uslov ove kapije,
+     * niti blokiraju pregled biznis plana ili M3. Ocjenjivanje i usmeno ostaju na posebnoj kapiji
+     * (M3, istek roka za prigovor i riješeni blagovremeni prigovori).
      * Ne uvodi novo lifecycle stanje.
      */
     public function isCommissionProcessingBlocked(): bool
@@ -415,18 +491,10 @@ class Competition extends Model
             return false;
         }
 
-        if (! $this->hasCompleteValidCommission()) {
-            return true;
-        }
-
-        if ($this->type === 'omladinsko') {
-            return ! $this->hasConfirmedFirstSessionQuorum();
-        }
-
-        return false;
+        return ! $this->hasCompleteValidCommission();
     }
 
-    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Komisija nije formalno kompletna, ili dok prva sjednica nije potvrđena sa potrebnim kvorumom.';
+    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Komisija nije formalno kompletna.';
 
     public const WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE = 'Nakon isteka roka za Prijave nije dozvoljena obična zamjena cijele dodijeljene Komisije.';
 
@@ -505,6 +573,10 @@ class Competition extends Model
      */
     public function isRankingFormed(): bool
     {
+        if ($this->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return $this->canonical_ranking_formed_at !== null;
+        }
+
         if ($this->isOmladinskoProfile()) {
             return app(CanonicalIndividualScoringService::class)
                 ->isYouthPreliminaryRankingReady($this);
@@ -519,6 +591,11 @@ class Competition extends Model
      */
     public function hasChairmanCompletedDecisions(): bool
     {
+        // Canonical support/reject outcome and amounts belong to the third-session wave.
+        if ($this->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            return false;
+        }
+
         if (!$this->isRankingFormed()) {
             return false;
         }
@@ -530,25 +607,8 @@ class Competition extends Model
         }
 
         if ($this->isOmladinskoProfile()) {
-            $subjects = app(CanonicalIndividualScoringService::class)
-                ->youthScoringCycleApplications($this)
-                ->filter(fn ($application) => $application->meetsMinimumScore());
-
-            if ($subjects->isEmpty()) {
-                return true;
-            }
-
-            return $subjects->every(function ($app) {
-                if ($app->commission_decision === 'podrzava_potpuno') {
-                    return $app->approved_amount !== null && (float) $app->approved_amount > 0;
-                }
-
-                if ($app->commission_decision === 'odbija') {
-                    return trim((string) $app->commission_justification) !== '';
-                }
-
-                return false;
-            });
+            return app(\App\Services\Competitions\YouthAllocationListConfirmationService::class)
+                ->confirmedListIsIntact($this);
         }
 
         $allApplications = $this->applications()

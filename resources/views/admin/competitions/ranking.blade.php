@@ -521,7 +521,8 @@
 
         @php
             $daysRemaining = $competition->getDaysUntilEvaluationDeadline();
-            $isDeadlinePassed = $competition->isEvaluationDeadlinePassed();
+            $isDeadlinePassed = \App\Support\ScoringProfileConfig::for($competition->type)->appliesEvaluationDeadline
+                && $competition->isEvaluationDeadlinePassed();
         @endphp
                 
         @if($isDeadlinePassed)

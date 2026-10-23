@@ -307,6 +307,22 @@ final class KnOmladinskoDocumentPackage
         return self::filledPurchaseCount($plan?->funding_sources_table) >= 1;
     }
 
+    /**
+     * Applicant-facing completeness for notices only. Never a submit/save gate.
+     */
+    public static function isContentIncomplete(?BusinessPlan $plan): bool
+    {
+        if ($plan === null || ! $plan->isComplete()) {
+            return true;
+        }
+
+        if (! self::hasPurchaseItem($plan)) {
+            return true;
+        }
+
+        return self::realizationError($plan) !== null;
+    }
+
     public static function realizationError(?BusinessPlan $plan): ?string
     {
         $choice = is_string($plan?->realization_type) ? trim($plan->realization_type) : '';

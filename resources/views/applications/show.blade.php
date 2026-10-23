@@ -618,6 +618,16 @@
                                 </span>
                                 <span style="color: #6b7280; font-size: 11px; margin-left: 8px;">Popunite Obrazac 1a/1b prvo</span>
                             @endif
+                            @if($application->competition?->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL && (int) $application->user_id === (int) auth()->id())
+                                <a href="{{ route('applications.canonical-p2.edit', $application) }}" class="status-badge {{ $application->canonicalInvestmentPlan?->isFrozen() ? 'status-evaluated' : 'status-draft' }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; margin-left: 6px;">
+                                    Plan ulaganja (P2) — vrsta subvencije i finansijski okvir
+                                </a>
+                                @if($application->finalClaim)
+                                    <a href="{{ route('applications.canonical-review.show', $application) }}" class="status-badge status-submitted" style="font-size: 12px; padding: 4px 12px; text-decoration: none; margin-left: 6px;">
+                                        Status provjere potpunosti i prigovor
+                                    </a>
+                                @endif
+                            @endif
                         </span>
                     </div>
                     <div class="info-item">
@@ -651,6 +661,13 @@
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($isReadyToSubmit && $competition?->is_open)
+                                @if($omladinskoPackage && $application->businessPlan && \App\Support\KnOmladinskoDocumentPackage::isContentIncomplete($application->businessPlan))
+                                    <div style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                        <p style="font-size: 12px; color: #92400e; margin: 0;">
+                                            Biznis plan nije kompletno popunjen. Prijavu možete podnijeti, ali će Komisija ocjenjivati isključivo dostavljeni sadržaj. Nakon podnošenja izmjene više neće biti moguće.
+                                        </p>
+                                    </div>
+                                @endif
                                 @if(! ($omladinskoPackage && session('omladinsko_confirm_missing_documents')))
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
                                     @csrf
@@ -884,7 +901,7 @@
                             <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
                             <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
                                 <option value="">Izaberi...</option>
-                                @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
+                                @foreach(auth()->user()->documents()->attachable()->latest()->get() as $userDoc)
                                     <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
                                 @endforeach
                             </select>
@@ -1245,7 +1262,7 @@
         </div>
 
         <!-- Ugovor -->
-        @if($application->status === 'approved')
+        @if($application->status === 'approved' && $application->competition?->type !== \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
         <div class="info-card">
             <h2>Ugovor</h2>
             @if($application->contract)

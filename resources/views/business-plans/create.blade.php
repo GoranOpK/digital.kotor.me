@@ -111,6 +111,18 @@
     .btn-primary:hover {
         background: var(--primary-dark);
     }
+    .bp-back-to-application {
+        margin: 0 0 16px;
+    }
+    .bp-back-to-application a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .bp-back-to-application a:hover {
+        text-decoration: underline;
+    }
     .btn-secondary {
         background: #6b7280;
         color: #fff;
@@ -604,6 +616,17 @@
             </div>
             <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
         </div>
+
+        @php
+            $applicationReviewUrl = $applicationReviewUrl ?? (
+                auth()->id() === $application->user_id
+                    ? route('applications.show', $application)
+                    : route('admin.applications.show', $application)
+            );
+        @endphp
+        <p class="no-print bp-back-to-application">
+            <a href="{{ $applicationReviewUrl }}">← Nazad na pregled prijave</a>
+        </p>
 
         @if(session('success'))
             <div class="alert alert-info no-print">
@@ -1363,7 +1386,7 @@
                                 {{ $financesNoticeConfirmed ? 'checked' : '' }}
                                 @if($readOnly ?? false) disabled @endif
                             >
-                            <span>Potvrđujem da sam pročitala napomenu: <span class="required">*</span></span>
+                            <span>Potvrđujem da je napomena pročitana: <span class="required">*</span></span>
                         </label>
                         @error('finances_notice_confirmed')
                             <div class="form-error" style="margin-top: 8px;">{{ $message }}</div>
@@ -1738,12 +1761,16 @@
                 <div class="form-card no-print" style="text-align: center;">
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="bpSubmitBtn" class="btn-primary" style="padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
-                            <span id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>
+                            <span id="bpSubmitBtnText">{{ $isOmladinsko ? 'Sačuvaj nacrt biznis plana' : 'Sačuvaj Nacrt plana' }}</span>
                         </button>
                     </div>
                 </div>
             @endif
         </form>
+
+        <p class="no-print bp-back-to-application">
+            <a href="{{ $applicationReviewUrl }}">← Nazad na pregled prijave</a>
+        </p>
 
         @php
             // Dugme "Štampaj" – vidljivo kandidatu koji popunjava obrazac ili predsjedniku komisije
@@ -2216,6 +2243,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const bpForm = document.getElementById('businessPlanForm');
     const bpSubmitBtn = document.getElementById('bpSubmitBtn');
     const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
+    const isOmladinsko = @json((bool) $isOmladinsko);
 
     // Obavezna polja koja treba provjeriti
     const requiredFields = [
@@ -2272,6 +2300,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funkcija za ažuriranje teksta dugmeta i informacije
     function updateSubmitButton() {
         if (!bpForm || !bpSubmitBtn) return;
+
+        if (isOmladinsko) {
+            bpSubmitBtnText.textContent = 'Sačuvaj nacrt biznis plana';
+            bpSubmitBtn.className = 'btn-secondary';
+            bpSubmitBtn.style.padding = '12px 24px';
+            bpSubmitBtn.style.fontSize = '14px';
+            return;
+        }
         
         const allFilled = checkRequiredFields();
         
@@ -2341,6 +2377,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Re-indeksiraj sve name atribute prije slanja forme
         reindexTableRows();
+
+        if (isOmladinsko) {
+            let draftInput = bpForm.querySelector('input[name="save_as_draft"]');
+            if (!draftInput) {
+                draftInput = document.createElement('input');
+                draftInput.type = 'hidden';
+                draftInput.name = 'save_as_draft';
+                draftInput.value = '1';
+                bpForm.appendChild(draftInput);
+            }
+            const requiredFieldsElements = bpForm.querySelectorAll('[required]');
+            requiredFieldsElements.forEach(field => {
+                field.removeAttribute('required');
+            });
+            bpForm.submit();
+            return;
+        }
         
         const allFilled = checkRequiredFields();
         
@@ -2350,7 +2403,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     financesNoticeConfirmWrap.classList.add('has-error');
                     financesNoticeConfirmWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                alert('Potrebno je potvrditi da ste pročitala napomenu prije unosa iznosa podrške (pitanje 22 i dalje).');
+                alert('Potvrdite da je napomena pročitana prije unosa iznosa podrške (pitanje 22 i dalje).');
                 return;
             }
 

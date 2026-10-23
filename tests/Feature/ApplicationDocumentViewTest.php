@@ -233,6 +233,7 @@ class ApplicationDocumentViewTest extends TestCase
             'start_date' => now()->subYear()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
 
         $deadlinePassed = $options['deadline_passed'];
@@ -329,6 +330,7 @@ class ApplicationDocumentViewTest extends TestCase
             'start_date' => now()->subYear()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
 
         CommissionMember::create([

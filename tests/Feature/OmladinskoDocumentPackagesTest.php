@@ -38,12 +38,13 @@ class OmladinskoDocumentPackagesTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_omladinsko_remains_development(): void
+    public function test_omladinsko_catalog_is_active(): void
     {
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
     }
 
     public function test_four_packages_match_locked_flows_a_to_d(): void
@@ -168,7 +169,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
     public function test_direct_post_rejects_zavod_ostalo_and_kasa_for_omladinsko(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft();
 
         foreach (['potvrda_zavod_nezaposleni', 'ostalo', 'izvjestaj_registar_kase', 'izvjestaj_realizacija'] as $type) {
@@ -202,7 +202,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
     public function test_preview_uses_youth_labels_without_womens_mapping(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $user = $this->makeKorisnik(['jmb' => $this->validJmb(611)]);
         $competition = $this->openCompetition('omladinsko', 'Poziv mladi paketi');
 
@@ -219,7 +218,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
     public function test_show_page_lists_package_one_without_m1_m2_as_uploads(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft();
 
         $html = $this->actingAs($owner)
@@ -264,7 +262,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
     public function test_omladinsko_missing_documents_require_explicit_confirmation_before_submit(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft();
         $this->assertSame(0, $application->documents()->count());
         $missingLabels = $application->getMissingRequiredDocumentLabels();
@@ -322,7 +319,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
     public function test_omladinsko_giro_is_not_a_blocking_missing_document(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         $competition = $this->openCompetition('omladinsko');
         $application = $this->makeApplication($competition, [
             'applicant_type' => 'preduzetnik',
@@ -339,7 +335,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
     public function test_omladinsko_complete_documents_submit_without_confirmation_step(): void
     {
-        $this->makeOmladinskoPubliclyAvailable();
         [$owner, $application] = $this->createOmladinskoReadyDraft();
         foreach ($application->getStrictlyRequiredDocuments() as $type) {
             $this->attachDocument($application, $type);
@@ -422,14 +417,6 @@ class OmladinskoDocumentPackagesTest extends TestCase
             'document_type' => $documentType,
             'is_required' => true,
         ]);
-    }
-
-    private function makeOmladinskoPubliclyAvailable(): void
-    {
-        CompetitionProgramCatalog::overrideStatusForTests(
-            'omladinsko',
-            CompetitionProgramCatalog::STATUS_ACTIVE
-        );
     }
 
     private function openCompetition(string $type, ?string $title = null): Competition

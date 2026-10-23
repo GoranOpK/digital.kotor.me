@@ -12,6 +12,7 @@ use App\Models\EvaluationScore;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\YouthSecondSessionGate;
 use App\Support\CompetitionProgramCatalog;
@@ -59,9 +60,9 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->getContent();
         $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
         $this->assertStringNotContainsString('Napomena mjesta 1', $html);
-        $this->assertStringContainsString('Napomena mjesta 2', $html);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $html);
+        $this->assertStringNotContainsString('Ostale napomene', $html);
 
-        $this->storeAndCompleteOral($ctx, true, $extra);
         $this->lockThreeSeats($ctx, [], $extra);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $extra]);
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
@@ -79,6 +80,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
 
         $service = app(CanonicalIndividualScoringService::class);
         $competition = $ctx['competition']->fresh();
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($failed->fresh()));
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($competition));
         $this->assertFalse($service->isYouthPreliminaryRankingReady($competition));
         $this->assertSame(
@@ -91,12 +94,13 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Napomena mjesta 1', $memberHtml);
-        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
-        $this->assertStringContainsString('Napomena mjesta 3', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 3', $memberHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
         $this->assertStringContainsString('Predsjednik', $memberHtml);
-        $this->assertStringContainsString('Član mjesta 2', $memberHtml);
-        $this->assertStringContainsString('Član mjesta 3', $memberHtml);
+        $this->assertStringContainsString('Član 1', $memberHtml);
+        $this->assertStringContainsString('Član 2', $memberHtml);
         $this->assertGreaterThan(10, substr_count($memberHtml, 'class="score-display"'));
         $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE, $memberHtml);
         $this->assertStringNotContainsString('Preliminarna rang-lista', $memberHtml);
@@ -108,6 +112,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ])
             ->assertRedirect();
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
         $this->assertSame(
             CanonicalIndividualScoringService::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE,
             $service->youthPreliminaryRankingBlockReason($ctx['competition']->fresh())
@@ -127,7 +132,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertNull($failed->fresh()->ranking_position);
     }
 
-    public function test_favorable_prigovor_enters_scoring_set_and_incomplete_oral_blocks_cycle(): void
+    public function test_favorable_prigovor_enters_scoring_set_and_incomplete_scores_block_cycle(): void
     {
         $ctx = $this->youthReadyToLock();
         $failed = $this->addFailedApplication($ctx);
@@ -165,9 +170,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertNull($failed->fresh('oralPresentation')->oralPresentation?->completed_at);
         $this->assertFalse($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
 
-        $this->storeAndCompleteOral($ctx, true, $failed);
-        $this->assertFalse($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
-
         $this->lockThreeSeats($ctx, [], $failed);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $failed]);
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
@@ -190,9 +192,10 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
                 ->get(route('evaluation.create', $ctx['application']))
                 ->assertOk()
                 ->getContent();
-            $this->assertStringContainsString('Napomena mjesta 1', $html);
-            $this->assertStringContainsString('Napomena mjesta 2', $html);
-            $this->assertStringContainsString('Napomena mjesta 3', $html);
+            $this->assertStringNotContainsString('Napomena mjesta 1', $html);
+            $this->assertStringNotContainsString('Napomena mjesta 2', $html);
+            $this->assertStringNotContainsString('Napomena mjesta 3', $html);
+            $this->assertStringNotContainsString('Ostale napomene', $html);
             $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $html);
             $this->assertStringNotContainsString('Preliminarna rang-lista', $html);
         }
@@ -228,7 +231,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Napomena mjesta 1', $html);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $html);
+        $this->assertStringNotContainsString('Ostale napomene', $html);
         $otherHtml = $this->actingAs($sharedUser)
             ->get(route('evaluation.create', $other['application']))
             ->assertOk()
@@ -403,7 +407,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertSame('rejected', $failed->fresh()->status);
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
         $this->assertStringContainsString('Preliminarna rang-lista', $html);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
 
         $zensko = $this->zenskoReadyToScore();
         foreach ($zensko['members']->take(4) as $index => $member) {
@@ -475,7 +479,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $service->persistYouthPreliminaryRankingIfReady($competition);
         $this->assertNotNull($ctx['application']->fresh()->ranking_position);
         $this->assertNull($below->fresh()->ranking_position);
-        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
 
         $bare = $this->makeYouthContext();
         $bare['application']->forceFill([
@@ -615,7 +619,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
                 'criterion_notes' => [1 => '', 2 => '', 3 => ''],
             ])
             ->assertRedirect();
-        $this->storeAndCompleteOral($ctx, true, $application);
 
         return $application->fresh('user');
     }
@@ -656,11 +659,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
      */
     private function youthReadyToLock(int $callNumber = 1, ?int $year = null): array
     {
-        $ctx = $this->youthWithPassedM3($callNumber, $year);
-        $this->storeAndConfirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, true);
-
-        return $ctx;
+        return $this->youthWithPassedM3($callNumber, $year);
     }
 
     /**
@@ -686,20 +685,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
      */
     private function makeYouthReadyContext(int $callNumber = 1, ?int $year = null): array
     {
-        $ctx = $this->makeYouthContext($callNumber, $year);
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            [
-                'held_at' => now()->subDays(2)->format('Y-m-d H:i:s'),
-                'notes' => 'Prva sjednica',
-                'present_member_ids' => [$ctx['members'][0]->id, $ctx['members'][1]->id],
-            ]
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        return $ctx;
+        return $this->makeYouthContext($callNumber, $year);
     }
 
     /**
@@ -717,6 +703,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];
@@ -784,6 +771,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
@@ -842,46 +830,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             'members' => $members,
             'application' => $application->fresh(),
         ];
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
-     */
-    private function storeAndConfirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Druga sjednica',
-                'present_member_ids' => array_map(fn (CommissionMember $member) => $member->id, $ctx['members']),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember}  $ctx
-     */
-    private function storeAndCompleteOral(array $ctx, bool $attended, ?Application $application = null): void
-    {
-        $application ??= $ctx['application'];
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $application]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-            ])->assertSessionHasNoErrors();
-        $payload = [
-            'scheduled_at' => now()->format('Y-m-d H:i:s'),
-            'applicant_attended' => $attended ? '1' : '0',
-            'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-        ];
-        if ($attended) {
-            $payload['held_at'] = now()->format('Y-m-d H:i:s');
-        }
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $application]), $payload)
-            ->assertSessionHasNoErrors();
     }
 
     private function userWithRole(string $role): User

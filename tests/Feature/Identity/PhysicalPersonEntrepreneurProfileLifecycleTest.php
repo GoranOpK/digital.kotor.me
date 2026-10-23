@@ -144,7 +144,24 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
         $this->assertFalse((bool) $this->physicalPerson($user)->is_entrepreneur);
     }
 
-    public function test_upgrade_to_entrepreneur_rejects_invalid_pib(): void
+    public function test_upgrade_to_entrepreneur_rejects_malformed_pib(): void
+    {
+        $user = $this->seedPhysicalPerson();
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('profile.update'), $this->profilePayload($user, [
+                'registers_as_entrepreneur' => '1',
+                'entrepreneur_business_name' => 'Radnja Petar',
+                'pib' => '1234567',
+                'crps_number' => $this->validCrps(1, 35),
+            ]))
+            ->assertSessionHasErrors('pib');
+
+        $this->assertFalse((bool) $this->physicalPerson($user)->is_entrepreneur);
+    }
+
+    public function test_upgrade_to_entrepreneur_accepts_eight_digit_pib_without_iso_check_digit(): void
     {
         $user = $this->seedPhysicalPerson();
 
@@ -156,9 +173,10 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
                 'pib' => '12345670',
                 'crps_number' => $this->validCrps(1, 35),
             ]))
-            ->assertSessionHasErrors('pib');
+            ->assertSessionHasNoErrors();
 
-        $this->assertFalse((bool) $this->physicalPerson($user)->is_entrepreneur);
+        $this->assertTrue((bool) $this->physicalPerson($user)->is_entrepreneur);
+        $this->assertSame('12345670', $this->physicalPerson($user)->pib);
     }
 
     public function test_upgrade_to_entrepreneur_rejects_invalid_crps_mark(): void

@@ -544,6 +544,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addMonth()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $competition->update([
             'commission_id' => $commission->id,
@@ -783,6 +784,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addMonth()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $competition->update([
             'commission_id' => $commission->id,
@@ -1045,6 +1047,7 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addMonth()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $competition->update([
             'commission_id' => $commission->id,

@@ -225,22 +225,6 @@
             </div>
         @endif
 
-        @if(!empty($isChairman) && $competition->isOmladinskoProfile() && ($competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed'], true)))
-            <div style="background: #eff6ff; border: 1px solid #3b82f6; color: #1e3a8a; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                <a href="{{ route('commission-sessions.first.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Evidentiraj prvu sjednicu Komisije</a>
-            </div>
-            @php
-                $secondSession = $competition->secondCommissionSession();
-                $secondStatus = $secondSession === null
-                    ? 'nije evidentirana'
-                    : ($secondSession->isConfirmed() ? 'potvrđena' : 'nacrt');
-            @endphp
-            <div style="background: #eff6ff; border: 1px solid #3b82f6; color: #1e3a8a; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                <p style="margin: 0 0 8px;">Druga sjednica: <strong>{{ $secondStatus }}</strong></p>
-                <a href="{{ route('commission-sessions.second.edit', $competition) }}" style="color: #1e3a8a; font-weight: 700;">Evidentiraj drugu sjednicu i usmeno predstavljanje</a>
-            </div>
-        @endif
-
         @if($errors->any())
             <div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
                 <ul style="margin: 0; padding-left: 20px;">
@@ -400,7 +384,59 @@
         @endif
         @endif
 
-        @include('admin.competitions.partials.official-decision')
+        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+            @if(in_array(auth()->user()?->role?->name, ['admin', 'konkurs_admin', 'superadmin'], true) && ! empty($canonicalCommissionOverview))
+                @php
+                    $cc = $canonicalCommissionOverview;
+                    $ccGovernance = \App\Services\Competitions\Commission\CanonicalCommissionGovernance::class;
+                    $ccStates = ['active' => 'Aktivan', 'vacant' => 'Upražnjeno — čeka zamjenu', 'empty' => 'Nepopunjeno'];
+                @endphp
+                <div class="info-card" data-section="canonical-commission">
+                    <h3 style="font-weight: 600; margin-bottom: 6px;">Kanonska Komisija</h3>
+                    @if($cc['foreignCommission'])
+                        <p>{{ $ccGovernance::NOT_CANONICAL_MESSAGE }}</p>
+                    @elseif($cc['commission'] === null)
+                        <p>Komisija nije uspostavljena.</p>
+                    @else
+                        <p>
+                            {{ $cc['commission']->name }}<br>
+                            Mandat: {{ $cc['commission']->mandate_starts_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
+                            – {{ $cc['commission']->mandate_ends_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
+                            ({{ $cc['mandateValid'] ? 'važeći' : 'nije važeći' }})
+                        </p>
+                        @if($cc['structuralBlock'])
+                            <p style="color: #b45309;">{{ $cc['structuralBlock'] }}</p>
+                        @endif
+                        <ul>
+                            @foreach($cc['seats'] as $seatNo => $seat)
+                                <li>
+                                    Mjesto {{ $seatNo }}:
+                                    @if($seat['member'])
+                                        {{ $seat['member']->name }} — {{ $ccGovernance::roleLabel($seat['member']->canonical_seat) }};
+                                    @endif
+                                    {{ $ccStates[$seat['state']] ?? $seat['state'] }};
+                                    @if($seat['member'])
+                                        izjave: {{ $seat['declarationsSigned'] ? 'potpisane' : 'nijesu evidentirane' }};
+                                        sukob interesa: {{ $seat['pibConflict'] ? 'DA' : 'ne' }}
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p>Zamjene: {{ $cc['replacements']->count() }}{{ $cc['replacements']->contains('late', true) ? ' (uključuje zamjenu nakon roka)' : '' }}</p>
+                    @endif
+                    <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}">Upravljanje Komisijom: uspostavljanje, imenovanje, izjave, upražnjenost i zamjene</a><br>
+                    <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije (pregled)</a>
+                    · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori (pregled)</a>
+                </div>
+            @endif
+            @if(auth()->user()?->role?->name === \App\Services\Competitions\Decision\CanonicalAdministrativeGate::SECRETARIAT_ROLE)
+                <div class="info-card">
+                    <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}">Formalna Odluka, potpisani primjerak i objava</a>
+                </div>
+            @endif
+        @else
+            @include('admin.competitions.partials.official-decision')
+        @endif
 
         @php
             $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
@@ -424,7 +460,7 @@
             </div>
         @endif
 
-        @if($competition->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null)
+        @if($competition->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null && \App\Support\ScoringProfileConfig::for($competition->type)->appliesEvaluationDeadline)
             <div class="info-card" style="border-left: 4px solid {{ $daysUntilEvaluationDeadline <= 3 ? '#ef4444' : ($daysUntilEvaluationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                 <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
                     <span>⏰</span>
@@ -457,6 +493,110 @@
             <div class="info-card">
                 <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>
                 <div style="overflow-x: auto;">
+                    @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+                        @if($isCommissionMember && ! $isAdmin)
+                            <a href="{{ route('evaluation.canonical-sessions.show', $competition) }}" class="btn" style="background:#6b7280; color:#fff; padding:6px 12px; font-size:12px; text-decoration:none;">
+                                Sjednice Komisije
+                            </a>
+                            <a href="{{ route('evaluation.canonical-review.index', $competition) }}" class="btn" style="background:var(--primary); color:#fff; padding:6px 12px; font-size:12px; text-decoration:none;">
+                                Provjera potpunosti i prigovori
+                            </a>
+                        @endif
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; min-width: 980px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left;">Prijava</th>
+                                <th style="padding: 12px; text-align: left;">Podnosilac</th>
+                                <th style="padding: 12px; text-align: left;">Status</th>
+                                <th style="padding: 12px; text-align: left;">Obrazac P1</th>
+                                <th style="padding: 12px; text-align: left;">Plan ulaganja P2</th>
+                                <th style="padding: 12px; text-align: left;">Dokumentacija</th>
+                                <th style="padding: 12px; text-align: left;">Datum podnošenja</th>
+                                <th style="padding: 12px; text-align: left;">Akcije</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($applications as $app)
+                                @php
+                                    $canonicalForm = $app->canonicalApplicantForm;
+                                    $canonicalPlan = $app->canonicalInvestmentPlan;
+                                    $formCode = $canonicalForm?->formCode() ?? 'P1';
+                                    $requiredDocs = $app->getStrictlyRequiredDocuments();
+                                    $missingDocs = $app->getMissingRequiredDocumentTypes();
+                                    $attachedRequired = max(0, count($requiredDocs) - count($missingDocs));
+                                    $canonicalStatusLabels = [
+                                        'draft' => 'Nacrt',
+                                        'submitted' => 'Podnesena',
+                                        'evaluated' => 'Ocijenjena',
+                                        'approved' => 'Odobrena',
+                                        'rejected' => 'Odbijena',
+                                    ];
+                                @endphp
+                                <tr style="border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        <strong>#{{ $app->redni_broj ?? $app->id }}</strong>
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        <span class="status-badge status-{{ $app->status }}" style="font-size:11px; padding:3px 10px;">
+                                            {{ $canonicalStatusLabels[$app->status] ?? $app->status }}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        @if($canonicalForm)
+                                            <span class="status-badge status-evaluated" style="font-size:11px; padding:3px 10px;">
+                                                {{ $formCode }} popunjen{{ $canonicalForm->isFrozen() ? ' · zamrznut' : '' }}
+                                            </span>
+                                        @else
+                                            <span class="status-badge status-draft" style="font-size:11px; padding:3px 10px;">Nedostaje</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        @if($canonicalPlan)
+                                            <span class="status-badge status-evaluated" style="font-size:11px; padding:3px 10px;">
+                                                P2 popunjen{{ $canonicalPlan->isFrozen() ? ' · zamrznut' : '' }}
+                                            </span>
+                                        @else
+                                            <span class="status-badge status-draft" style="font-size:11px; padding:3px 10px;">Nedostaje</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        <span class="status-badge {{ count($missingDocs) === 0 ? 'status-evaluated' : 'status-draft' }}" style="font-size:11px; padding:3px 10px;">
+                                            {{ $attachedRequired }}/{{ count($requiredDocs) }} obaveznih
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top; font-size:12px;">
+                                        {{ $app->submitted_at ? $app->submitted_at->format('d.m.Y H:i') : '-' }}
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                            <a href="{{ route('admin.applications.show', $app) }}" class="btn" style="background:#6b7280; color:#fff; padding:4px 12px; font-size:12px; text-decoration:none;">
+                                                Pregled prijave
+                                            </a>
+                                            @if($isCommissionMember && ! $isAdmin)
+                                                <a href="{{ route('evaluation.canonical-review.show', $app) }}" class="btn" style="background:var(--primary); color:#fff; padding:4px 12px; font-size:12px; text-decoration:none;">
+                                                    Provjera potpunosti
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" style="padding:40px; text-align:center; color:#6b7280;">
+                                        @if($isCommissionMember && !$isAdmin && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
+                                            Prijave će biti prikazane nakon isteka roka za prijavljivanje na konkurs.
+                                        @else
+                                            Nema prijava na ovaj konkurs.
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                    @else
                     <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                     <thead>
                         <tr style="border-bottom: 2px solid #e5e7eb;">
@@ -615,6 +755,7 @@
                         @endforelse
                     </tbody>
                     </table>
+                    @endif
                 </div>
                 <div style="margin-top: 20px;">
                     {{ $applications->links() }}

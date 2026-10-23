@@ -84,6 +84,23 @@
         text-decoration: none;
         font-weight: 600;
     }
+    .auth-forgot {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2px;
+    }
+    .auth-forgot a {
+        font-size: 13px;
+        color: #4f46e5;
+        text-decoration: none;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+    .auth-forgot a:hover,
+    .auth-forgot a:focus {
+        color: #4338ca;
+        text-decoration: underline;
+    }
 </style>
 
 <div class="auth-wrapper">
@@ -119,6 +136,9 @@
                 <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Prikaži/Sakrij lozinku">
                     <span id="password-toggle-icon">👁️</span>
                 </button>
+            </div>
+            <div class="auth-forgot">
+                <a href="{{ route('password.request') }}">Zaboravili ste šifru?</a>
             </div>
         </div>
 

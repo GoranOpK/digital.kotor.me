@@ -15,6 +15,8 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
+        $response->assertSee('Zaboravili ste šifru?', false);
+        $response->assertSee('/forgot-password', false);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

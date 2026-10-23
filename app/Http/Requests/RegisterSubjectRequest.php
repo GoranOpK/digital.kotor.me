@@ -7,7 +7,6 @@ use App\Identity\PhoneCallingCodeCatalog;
 use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Validation\CrpsIdentifierValidator;
 use App\Identity\Validation\JmbIdentifierValidator;
-use App\Identity\Validation\PibIdentifierValidator;
 use App\Models\PhysicalPersonIdentity;
 use App\Rules\ValidCrps;
 use App\Rules\ValidJmb;
@@ -68,7 +67,7 @@ class RegisterSubjectRequest extends FormRequest
 
         if ($this->isEntrepreneur()) {
             $rules['entrepreneur_business_name'] = ['required', 'string', 'max:255'];
-            $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib];
+            $rules['pib'] = ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib];
             $rules['crps_number'] = ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_ENTREPRENEUR)];
         }
 
@@ -178,16 +177,10 @@ class RegisterSubjectRequest extends FormRequest
 
     public function resolvedJmb(): ?string
     {
-        if ($this->isLegalEntityBranch()) {
-            return $this->filled('authorized_jmb') ? (string) $this->input('authorized_jmb') : null;
-        }
+        $field = $this->activeJmbField();
 
-        if ($this->input('user_type') === UserType::FOREIGN_BRANCH) {
-            return $this->filled('representative_jmb') ? (string) $this->input('representative_jmb') : null;
-        }
-
-        if ($this->filled('jmb')) {
-            return (string) $this->input('jmb');
+        if ($field !== null && $this->filled($field)) {
+            return (string) $this->input($field);
         }
 
         return null;
@@ -259,7 +252,7 @@ class RegisterSubjectRequest extends FormRequest
 
         $rules = [
             'legal_name' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'authorized_first_name' => ['required', 'string', 'max:255'],
             'authorized_last_name' => ['required', 'string', 'max:255'],
             'authorized_id_document_type' => ['required', 'in:'.PhysicalPersonIdentity::DOCUMENT_JMB.','.PhysicalPersonIdentity::DOCUMENT_PASSPORT],
@@ -291,7 +284,7 @@ class RegisterSubjectRequest extends FormRequest
         $rules = [
             'foreign_company_name' => ['required', 'string', 'max:255'],
             'branch_name_in_montenegro' => ['required', 'string', 'max:255'],
-            'pib' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
+            'pib' => ['bail', 'required', 'string', 'regex:/^[0-9]{8}$/', new ValidPib],
             'crps_number' => ['required', 'string', 'regex:/^[0-9]{8}$/', new ValidCrps(CrpsIdentifierValidator::MARK_FOREIGN_BRANCH)],
             'representative_first_name' => ['required', 'string', 'max:255'],
             'representative_last_name' => ['required', 'string', 'max:255'],
@@ -323,18 +316,11 @@ class RegisterSubjectRequest extends FormRequest
 
     private function refineIdentifiers(Validator $validator): void
     {
-        $pib = $this->input('pib');
-        if (is_string($pib) && preg_match('/^[0-9]{8}$/', $pib) && ! (new PibIdentifierValidator)->isValid($pib)) {
-            $validator->errors()->forget('pib');
-            $validator->errors()->add('pib', 'PIB nije ispravan.');
-        }
-
-        foreach (['jmb', 'authorized_jmb', 'representative_jmb'] as $field) {
-            $jmb = $this->input($field);
-            if (is_string($jmb) && preg_match('/^[0-9]{13}$/', $jmb) && ! (new JmbIdentifierValidator)->isValid($jmb)) {
-                $validator->errors()->forget($field);
-                $validator->errors()->add($field, 'JMB nije ispravan.');
-            }
+        $field = $this->activeJmbField();
+        $jmb = $field !== null ? $this->input($field) : null;
+        if (is_string($jmb) && preg_match('/^[0-9]{13}$/', $jmb) && ! (new JmbIdentifierValidator)->isValid($jmb)) {
+            $validator->errors()->forget($field);
+            $validator->errors()->add($field, 'JMB nije ispravan.');
         }
 
         $crps = $this->input('crps_number');
@@ -372,14 +358,47 @@ class RegisterSubjectRequest extends FormRequest
         }
 
         $pib = $this->input('pib');
-        if (is_string($pib) && $pib !== '' && $uniqueness->pibTaken($pib)) {
+        if ($this->collectsPib() && is_string($pib) && $pib !== '' && $uniqueness->pibTaken($pib)) {
             $validator->errors()->add('pib', 'PIB je već registrovan.');
         }
 
         $passport = $this->input('passport_number');
-        if (is_string($passport) && $passport !== '' && $this->isNaturalPersonBranch() && $uniqueness->physicalPassportTaken($passport)) {
+        if (is_string($passport) && $passport !== '' && $this->collectsPhysicalPassport() && $uniqueness->physicalPassportTaken($passport)) {
             $validator->errors()->add('passport_number', 'Broj pasoša je već registrovan.');
         }
+    }
+
+    private function activeJmbField(): ?string
+    {
+        if ($this->isNaturalPersonBranch()) {
+            $status = $this->input('residential_status');
+
+            return $status === 'resident'
+                || ($status === 'non-resident' && $this->input('id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB)
+                ? 'jmb'
+                : null;
+        }
+
+        if ($this->isLegalEntityBranch()) {
+            return $this->input('authorized_id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB
+                ? 'authorized_jmb'
+                : null;
+        }
+
+        if ($this->input('user_type') === UserType::FOREIGN_BRANCH) {
+            return $this->input('representative_id_document_type') === PhysicalPersonIdentity::DOCUMENT_JMB
+                ? 'representative_jmb'
+                : null;
+        }
+
+        return null;
+    }
+
+    private function collectsPhysicalPassport(): bool
+    {
+        return $this->isNaturalPersonBranch()
+            && $this->input('residential_status') === 'non-resident'
+            && $this->input('id_document_type') === PhysicalPersonIdentity::DOCUMENT_PASSPORT;
     }
 
     private function isEntrepreneur(): bool
@@ -430,6 +449,13 @@ class RegisterSubjectRequest extends FormRequest
     private function isNaturalPersonBranch(): bool
     {
         return $this->input('user_type') === UserType::PHYSICAL_PERSON || $this->isEntrepreneur();
+    }
+
+    private function collectsPib(): bool
+    {
+        return $this->isEntrepreneur()
+            || $this->isLegalEntityBranch()
+            || $this->input('user_type') === UserType::FOREIGN_BRANCH;
     }
 
     private function crpsMarkFor(string $type): ?int

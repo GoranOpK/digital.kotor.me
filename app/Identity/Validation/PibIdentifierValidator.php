@@ -2,6 +2,10 @@
 
 namespace App\Identity\Validation;
 
+/**
+ * PIB is accepted on format alone (exactly 8 digits). The check digit is
+ * intentionally not verified: official PIBs exist that fail ISO 7064 MOD 11,10.
+ */
 final class PibIdentifierValidator
 {
     public function isValid(mixed $value): bool
@@ -10,23 +14,6 @@ final class PibIdentifierValidator
             return false;
         }
 
-        $pib = (string) $value;
-
-        if (! preg_match('/^[0-9]{8}$/', $pib)) {
-            return false;
-        }
-
-        $product = 10;
-        for ($i = 0; $i < 7; $i++) {
-            $product = ($product + (int) $pib[$i]) % 10;
-            if ($product === 0) {
-                $product = 10;
-            }
-            $product = ($product * 2) % 11;
-        }
-
-        $checkDigit = (11 - $product) % 10;
-
-        return $checkDigit === (int) $pib[7];
+        return preg_match('/^[0-9]{8}$/', (string) $value) === 1;
     }
 }

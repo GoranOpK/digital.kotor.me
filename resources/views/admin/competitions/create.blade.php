@@ -174,9 +174,9 @@
                     <div class="form-group">
                         <label class="form-label">Tip konkursa *</label>
                         <select name="type" id="competition_type" class="form-control" required>
-                            <option value="zensko" {{ $selectedType === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
-                            <option value="omladinsko" {{ $selectedType === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
-                            <option value="ostalo" {{ $selectedType === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
+                            @foreach(\App\Services\Competitions\Profile\CompetitionProfileResolver::adminTypeOptions() as $typeKey => $typeLabel)
+                                <option value="{{ $typeKey }}" {{ $selectedType === $typeKey ? 'selected' : '' }}>{{ $typeLabel }}</option>
+                            @endforeach
                         </select>
                     </div>
 

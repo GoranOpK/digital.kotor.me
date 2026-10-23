@@ -316,15 +316,9 @@ class Step8CutoverCapabilityTest extends TestCase
                 'year' => 2026,
                 'start_date' => now()->toDateString(),
                 'end_date' => now()->addYear()->toDateString(),
-                'members' => [
-                    [
-                        'name' => 'Član Jedan',
-                        'email' => 'clan.step8@example.com',
-                        'password' => 'password',
-                        'position' => 'predsjednik',
-                        'member_type' => 'opstina',
-                    ],
-                ],
+                'competition_type' => 'zensko',
+                'competition_ids' => [$this->openCompetition()->id],
+                'members' => $this->zenskoCommissionMembers('clan.step8@example.com', 'step8'),
             ])
             ->assertRedirect();
 
@@ -382,15 +376,9 @@ class Step8CutoverCapabilityTest extends TestCase
                 'year' => 2026,
                 'start_date' => now()->toDateString(),
                 'end_date' => now()->addYear()->toDateString(),
-                'members' => [
-                    [
-                        'name' => 'Član Freeze',
-                        'email' => 'clan.freeze@example.com',
-                        'password' => 'password',
-                        'position' => 'predsjednik',
-                        'member_type' => 'opstina',
-                    ],
-                ],
+                'competition_type' => 'zensko',
+                'competition_ids' => [$this->openCompetition()->id],
+                'members' => $this->zenskoCommissionMembers('clan.freeze@example.com', 'freeze', 'Član Freeze'),
             ])
             ->assertRedirect();
 
@@ -1002,6 +990,30 @@ class Step8CutoverCapabilityTest extends TestCase
         return $this->registrationHttpPayload($email, [
             'jmb' => $jmb ?? $this->validJmb(10),
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function zenskoCommissionMembers(string $firstEmail, string $prefix, ?string $firstName = null): array
+    {
+        $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
+        $members = [];
+        foreach ($types as $index => $type) {
+            $row = [
+                'name' => $index === 0 && $firstName !== null ? $firstName : 'Član '.$prefix.' '.$index,
+                'email' => $index === 0 ? $firstEmail : $prefix.'.'.$index.'@example.com',
+                'password' => 'password',
+                'position' => $index === 0 ? 'predsjednik' : 'clan',
+                'member_type' => $type,
+            ];
+            if ($type === 'udruzenje') {
+                $row['organization'] = 'Udruženje';
+            }
+            $members[] = $row;
+        }
+
+        return $members;
     }
 
     private function openCompetition(): \App\Models\Competition

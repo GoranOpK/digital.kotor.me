@@ -129,6 +129,10 @@
                     @include('evaluation._youth_preliminary_ranking', [
                         'youthRankingView' => $youthPreliminaryByCompetition[$youthComp->id],
                         'youthRankingTitle' => $youthComp->title,
+                        'canEditYouthAllocationDraft' => $youthAllocationCanEditByCompetition[$youthComp->id] ?? false,
+                        'youthEqualScoreVotingBoard' => $youthEqualScoreVotingByCompetition[$youthComp->id] ?? null,
+                        'youthEqualScoreCompetition' => $youthComp,
+                        'youthAllocationConfirmationBoard' => $youthAllocationConfirmationByCompetition[$youthComp->id] ?? null,
                     ])
                 @endif
             @endforeach

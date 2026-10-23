@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\CommissionMember;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Support\EliminatoryProfileConfig;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -144,15 +145,10 @@ class ApplicationEliminatoryCheckService
     private function assertRequiredExplanations(ApplicationEliminatoryCheck $check, EliminatoryProfileConfig $profile): void
     {
         if ($profile->usesStructuredNotes) {
-            $explanations = EliminatoryProfileConfig::parseYouthNotes($check->note);
-            $errors = [];
-            foreach ([1, 2, 3] as $number) {
-                if ($check->criterionIsFalse($check->{"criterion_{$number}"}) && $explanations[$number] === '') {
-                    $errors['criterion_notes.'.$number] = EliminatoryProfileConfig::YOUTH_EXPLANATION_REQUIRED_MESSAGE;
-                }
-            }
-            if ($errors !== []) {
-                throw ValidationException::withMessages($errors);
+            if (EliminatoryProfileConfig::youthSharedNote($check->note) === '') {
+                throw ValidationException::withMessages([
+                    'note' => EliminatoryProfileConfig::NOTE_REQUIRED_ON_FAIL_MESSAGE,
+                ]);
             }
 
             return;
@@ -160,7 +156,7 @@ class ApplicationEliminatoryCheckService
 
         if (trim((string) $check->note) === '') {
             throw ValidationException::withMessages([
-                'note' => 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.',
+                'note' => EliminatoryProfileConfig::NOTE_REQUIRED_ON_FAIL_MESSAGE,
             ]);
         }
     }
@@ -168,6 +164,7 @@ class ApplicationEliminatoryCheckService
     private function assertChairmanCanMutate(Application $application, CommissionMember $chairman): void
     {
         $application->loadMissing('competition');
+        LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
 
         if ($chairman->position !== 'predsjednik' || $chairman->status !== 'active') {
             abort(403, 'Samo predsjednik Komisije može uređivati Obrazac 3.');

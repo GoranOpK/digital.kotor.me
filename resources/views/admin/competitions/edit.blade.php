@@ -132,9 +132,9 @@
                             <input type="text" class="form-control" value="Omladinsko preduzetništvo" readonly>
                         @else
                         <select name="type" class="form-control @error('type') error @enderror" required>
-                            <option value="zensko" {{ old('type', $competition->type) === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
-                            <option value="omladinsko" {{ old('type', $competition->type) === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
-                            <option value="ostalo" {{ old('type', $competition->type) === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
+                            @foreach(\App\Services\Competitions\Profile\CompetitionProfileResolver::adminTypeOptions() as $typeKey => $typeLabel)
+                                <option value="{{ $typeKey }}" {{ old('type', $competition->type) === $typeKey ? 'selected' : '' }}>{{ $typeLabel }}</option>
+                            @endforeach
                         </select>
                         @endif
                         @error('type')
@@ -225,6 +225,24 @@
                         </div>
                     </div>
                 </div>
+
+                @if($isAdmin
+                    && $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL
+                    && $competition->status === 'draft')
+                    <div class="form-group" style="padding: 14px 16px; border: 1px solid #f59e0b; background: #fffbeb; border-radius: 8px;">
+                        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
+                            <input type="hidden" name="is_test_preview" value="0">
+                            <input type="checkbox" name="is_test_preview" value="1" {{ old('is_test_preview', $competition->is_test_preview) ? 'checked' : '' }} style="margin-top:3px;">
+                            <span>
+                                <strong>Testni MMSP preview</strong><br>
+                                <span style="font-size:12px; color:#6b7280;">
+                                    Omogućava javni prikaz i testiranje prijave dok Poziv ostaje Nacrt.
+                                    Ne pokreće službenu objavu i ne zauzima godišnji MMSP publication slot.
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                @endif
 
                 <div class="form-group">
                     <label class="form-label">Informacije o roku</label>

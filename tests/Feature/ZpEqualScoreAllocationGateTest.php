@@ -363,6 +363,7 @@ class ZpEqualScoreAllocationGateTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
 
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();

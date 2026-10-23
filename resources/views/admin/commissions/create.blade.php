@@ -71,7 +71,37 @@
         font-size: 12px;
         margin-top: 4px;
     }
+    .form-step {
+        margin-bottom: 28px;
+        padding-bottom: 24px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .form-step h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0 0 16px;
+    }
+    .type-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        font-size: 15px;
+        color: #374151;
+        cursor: pointer;
+    }
 </style>
+
+@php
+    $selectedCompetitionType = $selectedCompetitionType ?? null;
+    $commissionFormTypes = $commissionFormTypes ?? [];
+    $isOmladinskoCommissionForm = !empty($isOmladinskoCommissionForm);
+    $isCanonicalCommissionForm = !empty($isCanonicalCommissionForm);
+    $isThreeSeatCommissionForm = !empty($isThreeSeatCommissionForm);
+    $statusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
+    $oldCompetitionIds = old('competition_ids', isset($targetCompetition) && $targetCompetition ? [$targetCompetition->id] : []);
+@endphp
 
 <div class="admin-page">
     <div class="container mx-auto px-4">
@@ -80,9 +110,34 @@
         </div>
 
         <div class="form-card">
+            <div class="form-step">
+                <h2>1. Vrsta konkursa</h2>
+                <form method="GET" action="{{ route('admin.commissions.create') }}" id="commission-type-form">
+                    @foreach($commissionFormTypes as $type => $label)
+                        <label class="type-option">
+                            <input type="radio" name="competition_type" value="{{ $type }}"
+                                   {{ $selectedCompetitionType === $type ? 'checked' : '' }}
+                                   onchange="this.form.submit()">
+                            <span>{{ $label }}</span>
+                        </label>
+                    @endforeach
+                    <noscript>
+                        <button type="submit" class="btn-primary" style="margin-top: 8px;">Prikaži Pozive</button>
+                    </noscript>
+                </form>
+                @if($selectedCompetitionType === null)
+                    <p style="font-size: 14px; color: #6b7280; margin: 12px 0 0;">Izaberite vrstu konkursa da biste nastavili sa izborom Poziva i sastavom Komisije.</p>
+                @endif
+            </div>
+
+            @if($selectedCompetitionType)
             <form method="POST" action="{{ route('admin.commissions.store') }}" autocomplete="on">
                 @csrf
-                
+                <input type="hidden" name="competition_type" value="{{ $selectedCompetitionType }}">
+                @error('competition_type')
+                    <div class="error-message" style="margin-bottom: 12px;">{{ $message }}</div>
+                @enderror
+
                 <div class="form-group">
                     <label class="form-label">Naziv komisije *</label>
                     <input type="text" name="name" class="form-control @error('name') error @enderror" value="{{ old('name') }}" required>
@@ -129,7 +184,6 @@
                             const endDate = new Date(startDate);
                             endDate.setFullYear(endDate.getFullYear() + 1);
                             
-                            // Formatiraj datum kao YYYY-MM-DD
                             const year = endDate.getFullYear();
                             const month = String(endDate.getMonth() + 1).padStart(2, '0');
                             const day = String(endDate.getDate()).padStart(2, '0');
@@ -140,277 +194,83 @@
                         }
                     }
                     
-                    // Izračunaj na učitavanju stranice ako već postoji start_date
                     document.addEventListener('DOMContentLoaded', function() {
-                        if (document.getElementById('start_date').value) {
+                        if (document.getElementById('start_date') && document.getElementById('start_date').value) {
                             calculateEndDate();
                         }
                     });
                 </script>
 
-                @if(!empty($isOmladinskoCommissionForm))
-                <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin: 24px 0;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">Sastav komisije mladih</h3>
-                    <p style="font-size: 14px; color: #374151; margin: 0;">Komisija ima tačno tri mjesta. Predsjednik je jedan od ta tri člana. Mjesta 4 i 5 nijesu dozvoljena.</p>
-                </div>
-                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
-                    <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Članovi komisije</h2>
-                    @foreach([1,2,3] as $seat)
-                        @php $idx = $seat - 1; @endphp
-                        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                            <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">Mjesto {{ $seat }}</h3>
-                            <input type="hidden" name="members[{{ $idx }}][canonical_seat_no]" value="{{ $seat }}">
-                            <div class="form-group">
-                                <label class="form-label">Ime i prezime</label>
-                                <input type="text" name="members[{{ $idx }}][name]" class="form-control" value="{{ old('members.'.$idx.'.name') }}">
+                <div class="form-step">
+                    <h2>2. Poziv</h2>
+                    @error('competition_ids')
+                        <div class="error-message" style="margin-bottom: 12px;">{{ $message }}</div>
+                    @enderror
+                    @if($competitions->count() > 0)
+                        <div class="form-group">
+                            <label class="form-label">
+                                @if(!empty($isCanonicalCommissionForm))
+                                    Izaberite Poziv za podršku mikro, malim i srednjim preduzećima (opciono)
+                                @elseif(!empty($isOmladinskoCommissionForm))
+                                    Izaberite omladinski Poziv (opciono)
+                                @else
+                                    Izaberi konkurs(e) za ovu komisiju (opciono)
+                                @endif
+                            </label>
+                            <div style="background: #f9fafb; padding: 16px; border-radius: 8px; max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb;">
+                                @foreach($competitions as $competition)
+                                    <div style="margin-bottom: 12px;">
+                                        <label style="display: flex; align-items: flex-start; cursor: pointer;">
+                                            <input type="checkbox" name="competition_ids[]" value="{{ $competition->id }}"
+                                                   {{ in_array($competition->id, $oldCompetitionIds) ? 'checked' : '' }}
+                                                   style="margin-right: 8px; margin-top: 3px; width: 18px; height: 18px; cursor: pointer;">
+                                            <span style="font-size: 14px; color: #374151;">
+                                                {{ $competition->title }} ({{ $competition->year }})
+                                                — {{ $statusLabels[$competition->status] ?? $competition->status }}
+                                                @if($competition->call_number)
+                                                    — Poziv br. {{ $competition->call_number }}
+                                                @endif
+                                                @if($competition->commission)
+                                                    <span style="color: #6b7280; font-size: 12px;">- Već dodijeljeno: {{ $competition->commission->name }}</span>
+                                                @endif
+                                            </span>
+                                        </label>
+                                    </div>
+                                @endforeach
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">E-mail</label>
-                                <input type="email" name="members[{{ $idx }}][email]" class="form-control" value="{{ old('members.'.$idx.'.email') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Password</label>
-                                <input type="password" name="members[{{ $idx }}][password]" class="form-control" minlength="8">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Pozicija</label>
-                                <select name="members[{{ $idx }}][position]" class="form-control">
-                                    <option value="predsjednik" {{ old('members.'.$idx.'.position', $seat === 1 ? 'predsjednik' : 'clan') === 'predsjednik' ? 'selected' : '' }}>Predsjednik</option>
-                                    <option value="clan" {{ old('members.'.$idx.'.position', $seat === 1 ? 'predsjednik' : 'clan') === 'clan' ? 'selected' : '' }}>Član</option>
-                                </select>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                Poziv nije obavezan pri kreiranju. Možete ostaviti prazno ili izabrati jedan ili više Poziva izabranog profila.
+                                @if(!empty($isCanonicalCommissionForm))
+                                    Ponuđeni su samo Pozivi za podršku mikro, malim i srednjim preduzećima.
+                                @elseif(!empty($isOmladinskoCommissionForm))
+                                    Ponuđeni su samo omladinski Pozivi.
+                                @endif
                             </div>
                         </div>
-                    @endforeach
-                </div>
-                @else
-                <!-- Informacije o sastavu komisije -->
-                <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin: 24px 0;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">Sastav komisije</h3>
-                    <p style="font-size: 14px; color: #374151; margin: 0 0 8px;"><strong>Članovi Komisije su:</strong></p>
-                    <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
-                        <li>3 člana - predstavnici Opštine Kotor (1 član - predsjednik Komisije, 2 člana - iz redova zaposlenih u Sekretarijatu od kojih je jedan sekretar Komisije)</li>
-                        <li>1 član - predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</li>
-                        <li>1 član - predstavnica Ženske političke mreže</li>
-                    </ul>
-                    <p style="font-size: 13px; color: #6b7280; margin: 12px 0 0; font-style: italic;">Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Nema obaveznih članova - možete dodati bilo koji član. Ostale članove možete dodati kasnije.</p>
+                    @else
+                        <p style="font-size: 14px; color: #6b7280; margin: 0;">Nema dostupnih Poziva ovog tipa. Komisija se može sačuvati i bez Poziva.</p>
+                    @endif
                 </div>
 
-                <!-- Članovi komisije -->
-                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
-                    <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Članovi komisije</h2>
-                    
-                    <!-- Predsjednik -->
-                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">1. Predsjednik</h3>
-                        <div class="form-group">
-                            <label class="form-label">Ime i prezime</label>
-                            <input type="text" name="members[0][name]" class="form-control @error('members.0.name') error @enderror" value="{{ old('members.0.name') }}">
-                            @error('members.0.name')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">E-mail</label>
-                            <input type="email" name="members[0][email]" class="form-control @error('members.0.email') error @enderror" value="{{ old('members.0.email') }}" autocomplete="section-commission-member-0 username" autocapitalize="off" spellcheck="false">
-                            @error('members.0.email')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="members[0][password]" class="form-control @error('members.0.password') error @enderror" minlength="8" autocomplete="section-commission-member-0 current-password">
-                            @error('members.0.password')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Organizacija</label>
-                            <input type="text" name="members[0][organization]" class="form-control" value="{{ old('members.0.organization') }}" placeholder="Opština Kotor">
-                        </div>
-                        <input type="hidden" name="members[0][position]" value="predsjednik">
-                        <input type="hidden" name="members[0][member_type]" value="opstina">
-                    </div>
-
-                    <!-- 2 člana - Opština -->
-                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine Kotor (Sekretarijat)</h3>
-                        <div class="form-group">
-                            <label class="form-label">Ime i prezime</label>
-                            <input type="text" name="members[1][name]" class="form-control @error('members.1.name') error @enderror" value="{{ old('members.1.name') }}">
-                            @error('members.1.name')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">E-mail</label>
-                            <input type="email" name="members[1][email]" class="form-control @error('members.1.email') error @enderror" value="{{ old('members.1.email') }}" autocomplete="section-commission-member-1 username" autocapitalize="off" spellcheck="false">
-                            @error('members.1.email')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="members[1][password]" class="form-control @error('members.1.password') error @enderror" minlength="8" autocomplete="section-commission-member-1 current-password">
-                            @error('members.1.password')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Organizacija</label>
-                            <input type="text" name="members[1][organization]" class="form-control" value="{{ old('members.1.organization') }}" placeholder="Naziv organizacije">
-                        </div>
-                        <input type="hidden" name="members[1][position]" value="clan">
-                        <input type="hidden" name="members[1][member_type]" value="opstina">
-                    </div>
-
-                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine Kotor (Sekretarijat)</h3>
-                        <div class="form-group">
-                            <label class="form-label">Ime i prezime</label>
-                            <input type="text" name="members[2][name]" class="form-control @error('members.2.name') error @enderror" value="{{ old('members.2.name') }}">
-                            @error('members.2.name')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">E-mail</label>
-                            <input type="email" name="members[2][email]" class="form-control @error('members.2.email') error @enderror" value="{{ old('members.2.email') }}" autocomplete="section-commission-member-2 username" autocapitalize="off" spellcheck="false">
-                            @error('members.2.email')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="members[2][password]" class="form-control @error('members.2.password') error @enderror" minlength="8" autocomplete="section-commission-member-2 current-password">
-                            @error('members.2.password')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Organizacija</label>
-                            <input type="text" name="members[2][organization]" class="form-control" value="{{ old('members.2.organization') }}" placeholder="Naziv organizacije">
-                        </div>
-                        <input type="hidden" name="members[2][position]" value="clan">
-                        <input type="hidden" name="members[2][member_type]" value="opstina">
-                    </div>
-
-                    <!-- 1 član - Udruženje -->
-                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</h3>
-                        <div class="form-group">
-                            <label class="form-label">Ime i prezime</label>
-                            <input type="text" name="members[3][name]" class="form-control @error('members.3.name') error @enderror" value="{{ old('members.3.name') }}">
-                            @error('members.3.name')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">E-mail</label>
-                            <input type="email" name="members[3][email]" class="form-control @error('members.3.email') error @enderror" value="{{ old('members.3.email') }}" autocomplete="section-commission-member-3 username" autocapitalize="off" spellcheck="false">
-                            @error('members.3.email')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="members[3][password]" class="form-control @error('members.3.password') error @enderror" minlength="8" autocomplete="section-commission-member-3 current-password">
-                            @error('members.3.password')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Organizacija</label>
-                            <input type="text" name="members[3][organization]" class="form-control @error('members.3.organization') error @enderror" value="{{ old('members.3.organization') }}" placeholder="Naziv udruženja/organizacije">
-                            @error('members.3.organization')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <input type="hidden" name="members[3][position]" value="clan">
-                        <input type="hidden" name="members[3][member_type]" value="udruzenje">
-                    </div>
-
-                    <!-- 1 član - Ženske mreže -->
-                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">5. Član - Predstavnica Ženske političke mreže</h3>
-                        <div class="form-group">
-                            <label class="form-label">Ime i prezime</label>
-                            <input type="text" name="members[4][name]" class="form-control @error('members.4.name') error @enderror" value="{{ old('members.4.name') }}">
-                            @error('members.4.name')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">E-mail</label>
-                            <input type="email" name="members[4][email]" class="form-control @error('members.4.email') error @enderror" value="{{ old('members.4.email') }}" autocomplete="section-commission-member-4 username" autocapitalize="off" spellcheck="false">
-                            @error('members.4.email')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="members[4][password]" class="form-control @error('members.4.password') error @enderror" minlength="8" autocomplete="section-commission-member-4 current-password">
-                            @error('members.4.password')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Organizacija</label>
-                            <input type="text" name="members[4][organization]" class="form-control" value="{{ old('members.4.organization') }}" placeholder="Ženska politička mreža">
-                        </div>
-                        <input type="hidden" name="members[4][position]" value="clan">
-                        <input type="hidden" name="members[4][member_type]" value="zene_mreza">
-                    </div>
-
+                <div class="form-step" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">
+                    <h2>3. Sastav Komisije</h2>
+                    @error('members')
+                        <div class="error-message" style="margin-bottom: 12px;">{{ $message }}</div>
+                    @enderror
+                    @if(!empty($isThreeSeatCommissionForm))
+                        @include('admin.commissions.partials.create-omladinsko-members')
+                    @else
+                        @include('admin.commissions.partials.create-zensko-members')
+                    @endif
                 </div>
-                @endif
-
-                <!-- Dodjela konkursa komisiji -->
-                @if($competitions->count() > 0)
-                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
-                    <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Dodjela konkursa</h2>
-                    <div class="form-group">
-                        <label class="form-label">Izaberi konkurs(e) za ovu komisiju</label>
-                        <div style="background: #f9fafb; padding: 16px; border-radius: 8px; max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb;">
-                            @foreach($competitions as $competition)
-                                <div style="margin-bottom: 12px;">
-                                    <label style="display: flex; align-items: center; cursor: pointer;">
-                                        <input type="checkbox" name="competition_ids[]" value="{{ $competition->id }}"
-                                               {{ in_array($competition->id, old('competition_ids', isset($targetCompetition) && $targetCompetition ? [$targetCompetition->id] : [])) ? 'checked' : '' }}
-                                               style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
-                                        <span style="font-size: 14px; color: #374151;">
-                                            {{ $competition->title }} ({{ $competition->year }})
-                                            @if($competition->commission)
-                                                <span style="color: #6b7280; font-size: 12px;">- Već dodijeljeno: {{ $competition->commission->name }}</span>
-                                            @endif
-                                        </span>
-                                    </label>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                            Možete izabrati više konkursa. Ista komisija može biti dodijeljena na više različitih konkursa.
-                        </div>
-                    </div>
-                </div>
-                @endif
 
                 <div style="margin-top: 24px;">
                     <button type="submit" class="btn-primary">Sačuvaj komisiju</button>
                     <a href="{{ route('admin.commissions.index') }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>
                 </div>
-                <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-left: 4px solid var(--primary); border-radius: 4px;">
-                    <p style="font-size: 13px; color: #374151; margin: 0;">
-                        <strong>Napomena:</strong> Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Nema obaveznih članova - možete dodati bilo koji član. Ako dodajete člana, sva polja za tog člana moraju biti popunjena. Ostale članove možete dodati kasnije na stranici za upravljanje komisijom.
-                    </p>
-                </div>
             </form>
+            @endif
         </div>
     </div>
 </div>
 @endsection
-

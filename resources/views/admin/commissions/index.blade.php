@@ -130,7 +130,13 @@
                                 {{ $commission->end_date->format('d.m.Y') }}
                             </td>
                             <td>
-                                {{ $commission->active_members_count }} / 5 aktivnih
+                                @php
+                                    $storedProfile = $commission->assignedProfileType();
+                                    $expectedMembers = $storedProfile
+                                        ? \App\Support\CommissionProfileConfig::for($storedProfile)->seatCount
+                                        : null;
+                                @endphp
+                                {{ $commission->active_members_count }}@if($expectedMembers) / {{ $expectedMembers }}@endif aktivnih
                             </td>
                             <td>
                                 <span class="status-badge status-{{ $commission->status }}">
@@ -139,7 +145,9 @@
                             </td>
                             <td>
                                 <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-sm btn-view">Pregled</a>
-                                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                @if($storedProfile)
+                                    <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                @endif
                                 <form action="{{ route('admin.commissions.destroy', $commission) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu komisiju? Ova akcija je nepovratna.');">
                                     @csrf
                                     @method('DELETE')

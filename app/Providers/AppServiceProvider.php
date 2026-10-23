@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\CulturalActivity\CulturalActivityStore::class);
         $this->app->singleton(\App\Services\CulturalActivity\CulturalActivityRecorder::class);
         $this->app->singleton(\App\Services\CulturalActivity\CulturalActivityEmitter::class);
+        $this->app->singleton(\App\Contracts\MegaArchiveClient::class, \App\Services\ExternalArchive\MegaArchiveService::class);
         $this->app->singleton(\App\Services\ExternalArchive\ExternalFileArchiveService::class);
         $this->app->singleton(\App\Services\Payments\PaymentGatewayResolver::class);
         $this->app->singleton(\App\Security\JmbEncryptionService::class, function () {

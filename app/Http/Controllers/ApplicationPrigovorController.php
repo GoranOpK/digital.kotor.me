@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Services\ApplicationPrigovorService;
+use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,7 @@ class ApplicationPrigovorController extends Controller
         }
 
         $application->loadMissing('competition');
+        LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
 
         if ($application->competition?->isOmladinskoProfile()) {
             $validated = $request->validate([

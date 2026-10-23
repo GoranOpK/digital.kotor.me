@@ -57,6 +57,23 @@ class BusinessPlanController extends Controller
     }
 
     /**
+     * Canonical MMSP has no Women/Youth business plan: Obrazac P2 is the only plan source.
+     */
+    private function redirectCanonicalToInvestmentPlan(Application $application): ?RedirectResponse
+    {
+        if (! $application->isCanonicalProfile()) {
+            return null;
+        }
+
+        if ((int) $application->user_id !== (int) Auth::id()) {
+            abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        return redirect()->route('applications.canonical-p2.edit', $application)
+            ->withErrors(['error' => 'Za javni poziv za preduzetnike i MMSP biznis plan se ne popunjava. Plan ulaganja je Obrazac P2.']);
+    }
+
+    /**
      * PIB iz Obrasca 1a/1b (prijava) ili korisničkog profila.
      */
     protected function resolvePibFromApplication(Application $application, $user): ?string
@@ -80,6 +97,10 @@ class BusinessPlanController extends Controller
      */
     public function create(Application $application): View|RedirectResponse
     {
+        if ($redirect = $this->redirectCanonicalToInvestmentPlan($application)) {
+            return $redirect;
+        }
+
         $this->bpLog('BP_CREATE: entered create()', [
             'application_id' => $application->id,
             'auth_user_id' => Auth::id(),
@@ -319,7 +340,18 @@ class BusinessPlanController extends Controller
             abort(403, 'Članovi komisije mogu samo pregledati biznis planove u read-only modu.');
         }
 
-        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData', 'readOnly', 'resolvedPib'));
+        $applicationReviewUrl = $isOwner
+            ? route('applications.show', $application)
+            : route('admin.applications.show', $application);
+
+        return view('business-plans.create', compact(
+            'application',
+            'businessPlan',
+            'defaultData',
+            'readOnly',
+            'resolvedPib',
+            'applicationReviewUrl'
+        ));
     }
 
     /**
@@ -327,6 +359,10 @@ class BusinessPlanController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
+        if ($redirect = $this->redirectCanonicalToInvestmentPlan($application)) {
+            return $redirect;
+        }
+
         $this->bpLog('BP_STORE: start', [
             'application_id' => $application->id,
             'user_id' => Auth::id(),
@@ -487,7 +523,7 @@ class BusinessPlanController extends Controller
             'applicant_email.required' => 'E-mail je obavezan.',
             'summary.required' => 'Rezime je obavezno.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
-            'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da ste pročitali napomenu u dijelu IV. Finansije.',
+            'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da je napomena u dijelu IV. Finansije pročitana.',
         ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->bpLog('BP_STORE: validation failed', [
@@ -504,27 +540,6 @@ class BusinessPlanController extends Controller
             throw ValidationException::withMessages([
                 'has_registered_business' => 'Odgovor mora odgovarati registrovanosti biznisa iz Prijave.',
             ]);
-        }
-
-        $application->loadMissing('competition');
-        if (! $isDraft && $application->isOmladinskoProfile()) {
-            $realizationType = (string) $request->input('realization_type', '');
-            if ($realizationType === '') {
-                throw ValidationException::withMessages([
-                    'realization_type' => 'Tačka 7 biznis plana mora imati tačno jedan odgovor.',
-                ]);
-            }
-            if ($realizationType === KnOmladinskoDocumentPackage::REALIZATION_DRUGO
-                && trim((string) $request->input('realization_other_text', '')) === '') {
-                throw ValidationException::withMessages([
-                    'realization_other_text' => 'Ako je u tački 7 izabrano „Drugo“, obavezno je tekstualno objašnjenje.',
-                ]);
-            }
-            if (KnOmladinskoDocumentPackage::filledPurchaseCount($request->input('funding_sources_table')) < 1) {
-                throw ValidationException::withMessages([
-                    'funding_sources_table' => 'Tabela nabavki mora sadržati najmanje jednu stavku.',
-                ]);
-            }
         }
 
         $this->bpLog('BP_STORE: validation ok', [
@@ -854,15 +869,24 @@ class BusinessPlanController extends Controller
             'redirect' => $isDraft ? 'dashboard' : 'applications.show',
         ]);
 
+        $application->loadMissing('competition');
+        $youthIncompleteNotice = $application->isOmladinskoProfile()
+            && KnOmladinskoDocumentPackage::isContentIncomplete($businessPlan);
+        $youthIncompleteMessage = 'Nacrt biznis plana je sačuvan. Biznis plan još nije kompletan. Nedostajuće podatke možete dopuniti prije konačnog podnošenja prijave.';
+
         // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
         if ($isDraft) {
             return redirect()->route('dashboard')
-                ->with('success', 'Biznis plan je sačuvan kao nacrt. Možete ga nastaviti popunjavati iz sekcije \"Moje prijave\".');
+                ->with('success', $youthIncompleteNotice
+                    ? $youthIncompleteMessage
+                    : 'Biznis plan je sačuvan kao nacrt. Možete ga nastaviti popunjavati iz sekcije \"Moje prijave\".');
         }
 
         // U suprotnom, vrati na prikaz prijave
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
+            ->with('success', $youthIncompleteNotice
+                ? $youthIncompleteMessage
+                : 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
     }
 }
 

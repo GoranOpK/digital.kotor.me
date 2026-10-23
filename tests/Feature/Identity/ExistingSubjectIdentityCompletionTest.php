@@ -196,8 +196,14 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
             ->assertSessionHasErrors('legal_name');
 
         $this->actingAs($user)->from(route('identity.completion.create'))
-            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => '12345670']))
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => '1234567A']))
             ->assertSessionHasErrors('pib');
+        $this->assertSame(['PIB mora imati tačno 8 cifara.'], session('errors')->get('pib'));
+
+        $this->actingAs($user)->from(route('identity.completion.create'))
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => '1234567']))
+            ->assertSessionHasErrors('pib');
+        $this->assertSame(['PIB mora imati tačno 8 cifara.'], session('errors')->get('pib'));
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->dooPayload(['crps_number' => '']))
@@ -213,7 +219,7 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->dooPayload(['authorized_jmb' => '0000000000001']))
-            ->assertSessionHasErrors('authorized_jmb');
+            ->assertSessionHasErrors(['authorized_jmb' => 'JMB nije ispravan.']);
 
         $this->assertSame(0, PlatformIdentity::query()->count());
 
@@ -337,6 +343,32 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
         $this->assertNull($passportFl->jmb);
     }
 
+    public function test_doo_completion_accepts_eight_digit_pib_without_iso_check_digit(): void
+    {
+        $this->enableCanonicalHttp();
+        $user = $this->makeDooUser();
+
+        $this->actingAs($user)
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => '12345670']))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertSame('12345670', LegalEntityIdentity::query()->value('pib'));
+    }
+
+    public function test_preduzetnik_completion_accepts_eight_digit_pib_without_iso_check_digit(): void
+    {
+        $this->enableCanonicalHttp();
+        $user = $this->makePreduzetnikUser();
+
+        $this->actingAs($user)
+            ->post(route('identity.completion.store'), $this->preduzetnikPayload(['pib' => '12345670']))
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertSame('12345670', PhysicalPersonIdentity::query()->value('pib'));
+    }
+
     public function test_preduzetnik_validation_matrix(): void
     {
         $this->enableCanonicalHttp();
@@ -344,10 +376,10 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
 
         $this->actingAs($user)->from(route('identity.completion.create'))
             ->post(route('identity.completion.store'), $this->preduzetnikPayload(['jmb' => '0000000000001']))
-            ->assertSessionHasErrors('jmb');
+            ->assertSessionHasErrors(['jmb' => 'JMB nije ispravan.']);
 
         $this->actingAs($user)->from(route('identity.completion.create'))
-            ->post(route('identity.completion.store'), $this->preduzetnikPayload(['pib' => '12345670']))
+            ->post(route('identity.completion.store'), $this->preduzetnikPayload(['pib' => '123456789']))
             ->assertSessionHasErrors('pib');
 
         $this->actingAs($user)->from(route('identity.completion.create'))
@@ -574,20 +606,20 @@ class ExistingSubjectIdentityCompletionTest extends TestCase
 
         $this->actingAs($user)
             ->withSession([ExistingSubjectIdentityReturnTo::SESSION_KEY => '/competitions/'.$competition->id.'/apply'])
-            ->post(route('identity.completion.store'), $this->dooPayload())
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => $user->pib]))
             ->assertRedirect('/competitions/'.$competition->id.'/apply');
         $this->assertNull(session(ExistingSubjectIdentityReturnTo::SESSION_KEY));
 
         $second = $this->makeDooUser();
         $this->actingAs($second)
             ->withSession([ExistingSubjectIdentityReturnTo::SESSION_KEY => 'https://evil.example/phish'])
-            ->post(route('identity.completion.store'), $this->dooPayload())
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => $second->pib]))
             ->assertRedirect(route('dashboard', absolute: false));
 
         $third = $this->makeDooUser();
         $this->actingAs($third)
             ->withSession([ExistingSubjectIdentityReturnTo::SESSION_KEY => '/login'])
-            ->post(route('identity.completion.store'), $this->dooPayload())
+            ->post(route('identity.completion.store'), $this->dooPayload(['pib' => $third->pib]))
             ->assertRedirect(route('dashboard', absolute: false));
     }
 

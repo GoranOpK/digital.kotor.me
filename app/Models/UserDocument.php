@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserDocument extends Model
 {
     use HasFactory;
+
+    public const ATTACHABLE_STATUSES = ['active', 'processed'];
 
     protected $fillable = [
         'user_id',
@@ -38,6 +41,11 @@ class UserDocument extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scopeAttachable(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::ATTACHABLE_STATUSES);
     }
 
     /**

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\CanonicalIndividualScoringService;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
+use App\Support\ScoringProfileConfig;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -58,6 +59,67 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertNotSame('approved', $application->status);
         $this->assertNotSame('rejected', $application->status);
         $this->assertTrue($application->competition->fresh()->isRankingFormed());
+    }
+
+    public function test_youth_bonus_table_shows_four_fields_without_zavod(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('/<form\b[^>]*\bid="evaluationForm"/', $html);
+        $this->assertTrue((bool) preg_match('/<form\b[^>]*\bid="evaluationForm"[^>]*>(.*)<\/form>/s', $html, $formMatch));
+        $mainForm = $formMatch[1];
+        $this->assertStringNotContainsString('<form', $mainForm);
+        $this->assertSame(1, substr_count($mainForm, 'id="youth-scoring-list"'));
+        $this->assertStringNotContainsString('evaluation-table-bonus', $mainForm);
+        $list = $this->youthScoringListHtml($mainForm);
+        foreach (ScoringProfileConfig::youthCriteria() as $criterionName) {
+            $this->assertStringContainsString($criterionName, $list);
+        }
+        $this->assertStringContainsString('Info dan', $list);
+        $this->assertStringContainsString('Obuka', $list);
+        $this->assertStringContainsString('Planirana registracija', $list);
+        $this->assertStringContainsString('Inovativno/zeleno poslovanje', $list);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $list);
+        $this->assertStringContainsString('KONAČNA OCJENA', $list);
+        $this->assertStringContainsString('Član 1', $list);
+        $this->assertStringContainsString('name="bonus_info_day"', $list);
+        $this->assertStringContainsString('name="bonus_training"', $list);
+        $this->assertStringContainsString('name="bonus_new_business"', $list);
+        $this->assertStringContainsString('name="bonus_green_innovative"', $list);
+        $this->assertStringNotContainsString('name="youth_bonus_action"', $list);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $list);
+        $this->assertStringContainsString('name="youth_bonus_action"', $mainForm);
+        $this->assertStringContainsString('value="draft"', $mainForm);
+        $this->assertStringContainsString('value="confirm"', $mainForm);
+        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $mainForm);
+        $this->assertStringContainsString('Potvrdi i zaključaj bonuse', $mainForm);
+        $this->assertStringNotContainsString('Predsjednik evidentira činjenice u ime Komisije na osnovu evidencije organizatora', $mainForm);
+        $this->assertStringNotContainsString('>Bodovi</th>', $mainForm);
+        $this->assertStringNotContainsString('name="notes"', $mainForm);
+        $this->assertStringNotContainsString('Ostale napomene', $mainForm);
+        $this->assertStringNotContainsString('name="bonus_zavod_nezaposleni"', $mainForm);
+        $this->assertStringNotContainsString('Zavoda za zapošljavanje', $mainForm);
+        $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $mainForm);
+
+        $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('id="youth-scoring-list"', $memberHtml);
+        $this->assertStringContainsString('Info dan', $memberHtml);
+        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_training"', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_new_business"', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_green_innovative"', $memberHtml);
+        $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
+        $this->assertStringNotContainsString('name="notes"', $memberHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
     }
 
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
@@ -274,9 +336,12 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $memberHtml);
         $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
-        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringNotContainsString('name="notes"', $memberHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
         $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
         $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $memberHtml);
 
         $chairmanHtml = $this->actingAs($ctx['chairman']->user)
@@ -285,6 +350,8 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $chairmanHtml);
         $this->assertStringNotContainsString('Napomena mjesta 2', $chairmanHtml);
+        $this->assertStringNotContainsString('name="notes"', $chairmanHtml);
+        $this->assertStringNotContainsString('Ostale napomene', $chairmanHtml);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $chairmanHtml);
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $chairmanHtml);
 
@@ -316,20 +383,51 @@ class YouthAggregateAndBonusTest extends TestCase
     public function test_youth_index_hides_forty_five_day_card_and_zensko_keeps_it(): void
     {
         $youth = $this->youthReadyToLock();
-        $youthHtml = $this->actingAs($youth['chairman']->user)
-            ->get(route('evaluation.index'))
-            ->assertOk()
-            ->getContent();
-        $this->assertStringNotContainsString('Rok za donošenje odluke', $youthHtml);
-        $this->assertStringNotContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $youthHtml);
+        $youthSurfaces = [
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('evaluation.index'))
+                ->assertOk()
+                ->getContent(),
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('evaluation.create', $youth['application']))
+                ->assertOk()
+                ->getContent(),
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('dashboard'))
+                ->assertOk()
+                ->getContent(),
+            $this->actingAs($youth['chairman']->user)
+                ->get(route('admin.competitions.show', $youth['competition']))
+                ->assertOk()
+                ->getContent(),
+        ];
+        foreach ($youthSurfaces as $youthHtml) {
+            $this->assertStringNotContainsString('45 dana', $youthHtml);
+            $this->assertStringNotContainsString('Rok za donošenje odluke', $youthHtml);
+            $this->assertStringNotContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $youthHtml);
+        }
 
         $zensko = $this->zenskoReadyToScore();
-        $zenskoHtml = $this->actingAs($zensko['chairman']->user)
+        $zenskoIndex = $this->actingAs($zensko['chairman']->user)
             ->get(route('evaluation.index'))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Rok za donošenje odluke', $zenskoHtml);
-        $this->assertStringContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $zenskoHtml);
+        $this->assertStringContainsString('Rok za donošenje odluke', $zenskoIndex);
+        $this->assertStringContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava', $zenskoIndex);
+        $this->assertStringContainsString('45 dana', $zenskoIndex);
+
+        $zenskoShow = $this->actingAs($zensko['chairman']->user)
+            ->get(route('admin.competitions.show', $zensko['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('45 dana', $zenskoShow);
+        $this->assertStringContainsString('Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs', $zenskoShow);
+
+        $zenskoDashboard = $this->actingAs($zensko['chairman']->user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('45 dana', $zenskoDashboard);
     }
 
     public function test_zensko_formula_zavod_ranking_and_null_youth_audit_remain(): void
@@ -363,7 +461,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertNull($fresh->bonuses_confirmed_by_user_id);
         $this->assertNull($fresh->bonuses_confirmed_by_commission_member_id);
         $this->assertNull($fresh->bonuses_confirmed_by_name);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
     }
 
     /**
@@ -432,11 +530,7 @@ class YouthAggregateAndBonusTest extends TestCase
      */
     private function youthReadyToLock(): array
     {
-        $ctx = $this->youthWithPassedM3();
-        $this->storeAndConfirmSecond($ctx);
-        $this->storeAndCompleteOral($ctx, true);
-
-        return $ctx;
+        return $this->youthWithPassedM3();
     }
 
     /**
@@ -462,20 +556,7 @@ class YouthAggregateAndBonusTest extends TestCase
      */
     private function makeYouthReadyContext(): array
     {
-        $ctx = $this->makeYouthContext();
-        $this->actingAs($ctx['chairman']->user)->post(
-            route('commission-sessions.first.store', $ctx['competition']),
-            [
-                'held_at' => now()->subDays(2)->format('Y-m-d H:i:s'),
-                'notes' => 'Prva sjednica',
-                'present_member_ids' => [$ctx['members'][0]->id, $ctx['members'][1]->id],
-            ]
-        )->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.first.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-
-        return $ctx;
+        return $this->makeYouthContext();
     }
 
     /**
@@ -490,6 +571,7 @@ class YouthAggregateAndBonusTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'omladinsko',
         ]);
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
         $members = [];
@@ -557,6 +639,7 @@ class YouthAggregateAndBonusTest extends TestCase
             'start_date' => now()->subMonth()->toDateString(),
             'end_date' => now()->addYear()->toDateString(),
             'status' => 'active',
+            'profile_type' => 'zensko',
         ]);
         $types = ['opstina', 'opstina', 'opstina', 'udruzenje', 'zene_mreza'];
         $komisijaRole = Role::where('name', 'komisija')->firstOrFail();
@@ -617,45 +700,6 @@ class YouthAggregateAndBonusTest extends TestCase
         ];
     }
 
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
-     */
-    private function storeAndConfirmSecond(array $ctx): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.store', $ctx['competition']), [
-                'held_at' => now()->subDay()->format('Y-m-d H:i:s'),
-                'notes' => 'Druga sjednica',
-                'present_member_ids' => array_map(fn (CommissionMember $member) => $member->id, $ctx['members']),
-            ])->assertSessionHasNoErrors();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.second.confirm', $ctx['competition']))
-            ->assertSessionHasNoErrors();
-    }
-
-    /**
-     * @param  array{competition: Competition, chairman: CommissionMember, application: Application}  $ctx
-     */
-    private function storeAndCompleteOral(array $ctx, bool $attended): void
-    {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.store', [$ctx['competition'], $ctx['application']]), [
-                'scheduled_at' => now()->format('Y-m-d H:i:s'),
-                'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-            ])->assertSessionHasNoErrors();
-        $payload = [
-            'scheduled_at' => now()->format('Y-m-d H:i:s'),
-            'applicant_attended' => $attended ? '1' : '0',
-            'notes' => $attended ? 'Prisutan' : 'Nedolazak',
-        ];
-        if ($attended) {
-            $payload['held_at'] = now()->format('Y-m-d H:i:s');
-        }
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('commission-sessions.oral.complete', [$ctx['competition'], $ctx['application']]), $payload)
-            ->assertSessionHasNoErrors();
-    }
-
     private function userWithRole(string $role): User
     {
         return User::factory()->create([
@@ -665,5 +709,16 @@ class YouthAggregateAndBonusTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    private function youthScoringListHtml(string $html): string
+    {
+        $this->assertTrue((bool) preg_match(
+            '/<table\b[^>]*\bid="youth-scoring-list"[^>]*>.*?<\/table>/s',
+            $html,
+            $match
+        ));
+
+        return $match[0];
     }
 }

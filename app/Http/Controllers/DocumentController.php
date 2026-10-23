@@ -667,44 +667,81 @@ class DocumentController extends Controller
             abort(403, 'Nemate pristup ovom dokumentu.');
         }
 
-        $deleted = false;
+        $documentId = $document->id;
+        $filePath = $document->file_path;
+        $originalFilePath = $document->original_file_path;
 
         // Fajlovi na MEGA brišu se u browser-u (handleDocumentDelete → deleteFromMega) pre slanja forme.
-        // Ovde brišemo samo lokalne fajlove (ako postoje) i zapis u bazi.
+        // Lokalni fajlovi i kvota se pokušavaju ukloniti ovdje, ali ne smiju spriječiti brisanje zapisa.
 
-        // Obriši lokalne fajlove ako postoje
-        if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
-            $fileSize = Storage::disk('local')->size($document->file_path);
-            Storage::disk('local')->delete($document->file_path);
-            $this->documentProcessor->updateUserStorage($user->id, -$fileSize);
-            $deleted = true;
-            
-            Log::info('Processed PDF file deleted', [
-                'document_id' => $document->id,
-                'file_path' => $document->file_path,
-                'file_size' => $fileSize
+        try {
+            if ($filePath && Storage::disk('local')->exists($filePath)) {
+                $fileSize = Storage::disk('local')->size($filePath);
+                Storage::disk('local')->delete($filePath);
+                try {
+                    $this->documentProcessor->updateUserStorage($user->id, -$fileSize);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to update storage after processed file delete', [
+                        'document_id' => $documentId,
+                        'file_path' => $filePath,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                Log::info('Processed PDF file deleted', [
+                    'document_id' => $documentId,
+                    'file_path' => $filePath,
+                    'file_size' => $fileSize,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to delete processed PDF file', [
+                'document_id' => $documentId,
+                'file_path' => $filePath,
+                'error' => $e->getMessage(),
             ]);
         }
-        
-        if ($document->original_file_path && Storage::disk('local')->exists($document->original_file_path)) {
-            $originalFileSize = Storage::disk('local')->size($document->original_file_path);
-            Storage::disk('local')->delete($document->original_file_path);
-            $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
-            $deleted = true;
-            
-            Log::info('Original file deleted', [
-                'document_id' => $document->id,
-                'original_file_path' => $document->original_file_path,
-                'file_size' => $originalFileSize
+
+        try {
+            if ($originalFilePath && Storage::disk('local')->exists($originalFilePath)) {
+                $originalFileSize = Storage::disk('local')->size($originalFilePath);
+                Storage::disk('local')->delete($originalFilePath);
+                try {
+                    $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to update storage after original file delete', [
+                        'document_id' => $documentId,
+                        'original_file_path' => $originalFilePath,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                Log::info('Original file deleted', [
+                    'document_id' => $documentId,
+                    'original_file_path' => $originalFilePath,
+                    'file_size' => $originalFileSize,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to delete original file', [
+                'document_id' => $documentId,
+                'original_file_path' => $originalFilePath,
+                'error' => $e->getMessage(),
             ]);
         }
-        
-        // Obriši zapis iz baze
+
         $document->delete();
 
-        // Uskladi kvotu (uključujući MEGA/cloud dokumente koji nemaju lokalni fajl)
-        $this->documentProcessor->recalculateUserStorage($user->id);
-        
+        try {
+            $this->documentProcessor->recalculateUserStorage($user->id);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to recalculate user storage after document delete', [
+                'document_id' => $documentId,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return redirect()->route('documents.index')
             ->with('success', 'Dokument je uspješno obrisan.');
     }

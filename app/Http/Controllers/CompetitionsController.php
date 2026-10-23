@@ -6,6 +6,9 @@ use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Support\CompetitionProgramCatalog;
+use App\Support\CanonicalDocumentCatalog;
+use App\Support\CanonicalLegalForm;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\KnApplicationClassification;
 use App\Support\KnOmladinskoDocumentPackage;
 use Illuminate\Http\Request;
@@ -20,8 +23,17 @@ class CompetitionsController extends Controller
     public function index(): View
     {
         $now = now();
-        $competitions = Competition::where('status', 'published')
-            ->whereIn('type', CompetitionProgramCatalog::publiclyAvailableTypes())
+        $competitions = Competition::query()
+            ->where(function ($query) {
+                $query->where(function ($published) {
+                    $published->where('status', 'published')
+                        ->whereIn('type', CompetitionProgramCatalog::publiclyAvailableTypes());
+                })->orWhere(function ($preview) {
+                    $preview->where('status', 'draft')
+                        ->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
+                        ->where('is_test_preview', true);
+                });
+            })
             ->where(function ($query) use ($now) {
                 // Konkurs je vidljiv korisnicima samo ako je datum početka danas ili u prošlosti
                 $query->where('start_date', '<=', $now->toDateString())
@@ -58,10 +70,9 @@ class CompetitionsController extends Controller
     {
         $now = now();
         
-        // Proveri da li je konkurs objavljen, da li je počeo i da li je profil javno dostupan.
-        if ($competition->status !== 'published'
-            || ($competition->start_date && $competition->start_date->startOfDay() > $now)
-            || ! CompetitionProgramCatalog::isPubliclyAvailable($competition->type)) {
+        // Redovno objavljen aktivan profil ili eksplicitni kanonski MMSP testni preview.
+        if (! $competition->isPubliclyAccessibleForApplications()
+            || ($competition->start_date && $competition->start_date->startOfDay() > $now)) {
             abort(404, 'Konkurs nije pronađen ili još uvijek nije počeo.');
         }
 
@@ -89,13 +100,20 @@ class CompetitionsController extends Controller
         $knFormApplicantType = null;
         $knAllowsRazvoj = false;
         $knSupportsOmladinskoDraft = false;
+        $canonicalLegalForm = null;
+        $canonicalApplicantTypeLabel = null;
         if (auth()->check()) {
             $user = auth()->user();
             $identity = app(CurrentIdentityResolver::class)->viewFor($user);
             $userType = $identity->userType;
-            $userApplication = $competition->applications()
-                ->where('user_id', auth()->id())
-                ->first();
+            if ($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL) {
+                $userApplication = app(\App\Services\Competitions\CanonicalBeneficiaryApplications::class)
+                    ->userApplicationForCompetition($competition, (int) auth()->id());
+            } else {
+                $userApplication = $competition->applications()
+                    ->where('user_id', auth()->id())
+                    ->first();
+            }
 
             $applicantType = app(CurrentIdentityResolver::class)->applicantTypeFor($user);
             $kn = KnApplicationClassification::fromUserType($userType, $competition->type);
@@ -106,6 +124,19 @@ class CompetitionsController extends Controller
             $knFormApplicantType = $identity->hasCurrentSubjectIdentity() && $kn->allowedApplicantTypes !== []
                 ? $kn->defaultFormApplicantType()
                 : null;
+
+            if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+                $storedCanonicalForm = $userApplication?->canonicalApplicantForm?->legal_form;
+                $canonicalLegalForm = CanonicalLegalForm::isValid($storedCanonicalForm)
+                    ? $storedCanonicalForm
+                    : null;
+
+                if ($canonicalLegalForm === CanonicalLegalForm::PREDUZETNIK) {
+                    $canonicalApplicantTypeLabel = 'Preduzetnik — Obrazac P1a';
+                } elseif ($canonicalLegalForm === CanonicalLegalForm::DRUSTVO) {
+                    $canonicalApplicantTypeLabel = 'Privredno društvo (DOO) — Obrazac P1b';
+                }
+            }
         }
 
         // Dokument labels za mapiranje
@@ -273,6 +304,29 @@ class CompetitionsController extends Controller
             }
         }
 
+        // Javni MMSP preview koristi isključivo kanonski katalog dokumentacije iz Odluke čl. 14.
+        // Ne koristi legacy ženski/omladinski preview.
+        $canonicalDocumentPreviewMaps = [];
+        if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            foreach (CanonicalLegalForm::codes() as $legalForm) {
+                $catalog = CanonicalDocumentCatalog::forLegalForm($legalForm, (int) $competition->year);
+                $canonicalDocumentPreviewMaps[$legalForm] = array_map(
+                    static function (array $item): string {
+                        $label = $item['label'];
+                        if (! empty($item['condition'])) {
+                            $label .= ' — '.$item['condition'];
+                        }
+                        if (! empty($item['supplement'])) {
+                            $label .= ' Dodatno: '.$item['supplement']['label'].' — '.$item['supplement']['condition'];
+                        }
+
+                        return $label;
+                    },
+                    $catalog->items()
+                );
+            }
+        }
+
         return view('competitions.show', compact(
             'competition',
             'deadline',
@@ -291,7 +345,10 @@ class CompetitionsController extends Controller
             'knFormApplicantType',
             'knAllowsRazvoj',
             'knSupportsOmladinskoDraft',
-            'omladinskoPreviewMaps'
+            'omladinskoPreviewMaps',
+            'canonicalDocumentPreviewMaps',
+            'canonicalLegalForm',
+            'canonicalApplicantTypeLabel'
         ));
     }
 }
