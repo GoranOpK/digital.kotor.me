@@ -13,6 +13,9 @@
         *, *::before, *::after { box-sizing: border-box; }
         html, body { height:100%; margin:0; padding:0; }
         body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
             background: var(--page-bg);
             color: #111827;
@@ -69,7 +72,7 @@
         .btn-logout:hover { background: #1f2937; }
 
         /* Main two-column layout */
-        .page-main { padding: 20px 0 28px; }
+        .page-main { flex: 1 0 auto; padding: 20px 0 28px; }
         .page-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -212,7 +215,7 @@
         }
 
         /* Footer */
-        .site-footer { margin-top: 8px; }
+        .site-footer { margin-top: auto; }
         .footer-banner {
             width: 100%;
             height: 120px;
