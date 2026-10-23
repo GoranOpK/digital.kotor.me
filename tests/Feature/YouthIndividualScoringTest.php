@@ -667,6 +667,75 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('32 / 50', $html);
         $this->assertStringContainsString('Podaci o podnositeljki prijave', $html);
         $this->assertStringContainsString('Zavoda za zapošljavanje', $html);
+        $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $html);
+        $this->assertStringNotContainsString('id="youth-bonus-locked-banner"', $html);
+    }
+
+    public function test_locked_youth_bonuses_hide_confirmer_name_and_timestamp(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $this->lockThreeSeats($ctx);
+        $this->confirmYouthBonuses($ctx);
+
+        $locked = $ctx['application']->fresh();
+        $this->assertNotNull($locked->bonuses_confirmed_at);
+        $this->assertSame($ctx['chairman']->name, $locked->bonuses_confirmed_by_name);
+        $this->assertSame($ctx['chairman']->user_id, (int) $locked->bonuses_confirmed_by_user_id);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Dodatni bodovi su zaključani.', $html);
+        $this->assertMatchesRegularExpression(
+            '/id="youth-bonus-locked-banner"[^>]*>\s*Dodatni bodovi su zaključani\.\s*<\/div>/u',
+            $html
+        );
+        preg_match('/id="youth-bonus-locked-banner".*?<\/div>/s', $html, $banner);
+        $this->assertNotEmpty($banner);
+        $this->assertStringNotContainsString('Potvrdio:', $banner[0]);
+        $this->assertStringNotContainsString('Datum i vrijeme:', $banner[0]);
+        $this->assertStringNotContainsString($ctx['chairman']->name, $banner[0]);
+        $this->assertStringNotContainsString($locked->bonuses_confirmed_at->format('d.m.Y. H:i'), $banner[0]);
+
+        $this->assertStringContainsString('Potvrdio: '.$ctx['chairman']->name, $html);
+        $eliminatoryAt = $locked->eliminatoryCheck?->confirmed_at?->format('d.m.Y. H:i');
+        $this->assertNotNull($eliminatoryAt);
+        $this->assertStringContainsString('Datum i vrijeme: '.$eliminatoryAt, $html);
+    }
+
+    public function test_youth_print_hint_appears_only_when_print_button_is_available(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+            ->assertSessionHasNoErrors();
+
+        $beforeCycle = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('>Štampaj</button>', $beforeCycle);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeCycle);
+        $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $beforeCycle);
+
+        foreach ([1, 2] as $index) {
+            $this->actingAs($ctx['members'][$index]->fresh('user')->user)
+                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+                ->assertSessionHasNoErrors();
+        }
+
+        $afterCycle = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('>Štampaj</button>', $afterCycle);
+        $this->assertStringContainsString('id="evaluation-print-hint"', $afterCycle);
+        $this->assertStringContainsString(
+            'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
+            $afterCycle
+        );
     }
 
     private function markEvaluationDeadlinePassed(Competition $competition): void

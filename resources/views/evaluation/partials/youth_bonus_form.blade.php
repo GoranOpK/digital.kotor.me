@@ -29,14 +29,8 @@
     </p>
 
     @if($youthBonusesLocked)
-        <div class="no-print" style="padding: 12px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 8px; color: #065f46; margin-bottom: 16px;">
+        <div id="youth-bonus-locked-banner" class="no-print" style="padding: 12px; background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 8px; color: #065f46; margin-bottom: 16px;">
             Dodatni bodovi su zaključani.
-            <div style="margin-top: 8px; font-size: 13px;">
-                Potvrdio: {{ $application->bonuses_confirmed_by_name ?: '—' }}
-            </div>
-            <div style="font-size: 13px;">
-                Datum i vrijeme: {{ $application->bonuses_confirmed_at?->format('d.m.Y. H:i') ?: '—' }}
-            </div>
         </div>
     @endif
 
