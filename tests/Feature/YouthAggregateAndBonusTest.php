@@ -88,8 +88,10 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $list);
         $this->assertStringContainsString('KONAČNA OCJENA', $list);
         $this->assertStringContainsString('Član 1', $list);
-        $this->assertStringContainsString('name="bonus_info_day"', $list);
-        $this->assertStringContainsString('name="bonus_training"', $list);
+        $this->assertStringContainsString('name="bonus_info_and_training"', $list);
+        $this->assertSame(1, substr_count($list, 'type="checkbox" name="bonus_info_and_training"'));
+        $this->assertStringNotContainsString('name="bonus_info_day"', $list);
+        $this->assertStringNotContainsString('name="bonus_training"', $list);
         $this->assertStringContainsString('name="bonus_new_business"', $list);
         $this->assertStringContainsString('name="bonus_green_innovative"', $list);
         $this->assertStringContainsString('Sačuvaj ocjene', $mainForm);
@@ -112,6 +114,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertStringContainsString('id="youth-scoring-list"', $memberHtml);
         $this->assertStringContainsString('Info dan i obuka (+1)', $memberHtml);
         $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
+        $this->assertStringNotContainsString('name="bonus_info_and_training"', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_training"', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_new_business"', $memberHtml);
@@ -124,33 +127,51 @@ class YouthAggregateAndBonusTest extends TestCase
 
     public function test_info_day_or_training_alone_is_zero_and_both_are_plus_one(): void
     {
-        $onlyInfo = $this->youthReadyToLock();
-        $this->actingAs($onlyInfo['chairman']->user)
-            ->post(route('evaluation.store', $onlyInfo['application']), $this->finalPayload(['bonus_info_day' => '1']))
-            ->assertSessionHasNoErrors();
-        $onlyInfoApp = $onlyInfo['application']->fresh();
-        $this->assertTrue((bool) $onlyInfoApp->bonus_info_day);
-        $this->assertFalse((bool) $onlyInfoApp->bonus_training);
-        $this->assertNotNull($onlyInfoApp->bonuses_confirmed_at);
-        $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($onlyInfoApp));
-        $this->assertNotNull(EvaluationScore::query()->where('application_id', $onlyInfoApp->id)->where('commission_member_id', $onlyInfo['chairman']->id)->first()?->completed_at);
-
-        $onlyTraining = $this->youthReadyToLock();
-        $this->actingAs($onlyTraining['chairman']->user)
-            ->post(route('evaluation.store', $onlyTraining['application']), $this->finalPayload(['bonus_training' => '1']))
-            ->assertSessionHasNoErrors();
-        $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($onlyTraining['application']->fresh()));
-        $this->assertNotNull($onlyTraining['application']->fresh()->bonuses_confirmed_at);
+        $legacy = $this->youthReadyToLock();
+        $legacy['application']->forceFill([
+            'bonus_info_day' => true,
+            'bonus_training' => false,
+        ])->save();
+        $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($legacy['application']->fresh()));
+        $legacyHtml = $this->actingAs($legacy['chairman']->user)
+            ->get(route('evaluation.create', $legacy['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertDoesNotMatchRegularExpression(
+            '/name="bonus_info_and_training"[^>]*value="1"[^>]*checked/',
+            $legacyHtml
+        );
+        $this->assertStringNotContainsString('name="bonus_info_day"', $legacyHtml);
+        $this->assertStringNotContainsString('name="bonus_training"', $legacyHtml);
 
         $both = $this->youthReadyToLock();
         $this->actingAs($both['chairman']->user)
             ->post(route('evaluation.store', $both['application']), $this->finalPayload([
-                'bonus_info_day' => '1',
-                'bonus_training' => '1',
+                'bonus_info_and_training' => '1',
             ]))
             ->assertSessionHasNoErrors();
-        $this->assertSame(1, app(CanonicalIndividualScoringService::class)->youthBonusScore($both['application']->fresh()));
-        $this->assertNotNull($both['application']->fresh()->bonuses_confirmed_at);
+        $bothApp = $both['application']->fresh();
+        $this->assertTrue((bool) $bothApp->bonus_info_day);
+        $this->assertTrue((bool) $bothApp->bonus_training);
+        $this->assertSame(1, app(CanonicalIndividualScoringService::class)->youthBonusScore($bothApp));
+        $this->assertNotNull($bothApp->bonuses_confirmed_at);
+        $bothHtml = $this->actingAs($both['chairman']->user)
+            ->get(route('evaluation.create', $both['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Info dan i obuka (+1)', $bothHtml);
+        $this->assertStringContainsString('✓', $bothHtml);
+
+        $unchecked = $this->youthReadyToLock();
+        $this->actingAs($unchecked['chairman']->user)
+            ->post(route('evaluation.store', $unchecked['application']), $this->finalPayload([
+                'bonus_info_and_training' => '0',
+            ]))
+            ->assertSessionHasNoErrors();
+        $uncheckedApp = $unchecked['application']->fresh();
+        $this->assertFalse((bool) $uncheckedApp->bonus_info_day);
+        $this->assertFalse((bool) $uncheckedApp->bonus_training);
+        $this->assertSame(0, app(CanonicalIndividualScoringService::class)->youthBonusScore($uncheckedApp));
     }
 
     public function test_planned_registration_bonus_is_plus_two_only_for_eligible_category(): void

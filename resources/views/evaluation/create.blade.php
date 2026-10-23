@@ -1269,10 +1269,10 @@
                     @php
                         $rejectedForDocuments = ! empty($eliminatoryIsConfirmedFail);
                         $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
-                        // Omladinsko: lična završena ocjena ili M3 odbijanje.
+                        // Omladinsko: član komisije (i prije čuvanja ocjena) ili M3 odbijanje.
                         // Ženski/ostali tok: ciklus svih članova ili M3 odbijanje.
                         $canPrintNow = ($isOmladinskoScoring ?? false)
-                            ? (($hasCompletedEvaluation ?? false) || $rejectedForDocuments)
+                            ? (! ($isApplicant ?? false) || $rejectedForDocuments)
                             : (($canViewOtherMembersScores ?? false) || $rejectedForDocuments);
                     @endphp
 
@@ -1372,6 +1372,10 @@
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
                         @if($isOmladinskoScoring)
+                            @if($canPrintNow)
+                                <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                                @include('evaluation.partials.youth_print_hint')
+                            @endif
                             <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
                             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                         @else

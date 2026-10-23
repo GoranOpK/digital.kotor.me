@@ -720,16 +720,14 @@ class EvaluationController extends Controller
 
         $validated = $request->validate([
             'youth_bonus_action' => 'required|in:draft,confirm',
+            'bonus_info_and_training' => 'sometimes|boolean',
             'bonus_info_day' => 'sometimes|boolean',
             'bonus_training' => 'sometimes|boolean',
             'bonus_new_business' => 'sometimes|boolean',
             'bonus_green_innovative' => 'sometimes|boolean',
         ]);
 
-        $flags = [];
-        foreach (CanonicalIndividualScoringService::YOUTH_BONUS_FLAG_KEYS as $key) {
-            $flags[$key] = $request->boolean($key);
-        }
+        $flags = $this->youthBonusFlagsFromRequest($request);
 
         $this->canonicalScoring->saveYouthBonuses(
             $application,
@@ -857,6 +855,12 @@ class EvaluationController extends Controller
         $flags = [];
         foreach (CanonicalIndividualScoringService::YOUTH_BONUS_FLAG_KEYS as $key) {
             $flags[$key] = $request->boolean($key);
+        }
+
+        if ($request->exists('bonus_info_and_training')) {
+            $attendance = $request->boolean('bonus_info_and_training');
+            $flags['bonus_info_day'] = $attendance;
+            $flags['bonus_training'] = $attendance;
         }
 
         return $flags;

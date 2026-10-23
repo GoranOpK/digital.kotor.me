@@ -4,6 +4,8 @@
         ?? app(\App\Services\CanonicalIndividualScoringService::class)->youthQualifiesForPlannedRegistrationBonus($application);
     $infoDay = (bool) old('bonus_info_day', $application->bonus_info_day ?? false);
     $training = (bool) old('bonus_training', $application->bonus_training ?? false);
+    $attendanceConfirmed = $infoDay && $training;
+    $attendanceChecked = (bool) old('bonus_info_and_training', $attendanceConfirmed);
     $newBusiness = (bool) old('bonus_new_business', $application->bonus_new_business ?? false);
     $green = (bool) old('bonus_green_innovative', $application->bonus_green_innovative ?? false);
     $attendancePoints = ($infoDay && $training) ? 1 : 0;
@@ -28,21 +30,10 @@
         @endphp
         <td style="text-align: center;">
             @if($canEditYouthBonuses && $isCurrentMember && $isChairmanMember)
-                <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
-                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
-                        <input type="checkbox" name="bonus_info_day" value="1" form="evaluationForm" {{ $infoDay ? 'checked' : '' }}>
-                        Info dan
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 500;">
-                        <input type="checkbox" name="bonus_training" value="1" form="evaluationForm" {{ $training ? 'checked' : '' }}>
-                        Obuka
-                    </label>
-                </div>
+                <input type="hidden" name="bonus_info_and_training" value="0" form="evaluationForm">
+                <input type="checkbox" name="bonus_info_and_training" value="1" form="evaluationForm" {{ $attendanceChecked ? 'checked' : '' }}>
             @elseif($isChairmanMember)
-                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
-                    <span>Info dan: {{ $infoDay ? '✓' : '—' }}</span>
-                    <span>Obuka: {{ $training ? '✓' : '—' }}</span>
-                </div>
+                {{ $attendanceConfirmed ? '✓' : '—' }}
             @else
                 —
             @endif
@@ -58,6 +49,13 @@
         @endif
     </td>
 </tr>
+@error('bonus_info_and_training')
+    <tr>
+        <td colspan="{{ 2 + $allMembers->count() }}" class="criterion-col">
+            <div class="error-message">{{ $message }}</div>
+        </td>
+    </tr>
+@enderror
 @error('bonus_info_day')
     <tr>
         <td colspan="{{ 2 + $allMembers->count() }}" class="criterion-col">

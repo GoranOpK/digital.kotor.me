@@ -191,6 +191,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $html);
         $this->assertStringNotContainsString('Potvrdi i zaključaj bonuse', $html);
         $this->assertStringNotContainsString('name="youth_bonus_action"', $html);
+        $this->assertYouthPrintHintBesideButton($html);
         $this->assertStringNotContainsString('završene evidencije usmenog', $html);
         $this->assertStringNotContainsString('Evidencija usmenog', $html);
         $this->assertDoesNotMatchRegularExpression(
@@ -329,8 +330,10 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringContainsString('id="youth-scoring-list"', $html);
         $this->assertStringContainsString('Info dan i obuka (+1)', $html);
         $this->assertSame(1, substr_count($html, 'Info dan i obuka (+1)'));
-        $this->assertStringContainsString('name="bonus_info_day"', $html);
-        $this->assertStringContainsString('name="bonus_training"', $html);
+        $this->assertStringContainsString('name="bonus_info_and_training"', $html);
+        $this->assertSame(1, substr_count($html, 'type="checkbox" name="bonus_info_and_training"'));
+        $this->assertStringNotContainsString('name="bonus_info_day"', $html);
+        $this->assertStringNotContainsString('name="bonus_training"', $html);
         $this->assertStringContainsString('Planirana registracija', $html);
         $this->assertStringContainsString('Inovativno/zeleno poslovanje', $html);
         $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $html);
@@ -871,8 +874,8 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $beforeCreate);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeCreate);
+        $this->assertYouthPrintHintBesideButton($beforeCreate);
+        $this->assertYouthOthersRemainHiddenBeforeCycle($beforeCreate);
 
         $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.show', $ctx['application']))
@@ -900,8 +903,7 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $otherCreate);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $otherCreate);
+        $this->assertYouthPrintHintBesideButton($otherCreate);
         $this->assertStringNotContainsString('>5</span>', $otherCreate);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $otherCreate);
     }
