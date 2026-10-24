@@ -10,6 +10,23 @@
     $redniBroj = $application->redni_broj ?? '—';
     $brojPrijave = $upBroj.'/'.$redniBroj;
     $value = fn (string $field) => old($field, $field === 'registration_date' ? $form->registration_date?->toDateString() : $form->{$field});
+    // MMSP P1a only: show profile defaults in empty fields without modifying saved form data.
+    $identity = app(\App\Identity\Runtime\CurrentIdentityResolver::class)->viewFor(auth()->user());
+    $profileDefaults = $isEntrepreneur && $identity->hasCurrentSubjectIdentity() ? [
+        'person_name' => $identity->displayName() === 'N/A' ? null : $identity->displayName(),
+        'address' => \App\Support\KotorAddress::formatStreetAndCity($identity->address, $identity->city),
+        'phone' => $identity->phone,
+        'email' => auth()->user()?->email,
+    ] : [];
+    $prefillValue = function (string $field) use ($form, $profileDefaults): mixed {
+        // old() (even an explicitly empty input) always wins after validation errors.
+        $oldValues = session()->getOldInput();
+        if (array_key_exists($field, $oldValues)) {
+            return $oldValues[$field];
+        }
+        $stored = $field === 'registration_date' ? $form->registration_date?->toDateString() : $form->{$field};
+        return $stored !== null && $stored !== '' ? $stored : ($profileDefaults[$field] ?? $stored);
+    };
     $required = array_merge(
         array_keys(app(\App\Services\Competitions\CanonicalApplicantFormService::class)->requiredFields($form->legal_form)),
         ['pib', 'accuracy_confirmed'],
@@ -488,12 +505,12 @@
                     @else
                         <div class="mmsp-p1-full">
                             <label class="mmsp-p1-label" for="person_name">Ime i prezime preduzetnika @if(in_array('person_name', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
-                            <input id="person_name" type="text" name="person_name" value="{{ $value('person_name') }}" class="mmsp-p1-control @error('person_name') is-invalid @enderror">
+                            <input id="person_name" type="text" name="person_name" value="{{ $prefillValue('person_name') }}" class="mmsp-p1-control @error('person_name') is-invalid @enderror">
                             @error('person_name')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="mmsp-p1-full">
                             <label class="mmsp-p1-label" for="address">Adresa @if(in_array('address', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
-                            <input id="address" type="text" name="address" value="{{ $value('address') }}" placeholder="npr. Njegoševa 1, 85330 Kotor" class="mmsp-p1-control @error('address') is-invalid @enderror">
+                            <input id="address" type="text" name="address" value="{{ $prefillValue('address') }}" placeholder="npr. Njegoševa 1, 85330 Kotor" class="mmsp-p1-control @error('address') is-invalid @enderror">
                             @error('address')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="mmsp-p1-full">
@@ -529,12 +546,12 @@
                         <div class="mmsp-p1-row">
                             <div class="mmsp-p1-field">
                                 <label class="mmsp-p1-label" for="phone">Kontakt telefon @if(in_array('phone', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
-                                <input id="phone" type="text" name="phone" value="{{ $value('phone') }}" class="mmsp-p1-control @error('phone') is-invalid @enderror">
+                                <input id="phone" type="text" name="phone" value="{{ $prefillValue('phone') }}" class="mmsp-p1-control @error('phone') is-invalid @enderror">
                                 @error('phone')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                             </div>
                             <div class="mmsp-p1-field">
                                 <label class="mmsp-p1-label" for="email">E-mail @if(in_array('email', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
-                                <input id="email" type="email" name="email" value="{{ $value('email') }}" class="mmsp-p1-control @error('email') is-invalid @enderror">
+                                <input id="email" type="email" name="email" value="{{ $prefillValue('email') }}" class="mmsp-p1-control @error('email') is-invalid @enderror">
                                 @error('email')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                             </div>
                         </div>
