@@ -319,6 +319,46 @@
                 </div>
             </div>
         @else
+        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+            {{-- MMSP-only layout: match the two-column competition overview used by the youth profile. --}}
+            <div class="program-feature-grid">
+                <div class="program-feature-card">
+                    <h2>Osnovne informacije</h2>
+                    <p class="featured-title">{{ $competition->title }}</p>
+                    <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'][$competition->status] ?? $competition->status }}</span></p>
+                    <p><strong>Broj konkursa:</strong> {{ $competition->upNumber?->number ?? 'N/A' }}</p>
+                    <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
+                    @if($canCompetitionAdminSeeApplications)
+                        <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                    @endif
+                    @if($competition->published_at)
+                        <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                    @endif
+                    @if($competition->start_date)
+                        <p><strong>Datum početka:</strong> {{ $competition->start_date->format('d.m.Y') }}</p>
+                    @endif
+                    <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
+                    @if($competition->deadline)
+                        <p><strong>Datum isteka roka za prijavu:</strong> {{ $competition->deadline->copy()->subSecond()->format('d.m.Y H:i') }}</p>
+                    @endif
+                    @if($competition->commission)
+                        <p><strong>Komisija:</strong>
+                            <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}" style="color: var(--primary); text-decoration: underline;">{{ $competition->commission->name }} ({{ $competition->commission->year }})</a>
+                        </p>
+                    @else
+                        <p><strong>Komisija:</strong> Nije dodijeljena</p>
+                    @endif
+                </div>
+                <div class="program-feature-card">
+                    <h2>Opis konkursa</h2>
+                    @if($competition->description)
+                        <div class="program-description competition-description">{!! $competition->descriptionHtml() !!}</div>
+                    @else
+                        <p style="color: #6b7280;">Opis nije unesen za ovaj konkurs.</p>
+                    @endif
+                </div>
+            </div>
+        @else
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
@@ -386,6 +426,7 @@
         </div>
         @endif
         @endif
+        @endif
 
         @if(! empty($testApplicationPhase))
             <div class="info-card" data-section="test-application-phase">
@@ -425,50 +466,6 @@
         @endif
 
         @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-            @if(in_array(auth()->user()?->role?->name, ['admin', 'konkurs_admin', 'superadmin'], true) && ! empty($canonicalCommissionOverview))
-                @php
-                    $cc = $canonicalCommissionOverview;
-                    $ccGovernance = \App\Services\Competitions\Commission\CanonicalCommissionGovernance::class;
-                    $ccStates = ['active' => 'Aktivan', 'vacant' => 'Upražnjeno — čeka zamjenu', 'empty' => 'Nepopunjeno'];
-                @endphp
-                <div class="info-card" data-section="canonical-commission">
-                    <h3 style="font-weight: 600; margin-bottom: 6px;">Komisija</h3>
-                    @if($cc['foreignCommission'])
-                        <p>{{ $ccGovernance::NOT_CANONICAL_MESSAGE }}</p>
-                    @elseif($cc['commission'] === null)
-                        <p>Komisija nije uspostavljena.</p>
-                    @else
-                        <p>
-                            {{ $cc['commission']->name }}<br>
-                            Mandat: {{ $cc['commission']->mandate_starts_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
-                            – {{ $cc['commission']->mandate_ends_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
-                            ({{ $cc['mandateValid'] ? 'važeći' : 'nije važeći' }})
-                        </p>
-                        @if($cc['structuralBlock'])
-                            <p style="color: #b45309;">{{ $cc['structuralBlock'] }}</p>
-                        @endif
-                        <ul>
-                            @foreach($cc['seats'] as $seatNo => $seat)
-                                <li>
-                                    Mjesto {{ $seatNo }}:
-                                    @if($seat['member'])
-                                        {{ $seat['member']->name }} — {{ $ccGovernance::roleLabel($seat['member']->canonical_seat) }};
-                                    @endif
-                                    {{ $ccStates[$seat['state']] ?? $seat['state'] }};
-                                    @if($seat['member'])
-                                        izjave: {{ $seat['declarationsSigned'] ? 'potpisane' : 'nijesu evidentirane' }};
-                                        sukob interesa: {{ $seat['pibConflict'] ? 'DA' : 'ne' }}
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                        <p>Zamjene: {{ $cc['replacements']->count() }}{{ $cc['replacements']->contains('late', true) ? ' (uključuje zamjenu nakon roka)' : '' }}</p>
-                    @endif
-                    <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}">Upravljanje Komisijom</a><br>
-                    <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije</a>
-                    · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori</a>
-                </div>
-            @endif
             @if(auth()->user()?->role?->name === \App\Services\Competitions\Decision\CanonicalAdministrativeGate::SECRETARIAT_ROLE)
                 <div class="info-card">
                     <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}">Formalna Odluka, potpisani primjerak i objava</a>
