@@ -432,7 +432,7 @@
                     $ccStates = ['active' => 'Aktivan', 'vacant' => 'Upražnjeno — čeka zamjenu', 'empty' => 'Nepopunjeno'];
                 @endphp
                 <div class="info-card" data-section="canonical-commission">
-                    <h3 style="font-weight: 600; margin-bottom: 6px;">Kanonska Komisija</h3>
+                    <h3 style="font-weight: 600; margin-bottom: 6px;">Komisija</h3>
                     @if($cc['foreignCommission'])
                         <p>{{ $ccGovernance::NOT_CANONICAL_MESSAGE }}</p>
                     @elseif($cc['commission'] === null)
@@ -464,9 +464,9 @@
                         </ul>
                         <p>Zamjene: {{ $cc['replacements']->count() }}{{ $cc['replacements']->contains('late', true) ? ' (uključuje zamjenu nakon roka)' : '' }}</p>
                     @endif
-                    <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}">Upravljanje Komisijom: uspostavljanje, imenovanje, izjave, upražnjenost i zamjene</a><br>
-                    <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije (pregled)</a>
-                    · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori (pregled)</a>
+                    <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}">Upravljanje Komisijom</a><br>
+                    <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije</a>
+                    · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori</a>
                 </div>
             @endif
             @if(auth()->user()?->role?->name === \App\Services\Competitions\Decision\CanonicalAdministrativeGate::SECRETARIAT_ROLE)
