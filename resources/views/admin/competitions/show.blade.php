@@ -350,11 +350,13 @@
                 </div>
                 <div>
                     <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
-                    @if($competition->published_at && $competition->deadline)
-                        <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                    @if(($competition->published_at || $competition->isCanonicalTestPreview()) && $competition->deadline)
+                        @if($competition->published_at)
+                            <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                        @endif
                         <p><strong>Datum početka:</strong> {{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</p>
                         <p><strong>Datum isteka roka za prijavu:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
-                        @if($competition->status === 'published' && ! $competition->canonicalTestApplicationWindowIsClosed())
+                        @if(($competition->status === 'published' || $competition->isCanonicalTestPreview()) && ! $competition->canonicalTestApplicationWindowIsClosed())
                             @if($competition->is_upcoming)
                                 <p><strong>Počinje za:</strong><br>
                                     <span class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6; background: #eff6ff; border-color: #dbeafe;">
@@ -369,6 +371,9 @@
                                 </p>
                             @endif
                         @endif
+                    @endif
+                    @if($competition->isCanonicalTestPreview())
+                        <p style="color: #6b7280; font-size: 13px;">Testni pregled — konkurs nije javno objavljen.</p>
                     @endif
                     @if($competition->closed_at)
                         <p><strong>Datum zatvaranja konkursa:</strong> {{ $competition->closed_at->format('d.m.Y H:i') }}</p>
@@ -427,7 +432,8 @@
         @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
             @if(auth()->user()?->role?->name === \App\Services\Competitions\Decision\CanonicalAdministrativeGate::SECRETARIAT_ROLE)
                 <div class="info-card">
-                    <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}">Formalna Odluka, potpisani primjerak i objava</a>
+                    <h2 style="font-size: 20px; margin-bottom: 16px;">Zvanična Odluka</h2>
+                    <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}" style="color: var(--primary); text-decoration: underline;">Pregled odluke i objave</a>
                 </div>
             @endif
         @else
