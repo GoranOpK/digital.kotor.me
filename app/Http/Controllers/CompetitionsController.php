@@ -35,9 +35,17 @@ class CompetitionsController extends Controller
                 });
             })
             ->where(function ($query) use ($now) {
-                // Konkurs je vidljiv korisnicima samo ako je datum početka danas ili u prošlosti
+                // Konkurs je vidljiv korisnicima samo ako je datum početka danas ili u prošlosti.
+                // Izuzetak je zatvorena kanonska testna prijavna faza: ostaje na listi i kad
+                // je početak u budućnosti, sa statusom zatvorenih prijava.
                 $query->where('start_date', '<=', $now->toDateString())
-                      ->orWhereNull('start_date');
+                      ->orWhereNull('start_date')
+                      ->orWhere(function ($closedPreview) {
+                          $closedPreview->where('status', 'draft')
+                              ->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
+                              ->where('is_test_preview', true)
+                              ->whereNotNull('canonical_test_applications_closed_at');
+                      });
             })
             ->orderBy('start_date', 'asc')
             ->get()
@@ -71,8 +79,10 @@ class CompetitionsController extends Controller
         $now = now();
         
         // Redovno objavljen aktivan profil ili eksplicitni kanonski MMSP testni preview.
+        // Zatvorena testna prijavna faza ostaje vidljiva i kad je početak u budućnosti.
+        $startsLater = $competition->start_date && $competition->start_date->startOfDay() > $now;
         if (! $competition->isPubliclyAccessibleForApplications()
-            || ($competition->start_date && $competition->start_date->startOfDay() > $now)) {
+            || ($startsLater && ! $competition->isCanonicalTestApplicationPhaseClosed())) {
             abort(404, 'Konkurs nije pronađen ili još uvijek nije počeo.');
         }
 

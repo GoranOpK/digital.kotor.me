@@ -75,6 +75,10 @@ final class FinalSubmissionService
                     return FinalSubmissionResult::failed(self::CLAIM_CONFLICT_MESSAGE);
                 }
 
+                if ($competition->canonicalTestApplicationWindowIsClosed()) {
+                    return FinalSubmissionResult::failed(CanonicalTestApplicationPhaseService::WINDOW_CLOSED_MESSAGE);
+                }
+
                 if (! $competition->is_open) {
                     return FinalSubmissionResult::failed('Rok za prijave je istekao ili konkurs nije otvoren za prijave.');
                 }
