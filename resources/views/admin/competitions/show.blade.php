@@ -319,46 +319,6 @@
                 </div>
             </div>
         @else
-        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-            {{-- MMSP-only layout: match the two-column competition overview used by the youth profile. --}}
-            <div class="program-feature-grid">
-                <div class="program-feature-card">
-                    <h2>Osnovne informacije</h2>
-                    <p class="featured-title">{{ $competition->title }}</p>
-                    <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'][$competition->status] ?? $competition->status }}</span></p>
-                    <p><strong>Broj konkursa:</strong> {{ $competition->upNumber?->number ?? 'N/A' }}</p>
-                    <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
-                    @if($canCompetitionAdminSeeApplications)
-                        <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
-                    @endif
-                    @if($competition->published_at)
-                        <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
-                    @endif
-                    @if($competition->start_date)
-                        <p><strong>Datum početka:</strong> {{ $competition->start_date->format('d.m.Y') }}</p>
-                    @endif
-                    <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
-                    @if($competition->deadline)
-                        <p><strong>Datum isteka roka za prijavu:</strong> {{ $competition->deadline->copy()->subSecond()->format('d.m.Y H:i') }}</p>
-                    @endif
-                    @if($competition->commission)
-                        <p><strong>Komisija:</strong>
-                            <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}" style="color: var(--primary); text-decoration: underline;">{{ $competition->commission->name }} ({{ $competition->commission->year }})</a>
-                        </p>
-                    @else
-                        <p><strong>Komisija:</strong> Nije dodijeljena</p>
-                    @endif
-                </div>
-                <div class="program-feature-card">
-                    <h2>Opis konkursa</h2>
-                    @if($competition->description)
-                        <div class="program-description competition-description">{!! $competition->descriptionHtml() !!}</div>
-                    @else
-                        <p style="color: #6b7280;">Opis nije unesen za ovaj konkurs.</p>
-                    @endif
-                </div>
-            </div>
-        @else
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
@@ -380,7 +340,7 @@
                     @endif
                     @if($competition->commission)
                         <p><strong>Komisija:</strong> 
-                            <a href="{{ route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
+                            <a href="{{ $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL ? route('admin.competitions.canonical-commission.show', $competition) : route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
                                 {{ $competition->commission->name }} ({{ $competition->commission->year }})
                             </a>
                         </p>
@@ -424,7 +384,6 @@
                 {!! $competition->descriptionHtml() !!}
             </div>
         </div>
-        @endif
         @endif
         @endif
 
