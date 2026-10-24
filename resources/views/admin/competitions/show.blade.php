@@ -345,10 +345,6 @@
                         <p><strong>Komisija:</strong>
                             <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}" style="color: var(--primary); text-decoration: underline;">{{ $competition->commission->name }} ({{ $competition->commission->year }})</a>
                         </p>
-                        <p><strong>Postupci Komisije:</strong>
-                            <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}" style="color: var(--primary); text-decoration: underline;">Sjednice</a>
-                            · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}" style="color: var(--primary); text-decoration: underline;">Provjera potpunosti i prigovori</a>
-                        </p>
                     @else
                         <p><strong>Komisija:</strong> Nije dodijeljena</p>
                     @endif
