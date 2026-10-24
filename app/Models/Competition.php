@@ -26,6 +26,7 @@ class Competition extends Model
         'call_number',
         'status',
         'is_test_preview',
+        'canonical_test_applications_closed_at',
         'competition_number',
         'year',
         'budget',
@@ -57,6 +58,7 @@ class Competition extends Model
         'call_number' => 'integer',
         'deadline_days' => 'integer',
         'is_test_preview' => 'boolean',
+        'canonical_test_applications_closed_at' => 'datetime',
     ];
 
     public function isOmladinskoProfile(): bool
@@ -83,6 +85,25 @@ class Competition extends Model
     {
         return $this->status === 'draft'
             && $this->isCanonicalTestMode();
+    }
+
+    /**
+     * Testna prijavna faza je zatvorena i konkurs je i dalje kanonski MMSP testni preview.
+     * Samo tada rana rang-lista smije zamijeniti kalendarski rok.
+     */
+    public function isCanonicalTestApplicationPhaseClosed(): bool
+    {
+        return $this->isCanonicalTestPreview()
+            && $this->canonical_test_applications_closed_at !== null;
+    }
+
+    /**
+     * Prozor prijava ostaje zatvoren i ako se preview flag ili status kasnije promijene.
+     * Ne otvara rang-listu prije roka: to radi isključivo isCanonicalTestApplicationPhaseClosed().
+     */
+    public function canonicalTestApplicationWindowIsClosed(): bool
+    {
+        return $this->canonical_test_applications_closed_at !== null;
     }
 
     /**
@@ -237,6 +258,10 @@ class Competition extends Model
      */
     public function getIsOpenAttribute()
     {
+        if ($this->canonicalTestApplicationWindowIsClosed()) {
+            return false;
+        }
+
         if (! $this->hasApplicationWindowStatus()) {
             return false;
         }
@@ -253,10 +278,16 @@ class Competition extends Model
     }
 
     /**
-     * Proverava da li konkurs tek treba da počne
+     * Proverava da li konkurs tek treba da počne.
+     * Zatvorena testna prijavna faza ima prednost: početak u budućnosti
+     * više ne smije da prikaže status „Uskoro počinje“.
      */
     public function getIsUpcomingAttribute()
     {
+        if ($this->canonicalTestApplicationWindowIsClosed()) {
+            return false;
+        }
+
         if (! $this->hasApplicationWindowStatus() || !$this->start_date) {
             return false;
         }

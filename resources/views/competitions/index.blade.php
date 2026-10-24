@@ -193,9 +193,12 @@
                                 <span>Budžet: {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</span>
                             </div>
                             <div class="meta-item">
-                                <span class="status-badge {{ $competition->is_open ? 'status-open' : ($competition->is_upcoming ? 'status-upcoming' : 'status-closed') }}" 
-                                      style="{{ $competition->is_upcoming ? 'background: #dbeafe; color: #1e40af;' : '' }}">
-                                    @if($competition->is_open)
+                                @php $testPhaseClosed = $competition->isCanonicalTestApplicationPhaseClosed(); @endphp
+                                <span class="status-badge {{ $competition->is_open ? 'status-open' : (($competition->is_upcoming && ! $testPhaseClosed) ? 'status-upcoming' : 'status-closed') }}"
+                                      style="{{ $competition->is_upcoming && ! $testPhaseClosed ? 'background: #dbeafe; color: #1e40af;' : '' }}">
+                                    @if($testPhaseClosed)
+                                        Zatvoren za prijave
+                                    @elseif($competition->is_open)
                                         Otvoren
                                     @elseif($competition->is_upcoming)
                                         Uskoro počinje
@@ -214,7 +217,11 @@
                             </p>
                         @endif
 
-                        @if($competition->is_upcoming)
+                        @if($competition->isCanonicalTestApplicationPhaseClosed())
+                            <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 8px; margin-top: 16px;">
+                                <strong style="color: #991b1b;">Testna prijavna faza je zatvorena.</strong>
+                            </div>
+                        @elseif($competition->is_upcoming)
                             <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; margin-top: 16px;">
                                 <strong style="color: #1e40af;">Počinje: {{ $competition->start_date->format('d.m.Y') }}</strong>
                             </div>

@@ -268,7 +268,10 @@
             @php
                 $fc = $competition;
                 $fcStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
-                if ($fc->is_open) {
+                if ($fc->isCanonicalTestApplicationPhaseClosed()) {
+                    $fcStatusText = 'Zatvoren za prijave';
+                    $fcStatusColor = '#92400e';
+                } elseif ($fc->is_open) {
                     $fcStatusText = 'Otvoren za prijave';
                     $fcStatusColor = '#065f46';
                 } elseif ($fc->is_upcoming) {
@@ -299,7 +302,7 @@
                     @if($fc->deadline)
                         <p><strong>Rok za prijave:</strong> {{ $fc->deadline->format('d.m.Y H:i') }}</p>
                     @endif
-                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed())
+                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed() && !$fc->isCanonicalTestApplicationPhaseClosed())
                         <p><strong>Preostalo za prijave:</strong> {{ $fcDaysLeft }} {{ $fcDaysLeft == 1 ? 'dan' : 'dana' }}</p>
                     @endif
                     @if($fc->commission)
@@ -351,7 +354,7 @@
                         <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
                         <p><strong>Datum početka:</strong> {{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</p>
                         <p><strong>Datum isteka roka za prijavu:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
-                        @if($competition->status === 'published')
+                        @if($competition->status === 'published' && ! $competition->canonicalTestApplicationWindowIsClosed())
                             @if($competition->is_upcoming)
                                 <p><strong>Počinje za:</strong><br>
                                     <span class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6; background: #eff6ff; border-color: #dbeafe;">
@@ -382,6 +385,43 @@
             </div>
         </div>
         @endif
+        @endif
+
+        @if(! empty($testApplicationPhase))
+            <div class="info-card" data-section="test-application-phase">
+                <h2 style="font-size: 20px; margin-bottom: 16px;">Testna prijavna faza</h2>
+                @if($testApplicationPhase['closed'])
+                    <p style="margin: 0 0 8px;">
+                        Zatvorena {{ $testApplicationPhase['closedAt']?->timezone('Europe/Belgrade')->format('d.m.Y H:i') }}
+                        @if($testApplicationPhase['closedBy'])
+                            — {{ $testApplicationPhase['closedBy'] }}
+                        @endif.
+                    </p>
+                    <p style="margin: 0;">
+                        Nove prijave, izmjene nacrta i konačna predaja nacrta više nisu moguće. Radnja je nepovratna.
+                        Kalendarski rok za prijave ostaje {{ $competition->deadline ? $competition->deadline->format('d.m.Y H:i') : 'neizmijenjen' }}.
+                        Status Nacrt i testni preview nisu mijenjani.
+                    </p>
+                @else
+                    <div style="padding: 14px 16px; border: 1px solid #f59e0b; background: #fffbeb; border-radius: 8px; margin-bottom: 12px;">
+                        <strong>Upozorenje.</strong>
+                        Zatvaranje je nepovratno. Nakon potvrde više neće biti moguće započeti novu prijavu, mijenjati postojeći nacrt niti konačno predati nacrt.
+                        Već podnesene prijave, prigovori, ocjene i sjednice ostaju neizmijenjeni.
+                    </div>
+                    @if($testApplicationPhase['canClose'])
+                        <form method="POST" action="{{ route('admin.competitions.test-application-phase.close', $competition) }}">
+                            @csrf
+                            <label style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px;">
+                                <input type="checkbox" name="confirm_test_application_phase_close" value="1" required style="margin-top: 3px;">
+                                <span>Potvrđujem da je zatvaranje testne prijavne faze nepovratno i da nove prijave više neće biti moguće.</span>
+                            </label>
+                            <button type="submit" class="btn btn-danger">Zatvori testnu prijavnu fazu</button>
+                        </form>
+                    @elseif($testApplicationPhase['block'])
+                        <p style="margin: 0; color: #92400e;">{{ $testApplicationPhase['block'] }}</p>
+                    @endif
+                @endif
+            </div>
         @endif
 
         @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)

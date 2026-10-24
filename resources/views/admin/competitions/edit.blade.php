@@ -200,11 +200,15 @@
 
                 <div class="form-row">
                     <div class="form-group">
+                        @php $lockClosedTestDates = $competition->isCanonicalTestApplicationPhaseClosed(); @endphp
                         <label class="form-label">Datum početka</label>
-                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') error @enderror" value="{{ old('start_date', $competition->start_date?->format('Y-m-d')) }}">
+                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') error @enderror" value="{{ old('start_date', $competition->start_date?->format('Y-m-d')) }}" @if($lockClosedTestDates) disabled @endif>
                         @error('start_date')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
+                        @if($lockClosedTestDates)
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Datum početka je zaključan jer je testna prijavna faza zatvorena.</div>
+                        @endif
                     </div>
 
                     <div class="form-group">
@@ -230,6 +234,18 @@
                     && $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL
                     && $competition->status === 'draft')
                     <div class="form-group" style="padding: 14px 16px; border: 1px solid #f59e0b; background: #fffbeb; border-radius: 8px;">
+                        @if($competition->isCanonicalTestApplicationPhaseClosed())
+                            <input type="hidden" name="is_test_preview" value="1">
+                            <label style="display:flex; gap:10px; align-items:flex-start;">
+                                <input type="checkbox" checked disabled style="margin-top:3px;">
+                                <span>
+                                    <strong>Testni MMSP preview</strong><br>
+                                    <span style="font-size:12px; color:#6b7280;">
+                                        Testna prijavna faza je nepovratno zatvorena. Preview ostaje uključen, a prijave se ne mogu ponovo otvoriti.
+                                    </span>
+                                </span>
+                            </label>
+                        @else
                         <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer;">
                             <input type="hidden" name="is_test_preview" value="0">
                             <input type="checkbox" name="is_test_preview" value="1" {{ old('is_test_preview', $competition->is_test_preview) ? 'checked' : '' }} style="margin-top:3px;">
@@ -241,17 +257,22 @@
                                 </span>
                             </span>
                         </label>
+                        @endif
                     </div>
                 @endif
 
                 <div class="form-group">
                     <label class="form-label">Informacije o roku</label>
                     <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151;">
-                        <p style="margin: 0;"><strong>Rok za prijave:</strong> 20 dana</p>
+                        <p style="margin: 0;"><strong>Rok za prijave:</strong> {{ $lockClosedTestDates ? ($competition->deadline_days ?? 20) : 20 }} dana</p>
                         <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">{{ $competition->deadline ? $competition->deadline->format('d.m.Y') : ($competition->end_date ? $competition->end_date->format('d.m.Y') : 'Nije definisano') }}</span></p>
+                        @if($lockClosedTestDates)
+                            <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">Rok za prijave je zaključan jer je testna prijavna faza zatvorena.</p>
+                        @endif
                     </div>
                 </div>
 
+                @unless($lockClosedTestDates)
                 <script>
                     document.getElementById('start_date').addEventListener('change', function() {
                         const startDateVal = this.value;
@@ -270,6 +291,7 @@
                         }
                     });
                 </script>
+                @endunless
                 <script>
                     (function() {
                         var el = document.getElementById('up_number');
