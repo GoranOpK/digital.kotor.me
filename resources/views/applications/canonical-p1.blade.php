@@ -78,6 +78,7 @@
         border: 1px solid #d1d5db;
         border-radius: 8px;
         font-size: 14px;
+        transition: border-color 0.2s;
         background: #fff;
         color: #111827;
         box-sizing: border-box;
@@ -115,8 +116,13 @@
         width: 18px;
         height: 18px;
         min-width: 18px;
+        min-height: 18px;
+        max-width: 18px;
+        max-height: 18px;
         margin-top: 2px;
         cursor: pointer;
+        flex-shrink: 0;
+        box-sizing: border-box;
     }
     .mmsp-p1-check label {
         font-size: 14px;
@@ -187,8 +193,10 @@
         color:#374151;
     }
     .mmsp-p1-radio-option input {
-        width:16px;
-        height:16px;
+        width:18px;
+        height:18px;
+        flex-shrink:0;
+        cursor:pointer;
     }
     .mmsp-p1-section-divider {
         border-top:1px solid #e5e7eb;
