@@ -107,8 +107,8 @@ class CanonicalApplicantController extends Controller
             return back()->withErrors(['error' => $result->error])->withInput();
         }
 
-        return redirect()->route('applications.canonical-p1.edit', $application)
-            ->with('success', 'Obrazac P1 je sačuvan.');
+        return redirect()->route('dashboard')
+            ->with('success', 'Prijava je sačuvana kao nacrt. U bilo kom trenutku je možete nastaviti iz sekcije "Moje prijave".');
     }
 
     public function documents(Request $request, Application $application): RedirectResponse
