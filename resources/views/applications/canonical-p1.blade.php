@@ -335,7 +335,7 @@
 
     /* Only the canonical MMSP P1a/P1b print view; on-screen layout stays unchanged. */
     @media print {
-        @page { size: A4 portrait; margin: 12mm; }
+        @page { size: A4 portrait; margin: 12mm 10mm; }
         body { background: #fff !important; }
         body > header, body > nav, body > footer,
         .mmsp-p1 .mmsp-p1-alert,
@@ -375,17 +375,19 @@
             max-width: 100% !important;
         }
         .mmsp-p1-header {
-            padding: 10px 12px !important;
+            padding: 12px 16px !important;
             margin: 0 0 12px !important;
             border: 1px solid #ddd !important;
             box-shadow: none !important;
             break-inside: avoid;
         }
         .mmsp-p1-header-top { margin-bottom: 8px !important; }
-        .mmsp-p1-crest img { height: 1.6cm !important; }
+        .mmsp-p1-crest img { height: 2cm !important; }
         .mmsp-p1-meta { margin-top: 6px !important; padding-top: 6px !important; }
-        .mmsp-p1-title { margin-top: 5px !important; }
-        .mmsp-p1-subtitle { margin-top: 5px !important; }
+        .mmsp-p1-org, .mmsp-p1-contact { font-size: 11.7px !important; }
+        .mmsp-p1-number, .mmsp-p1-code { font-size: 12.6px !important; }
+        .mmsp-p1-title { font-size: 19.8px !important; margin-top: 5px !important; }
+        .mmsp-p1-subtitle { font-size: 12.6px !important; margin-top: 5px !important; }
         .mmsp-p1-call { margin-top: 3px !important; }
         .mmsp-p1-card {
             padding: 0 !important;
@@ -399,7 +401,7 @@
         .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-            column-gap: 12px !important;
+            column-gap: 16px !important;
             align-items: start !important;
         }
         .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) > .mmsp-p1-row {
@@ -415,14 +417,14 @@
             grid-column: 1 / -1 !important;
         }
         .mmsp-p1-field, .mmsp-p1-full {
-            margin-bottom: 9px !important;
+            margin-bottom: 10px !important;
             min-width: 0 !important;
             break-inside: avoid;
         }
         .mmsp-p1-label {
             margin-bottom: 4px !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
+            font-size: 9.9pt !important;
+            font-weight: 600 !important;
             color: #374151 !important;
         }
         .mmsp-p1 .mmsp-p1-full,
@@ -442,13 +444,13 @@
             border: 1px solid #d1d5db !important;
             outline: 1px solid #d1d5db !important;
             outline-offset: -1px !important;
-            padding: 6px 8px !important;
-            font-size: 12px !important;
+            padding: 3px 5px !important;
+            font-size: 9pt !important;
             font-weight: 400 !important;
             border-radius: 0 !important;
             background: #fff !important;
             height: auto !important;
-            min-height: 28px !important;
+            min-height: 29px !important;
             box-shadow: none !important;
         }
         .mmsp-p1-section-divider {
