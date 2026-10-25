@@ -336,6 +336,12 @@
     /* Only the canonical MMSP P1a/P1b print view; on-screen layout stays unchanged. */
     @media print {
         @page { size: A4 portrait; margin: 12mm 10mm; }
+        /* Override the MMSP shared visual layer's 24px top padding in print only.
+           24 CSS px = 18 PDF pt: the exact measured header offset versus Women. */
+        .canonical-ui-page.mmsp-form-page {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
         body { background: #fff !important; }
         body > header, body > nav, body > footer,
         .mmsp-p1 .mmsp-p1-alert,
