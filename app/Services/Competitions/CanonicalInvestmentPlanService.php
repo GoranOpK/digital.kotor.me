@@ -266,7 +266,7 @@ final class CanonicalInvestmentPlanService
                 $errors['expense_lines'] = 'Unesite najmanje jednu stavku troška (vrsta troška, opis, iznos).';
             }
 
-            return $errors;
+            // Continue checking narrative sections even when expense lines are missing.
         }
 
         $sum = '0.00';
