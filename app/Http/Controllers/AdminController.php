@@ -22,6 +22,7 @@ use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
 use App\Services\Competitions\CallPublicationService;
+use App\Services\Competitions\CanonicalTestApplicationPhaseService;
 use App\Services\Competitions\Commission\CanonicalCommissionAdministrationService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
@@ -911,8 +912,12 @@ class AdminController extends Controller
             ? app(CanonicalCommissionAdministrationService::class)->overview($competition)
             : null;
 
+        $testApplicationPhase = $competition->isCanonicalTestPreview()
+            ? app(CanonicalTestApplicationPhaseService::class)->presentation($competition, $user)
+            : null;
+
         return view('admin.competitions.show', array_merge(
-            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView', 'canonicalCommissionOverview'),
+            compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView', 'canonicalCommissionOverview', 'testApplicationPhase'),
             $omladinskoAnnualOverview
         ));
     }
@@ -1066,6 +1071,16 @@ class AdminController extends Controller
             $data['is_test_preview'] = false;
         }
 
+        if (app(CanonicalTestApplicationPhaseService::class)->editLeavesClosedPreview(
+            $competition,
+            $validated,
+            (bool) ($data['is_test_preview'] ?? false),
+        )) {
+            return back()->withErrors([
+                'is_test_preview' => CanonicalTestApplicationPhaseService::PREVIEW_LOCKED_MESSAGE,
+            ])->withInput();
+        }
+
         if ($isOmladinsko) {
             $data['call_number'] = $competition->call_number;
             $data['type'] = CompetitionAnnualInstance::PROFILE_OMLADINSKO;
@@ -1091,6 +1106,23 @@ class AdminController extends Controller
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
+        }
+
+        if ($competition->isCanonicalTestApplicationPhaseClosed()) {
+            $submittedStart = $validated['start_date'] ?? null;
+            $storedStart = $competition->start_date?->toDateString();
+            $submittedStartDate = is_string($submittedStart) && $submittedStart !== ''
+                ? \Carbon\Carbon::parse($submittedStart)->toDateString()
+                : null;
+            if ($submittedStartDate !== null && $submittedStartDate !== $storedStart) {
+                return back()->withErrors([
+                    'start_date' => CanonicalTestApplicationPhaseService::DATES_LOCKED_MESSAGE,
+                ])->withInput();
+            }
+
+            $data['start_date'] = $storedStart;
+            $data['end_date'] = $competition->end_date?->toDateString();
+            $data['deadline_days'] = $competition->deadline_days;
         }
 
         $oldCommissionId = $competition->commission_id;

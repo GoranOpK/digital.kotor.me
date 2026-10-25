@@ -58,6 +58,8 @@ class CanonicalAdministrativeEvent extends Model
 
     public const COMPETITION_CLOSED = 'competition_closed';
 
+    public const TEST_APPLICATIONS_CLOSED = 'test_applications_closed';
+
     public const UPDATED_AT = null;
 
     protected $fillable = [

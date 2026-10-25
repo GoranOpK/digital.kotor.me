@@ -65,6 +65,9 @@ final class CanonicalApplicantFormService
         if (CanonicalAdministrativeGate::isClosed($competition)) {
             return CanonicalAdministrativeGate::CLOSED_MESSAGE;
         }
+        if ($competition->canonicalTestApplicationWindowIsClosed()) {
+            return CanonicalTestApplicationPhaseService::WINDOW_CLOSED_MESSAGE;
+        }
         if (! $competition->is_open) {
             return $competition->is_upcoming
                 ? 'Javni poziv još nije počeo. Prijave će biti moguće od datuma početka.'

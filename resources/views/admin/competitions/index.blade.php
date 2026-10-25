@@ -182,7 +182,10 @@
             @php
                 $fc = $featuredCompetition;
                 $fcStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
-                if ($fc->is_open) {
+                if ($fc->isCanonicalTestApplicationPhaseClosed()) {
+                    $fcStatusText = 'Zatvoren za prijave';
+                    $fcStatusColor = '#92400e';
+                } elseif ($fc->is_open) {
                     $fcStatusText = 'Otvoren za prijave';
                     $fcStatusColor = '#065f46';
                 } elseif ($fc->is_upcoming) {
@@ -217,7 +220,7 @@
                     @if($fc->deadline)
                         <p><strong>Rok za prijave:</strong> {{ $fc->deadline->format('d.m.Y H:i') }}</p>
                     @endif
-                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed())
+                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed() && !$fc->isCanonicalTestApplicationPhaseClosed())
                         <p><strong>Preostalo za prijave:</strong> {{ $fcDaysLeft }} {{ $fcDaysLeft == 1 ? 'dan' : 'dana' }}</p>
                     @endif
                     @if($fc->commission)

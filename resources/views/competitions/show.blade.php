@@ -235,7 +235,11 @@
             </div>
         @endif
 
-        @if($isUpcoming)
+        @if($competition->isCanonicalTestApplicationPhaseClosed())
+            <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b;">
+                <strong>Testna prijavna faza je zatvorena.</strong> Nove prijave i izmjene nacrta više nisu moguće.
+            </div>
+        @elseif($isUpcoming)
             <div class="alert alert-info" style="background: #eff6ff; border-color: #3b82f6; color: #1e40af;">
                 <strong>🔜 Konkurs uskoro počinje!</strong><br>
                 Prijave će biti moguće od: <strong>{{ $competition->start_date->format('d.m.Y') }}</strong>
@@ -315,7 +319,7 @@
                         <span class="info-value">
                             @php
                                 $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
-                                $statusLabel = $isOpen ? 'Otvoren' : ($isApplicationDeadlinePassed ? 'Zatvoren za prijave' : 'Zatvoren');
+                                $statusLabel = $isOpen ? 'Otvoren' : ($competition->isCanonicalTestApplicationPhaseClosed() || $isApplicationDeadlinePassed ? 'Zatvoren za prijave' : 'Zatvoren');
                                 $statusClass = $isOpen ? 'status-open' : 'status-closed';
                             @endphp
                             <span class="status-badge {{ $statusClass }}">
