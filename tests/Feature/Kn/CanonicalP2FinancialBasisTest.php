@@ -39,6 +39,45 @@ class CanonicalP2FinancialBasisTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
+    public function test_article17_sections_render_and_p1_subsidy_is_preselected(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), withP2: false);
+
+        $this->actingAs($owner)->get(route('applications.canonical-p2.edit', $application))
+            ->assertOk()
+            ->assertSee('OSNOVNI PODACI')
+            ->assertSee('PLAN ULAGANJA')
+            ->assertSee('FINANSIJSKI OKVIR ULAGANJA')
+            ->assertSee('AUTENTIČNOST / INOVATIVNOST / DIGITALIZACIJA')
+            ->assertSee('OČEKIVANI REZULTATI')
+            ->assertSee('UTICAJ NA LOKALNU EKONOMIJU')
+            ->assertSee('ODRŽIVOST I DUGOROČNI EFEKTI')
+            ->assertSee('value="'.CanonicalSubsidyType::INNOVATIVE.'" selected', false);
+    }
+
+    public function test_article17_narratives_save_as_draft_but_are_required_for_final(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), withP2: false);
+        $payload = $this->p2Payload();
+        unset($payload['narrative_sections']);
+
+        $this->actingAs($owner)->put(route('applications.canonical-p2.update', $application), $payload)
+            ->assertSessionHasNoErrors();
+
+        $service = app(\App\Services\Competitions\CanonicalInvestmentPlanService::class);
+        $this->assertStringContainsString('Opis planiranog ulaganja', $service->finalBlockReason($application));
+
+        $payload['narrative_sections'] = array_fill_keys(
+            array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS),
+            'Testni opis ulaganja i njegovog uticaja na lokalnu ekonomiju.'
+        );
+        $this->actingAs($owner)->put(route('applications.canonical-p2.update', $application), $payload)
+            ->assertSessionHasNoErrors();
+        $this->assertNull($service->finalBlockReason($application));
+    }
+
     // ---- A. Subsidy type -------------------------------------------------
 
     public function test_subsidy_type_catalog_codes_labels_order_and_cap_metadata(): void
