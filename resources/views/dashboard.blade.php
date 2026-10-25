@@ -581,7 +581,15 @@
                                                style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #e5e7eb; color: #111827; text-decoration: none;">
                                                 Status prijave
                                             </a>
-                                            @php $comp = $app->competition; $canDeleteApp = $comp && $comp->status !== 'closed' && !$comp->isApplicationDeadlinePassed(); @endphp
+                                            @php
+                                                $comp = $app->competition;
+                                                $canDeleteApp = $comp && $comp->status !== 'closed' && !$comp->isApplicationDeadlinePassed();
+                                                // MMSP only: do not show delete for already submitted or locked applications.
+                                                // Women/youth continue using the existing visibility rule unchanged.
+                                                if ($canDeleteApp && $comp->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL) {
+                                                    $canDeleteApp = ! $app->isApplicantContentWriteLocked();
+                                                }
+                                            @endphp
                                             @if($canDeleteApp)
                                             <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
                                                 @csrf @method('DELETE')
