@@ -332,6 +332,85 @@
             padding: 20px;
         }
     }
+
+    /* Only the canonical MMSP P1a/P1b print view; on-screen layout stays unchanged. */
+    @media print {
+        @page { size: A4 portrait; margin: 12mm; }
+        body { background: #fff !important; }
+        body > header, body > nav, body > footer,
+        .mmsp-p1 .mmsp-p1-alert,
+        .mmsp-p1 .mmsp-p1-type-card,
+        .mmsp-p1 .mmsp-p1-nav,
+        .mmsp-p1 .mmsp-p1-hint,
+        .mmsp-p1 .mmsp-p1-help,
+        .mmsp-p1 .mmsp-p1-error,
+        .mmsp-p1 .mmsp-p1-screen-actions,
+        .mmsp-p1 button,
+        .mmsp-p1-submit { display: none !important; }
+        .mmsp-p1,
+        .mmsp-p1-wrap {
+            background: white !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+        }
+        .mmsp-p1-header {
+            padding: 10px 12px !important;
+            margin: 0 0 12px !important;
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+            break-inside: avoid;
+        }
+        .mmsp-p1-header-top { margin-bottom: 8px !important; }
+        .mmsp-p1-crest img { height: 1.6cm !important; }
+        .mmsp-p1-meta { margin-top: 6px !important; padding-top: 6px !important; }
+        .mmsp-p1-title { margin-top: 5px !important; }
+        .mmsp-p1-subtitle { margin-top: 5px !important; }
+        .mmsp-p1-call { margin-top: 3px !important; }
+        .mmsp-p1-card {
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            break-inside: auto;
+        }
+        .mmsp-p1-row {
+            display: grid !important;
+            grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+            gap: 12px !important;
+        }
+        .mmsp-p1-field, .mmsp-p1-full {
+            margin-bottom: 9px !important;
+            min-width: 0 !important;
+            break-inside: avoid;
+        }
+        .mmsp-p1-label { margin-bottom: 3px !important; font-size: 11px !important; }
+        .mmsp-p1-control {
+            padding: 5px 8px !important;
+            font-size: 11px !important;
+            border: 1px solid #ddd !important;
+            border-radius: 0 !important;
+            background: #fff !important;
+            height: auto !important;
+            min-height: 28px !important;
+            box-shadow: none !important;
+        }
+        .mmsp-p1-section-divider {
+            margin-top: 5px !important;
+            padding-top: 8px !important;
+            break-inside: avoid;
+        }
+        .mmsp-p1-check { gap: 8px !important; }
+        .mmsp-p1-check label { font-size: 11px !important; }
+        .mmsp-p1 .mmsp-p1-section-divider .mmsp-p1-help {
+            display: block !important;
+            font-size: 10px !important;
+            margin-top: 5px !important;
+        }
+    }
 </style>
 
 <div class="mmsp-p1 canonical-ui-page mmsp-form-page">
@@ -450,7 +529,7 @@
                             @error('address')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="mmsp-p1-full">
-                            <label class="mmsp-p1-label" for="website">Website</label>
+                            <label class="mmsp-p1-label" for="website">Website (opciono)</label>
                             <input id="website" type="text" name="website" value="{{ $value('website') }}" class="mmsp-p1-control @error('website') is-invalid @enderror">
                             @error('website')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                         </div>
@@ -514,7 +593,7 @@
                             @error('address')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                         </div>
                         <div class="mmsp-p1-full">
-                            <label class="mmsp-p1-label" for="website">Website</label>
+                            <label class="mmsp-p1-label" for="website">Website (opciono)</label>
                             <input id="website" type="text" name="website" value="{{ $value('website') }}" class="mmsp-p1-control @error('website') is-invalid @enderror">
                             @error('website')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                         </div>
@@ -583,7 +662,7 @@
                 </div>
 
                 @unless($readOnly)
-                    <div class="mmsp-p1-card" style="text-align:center; padding:32px;">
+                    <div class="mmsp-p1-card mmsp-p1-screen-actions" style="text-align:center; padding:32px;">
                         <div style="display:flex; justify-content:center; flex-wrap:wrap;">
                             <button type="submit" class="mmsp-p1-submit" style="background:#6b7280; padding:12px 24px; font-size:14px; margin:0;">
                                 Sačuvaj kao nacrt
@@ -594,7 +673,7 @@
             </fieldset>
         </form>
 
-        <div class="mmsp-p1-card" style="text-align:center; margin-top:8px; margin-bottom:24px;">
+        <div class="mmsp-p1-card mmsp-p1-screen-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">
             <button type="button"
                     class="mmsp-p1-submit"
                     onclick="window.print();"
