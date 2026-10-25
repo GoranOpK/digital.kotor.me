@@ -2,6 +2,28 @@
 
 @section('content')
 @include('partials.canonical-ui')
+<style>
+@media print {
+    @page { size: A4 portrait; margin: 12mm 10mm; }
+    .canonical-ui-page.mmsp-business-plan { padding: 0 !important; margin: 0 !important; background: #fff !important; min-height: 0 !important; }
+    .canonical-ui-page.mmsp-business-plan > .container { padding: 0 !important; max-width: none !important; }
+    body > nav, body > header, body > footer,
+    .mmsp-business-plan .mmsp-alert, .mmsp-business-plan a[href],
+    .mmsp-business-plan button, .mmsp-business-plan .mmsp-form-card:has(button) { display: none !important; }
+    .mmsp-business-plan .mmsp-obrazac-zaglavlje { box-shadow: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }
+    .mmsp-business-plan .mmsp-obrazac-grb img { height: 2cm !important; }
+    .mmsp-business-plan .mmsp-form-card { box-shadow: none !important; padding: 8px 0 !important; margin: 0 !important; }
+    .mmsp-business-plan .mmsp-form-section { margin-bottom: 8px !important; }
+    .mmsp-business-plan .mmsp-form-section h2 { font-size: 13px !important; margin: 4px 0 8px !important; }
+    .mmsp-business-plan .mmsp-section-number { font-size: 11px !important; width: 23px !important; height: 23px !important; line-height: 23px !important; }
+    .mmsp-business-plan .mmsp-form-label { font-size: 10pt !important; margin-bottom: 3px !important; }
+    .mmsp-business-plan .mmsp-form-control { box-sizing: border-box !important; border: 1px solid #ccc !important; border-radius: 0 !important; font-size: 9pt !important; padding: 4px 6px !important; width: 100% !important; }
+    .mmsp-business-plan table { border-collapse: collapse !important; table-layout: fixed; }
+    .mmsp-business-plan th, .mmsp-business-plan td { border: 1px solid #ddd !important; padding: 5px !important; }
+    .mmsp-business-plan tr, .mmsp-business-plan .mmsp-form-group { break-inside: avoid; }
+    .mmsp-business-plan .mmsp-form-text { font-size: 9pt !important; }
+}
+</style>
 @php
     $competition = $application->competition;
     $lines = old('expense_lines', $plan?->expenseLines() ?? []);
@@ -119,6 +141,14 @@
                                     <input class="mmsp-form-control" value="{{ $p1?->address }}" readonly>
                                 </div>
                                 <div>
+                                <div>
+                                    <label class="mmsp-form-label">PIB</label>
+                                    <input class="mmsp-form-control" value="{{ $application->pib }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Šifra djelatnosti / broj zaposlenih</label>
+                                    <input class="mmsp-form-control" value="{{ trim(($p1?->activity_code ?? '').' / '.($p1?->employee_count ?? ''), ' /') }}" readonly>
+                                </div>
                                     <label class="mmsp-form-label">Kontakt i e-mail</label>
                                     <input class="mmsp-form-control" value="{{ trim(($p1?->phone ?? '').' / '.($p1?->email ?? ''), ' /') }}" readonly>
                                 </div>
