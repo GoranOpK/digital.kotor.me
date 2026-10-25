@@ -365,6 +365,15 @@
             min-width: 0 !important;
             box-sizing: border-box !important;
         }
+        /* Reserve a right print gutter: Chrome was clipping controls at the page edge. */
+        .mmsp-p1 form fieldset {
+            padding-right: 7mm !important;
+            margin-right: 0 !important;
+        }
+        .mmsp-p1 form .mmsp-p1-card {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
         .mmsp-p1-header {
             padding: 10px 12px !important;
             margin: 0 0 12px !important;
@@ -410,7 +419,12 @@
             min-width: 0 !important;
             break-inside: avoid;
         }
-        .mmsp-p1-label { margin-bottom: 3px !important; font-size: 11px !important; }
+        .mmsp-p1-label {
+            margin-bottom: 4px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            color: #374151 !important;
+        }
         .mmsp-p1 .mmsp-p1-full,
         .mmsp-p1 .mmsp-p1-field,
         .mmsp-p1 .mmsp-p1-row {
@@ -425,11 +439,12 @@
             max-width: 100% !important;
             min-width: 0 !important;
             box-sizing: border-box !important;
-            border-left: 1px solid #ddd !important;
-            border-right: 1px solid #ddd !important;
-            padding: 5px 8px !important;
-            font-size: 11px !important;
-            border: 1px solid #ddd !important;
+            border: 1px solid #d1d5db !important;
+            outline: 1px solid #d1d5db !important;
+            outline-offset: -1px !important;
+            padding: 6px 8px !important;
+            font-size: 12px !important;
+            font-weight: 400 !important;
             border-radius: 0 !important;
             background: #fff !important;
             height: auto !important;
