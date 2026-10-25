@@ -356,6 +356,15 @@
             width: 100% !important;
             max-width: none !important;
         }
+        /* Keep the entire print form inside the printable A4 width. */
+        .mmsp-p1 form,
+        .mmsp-p1 form fieldset,
+        .mmsp-p1 form .mmsp-p1-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+        }
         .mmsp-p1-header {
             padding: 10px 12px !important;
             margin: 0 0 12px !important;
@@ -402,7 +411,22 @@
             break-inside: avoid;
         }
         .mmsp-p1-label { margin-bottom: 3px !important; font-size: 11px !important; }
+        .mmsp-p1 .mmsp-p1-full,
+        .mmsp-p1 .mmsp-p1-field,
+        .mmsp-p1 .mmsp-p1-row {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+        }
         .mmsp-p1-control {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            border-left: 1px solid #ddd !important;
+            border-right: 1px solid #ddd !important;
             padding: 5px 8px !important;
             font-size: 11px !important;
             border: 1px solid #ddd !important;
