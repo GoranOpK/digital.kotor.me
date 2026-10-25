@@ -224,14 +224,6 @@ final class CanonicalInvestmentPlanService
         $own = $values['own_contribution'];
         $expected = $values['expected_subsidy'];
         $lines = $values['expense_lines'];
-        $narratives = $values['narrative_sections'] ?? [];
-        if ($requireComplete) {
-            foreach (self::NARRATIVE_FIELDS as $key => $label) {
-                if (trim((string) ($narratives[$key] ?? '')) === '') {
-                    $errors['narrative_sections.'.$key] = $label.' je obavezan dio Obrasca P2.';
-                }
-            }
-        }
 
         if ($values['subsidy_type'] === null) {
             if ($requireComplete) {
@@ -297,6 +289,14 @@ final class CanonicalInvestmentPlanService
             $errors['expense_lines'] = 'Zbir stavki troškova ('.$sum.' EUR) mora biti jednak ukupnoj vrijednosti ulaganja ('.$total.' EUR).';
         }
 
+        if ($requireComplete) {
+            $narratives = $values['narrative_sections'] ?? [];
+            foreach (self::NARRATIVE_FIELDS as $key => $label) {
+                if (trim((string) ($narratives[$key] ?? '')) === '') {
+                    $errors['narrative_sections.'.$key] = $label.' je obavezan dio Obrasca P2.';
+                }
+            }
+        }
         return $errors;
     }
 
