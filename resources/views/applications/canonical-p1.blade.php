@@ -377,10 +377,24 @@
             margin: 0 !important;
             break-inside: auto;
         }
-        .mmsp-p1-row {
+        /* Flatten existing edit-only rows into one consistent, document-style grid. */
+        .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) {
             display: grid !important;
-            grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
-            gap: 12px !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            column-gap: 12px !important;
+            align-items: start !important;
+        }
+        .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) > .mmsp-p1-row {
+            display: contents !important;
+        }
+        .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) > .mmsp-p1-full,
+        .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) .mmsp-p1-row > .mmsp-p1-field {
+            grid-column: auto !important;
+        }
+        /* The subsidy selection is a section header and retains its full width. */
+        .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) > .mmsp-p1-full:has(#subsidy_type),
+        .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) > .mmsp-p1-section-divider {
+            grid-column: 1 / -1 !important;
         }
         .mmsp-p1-field, .mmsp-p1-full {
             margin-bottom: 9px !important;
