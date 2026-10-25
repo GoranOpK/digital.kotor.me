@@ -388,8 +388,13 @@ class CanonicalFormalDecisionAndCloseTest extends TestCase
         DB::table('competitions')->where('id', $competition->id)->update([
             'status' => 'draft',
             'is_test_preview' => true,
+            'start_date' => now()->addDay()->toDateString(),
+            'canonical_test_applications_closed_at' => now(),
         ]);
         $competition = $competition->fresh();
+
+        $this->assertTrue($competition->isCanonicalTestApplicationPhaseClosed());
+        $this->assertTrue($competition->deadline->isFuture());
 
         $publication = app(CanonicalResultPublicationService::class);
         $this->ok($publication->publish($competition, $admin));
