@@ -713,6 +713,7 @@ class CanonicalP2FinancialBasisTest extends TestCase
             'expense_lines' => [
                 ['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => $total],
             ],
+            'narrative_sections' => array_fill_keys(array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS), 'Testni opis plana ulaganja.'),
         ];
     }
 
