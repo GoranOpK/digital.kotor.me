@@ -3,25 +3,63 @@
 @section('content')
 @include('partials.canonical-ui')
 <style>
+/* Print-only, scoped to canonical MMSP P2. Match the tested P1a A4 header typography. */
 @media print {
     @page { size: A4 portrait; margin: 12mm 10mm; }
-    .canonical-ui-page.mmsp-business-plan { padding: 0 !important; margin: 0 !important; background: #fff !important; min-height: 0 !important; }
-    .canonical-ui-page.mmsp-business-plan > .container { padding: 0 !important; max-width: none !important; }
-    body > nav, body > header, body > footer,
-    .mmsp-business-plan .mmsp-alert, .mmsp-business-plan a[href],
-    .mmsp-business-plan button, .mmsp-business-plan .mmsp-form-card:has(button) { display: none !important; }
-    .mmsp-business-plan .mmsp-obrazac-zaglavlje { box-shadow: none !important; padding: 12px 16px !important; margin-bottom: 12px !important; }
-    .mmsp-business-plan .mmsp-obrazac-grb img { height: 2cm !important; }
-    .mmsp-business-plan .mmsp-form-card { box-shadow: none !important; padding: 8px 0 !important; margin: 0 !important; }
-    .mmsp-business-plan .mmsp-form-section { margin-bottom: 8px !important; }
-    .mmsp-business-plan .mmsp-form-section h2 { font-size: 13px !important; margin: 4px 0 8px !important; }
-    .mmsp-business-plan .mmsp-section-number { font-size: 11px !important; width: 23px !important; height: 23px !important; line-height: 23px !important; }
-    .mmsp-business-plan .mmsp-form-label { font-size: 10pt !important; margin-bottom: 3px !important; }
-    .mmsp-business-plan .mmsp-form-control { box-sizing: border-box !important; border: 1px solid #ccc !important; border-radius: 0 !important; font-size: 9pt !important; padding: 4px 6px !important; width: 100% !important; }
-    .mmsp-business-plan table { border-collapse: collapse !important; table-layout: fixed; }
-    .mmsp-business-plan th, .mmsp-business-plan td { border: 1px solid #ddd !important; padding: 5px !important; }
-    .mmsp-business-plan tr, .mmsp-business-plan .mmsp-form-group { break-inside: avoid; }
-    .mmsp-business-plan .mmsp-form-text { font-size: 9pt !important; }
+    body > header, body > nav, body > footer,
+    .mmsp-business-plan .mmsp-alert,
+    .mmsp-business-plan .mmsp-p2-screen-only,
+    .mmsp-business-plan button,
+    .mmsp-business-plan .mmsp-p2-actions { display:none !important; }
+    .canonical-ui-page.mmsp-form-page.mmsp-business-plan {
+        padding:0 !important; margin:0 !important; min-height:0 !important; background:#fff !important;
+    }
+    .mmsp-business-plan > .container {
+        padding:0 !important; margin:0 !important; width:100% !important; max-width:none !important;
+    }
+    .mmsp-business-plan .mmsp-obrazac-zaglavlje {
+        background:#fff !important; box-shadow:none !important; border:1px solid #ccc !important;
+        border-radius:0 !important; padding:12px 16px !important; margin:0 0 12px !important;
+        break-inside:avoid;
+    }
+    .mmsp-business-plan .mmsp-obrazac-grb img { height:2cm !important; width:auto !important; }
+    .mmsp-business-plan .mmsp-obrazac-org,
+    .mmsp-business-plan .mmsp-obrazac-contact { font-size:11.7px !important; }
+    .mmsp-business-plan .mmsp-obrazac-number,
+    .mmsp-business-plan .mmsp-obrazac-code { font-size:12.6px !important; }
+    .mmsp-business-plan .mmsp-obrazac-title { font-size:19.8px !important; }
+    .mmsp-business-plan form, .mmsp-business-plan fieldset { margin:0 !important; padding:0 !important; width:100% !important; }
+    .mmsp-business-plan .mmsp-form-card {
+        background:#fff !important; box-shadow:none !important; padding:0 !important;
+        margin:0 0 12px !important; border:0 !important; border-radius:0 !important;
+    }
+    .mmsp-business-plan .mmsp-form-section { margin:0 !important; break-inside:auto; }
+    .mmsp-business-plan .mmsp-form-section h2 {
+        font-size:13px !important; margin:7px 0 10px !important; padding-bottom:5px !important;
+        color:#0B3D91 !important; border-bottom:1px solid #e5e7eb !important;
+    }
+    .mmsp-business-plan .mmsp-section-number {
+        font-size:11px !important; width:23px !important; height:23px !important; line-height:23px !important;
+    }
+    .mmsp-business-plan .mmsp-form-group { margin-bottom:9px !important; break-inside:avoid; }
+    .mmsp-business-plan .mmsp-form-label {
+        font-size:9.9pt !important; font-weight:600 !important; margin-bottom:2px !important;
+    }
+    .mmsp-business-plan .mmsp-form-control {
+        font-size:9pt !important; line-height:1.4 !important; box-sizing:border-box !important;
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        padding:3px 5px !important; border:1px solid #d1d5db !important; border-radius:0 !important;
+        box-shadow:none !important; background:#fff !important; color:#111 !important;
+    }
+    .mmsp-business-plan textarea.mmsp-form-control { min-height:55px !important; resize:none !important; }
+    .mmsp-business-plan .mmsp-form-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; gap:6px 16px !important; }
+    .mmsp-business-plan .mmsp-form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px 12px !important; }
+    .mmsp-business-plan .mmsp-form-text { font-size:9pt !important; }
+    .mmsp-business-plan .mmsp-dynamic-table { width:100% !important; border-collapse:collapse !important; table-layout:fixed !important; }
+    .mmsp-business-plan .mmsp-dynamic-table th,
+    .mmsp-business-plan .mmsp-dynamic-table td { border:1px solid #ddd !important; padding:5px !important; font-size:9pt !important; }
+    .mmsp-business-plan .mmsp-dynamic-table tr { break-inside:avoid; }
+    .mmsp-business-plan .mmsp-required { color:#111 !important; }
 }
 </style>
 @php
@@ -64,7 +102,7 @@
             <h1 class="mmsp-obrazac-title">FORMA ZA PLAN ULAGANJA</h1>
         </div>
 
-        <p style="margin:0 0 18px;">
+        <p class="mmsp-p2-screen-only" style="margin:0 0 18px;">
             <a href="{{ route('applications.show', $application) }}" style="color:#0B3D91; font-weight:600; text-decoration:none;">
                 ← Nazad na pregled prijave
             </a>
@@ -240,7 +278,7 @@
                 @endforeach
 
                 @unless($readOnly)
-                    <div class="mmsp-form-card" style="text-align:center;">
+                    <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center;">
                         <div style="display:flex; justify-content:center; flex-wrap:wrap;">
                             <button type="submit"
                                     style="background:#6b7280; color:#fff; padding:12px 24px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
@@ -252,13 +290,13 @@
             </fieldset>
         </form>
 
-        <p style="margin:0 0 18px;">
+        <p class="mmsp-p2-screen-only" style="margin:0 0 18px;">
             <a href="{{ route('applications.show', $application) }}" style="color:#0B3D91; font-weight:600; text-decoration:none;">
                 ← Nazad na pregled prijave
             </a>
         </p>
 
-        <div class="mmsp-form-card" style="text-align:center; margin-top:8px; margin-bottom:24px;">
+        <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">
             <button type="button"
                     onclick="window.print();"
                     style="background:#0B3D91; color:#fff; padding:10px 24px; min-width:180px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
