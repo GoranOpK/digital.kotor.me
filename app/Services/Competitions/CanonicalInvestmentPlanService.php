@@ -24,6 +24,16 @@ final class CanonicalInvestmentPlanService
 
     public const MAX_EXPENSE_LINES = 50;
 
+    public const NARRATIVE_FIELDS = [
+        'investment_description' => 'Opis planiranog ulaganja',
+        'investment_goals' => 'Ciljevi ulaganja',
+        'planned_activities' => 'Planirane aktivnosti',
+        'innovation_digitalization' => 'Autentičnost / inovativnost / digitalizacija',
+        'expected_results' => 'Očekivani rezultati',
+        'local_economy_impact' => 'Uticaj na lokalnu ekonomiju',
+        'sustainability' => 'Održivost i dugoročni efekti',
+    ];
+
     private const AMOUNT_PATTERN = '/^\d{1,12}(?:[.,]\d{1,2})?$/';
 
     public function __construct(
@@ -110,6 +120,7 @@ final class CanonicalInvestmentPlanService
             'own_contribution' => $plan->own_contribution,
             'expected_subsidy' => $plan->expected_subsidy,
             'expense_lines' => $plan->expenseLines(),
+            'narrative_sections' => $plan->narrative_sections ?? [],
         ], true);
 
         return $errors === [] ? null : 'Plan ulaganja (Obrazac P2) nije kompletan: '.reset($errors);
@@ -173,12 +184,32 @@ final class CanonicalInvestmentPlanService
             $lines[] = ['cost_type' => $costType, 'description' => $description, 'amount' => $amount];
         }
 
+        $narratives = [];
+        $rawNarratives = $input['narrative_sections'] ?? [];
+        if (! is_array($rawNarratives)) {
+            $errors['narrative_sections'] = 'Djelovi plana ulaganja nijesu u ispravnom formatu.';
+            $rawNarratives = [];
+        }
+        foreach (self::NARRATIVE_FIELDS as $key => $label) {
+            $raw = $rawNarratives[$key] ?? '';
+            if (! is_string($raw)) {
+                $errors['narrative_sections.'.$key] = $label.': neispravna vrijednost.';
+                $raw = '';
+            }
+            $value = trim($raw);
+            if (mb_strlen($value) > 5000) {
+                $errors['narrative_sections.'.$key] = $label.': najviše 5000 karaktera.';
+            }
+            $narratives[$key] = $value;
+        }
+
         return [[
             'subsidy_type' => $type,
             'total_investment' => $amounts['total_investment'],
             'own_contribution' => $amounts['own_contribution'],
             'expected_subsidy' => $amounts['expected_subsidy'],
             'expense_lines' => $lines,
+            'narrative_sections' => $narratives,
         ], $errors];
     }
 
@@ -193,6 +224,14 @@ final class CanonicalInvestmentPlanService
         $own = $values['own_contribution'];
         $expected = $values['expected_subsidy'];
         $lines = $values['expense_lines'];
+        $narratives = $values['narrative_sections'] ?? [];
+        if ($requireComplete) {
+            foreach (self::NARRATIVE_FIELDS as $key => $label) {
+                if (trim((string) ($narratives[$key] ?? '')) === '') {
+                    $errors['narrative_sections.'.$key] = $label.' je obavezan dio Obrasca P2.';
+                }
+            }
+        }
 
         if ($values['subsidy_type'] === null) {
             if ($requireComplete) {
