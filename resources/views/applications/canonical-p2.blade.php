@@ -10,6 +10,7 @@
     $upBroj = $competition?->upNumber?->number ?? '—';
     $redniBroj = $application->redni_broj ?? '—';
     $brojPrijave = $upBroj.'/'.$redniBroj;
+    $p1 = $application->canonicalApplicantForm;
     $p1Complete = app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
 @endphp
 
@@ -89,7 +90,7 @@
                             <select id="subsidy_type" name="subsidy_type" class="mmsp-form-control @error('subsidy_type') error @enderror">
                                 <option value="">— izaberite vrstu subvencije —</option>
                                 @foreach($subsidyTypes as $code => $label)
-                                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type) === $code)>{{ $label }}</option>
+                                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type ?? $p1?->subsidy_type) === $code)>{{ $label }}</option>
                                 @endforeach
                             </select>
                             <div class="mmsp-form-text">
@@ -97,6 +98,48 @@
                             </div>
                             @error('subsidy_type')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                         </div>
+                    </div>
+                </div>
+
+                <div class="mmsp-form-card">
+                    <div class="mmsp-form-section">
+                        <div class="mmsp-form-group">
+                            <label class="mmsp-form-label">Osnovni podaci o preduzetniku / društvu (iz Obrasca {{ $p1?->formCode() ?? 'P1' }})</label>
+                            <div class="mmsp-form-row" style="gap:12px;">
+                                <div>
+                                    <label class="mmsp-form-label">Podnosilac / naziv društva</label>
+                                    <input class="mmsp-form-control" value="{{ $p1?->company_name ?: $p1?->person_name }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Odgovorno lice / preduzetnik</label>
+                                    <input class="mmsp-form-control" value="{{ $p1?->person_name }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Adresa / sjedište</label>
+                                    <input class="mmsp-form-control" value="{{ $p1?->address }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Kontakt i e-mail</label>
+                                    <input class="mmsp-form-control" value="{{ trim(($p1?->phone ?? '').' / '.($p1?->email ?? ''), ' /') }}" readonly>
+                                </div>
+                            </div>
+                            <p class="mmsp-form-text">Ovi podaci se uređuju u Obrascu {{ $p1?->formCode() ?? 'P1a/P1b' }}, ne ponavljaju se u P2.</p>
+                        </div>
+                    </div>
+                </div>
+
+                @php $narratives = old('narrative_sections', $plan?->narrative_sections ?? []); @endphp
+
+                <div class="mmsp-form-card">
+                    <div class="mmsp-form-section">
+                        <h2><span class="mmsp-section-number">II</span> PLAN ULAGANJA</h2>
+                        @foreach(['investment_description' => 'Opis planiranog ulaganja', 'investment_goals' => 'Ciljevi ulaganja', 'planned_activities' => 'Planirane aktivnosti'] as $key => $label)
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="{{ $key }}">{{ $label }} <span class="mmsp-required">*</span></label>
+                                <textarea class="mmsp-form-control @error('narrative_sections.'.$key) error @enderror" rows="3" id="{{ $key }}" name="narrative_sections[{{ $key }}]" maxlength="5000">{{ $narratives[$key] ?? '' }}</textarea>
+                                @error('narrative_sections.'.$key)<div class="error-message">{{ $message }}</div>@enderror
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -147,6 +190,24 @@
                         </div>
                     </div>
                 </div>
+
+                @foreach([
+                    'IV' => ['AUTENTIČNOST / INOVATIVNOST / DIGITALIZACIJA', 'innovation_digitalization', 'Opišite doprinos odabranoj vrsti subvencije'],
+                    'V' => ['OČEKIVANI REZULTATI', 'expected_results', 'Očekivani konkretni rezultati i pokazatelji'],
+                    'VI' => ['UTICAJ NA LOKALNU EKONOMIJU', 'local_economy_impact', 'Zapošljavanje, lokalni dobavljači, lokalno tržište'],
+                    'VII' => ['ODRŽIVOST I DUGOROČNI EFEKTI', 'sustainability', 'Način održavanja rezultata nakon podrške'],
+                ] as $roman => [$heading, $key, $hint])
+                    <div class="mmsp-form-card">
+                        <div class="mmsp-form-section">
+                            <h2><span class="mmsp-section-number">{{ $roman }}</span> {{ $heading }}</h2>
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="{{ $key }}">{{ $hint }} <span class="mmsp-required">*</span></label>
+                                <textarea class="mmsp-form-control @error('narrative_sections.'.$key) error @enderror" rows="4" maxlength="5000" name="narrative_sections[{{ $key }}]" id="{{ $key }}">{{ $narratives[$key] ?? '' }}</textarea>
+                                @error('narrative_sections.'.$key)<div class="error-message">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
 
                 @unless($readOnly)
                     <div class="mmsp-form-card" style="text-align:center;">
