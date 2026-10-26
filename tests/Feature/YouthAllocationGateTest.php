@@ -132,6 +132,16 @@ class YouthAllocationGateTest extends TestCase
         $this->assertStringNotContainsString(' / 58', $chairmanHtml);
         $this->assertStringNotContainsString('Preduzetnica', $chairmanHtml);
         $this->assertStringContainsString('youth-ranking-no-print', $chairmanHtml);
+        $this->assertStringContainsString('.youth-allocation-draft-form input[type="text"]', $chairmanHtml);
+        $this->assertStringContainsString('.youth-allocation-draft-form input[type="number"]', $chairmanHtml);
+        $this->assertStringContainsString('.youth-allocation-draft-form select', $chairmanHtml);
+        $this->assertStringContainsString('border: 1px solid #9ca3af', $chairmanHtml);
+        $this->assertStringContainsString('background: #ffffff', $chairmanHtml);
+        $this->assertStringContainsString('padding: 8px 10px', $chairmanHtml);
+        $this->assertStringContainsString('.youth-allocation-draft-form input[type="text"]:focus', $chairmanHtml);
+        $this->assertStringContainsString('.youth-allocation-draft-form input[type="number"]:focus', $chairmanHtml);
+        $this->assertStringContainsString('.youth-allocation-draft-form select:focus', $chairmanHtml);
+        $this->assertStringContainsString('border-color: #2563eb', $chairmanHtml);
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.create', $ctx['application']))

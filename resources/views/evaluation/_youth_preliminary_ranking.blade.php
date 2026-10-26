@@ -118,6 +118,26 @@
         font-size: 12px;
         margin-top: 4px;
     }
+    .youth-ranking-print-root .youth-allocation-draft-form input[type="text"],
+    .youth-ranking-print-root .youth-allocation-draft-form input[type="number"],
+    .youth-ranking-print-root .youth-allocation-draft-form select {
+        background: #ffffff;
+        color: #111827;
+        border: 1px solid #9ca3af;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 14px;
+        line-height: 1.4;
+        box-sizing: border-box;
+    }
+    .youth-ranking-print-root .youth-allocation-draft-form input[type="text"]:focus,
+    .youth-ranking-print-root .youth-allocation-draft-form input[type="number"]:focus,
+    .youth-ranking-print-root .youth-allocation-draft-form select:focus {
+        outline: 2px solid #2563eb;
+        outline-offset: 1px;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+    }
     .youth-ranking-table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -404,7 +424,7 @@
                             @endphp
                             <tr class="youth-ranking-no-print no-print">
                                 <td colspan="7" style="padding: 8px 8px 16px;">
-                                    <form method="POST" action="{{ route('evaluation.youth-allocation-draft', $ranked) }}" class="no-print" data-testid="youth-allocation-draft-form">
+                                    <form method="POST" action="{{ route('evaluation.youth-allocation-draft', $ranked) }}" class="no-print youth-allocation-draft-form" data-testid="youth-allocation-draft-form">
                                         @csrf
                                         <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
                                             <label style="display: flex; align-items: center; gap: 6px;">
