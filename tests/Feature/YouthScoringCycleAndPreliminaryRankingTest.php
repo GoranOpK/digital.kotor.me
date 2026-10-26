@@ -319,7 +319,11 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
         $this->assertStringContainsString('ranking-badge', $html);
         $this->assertStringContainsString('data-testid="youth-ranking-print"', $html);
-        $this->assertStringContainsString('printYouthPreliminaryRanking', $html);
+        $this->assertStringContainsString('printYouthPreliminaryRanking(this)', $html);
+        $this->assertStringContainsString("closest('.youth-ranking-print-root')", $html);
+        $this->assertStringContainsString('youth-ranking-print-target', $html);
+        $this->assertStringContainsString('.youth-ranking-print-root:not(.youth-ranking-print-target)', $html);
+        $this->assertStringContainsString("classList.remove('youth-ranking-print-target')", $html);
         $this->assertStringContainsString('images/srednji_grb.png', $html);
         $this->assertStringContainsString('50.00 / 56', $html);
         $this->assertStringContainsString('29.67 / 56', $html);
@@ -369,6 +373,116 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertSame($evaluatedAt, $first->fresh()->evaluated_at->toDateTimeString());
         $this->assertSame('50.00', $first->fresh()->final_score);
         $this->assertSame('evaluated', $first->fresh()->status);
+    }
+
+    public function test_below_threshold_applications_are_listed_highest_score_first_with_id_tiebreak(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $lowFirst = $this->addPassedApplication($ctx, 'Ispod nizi bodovi');
+        $highLater = $this->addPassedApplication($ctx, 'Ispod visi bodovi');
+        $tieEarlier = $this->addPassedApplication($ctx, 'Ispod izjednaceno A');
+        $tieLater = $this->addPassedApplication($ctx, 'Ispod izjednaceno B');
+
+        $this->lockThreeSeats($ctx);
+        $this->lockThreeSeats($ctx, [1 => $this->allCriteria(2)], $lowFirst);
+        $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $highLater);
+        $this->lockThreeSeats($ctx, [
+            1 => ['criterion_1' => 2],
+            2 => ['criterion_1' => 2],
+            3 => ['criterion_1' => 2],
+        ], $tieEarlier);
+        $this->lockThreeSeats($ctx, [
+            1 => ['criterion_1' => 2],
+            2 => ['criterion_1' => 2],
+            3 => ['criterion_1' => 2],
+        ], $tieLater);
+        $this->confirmYouthBonuses($ctx);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $lowFirst]);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $highLater]);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $tieEarlier]);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $tieLater]);
+
+        $lowFirst = $lowFirst->fresh();
+        $highLater = $highLater->fresh();
+        $tieEarlier = $tieEarlier->fresh();
+        $tieLater = $tieLater->fresh();
+        $this->assertSame('30.00', $ctx['application']->fresh()->final_score);
+        $this->assertSame('26.67', $lowFirst->final_score);
+        $this->assertSame('29.67', $highLater->final_score);
+        $this->assertSame('29.00', $tieEarlier->final_score);
+        $this->assertSame('29.00', $tieLater->final_score);
+        $this->assertLessThan($highLater->id, $lowFirst->id);
+        $this->assertLessThan($tieLater->id, $tieEarlier->id);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertNull($lowFirst->ranking_position);
+        $this->assertNull($highLater->ranking_position);
+        $this->assertNull($tieEarlier->ranking_position);
+        $this->assertNull($tieLater->ranking_position);
+
+        $service = app(CanonicalIndividualScoringService::class);
+        $view = $service->youthPreliminaryRankingView($ctx['competition']->fresh());
+        $this->assertTrue($view['ranking_ready']);
+        $this->assertSame(
+            [$highLater->id, $tieEarlier->id, $tieLater->id, $lowFirst->id],
+            $view['below']->pluck('id')->all()
+        );
+        $this->assertSame(
+            [$ctx['application']->id],
+            $view['above']->pluck('id')->all()
+        );
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.index'))
+            ->assertOk()
+            ->getContent();
+        $highPos = strpos($html, $highLater->business_plan_name);
+        $tieEarlierPos = strpos($html, $tieEarlier->business_plan_name);
+        $tieLaterPos = strpos($html, $tieLater->business_plan_name);
+        $lowPos = strpos($html, $lowFirst->business_plan_name);
+        $this->assertNotFalse($highPos);
+        $this->assertNotFalse($tieEarlierPos);
+        $this->assertNotFalse($tieLaterPos);
+        $this->assertNotFalse($lowPos);
+        $this->assertLessThan($tieEarlierPos, $highPos);
+        $this->assertLessThan($tieLaterPos, $tieEarlierPos);
+        $this->assertLessThan($lowPos, $tieLaterPos);
+    }
+
+    public function test_print_button_targets_only_the_clicked_youth_ranking_root(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $this->lockThreeSeats($ctx);
+        $this->confirmYouthBonuses($ctx);
+
+        $view = app(CanonicalIndividualScoringService::class)
+            ->youthPreliminaryRankingView($ctx['competition']->fresh());
+        $this->assertTrue($view['ranking_ready']);
+
+        $first = view('evaluation._youth_preliminary_ranking', [
+            'youthRankingView' => $view,
+            'youthRankingTitle' => 'Prvi omladinski poziv',
+            'canEditYouthAllocationDraft' => false,
+            'youthEqualScoreCompetition' => $ctx['competition'],
+        ])->render();
+        $second = view('evaluation._youth_preliminary_ranking', [
+            'youthRankingView' => $view,
+            'youthRankingTitle' => 'Drugi omladinski poziv',
+            'canEditYouthAllocationDraft' => false,
+            'youthEqualScoreCompetition' => $ctx['competition'],
+        ])->render();
+        $html = $first.$second;
+
+        $this->assertSame(2, substr_count($html, 'class="youth-ranking-print-root"'));
+        $this->assertSame(2, substr_count($html, 'printYouthPreliminaryRanking(this)'));
+        $this->assertSame(2, substr_count($html, 'data-testid="youth-ranking-print"'));
+        $this->assertStringContainsString("closest('.youth-ranking-print-root')", $html);
+        $this->assertStringContainsString('youth-ranking-print-target', $html);
+        $this->assertStringContainsString('.youth-ranking-print-root:not(.youth-ranking-print-target)', $html);
+        $this->assertStringContainsString("classList.remove('youth-ranking-print')", $html);
+        $this->assertStringContainsString("classList.remove('youth-ranking-print-target')", $html);
+        $this->assertStringContainsString('youth-ranking-no-print', $html);
+        $this->assertStringNotContainsString('printYouthPreliminaryRanking();', $html);
+        $this->assertSame(2, substr_count($html, (string) $ctx['competition']->title));
     }
 
     public function test_second_call_has_separate_cycle_and_does_not_change_first(): void
@@ -424,6 +538,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
         $this->assertStringContainsString('ranking-badge', $html);
         $this->assertStringContainsString('data-testid="youth-ranking-print"', $html);
+        $this->assertStringContainsString('printYouthPreliminaryRanking(this)', $html);
+        $this->assertStringContainsString('.youth-ranking-print-root:not(.youth-ranking-print-target)', $html);
         $this->assertStringContainsString(' / 56', $html);
         $this->assertStringNotContainsString(' / 58', $html);
         $this->assertStringNotContainsString('Preduzetnica', $html);

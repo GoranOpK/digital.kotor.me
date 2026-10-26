@@ -215,7 +215,10 @@
         body.youth-ranking-print .container > *:not(.youth-ranking-print-root) {
             display: none !important;
         }
-        body.youth-ranking-print .youth-ranking-print-root {
+        body.youth-ranking-print .youth-ranking-print-root:not(.youth-ranking-print-target) {
+            display: none !important;
+        }
+        body.youth-ranking-print .youth-ranking-print-root.youth-ranking-print-target {
             position: static;
             box-shadow: none;
             border: none;
@@ -274,13 +277,26 @@
     }
 </style>
 <script>
-    window.printYouthPreliminaryRanking = function () {
+    window.printYouthPreliminaryRanking = function (button) {
+        var root = button && typeof button.closest === 'function'
+            ? button.closest('.youth-ranking-print-root')
+            : null;
+        if (!root) {
+            return;
+        }
+        var cleaned = false;
         var done = function () {
+            if (cleaned) {
+                return;
+            }
+            cleaned = true;
             document.body.classList.remove('youth-ranking-print');
+            root.classList.remove('youth-ranking-print-target');
             window.removeEventListener('afterprint', done);
         };
         window.addEventListener('afterprint', done);
         document.body.classList.add('youth-ranking-print');
+        root.classList.add('youth-ranking-print-target');
         window.print();
     };
 </script>
@@ -534,7 +550,7 @@
             <p style="margin: 16px 0 0; color: #6b7280; font-size: 13px;">Ova lista nije konačna odluka o podršci. Prijave ispod praga ne dobijaju odluku o raspodjeli.</p>
             </div>
             <div class="youth-ranking-no-print no-print" style="margin: 24px 0 8px 0; text-align: center;">
-                <button type="button" onclick="printYouthPreliminaryRanking();" class="youth-ranking-print-btn" data-testid="youth-ranking-print">
+                <button type="button" onclick="printYouthPreliminaryRanking(this);" class="youth-ranking-print-btn" data-testid="youth-ranking-print">
                     Štampaj
                 </button>
             </div>

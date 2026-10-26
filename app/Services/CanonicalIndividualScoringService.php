@@ -500,7 +500,16 @@ class CanonicalIndividualScoringService
                 ->values();
             $below = $scored
                 ->filter(fn (Application $application) => ! $this->youthMeetsMinimumScore($application))
-                ->sortBy('id')
+                ->sort(function (Application $a, Application $b) {
+                    $aScore = $this->youthFullPrecisionFinalScore($a) ?? '0';
+                    $bScore = $this->youthFullPrecisionFinalScore($b) ?? '0';
+                    $compared = bccomp($bScore, $aScore, self::YOUTH_BONUS_SCALE);
+                    if ($compared !== 0) {
+                        return $compared;
+                    }
+
+                    return $a->id <=> $b->id;
+                })
                 ->values();
         }
 
