@@ -48,16 +48,22 @@ class YouthAllocationGateTest extends TestCase
     {
         $ctx = $this->youthReadyToLock();
         $ctx['application']->update(['requested_amount' => 5000]);
+        $unscored = $this->addPassedApplication($ctx, 'Bez ocjena');
         $this->lockThreeSeats($ctx);
         $before = $ctx['application']->fresh();
         $this->assertSame('evaluated', $before->status);
+        $service = app(CanonicalIndividualScoringService::class);
+        $this->assertFalse($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
+        $this->assertFalse($service->isYouthPreliminaryRankingReady($ctx['competition']->fresh()));
+        $this->assertFalse($ctx['competition']->fresh()->isRankingFormed());
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
+        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $html);
-        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $html);
+        $this->assertStringNotContainsString('name="approved_amount"', $html);
 
         $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
@@ -76,7 +82,8 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame($before->commission_justification, $after->commission_justification);
         $this->assertSame('evaluated', $after->status);
 
-        $this->confirmYouthBonuses($ctx);
+        $this->lockThreeSeats($ctx, [], $unscored);
+        $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
         $this->assertTrue($ctx['competition']->fresh()->isRankingFormed());
 
         $this->actingAs($ctx['chairman']->user)
@@ -108,15 +115,33 @@ class YouthAllocationGateTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
+        $this->assertTrue(
+            app(CanonicalIndividualScoringService::class)->isYouthPreliminaryRankingReady($ctx['competition']->fresh())
+        );
         $this->assertStringContainsString('data-testid="youth-allocation-draft-form"', $chairmanHtml);
         $this->assertStringContainsString(route('evaluation.youth-allocation-draft', $ctx['application']), $chairmanHtml);
         $this->assertStringNotContainsString(route('evaluation.youth-allocation-draft', $below), $chairmanHtml);
+        $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $chairmanHtml);
+        $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $chairmanHtml);
+        $this->assertStringContainsString('Ispod praga', $chairmanHtml);
+        $this->assertStringContainsString('data-testid="youth-ranking-print"', $chairmanHtml);
+        $this->assertStringContainsString('data-testid="youth-allocation-facts"', $chairmanHtml);
+        $this->assertStringContainsString('Inovativni tehnološki start-up', $chairmanHtml);
+        $this->assertStringContainsString('Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih', $chairmanHtml);
+        $this->assertStringContainsString(' / 56', $chairmanHtml);
+        $this->assertStringNotContainsString(' / 58', $chairmanHtml);
+        $this->assertStringNotContainsString('Preduzetnica', $chairmanHtml);
+        $this->assertStringContainsString('youth-ranking-no-print', $chairmanHtml);
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberHtml);
+        $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $memberHtml);
+        $this->assertStringContainsString('data-testid="youth-ranking-print"', $memberHtml);
+        $this->assertStringContainsString(' / 56', $memberHtml);
+        $this->assertStringNotContainsString(' / 58', $memberHtml);
 
         $response = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [

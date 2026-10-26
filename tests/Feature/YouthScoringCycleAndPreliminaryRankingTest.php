@@ -315,6 +315,17 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertStringContainsString('nije konačna odluka o podršci', $html);
         $this->assertStringContainsString($below->business_plan_name, $html);
         $this->assertStringNotContainsString('Dobitnik sredstava', $html);
+        $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $html);
+        $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
+        $this->assertStringContainsString('ranking-badge', $html);
+        $this->assertStringContainsString('data-testid="youth-ranking-print"', $html);
+        $this->assertStringContainsString('printYouthPreliminaryRanking', $html);
+        $this->assertStringContainsString('images/srednji_grb.png', $html);
+        $this->assertStringContainsString('50.00 / 56', $html);
+        $this->assertStringContainsString('29.67 / 56', $html);
+        $this->assertStringNotContainsString(' / 58', $html);
+        $this->assertStringNotContainsString('Preduzetnica', $html);
+        $this->assertStringNotContainsString('30/58', $html);
 
         $applicantHtml = $this->actingAs($first->user)
             ->get(route('evaluation.index'));
@@ -409,6 +420,13 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertSame('rejected', $failed->fresh()->status);
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
         $this->assertStringContainsString('Preliminarna rang-lista', $html);
+        $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $html);
+        $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
+        $this->assertStringContainsString('ranking-badge', $html);
+        $this->assertStringContainsString('data-testid="youth-ranking-print"', $html);
+        $this->assertStringContainsString(' / 56', $html);
+        $this->assertStringNotContainsString(' / 58', $html);
+        $this->assertStringNotContainsString('Preduzetnica', $html);
         $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()['omladinsko']['status']);
 
         $zensko = $this->zenskoReadyToScore();
