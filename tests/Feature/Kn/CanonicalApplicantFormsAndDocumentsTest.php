@@ -177,7 +177,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
                 'legal_form' => CanonicalLegalForm::DRUSTVO,
                 'applicant_type' => 'privredno_drustvo',
             ]))
-            ->assertRedirect(route('applications.canonical-p1.edit', $application))
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('success', 'Prijava je sačuvana kao nacrt. U bilo kom trenutku je možete nastaviti iz sekcije "Moje prijave".')
             ->assertSessionHasNoErrors();
 
         $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->sole();
@@ -232,7 +233,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertOk()
             ->assertSee('Obrazac P1b')
             ->assertSee('PRIJAVA')
-            ->assertSee('na javni poziv za podršku mikro, malim i srednjim preduzećima')
+            ->assertSee('na javni konkurs za raspodjelu bespovratnih sredstava')
+            ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
             ->assertSee('DRUŠTVO (DOO)')
             ->getContent();
         $form = $this->formSection($html, route('applications.canonical-p1.update', $application));
@@ -497,6 +499,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $pending->update(['status' => 'pending']);
 
         $this->actingAs($owner)->get(route('applications.canonical-documents.index', $application))
+            ->assertRedirect(route('applications.show', $application).'#application-documents');
+        $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
             ->assertSee('obradjeni-prilog.pdf')
             ->assertDontSee('prilog-u-obradi.pdf');
@@ -762,7 +766,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertOk()
             ->assertSee(CanonicalApplicantForm::FROZEN_MESSAGE)
             ->assertDontSee('Sačuvaj Obrazac P1a');
-        $this->actingAs($owner)->get(route('applications.canonical-documents.index', $application))->assertOk();
+        $this->actingAs($owner)->get(route('applications.canonical-documents.index', $application))
+            ->assertRedirect(route('applications.show', $application).'#application-documents');
     }
 
     public function test_p1b_final_persists_no_jmbg_and_keeps_pib_protection(): void
@@ -855,10 +860,11 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame(1, Application::query()->where('user_id', $owner->id)->count());
 
         $this->actingAs($owner)->post(route('applications.final-submit', $first))->assertRedirect(route('applications.show', $first));
+        $this->assertNotNull($first->fresh()->finalClaim);
         $this->actingAs($owner)->get(route('applications.show', $first))
             ->assertOk()
             ->assertSee('Započni drugu prijavu')
-            ->assertSee('Status provjere potpunosti / prigovor');
+            ->assertSee('Pregled statusa');
 
         $second = $this->startedDraft($owner, $call, CanonicalLegalForm::PREDUZETNIK);
         $this->assertNotSame($first->id, $second->id);
@@ -867,8 +873,15 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSessionHasErrors(['subsidy_type' => CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE]);
         $this->actingAs($owner)->put(route('applications.canonical-p1.update', $second), $this->p1aPayload($pib, CanonicalSubsidyType::DIGITALIZATION))
             ->assertSessionHasNoErrors();
-        $this->actingAs($owner)->put(route('applications.canonical-p2.update', $second), $this->p2Payload(CanonicalSubsidyType::DIGITALIZATION))
-            ->assertSessionHasNoErrors();
+        $this->actingAs($owner)->put(
+            route('applications.canonical-p2.update', $second),
+            array_replace($this->p2Payload(CanonicalSubsidyType::DIGITALIZATION), [
+                'narrative_sections' => array_fill_keys(
+                    array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS),
+                    'Testni opis plana ulaganja.'
+                ),
+            ])
+        )->assertSessionHasNoErrors();
         $this->attachCanonicalDocuments($second);
 
         $this->actingAs($owner)->post(route('applications.final-submit', $second))->assertRedirect(route('applications.show', $second));
@@ -1015,7 +1028,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
             ->assertSee('Obrazac P1a')
-            ->assertSee('Plan ulaganja (Obrazac P2)')
+            ->assertSee('Obrazac P2')
             ->assertDontSee('Biznis plan');
     }
 
@@ -1059,7 +1072,12 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->sole();
         $this->assertSame($fingerprint, $assessment->evidence_fingerprint);
 
-        $this->actingAs($owner)->get(route('applications.canonical-review.show', $application))->assertOk();
+        $this->actingAs($owner)->get(route('applications.canonical-review.show', $application))
+            ->assertRedirect(route('applications.show', $application).'#application-review');
+        $this->actingAs($owner)->get(route('applications.show', $application))
+            ->assertOk()
+            ->assertSee('Provjera potpunosti')
+            ->assertSee('Pregled statusa');
     }
 
     // ---------------------------------------------------------------- Helpers

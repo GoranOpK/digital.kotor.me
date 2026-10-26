@@ -24,6 +24,7 @@ class CanonicalInvestmentPlan extends Model
         'own_contribution',
         'expected_subsidy',
         'expense_lines',
+        'narrative_sections',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class CanonicalInvestmentPlan extends Model
         'own_contribution' => 'decimal:2',
         'expected_subsidy' => 'decimal:2',
         'expense_lines' => 'array',
+        'narrative_sections' => 'array',
         'frozen_at' => 'datetime',
     ];
 
@@ -85,6 +87,7 @@ class CanonicalInvestmentPlan extends Model
             'own_contribution' => $this->own_contribution,
             'expected_subsidy' => $this->expected_subsidy,
             'expense_lines' => $this->expenseLines(),
+            'narrative_sections' => $this->narrative_sections ?? [],
             'frozen_at' => $this->frozen_at?->toIso8601String(),
         ];
     }

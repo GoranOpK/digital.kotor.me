@@ -68,6 +68,7 @@ trait BuildsCanonicalApplicantDraft
                 'own_contribution' => '200.00',
                 'expected_subsidy' => '500.00',
                 'expense_lines' => [['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => '1000.00']],
+                'narrative_sections' => array_fill_keys(array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS), 'Testni opis plana ulaganja.'),
             ]);
         }
 

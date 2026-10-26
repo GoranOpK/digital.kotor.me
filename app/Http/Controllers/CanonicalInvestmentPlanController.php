@@ -22,6 +22,7 @@ class CanonicalInvestmentPlanController extends Controller
         $this->authorizeOwnerOnCanonical($request, $application);
 
         $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->first();
+        $application->loadMissing('canonicalApplicantForm');
 
         return view('applications.canonical-p2', [
             'application' => $application,
@@ -44,6 +45,7 @@ class CanonicalInvestmentPlanController extends Controller
             'own_contribution',
             'expected_subsidy',
             'expense_lines',
+            'narrative_sections',
         ]));
 
         if (! $result->succeeded) {
