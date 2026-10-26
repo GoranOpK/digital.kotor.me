@@ -20,6 +20,10 @@ final class EliminatoryProfileConfig
 {
     public const YOUTH_NOTE_PREFIX = "OM-M3-NOTES-v1\n";
 
+    public const YOUTH_NOTE_TYPO = 'popunu dokumentaciju';
+
+    public const YOUTH_NOTE_CORRECTION = 'potpunu dokumentaciju';
+
     public const YOUTH_EXPLANATION_REQUIRED_MESSAGE = 'Obrazloženje je obavezno kada je eliminatorni razlog aktiviran.';
 
     public const NOTE_REQUIRED_ON_FAIL_MESSAGE = 'Napomena je obavezna kada postoji najmanje jedan odgovor Ne*.';
@@ -139,13 +143,26 @@ final class EliminatoryProfileConfig
     {
         $payload = [];
         foreach ([1, 2, 3] as $number) {
-            $payload[(string) $number] = trim((string) ($explanationsByNumber[$number] ?? $explanationsByNumber[(string) $number] ?? ''));
+            $payload[(string) $number] = self::correctYouthExplanationTypo(
+                trim((string) ($explanationsByNumber[$number] ?? $explanationsByNumber[(string) $number] ?? ''))
+            );
         }
 
         return self::YOUTH_NOTE_PREFIX.json_encode(
             $payload,
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
         );
+    }
+
+    public static function correctYouthExplanationTypo(string $text): string
+    {
+        $corrected = preg_replace(
+            '/'.preg_quote(self::YOUTH_NOTE_TYPO, '/').'/iu',
+            self::YOUTH_NOTE_CORRECTION,
+            $text
+        );
+
+        return is_string($corrected) ? $corrected : $text;
     }
 
     /**
@@ -259,11 +276,7 @@ final class EliminatoryProfileConfig
             : [1 => (string) $check->note, 2 => '', 3 => ''];
 
         $details = [];
-        foreach ([1, 2, 3] as $number) {
-            if (! $check->criterionIsFalse($check->{"criterion_{$number}"})) {
-                continue;
-            }
-
+        foreach ($check->activatedCriterionNumbers() as $number) {
             $details[] = [
                 'number' => $number,
                 'statement' => $this->statement($number),

@@ -92,15 +92,15 @@
         @if($prigovor->submitted_at)
             <p>Podnesen: {{ $prigovor->submitted_at->format('d.m.Y. H:i') }}</p>
         @endif
-        <p><strong>Osporeni razlozi i obrazloženja:</strong></p>
+        <p><strong>Aktivirani kriterijumi i obrazloženja:</strong></p>
         <ul>
             @foreach($activatedReasons as $reason)
-                @if($prigovor->criterionIsContested($reason['number']))
-                    <li>
-                        {{ $reason['statement'] }}
+                <li>
+                    {{ $reason['statement'] }}
+                    @if(($submittedExplanations[$reason['number']] ?? '') !== '')
                         <br>{{ $submittedExplanations[$reason['number']] }}
-                    </li>
-                @endif
+                    @endif
+                </li>
             @endforeach
         </ul>
         @if($prigovor->isPodnesen())
@@ -125,15 +125,12 @@
                 <p><strong>Obrazloženje odluke:</strong></p>
                 <p style="white-space: pre-wrap;">{{ $prigovor->decision_note }}</p>
             @endif
-            <p><strong>Ishod po aktiviranim razlozima:</strong></p>
+            <p><strong>Ishod po aktiviranim kriterijumima:</strong></p>
             <ul>
                 @foreach($activatedReasons as $reason)
                     <li>
                         {{ $reason['statement'] }}
                         — {{ $prigovor->criterionOutcomeLabel($reason['number']) ?? 'Ostaje' }}
-                        @if(! $prigovor->criterionIsContested($reason['number']))
-                            (nije osporen, razlog ostaje)
-                        @endif
                     </li>
                 @endforeach
             </ul>
@@ -146,22 +143,19 @@
     @elseif($canSubmitPrigovor)
         <form method="POST" action="{{ route('applications.prigovor.store', $application) }}">
             @csrf
-            <p><strong>Osporite jedan, više ili sve aktivirane razloge.</strong> Za svaki osporeni razlog unesite obrazloženje.</p>
+            <p><strong>Unesite obrazloženje za svaki prikazani aktivirani kriterijum.</strong> Prigovor obuhvata sve aktivirane kriterijume.</p>
             @error('contested')
                 <p style="color: #ef4444;">{{ $message }}</p>
             @enderror
             @foreach($activatedReasons as $reason)
                 @php $n = $reason['number']; @endphp
                 <div class="kn-prigovor-criterion">
-                    <label>
-                        <input type="checkbox" name="contested[]" value="{{ $n }}"
-                            {{ in_array((string) $n, array_map('strval', (array) old('contested', [])), true) ? 'checked' : '' }}>
-                        Ospori: {{ $reason['statement'] }}
-                    </label>
+                    <p><strong>{{ $reason['statement'] }}</strong></p>
                     <label for="kn-prigovor-obrazlozenje-{{ $n }}"><strong>Obrazloženje</strong></label>
                     <textarea id="kn-prigovor-obrazlozenje-{{ $n }}"
                         name="criterion_obrazlozenja[{{ $n }}]"
-                        class="kn-prigovor-textarea">{{ old('criterion_obrazlozenja.'.$n) }}</textarea>
+                        class="kn-prigovor-textarea"
+                        required>{{ old('criterion_obrazlozenja.'.$n) }}</textarea>
                     @error('criterion_obrazlozenja.'.$n)
                         <p style="color: #ef4444;">{{ $message }}</p>
                     @enderror

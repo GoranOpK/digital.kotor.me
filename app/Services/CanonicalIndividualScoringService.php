@@ -857,6 +857,11 @@ class CanonicalIndividualScoringService
             return self::CANONICAL_RANKING_FROZEN_MESSAGE;
         }
 
+        $deadlineBlock = $this->canonicalIndividualScoreDeadlineBlockReason($application->competition);
+        if ($deadlineBlock !== null) {
+            return $deadlineBlock;
+        }
+
         $reason = $this->canonicalGovernance()->scoreWriteBlockReason($user, $application);
         if ($reason !== null) {
             return $reason;
@@ -865,6 +870,23 @@ class CanonicalIndividualScoringService
         return $this->canonicalRowsAreCorrupt($application, $this->canonicalScoreRows($application))
             ? self::CANONICAL_CORRUPT_ROW_MESSAGE
             : null;
+    }
+
+    /**
+     * Individual scoring before the application deadline is allowed only for an MMSP draft
+     * with the test preview flag. Ranking formation keeps its own deadline gate, except when
+     * that same test preview has irreversibly closed its application phase.
+     */
+    private function canonicalIndividualScoreDeadlineBlockReason(?Competition $competition): ?string
+    {
+        if ($competition === null
+            || $competition->isCanonicalTestPreview()
+            || in_array($competition->status, ['closed', 'completed'], true)
+            || $competition->isApplicationDeadlinePassed()) {
+            return null;
+        }
+
+        return CanonicalCommissionGovernance::APPLICATION_DEADLINE_OPEN_MESSAGE;
     }
 
     /**
@@ -1013,7 +1035,9 @@ class CanonicalIndividualScoringService
             return CanonicalCommissionGovernance::NO_COMMISSION_MESSAGE;
         }
 
-        if (! in_array($competition->status, ['closed', 'completed'], true) && ! $competition->isApplicationDeadlinePassed()) {
+        if (! in_array($competition->status, ['closed', 'completed'], true)
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! $competition->isCanonicalTestApplicationPhaseClosed()) {
             return self::CANONICAL_CYCLE_INCOMPLETE_MESSAGE;
         }
 
@@ -1288,6 +1312,39 @@ class CanonicalIndividualScoringService
             'bonus_zavod_nezaposleni' => (bool) ($flags['bonus_zavod_nezaposleni'] ?? false),
             'bonus_green_innovative' => (bool) ($flags['bonus_green_innovative'] ?? false),
         ])->save();
+    }
+
+    /**
+     * Chairman "Sačuvaj ocjene" locks the personal score and youth bonuses together.
+     * Bonus confirmation/audit are written from the server member record, not the request.
+     *
+     * @param  array<string, mixed>  $criteria
+     * @param  array<string, mixed>  $flags
+     */
+    public function recordYouthChairmanFinalScoreAndBonuses(
+        Application $application,
+        CommissionMember $member,
+        array $criteria,
+        ?string $notes,
+        bool $confirmed,
+        array $flags,
+    ): EvaluationScore {
+        return DB::transaction(function () use ($application, $member, $criteria, $notes, $confirmed, $flags) {
+            $recorded = $this->recordYouthFinalScore(
+                $application,
+                $member,
+                $criteria,
+                $notes,
+                $confirmed,
+            );
+
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            if ($locked->bonuses_confirmed_at === null) {
+                $this->saveYouthBonuses($locked, $member, $flags, true);
+            }
+
+            return $recorded;
+        });
     }
 
     /**

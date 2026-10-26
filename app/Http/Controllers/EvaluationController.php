@@ -8,6 +8,7 @@ use App\Models\CommissionMember;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
+use App\Services\YouthPrigovorMappingCorrectionService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\YouthAllocationDraftService;
@@ -31,6 +32,7 @@ class EvaluationController extends Controller
         protected ApplicationPrigovorService $prigovors,
         protected CanonicalIndividualScoringService $canonicalScoring,
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
+        protected YouthPrigovorMappingCorrectionService $youthMappingCorrections,
         protected YouthAllocationDraftService $youthAllocationDrafts,
         protected YouthEqualScoreVotingService $youthEqualScoreVoting,
         protected YouthAllocationListConfirmationService $youthAllocationListConfirmation,
@@ -94,7 +96,9 @@ class EvaluationController extends Controller
             ->get();
 
         $competitionIds = $assignedCompetitions->filter(function ($c) {
-            if (! in_array($c->status, ['closed', 'completed']) && ! $c->isApplicationDeadlinePassed()) {
+            if (! in_array($c->status, ['closed', 'completed'])
+                && ! $c->isApplicationDeadlinePassed()
+                && ! $c->isCanonicalTestPreview()) {
                 return false;
             }
 
@@ -440,6 +444,8 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
+        $canCorrectYouth107Mapping = $this->youthMappingCorrections->chairmanCanCorrect($commissionMember, $application, $prigovor);
+        $youth107MappingCorrection = $this->youthMappingCorrections->recordedCorrection($application);
         $scoringLockedMessage = $isOmladinskoScoring
             ? ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE
             : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE;
@@ -476,6 +482,8 @@ class EvaluationController extends Controller
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
+            'canCorrectYouth107Mapping',
+            'youth107MappingCorrection',
             'scoringProfile',
             'isOmladinskoScoring',
             'scoringLockedMessage',
@@ -643,7 +651,22 @@ class EvaluationController extends Controller
         CommissionMember $commissionMember,
         bool $alreadyFinal,
     ): RedirectResponse {
+        $isChairman = $commissionMember->position === 'predsjednik';
+        $bonusesLocked = $application->bonuses_confirmed_at !== null;
+
         if ($alreadyFinal) {
+            if ($isChairman && ! $bonusesLocked) {
+                $this->canonicalScoring->saveYouthBonuses(
+                    $application,
+                    $commissionMember,
+                    $this->youthBonusFlagsFromRequest($request),
+                    true,
+                );
+
+                return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                    ->with('success', 'Dodatni bodovi su potvrđeni i zaključani.');
+            }
+
             abort(403, CanonicalIndividualScoringService::SCORE_IMMUTABLE_MESSAGE);
         }
 
@@ -670,13 +693,24 @@ class EvaluationController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
-        $this->canonicalScoring->recordYouthFinalScore(
-            $application,
-            $commissionMember,
-            $validated,
-            $validated['notes'] ?? null,
-            $request->boolean('scoring_confirmed'),
-        );
+        if ($isChairman && ! $bonusesLocked) {
+            $this->canonicalScoring->recordYouthChairmanFinalScoreAndBonuses(
+                $application,
+                $commissionMember,
+                $validated,
+                $validated['notes'] ?? null,
+                $request->boolean('scoring_confirmed'),
+                $this->youthBonusFlagsFromRequest($request),
+            );
+        } else {
+            $this->canonicalScoring->recordYouthFinalScore(
+                $application,
+                $commissionMember,
+                $validated,
+                $validated['notes'] ?? null,
+                $request->boolean('scoring_confirmed'),
+            );
+        }
 
         return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
             ->with('success', 'Ocjena je uspješno sačuvana.');
@@ -694,16 +728,14 @@ class EvaluationController extends Controller
 
         $validated = $request->validate([
             'youth_bonus_action' => 'required|in:draft,confirm',
+            'bonus_info_and_training' => 'sometimes|boolean',
             'bonus_info_day' => 'sometimes|boolean',
             'bonus_training' => 'sometimes|boolean',
             'bonus_new_business' => 'sometimes|boolean',
             'bonus_green_innovative' => 'sometimes|boolean',
         ]);
 
-        $flags = [];
-        foreach (CanonicalIndividualScoringService::YOUTH_BONUS_FLAG_KEYS as $key) {
-            $flags[$key] = $request->boolean($key);
-        }
+        $flags = $this->youthBonusFlagsFromRequest($request);
 
         $this->canonicalScoring->saveYouthBonuses(
             $application,
@@ -733,7 +765,9 @@ class EvaluationController extends Controller
             abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
         }
 
-        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+        if (! $competition->isCanonicalTestPreview()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
         }
 
@@ -773,9 +807,17 @@ class EvaluationController extends Controller
 
     protected function storeCanonicalScore(Request $request, Application $application): RedirectResponse
     {
-        $profile = ScoringProfileConfig::for($application->competition?->type);
+        $application->loadMissing('competition');
+        $competition = $application->competition;
+        $profile = ScoringProfileConfig::for($competition?->type);
         $profile->assertScoringFormulaActive();
-        $this->abortIfCommissionProcessingBlocked($application->competition);
+        if ($competition
+            && ! $competition->isCanonicalTestPreview()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, $profile->evaluationOpensAfterApplicationDeadlineMessage());
+        }
+        $this->abortIfCommissionProcessingBlocked($competition);
 
         $rules = [
             'notes' => 'nullable|string|max:5000',
@@ -818,6 +860,25 @@ class EvaluationController extends Controller
         $flags = [];
         foreach (CanonicalIndividualScoringService::BONUS_FLAG_KEYS as $key) {
             $flags[$key] = $request->boolean($key);
+        }
+
+        return $flags;
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    protected function youthBonusFlagsFromRequest(Request $request): array
+    {
+        $flags = [];
+        foreach (CanonicalIndividualScoringService::YOUTH_BONUS_FLAG_KEYS as $key) {
+            $flags[$key] = $request->boolean($key);
+        }
+
+        if ($request->exists('bonus_info_and_training')) {
+            $attendance = $request->boolean('bonus_info_and_training');
+            $flags['bonus_info_day'] = $attendance;
+            $flags['bonus_training'] = $attendance;
         }
 
         return $flags;
@@ -949,6 +1010,8 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
+        $canCorrectYouth107Mapping = $this->youthMappingCorrections->chairmanCanCorrect($commissionMember, $application, $prigovor);
+        $youth107MappingCorrection = $this->youthMappingCorrections->recordedCorrection($application);
         $canEditYouthAllocationDraft = $isOmladinskoScoring
             && $competition
             && $this->youthAllocationDrafts->canEditDraft($competition, $user);
@@ -968,6 +1031,8 @@ class EvaluationController extends Controller
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
+            'canCorrectYouth107Mapping',
+            'youth107MappingCorrection',
             'scoringProfile',
             'isOmladinskoScoring',
             'youthFinalScoreDisplay',
@@ -1347,6 +1412,21 @@ class EvaluationController extends Controller
             ->with('success', 'Odluka Komisije o Prigovoru je evidentirana.');
     }
 
+    public function correctYouth107PrigovorMapping(Request $request, Application $application): RedirectResponse
+    {
+        $chairman = $this->chairmanForEliminatoryMutation($application);
+        $validated = $request->validate([
+            'correction_reason' => 'required|string|max:5000',
+        ], [
+            'correction_reason.required' => YouthPrigovorMappingCorrectionService::REASON_REQUIRED_MESSAGE,
+        ]);
+
+        $this->youthMappingCorrections->correct($application, $chairman, $validated['correction_reason']);
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', 'Korekcija mapiranja Prigovora je evidentirana.');
+    }
+
     protected function chairmanForEliminatoryMutation(Application $application): CommissionMember
     {
         $user = Auth::user();
@@ -1397,7 +1477,11 @@ class EvaluationController extends Controller
                 return false;
             }
 
-            return $prigovor->hasReadableContestedData();
+            if ($this->youthMappingCorrections->isPendingUncorrected($application)) {
+                return false;
+            }
+
+            return $application->eliminatoryCheck->hasAnyFailCriterion();
         }
 
         return true;

@@ -41,6 +41,10 @@ class CallPublicationService
     private function publishLocked(Competition $competition): CallPublicationResult
     {
         $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
+        if ($locked->canonicalTestApplicationWindowIsClosed()) {
+            return CallPublicationResult::failed(CanonicalTestApplicationPhaseService::PUBLICATION_BLOCKED_MESSAGE);
+        }
+
         $policy = $locked->profile();
         $now = CarbonImmutable::now();
 

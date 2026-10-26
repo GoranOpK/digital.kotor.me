@@ -187,9 +187,11 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
         $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
         $this->assertStringContainsString('Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.', $html);
-        $this->assertStringContainsString('Sačuvaj nacrt bonusa', $html);
-        $this->assertStringContainsString('name="youth_bonus_action"', $html);
-        $this->assertStringContainsString('value="draft"', $html);
+        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $html);
+        $this->assertStringNotContainsString('Potvrdi i zaključaj bonuse', $html);
+        $this->assertStringNotContainsString('name="youth_bonus_action"', $html);
+        $this->assertYouthPrintHintBesideButton($html);
         $this->assertStringNotContainsString('završene evidencije usmenog', $html);
         $this->assertStringNotContainsString('Evidencija usmenog', $html);
         $this->assertDoesNotMatchRegularExpression(
@@ -326,12 +328,17 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
         $this->assertStringContainsString('id="youth-scoring-list"', $html);
-        $this->assertStringContainsString('Info dan', $html);
-        $this->assertStringContainsString('Obuka', $html);
+        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
+        $this->assertSame(1, substr_count($html, 'Info dan i obuka (+1)'));
+        $this->assertStringContainsString('name="bonus_info_and_training"', $html);
+        $this->assertSame(1, substr_count($html, 'type="checkbox" name="bonus_info_and_training"'));
+        $this->assertStringNotContainsString('name="bonus_info_day"', $html);
+        $this->assertStringNotContainsString('name="bonus_training"', $html);
         $this->assertStringContainsString('Planirana registracija', $html);
         $this->assertStringContainsString('Inovativno/zeleno poslovanje', $html);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $html);
-        $this->assertStringContainsString('KONAČNA OCJENA', $html);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $html);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $html);
+        $this->assertStringNotContainsString('KONAČNA OCJENA', $html);
         $this->assertStringNotContainsString('class="evaluation-table evaluation-table-bonus"', $html);
         $this->assertStringNotContainsString('name="notes"', $html);
         $this->assertStringNotContainsString('Ostale napomene', $html);
@@ -369,11 +376,13 @@ class YouthIndividualScoringTest extends TestCase
         $afterThree = $ctx['application']->fresh();
         $this->assertSame('evaluated', $afterThree->status);
         $this->assertNotNull($afterThree->evaluated_at);
-        $this->assertNull($afterThree->final_score);
-        $this->assertNull($afterThree->ranking_position);
+        $this->assertSame('30.00', $afterThree->final_score);
+        $this->assertNotNull($afterThree->bonuses_confirmed_at);
+        $this->assertSame($ctx['chairman']->name, $afterThree->bonuses_confirmed_by_name);
+        $this->assertSame(1, (int) $afterThree->ranking_position);
         $this->assertNotSame('approved', $afterThree->status);
         $this->assertNotSame('rejected', $afterThree->status);
-        $this->assertFalse($afterThree->competition->isRankingFormed());
+        $this->assertTrue($afterThree->competition->fresh()->isRankingFormed());
         $this->assertSame(3, EvaluationScore::query()->where('application_id', $afterThree->id)->whereNotNull('completed_at')->count());
         $this->assertEqualsCanonicalizing(
             [1, 2, 3],
@@ -711,7 +720,19 @@ class YouthIndividualScoringTest extends TestCase
     public function test_youth_commission_final_score_appears_only_after_cycle_and_confirmed_bonuses(): void
     {
         $ctx = $this->youthReadyToLock();
-        $this->lockThreeSeats($ctx);
+        foreach ([2, 3] as $seat) {
+            $this->actingAs($ctx['members'][$seat - 1]->fresh('user')->user)
+                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+                ->assertSessionHasNoErrors();
+        }
+        $lockedChairmanPayload = $this->finalPayload();
+        unset($lockedChairmanPayload['scoring_confirmed']);
+        EvaluationScore::query()->create(array_merge($lockedChairmanPayload, [
+            'application_id' => $ctx['application']->id,
+            'commission_member_id' => $ctx['chairman']->id,
+            'canonical_seat_no' => 1,
+            'completed_at' => now(),
+        ]));
 
         $beforeBonuses = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
@@ -719,12 +740,13 @@ class YouthIndividualScoringTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $beforeBonuses);
         $this->assertYouthFinalScoreRowShowsMemberTotal($beforeBonuses, '30');
+        $this->assertStringContainsString('id="youth-save-scores"', $beforeBonuses);
         $this->assertStringNotContainsString('30 / 50', $beforeBonuses);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $beforeBonuses);
         $this->assertStringNotContainsString('id="youth-commission-final-score"', $beforeBonuses);
         $this->assertStringNotContainsString(' / 56', $beforeBonuses);
+        $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $beforeBonuses);
         $this->assertStringNotContainsString('Sačuvaj izmjene', $beforeBonuses);
-        $this->assertStringNotContainsString('Otkaži', $beforeBonuses);
 
         $this->confirmYouthBonuses($ctx);
 
@@ -745,12 +767,64 @@ class YouthIndividualScoringTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $afterShow);
-        $this->assertStringContainsString('Info dan', $afterShow);
-        $this->assertStringContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
+        $this->assertStringContainsString('Info dan i obuka (+1)', $afterShow);
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $afterShow);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
         $this->assertStringContainsString('30.00 / 56', $afterShow);
         $this->assertStringNotContainsString('evaluation-table-bonus', $afterShow);
         $this->assertStringNotContainsString('Ostale napomene', $afterShow);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $afterShow);
+    }
+
+    public function test_youth_combined_sum_adds_confirmed_bonuses_once(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $fives = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $fives["criterion_{$i}"] = 5;
+        }
+        foreach ([1, 2, 3] as $seat) {
+            EvaluationScore::query()->create(array_merge($fives, [
+                'application_id' => $ctx['application']->id,
+                'commission_member_id' => $ctx['members'][$seat - 1]->id,
+                'canonical_seat_no' => $seat,
+                'completed_at' => now(),
+            ]));
+        }
+        $ctx['application']->forceFill([
+            'bonus_info_day' => true,
+            'bonus_training' => true,
+            'bonus_new_business' => true,
+            'bonus_green_innovative' => true,
+        ])->save();
+
+        $before = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertYouthFinalScoreRowShowsMemberTotal($before, '50');
+        $this->assertYouthFinalScoreRowDoesNotShowMemberTotal($before, '56');
+        $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $before);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $before);
+        $this->assertStringNotContainsString('56.00 / 56', $before);
+
+        $this->confirmYouthBonuses($ctx, [
+            'bonus_info_and_training' => '1',
+            'bonus_new_business' => '1',
+            'bonus_green_innovative' => '1',
+        ]);
+
+        $after = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $afterRow = $this->youthFinalScoreRowHtml($after);
+        $this->assertYouthFinalScoreRowShowsMemberTotal($after, '56');
+        $this->assertStringContainsString('56.00 / 56', $afterRow);
+        $this->assertStringNotContainsString('62.00', $after);
+        $this->assertStringNotContainsString('68.00', $after);
+        $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $after);
+        $this->assertStringNotContainsString('KONAČNA OCJENA', $after);
     }
 
     public function test_zensko_completed_form_keeps_save_cancel_and_does_not_show_youth_totals(): void
@@ -853,8 +927,8 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $beforeCreate);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $beforeCreate);
+        $this->assertYouthPrintHintBesideButton($beforeCreate);
+        $this->assertYouthOthersRemainHiddenBeforeCycle($beforeCreate);
 
         $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.show', $ctx['application']))
@@ -882,8 +956,7 @@ class YouthIndividualScoringTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('>Štampaj</button>', $otherCreate);
-        $this->assertStringNotContainsString('id="evaluation-print-hint"', $otherCreate);
+        $this->assertYouthPrintHintBesideButton($otherCreate);
         $this->assertStringNotContainsString('>5</span>', $otherCreate);
         $this->assertStringNotContainsString('Konačna ocjena Komisije', $otherCreate);
     }
@@ -953,10 +1026,19 @@ class YouthIndividualScoringTest extends TestCase
      */
     private function confirmYouthBonuses(array $ctx, array $flags = []): void
     {
+        $application = $ctx['application']->fresh();
+        $chairmanScore = EvaluationScore::query()
+            ->where('application_id', $application->id)
+            ->where('commission_member_id', $ctx['chairman']->id)
+            ->first();
+        $alreadyFinal = $chairmanScore && $chairmanScore->completed_at !== null;
+        if ($alreadyFinal && $application->bonuses_confirmed_at !== null) {
+            return;
+        }
+
+        $payload = $alreadyFinal ? $flags : array_merge($this->finalPayload(), $flags);
         $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.store', $ctx['application']), array_merge([
-                'youth_bonus_action' => 'confirm',
-            ], $flags))
+            ->post(route('evaluation.store', $application), $payload)
             ->assertSessionHasNoErrors();
     }
 

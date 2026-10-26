@@ -5,7 +5,11 @@
     <title>Obavještenje o odluci po Prigovoru</title>
 </head>
 <body style="font-family: Arial, sans-serif; font-size: 14px; color: #111827; line-height: 1.6;">
-    <p>Poštovani/a {{ $recipientName }},</p>
+    @if($hasNamedRecipient)
+        <p>Poštovani/a {{ $recipientName }},</p>
+    @else
+        <p>Poštovanje, {{ $recipientName }},</p>
+    @endif
 
     <p>
         Obavještavamo Vas da je Komisija donijela odluku po Vašem Prigovoru.
@@ -25,9 +29,6 @@
             @foreach($criterionOutcomes as $row)
                 <li>
                     {{ $row['statement'] }} — {{ $row['outcome'] }}
-                    @if(! $row['contested'])
-                        (nije osporen, razlog ostaje)
-                    @endif
                 </li>
             @endforeach
         </ul>

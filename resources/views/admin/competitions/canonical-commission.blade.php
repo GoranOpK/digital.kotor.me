@@ -13,7 +13,11 @@
 @endphp
 <div class="container mx-auto px-4 py-6" style="max-width: 1100px;">
     <p><a href="{{ route('admin.competitions.show', $competition) }}">← {{ $competition->title }}</a></p>
-    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Kanonska Komisija Poziva</h1>
+    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Komisija</h1>
+    <p style="margin-bottom: 16px;">
+        <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije</a>
+        · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori</a>
+    </p>
     <p style="color: #4b5563; margin-bottom: 16px;">
         Evidencija imenovanja koje vrši nadležni organ van platforme. Komisija ima tačno {{ $commissionSize }} mjesta;
         mandat traje {{ $mandateYears }} godinu; upražnjeno mjesto popunjava se u roku od {{ $replacementDueDays }} dana.

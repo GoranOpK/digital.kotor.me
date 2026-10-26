@@ -268,7 +268,10 @@
             @php
                 $fc = $competition;
                 $fcStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
-                if ($fc->is_open) {
+                if ($fc->isCanonicalTestApplicationPhaseClosed()) {
+                    $fcStatusText = 'Zatvoren za prijave';
+                    $fcStatusColor = '#92400e';
+                } elseif ($fc->is_open) {
                     $fcStatusText = 'Otvoren za prijave';
                     $fcStatusColor = '#065f46';
                 } elseif ($fc->is_upcoming) {
@@ -299,7 +302,7 @@
                     @if($fc->deadline)
                         <p><strong>Rok za prijave:</strong> {{ $fc->deadline->format('d.m.Y H:i') }}</p>
                     @endif
-                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed())
+                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed() && !$fc->isCanonicalTestApplicationPhaseClosed())
                         <p><strong>Preostalo za prijave:</strong> {{ $fcDaysLeft }} {{ $fcDaysLeft == 1 ? 'dan' : 'dana' }}</p>
                     @endif
                     @if($fc->commission)
@@ -337,7 +340,7 @@
                     @endif
                     @if($competition->commission)
                         <p><strong>Komisija:</strong> 
-                            <a href="{{ route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
+                            <a href="{{ $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL ? route('admin.competitions.canonical-commission.show', $competition) : route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
                                 {{ $competition->commission->name }} ({{ $competition->commission->year }})
                             </a>
                         </p>
@@ -347,11 +350,13 @@
                 </div>
                 <div>
                     <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
-                    @if($competition->published_at && $competition->deadline)
-                        <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                    @if(($competition->published_at || $competition->isCanonicalTestPreview()) && $competition->deadline)
+                        @if($competition->published_at)
+                            <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                        @endif
                         <p><strong>Datum početka:</strong> {{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</p>
                         <p><strong>Datum isteka roka za prijavu:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
-                        @if($competition->status === 'published')
+                        @if(($competition->status === 'published' || $competition->isCanonicalTestPreview()) && ! $competition->canonicalTestApplicationWindowIsClosed())
                             @if($competition->is_upcoming)
                                 <p><strong>Počinje za:</strong><br>
                                     <span class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6; background: #eff6ff; border-color: #dbeafe;">
@@ -366,6 +371,9 @@
                                 </p>
                             @endif
                         @endif
+                    @endif
+                    @if($competition->isCanonicalTestPreview())
+                        <p style="color: #6b7280; font-size: 13px;">Testni pregled — konkurs nije javno objavljen.</p>
                     @endif
                     @if($competition->closed_at)
                         <p><strong>Datum zatvaranja konkursa:</strong> {{ $competition->closed_at->format('d.m.Y H:i') }}</p>
@@ -384,54 +392,48 @@
         @endif
         @endif
 
-        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-            @if(in_array(auth()->user()?->role?->name, ['admin', 'konkurs_admin', 'superadmin'], true) && ! empty($canonicalCommissionOverview))
-                @php
-                    $cc = $canonicalCommissionOverview;
-                    $ccGovernance = \App\Services\Competitions\Commission\CanonicalCommissionGovernance::class;
-                    $ccStates = ['active' => 'Aktivan', 'vacant' => 'Upražnjeno — čeka zamjenu', 'empty' => 'Nepopunjeno'];
-                @endphp
-                <div class="info-card" data-section="canonical-commission">
-                    <h3 style="font-weight: 600; margin-bottom: 6px;">Kanonska Komisija</h3>
-                    @if($cc['foreignCommission'])
-                        <p>{{ $ccGovernance::NOT_CANONICAL_MESSAGE }}</p>
-                    @elseif($cc['commission'] === null)
-                        <p>Komisija nije uspostavljena.</p>
-                    @else
-                        <p>
-                            {{ $cc['commission']->name }}<br>
-                            Mandat: {{ $cc['commission']->mandate_starts_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
-                            – {{ $cc['commission']->mandate_ends_at?->timezone('Europe/Belgrade')->format('d.m.Y') ?? '—' }}
-                            ({{ $cc['mandateValid'] ? 'važeći' : 'nije važeći' }})
-                        </p>
-                        @if($cc['structuralBlock'])
-                            <p style="color: #b45309;">{{ $cc['structuralBlock'] }}</p>
-                        @endif
-                        <ul>
-                            @foreach($cc['seats'] as $seatNo => $seat)
-                                <li>
-                                    Mjesto {{ $seatNo }}:
-                                    @if($seat['member'])
-                                        {{ $seat['member']->name }} — {{ $ccGovernance::roleLabel($seat['member']->canonical_seat) }};
-                                    @endif
-                                    {{ $ccStates[$seat['state']] ?? $seat['state'] }};
-                                    @if($seat['member'])
-                                        izjave: {{ $seat['declarationsSigned'] ? 'potpisane' : 'nijesu evidentirane' }};
-                                        sukob interesa: {{ $seat['pibConflict'] ? 'DA' : 'ne' }}
-                                    @endif
-                                </li>
-                            @endforeach
-                        </ul>
-                        <p>Zamjene: {{ $cc['replacements']->count() }}{{ $cc['replacements']->contains('late', true) ? ' (uključuje zamjenu nakon roka)' : '' }}</p>
+        @if(! empty($testApplicationPhase))
+            <div class="info-card" data-section="test-application-phase">
+                <h2 style="font-size: 20px; margin-bottom: 16px;">Testna prijavna faza</h2>
+                @if($testApplicationPhase['closed'])
+                    <p style="margin: 0 0 8px;">
+                        Zatvorena {{ $testApplicationPhase['closedAt']?->timezone('Europe/Belgrade')->format('d.m.Y H:i') }}
+                        @if($testApplicationPhase['closedBy'])
+                            — {{ $testApplicationPhase['closedBy'] }}
+                        @endif.
+                    </p>
+                    <p style="margin: 0;">
+                        Nove prijave, izmjene nacrta i konačna predaja nacrta više nisu moguće. Radnja je nepovratna.
+                        Kalendarski rok za prijave ostaje {{ $competition->deadline ? $competition->deadline->format('d.m.Y H:i') : 'neizmijenjen' }}.
+                        Status Nacrt i testni preview nisu mijenjani.
+                    </p>
+                @else
+                    <div style="padding: 14px 16px; border: 1px solid #f59e0b; background: #fffbeb; border-radius: 8px; margin-bottom: 12px;">
+                        <strong>Upozorenje.</strong>
+                        Zatvaranje je nepovratno. Nakon potvrde više neće biti moguće započeti novu prijavu, mijenjati postojeći nacrt niti konačno predati nacrt.
+                        Već podnesene prijave, prigovori, ocjene i sjednice ostaju neizmijenjeni.
+                    </div>
+                    @if($testApplicationPhase['canClose'])
+                        <form method="POST" action="{{ route('admin.competitions.test-application-phase.close', $competition) }}">
+                            @csrf
+                            <label style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px;">
+                                <input type="checkbox" name="confirm_test_application_phase_close" value="1" required style="margin-top: 3px;">
+                                <span>Potvrđujem da je zatvaranje testne prijavne faze nepovratno i da nove prijave više neće biti moguće.</span>
+                            </label>
+                            <button type="submit" class="btn btn-danger">Zatvori testnu prijavnu fazu</button>
+                        </form>
+                    @elseif($testApplicationPhase['block'])
+                        <p style="margin: 0; color: #92400e;">{{ $testApplicationPhase['block'] }}</p>
                     @endif
-                    <a href="{{ route('admin.competitions.canonical-commission.show', $competition) }}">Upravljanje Komisijom: uspostavljanje, imenovanje, izjave, upražnjenost i zamjene</a><br>
-                    <a href="{{ route('admin.competitions.canonical-sessions.show', $competition) }}">Sjednice Komisije (pregled)</a>
-                    · <a href="{{ route('admin.competitions.canonical-review.index', $competition) }}">Provjera potpunosti i prigovori (pregled)</a>
-                </div>
-            @endif
+                @endif
+            </div>
+        @endif
+
+        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
             @if(auth()->user()?->role?->name === \App\Services\Competitions\Decision\CanonicalAdministrativeGate::SECRETARIAT_ROLE)
                 <div class="info-card">
-                    <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}">Formalna Odluka, potpisani primjerak i objava</a>
+                    <h2 style="font-size: 20px; margin-bottom: 16px;">Zvanična Odluka</h2>
+                    <a href="{{ route('admin.competitions.canonical-decision.show', $competition) }}" style="color: var(--primary); text-decoration: underline;">Pregled odluke i objave</a>
                 </div>
             @endif
         @else
@@ -586,7 +588,7 @@
                             @empty
                                 <tr>
                                     <td colspan="8" style="padding:40px; text-align:center; color:#6b7280;">
-                                        @if($isCommissionMember && !$isAdmin && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
+                                        @if($isCommissionMember && !$isAdmin && !$competition->isCanonicalTestPreview() && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
                                             Prijave će biti prikazane nakon isteka roka za prijavljivanje na konkurs.
                                         @else
                                             Nema prijava na ovaj konkurs.

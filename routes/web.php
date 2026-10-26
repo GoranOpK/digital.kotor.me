@@ -7,6 +7,7 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationProcessController;
 use App\Http\Controllers\BusinessPlanController;
 use App\Http\Controllers\CanonicalApplicantController;
+use App\Http\Controllers\CanonicalTestApplicationPhaseController;
 use App\Http\Controllers\CanonicalInvestmentPlanController;
 use App\Http\Controllers\CompetitionsController;
 use App\Http\Controllers\ContractController;
@@ -485,6 +486,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::post('/applications/{application}/eliminatory', [EvaluationController::class, 'storeEliminatory'])->name('eliminatory.store');
             Route::post('/applications/{application}/eliminatory/confirm', [EvaluationController::class, 'confirmEliminatory'])->name('eliminatory.confirm');
             Route::post('/applications/{application}/prigovor/decide', [EvaluationController::class, 'decidePrigovor'])->name('prigovor.decide');
+            Route::post('/applications/{application}/prigovor/correct-107-mapping', [EvaluationController::class, 'correctYouth107PrigovorMapping'])->name('prigovor.correct-107-mapping');
             Route::post('/applications/{application}/completeness', [ApplicationProcessController::class, 'recordCompleteness'])->name('completeness');
             Route::post('/applications/{application}/complaints/{complaint}/decision', [ApplicationProcessController::class, 'decideComplaint'])->name('complaint-decision');
             // Kanonski MMSP — provjera potpunosti nad zamrznutim dosijeom i odluka o prigovoru (KN-SYNC-014)
@@ -676,6 +678,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
 
             // Zatvaranje konkursa (dostupno i predsjedniku komisije)
             Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
+            Route::post('/competitions/{competition}/test-application-phase/close', [CanonicalTestApplicationPhaseController::class, 'close'])
+                ->name('competitions.test-application-phase.close');
 
             // Rang lista
             Route::get('/competitions/{competition}/ranking', [AdminController::class, 'rankingList'])->name('competitions.ranking');

@@ -873,35 +873,6 @@
                             @endforeach
                             @if($isOmladinskoScoring)
                                 @include('evaluation.partials.youth_bonus_rows')
-                                <tr class="final-score-row" id="youth-final-score-row">
-                                    <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
-                                        <strong>KONAČNA OCJENA:</strong>
-                                    </td>
-                                    @foreach($allMembers as $member)
-                                        <td style="font-weight: bold !important;">
-                                            @php
-                                                $memberScore = $allScores->get($member->id);
-                                                $memberScoreIsFinal = $memberScore && $memberScore->completed_at !== null;
-                                                $memberTotal = $memberScoreIsFinal ? $memberScore->calculateTotalScore() : 0;
-                                                $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
-                                            @endphp
-                                            @if($isCurrentMember && $memberScoreIsFinal)
-                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
-                                            @elseif(! $isCurrentMember && ($canViewOtherMembersScores ?? false) && $memberScoreIsFinal)
-                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
-                                            @else
-                                                <strong style="color: #d1d5db;">—</strong>
-                                            @endif
-                                        </td>
-                                    @endforeach
-                                    <td class="average-col" id="final_score" style="font-weight: bold !important;">
-                                        @if(($canViewOtherMembersScores ?? false) && ! empty($youthFinalScoreDisplay))
-                                            <strong>{{ $youthFinalScoreDisplay }} / 56</strong>
-                                        @else
-                                            <strong>—</strong>
-                                        @endif
-                                    </td>
-                                </tr>
                             @endif
                         </tbody>
                     </table>
@@ -1269,10 +1240,10 @@
                     @php
                         $rejectedForDocuments = ! empty($eliminatoryIsConfirmedFail);
                         $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
-                        // Omladinsko: lična završena ocjena ili M3 odbijanje.
+                        // Omladinsko: član komisije (i prije čuvanja ocjena) ili M3 odbijanje.
                         // Ženski/ostali tok: ciklus svih članova ili M3 odbijanje.
                         $canPrintNow = ($isOmladinskoScoring ?? false)
-                            ? (($hasCompletedEvaluation ?? false) || $rejectedForDocuments)
+                            ? (! ($isApplicant ?? false) || $rejectedForDocuments)
                             : (($canViewOtherMembersScores ?? false) || $rejectedForDocuments);
                     @endphp
 
@@ -1309,6 +1280,9 @@
                             <div style="padding: 16px; background: #ecfdf5; border-radius: 8px; margin-bottom: 16px; border: 1px solid #6ee7b7; color: #065f46; font-weight: 600;">
                                 Individualna ocjena je zaključana i ne može se mijenjati.
                             </div>
+                            @if(! ($youthBonusesLocked ?? false))
+                                <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
+                            @endif
                             @if($canPrintNow)
                                 <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                                 @include('evaluation.partials.youth_print_hint')
@@ -1369,6 +1343,10 @@
                     @else
                         {{-- Član još nije završio ocjenjivanje --}}
                         @if($isOmladinskoScoring)
+                            @if($canPrintNow)
+                                <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                                @include('evaluation.partials.youth_print_hint')
+                            @endif
                             <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
                             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                         @else
@@ -1425,17 +1403,8 @@
     }
 
     document.getElementById('evaluationForm')?.addEventListener('submit', function (event) {
-        const submitter = event.submitter;
-        const submitterName = submitter ? (submitter.getAttribute('name') || '') : '';
         const confirmed = this.querySelector('[name="scoring_confirmed"]');
         const scoringAllowed = this.dataset.scoringAllowed === '1';
-
-        if (submitterName === 'youth_bonus_action') {
-            if (confirmed) {
-                confirmed.value = '0';
-            }
-            return;
-        }
 
         if (! scoringAllowed) {
             event.preventDefault();

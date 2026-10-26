@@ -471,7 +471,14 @@
                     <div style="overflow-y: auto; max-height: 350px;">
                         @foreach($myApplicationsList->take(5) as $app)
                             <div style="padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
-                                <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name ?? 'Bez naziva', 25) }}</div>
+                                @php
+                                    $isMmspApplication = $app->competition?->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
+                                    $mmspFormCode = $isMmspApplication ? ($app->canonicalApplicantForm?->formCode() ?? null) : null;
+                                    $displayApplicationName = $isMmspApplication
+                                        ? (($app->competition?->title ?: 'MMSP konkurs') . ' — MMSP' . ($mmspFormCode ? ' (' . $mmspFormCode . ')' : ''))
+                                        : ($app->business_plan_name ?? 'Bez naziva');
+                                @endphp
+                                <div style="font-weight: 600; color: #111827; font-size: 13px;" title="{{ $displayApplicationName }}">{{ Str::limit($displayApplicationName, 40) }}</div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                                     @php
                                         $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocijenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
@@ -484,7 +491,17 @@
                                         $obrazacLabel = null;
                                         $obrazacStyle = '';
                                         $obrazacUrl = null;
-                                        if ($app->applicant_type) {
+                                        if ($isMmspApplication) {
+                                            $canonicalForm = $app->canonicalApplicantForm;
+                                            if ($canonicalForm) {
+                                                $code = $canonicalForm->formCode();
+                                                $obrazacLabel = 'Obrazac ' . $code . ' - ' . ($canonicalForm->isFrozen() ? 'Predat' : 'Nacrt');
+                                                $obrazacStyle = $canonicalForm->isFrozen()
+                                                    ? 'background: #d1fae5; color: #065f46;'
+                                                    : 'background: #fef3c7; color: #92400e;';
+                                                $obrazacUrl = route('applications.canonical-p1.edit', $app);
+                                            }
+                                        } elseif ($app->applicant_type) {
                                             $isObrazacComplete = $app->isObrazacComplete();
 
                                             if ($isObrazacComplete) {
@@ -522,7 +539,7 @@
                                         $bizPlanLabel = null;
                                         $bizPlanStyle = '';
                                         $bizPlanUrl = null;
-                                        if ($app->businessPlan) {
+                                        if (! $isMmspApplication && $app->businessPlan) {
                                             if ($app->businessPlan->isComplete()) {
                                                 $bizPlanLabel = 'Biznis plan – popunjen';
                                                 $bizPlanStyle = 'background: #d1fae5; color: #065f46;';
@@ -564,7 +581,15 @@
                                                style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #e5e7eb; color: #111827; text-decoration: none;">
                                                 Status prijave
                                             </a>
-                                            @php $comp = $app->competition; $canDeleteApp = $comp && $comp->status !== 'closed' && !$comp->isApplicationDeadlinePassed(); @endphp
+                                            @php
+                                                $comp = $app->competition;
+                                                $canDeleteApp = $comp && $comp->status !== 'closed' && !$comp->isApplicationDeadlinePassed();
+                                                // MMSP only: do not show delete for already submitted or locked applications.
+                                                // Women/youth continue using the existing visibility rule unchanged.
+                                                if ($canDeleteApp && $comp->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL) {
+                                                    $canDeleteApp = ! $app->isApplicantContentWriteLocked();
+                                                }
+                                            @endphp
                                             @if($canDeleteApp)
                                             <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
                                                 @csrf @method('DELETE')
