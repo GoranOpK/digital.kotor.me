@@ -11,7 +11,7 @@
     <style>
         :root { --primary:#0B3D91; --primary-dark:#0A347B; --secondary:#B8860B; --page-bg:#eef2f7; }
         *, *::before, *::after { box-sizing: border-box; }
-        html, body { height:100%; margin:0; padding:0; }
+        html, body { margin:0; padding:0; }
         body {
             min-height: 100vh;
             display: flex;
@@ -25,6 +25,7 @@
         /* Header — compact bar at top */
         .site-header {
             position: relative;
+            flex-shrink: 0;
             overflow: hidden;
             color: #fff;
             background-color: #1a2332;
@@ -215,7 +216,7 @@
         }
 
         /* Footer */
-        .site-footer { margin-top: auto; }
+        .site-footer { margin-top: auto; flex-shrink: 0; }
         .footer-banner {
             width: 100%;
             height: 120px;
