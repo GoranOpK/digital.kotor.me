@@ -2,6 +2,66 @@
 
 @section('content')
 @include('partials.canonical-ui')
+<style>
+/* Print-only, scoped to canonical MMSP P2. Match the tested P1a A4 header typography. */
+@media print {
+    @page { size: A4 portrait; margin: 12mm 10mm; }
+    body > header, body > nav, body > footer,
+    .mmsp-business-plan .mmsp-alert,
+    .mmsp-business-plan .mmsp-p2-screen-only,
+    .mmsp-business-plan button,
+    .mmsp-business-plan .mmsp-p2-actions { display:none !important; }
+    .canonical-ui-page.mmsp-form-page.mmsp-business-plan {
+        padding:0 !important; margin:0 !important; min-height:0 !important; background:#fff !important;
+    }
+    .mmsp-business-plan > .container {
+        padding:0 !important; margin:0 !important; width:100% !important; max-width:none !important;
+    }
+    .mmsp-business-plan .mmsp-obrazac-zaglavlje {
+        background:#fff !important; box-shadow:none !important; border:1px solid #ccc !important;
+        border-radius:0 !important; padding:12px 16px !important; margin:0 0 12px !important;
+        break-inside:avoid;
+    }
+    .mmsp-business-plan .mmsp-obrazac-grb img { height:2cm !important; width:auto !important; }
+    .mmsp-business-plan .mmsp-obrazac-org,
+    .mmsp-business-plan .mmsp-obrazac-contact { font-size:11.7px !important; }
+    .mmsp-business-plan .mmsp-obrazac-number,
+    .mmsp-business-plan .mmsp-obrazac-code { font-size:12.6px !important; }
+    .mmsp-business-plan .mmsp-obrazac-title { font-size:19.8px !important; }
+    .mmsp-business-plan form, .mmsp-business-plan fieldset { margin:0 !important; padding:0 !important; width:100% !important; }
+    .mmsp-business-plan .mmsp-form-card {
+        background:#fff !important; box-shadow:none !important; padding:0 !important;
+        margin:0 0 12px !important; border:0 !important; border-radius:0 !important;
+    }
+    .mmsp-business-plan .mmsp-form-section { margin:0 !important; break-inside:auto; }
+    .mmsp-business-plan .mmsp-form-section h2 {
+        font-size:13px !important; margin:7px 0 10px !important; padding-bottom:5px !important;
+        color:#0B3D91 !important; border-bottom:1px solid #e5e7eb !important;
+    }
+    .mmsp-business-plan .mmsp-section-number {
+        font-size:11px !important; width:23px !important; height:23px !important; line-height:23px !important;
+    }
+    .mmsp-business-plan .mmsp-form-group { margin-bottom:9px !important; break-inside:avoid; }
+    .mmsp-business-plan .mmsp-form-label {
+        font-size:9.9pt !important; font-weight:600 !important; margin-bottom:2px !important;
+    }
+    .mmsp-business-plan .mmsp-form-control {
+        font-size:9pt !important; line-height:1.4 !important; box-sizing:border-box !important;
+        width:100% !important; max-width:100% !important; min-width:0 !important;
+        padding:3px 5px !important; border:1px solid #d1d5db !important; border-radius:0 !important;
+        box-shadow:none !important; background:#fff !important; color:#111 !important;
+    }
+    .mmsp-business-plan textarea.mmsp-form-control { min-height:55px !important; resize:none !important; }
+    .mmsp-business-plan .mmsp-form-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; gap:6px 16px !important; }
+    .mmsp-business-plan .mmsp-form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px 12px !important; }
+    .mmsp-business-plan .mmsp-form-text { font-size:9pt !important; }
+    .mmsp-business-plan .mmsp-dynamic-table { width:100% !important; border-collapse:collapse !important; table-layout:fixed !important; }
+    .mmsp-business-plan .mmsp-dynamic-table th,
+    .mmsp-business-plan .mmsp-dynamic-table td { border:1px solid #ddd !important; padding:5px !important; font-size:9pt !important; }
+    .mmsp-business-plan .mmsp-dynamic-table tr { break-inside:avoid; }
+    .mmsp-business-plan .mmsp-required { color:#111 !important; }
+}
+</style>
 @php
     $competition = $application->competition;
     $lines = old('expense_lines', $plan?->expenseLines() ?? []);
@@ -10,6 +70,7 @@
     $upBroj = $competition?->upNumber?->number ?? '—';
     $redniBroj = $application->redni_broj ?? '—';
     $brojPrijave = $upBroj.'/'.$redniBroj;
+    $p1 = $application->canonicalApplicantForm;
     $p1Complete = app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
 @endphp
 
@@ -41,7 +102,7 @@
             <h1 class="mmsp-obrazac-title">FORMA ZA PLAN ULAGANJA</h1>
         </div>
 
-        <p style="margin:0 0 18px;">
+        <p class="mmsp-p2-screen-only" style="margin:0 0 18px;">
             <a href="{{ route('applications.show', $application) }}" style="color:#0B3D91; font-weight:600; text-decoration:none;">
                 ← Nazad na pregled prijave
             </a>
@@ -89,7 +150,7 @@
                             <select id="subsidy_type" name="subsidy_type" class="mmsp-form-control @error('subsidy_type') error @enderror">
                                 <option value="">— izaberite vrstu subvencije —</option>
                                 @foreach($subsidyTypes as $code => $label)
-                                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type) === $code)>{{ $label }}</option>
+                                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type ?? $p1?->subsidy_type) === $code)>{{ $label }}</option>
                                 @endforeach
                             </select>
                             <div class="mmsp-form-text">
@@ -97,6 +158,56 @@
                             </div>
                             @error('subsidy_type')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                         </div>
+                    </div>
+                </div>
+
+                <div class="mmsp-form-card">
+                    <div class="mmsp-form-section">
+                        <div class="mmsp-form-group">
+                            <label class="mmsp-form-label">Osnovni podaci o preduzetniku / društvu (iz Obrasca {{ $p1?->formCode() ?? 'P1' }})</label>
+                            <div class="mmsp-form-row" style="gap:12px;">
+                                <div>
+                                    <label class="mmsp-form-label">Podnosilac / naziv društva</label>
+                                    <input class="mmsp-form-control" value="{{ $p1?->company_name ?: $p1?->person_name }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Odgovorno lice / preduzetnik</label>
+                                    <input class="mmsp-form-control" value="{{ $p1?->person_name }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Adresa / sjedište</label>
+                                    <input class="mmsp-form-control" value="{{ $p1?->address }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">PIB</label>
+                                    <input class="mmsp-form-control" value="{{ $application->pib }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Šifra djelatnosti / broj zaposlenih</label>
+                                    <input class="mmsp-form-control" value="{{ trim(($p1?->activity_code ?? '').' / '.($p1?->employee_count ?? ''), ' /') }}" readonly>
+                                </div>
+                                <div>
+                                    <label class="mmsp-form-label">Kontakt i e-mail</label>
+                                    <input class="mmsp-form-control" value="{{ trim(($p1?->phone ?? '').' / '.($p1?->email ?? ''), ' /') }}" readonly>
+                                </div>
+                            </div>
+                            <p class="mmsp-form-text">Ovi podaci se uređuju u Obrascu {{ $p1?->formCode() ?? 'P1a/P1b' }}, ne ponavljaju se u P2.</p>
+                        </div>
+                    </div>
+                </div>
+
+                @php $narratives = old('narrative_sections', $plan?->narrative_sections ?? []); @endphp
+
+                <div class="mmsp-form-card">
+                    <div class="mmsp-form-section">
+                        <h2><span class="mmsp-section-number">II</span> PLAN ULAGANJA</h2>
+                        @foreach(['investment_description' => 'Opis planiranog ulaganja', 'investment_goals' => 'Ciljevi ulaganja', 'planned_activities' => 'Planirane aktivnosti'] as $key => $label)
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="{{ $key }}">{{ $label }} <span class="mmsp-required">*</span></label>
+                                <textarea class="mmsp-form-control @error('narrative_sections.'.$key) error @enderror" rows="3" id="{{ $key }}" name="narrative_sections[{{ $key }}]" maxlength="5000">{{ $narratives[$key] ?? '' }}</textarea>
+                                @error('narrative_sections.'.$key)<div class="error-message">{{ $message }}</div>@enderror
+                            </div>
+                        @endforeach
                     </div>
                 </div>
 
@@ -148,8 +259,26 @@
                     </div>
                 </div>
 
+                @foreach([
+                    'IV' => ['AUTENTIČNOST / INOVATIVNOST / DIGITALIZACIJA', 'innovation_digitalization', 'Opišite doprinos odabranoj vrsti subvencije'],
+                    'V' => ['OČEKIVANI REZULTATI', 'expected_results', 'Očekivani konkretni rezultati i pokazatelji'],
+                    'VI' => ['UTICAJ NA LOKALNU EKONOMIJU', 'local_economy_impact', 'Zapošljavanje, lokalni dobavljači, lokalno tržište'],
+                    'VII' => ['ODRŽIVOST I DUGOROČNI EFEKTI', 'sustainability', 'Način održavanja rezultata nakon podrške'],
+                ] as $roman => [$heading, $key, $hint])
+                    <div class="mmsp-form-card">
+                        <div class="mmsp-form-section">
+                            <h2><span class="mmsp-section-number">{{ $roman }}</span> {{ $heading }}</h2>
+                            <div class="mmsp-form-group">
+                                <label class="mmsp-form-label" for="{{ $key }}">{{ $hint }} <span class="mmsp-required">*</span></label>
+                                <textarea class="mmsp-form-control @error('narrative_sections.'.$key) error @enderror" rows="4" maxlength="5000" name="narrative_sections[{{ $key }}]" id="{{ $key }}">{{ $narratives[$key] ?? '' }}</textarea>
+                                @error('narrative_sections.'.$key)<div class="error-message">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
                 @unless($readOnly)
-                    <div class="mmsp-form-card" style="text-align:center;">
+                    <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center;">
                         <div style="display:flex; justify-content:center; flex-wrap:wrap;">
                             <button type="submit"
                                     style="background:#6b7280; color:#fff; padding:12px 24px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
@@ -161,13 +290,13 @@
             </fieldset>
         </form>
 
-        <p style="margin:0 0 18px;">
+        <p class="mmsp-p2-screen-only" style="margin:0 0 18px;">
             <a href="{{ route('applications.show', $application) }}" style="color:#0B3D91; font-weight:600; text-decoration:none;">
                 ← Nazad na pregled prijave
             </a>
         </p>
 
-        <div class="mmsp-form-card" style="text-align:center; margin-top:8px; margin-bottom:24px;">
+        <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">
             <button type="button"
                     onclick="window.print();"
                     style="background:#0B3D91; color:#fff; padding:10px 24px; min-width:180px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">

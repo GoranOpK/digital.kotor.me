@@ -331,7 +331,13 @@ class CanonicalCallLifecycleLockTest extends TestCase
         $this->assertSame('Dorađeno Ime', $application->canonicalApplicantForm()->value('person_name'));
 
         $this->actingAs($owner)
-            ->put(route('applications.canonical-p2.update', $application), array_merge($this->p2Payload(CanonicalSubsidyType::AUTHENTIC_LOCAL), ['expected_subsidy' => '450.00']))
+            ->put(route('applications.canonical-p2.update', $application), array_replace($this->p2Payload(CanonicalSubsidyType::AUTHENTIC_LOCAL), [
+                'expected_subsidy' => '450.00',
+                'narrative_sections' => array_fill_keys(
+                    array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS),
+                    'Testni opis plana ulaganja.'
+                ),
+            ]))
             ->assertSessionHasNoErrors();
         $this->assertSame('450.00', $application->canonicalInvestmentPlan()->value('expected_subsidy'));
 
