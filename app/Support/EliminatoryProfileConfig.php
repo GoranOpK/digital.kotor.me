@@ -276,11 +276,7 @@ final class EliminatoryProfileConfig
             : [1 => (string) $check->note, 2 => '', 3 => ''];
 
         $details = [];
-        foreach ([1, 2, 3] as $number) {
-            if (! $check->criterionIsFalse($check->{"criterion_{$number}"})) {
-                continue;
-            }
-
+        foreach ($check->activatedCriterionNumbers() as $number) {
             $details[] = [
                 'number' => $number,
                 'statement' => $this->statement($number),

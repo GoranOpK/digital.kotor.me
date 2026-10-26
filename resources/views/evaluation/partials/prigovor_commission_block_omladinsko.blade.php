@@ -99,20 +99,46 @@
             <p><strong>Rok od 7 dana je prekoračen.</strong> Odluka je i dalje dozvoljena. Platforma ne donosi automatsku odluku.</p>
         @endif
 
-        <p><strong>Aktivirani razlozi Obrasca 3 i osporavanja podnosioca:</strong></p>
+        <p><strong>Aktivirani kriterijumi i obrazloženja podnosioca:</strong></p>
         <ul>
             @foreach($activatedReasons as $reason)
                 <li>
                     {{ $reason['statement'] }}
-                    @if($prigovor->criterionIsContested($reason['number']))
-                        — osporen
+                    @if(($submittedExplanations[$reason['number']] ?? '') !== '')
                         <br>Obrazloženje podnosioca: {{ $submittedExplanations[$reason['number']] }}
-                    @else
-                        — nije osporen (ostaje)
                     @endif
                 </li>
             @endforeach
         </ul>
+
+        @if($youth107MappingCorrection ?? null)
+            <p>
+                Jednokratna korekcija mapiranja evidentirana
+                {{ $youth107MappingCorrection->created_at?->format('d.m.Y. H:i') }}
+                — {{ $youth107MappingCorrection->corrected_by_name }}.
+                Originalni tekst podnosioca ostaje u audit tragu i nije obrazloženje za kriterijum dokumentacije.
+            </p>
+        @endif
+
+        @if($canCorrectYouth107Mapping ?? false)
+            <form method="POST" action="{{ route('evaluation.prigovor.correct-107-mapping', $application) }}">
+                @csrf
+                <p>
+                    Jednokratna korekcija mapiranja: zapis je pogrešno označio neaktivirani kriterijum M4/M4a kao osporen.
+                    Korekcija označava da Prigovor obuhvata samo aktivirani kriterijum dokumentacije.
+                    Originalni tekst podnosioca se ne prepisuje na taj kriterijum i ostaje u audit tragu.
+                    Prvobitni rok i <code>submitted_at</code> ostaju nepromijenjeni.
+                </p>
+                <label for="kn-prigovor-correction-reason"><strong>Obrazloženje korekcije</strong></label>
+                <textarea id="kn-prigovor-correction-reason" name="correction_reason" class="kn-prigovor-textarea" required>{{ old('correction_reason') }}</textarea>
+                @error('correction_reason')
+                    <p style="color: #ef4444;">{{ $message }}</p>
+                @enderror
+                <div class="kn-prigovor-actions">
+                    <button type="submit" class="kn-prigovor-btn">Evidentiraj korekciju mapiranja</button>
+                </div>
+            </form>
+        @endif
 
         @if($prigovor->isFinished())
             <p>
@@ -131,15 +157,12 @@
                 <p><strong>Obrazloženje odluke:</strong></p>
                 <p style="white-space: pre-wrap;">{{ $prigovor->decision_note }}</p>
             @endif
-            <p>Ishod po aktiviranim razlozima (Obrazac 3 ostaje istorijski nepromijenjen):</p>
+            <p>Ishod po aktiviranim kriterijumima (Obrazac 3 ostaje istorijski nepromijenjen):</p>
             <ul>
                 @foreach($activatedReasons as $reason)
                     <li>
                         {{ $reason['statement'] }}
                         — {{ $prigovor->criterionOutcomeLabel($reason['number']) ?? 'Ostaje' }}
-                        @if(! $prigovor->criterionIsContested($reason['number']))
-                            (nije osporen)
-                        @endif
                     </li>
                 @endforeach
             </ul>
@@ -147,40 +170,44 @@
             <form method="POST" action="{{ route('evaluation.prigovor.decide', $application) }}">
                 @csrf
                 <p>
-                    Za svaki osporeni razlog označite <strong>Otklonjen</strong> ili <strong>Ostaje</strong>.
-                    Neosporeni aktivirani razlog ostaje. Konačni ishod izračunava Platforma.
+                    Za svaki aktivirani kriterijum označite <strong>Otklonjen</strong> ili <strong>Ostaje</strong>.
+                    Konačni ishod izračunava Platforma.
                 </p>
+                @if((int) $application->id === \App\Services\YouthPrigovorMappingCorrectionService::APPLICATION_ID)
+                    <p>
+                        Za kriterijum dokumentacije smiju se uzeti u obzir samo prilozi koji su blagovremeno bili dio prijave.
+                        Dokument dodat nakon roka za prijave ne otklanja razlog iz Obrasca 3.
+                    </p>
+                @endif
                 @foreach($activatedReasons as $reason)
                     @php $n = $reason['number']; @endphp
                     <div class="kn-prigovor-outcome">
                         <p><strong>{{ $reason['statement'] }}</strong></p>
-                        @if($prigovor->criterionIsContested($n))
-                            <p>Osporeno. Obrazloženje podnosioca:</p>
+                        @if(($submittedExplanations[$n] ?? '') !== '')
+                            <p>Obrazloženje podnosioca:</p>
                             <p style="white-space: pre-wrap;">{{ $submittedExplanations[$n] }}</p>
-                            <div class="kn-prigovor-actions">
-                                <label>
-                                    <input type="radio"
-                                        name="criterion_outcomes[{{ $n }}]"
-                                        value="otklonjen"
-                                        required
-                                        {{ old('criterion_outcomes.'.$n) === 'otklonjen' ? 'checked' : '' }}>
-                                    Otklonjen
-                                </label>
-                                <label>
-                                    <input type="radio"
-                                        name="criterion_outcomes[{{ $n }}]"
-                                        value="ostaje"
-                                        required
-                                        {{ old('criterion_outcomes.'.$n) === 'ostaje' ? 'checked' : '' }}>
-                                    Ostaje
-                                </label>
-                            </div>
-                            @error('criterion_outcomes.'.$n)
-                                <p style="color: #ef4444;">{{ $message }}</p>
-                            @enderror
-                        @else
-                            <p>Nije osporen. Ishod: <strong>Ostaje</strong></p>
                         @endif
+                        <div class="kn-prigovor-actions">
+                            <label>
+                                <input type="radio"
+                                    name="criterion_outcomes[{{ $n }}]"
+                                    value="otklonjen"
+                                    required
+                                    {{ old('criterion_outcomes.'.$n) === 'otklonjen' ? 'checked' : '' }}>
+                                Otklonjen
+                            </label>
+                            <label>
+                                <input type="radio"
+                                    name="criterion_outcomes[{{ $n }}]"
+                                    value="ostaje"
+                                    required
+                                    {{ old('criterion_outcomes.'.$n) === 'ostaje' ? 'checked' : '' }}>
+                                Ostaje
+                            </label>
+                        </div>
+                        @error('criterion_outcomes.'.$n)
+                            <p style="color: #ef4444;">{{ $message }}</p>
+                        @enderror
                     </div>
                 @endforeach
 

@@ -35,7 +35,7 @@ class ApplicationPrigovorDecisionMail extends Mailable
 
     public string $decisionNote;
 
-    /** @var list<array{statement: string, outcome: string, contested: bool}> */
+    /** @var list<array{statement: string, outcome: string}> */
     public array $criterionOutcomes = [];
 
     /** @var list<string> */
@@ -83,7 +83,7 @@ class ApplicationPrigovorDecisionMail extends Mailable
     }
 
     /**
-     * @return list<array{statement: string, outcome: string, contested: bool}>
+     * @return list<array{statement: string, outcome: string}>
      */
     private function youthCriterionOutcomes(
         EliminatoryProfileConfig $profile,
@@ -93,17 +93,10 @@ class ApplicationPrigovorDecisionMail extends Mailable
         $check = $application->eliminatoryCheck;
         $rows = [];
 
-        foreach ([1, 2, 3] as $number) {
-            $isActivated = $check?->criterionIsFalse($check->{"criterion_{$number}"}) === true;
-            if (! $isActivated) {
-                continue;
-            }
-
-            $contested = $prigovor->criterionIsContested($number);
+        foreach ($check?->activatedCriterionNumbers() ?? [] as $number) {
             $rows[] = [
                 'statement' => $profile->statement($number),
                 'outcome' => $prigovor->criterionOutcomeLabel($number) ?? 'Ostaje',
-                'contested' => $contested,
             ];
         }
 

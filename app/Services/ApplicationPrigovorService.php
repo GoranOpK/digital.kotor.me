@@ -38,11 +38,11 @@ class ApplicationPrigovorService
 
     public const INACTIVE_CONTESTED_MESSAGE = 'Prigovor može osporiti samo aktivirane eliminatorne razloge.';
 
-    public const CONTESTED_EXPLANATION_REQUIRED_MESSAGE = 'Obrazloženje je obavezno za svaki osporeni kriterijum.';
+    public const CONTESTED_EXPLANATION_REQUIRED_MESSAGE = 'Obrazloženje je obavezno za svaki aktivirani kriterijum.';
 
     public const YOUTH_COMMISSION_INCOMPLETE_MESSAGE = 'Odluku po prigovoru može evidentirati samo predsjednik kompletne Komisije Poziva sa tačno tri aktivna mjesta.';
 
-    public const YOUTH_CONTESTED_OUTCOME_REQUIRED_MESSAGE = 'Za svaki osporeni kriterijum mora se označiti Otklonjen ili Ostaje.';
+    public const YOUTH_CONTESTED_OUTCOME_REQUIRED_MESSAGE = 'Za svaki aktivirani kriterijum mora se označiti Otklonjen ili Ostaje.';
 
     public const YOUTH_UNCONTESTED_CANNOT_LIFT_MESSAGE = 'Neosporeni aktivirani razlog ostaje. Ne može se otkloniti.';
 
@@ -56,6 +56,7 @@ class ApplicationPrigovorService
 
     public function __construct(
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
+        protected YouthPrigovorMappingCorrectionService $youthMappingCorrections,
     ) {}
 
     public function applicantCanSubmit(Application $application, User $user): bool
@@ -362,13 +363,15 @@ class ApplicationPrigovorService
                     abort(403, 'Odluka po Prigovoru je moguća samo uz potvrđenu eliminatornu provjeru.');
                 }
 
-                if (! $prigovor->hasReadableContestedData()) {
-                    abort(403, 'Odluka po prigovoru zahtijeva čitljive osporene kriterijume i obrazloženja.');
+                if ($check->activatedCriterionNumbers() === []) {
+                    abort(403, 'Odluka po prigovoru je moguća samo uz aktivirane razloge iz zaključanog Obrasca 3.');
                 }
+
+                $this->youthMappingCorrections->assertDecisionAllowed($locked, $prigovor, $criterionOutcomes);
 
                 $this->assertYouthCommissionDecisionGate($locked, $chairman);
 
-                $remainingByCriterion = $this->validatedYouthRemainingByCriterion($check, $prigovor, $criterionOutcomes);
+                $remainingByCriterion = $this->validatedYouthRemainingByCriterion($check, $criterionOutcomes);
                 $anyRemaining = in_array(true, $remainingByCriterion, true);
                 $odluka = $anyRemaining
                     ? ApplicationPrigovor::STATUS_ODBIJEN
@@ -469,7 +472,6 @@ class ApplicationPrigovorService
      */
     private function validatedYouthRemainingByCriterion(
         ApplicationEliminatoryCheck $check,
-        ApplicationPrigovor $prigovor,
         array $criterionOutcomes,
     ): array {
         $normalized = [];
@@ -482,10 +484,10 @@ class ApplicationPrigovorService
 
         $remaining = [1 => null, 2 => null, 3 => null];
         $errors = [];
+        $activated = array_fill_keys($check->activatedCriterionNumbers(), true);
 
         foreach ([1, 2, 3] as $number) {
-            $isActivated = $check->criterionIsFalse($check->{"criterion_{$number}"});
-            $isContested = $prigovor->criterionIsContested($number);
+            $isActivated = isset($activated[$number]);
             $hasPostedOutcome = array_key_exists($number, $normalized)
                 && $normalized[$number] !== ''
                 && $normalized[$number] !== null;
@@ -495,15 +497,6 @@ class ApplicationPrigovorService
                     $errors["criterion_outcomes.{$number}"] = self::YOUTH_INACTIVE_OUTCOME_MESSAGE;
                 }
                 $remaining[$number] = null;
-
-                continue;
-            }
-
-            if (! $isContested) {
-                if ($hasPostedOutcome && $normalized[$number] === ApplicationPrigovor::OUTCOME_OTKLONJEN) {
-                    $errors["criterion_outcomes.{$number}"] = self::YOUTH_UNCONTESTED_CANNOT_LIFT_MESSAGE;
-                }
-                $remaining[$number] = true;
 
                 continue;
             }
@@ -581,46 +574,40 @@ class ApplicationPrigovorService
             abort(403, 'Prigovor je moguć samo nakon odbijanja po eliminatornoj provjeri.');
         }
 
-        $normalizedContested = [];
+        $postedNumbers = [];
         foreach ($contestedNumbers as $value) {
             $number = (int) $value;
             if ($number >= 1 && $number <= 3) {
-                $normalizedContested[$number] = $number;
+                $postedNumbers[$number] = $number;
             }
         }
-        $normalizedContested = array_values($normalizedContested);
-
-        if ($normalizedContested === []) {
-            throw ValidationException::withMessages([
-                'contested' => self::CONTESTED_REQUIRED_MESSAGE,
-            ]);
+        foreach ($explanationsByCriterion as $key => $value) {
+            $number = (int) $key;
+            if ($number >= 1 && $number <= 3 && trim((string) $value) !== '') {
+                $postedNumbers[$number] = $number;
+            }
         }
 
         $errors = [];
         $explanations = [1 => '', 2 => '', 3 => ''];
         $contestedByCriterion = [1 => null, 2 => null, 3 => null];
+        $activated = array_fill_keys($check->activatedCriterionNumbers(), true);
+        $activatedCount = count($activated);
+
+        foreach ($postedNumbers as $number) {
+            if (! isset($activated[$number])) {
+                $errors['contested'] = self::INACTIVE_CONTESTED_MESSAGE;
+            }
+        }
 
         foreach ([1, 2, 3] as $number) {
-            $isActivated = $check->criterionIsFalse($check->{"criterion_{$number}"});
-            $isContested = in_array($number, $normalizedContested, true);
-
-            if ($isContested && ! $isActivated) {
-                $errors['contested'] = self::INACTIVE_CONTESTED_MESSAGE;
-
-                continue;
-            }
-
-            if (! $isActivated) {
+            if (! isset($activated[$number])) {
                 $contestedByCriterion[$number] = null;
 
                 continue;
             }
 
-            $contestedByCriterion[$number] = $isContested;
-            if (! $isContested) {
-                continue;
-            }
-
+            $contestedByCriterion[$number] = true;
             $text = trim((string) ($explanationsByCriterion[$number] ?? $explanationsByCriterion[(string) $number] ?? ''));
             if ($text === '') {
                 $errors["criterion_obrazlozenja.{$number}"] = self::CONTESTED_EXPLANATION_REQUIRED_MESSAGE;
@@ -629,6 +616,12 @@ class ApplicationPrigovorService
             }
 
             $explanations[$number] = $text;
+        }
+
+        if ($activatedCount === 0 && $errors === []) {
+            throw ValidationException::withMessages([
+                'contested' => self::CONTESTED_REQUIRED_MESSAGE,
+            ]);
         }
 
         if ($errors !== []) {

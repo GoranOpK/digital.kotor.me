@@ -29,9 +29,6 @@
             @foreach($criterionOutcomes as $row)
                 <li>
                     {{ $row['statement'] }} — {{ $row['outcome'] }}
-                    @if(! $row['contested'])
-                        (nije osporen, razlog ostaje)
-                    @endif
                 </li>
             @endforeach
         </ul>

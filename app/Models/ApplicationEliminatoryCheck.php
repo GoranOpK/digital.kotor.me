@@ -74,9 +74,24 @@ class ApplicationEliminatoryCheck extends Model
 
     public function hasAnyFailCriterion(): bool
     {
-        return $this->criterionIsFalse($this->criterion_1)
-            || $this->criterionIsFalse($this->criterion_2)
-            || $this->criterionIsFalse($this->criterion_3);
+        return $this->activatedCriterionNumbers() !== [];
+    }
+
+    /**
+     * Locked Obrazac 3 is the source of truth for which eliminatory reasons are active.
+     *
+     * @return list<int>
+     */
+    public function activatedCriterionNumbers(): array
+    {
+        $numbers = [];
+        foreach ([1, 2, 3] as $number) {
+            if ($this->criterionIsFalse($this->{"criterion_{$number}"})) {
+                $numbers[] = $number;
+            }
+        }
+
+        return $numbers;
     }
 
     public function profileConfig(): EliminatoryProfileConfig
@@ -93,10 +108,8 @@ class ApplicationEliminatoryCheck extends Model
     {
         $failed = [];
         $labels = $this->profileConfig()->criteria;
-        foreach ($labels as $number => $criterion) {
-            if ($this->criterionIsFalse($this->{"criterion_{$number}"})) {
-                $failed[] = $criterion['statement'];
-            }
+        foreach ($this->activatedCriterionNumbers() as $number) {
+            $failed[] = $labels[$number]['statement'];
         }
 
         return $failed;

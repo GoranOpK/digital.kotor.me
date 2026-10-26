@@ -8,6 +8,7 @@ use App\Models\CommissionMember;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
+use App\Services\YouthPrigovorMappingCorrectionService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\YouthAllocationDraftService;
@@ -31,6 +32,7 @@ class EvaluationController extends Controller
         protected ApplicationPrigovorService $prigovors,
         protected CanonicalIndividualScoringService $canonicalScoring,
         protected ApplicationYouthAppealWindowService $youthAppealWindows,
+        protected YouthPrigovorMappingCorrectionService $youthMappingCorrections,
         protected YouthAllocationDraftService $youthAllocationDrafts,
         protected YouthEqualScoreVotingService $youthEqualScoreVoting,
         protected YouthAllocationListConfirmationService $youthAllocationListConfirmation,
@@ -442,6 +444,8 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
+        $canCorrectYouth107Mapping = $this->youthMappingCorrections->chairmanCanCorrect($commissionMember, $application, $prigovor);
+        $youth107MappingCorrection = $this->youthMappingCorrections->recordedCorrection($application);
         $scoringLockedMessage = $isOmladinskoScoring
             ? ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE
             : ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE;
@@ -478,6 +482,8 @@ class EvaluationController extends Controller
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
+            'canCorrectYouth107Mapping',
+            'youth107MappingCorrection',
             'scoringProfile',
             'isOmladinskoScoring',
             'scoringLockedMessage',
@@ -1004,6 +1010,8 @@ class EvaluationController extends Controller
         $eliminatoryNotice = $application->eliminatoryNotice;
         $prigovor = $application->prigovor;
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
+        $canCorrectYouth107Mapping = $this->youthMappingCorrections->chairmanCanCorrect($commissionMember, $application, $prigovor);
+        $youth107MappingCorrection = $this->youthMappingCorrections->recordedCorrection($application);
         $canEditYouthAllocationDraft = $isOmladinskoScoring
             && $competition
             && $this->youthAllocationDrafts->canEditDraft($competition, $user);
@@ -1023,6 +1031,8 @@ class EvaluationController extends Controller
             'eliminatoryNotice',
             'prigovor',
             'canDecidePrigovor',
+            'canCorrectYouth107Mapping',
+            'youth107MappingCorrection',
             'scoringProfile',
             'isOmladinskoScoring',
             'youthFinalScoreDisplay',
@@ -1402,6 +1412,21 @@ class EvaluationController extends Controller
             ->with('success', 'Odluka Komisije o Prigovoru je evidentirana.');
     }
 
+    public function correctYouth107PrigovorMapping(Request $request, Application $application): RedirectResponse
+    {
+        $chairman = $this->chairmanForEliminatoryMutation($application);
+        $validated = $request->validate([
+            'correction_reason' => 'required|string|max:5000',
+        ], [
+            'correction_reason.required' => YouthPrigovorMappingCorrectionService::REASON_REQUIRED_MESSAGE,
+        ]);
+
+        $this->youthMappingCorrections->correct($application, $chairman, $validated['correction_reason']);
+
+        return redirect()->route('evaluation.create', $application)
+            ->with('success', 'Korekcija mapiranja Prigovora je evidentirana.');
+    }
+
     protected function chairmanForEliminatoryMutation(Application $application): CommissionMember
     {
         $user = Auth::user();
@@ -1452,7 +1477,11 @@ class EvaluationController extends Controller
                 return false;
             }
 
-            return $prigovor->hasReadableContestedData();
+            if ($this->youthMappingCorrections->isPendingUncorrected($application)) {
+                return false;
+            }
+
+            return $application->eliminatoryCheck->hasAnyFailCriterion();
         }
 
         return true;
