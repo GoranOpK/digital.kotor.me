@@ -138,6 +138,53 @@
         border-color: #2563eb;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
     }
+    .youth-ranking-print-root .youth-allocation-draft-form .youth-allocation-decision-row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-end;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+    }
+    .youth-ranking-print-root .youth-allocation-decision-choices {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        flex: 0 0 auto;
+        min-height: 38px;
+    }
+    .youth-ranking-print-root .youth-allocation-choice {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        white-space: nowrap;
+    }
+    .youth-ranking-print-root .youth-allocation-field {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 4px;
+        margin: 0;
+        min-width: 0;
+    }
+    .youth-ranking-print-root .youth-allocation-field-amount {
+        flex: 0 0 140px;
+        width: 140px;
+    }
+    .youth-ranking-print-root .youth-allocation-field-justification {
+        flex: 1 1 auto;
+    }
+    .youth-ranking-print-root .youth-allocation-field input[type="text"],
+    .youth-ranking-print-root .youth-allocation-field input[type="number"] {
+        width: 100%;
+        margin: 0;
+    }
+    .youth-ranking-print-root .youth-allocation-decision-row .btn-primary {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
     .youth-ranking-table-wrap {
         width: 100%;
         overflow-x: auto;
@@ -222,6 +269,18 @@
             height: 28px;
             line-height: 28px;
             font-size: 12px;
+        }
+        .youth-ranking-print-root .youth-allocation-draft-form .youth-allocation-decision-row {
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+        .youth-ranking-print-root .youth-allocation-decision-choices,
+        .youth-ranking-print-root .youth-allocation-field-amount,
+        .youth-ranking-print-root .youth-allocation-field-justification,
+        .youth-ranking-print-root .youth-allocation-decision-row .btn-primary {
+            flex: 1 1 100%;
+            width: 100%;
+            min-height: 0;
         }
     }
     @media print {
@@ -426,22 +485,24 @@
                                 <td colspan="7" style="padding: 8px 8px 16px;">
                                     <form method="POST" action="{{ route('evaluation.youth-allocation-draft', $ranked) }}" class="no-print youth-allocation-draft-form" data-testid="youth-allocation-draft-form">
                                         @csrf
-                                        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
-                                            <label style="display: flex; align-items: center; gap: 6px;">
-                                                <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $ranked->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
-                                                Podržava
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 6px;">
-                                                <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $ranked->commission_decision) === 'odbija' ? 'checked' : '' }} required>
-                                                Odbija
-                                            </label>
-                                            <label>
+                                        <div class="youth-allocation-decision-row" data-testid="youth-allocation-decision-row">
+                                            <div class="youth-allocation-decision-choices">
+                                                <label class="youth-allocation-choice">
+                                                    <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $ranked->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
+                                                    Podržava
+                                                </label>
+                                                <label class="youth-allocation-choice">
+                                                    <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $ranked->commission_decision) === 'odbija' ? 'checked' : '' }} required>
+                                                    Odbija
+                                                </label>
+                                            </div>
+                                            <label class="youth-allocation-field youth-allocation-field-amount">
                                                 Iznos
-                                                <input type="number" step="0.01" min="0" name="approved_amount" value="{{ old('approved_amount', $ranked->approved_amount) }}" style="width: 140px; margin-left: 6px;">
+                                                <input type="number" step="0.01" min="0" name="approved_amount" value="{{ old('approved_amount', $ranked->approved_amount) }}">
                                             </label>
-                                            <label style="flex: 1; min-width: 220px;">
+                                            <label class="youth-allocation-field youth-allocation-field-justification">
                                                 Obrazloženje
-                                                <input type="text" name="commission_justification" value="{{ old('commission_justification', $ranked->commission_justification) }}" style="width: 100%; margin-left: 6px;">
+                                                <input type="text" name="commission_justification" value="{{ old('commission_justification', $ranked->commission_justification) }}">
                                             </label>
                                             <button type="submit" class="btn-primary">Sačuvaj nacrt</button>
                                         </div>
