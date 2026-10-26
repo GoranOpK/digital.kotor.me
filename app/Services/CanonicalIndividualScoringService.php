@@ -874,7 +874,8 @@ class CanonicalIndividualScoringService
 
     /**
      * Individual scoring before the application deadline is allowed only for an MMSP draft
-     * with the test preview flag. Ranking formation keeps its own deadline gate.
+     * with the test preview flag. Ranking formation keeps its own deadline gate, except when
+     * that same test preview has irreversibly closed its application phase.
      */
     private function canonicalIndividualScoreDeadlineBlockReason(?Competition $competition): ?string
     {
@@ -1034,7 +1035,9 @@ class CanonicalIndividualScoringService
             return CanonicalCommissionGovernance::NO_COMMISSION_MESSAGE;
         }
 
-        if (! in_array($competition->status, ['closed', 'completed'], true) && ! $competition->isApplicationDeadlinePassed()) {
+        if (! in_array($competition->status, ['closed', 'completed'], true)
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! $competition->isCanonicalTestApplicationPhaseClosed()) {
             return self::CANONICAL_CYCLE_INCOMPLETE_MESSAGE;
         }
 

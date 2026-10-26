@@ -93,9 +93,11 @@ class ApplicationController extends Controller
         }
 
         if (! $competition->is_open) {
-            $message = $competition->is_upcoming
-                ? 'Konkurs još nije počeo. Prijave će biti moguće od datuma početka konkursa.'
-                : 'Rok za prijave je istekao.';
+            $message = $competition->canonicalTestApplicationWindowIsClosed()
+                ? \App\Services\Competitions\CanonicalTestApplicationPhaseService::WINDOW_CLOSED_MESSAGE
+                : ($competition->is_upcoming
+                    ? 'Konkurs još nije počeo. Prijave će biti moguće od datuma početka konkursa.'
+                    : 'Rok za prijave je istekao.');
 
             return redirect()->route('competitions.show', $competition)
                 ->withErrors(['error' => $message]);

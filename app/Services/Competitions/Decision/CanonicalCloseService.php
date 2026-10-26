@@ -36,7 +36,11 @@ final class CanonicalCloseService
         }
 
         $deadline = $competition->deadline;
-        if (! $deadline || ! now()->isAfter($deadline)) {
+        // Only MMSP draft test-preview contests whose test application phase was
+        // explicitly closed may complete before the calendar deadline.
+        // Published/live calls must still wait for the real deadline.
+        $testPhaseClosed = $competition->isCanonicalTestApplicationPhaseClosed();
+        if (! $testPhaseClosed && (! $deadline || ! now()->isAfter($deadline))) {
             return self::DEADLINE_MESSAGE;
         }
 
