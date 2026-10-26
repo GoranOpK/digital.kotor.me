@@ -361,7 +361,8 @@ class CanonicalP2FinancialBasisTest extends TestCase
         $this->assertSame('2000.00', $plan->expenseLines()[0]['amount']);
         $this->actingAs($owner)->get(route('applications.canonical-p2.edit', $application))
             ->assertOk()
-            ->assertSee('Plan ulaganja — Obrazac P2')
+            ->assertSee('FORMA ZA PLAN ULAGANJA')
+            ->assertSee('Obrazac P2')
             ->assertSee('Subvencije za razvoj autentičnih lokalnih proizvoda/usluga')
             ->assertDontSee('biznis ideja');
     }
