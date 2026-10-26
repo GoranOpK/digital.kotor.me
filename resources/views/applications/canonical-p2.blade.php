@@ -179,7 +179,6 @@
                                     <input class="mmsp-form-control" value="{{ $p1?->address }}" readonly>
                                 </div>
                                 <div>
-                                <div>
                                     <label class="mmsp-form-label">PIB</label>
                                     <input class="mmsp-form-control" value="{{ $application->pib }}" readonly>
                                 </div>
@@ -187,6 +186,7 @@
                                     <label class="mmsp-form-label">Šifra djelatnosti / broj zaposlenih</label>
                                     <input class="mmsp-form-control" value="{{ trim(($p1?->activity_code ?? '').' / '.($p1?->employee_count ?? ''), ' /') }}" readonly>
                                 </div>
+                                <div>
                                     <label class="mmsp-form-label">Kontakt i e-mail</label>
                                     <input class="mmsp-form-control" value="{{ trim(($p1?->phone ?? '').' / '.($p1?->email ?? ''), ' /') }}" readonly>
                                 </div>
