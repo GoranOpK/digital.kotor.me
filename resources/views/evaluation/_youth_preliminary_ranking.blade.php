@@ -8,6 +8,33 @@
         ?? $youthAboveFirst?->competition
         ?? $youthBelowFirst?->competition;
     $youthRankingCompetition?->loadMissing('upNumber');
+    $youthApplicantTypeLabel = static function ($application): string {
+        $commercialForm = null;
+        foreach ([
+            $application->company_legal_form ?? null,
+            \App\Support\KnCommercialCompanyForm::fromRegistrationForm($application->registration_form ?? null),
+            \App\Support\KnCommercialCompanyForm::fromUserType($application->registration_form ?? null),
+            is_string($application->registration_form ?? null) ? strtolower((string) $application->registration_form) : null,
+        ] as $candidate) {
+            if (! is_string($candidate) || $candidate === '') {
+                continue;
+            }
+            $label = \App\Support\KnCommercialCompanyForm::headingCode(strtolower($candidate));
+            if ($label !== null) {
+                $commercialForm = $label;
+                break;
+            }
+        }
+
+        return match ((string) ($application->applicant_type ?? '')) {
+            'preduzetnik' => 'Preduzetnik',
+            'fizicko_lice' => 'Fizičko lice',
+            'doo' => 'DOO',
+            'privredno_drustvo' => $commercialForm ?? 'Privredno društvo',
+            'ostalo' => $commercialForm ?? 'Ostalo',
+            default => 'Ostalo',
+        };
+    };
 @endphp
 @if($youthRankingView)
 <style>
@@ -440,12 +467,7 @@
                         @php
                             $score = (float) $ranked->final_score;
                             $scoreClass = $score >= 40 ? 'score-high' : 'score-medium';
-                            $youthType = match ($ranked->applicant_type) {
-                                'preduzetnik' => 'Preduzetnik',
-                                'doo' => 'DOO',
-                                'fizicko_lice' => 'Fizičko lice',
-                                default => 'Ostalo',
-                            };
+                            $youthType = $youthApplicantTypeLabel($ranked);
                             $youthStage = $ranked->business_stage === 'započinjanje' ? 'Započinjanje' : ($ranked->business_stage === 'razvoj' ? 'Razvoj' : null);
                         @endphp
                         <tr>
@@ -596,12 +618,7 @@
                     <tbody>
                         @forelse($youthRankingView['below'] as $below)
                             @php
-                                $belowType = match ($below->applicant_type) {
-                                    'preduzetnik' => 'Preduzetnik',
-                                    'doo' => 'DOO',
-                                    'fizicko_lice' => 'Fizičko lice',
-                                    default => 'Ostalo',
-                                };
+                                $belowType = $youthApplicantTypeLabel($below);
                                 $belowStage = $below->business_stage === 'započinjanje' ? 'Započinjanje' : ($below->business_stage === 'razvoj' ? 'Razvoj' : null);
                             @endphp
                             <tr style="background: #f9fafb;">

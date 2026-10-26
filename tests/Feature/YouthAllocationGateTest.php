@@ -16,6 +16,7 @@ use App\Support\CommissionCanonicalSeat;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
+use App\Support\KnCommercialCompanyForm;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -110,6 +111,14 @@ class YouthAllocationGateTest extends TestCase
         $below = $this->addPassedApplication($ctx, 'Ispod praga');
         $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $below]);
+        $ctx['application']->forceFill([
+            'applicant_type' => KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO,
+            'company_legal_form' => KnCommercialCompanyForm::AD,
+        ])->save();
+        $below->forceFill([
+            'applicant_type' => KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO,
+            'company_legal_form' => KnCommercialCompanyForm::KD,
+        ])->save();
 
         $chairmanHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
@@ -152,6 +161,15 @@ class YouthAllocationGateTest extends TestCase
         $this->assertStringContainsString('name="approved_amount"', $chairmanHtml);
         $this->assertStringContainsString('name="commission_justification"', $chairmanHtml);
         $this->assertStringContainsString('Sačuvaj nacrt', $chairmanHtml);
+        $belowHeadingPos = strpos($chairmanHtml, 'Prijave ispod minimuma (30 bodova)');
+        $adPos = strpos($chairmanHtml, 'AD - Započinjanje');
+        $kdPos = strpos($chairmanHtml, 'KD - Započinjanje');
+        $this->assertNotFalse($belowHeadingPos);
+        $this->assertNotFalse($adPos);
+        $this->assertNotFalse($kdPos);
+        $this->assertLessThan($belowHeadingPos, $adPos);
+        $this->assertGreaterThan($belowHeadingPos, $kdPos);
+        $this->assertStringNotContainsString('Ostalo - Započinjanje', $chairmanHtml);
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.create', $ctx['application']))
