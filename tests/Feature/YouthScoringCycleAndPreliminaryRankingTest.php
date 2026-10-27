@@ -306,8 +306,17 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertSame(1, (int) $first->fresh()->ranking_position);
         $this->assertSame(4, (int) $fourth->fresh()->ranking_position);
 
-        $html = $this->actingAs($ctx['chairman']->user)
+        $indexHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Preliminarna rang-lista — PM', $indexHtml);
+        $this->assertStringContainsString(route('evaluation.youth-ranking', $ctx['competition']), $indexHtml);
+        $this->assertStringNotContainsString('RANG LISTA BIZNIS PLANOVA', $indexHtml);
+        $this->assertStringNotContainsString('data-testid="youth-ranking-print"', $indexHtml);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('Preliminarna rang-lista', $html);
@@ -431,8 +440,15 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             $view['above']->pluck('id')->all()
         );
 
-        $html = $this->actingAs($ctx['chairman']->user)
+        $indexHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('RANG LISTA BIZNIS PLANOVA', $indexHtml);
+        $this->assertStringContainsString(route('evaluation.youth-ranking', $ctx['competition']), $indexHtml);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $highPos = strpos($html, $highLater->business_plan_name);
@@ -527,8 +543,16 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->assertForbidden();
         $this->assertNull($ctx['application']->fresh()->ranking_position);
 
-        $html = $this->actingAs($ctx['chairman']->user)
+        $indexHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(route('evaluation.youth-ranking', $ctx['competition']), $indexHtml);
+        $this->assertStringNotContainsString('RANG LISTA BIZNIS PLANOVA', $indexHtml);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertSame('rejected', $failed->fresh()->status);

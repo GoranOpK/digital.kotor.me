@@ -123,19 +123,23 @@
             @endif
         </div>
 
-        @if(isset($youthPreliminaryByCompetition) && $youthPreliminaryByCompetition !== [])
-            @foreach($competitions as $youthComp)
-                @if(isset($youthPreliminaryByCompetition[$youthComp->id]))
-                    @include('evaluation._youth_preliminary_ranking', [
-                        'youthRankingView' => $youthPreliminaryByCompetition[$youthComp->id],
-                        'youthRankingTitle' => $youthComp->title,
-                        'canEditYouthAllocationDraft' => $youthAllocationCanEditByCompetition[$youthComp->id] ?? false,
-                        'youthEqualScoreVotingBoard' => $youthEqualScoreVotingByCompetition[$youthComp->id] ?? null,
-                        'youthEqualScoreCompetition' => $youthComp,
-                        'youthAllocationConfirmationBoard' => $youthAllocationConfirmationByCompetition[$youthComp->id] ?? null,
-                    ])
-                @endif
-            @endforeach
+        @php
+            $pmRankingCompetitions = collect($competitions ?? [])
+                ->filter(fn ($comp) => $comp->isOmladinskoProfile())
+                ->values();
+            if (request()->filled('competition_id')) {
+                $requestedCompetitionId = (int) request('competition_id');
+                $pmRankingCompetitions = $pmRankingCompetitions
+                    ->filter(fn ($comp) => (int) $comp->id === $requestedCompetitionId)
+                    ->values();
+            }
+        @endphp
+        @if($pmRankingCompetitions->isNotEmpty())
+            <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                @foreach($pmRankingCompetitions as $pmCompetition)
+                    <a href="{{ route('evaluation.youth-ranking', ['competition' => $pmCompetition]) }}">Preliminarna rang-lista — PM — {{ $pmCompetition->title }}</a>
+                @endforeach
+            </div>
         @endif
 
         @php

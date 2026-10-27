@@ -509,8 +509,18 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $indexHtml);
         $this->assertStringContainsString('Ocjenjivanje u toku', $indexHtml);
-        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $indexHtml);
-        $this->assertStringNotContainsString('Preliminarna rang-lista', $indexHtml);
+        $this->assertStringContainsString('Preliminarna rang-lista — PM', $indexHtml);
+        $this->assertStringContainsString(route('evaluation.youth-ranking', $ctx['competition']), $indexHtml);
+        $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $indexHtml);
+        $this->assertStringNotContainsString('RANG LISTA BIZNIS PLANOVA', $indexHtml);
+
+        $rankingHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $rankingHtml);
+        $this->assertStringNotContainsString('56.00', $rankingHtml);
+        $this->assertStringNotContainsString('RANG LISTA BIZNIS PLANOVA', $rankingHtml);
     }
 
     public function test_dual_membership_does_not_copy_youth_bonuses_to_zensko(): void

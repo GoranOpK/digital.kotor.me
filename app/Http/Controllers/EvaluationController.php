@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
-use App\Models\EvaluationScore;
 use App\Models\CommissionMember;
+use App\Models\Competition;
+use App\Models\EvaluationScore;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
@@ -1058,6 +1059,39 @@ class EvaluationController extends Controller
             'youthAllocationConfirmationBoard',
             'canEditYouthAllocationDraft',
         ));
+    }
+
+    /**
+     * Preliminarna rang-lista jednog omladinskog poziva.
+     * Isti podaci i isti idempotentni upis pozicija kao na postojećem prikazu.
+     */
+    public function youthRanking(Competition $competition): View
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            abort(403, 'Preliminarna rang-lista mladih dostupna je samo za omladinski Poziv.');
+        }
+
+        $user = Auth::user();
+        if (CommissionMember::activeForCompetition($user->id, $competition) === null) {
+            abort(403, 'Niste član komisije tog Poziva.');
+        }
+
+        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
+        }
+
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
+
+        return view('evaluation.youth-ranking', [
+            'youthRankingView' => $this->canonicalScoring->youthPreliminaryRankingView($competition),
+            'youthRankingTitle' => $competition->title,
+            'canEditYouthAllocationDraft' => $this->youthAllocationDrafts->canEditDraft($competition, $user),
+            'youthEqualScoreVotingBoard' => $this->youthEqualScoreVoting->board($competition, $user),
+            'youthEqualScoreCompetition' => $competition,
+            'youthAllocationConfirmationBoard' => $this->youthAllocationListConfirmation->board($competition, $user),
+        ]);
     }
 
     /**
