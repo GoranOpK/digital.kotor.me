@@ -6,8 +6,8 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.45
-**Datum:** 2026-10-23
+**Verzija:** 1.0.46
+**Datum:** 2026-10-27
 
 ---
 
@@ -136,7 +136,7 @@ Pravila su DK-DS-001 §6–§8. KN ih primjenjuje, ne mijenja.
 
 | Kategorija | KN model | Status |
 |------------|----------|--------|
-| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-BM-004`, `KN-PATCH-BM-005`, `KN-PATCH-BM-006`, `KN-PATCH-BM-007`, `KN-PATCH-BM-008`, `KN-PATCH-BM-009`, `KN-PATCH-BM-010`, `KN-PATCH-BM-011`, `KN-PATCH-BM-012`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005`, `KN-PATCH-FS-006`, `KN-PATCH-BM-013`, `KN-PATCH-FS-007`, `KN-PATCH-BM-014`, `KN-PATCH-FS-008`, `KN-PATCH-BM-015`, `KN-PATCH-FS-009`, `KN-PATCH-BM-016`, `KN-PATCH-FS-010`, `KN-PATCH-TS-001`, `KN-PATCH-BM-017`, `KN-PATCH-FS-011`, `KN-PATCH-TS-002`, `KN-PATCH-BM-018`, `KN-PATCH-FS-012`, `KN-PATCH-TS-003`, `KN-PATCH-FS-013`, `KN-PATCH-TS-004`, `KN-PATCH-BM-019`, `KN-PATCH-BM-020`, `KN-PATCH-FS-014`, `KN-PATCH-TS-005`, `KN-PATCH-BM-021`, `KN-PATCH-FS-015`, `KN-PATCH-TS-006`, `KN-PATCH-BM-023`, `KN-PATCH-FS-021`, `KN-PATCH-TS-012` |
+| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-BM-004`, `KN-PATCH-BM-005`, `KN-PATCH-BM-006`, `KN-PATCH-BM-007`, `KN-PATCH-BM-008`, `KN-PATCH-BM-009`, `KN-PATCH-BM-010`, `KN-PATCH-BM-011`, `KN-PATCH-BM-012`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005`, `KN-PATCH-FS-006`, `KN-PATCH-BM-013`, `KN-PATCH-FS-007`, `KN-PATCH-BM-014`, `KN-PATCH-FS-008`, `KN-PATCH-BM-015`, `KN-PATCH-FS-009`, `KN-PATCH-BM-016`, `KN-PATCH-FS-010`, `KN-PATCH-TS-001`, `KN-PATCH-BM-017`, `KN-PATCH-FS-011`, `KN-PATCH-TS-002`, `KN-PATCH-BM-018`, `KN-PATCH-FS-012`, `KN-PATCH-TS-003`, `KN-PATCH-FS-013`, `KN-PATCH-TS-004`, `KN-PATCH-BM-019`, `KN-PATCH-BM-020`, `KN-PATCH-FS-014`, `KN-PATCH-TS-005`, `KN-PATCH-BM-021`, `KN-PATCH-FS-015`, `KN-PATCH-TS-006`, `KN-PATCH-BM-023`, `KN-PATCH-FS-021`, `KN-PATCH-TS-012`, `KN-PATCH-BM-024`, `KN-PATCH-FS-022` |
 | Feature ID | Globalni `FT-*` **nije obavezan**. Ako se kasnije uvede FR: `{NS}-FR-001`; model feature ID-a definiše se tada u ovom RG-u i **ne** nastavlja automatski istorijski `FT-*` niz. | **NOT YET CREATED** |
 | CR | Ako zatreba: `KN-CR-{NNN}`; registar `KN-CR-REG-001` | **NOT YET CREATED** |
 | KN-DOC | Dokumentaciona načela otvaranja paketa (`KN-DOC-01` … `KN-DOC-07`) | Žive u KN-BM-001 §5. **Nisu** poslovna pravila konkursa i **nisu** BR. |
@@ -163,7 +163,7 @@ Postojeći runtime identiteti implementacije ženskog preduzetništva (klase, ta
 
 Za **nove** KN dokumente status dokumenta: `NACRT` · `U IZRADI` · `USVOJENO` · `SUPERSEDED` · `ARHIVIRANO`.
 
-PO odluka da se **otvara** kanonski KN paket je USVOJENA. Trenutni statusi sadržajnih dokumenata (usklađeno sa zaglavljima): **KN-BM-001 = USVOJENO** (v0.2.11); **KN-FS-001 = USVOJENO** (v0.2.13); **KN-PRO-001 = NACRT**; **KN-TS-001 = NACRT**.
+PO odluka da se **otvara** kanonski KN paket je USVOJENA. Trenutni statusi sadržajnih dokumenata (usklađeno sa zaglavljima): **KN-BM-001 = USVOJENO** (v0.2.13); **KN-FS-001 = USVOJENO** (v0.2.15); **KN-PRO-001 = NACRT**; **KN-TS-001 = NACRT**.
 
 Minimalni metadata: Document ID · Naziv · Namespace / modul · Verzija · Status dokumenta · Datum posljednje izmjene (DK-DS-001 §13).
 
@@ -265,7 +265,8 @@ Ova podsekcija uvodi samo dva PO-usvojena pravila higijene registra. **Ne** rest
 | 1.0.43 | 2026-10-22 | Evidentirani KN-PATCH-BM-022 za KN-BM-002 v1.0.13, KN-PATCH-FS-019 za KN-FS-002 v1.0.14 i KN-PATCH-TS-010 za KN-TS-002 v1.0.10: kriterijum 6 individualnog bodovanja mladih glasi „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“; niz tačaka se ne zadržava. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.44 | 2026-10-22 | Evidentirani KN-PATCH-FS-020 za KN-FS-002 v1.0.15 i KN-PATCH-TS-011 za KN-TS-002 v1.0.11: omladinsko usmeno obrazloženje ostaje poslovna obaveza i ocjenjuje se kroz kriterijum 10, ali Digital ne vodi zasebnu evidenciju termina, prisustva, nedolaska ni završetka; konačna ocjena prati ženski tok (svih 10 kriterijuma i potvrda člana) bez `youthLockEvidence*`. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
 | 1.0.45 | 2026-10-23 | Evidentirani KN-PATCH-BM-023 za KN-BM-002 v1.0.14, KN-PATCH-FS-021 za KN-FS-002 v1.0.16 i KN-PATCH-TS-012 za KN-TS-002 v1.0.12: omladinska individualna ocjena nema privremeni nacrt; jedno dugme `Sačuvaj ocjene` šalje svih 10 kriterijuma kao konačnu i zaključanu ocjenu uz potvrdu; nepotpun unos i `save_as_draft` se odbijaju bez upisa; raniji djelimični unosi ostaju u tragu; nacrt dodatnih bodova ostaje zaseban. Katalog skraćenica nije mijenjan. Ženski profil nije diran. Status ostaje USVOJENO. |
+| 1.0.46 | 2026-10-27 | Evidentirani `KN-PATCH-BM-024` za KN-BM-001 v0.2.13 i `KN-PATCH-FS-022` za KN-FS-001 v0.2.15, kao zapis usvojene odluke KN-D01 (MMSP: najviše dvije konačne prijave po normalizovanom PIB-u, različite vrste, najviše jedna dodijeljena podrška). §8 usklađen na te verzije. Katalog poslovnih skraćenica nije mijenjan. Žensko i omladinsko nijesu dirani. Status ostaje USVOJENO. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.45**
+**Kraj dokumenta KN-RG-001 v1.0.46**
