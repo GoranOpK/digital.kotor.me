@@ -3,7 +3,28 @@
 @section('content')
 @include('partials.canonical-ui')
 <style>
-/* Print-only, scoped to canonical MMSP P2. Match the tested P1a A4 header typography. */
+/* Screen overrides scoped to canonical MMSP P2. Shared canonical-ui rules stay unchanged. */
+.canonical-ui-page.mmsp-business-plan .mmsp-obrazac-top {
+    margin-bottom: 0;
+}
+@media (max-width: 640px) {
+    .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-top {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        max-width: 100%;
+    }
+    .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-org,
+    .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-contact {
+        flex: 1 1 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-contact {
+        text-align: right;
+    }
+}
+/* Print-only, scoped to canonical MMSP P2. */
 @media print {
     @page { size: A4 portrait; margin: 12mm 10mm; }
     body > header, body > nav, body > footer,
@@ -18,8 +39,8 @@
         padding:0 !important; margin:0 !important; width:100% !important; max-width:none !important;
     }
     .mmsp-business-plan .mmsp-obrazac-zaglavlje {
-        background:#fff !important; box-shadow:none !important; border:1px solid #ccc !important;
-        border-radius:0 !important; padding:12px 16px !important; margin:0 0 12px !important;
+        background:#fff !important; box-shadow:none !important; border:none !important;
+        border-radius:0 !important; padding:0 0 8px !important; margin:0 0 8px !important;
         break-inside:avoid;
     }
     .mmsp-business-plan .mmsp-obrazac-grb img { height:2cm !important; width:auto !important; }
@@ -27,7 +48,7 @@
     .mmsp-business-plan .mmsp-obrazac-contact { font-size:11.7px !important; }
     .mmsp-business-plan .mmsp-obrazac-number,
     .mmsp-business-plan .mmsp-obrazac-code { font-size:12.6px !important; }
-    .mmsp-business-plan .mmsp-obrazac-title { font-size:19.8px !important; }
+    .mmsp-business-plan .mmsp-obrazac-title { font-size:22px !important; }
     .mmsp-business-plan form, .mmsp-business-plan fieldset { margin:0 !important; padding:0 !important; width:100% !important; }
     .mmsp-business-plan .mmsp-form-card {
         background:#fff !important; box-shadow:none !important; padding:0 !important;
@@ -35,8 +56,8 @@
     }
     .mmsp-business-plan .mmsp-form-section { margin:0 !important; break-inside:auto; }
     .mmsp-business-plan .mmsp-form-section h2 {
-        font-size:13px !important; margin:7px 0 10px !important; padding-bottom:5px !important;
-        color:#0B3D91 !important; border-bottom:1px solid #e5e7eb !important;
+        font-size:12pt !important; margin:7px 0 10px !important; padding-bottom:5px !important;
+        color:#000 !important; border-bottom:1px solid #000 !important;
     }
     .mmsp-business-plan .mmsp-section-number {
         font-size:11px !important; width:23px !important; height:23px !important; line-height:23px !important;
@@ -281,7 +302,7 @@
                     <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center;">
                         <div style="display:flex; justify-content:center; flex-wrap:wrap;">
                             <button type="submit"
-                                    style="background:#6b7280; color:#fff; padding:12px 24px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
+                                    style="background:#0B3D91; color:#fff; padding:12px 24px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
                                 Sačuvaj Nacrt plana
                             </button>
                         </div>
