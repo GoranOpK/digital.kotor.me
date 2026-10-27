@@ -27,6 +27,24 @@ class ZenskoPreDeadlineContentGate
     }
 
     /**
+     * Zbir ženskih prijava ostaje skriven članici Komisije dok traje stvarni rok,
+     * i poslije roka dok Komisija nije potpuna i valjana.
+     * Druge profile konkursa ova provjera ne zadržava.
+     */
+    public static function commissionApplicationCountIsWithheld(Competition $competition): bool
+    {
+        if ($competition->type !== 'zensko') {
+            return false;
+        }
+
+        if (self::individualContentIsLocked($competition)) {
+            return true;
+        }
+
+        return ! $competition->hasCompleteValidCommission();
+    }
+
+    /**
      * @return list<int>
      */
     public static function lockedCompetitionIds(): array

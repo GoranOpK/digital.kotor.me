@@ -114,7 +114,7 @@
                                     <strong>{{ $competition->title }}</strong>
                                 </td>
                                 <td>{{ $competition->year ?? 'N/A' }}</td>
-                                <td>{{ $competition->applications_count }}</td>
+                                <td>@if($competition->applications_count === null)—@else{{ $competition->applications_count }}@endif</td>
                                 <td>
                                     @if($competition->closed_at)
                                         {{ $competition->closed_at->format('d.m.Y') }}

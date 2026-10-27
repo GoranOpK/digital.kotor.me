@@ -11,6 +11,7 @@ use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\YouthPrigovorMappingCorrectionService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\Competitions\YouthAllocationDraftService;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\YouthEqualScoreVotingService;
@@ -96,6 +97,10 @@ class EvaluationController extends Controller
             ->get();
 
         $competitionIds = $assignedCompetitions->filter(function ($c) {
+            if (ZenskoPreDeadlineContentGate::individualContentIsLocked($c)) {
+                return false;
+            }
+
             if (! in_array($c->status, ['closed', 'completed'])
                 && ! $c->isApplicationDeadlinePassed()
                 && ! $c->isCanonicalTestPreview()) {
@@ -269,6 +274,12 @@ class EvaluationController extends Controller
             } else {
                 abort(403, 'Niste član komisije.');
             }
+        }
+
+        if ($commissionMember
+            && $application->competition
+            && ZenskoPreDeadlineContentGate::individualContentIsLocked($application->competition)) {
+            abort(403, ScoringProfileConfig::for($application->competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
         }
 
         $this->youthAppealWindows->finalizeExpiredWithoutPrigovor($application);
@@ -508,6 +519,12 @@ class EvaluationController extends Controller
         if ($this->canonicalScoring->isCanonicalCompetition($competition)) {
             return $this->storeCanonicalScore($request, $application);
         }
+
+        if ($competition && ZenskoPreDeadlineContentGate::individualContentIsLocked($competition)) {
+            return redirect()->back()
+                ->withErrors(['error' => ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage()]);
+        }
+
         ScoringProfileConfig::for($competition?->type)->assertScoringFormulaActive();
         
         // Ocjenjivanje počinje tek kada istekne rok za prijave

@@ -364,7 +364,7 @@
                                     @endif
                                 </span>
                             </td>
-                            <td>{{ $competition->applications_count }}</td>
+                            <td>@if($competition->applications_count === null)—@else{{ $competition->applications_count }}@endif</td>
                             <td>
                                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-sm btn-view">Pregled</a>
                                 @if(isset($isAdmin) && $isAdmin && !in_array($competition->status, ['closed', 'completed']))

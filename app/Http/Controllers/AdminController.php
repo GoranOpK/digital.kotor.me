@@ -128,6 +128,81 @@ class AdminController extends Controller
     }
 
     /**
+     * Administrator zadržava ukupan broj svih prijava.
+     * Članica Komisije dobija broj tek kroz kalendarsku ŽP provjeru.
+     */
+    private function competitionsListingQuery(bool $isAdmin)
+    {
+        $query = Competition::query();
+
+        if ($isAdmin) {
+            $query->withCount('applications');
+        }
+
+        return $query;
+    }
+
+    /**
+     * Za članicu Komisije ne učitava zabranjeni zbir.
+     * Poslije stvarnog roka broji prijave koje nijesu nacrt, istim uslovom
+     * koji već određuje prijave dostupne Komisiji.
+     */
+    private function applyCommissionVisibleApplicationCounts($competitions): void
+    {
+        $items = $competitions->getCollection();
+        $fullCountIds = [];
+        $availableCountIds = [];
+
+        foreach ($items as $competition) {
+            if (ZenskoPreDeadlineContentGate::commissionApplicationCountIsWithheld($competition)) {
+                $competition->setAttribute('applications_count', null);
+
+                continue;
+            }
+
+            if ($competition->type === 'zensko') {
+                $availableCountIds[] = (int) $competition->id;
+
+                continue;
+            }
+
+            $fullCountIds[] = (int) $competition->id;
+        }
+
+        $this->assignGroupedApplicationCounts($items, $fullCountIds, false);
+        $this->assignGroupedApplicationCounts($items, $availableCountIds, true);
+    }
+
+    /**
+     * @param  list<int>  $competitionIds
+     */
+    private function assignGroupedApplicationCounts($items, array $competitionIds, bool $excludeDrafts): void
+    {
+        if ($competitionIds === []) {
+            return;
+        }
+
+        $query = Application::query()->whereIn('competition_id', $competitionIds);
+        if ($excludeDrafts) {
+            $query->where('status', '!=', 'draft');
+        }
+
+        $totals = $query
+            ->selectRaw('competition_id, COUNT(*) as aggregate')
+            ->groupBy('competition_id')
+            ->pluck('aggregate', 'competition_id');
+
+        foreach ($items as $competition) {
+            $id = (int) $competition->id;
+            if (! in_array($id, $competitionIds, true)) {
+                continue;
+            }
+
+            $competition->setAttribute('applications_count', (int) ($totals[$id] ?? $totals[(string) $id] ?? 0));
+        }
+    }
+
+    /**
      * Proverava da li korisnik može da pristupi upravljanju konkursima
      */
     protected function canAccessCompetitionsManagement(): bool
@@ -486,7 +561,7 @@ class AdminController extends Controller
             }
 
             // Arhiva - završeni konkursi (closed ili completed)
-            $query = Competition::withCount('applications')
+            $query = $this->competitionsListingQuery($isAdmin)
                 ->whereIn('status', ['closed', 'completed']);
 
             if (! $isAdmin && $commissionId) {
@@ -501,7 +576,7 @@ class AdminController extends Controller
                 ->appends(['tab' => $tab, 'type' => $type]);
         } elseif ($tab === 'all') {
             // Svi konkursi (bez obzira na status)
-            $query = Competition::withCount('applications');
+            $query = $this->competitionsListingQuery($isAdmin);
 
             if (! $isAdmin && isset($commissionId)) {
                 $query->where('commission_id', $commissionId);
@@ -514,7 +589,7 @@ class AdminController extends Controller
                 ->appends(['tab' => $tab, 'type' => $type]);
         } else {
             // Aktivni konkursi (draft, published)
-            $query = Competition::withCount('applications')
+            $query = $this->competitionsListingQuery($isAdmin)
                 ->whereIn('status', ['draft', 'published']);
 
             if (! $isAdmin && isset($commissionId)) {
@@ -526,6 +601,10 @@ class AdminController extends Controller
             $competitions = $query->orderBy('created_at', 'desc')
                 ->paginate(20)
                 ->appends(['tab' => $tab, 'type' => $type]);
+        }
+
+        if (! $isAdmin) {
+            $this->applyCommissionVisibleApplicationCounts($competitions);
         }
 
         $featuredCompetition = $type ? $this->getFeaturedCompetitionForProgram($type) : null;
@@ -541,7 +620,7 @@ class AdminController extends Controller
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
 
-        $query = Competition::withCount('applications')
+        $query = $this->competitionsListingQuery($isAdmin)
             ->whereIn('status', ['closed', 'completed'])
             ->orderByRaw('COALESCE(published_at, created_at) DESC')
             ->orderBy('created_at', 'desc');
@@ -563,6 +642,10 @@ class AdminController extends Controller
         }
 
         $competitions = $query->paginate(20);
+
+        if (! $isAdmin) {
+            $this->applyCommissionVisibleApplicationCounts($competitions);
+        }
 
         return view('competitions.archive', compact('competitions'));
     }

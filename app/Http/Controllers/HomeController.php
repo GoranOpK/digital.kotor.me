@@ -13,6 +13,7 @@ use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\Notice;
 use App\Models\User;
+use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Support\UserType;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -297,6 +298,10 @@ class HomeController extends Controller
 
                 // Sekcija "Prijave za ocjenjivanje" vidljiva je tek nakon isteka roka / zatvaranja.
                 $competitionsWithDeadlinePassed = $commissionCompetitions->filter(function ($competition) {
+                    if (ZenskoPreDeadlineContentGate::individualContentIsLocked($competition)) {
+                        return false;
+                    }
+
                     return in_array($competition->status, ['closed', 'completed'], true)
                         || $competition->isApplicationDeadlinePassed();
                 });
