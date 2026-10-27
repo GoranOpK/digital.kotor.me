@@ -54,15 +54,25 @@
         background:#fff !important; box-shadow:none !important; padding:0 !important;
         margin:0 0 12px !important; border:0 !important; border-radius:0 !important;
     }
-    .mmsp-business-plan .mmsp-form-section { margin:0 !important; break-inside:auto; }
+    .mmsp-business-plan .mmsp-form-section { margin:0 !important; break-inside:auto; page-break-inside:auto; }
     .mmsp-business-plan .mmsp-form-section h2 {
-        font-size:12pt !important; margin:7px 0 10px !important; padding-bottom:5px !important;
+        font-size:12pt !important; margin:7px 0 8px !important; padding-bottom:4px !important;
         color:#000 !important; border-bottom:1px solid #000 !important;
+        break-after:avoid; page-break-after:avoid;
+    }
+    .mmsp-business-plan .mmsp-form-section > .mmsp-form-text {
+        break-after:avoid; page-break-after:avoid;
     }
     .mmsp-business-plan .mmsp-section-number {
-        font-size:11px !important; width:23px !important; height:23px !important; line-height:23px !important;
+        background:transparent !important; color:#000 !important;
+        border:1px solid #000 !important; border-radius:0 !important;
+        width:auto !important; height:auto !important; line-height:1.2 !important;
+        padding:0 5px !important; font-size:11pt !important;
     }
-    .mmsp-business-plan .mmsp-form-group { margin-bottom:9px !important; break-inside:avoid; }
+    .mmsp-business-plan .mmsp-form-group { margin-bottom:9px !important; break-inside:avoid; page-break-inside:avoid; }
+    .mmsp-business-plan .mmsp-form-group:has(textarea) {
+        break-inside:auto !important; page-break-inside:auto !important;
+    }
     .mmsp-business-plan .mmsp-form-label {
         font-size:9.9pt !important; font-weight:600 !important; margin-bottom:2px !important;
     }
@@ -72,14 +82,34 @@
         padding:3px 5px !important; border:1px solid #d1d5db !important; border-radius:0 !important;
         box-shadow:none !important; background:#fff !important; color:#111 !important;
     }
-    .mmsp-business-plan textarea.mmsp-form-control { min-height:55px !important; resize:none !important; }
+    .mmsp-business-plan textarea.mmsp-form-control {
+        border:1px solid #000 !important; background:#fff !important;
+        padding:6px 8px !important; margin-top:2px !important;
+        min-height:5em !important; height:auto !important; max-height:none !important;
+        resize:none !important; overflow:visible !important; field-sizing:content;
+        break-inside:auto; page-break-inside:auto;
+    }
     .mmsp-business-plan .mmsp-form-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; gap:6px 16px !important; }
     .mmsp-business-plan .mmsp-form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px 12px !important; }
     .mmsp-business-plan .mmsp-form-text { font-size:9pt !important; }
-    .mmsp-business-plan .mmsp-dynamic-table { width:100% !important; border-collapse:collapse !important; table-layout:fixed !important; }
+    .mmsp-business-plan [style*="overflow-x:auto"] {
+        overflow:visible !important; break-inside:auto; page-break-inside:auto;
+    }
+    .mmsp-business-plan .mmsp-dynamic-table {
+        width:100% !important; border-collapse:collapse !important; border-spacing:0 !important;
+        table-layout:fixed !important; break-inside:auto; page-break-inside:auto;
+    }
     .mmsp-business-plan .mmsp-dynamic-table th,
-    .mmsp-business-plan .mmsp-dynamic-table td { border:1px solid #ddd !important; padding:5px !important; font-size:9pt !important; }
-    .mmsp-business-plan .mmsp-dynamic-table tr { break-inside:avoid; }
+    .mmsp-business-plan .mmsp-dynamic-table td {
+        border:1px solid #000 !important; padding:3px 5px !important; font-size:9pt !important;
+        background:transparent !important;
+    }
+    .mmsp-business-plan .mmsp-dynamic-table th { font-weight:bold !important; color:#000 !important; }
+    .mmsp-business-plan .mmsp-dynamic-table .mmsp-form-control {
+        border:none !important; background:transparent !important; box-shadow:none !important;
+        padding:0 !important; min-height:0 !important; margin-top:0 !important;
+    }
+    .mmsp-business-plan .mmsp-dynamic-table tr { break-inside:avoid; page-break-inside:avoid; }
     .mmsp-business-plan .mmsp-required { color:#111 !important; }
 }
 </style>
