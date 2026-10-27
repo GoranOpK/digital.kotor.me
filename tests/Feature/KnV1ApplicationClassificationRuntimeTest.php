@@ -549,6 +549,8 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $competition->update([
             'commission_id' => $commission->id,
             'status' => 'closed',
+            'start_date' => now()->subDays(40)->toDateString(),
+            'deadline_days' => 20,
         ]);
         $application->update([
             'status' => 'submitted',
@@ -789,6 +791,8 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $competition->update([
             'commission_id' => $commission->id,
             'status' => 'closed',
+            'start_date' => now()->subDays(40)->toDateString(),
+            'deadline_days' => 20,
         ]);
         $application->update([
             'status' => 'submitted',
@@ -1052,6 +1056,8 @@ class KnV1ApplicationClassificationRuntimeTest extends TestCase
         $competition->update([
             'commission_id' => $commission->id,
             'status' => 'closed',
+            'start_date' => now()->subDays(40)->toDateString(),
+            'deadline_days' => 20,
         ]);
         $application->update([
             'status' => 'submitted',

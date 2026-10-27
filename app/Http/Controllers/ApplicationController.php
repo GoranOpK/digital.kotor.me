@@ -28,6 +28,7 @@ use App\Services\Competitions\ComplaintService;
 use App\Services\Competitions\FinalSubmissionService;
 use App\Support\CanonicalSubsidyType;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\KnApplicationStartContextFactory;
 use App\Services\KnApplicationStartContextStore;
 use Illuminate\Http\Request;
@@ -171,8 +172,19 @@ class ApplicationController extends Controller
         
         if ($request->has('application_id')) {
             // Ako je proslijeđen application_id, provjeri da li je član komisije
-            $existingApplication = Application::with(['user', 'competition'])->find($request->application_id);
-            
+            $existingApplication = Application::with('competition')->find($request->application_id);
+
+            if ($existingApplication
+                && (int) $existingApplication->user_id !== (int) $user->id
+                && $existingApplication->competition
+                && ZenskoPreDeadlineContentGate::individualContentIsLocked($existingApplication->competition)) {
+                abort(403, ZenskoPreDeadlineContentGate::INDIVIDUAL_CONTENT_LOCKED_MESSAGE);
+            }
+
+            if ($existingApplication) {
+                $existingApplication->load('user');
+            }
+
             if ($existingApplication && $roleName === 'komisija') {
                 // Provjeri da li je član komisije za ovu prijavu
                 $isCommissionMemberForThisCompetition = false;

@@ -182,7 +182,7 @@ class ApplicationDocumentViewTest extends TestCase
 
         $this->actingAs($konkursAdmin)
             ->get(route('admin.applications.show', $application))
-            ->assertOk();
+            ->assertForbidden();
 
         $this->actingAs($konkursAdmin)
             ->get(route('applications.document.view', [

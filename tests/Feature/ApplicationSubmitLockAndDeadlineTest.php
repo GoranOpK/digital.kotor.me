@@ -267,6 +267,8 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
         $application->competition->update([
             'commission_id' => $commission->id,
             'status' => 'closed',
+            'start_date' => now()->subDays(40)->toDateString(),
+            'deadline_days' => 20,
             'end_date' => now()->subDay()->toDateString(),
         ]);
         $member = $commission->fresh(['activeMembers.user'])->activeMembers->firstWhere('position', 'clan');

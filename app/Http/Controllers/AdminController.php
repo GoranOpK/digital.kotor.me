@@ -28,6 +28,7 @@ use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
@@ -879,11 +880,18 @@ class AdminController extends Controller
         $typeLabel = $this->getCompetitionTypeLabel($competition->type);
         $isKomisijaView = $isCommissionMember && ! $isAdmin && ! $isCompetitionAdmin;
 
-        // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje
-        $applicationsQuery = $competition->applications()
-            ->with(['user', 'businessPlan']);
+        // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje.
+        // Ženska prijava ostaje bez pojedinačnog prikaza dok stvarni rok ne istekne, uključujući administratorske uloge.
+        $applicationsQuery = $competition->applications();
+        $zenskoContentLocked = ZenskoPreDeadlineContentGate::individualContentIsLocked($competition);
 
-        if ($isCommissionMember && ! $isAdmin) {
+        if ($zenskoContentLocked) {
+            $applicationsQuery->whereRaw('1 = 0');
+        } else {
+            $applicationsQuery->with(['user', 'businessPlan']);
+        }
+
+        if (! $zenskoContentLocked && $isCommissionMember && ! $isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
             if (! $competition->isCanonicalTestPreview()
@@ -1460,6 +1468,13 @@ class AdminController extends Controller
 
         $query = Application::with(['user', 'competition', 'evaluationScores']);
 
+        if ($isAdmin) {
+            $lockedZenskoCompetitionIds = ZenskoPreDeadlineContentGate::lockedCompetitionIds();
+            if ($lockedZenskoCompetitionIds !== []) {
+                $query->whereNotIn('competition_id', $lockedZenskoCompetitionIds);
+            }
+        }
+
         // Filtriranje po statusu
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
@@ -1502,6 +1517,19 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $roleName = $user->role ? $user->role->name : null;
+        $competition = $application->competition;
+
+        if ($competition && ZenskoPreDeadlineContentGate::individualContentIsLocked($competition)) {
+            abort(403, ZenskoPreDeadlineContentGate::INDIVIDUAL_CONTENT_LOCKED_MESSAGE);
+        }
+
+        if ($roleName === 'konkurs_admin'
+            && $competition
+            && $competition->type === 'zensko'
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, 'Administrator konkursa može pregledati obrasce samo za arhivirane konkurse.');
+        }
 
         // Ako nije admin, proveri da li je član komisije i da li je prijava vezana za konkurs dodijeljen njegovoj komisiji
         if (! $isAdmin) {
