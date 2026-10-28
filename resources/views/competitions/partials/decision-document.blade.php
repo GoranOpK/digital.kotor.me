@@ -284,9 +284,7 @@
                     <ol class="decision-applicant-list" start="1">
                         @foreach($winners as $winner)
                             @php
-                                $planTotal = $winner->businessPlan?->required_amount
-                                    ?? $winner->total_budget_needed
-                                    ?? 0;
+                                $planTotal = $winner->displayRequiredFunds() ?? 0;
                             @endphp
                             <li class="decision-applicant-item">
                                 <div class="decision-applicant-head">
@@ -294,7 +292,7 @@
                                 </div>
                                 <div class="decision-applicant-details">
                                     <div>Naziv biznis plana: "{{ $winner->business_plan_name }}"</div>
-                                    <div>Ukupno bodova: <strong>{{ number_format($winner->getDisplayScore(), 1, ',', '.') }}</strong></div>
+                                    <div>Ukupno bodova: <strong>{{ number_format($winner->getDisplayScore(), 2, ',', '.') }}</strong></div>
                                     <div>Iznos odobrenih sredstava: {{ number_format($winner->approved_amount ?? 0, 2, ',', '.') }} €</div>
                                     <div>Ukupna vrijednost biznis plana: {{ number_format((float) $planTotal, 2, ',', '.') }} €</div>
                                 </div>

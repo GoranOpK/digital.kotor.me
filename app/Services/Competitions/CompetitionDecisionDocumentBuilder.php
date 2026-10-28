@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Builds the view data for the official competition decision document.
@@ -18,13 +19,9 @@ class CompetitionDecisionDocumentBuilder
      */
     public function build(Competition $competition): array
     {
-        $winners = Application::where('competition_id', $competition->id)
-            ->whereNotNull('approved_amount')
-            ->where('approved_amount', '>', 0)
-            ->with(['user', 'businessPlan'])
-            ->orderBy('ranking_position')
-            ->orderBy('id')
-            ->get();
+        $winners = $competition->type === 'zensko'
+            ? $this->articleOneApplications($competition)
+            : $this->positiveApprovedAmountApplications($competition);
 
         $chairmanName = null;
         $commissionMembersCount = 0;
@@ -90,5 +87,61 @@ class CompetitionDecisionDocumentBuilder
             'competitionYear',
             'decisionDate'
         );
+    }
+
+    /**
+     * Član 1 ženskog Predloga: podržane prijave iznad postojećeg praga, bez eliminisanih i odbijenih.
+     *
+     * @return Collection<int, Application>
+     */
+    public function articleOneApplications(Competition $competition): Collection
+    {
+        return Application::query()
+            ->where('competition_id', $competition->id)
+            ->where('commission_decision', 'podrzava_potpuno')
+            ->where('status', '!=', 'rejected')
+            ->whereNotNull('approved_amount')
+            ->where('approved_amount', '>', 0)
+            ->with(['user.identity.legalEntity', 'businessPlan', 'eliminatoryCheck', 'prigovor'])
+            ->get()
+            ->filter(function (Application $application): bool {
+                if ($application->isEliminatedFromScoring()) {
+                    return false;
+                }
+
+                return $application->meetsMinimumScore();
+            })
+            ->sort(function (Application $a, Application $b): int {
+                $aPos = $a->ranking_position ?? PHP_INT_MAX;
+                $bPos = $b->ranking_position ?? PHP_INT_MAX;
+
+                if ($aPos !== $bPos) {
+                    return $aPos <=> $bPos;
+                }
+
+                $aScore = (float) ($a->final_score ?? 0);
+                $bScore = (float) ($b->final_score ?? 0);
+                if ($aScore !== $bScore) {
+                    return $bScore <=> $aScore;
+                }
+
+                return $a->id <=> $b->id;
+            })
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Application>
+     */
+    private function positiveApprovedAmountApplications(Competition $competition): Collection
+    {
+        return Application::query()
+            ->where('competition_id', $competition->id)
+            ->whereNotNull('approved_amount')
+            ->where('approved_amount', '>', 0)
+            ->with(['user', 'businessPlan'])
+            ->orderBy('ranking_position')
+            ->orderBy('id')
+            ->get();
     }
 }

@@ -606,7 +606,7 @@
                 <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
                     @php
                         $decisionLabels = [
-                            'podrzava_potpuno' => 'a. Podržava u potpunosti',
+                            'podrzava_potpuno' => 'a. Podržava se',
                             'odbija' => 'b. Odbija'
                         ];
                         $currentDecision = $application->commission_decision;

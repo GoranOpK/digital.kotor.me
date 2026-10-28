@@ -1139,7 +1139,10 @@ class CanonicalIndividualScoringTest extends TestCase
 
         $first = $apps[0]->fresh();
         $second = $apps[1]->fresh();
-        $first->update(['requested_amount' => 1000]);
+        $first->update([
+            'requested_amount' => 1000,
+            'preduzetnik_name' => 'Ana Anić',
+        ]);
         $second->update(['requested_amount' => 1000]);
 
         $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());

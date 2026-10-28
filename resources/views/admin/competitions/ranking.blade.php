@@ -853,7 +853,7 @@
                                             <div style="display: flex; gap: 32px; flex-wrap: wrap;">
                                                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
                                                     <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
-                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">a. Podržava u potpunosti</span>
+                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">a. Podržava se</span>
                                                 </label>
                                                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
                                                     <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
@@ -934,7 +934,7 @@
                                             <th>Zaključak</th>
                                             <td>
                                                 @if($application->commission_decision === 'podrzava_potpuno')
-                                                    Podržava u potpunosti
+                                                    Podržava se
                                                 @elseif($application->commission_decision === 'odbija')
                                                     Odbija
                                                 @else

@@ -3114,14 +3114,17 @@ class AdminController extends Controller
 
     private function decisionIdentityBlockMessage(Competition $competition): ?string
     {
-        $winners = Application::query()
-            ->where('competition_id', $competition->id)
-            ->whereNotNull('approved_amount')
-            ->where('approved_amount', '>', 0)
-            ->with(['user.identity.legalEntity'])
-            ->orderBy('ranking_position')
-            ->orderBy('id')
-            ->get();
+        $winners = $competition->type === 'zensko'
+            ? app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)
+                ->articleOneApplications($competition)
+            : Application::query()
+                ->where('competition_id', $competition->id)
+                ->whereNotNull('approved_amount')
+                ->where('approved_amount', '>', 0)
+                ->with(['user.identity.legalEntity'])
+                ->orderBy('ranking_position')
+                ->orderBy('id')
+                ->get();
 
         $lines = [];
         foreach ($winners as $winner) {
