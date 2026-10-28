@@ -70,7 +70,13 @@ final class YouthEqualScoreVotingService
         'Poziv se ne može zaključiti dok izjednačena grupa nema usvojen zaključani krug.';
 
     public const LOWER_RANK_UNRESOLVED_GROUP_MESSAGE =
-        'Nacrt nižeg ranga nije dozvoljen dok izjednačena grupa višeg ranga nema usvojen zaključani krug.';
+        'Podrška nižem rangu nije dozvoljena dok raspodjela višeg ranga nije razriješena pojedinačnim odlukama.';
+
+    public const STARTUP_PRIORITY_PENDING_MESSAGE =
+        'Podrška prijavi u fazi razvoja nije dozvoljena dok prijave otpočinjanja sa istim brojem bodova nemaju konačnu odluku.';
+
+    public const VOTING_RETIRED_MESSAGE =
+        'Elektronsko glasanje izjednačenih grupa mladih je ukinuto i ne mijenja odluke.';
 
     public const RULE_STARTUP_PRIORITY_VOTE = 'startup_priority_vote';
 
@@ -163,9 +169,16 @@ final class YouthEqualScoreVotingService
         return $this->remainingBeforeRank($competition, $this->scoredRankedApplications($competition), $rank);
     }
 
-    public function lowerRankDraftBlockReason(Competition $competition, Application $application): ?string
-    {
+    public function lowerRankDraftBlockReason(
+        Competition $competition,
+        Application $application,
+        ?string $decision = null,
+    ): ?string {
         if (! $competition->isOmladinskoProfile()) {
+            return null;
+        }
+
+        if ($decision === 'odbija') {
             return null;
         }
 
@@ -182,12 +195,113 @@ final class YouthEqualScoreVotingService
             if ((int) $group['ranking_position'] >= $rank) {
                 continue;
             }
-            if ($this->adoptedLockedRound($competition, (string) $group['group_key']) === null) {
-                return self::LOWER_RANK_UNRESOLVED_GROUP_MESSAGE;
-            }
+
+            return self::LOWER_RANK_UNRESOLVED_GROUP_MESSAGE;
         }
 
         return null;
+    }
+
+    /**
+     * Soba za novu podršku iz sačuvanih odluka. Ne čita izabrane kandidate starog kruga.
+     */
+    public function liveSupportRoom(Competition $competition, Application $application): string
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return $this->remainingBeforeApplication($competition, $application);
+        }
+
+        $scored = $this->scoredRankedApplications($competition);
+        $budget = $this->money((string) ($competition->budget ?? 0));
+        $selfId = (int) $application->id;
+        $selfRow = $scored->first(fn (array $row) => (int) $row['application']->id === $selfId);
+        $rank = $selfRow !== null ? (int) $selfRow['rank'] : PHP_INT_MAX;
+        $fullScore = $selfRow['full_score'] ?? null;
+
+        $globalUsed = '0.00';
+        foreach ($scored as $row) {
+            $other = $row['application'];
+            if ((int) $other->id === $selfId || ! $this->isCompetingDraft($other)) {
+                continue;
+            }
+            $globalUsed = bcadd($globalUsed, $this->money((string) $other->approved_amount), 2);
+        }
+        $globalRoom = bcsub($budget, $globalUsed, 2);
+        if (bccomp($globalRoom, '0.00', 2) === -1) {
+            $globalRoom = '0.00';
+        }
+
+        $higherUsed = '0.00';
+        foreach ($scored->groupBy('rank')->sortKeys() as $groupRank => $rows) {
+            if ((int) $groupRank >= $rank) {
+                break;
+            }
+            foreach ($rows->groupBy('full_score') as $sameScore) {
+                $higherUsed = bcadd($higherUsed, $this->sumDrafts($this->competingFromRows($sameScore)), 2);
+            }
+        }
+        $beforeSet = bcsub($budget, $higherUsed, 2);
+
+        $sameSet = $fullScore === null
+            ? collect()
+            : $scored->filter(fn (array $row) => (int) $row['rank'] === $rank && $row['full_score'] === $fullScore);
+        $others = $sameSet
+            ->map(fn (array $row) => $row['application'])
+            ->filter(fn (Application $other) => (int) $other->id !== $selfId)
+            ->values();
+
+        if (! $this->isStartup($application)) {
+            $startups = $sameSet
+                ->map(fn (array $row) => $row['application'])
+                ->filter(fn (Application $other) => $this->isStartup($other))
+                ->values();
+            foreach ($startups as $startup) {
+                if (! $this->hasCompleteDraft($startup)) {
+                    return '0.00';
+                }
+            }
+            $startupSum = $this->sumDrafts($startups->filter(fn (Application $startup) => $this->isCompetingDraft($startup)));
+            $developmentSum = $this->sumDrafts(
+                $others->filter(fn (Application $other) => ! $this->isStartup($other) && $this->isCompetingDraft($other))
+            );
+            $room = bcsub(bcsub($beforeSet, $startupSum, 2), $developmentSum, 2);
+        } else {
+            $otherStartupSum = $this->sumDrafts(
+                $others->filter(fn (Application $other) => $this->isStartup($other) && $this->isCompetingDraft($other))
+            );
+            $room = bcsub($beforeSet, $otherStartupSum, 2);
+        }
+
+        if (bccomp($room, '0.00', 2) === -1) {
+            $room = '0.00';
+        }
+        if (bccomp($room, $globalRoom, 2) === 1) {
+            return $globalRoom;
+        }
+
+        return $room;
+    }
+
+    public function startupPrioritySupportBlockReason(Competition $competition, Application $application): ?string
+    {
+        if (! $competition->isOmladinskoProfile() || $this->isStartup($application)) {
+            return null;
+        }
+
+        $scored = $this->scoredRankedApplications($competition);
+        $self = $scored->first(fn (array $row) => (int) $row['application']->id === (int) $application->id);
+        if ($self === null) {
+            return null;
+        }
+
+        $pendingStartup = $scored->contains(function (array $row) use ($self) {
+            return (int) $row['rank'] === (int) $self['rank']
+                && $row['full_score'] === $self['full_score']
+                && $this->isStartup($row['application'])
+                && ! $this->hasCompleteDraft($row['application']);
+        });
+
+        return $pendingStartup ? self::STARTUP_PRIORITY_PENDING_MESSAGE : null;
     }
 
     public function listCloseBlockReason(Competition $competition): ?string
@@ -219,177 +333,65 @@ final class YouthEqualScoreVotingService
     }
 
     /**
+     * Elektronsko glasanje je ukinuto. Ne kreira i ne mijenja krugove ni glasove.
+     *
      * @param  array<string, mixed>  $input
      */
     public function saveRound(Competition $competition, User $user, array $input): YouthEqualScoreRound
     {
-        $chairman = $this->guardChairmanMutation($competition, $user);
-        $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
-        $competition->refresh();
+        unset($competition, $user, $input);
 
-        if (! $this->canonicalScoring->isYouthPreliminaryRankingReady($competition)) {
-            abort(403, self::RANKING_NOT_READY_MESSAGE);
-        }
-
-        $justification = trim((string) ($input['justification'] ?? ''));
-        if ($justification === '') {
-            throw ValidationException::withMessages([
-                'justification' => self::JUSTIFICATION_REQUIRED_MESSAGE,
-            ]);
-        }
-
-        $selectedIds = $this->selectedIdsFromInput($input);
-        $votesInput = $this->votesFromInput($input);
-        $groupKey = isset($input['group_key']) ? (string) $input['group_key'] : null;
-
-        return DB::transaction(function () use ($competition, $chairman, $user, $justification, $selectedIds, $votesInput, $groupKey) {
-            Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
-            $detected = $this->requireVotableGroup($competition, $groupKey);
-            $this->assertSelectionFits($detected, $selectedIds);
-
-            $group = YouthEqualScoreGroup::query()
-                ->where('competition_id', $competition->id)
-                ->where('group_key', $detected['group_key'])
-                ->lockForUpdate()
-                ->first();
-
-            if ($group === null) {
-                $group = YouthEqualScoreGroup::query()->create([
-                    'competition_id' => $competition->id,
-                    'group_key' => $detected['group_key'],
-                    'full_score' => $detected['full_score'],
-                    'ranking_position' => $detected['ranking_position'],
-                    'applied_rule' => $detected['applied_rule'],
-                ]);
-                $group = YouthEqualScoreGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
-            } else {
-                $group->forceFill(['applied_rule' => $detected['applied_rule']])->save();
-            }
-
-            if ($this->adoptedRound($group) !== null) {
-                abort(403, self::ADOPTED_ROUND_EXISTS_MESSAGE);
-            }
-
-            $unlocked = YouthEqualScoreRound::query()
-                ->where('group_id', $group->id)
-                ->whereNull('locked_at')
-                ->lockForUpdate()
-                ->get();
-
-            if ($unlocked->count() > 1) {
-                abort(409, 'Postoji više od jednog aktivnog nacrta kruga.');
-            }
-
-            $proposalTotal = $this->proposalTotal($detected, $selectedIds);
-            $round = $unlocked->first();
-            if ($round === null) {
-                $nextNo = (int) YouthEqualScoreRound::query()->where('group_id', $group->id)->max('round_no') + 1;
-                $round = YouthEqualScoreRound::query()->create([
-                    'group_id' => $group->id,
-                    'round_no' => $nextNo,
-                    'justification' => $justification,
-                    'budget_before' => $detected['remaining_before'],
-                    'proposal_total' => $proposalTotal,
-                    'created_by_user_id' => $user->id,
-                    'created_by_member_id' => $chairman->id,
-                    'created_by_name' => $this->memberDisplayName($chairman, $user),
-                ]);
-            } else {
-                $round->forceFill([
-                    'justification' => $justification,
-                    'budget_before' => $detected['remaining_before'],
-                    'proposal_total' => $proposalTotal,
-                ])->save();
-            }
-
-            $this->syncRoundApplications($round, $detected, $selectedIds);
-            $this->syncVotes($round, $competition, $user, $votesInput);
-
-            return $round->fresh(['applications', 'votes']);
-        });
+        abort(403, self::VOTING_RETIRED_MESSAGE);
     }
 
+    /**
+     * Elektronsko glasanje je ukinuto. Ne zaključava postojeće krugove.
+     */
     public function lockRound(Competition $competition, User $user, YouthEqualScoreRound $round): YouthEqualScoreRound
     {
-        $chairman = $this->guardChairmanMutation($competition, $user);
+        unset($competition, $user, $round);
 
-        return DB::transaction(function () use ($competition, $chairman, $user, $round) {
-            Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
-            $lockedRound = YouthEqualScoreRound::query()->whereKey($round->id)->lockForUpdate()->firstOrFail();
-            $group = YouthEqualScoreGroup::query()->whereKey($lockedRound->group_id)->lockForUpdate()->firstOrFail();
+        abort(403, self::VOTING_RETIRED_MESSAGE);
+    }
 
-            if ((int) $group->competition_id !== (int) $competition->id) {
-                abort(404, self::ROUND_NOT_IN_COMPETITION_MESSAGE);
-            }
+    /**
+     * Neriješeno izjednačenje po sačuvanim odlukama. Ne čita krugove ni glasove.
+     */
+    public function hasUnresolvedLiveAllocation(Competition $competition): bool
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return false;
+        }
 
-            if ($lockedRound->isLocked()) {
-                abort(403, self::ROUND_LOCKED_MESSAGE);
-            }
+        if (! $this->canonicalScoring->isYouthPreliminaryRankingReady($competition)) {
+            return false;
+        }
 
-            $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
-            $competition->refresh();
-            if (! $this->canonicalScoring->isYouthPreliminaryRankingReady($competition)) {
-                abort(403, self::RANKING_NOT_READY_MESSAGE);
-            }
+        $scored = $this->scoredRankedApplications($competition);
+        $budget = $this->money((string) ($competition->budget ?? 0));
+        $used = '0.00';
 
-            $detected = $this->requireVotableGroup($competition, $group->group_key);
-
-            $selectedIds = $lockedRound->applications()
-                ->where('selected', true)
-                ->pluck('application_id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-            $this->assertSelectionFits($detected, $selectedIds);
-
-            $lockedRound->forceFill([
-                'budget_before' => $detected['remaining_before'],
-                'proposal_total' => $this->proposalTotal($detected, $selectedIds),
-            ])->save();
-            $this->syncRoundApplications($lockedRound, $detected, $selectedIds);
-
-            $seats = $this->activeCanonicalSeats($competition);
-            if ($seats->count() !== 3) {
-                throw ValidationException::withMessages([
-                    'votes' => self::THREE_VOTES_REQUIRED_MESSAGE,
-                ]);
-            }
-
-            $votes = YouthEqualScoreVote::query()
-                ->where('round_id', $lockedRound->id)
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('canonical_seat_no');
-
-            foreach ([1, 2, 3] as $seatNo) {
-                $vote = $votes->get($seatNo);
-                $member = $seats->get($seatNo);
-                if ($vote === null || $member === null) {
-                    throw ValidationException::withMessages([
-                        'votes' => self::THREE_VOTES_REQUIRED_MESSAGE,
-                    ]);
+        foreach ($scored->groupBy('rank')->sortKeys() as $rows) {
+            foreach ($rows->groupBy('full_score') as $sameScore) {
+                $remaining = bcsub($budget, $used, 2);
+                if ($sameScore->count() >= 2) {
+                    $first = $sameScore->first();
+                    $detected = $this->analyzeTiedSet(
+                        (int) $first['rank'],
+                        (string) $first['full_score'],
+                        $sameScore,
+                        $remaining
+                    );
+                    if ($detected !== null) {
+                        return true;
+                    }
                 }
-                if ((int) $vote->commission_member_id !== (int) $member->id) {
-                    throw ValidationException::withMessages([
-                        'votes' => self::SEAT_MEMBER_MISMATCH_MESSAGE,
-                    ]);
-                }
+
+                $used = bcadd($used, $this->sumDrafts($this->competingFromRows($sameScore)), 2);
             }
+        }
 
-            $forCount = $votes->where('vote_value', YouthEqualScoreVote::FOR)->count();
-            $outcome = $forCount >= 2
-                ? YouthEqualScoreRound::OUTCOME_ADOPTED
-                : YouthEqualScoreRound::OUTCOME_REJECTED;
-
-            $lockedRound->forceFill([
-                'locked_at' => now(),
-                'outcome' => $outcome,
-                'locked_by_user_id' => $user->id,
-                'locked_by_member_id' => $chairman->id,
-                'locked_by_name' => $this->memberDisplayName($chairman, $user),
-            ])->save();
-
-            return $lockedRound->fresh(['applications', 'votes']);
-        });
+        return false;
     }
 
     /**
@@ -761,6 +763,9 @@ final class YouthEqualScoreVotingService
                 'business_stage' => (string) $application->business_stage,
                 'requested_amount' => $application->requested_amount !== null
                     ? $this->money((string) $application->requested_amount)
+                    : null,
+                'approved_amount' => $application->approved_amount !== null
+                    ? $this->money((string) $application->approved_amount)
                     : null,
                 'draft_amount' => $this->money((string) ($application->approved_amount ?? 0)),
                 'applied_cap_percent' => $application->youth_applied_cap_percent !== null

@@ -162,7 +162,9 @@ class YouthAllocationGateTest extends TestCase
         $this->assertStringContainsString('name="commission_decision"', $chairmanHtml);
         $this->assertStringContainsString('name="approved_amount"', $chairmanHtml);
         $this->assertStringContainsString('name="commission_justification"', $chairmanHtml);
-        $this->assertStringContainsString('Sačuvaj nacrt', $chairmanHtml);
+        $this->assertStringContainsString('Sačuvaj zaključak', $chairmanHtml);
+        $this->assertStringContainsString('a. Podržava u potpunosti', $chairmanHtml);
+        $this->assertStringContainsString('Zaključak komisije i obrazloženje', $chairmanHtml);
         $belowHeadingPos = strpos($chairmanHtml, 'Prijave ispod minimuma (30 bodova)');
         $adPos = strpos($chairmanHtml, 'AD - Započinjanje');
         $kdPos = strpos($chairmanHtml, 'KD - Započinjanje');

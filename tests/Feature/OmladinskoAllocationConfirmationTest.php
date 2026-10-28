@@ -9,10 +9,14 @@ use App\Models\Competition;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Models\YouthEqualScoreGroup;
 use App\Models\YouthEqualScoreRound;
+use App\Models\YouthEqualScoreRoundApplication;
 use App\Models\YouthEqualScoreVote;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\YouthAllocationDraftService;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
+use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
@@ -118,22 +122,20 @@ class OmladinskoAllocationConfirmationTest extends TestCase
     public function test_fewer_than_three_votes_blocks_confirmation(): void
     {
         $ctx = $this->twoAppsFundsForOne();
-        $this->actingAs($ctx['chairman']->user)
+        $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-equal-score-round', $ctx['competition']), [
                 'justification' => 'Dva glasa.',
                 'selected' => [$ctx['tied'][0]->id],
                 'votes' => [1 => 'for', 2 => 'for'],
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-        $round = YouthEqualScoreRound::query()->firstOrFail();
-        $round->forceFill([
-            'locked_at' => now(),
-            'outcome' => YouthEqualScoreRound::OUTCOME_ADOPTED,
-            'locked_by_user_id' => $ctx['chairman']->user_id,
-            'locked_by_member_id' => $ctx['chairman']->id,
-            'locked_by_name' => $ctx['chairman']->name,
-        ])->save();
+            ]);
+        $response->assertForbidden();
+        $this->assertSame(
+            YouthEqualScoreVotingService::VOTING_RETIRED_MESSAGE,
+            $response->exception?->getMessage()
+        );
+        $this->assertSame(0, YouthEqualScoreRound::query()->count());
+        $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('30000.00', $ctx['tied'][0]->fresh()->approved_amount);
         $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
@@ -197,7 +199,10 @@ class OmladinskoAllocationConfirmationTest extends TestCase
                 'commission_justification' => 'Izmijenjen iznos nakon usvojenog kruga.',
             ]))
             ->assertRedirect()
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors([
+                'approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE,
+            ]);
+        $this->assertSame('30000.00', $ctx['tied'][0]->fresh()->approved_amount);
         $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
@@ -206,6 +211,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             $response->exception?->getMessage()
         );
         $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('30000.00', $ctx['tied'][0]->fresh()->approved_amount);
     }
 
     public function test_statuses_scores_ranks_budget_and_lock_after_confirmation(): void
@@ -604,26 +610,74 @@ class OmladinskoAllocationConfirmationTest extends TestCase
     }
 
     /**
+     * Istorijski zapis. Ne poziva ukinuti upis glasanja.
+     *
+     * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
+     * @param  list<int>  $selected
      * @param  list<string>  $votes
      */
     private function saveAndLock(array $ctx, array $selected, array $votes): YouthEqualScoreRound
     {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.youth-equal-score-round', $ctx['competition']), [
-                'justification' => 'Podrška izjednačenoj prijavi.',
-                'selected' => $selected,
-                'votes' => [1 => $votes[0], 2 => $votes[1], 3 => $votes[2]],
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-        $round = YouthEqualScoreRound::query()
-            ->whereHas('group', fn ($q) => $q->where('competition_id', $ctx['competition']->id))
-            ->whereNull('locked_at')
-            ->firstOrFail();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.youth-equal-score-round.lock', [$ctx['competition'], $round]))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+        $detected = app(YouthEqualScoreVotingService::class)
+            ->detectBoundaryGroups($ctx['competition']->fresh());
+        $groupData = $detected[0] ?? null;
+        $this->assertIsArray($groupData);
+        $selectedIds = array_map('intval', $selected);
+        $proposal = '0.00';
+        foreach ($groupData['applications'] as $snapshot) {
+            if (in_array((int) $snapshot['application_id'], $selectedIds, true)) {
+                $proposal = bcadd($proposal, (string) $snapshot['draft_amount'], 2);
+            }
+        }
+        $forCount = count(array_filter($votes, fn (string $vote) => $vote === YouthEqualScoreVote::FOR));
+        $group = YouthEqualScoreGroup::query()->create([
+            'competition_id' => $ctx['competition']->id,
+            'group_key' => $groupData['group_key'],
+            'full_score' => $groupData['full_score'],
+            'ranking_position' => $groupData['ranking_position'],
+            'applied_rule' => $groupData['applied_rule'],
+        ]);
+        $round = YouthEqualScoreRound::query()->create([
+            'group_id' => $group->id,
+            'round_no' => 1,
+            'justification' => 'Podrška izjednačenoj prijavi.',
+            'budget_before' => $groupData['remaining_before'],
+            'proposal_total' => $proposal,
+            'locked_at' => now(),
+            'outcome' => $forCount >= 2
+                ? YouthEqualScoreRound::OUTCOME_ADOPTED
+                : YouthEqualScoreRound::OUTCOME_REJECTED,
+            'created_by_user_id' => $ctx['chairman']->user_id,
+            'created_by_member_id' => $ctx['chairman']->id,
+            'created_by_name' => $ctx['chairman']->name,
+            'locked_by_user_id' => $ctx['chairman']->user_id,
+            'locked_by_member_id' => $ctx['chairman']->id,
+            'locked_by_name' => $ctx['chairman']->name,
+        ]);
+        foreach ($groupData['applications'] as $snapshot) {
+            YouthEqualScoreRoundApplication::query()->create([
+                'round_id' => $round->id,
+                'application_id' => $snapshot['application_id'],
+                'business_stage' => $snapshot['business_stage'],
+                'requested_amount' => $snapshot['requested_amount'],
+                'draft_amount' => $snapshot['draft_amount'],
+                'applied_cap_percent' => $snapshot['applied_cap_percent'],
+                'selected' => in_array((int) $snapshot['application_id'], $selectedIds, true),
+            ]);
+        }
+        foreach ([1, 2, 3] as $index => $seat) {
+            $member = $ctx['members'][$index];
+            YouthEqualScoreVote::query()->create([
+                'round_id' => $round->id,
+                'canonical_seat_no' => $seat,
+                'commission_member_id' => $member->id,
+                'user_id' => $member->user_id,
+                'member_name' => $member->name,
+                'vote_value' => $votes[$index],
+                'recorded_by_user_id' => $ctx['chairman']->user_id,
+                'voted_at' => now(),
+            ]);
+        }
 
         return $round->fresh();
     }
@@ -640,7 +694,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->saveCapSupport($ctx, $ctx['application']);
         $this->saveCapSupport($ctx, $second);
         $this->saveCapSupport($ctx, $tiedA);
-        $this->saveCapSupport($ctx, $tiedB);
+        $this->forceCompetingSupport($tiedB);
         $ctx['tied'] = [$tiedA, $tiedB];
 
         return $ctx;
@@ -674,6 +728,22 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-draft', $application), $this->capDraft())
             ->assertRedirect()
             ->assertSessionHasNoErrors();
+    }
+
+    private function forceCompetingSupport(Application $application, string $amount = '30000.00'): void
+    {
+        $application->forceFill([
+            'status' => 'approved',
+            'commission_decision' => 'podrzava_potpuno',
+            'approved_amount' => $amount,
+            'signed_by_chairman' => true,
+            'commission_decision_date' => now(),
+            'youth_innovative_tech_startup' => true,
+            'youth_innovative_tech_startup_confirmed_at' => now(),
+            'youth_prior_municipal_youth_funding' => false,
+            'youth_prior_municipal_youth_funding_confirmed_at' => now(),
+            'youth_applied_cap_percent' => 30,
+        ])->save();
     }
 
     private function capDraft(array $overrides = []): array

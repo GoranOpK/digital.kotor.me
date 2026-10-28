@@ -696,6 +696,6 @@ class Competition extends Model
         }
 
         return app(\App\Services\Competitions\YouthEqualScoreVotingService::class)
-            ->detectBoundaryGroups($this) === [];
+            ->hasUnresolvedLiveAllocation($this) === false;
     }
 }

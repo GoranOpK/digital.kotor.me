@@ -116,7 +116,11 @@ final class YouthAllocationDraftService
             ? Application::query()->find($exceptApplicationId)
             : null;
 
-        return $this->youthEqualScoreVoting->remainingBeforeApplication($competition, $application);
+        if ($application !== null) {
+            return $this->youthEqualScoreVoting->liveSupportRoom($competition, $application);
+        }
+
+        return $this->youthEqualScoreVoting->remainingBeforeApplication($competition, null);
     }
 
     /**
@@ -223,12 +227,18 @@ final class YouthAllocationDraftService
                 abort(403, self::BELOW_THRESHOLD_MESSAGE);
             }
 
-            $lowerRankBlock = $this->youthEqualScoreVoting->lowerRankDraftBlockReason($lockedCompetition, $locked);
+            $decision = (string) ($input['commission_decision'] ?? '');
+            $lowerRankBlock = $this->youthEqualScoreVoting->lowerRankDraftBlockReason($lockedCompetition, $locked, $decision);
             if ($lowerRankBlock !== null) {
                 abort(403, $lowerRankBlock);
             }
 
-            $decision = (string) ($input['commission_decision'] ?? '');
+            if ($decision === 'podrzava_potpuno') {
+                $priorityBlock = $this->youthEqualScoreVoting->startupPrioritySupportBlockReason($lockedCompetition, $locked);
+                if ($priorityBlock !== null) {
+                    abort(403, $priorityBlock);
+                }
+            }
             $justification = trim((string) ($input['commission_justification'] ?? ''));
             $approvedAmount = array_key_exists('approved_amount', $input) ? $input['approved_amount'] : null;
             $startup = $this->nullableBoolFromInput($input, 'youth_innovative_tech_startup');
@@ -278,7 +288,7 @@ final class YouthAllocationDraftService
                     ]);
                 }
 
-                $remaining = $this->youthEqualScoreVoting->remainingBeforeApplication($lockedCompetition, $locked);
+                $remaining = $this->youthEqualScoreVoting->liveSupportRoom($lockedCompetition, $locked);
                 if (bccomp($amount, $remaining, 2) === 1) {
                     throw ValidationException::withMessages([
                         'approved_amount' => self::AMOUNT_EXCEEDS_REMAINING_MESSAGE,

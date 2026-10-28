@@ -17,8 +17,8 @@
         'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard,
     ])
 
-    <div class="no-print" style="margin-top: 16px;">
-        <a href="{{ route('evaluation.index') }}" style="color: #6b7280; text-decoration: none;">Nazad na listu</a>
+    <div class="no-print" style="margin: 24px 0 8px 0; text-align: center;">
+        <a href="{{ route('evaluation.index') }}" class="btn btn-primary" style="display: inline-block; margin: 0 8px; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; background: #0B3D91; color: #fff;">Nazad</a>
     </div>
 </div>
 @endsection

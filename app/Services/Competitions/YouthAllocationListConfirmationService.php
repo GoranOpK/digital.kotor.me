@@ -70,6 +70,9 @@ final class YouthAllocationListConfirmationService
     public const LIST_CONFIRMATION_RETIRED_MESSAGE =
         'Potvrda cijele omladinske liste je isključena i ne mijenja pojedinačne odluke.';
 
+    public const LIVE_UNRESOLVED_ALLOCATION_MESSAGE =
+        'Raspodjela nije razriješena dok sve prijave iznad praga nemaju pojedinačne odluke koje staju u budžet poziva.';
+
     public const BELOW_THRESHOLD_REASON =
         'Prijava nije ostvarila minimalni prag od 30 bodova.';
 
@@ -159,53 +162,65 @@ final class YouthAllocationListConfirmationService
 
         $rankingReady = $this->canonicalScoring->isYouthPreliminaryRankingReady($competition);
         $confirmed = $this->isConfirmed($competition);
-        $plan = $rankingReady ? $this->plannedOutcomes($competition) : null;
-        $blockReason = null;
-        if ($rankingReady && ! $confirmed) {
-            $blockReason = $this->validationBlockReason($competition);
-        }
-
         $supported = [];
         $rejected = [];
+        $pending = [];
         $total = '0.00';
-        if ($plan !== null) {
-            foreach ($plan as $row) {
+
+        if ($rankingReady) {
+            $rows = $this->confirmableApplications($competition)
+                ->filter(function (Application $application) {
+                    return ! $application->isEliminatedFromScoring()
+                        && $this->canonicalScoring->youthMeetsMinimumScore($application);
+                })
+                ->sortBy(fn (Application $application) => sprintf(
+                    '%08d-%08d',
+                    (int) ($application->ranking_position ?? PHP_INT_MAX),
+                    (int) $application->id
+                ))
+                ->values();
+
+            foreach ($rows as $application) {
                 $item = [
-                    'application_id' => (int) $row['application']->id,
-                    'business_plan_name' => $row['application']->business_plan_name,
-                    'amount' => $row['approved_amount'],
-                    'ranking_position' => $row['application']->ranking_position,
+                    'application_id' => (int) $application->id,
+                    'business_plan_name' => $application->business_plan_name,
+                    'ranking_position' => $application->ranking_position,
+                    'justification' => $application->commission_justification,
                 ];
-                if ($row['status'] === 'approved') {
-                    $supported[] = $item;
-                    $total = bcadd($total, $this->money((string) ($row['approved_amount'] ?? '0')), 2);
+                if ($application->commission_decision === 'podrzava_potpuno' && $this->hasCompleteDraft($application)) {
+                    $amount = $this->money((string) $application->approved_amount);
+                    $supported[] = $item + ['amount' => $amount];
+                    $total = bcadd($total, $amount, 2);
+                } elseif ($application->commission_decision === 'odbija' && $this->hasCompleteDraft($application)) {
+                    $rejected[] = $item + [
+                        'amount' => '0.00',
+                        'reason' => $application->commission_justification,
+                    ];
                 } else {
-                    $rejected[] = $item + ['reason' => $row['rejection_reason']];
+                    $pending[] = $item + ['amount' => null, 'reason' => null];
                 }
             }
         }
 
         $budget = $this->money((string) ($competition->budget ?? 0));
-        $resolvedGroups = 0;
-        if ($rankingReady) {
-            foreach ($this->youthEqualScoreVoting->detectBoundaryGroups($competition) as $group) {
-                if ($this->adoptedLockedRound($competition, (string) $group['group_key']) !== null) {
-                    $resolvedGroups++;
-                }
-            }
-        }
+        $unresolved = $rankingReady && ! $confirmed && (
+            $pending !== []
+            || $this->youthEqualScoreVoting->detectBoundaryGroups($competition) !== []
+        );
 
         return [
             'visible' => true,
             'ranking_ready' => $rankingReady,
             'confirmed' => $confirmed,
             'can_confirm' => false,
-            'block_reason' => $blockReason,
+            'block_reason' => $unresolved ? self::LIVE_UNRESOLVED_ALLOCATION_MESSAGE : null,
             'supported' => $supported,
             'rejected' => $rejected,
+            'pending' => $pending,
             'total_allocation' => $total,
+            'call_budget' => $budget,
             'remaining_budget' => bcsub($budget, $total, 2),
-            'resolved_groups' => $resolvedGroups,
+            'resolved_groups' => 0,
             'confirmed_at' => $competition->youth_allocation_list_confirmed_at?->format('d.m.Y. H:i'),
             'confirmed_by_name' => $competition->youth_allocation_list_confirmed_by_name,
         ];

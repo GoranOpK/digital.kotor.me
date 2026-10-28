@@ -309,6 +309,9 @@
             width: 100%;
             min-height: 0;
         }
+        .youth-ranking-print-root .youth-decision-amount-grid {
+            grid-template-columns: 1fr !important;
+        }
     }
     @media print {
         body.youth-ranking-print nav,
@@ -449,6 +452,13 @@
 
             <div class="youth-ranking-list-card">
             <h2>Preliminarna rang-lista</h2>
+            @if(count($youthRankingView['above'] ?? []) === 0 && count($youthRankingView['below'] ?? []) === 0)
+                <div style="text-align: center; padding: 40px; color: #6b7280;">
+                    <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema ocijenjenih prijava za ovaj konkurs.</p>
+                    <p style="margin-bottom: 8px; font-size: 14px;">Prijave odbijene zbog nedostatka dokumenata ne prikazuju se u rang listi.</p>
+                </div>
+            @else
+            @if(count($youthRankingView['above'] ?? []) > 0)
             <div class="youth-ranking-table-wrap">
             <table>
                 <thead>
@@ -460,17 +470,18 @@
                         <th style="text-align: center;">Ocjena</th>
                         <th style="text-align: right;">Traženi iznos</th>
                         <th style="text-align: right;">Odobreni iznos</th>
+                        <th style="text-align: center;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($youthRankingView['above'] as $ranked)
+                    @foreach($youthRankingView['above'] as $ranked)
                         @php
                             $score = (float) $ranked->final_score;
-                            $scoreClass = $score >= 40 ? 'score-high' : 'score-medium';
+                            $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                             $youthType = $youthApplicantTypeLabel($ranked);
                             $youthStage = $ranked->business_stage === 'započinjanje' ? 'Započinjanje' : ($ranked->business_stage === 'razvoj' ? 'Razvoj' : null);
                         @endphp
-                        <tr>
+                        <tr style="{{ $ranked->status === 'approved' ? 'background: #d1fae5;' : '' }}">
                             <td>
                                 <span class="ranking-badge">{{ $ranked->ranking_position }}</span>
                             </td>
@@ -488,122 +499,190 @@
                                 {{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2, ',', '.').' €' : '—' }}
                             </td>
                             <td style="text-align: right;">
-                                @if($ranked->approved_amount)
+                                @if($ranked->status === 'approved' && $ranked->approved_amount)
                                     <strong>{{ number_format((float) $ranked->approved_amount, 2, ',', '.') }} €</strong>
                                 @else
                                     <span style="color: #6b7280;">-</span>
                                 @endif
                             </td>
+                            <td style="text-align: center;">
+                                @if($ranked->status === 'approved')
+                                    <span style="font-weight: 600;">✓ Dobitnik sredstava</span>
+                                @else
+                                    <span style="color: #6b7280;">-</span>
+                                @endif
+                            </td>
                         </tr>
-                        @if(($youthRankingView['ranking_ready'] ?? false) && $canEditYouthAllocationDraft)
-                            @php
-                                $youthDraftService = app(\App\Services\Competitions\YouthAllocationDraftService::class);
-                                $remainingForDraft = $youthDraftService->remainingBudget($ranked->competition, $ranked->id);
-                                $youthCap = $youthDraftService->capSnapshot($ranked);
-                                $startupValue = old('youth_innovative_tech_startup', $ranked->getAttributes()['youth_innovative_tech_startup'] ?? null);
-                                $priorValue = old('youth_prior_municipal_youth_funding', $ranked->getAttributes()['youth_prior_municipal_youth_funding'] ?? null);
-                            @endphp
-                            <tr class="youth-ranking-no-print no-print">
-                                <td colspan="7" style="padding: 8px 8px 16px;">
-                                    <form method="POST" action="{{ route('evaluation.youth-allocation-draft', $ranked) }}" class="no-print youth-allocation-draft-form" data-testid="youth-allocation-draft-form">
-                                        @csrf
-                                        <div class="youth-allocation-decision-row" data-testid="youth-allocation-decision-row">
-                                            <div class="youth-allocation-decision-choices">
-                                                <label class="youth-allocation-choice">
-                                                    <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $ranked->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
-                                                    Podržava
-                                                </label>
-                                                <label class="youth-allocation-choice">
-                                                    <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $ranked->commission_decision) === 'odbija' ? 'checked' : '' }} required>
-                                                    Odbija
-                                                </label>
-                                            </div>
-                                            <label class="youth-allocation-field youth-allocation-field-amount">
-                                                Iznos
-                                                <input type="number" step="0.01" min="0" name="approved_amount" value="{{ old('approved_amount', $ranked->approved_amount) }}">
-                                            </label>
-                                            <label class="youth-allocation-field youth-allocation-field-justification">
-                                                Obrazloženje
-                                                <input type="text" name="commission_justification" value="{{ old('commission_justification', $ranked->commission_justification) }}">
-                                            </label>
-                                            <button type="submit" class="btn-primary">Sačuvaj nacrt</button>
-                                        </div>
-                                        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px;" data-testid="youth-allocation-facts">
-                                            <label>
-                                                Inovativni tehnološki start-up
-                                                <select name="youth_innovative_tech_startup" style="margin-left: 6px;">
-                                                    <option value="">—</option>
-                                                    <option value="1" {{ in_array($startupValue, [1, '1', true], true) ? 'selected' : '' }}>Da</option>
-                                                    <option value="0" {{ in_array($startupValue, [0, '0', false], true) ? 'selected' : '' }}>Ne</option>
-                                                </select>
-                                            </label>
-                                            <label>
-                                                Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih
-                                                <select name="youth_prior_municipal_youth_funding" style="margin-left: 6px;">
-                                                    <option value="">—</option>
-                                                    <option value="1" {{ in_array($priorValue, [1, '1', true], true) ? 'selected' : '' }}>Da</option>
-                                                    <option value="0" {{ in_array($priorValue, [0, '0', false], true) ? 'selected' : '' }}>Ne</option>
-                                                </select>
-                                            </label>
-                                        </div>
-                                        @if($youthCap['facts_confirmed'])
-                                            <div style="margin-top: 10px; color: #374151; font-size: 13px;" data-testid="youth-allocation-cap-summary">
-                                                <p style="margin: 0 0 4px;">Inovativni tehnološki start-up: {{ $youthCap['startup'] ? 'Da' : 'Ne' }}</p>
-                                                <p style="margin: 0 0 4px;">Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih: {{ $youthCap['prior_funding'] ? 'Da' : 'Ne' }}</p>
-                                                <p style="margin: 0 0 4px;">Primijenjeni maksimum: {{ $youthCap['percent'] }}% ({{ number_format((float) $youthCap['percent_max'], 2) }} EUR)</p>
-                                                <p style="margin: 0 0 4px;">{{ \App\Services\Competitions\YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE }}</p>
-                                                @if($youthCap['confirmed_by_name'])
-                                                    <p style="margin: 0;">Potvrdio: {{ $youthCap['confirmed_by_name'] }}@if($youthCap['confirmed_at']) — {{ $youthCap['confirmed_at'] }}@endif</p>
-                                                @endif
-                                            </div>
-                                        @endif
-                                        <p style="margin: 8px 0 0; color: #6b7280; font-size: 12px;">
-                                            Traženo: {{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2) : '—' }} EUR.
-                                            Raspoloživo za ovu prijavu: {{ number_format((float) $remainingForDraft, 2) }} EUR.
-                                            Nacrt ne mijenja status prijave.
-                                        </p>
-                                        @error('approved_amount')
-                                            <div class="error-message">{{ $message }}</div>
-                                        @enderror
-                                        @error('commission_justification')
-                                            <div class="error-message">{{ $message }}</div>
-                                        @enderror
-                                        @error('commission_decision')
-                                            <div class="error-message">{{ $message }}</div>
-                                        @enderror
-                                        @error('youth_innovative_tech_startup')
-                                            <div class="error-message">{{ $message }}</div>
-                                        @enderror
-                                        @error('youth_prior_municipal_youth_funding')
-                                            <div class="error-message">{{ $message }}</div>
-                                        @enderror
-                                    </form>
-                                </td>
-                            </tr>
-                        @elseif($ranked->commission_decision)
-                            <tr class="youth-ranking-no-print no-print">
-                                <td colspan="7" style="padding: 0 8px 12px; color: #4b5563; font-size: 13px;">
-                                    Nacrt:
-                                    {{ $ranked->commission_decision === 'podrzava_potpuno' ? 'Podržava' : 'Odbija' }}
-                                    @if($ranked->approved_amount)
-                                        — {{ number_format((float) $ranked->approved_amount, 2) }} EUR
-                                    @endif
-                                </td>
-                            </tr>
-                        @endif
-                    @empty
-                        <tr>
-                            <td colspan="7" style="padding: 8px; color: #6b7280;">Nema prijava iznad praga.</td>
-                        </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
             </div>
+            @php
+                $youthHasSavedDecision = collect($youthRankingView['above'])->contains(fn ($row) => filled($row->commission_decision));
+            @endphp
+            @if($canEditYouthAllocationDraft || $youthHasSavedDecision)
+            <div class="info-card commission-decision-section" style="background: transparent; box-shadow: none; padding: 24px 0 0; margin-bottom: 0;">
+                <h2>Zaključak komisije i obrazloženje</h2>
+                @if($canEditYouthAllocationDraft)
+                    <p class="no-print" style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                        Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
+                    </p>
+                @endif
+                @foreach($youthRankingView['above'] as $ranked)
+                    @if(! $canEditYouthAllocationDraft && ! $ranked->commission_decision)
+                        @continue
+                    @endif
+                    @php
+                        $score = (float) $ranked->final_score;
+                        $youthDraftService = app(\App\Services\Competitions\YouthAllocationDraftService::class);
+                        $remainingForDraft = $youthDraftService->remainingBudget($ranked->competition, $ranked->id);
+                        $youthCap = $youthDraftService->capSnapshot($ranked);
+                        $startupValue = old('youth_innovative_tech_startup', $ranked->getAttributes()['youth_innovative_tech_startup'] ?? null);
+                        $priorValue = old('youth_prior_municipal_youth_funding', $ranked->getAttributes()['youth_prior_municipal_youth_funding'] ?? null);
+                    @endphp
+                    <div class="commission-decision-block{{ $ranked->signed_by_chairman ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                        @if($canEditYouthAllocationDraft)
+                            <div class="commission-decision-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb; gap: 12px; flex-wrap: wrap;">
+                                <div>
+                                    <h3 style="font-size: 18px; font-weight: 700; color: #0B3D91; margin: 0 0 4px 0;">
+                                        {{ $ranked->business_plan_name }}
+                                    </h3>
+                                    <p style="font-size: 14px; color: #6b7280; margin: 0;">
+                                        Podnosilac: {{ $ranked->user->name ?? 'N/A' }} |
+                                        Pozicija: <strong>#{{ $ranked->ranking_position }}</strong> |
+                                        Ocjena: <strong>{{ number_format($score, 2) }} / 56</strong>
+                                    </p>
+                                </div>
+                                @if($ranked->commission_decision)
+                                    <span style="display: inline-block; padding: 6px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                                        ✓ Zaključeno
+                                    </span>
+                                @endif
+                            </div>
+                            <form method="POST" action="{{ route('evaluation.youth-allocation-draft', $ranked) }}" class="no-print youth-allocation-draft-form" data-testid="youth-allocation-draft-form">
+                                @csrf
+                                <div style="margin-bottom: 24px;">
+                                    <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 12px;">
+                                        Zaključak komisije: *
+                                    </label>
+                                    <div class="youth-allocation-decision-row" data-testid="youth-allocation-decision-row" style="display: flex; gap: 32px; flex-wrap: wrap;">
+                                        <label class="youth-allocation-choice" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb;">
+                                            <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $ranked->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
+                                            <span style="font-size: 14px; color: #374151; font-weight: 500;">a. Podržava u potpunosti</span>
+                                        </label>
+                                        <label class="youth-allocation-choice" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb;">
+                                            <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $ranked->commission_decision) === 'odbija' ? 'checked' : '' }} required>
+                                            <span style="font-size: 14px; color: #374151; font-weight: 500;">b. Odbija</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="youth-decision-amount-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                                    <label class="youth-allocation-field youth-allocation-field-amount">
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Iznos odobrenih sredstava:</span>
+                                        <input type="number" step="0.01" min="0" name="approved_amount" value="{{ old('approved_amount', $ranked->approved_amount) }}">
+                                    </label>
+                                    <div>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Traženi iznos:</span>
+                                        <div style="padding: 10px 12px; background: #fff; border-radius: 6px; color: #6b7280; font-size: 14px;">
+                                            {{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2, ',', '.') : '—' }} €
+                                        </div>
+                                        <p style="margin: 8px 0 0; color: #6b7280; font-size: 12px;">
+                                            Raspoloživo za ovu prijavu: {{ number_format((float) $remainingForDraft, 2, ',', '.') }} €
+                                        </p>
+                                    </div>
+                                </div>
+                                <label class="youth-allocation-field youth-allocation-field-justification" style="display: block; margin-bottom: 24px;">
+                                    <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Obrazloženje (obavezno za Odbija; kada je iznos manji od traženog — i za Podržava):</span>
+                                    <textarea name="commission_justification" rows="6" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">{{ old('commission_justification', $ranked->commission_justification) }}</textarea>
+                                </label>
+                                <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;" data-testid="youth-allocation-facts">
+                                    <label>
+                                        Inovativni tehnološki start-up
+                                        <select name="youth_innovative_tech_startup" style="margin-left: 6px;">
+                                            <option value="">—</option>
+                                            <option value="1" {{ in_array($startupValue, [1, '1', true], true) ? 'selected' : '' }}>Da</option>
+                                            <option value="0" {{ in_array($startupValue, [0, '0', false], true) ? 'selected' : '' }}>Ne</option>
+                                        </select>
+                                    </label>
+                                    <label>
+                                        Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih
+                                        <select name="youth_prior_municipal_youth_funding" style="margin-left: 6px;">
+                                            <option value="">—</option>
+                                            <option value="1" {{ in_array($priorValue, [1, '1', true], true) ? 'selected' : '' }}>Da</option>
+                                            <option value="0" {{ in_array($priorValue, [0, '0', false], true) ? 'selected' : '' }}>Ne</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                @if($youthCap['facts_confirmed'])
+                                    <div style="margin-bottom: 16px; color: #374151; font-size: 13px;" data-testid="youth-allocation-cap-summary">
+                                        <p style="margin: 0 0 4px;">Inovativni tehnološki start-up: {{ $youthCap['startup'] ? 'Da' : 'Ne' }}</p>
+                                        <p style="margin: 0 0 4px;">Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih: {{ $youthCap['prior_funding'] ? 'Da' : 'Ne' }}</p>
+                                        <p style="margin: 0 0 4px;">Primijenjeni maksimum: {{ $youthCap['percent'] }}% ({{ number_format((float) $youthCap['percent_max'], 2) }} EUR)</p>
+                                        <p style="margin: 0 0 4px;">{{ \App\Services\Competitions\YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE }}</p>
+                                        @if($youthCap['confirmed_by_name'])
+                                            <p style="margin: 0;">Potvrdio: {{ $youthCap['confirmed_by_name'] }}@if($youthCap['confirmed_at']) — {{ $youthCap['confirmed_at'] }}@endif</p>
+                                        @endif
+                                    </div>
+                                @endif
+                                @error('approved_amount')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                                @error('commission_justification')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                                @error('commission_decision')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                                @error('youth_innovative_tech_startup')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                                @error('youth_prior_municipal_youth_funding')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                                <div style="text-align: right;">
+                                    <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; min-width: 160px;">Sačuvaj zaključak</button>
+                                </div>
+                            </form>
+                        @endif
+                        @if($ranked->commission_decision)
+                            <table class="commission-decision-table" style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+                                <tbody>
+                                    <tr>
+                                        <th colspan="2" style="text-align: left; font-size: 16px; font-weight: 700; color: #0B3D91; padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $ranked->business_plan_name }}</th>
+                                    </tr>
+                                    <tr>
+                                        <th style="width: 28%; text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Zaključak</th>
+                                        <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $ranked->commission_decision === 'podrzava_potpuno' ? 'Podržava u potpunosti' : 'Odbija' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Iznos odobrenih sredstava</th>
+                                        <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $ranked->status === 'approved' && $ranked->approved_amount ? number_format((float) $ranked->approved_amount, 2, ',', '.').' €' : '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th style="text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Traženi iznos</th>
+                                        <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2, ',', '.') : '—' }} €</td>
+                                    </tr>
+                                    @if(filled($ranked->commission_justification))
+                                        <tr>
+                                            <th style="text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Obrazloženje</th>
+                                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb; white-space: pre-wrap;">{{ $ranked->commission_justification }}</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+            @endif
+            @endif
+            @endif
+            @if(count($youthRankingView['below'] ?? []) > 0)
             <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
                 <div class="below-minimum-heading" style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
                     ——— Prijave ispod minimuma (30 bodova) ———
                 </div>
-                <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Ispod praga</h3>
+                <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
                 <div class="youth-ranking-table-wrap">
                 <table>
                     <thead>
@@ -645,7 +724,7 @@
                 </table>
                 </div>
             </div>
-            <p style="margin: 16px 0 0; color: #6b7280; font-size: 13px;">Ova lista nije konačna odluka o podršci. Prijave ispod praga ne dobijaju odluku o raspodjeli.</p>
+            @endif
             </div>
             <div class="youth-ranking-no-print no-print" style="margin: 24px 0 8px 0; text-align: center;">
                 <button type="button" onclick="printYouthPreliminaryRanking(this);" class="youth-ranking-print-btn" data-testid="youth-ranking-print">

@@ -1114,37 +1114,22 @@ class EvaluationController extends Controller
 
         $this->youthAllocationDrafts->saveDraft($application, Auth::user(), $validated);
 
-        return redirect()->back()->with('success', 'Nacrt raspodjele je sačuvan.');
+        return redirect()->back()->with('success', 'Zaključak Komisije je uspješno sačuvan.');
     }
 
     /**
-     * Nacrt kruga glasanja izjednačenih youth grupa. Ne potvrđuje listu.
+     * Elektronsko glasanje je ukinuto. Ruta ostaje radi odbijanja starog zahtjeva, bez upisa.
      */
     public function storeYouthEqualScoreRound(Request $request, \App\Models\Competition $competition): RedirectResponse
     {
         $this->abortUnlessOmladinskoEqualScoreVoting($competition);
-        $this->abortIfCommissionProcessingBlocked($competition);
+        unset($request);
 
-        $validated = $request->validate([
-            'group_key' => 'nullable|string|max:191',
-            'justification' => 'required|string|max:5000',
-            'selected' => 'nullable|array',
-            'selected.*' => 'integer',
-            'votes' => 'nullable|array',
-            'votes.1' => 'nullable|in:for,against',
-            'votes.2' => 'nullable|in:for,against',
-            'votes.3' => 'nullable|in:for,against',
-        ], [
-            'justification.required' => YouthEqualScoreVotingService::JUSTIFICATION_REQUIRED_MESSAGE,
-        ]);
-
-        $this->youthEqualScoreVoting->saveRound($competition, Auth::user(), $validated);
-
-        return redirect()->back()->with('success', 'Nacrt kruga glasanja je sačuvan.');
+        abort(403, YouthEqualScoreVotingService::VOTING_RETIRED_MESSAGE);
     }
 
     /**
-     * Zaključavanje kruga. Ne postavlja approved/rejected i ne potvrđuje listu.
+     * Elektronsko glasanje je ukinuto. Ruta ostaje radi odbijanja starog zahtjeva, bez upisa.
      */
     public function lockYouthEqualScoreRound(
         Request $request,
@@ -1152,11 +1137,9 @@ class EvaluationController extends Controller
         \App\Models\YouthEqualScoreRound $round,
     ): RedirectResponse {
         $this->abortUnlessOmladinskoEqualScoreVoting($competition);
-        $this->abortIfCommissionProcessingBlocked($competition);
+        unset($request, $round);
 
-        $this->youthEqualScoreVoting->lockRound($competition, Auth::user(), $round);
-
-        return redirect()->back()->with('success', 'Krug glasanja je zaključan.');
+        abort(403, YouthEqualScoreVotingService::VOTING_RETIRED_MESSAGE);
     }
 
     /**

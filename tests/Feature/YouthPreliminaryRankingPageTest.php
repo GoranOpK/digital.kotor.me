@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Support\CommissionCanonicalSeat;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,6 +68,68 @@ class YouthPreliminaryRankingPageTest extends TestCase
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-equal-score-round-form"', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $memberHtml);
+    }
+
+    public function test_youth_ranking_follows_the_womens_list_standard_and_live_decisions(): void
+    {
+        $ctx = $this->rankingReady();
+        $reason = 'Komisija nije podržala ovu prijavu.';
+
+        $openHtml = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $openHtml);
+        $this->assertStringContainsString('>Status<', $openHtml);
+        $this->assertStringContainsString('Odobreni iznos', $openHtml);
+        $this->assertStringContainsString('Zaključak komisije i obrazloženje', $openHtml);
+        $this->assertStringContainsString('a. Podržava u potpunosti', $openHtml);
+        $this->assertStringContainsString('b. Odbija', $openHtml);
+        $this->assertStringContainsString('Sačuvaj zaključak', $openHtml);
+        $this->assertStringContainsString('>Nazad<', $openHtml);
+        $this->assertStringContainsString('Štampaj', $openHtml);
+        $this->assertStringContainsString('@media (max-width: 768px)', $openHtml);
+        $this->assertStringContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $openHtml);
+        $this->assertStringContainsString('Budžet poziva', $openHtml);
+        $this->assertStringNotContainsString('Zaključi krug', $openHtml);
+        $this->assertStringNotContainsString('Ranije zaključani krugovi', $openHtml);
+        $this->assertStringNotContainsString('tri glasa', $openHtml);
+        $this->assertStringNotContainsString('Potvrdi konačnu listu', $openHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $openHtml);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => $reason,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($reason, $memberHtml);
+        $this->assertStringContainsString('Odbija', $memberHtml);
+        $this->assertStringContainsString('0,00 €', $memberHtml);
+        $this->assertStringContainsString('100.000,00 €', $memberHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberHtml);
+        $this->assertStringNotContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $memberHtml);
+
+        $ctx['competition']->update([
+            'youth_allocation_list_confirmed_at' => now(),
+            'youth_allocation_list_confirmed_by_name' => 'Predsjednik arhive',
+            'youth_allocation_list_confirmed_by_user_id' => $ctx['chairman']->user_id,
+            'youth_allocation_list_confirmed_by_commission_member_id' => $ctx['chairman']->id,
+        ]);
+        $archivedHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Lista je potvrđena i zaključana.', $archivedHtml);
+        $this->assertStringContainsString('Predsjednik arhive', $archivedHtml);
+        $this->assertStringContainsString($reason, $archivedHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $archivedHtml);
     }
 
     public function test_user_outside_the_commission_cannot_open_the_page(): void
