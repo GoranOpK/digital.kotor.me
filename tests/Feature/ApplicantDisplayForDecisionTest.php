@@ -7,6 +7,7 @@ use App\Models\BusinessPlan;
 use App\Models\LegalEntityIdentity;
 use App\Models\PlatformIdentity;
 use App\Models\User;
+use App\Support\UserType;
 use Tests\TestCase;
 
 class ApplicantDisplayForDecisionTest extends TestCase
@@ -22,10 +23,13 @@ class ApplicantDisplayForDecisionTest extends TestCase
         return $application;
     }
 
-    private function withCanonicalLegalEntity(Application $application, string $legalName): Application
-    {
+    private function withCanonicalLegalEntity(
+        Application $application,
+        string $legalName,
+        string $legalForm = LegalEntityIdentity::FORM_DOO
+    ): Application {
         $legal = new LegalEntityIdentity([
-            'legal_form' => LegalEntityIdentity::FORM_DOO,
+            'legal_form' => $legalForm,
             'legal_name' => $legalName,
         ]);
         $platform = new PlatformIdentity([
@@ -40,38 +44,153 @@ class ApplicantDisplayForDecisionTest extends TestCase
         return $application;
     }
 
-    public function test_fizicko_lice_prefers_physical_person_name_over_user_name(): void
+    public function test_registered_name_that_already_contains_doo_is_not_doubled(): void
     {
-        $application = $this->applicationWithUser([
-            'applicant_type' => 'fizicko_lice',
-            'physical_person_name' => 'Snapshot Fizicko',
-        ], 'Profil Korisnica');
+        $application = $this->registeredCompany([
+            'founder_name' => 'Lana Lanić',
+            'director_name' => 'Lana Lanić',
+        ], 'Ana Anić DOO');
 
-        $this->assertSame('Snapshot Fizicko', $application->getApplicantDisplayForDecision());
+        $display = $application->getApplicantDisplayForDecision();
+
+        $this->assertSame(
+            'Ana Anić DOO, koga zastupa osnivačica i izvršna direktorica Lana Lanić.',
+            $display
+        );
+        $this->assertStringNotContainsString('DOO DOO', $display);
+        $this->assertStringNotContainsString('"Ana Anić DOO"', $display);
+        $this->assertNull($application->decisionIdentityBlockReason());
     }
 
-    public function test_fizicko_lice_falls_back_to_user_name_when_snapshot_missing(): void
+    public function test_registered_name_does_not_receive_an_automatic_legal_form_suffix(): void
     {
-        $application = $this->applicationWithUser([
-            'applicant_type' => 'fizicko_lice',
-            'physical_person_name' => null,
-        ], 'Profil Korisnica');
+        $application = $this->registeredCompany([
+            'doo_name' => 'Nositeljka Snapshot',
+            'founder_name' => 'Lana Lanić',
+            'director_name' => 'Lana Lanić',
+        ], 'Firma Alfa');
+        $application->setRelation('businessPlan', new BusinessPlan([
+            'company_name' => 'BP Kombinovani Tekst',
+        ]));
 
-        $this->assertSame('Profil Korisnica', $application->getApplicantDisplayForDecision());
+        $display = $application->getApplicantDisplayForDecision();
+
+        $this->assertSame(
+            'Firma Alfa, koga zastupa osnivačica i izvršna direktorica Lana Lanić.',
+            $display
+        );
+        $this->assertStringNotContainsString('DOO', $display);
+        $this->assertStringNotContainsString('Nositeljka Snapshot', $display);
+        $this->assertStringNotContainsString('BP Kombinovani Tekst', $display);
+        $this->assertStringNotContainsString('Profil Korisnica', $display);
     }
 
-    public function test_fizicko_lice_final_fallback_is_na(): void
+    public function test_only_founder_is_not_presented_as_executive_director_and_blocks_generation(): void
     {
-        $application = $this->applicationWithUser([
-            'applicant_type' => 'fizicko_lice',
-            'physical_person_name' => null,
-        ], '');
-        $application->setRelation('user', new User(['name' => null]));
+        $application = $this->registeredCompany([
+            'doo_name' => 'Jana Janić',
+            'founder_name' => 'Jana Janić',
+            'director_name' => null,
+        ], 'Firma Alfa');
 
-        $this->assertSame('N/A', $application->getApplicantDisplayForDecision());
+        $display = $application->getApplicantDisplayForDecision();
+
+        $this->assertSame('Firma Alfa. Osnivačica: Jana Janić.', $display);
+        $this->assertStringNotContainsString('direktor', mb_strtolower($display));
+        $this->assertSame(
+            Application::DECISION_IDENTITY_REPRESENTATION_MISSING,
+            $application->decisionIdentityBlockReason()
+        );
     }
 
-    public function test_preduzetnica_prefers_preduzetnik_name_and_ignores_founder_director_and_bp_company(): void
+    public function test_only_director_is_the_representative_and_is_not_called_founder(): void
+    {
+        $application = $this->registeredCompany([
+            'doo_name' => 'Mina Minić',
+            'founder_name' => null,
+            'director_name' => 'Mina Minić',
+        ], 'Firma Alfa');
+
+        $this->assertSame(
+            'Firma Alfa, koga zastupa izvršna direktorica Mina Minić.',
+            $application->getApplicantDisplayForDecision()
+        );
+        $this->assertStringNotContainsString('Osnivačica', $application->getApplicantDisplayForDecision());
+        $this->assertNull($application->decisionIdentityBlockReason());
+    }
+
+    public function test_different_founder_and_director_keep_separate_roles(): void
+    {
+        $application = $this->registeredCompany([
+            'doo_name' => 'Treća Osoba',
+            'founder_name' => 'Jana Janić',
+            'director_name' => 'Mina Minić',
+        ], 'Firma Alfa');
+
+        $display = $application->getApplicantDisplayForDecision();
+
+        $this->assertSame(
+            'Firma Alfa, koga zastupa izvršna direktorica Mina Minić. Osnivačica: Jana Janić.',
+            $display
+        );
+        $this->assertStringNotContainsString('Treća Osoba', $display);
+        $this->assertNull($application->decisionIdentityBlockReason());
+    }
+
+    public function test_missing_registered_name_is_not_replaced_by_a_person_or_user_profile(): void
+    {
+        $application = $this->registeredCompany([
+            'doo_name' => 'Jana Janić',
+            'founder_name' => 'Jana Janić',
+            'director_name' => 'Mina Minić',
+        ], null, 'Profil Korisnica');
+        $application->setRelation('businessPlan', new BusinessPlan([
+            'company_name' => 'BP Ne Koristiti Kao Naziv',
+        ]));
+
+        $display = $application->getApplicantDisplayForDecision();
+
+        $this->assertSame('Registrovani naziv nije upisan.', $display);
+        $this->assertStringNotContainsString('Jana Janić', $display);
+        $this->assertStringNotContainsString('Profil Korisnica', $display);
+        $this->assertStringNotContainsString('BP Ne Koristiti Kao Naziv', $display);
+        $this->assertStringNotContainsString('DOO', $display);
+        $this->assertSame(
+            Application::DECISION_IDENTITY_REGISTERED_NAME_MISSING,
+            $application->decisionIdentityBlockReason()
+        );
+    }
+
+    public function test_missing_or_contradictory_representation_blocks_a_new_decision(): void
+    {
+        $missingDirector = $this->registeredCompany([
+            'founder_name' => 'Jana Janić',
+            'director_name' => '   ',
+        ], 'Firma Alfa');
+
+        $this->assertSame(
+            Application::DECISION_IDENTITY_REPRESENTATION_MISSING,
+            $missingDirector->decisionIdentityBlockReason()
+        );
+
+        $contradiction = $this->registeredCompany([
+            'registration_form' => UserType::JOINT_STOCK_COMPANY,
+            'founder_name' => 'Jana Janić',
+            'director_name' => 'Mina Minić',
+        ], 'Firma Alfa');
+
+        $this->assertSame(
+            'Pravni oblik prijave i registrovani oblik se ne slažu.',
+            $contradiction->getApplicantDisplayForDecision()
+        );
+        $this->assertStringNotContainsString('DOO', $contradiction->getApplicantDisplayForDecision());
+        $this->assertSame(
+            Application::DECISION_IDENTITY_LEGAL_FORM_CONTRADICTS,
+            $contradiction->decisionIdentityBlockReason()
+        );
+    }
+
+    public function test_preduzetnica_uses_the_application_name_without_business_area_or_profile(): void
     {
         $application = $this->applicationWithUser([
             'applicant_type' => 'preduzetnica',
@@ -86,142 +205,157 @@ class ApplicantDisplayForDecisionTest extends TestCase
 
         $display = $application->getApplicantDisplayForDecision();
 
-        $this->assertSame(
-            'Preduzetnica Snapshot Preduzetnica koja obavlja djelatnost u turizam.',
-            $display
-        );
+        $this->assertSame('Preduzetnica Snapshot Preduzetnica.', $display);
+        $this->assertStringNotContainsString('turizam', $display);
         $this->assertStringNotContainsString('Osnivac Pogresan', $display);
-        $this->assertStringNotContainsString('Direktor Pogresan', $display);
         $this->assertStringNotContainsString('BP Trgovacki Naziv', $display);
         $this->assertStringNotContainsString('Profil Korisnica', $display);
-    }
+        $this->assertNull($application->decisionIdentityBlockReason());
 
-    public function test_preduzetnica_falls_back_to_user_name_not_founder_or_director(): void
-    {
-        $application = $this->applicationWithUser([
+        $missing = $this->applicationWithUser([
             'applicant_type' => 'preduzetnica',
             'preduzetnik_name' => null,
             'founder_name' => 'Osnivac Legacy',
             'director_name' => 'Direktor Legacy',
-            'business_area' => null,
         ], 'Profil Preduzetnica');
 
-        $display = $application->getApplicantDisplayForDecision();
-
         $this->assertSame(
-            'Preduzetnica Profil Preduzetnica koja obavlja djelatnost.',
-            $display
+            'Ime preduzetnice nije upisano u prijavi.',
+            $missing->getApplicantDisplayForDecision()
         );
-        $this->assertStringNotContainsString('Osnivac Legacy', $display);
-        $this->assertStringNotContainsString('Direktor Legacy', $display);
+        $this->assertStringNotContainsString('Profil Preduzetnica', $missing->getApplicantDisplayForDecision());
+        $this->assertSame(
+            Application::DECISION_IDENTITY_APPLICANT_NAME_MISSING,
+            $missing->decisionIdentityBlockReason()
+        );
     }
 
-    public function test_registered_doo_uses_canonical_legal_name_and_doo_name_ignoring_bp_company(): void
+    public function test_physical_person_uses_only_the_application_name(): void
     {
         $application = $this->applicationWithUser([
-            'applicant_type' => 'doo',
-            'doo_name' => 'Nositeljka Snapshot',
-            'founder_name' => 'Osnivac Fallback',
-            'director_name' => 'Direktor Fallback',
+            'applicant_type' => 'fizicko_lice',
+            'physical_person_name' => 'Snapshot Fizicko',
+        ], 'Profil Korisnica');
+
+        $this->assertSame('Snapshot Fizicko', $application->getApplicantDisplayForDecision());
+        $this->assertNull($application->decisionIdentityBlockReason());
+
+        $missing = $this->applicationWithUser([
+            'applicant_type' => 'fizicko_lice',
+            'physical_person_name' => null,
+        ], 'Profil Korisnica');
+
+        $this->assertSame(
+            'Ime podnositeljke nije upisano u prijavi.',
+            $missing->getApplicantDisplayForDecision()
+        );
+        $this->assertStringNotContainsString('Profil Korisnica', $missing->getApplicantDisplayForDecision());
+        $this->assertStringNotContainsString('DOO', $missing->getApplicantDisplayForDecision());
+        $this->assertStringNotContainsString('Preduzetnica', $missing->getApplicantDisplayForDecision());
+        $this->assertSame(
+            Application::DECISION_IDENTITY_APPLICANT_NAME_MISSING,
+            $missing->decisionIdentityBlockReason()
+        );
+    }
+
+    public function test_other_legal_form_keeps_the_registered_name_and_states_the_form_separately(): void
+    {
+        $application = $this->applicationWithUser([
+            'applicant_type' => 'ostalo',
+            'is_registered' => true,
+            'registration_form' => UserType::JOINT_STOCK_COMPANY,
+            'doo_name' => 'Nositeljka Ostalo',
+            'founder_name' => 'Jana Janić',
+            'director_name' => 'Mina Minić',
         ], 'Profil Korisnica');
         $application->setRelation('businessPlan', new BusinessPlan([
-            'company_name' => 'BP Kombinovani Tekst',
+            'company_name' => 'BP Ignorisati',
         ]));
-        $this->withCanonicalLegalEntity($application, 'Firma Alfa');
+        $this->withCanonicalLegalEntity($application, 'Studio Epsilon', LegalEntityIdentity::FORM_AD);
 
         $display = $application->getApplicantDisplayForDecision();
 
         $this->assertSame(
-            '"Firma Alfa" DOO, koga zastupa osnivačica i izvršna direktorica Nositeljka Snapshot.',
+            'Studio Epsilon, pravni oblik: Akcionarsko društvo, koga zastupa izvršna direktorica Mina Minić. Osnivačica: Jana Janić.',
             $display
         );
-        $this->assertStringNotContainsString('BP Kombinovani Tekst', $display);
-        $this->assertStringNotContainsString('"Profil Korisnica"', $display);
+        $this->assertStringNotContainsString('DOO', $display);
+        $this->assertStringNotContainsString('Nositeljka Ostalo', $display);
+        $this->assertStringNotContainsString('BP Ignorisati', $display);
+        $this->assertNull($application->decisionIdentityBlockReason());
     }
 
-    public function test_doo_nositeljka_fallback_order_with_canonical_legal_name(): void
-    {
-        $withoutDooName = $this->applicationWithUser([
-            'applicant_type' => 'doo',
-            'doo_name' => null,
-            'founder_name' => 'Osnivac Fallback',
-            'director_name' => 'Direktor Fallback',
-        ], 'Profil Korisnica');
-        $withoutDooName->setRelation('businessPlan', new BusinessPlan([
-            'company_name' => 'BP Ignorisati',
-        ]));
-        $this->withCanonicalLegalEntity($withoutDooName, 'Firma Beta');
-
-        $this->assertSame(
-            '"Firma Beta" DOO, koga zastupa osnivačica i izvršna direktorica Osnivac Fallback.',
-            $withoutDooName->getApplicantDisplayForDecision()
-        );
-
-        $founderMissing = $this->applicationWithUser([
-            'applicant_type' => 'doo',
-            'doo_name' => null,
-            'founder_name' => null,
-            'director_name' => 'Direktor Fallback',
-        ], 'Profil Korisnica');
-        $this->withCanonicalLegalEntity($founderMissing, 'Firma Gama');
-
-        $this->assertSame(
-            '"Firma Gama" DOO, koga zastupa osnivačica i izvršna direktorica Direktor Fallback.',
-            $founderMissing->getApplicantDisplayForDecision()
-        );
-
-        $onlyUser = $this->applicationWithUser([
-            'applicant_type' => 'doo',
-            'doo_name' => null,
-            'founder_name' => null,
-            'director_name' => null,
-        ], 'Profil Korisnica');
-        $this->withCanonicalLegalEntity($onlyUser, 'Firma Delta');
-
-        $this->assertSame(
-            '"Firma Delta" DOO, koga zastupa osnivačica i izvršna direktorica Profil Korisnica.',
-            $onlyUser->getApplicantDisplayForDecision()
-        );
-    }
-
-    public function test_planned_doo_without_canonical_legal_entity_does_not_invent_company_name(): void
+    public function test_unregistered_company_applicant_is_a_person_and_ignores_another_companys_legal_name(): void
     {
         $application = $this->applicationWithUser([
             'applicant_type' => 'doo',
-            'doo_name' => 'Nositeljka Bez Firme',
+            'is_registered' => false,
+            'doo_name' => 'Milica Milić',
             'founder_name' => null,
             'director_name' => null,
         ], 'Profil Korisnica');
         $application->setRelation('businessPlan', new BusinessPlan([
             'company_name' => 'BP Ne Koristiti Kao Naziv',
         ]));
+        $this->withCanonicalLegalEntity($application, 'Tuđe Društvo DOO');
 
         $display = $application->getApplicantDisplayForDecision();
 
-        $this->assertSame('Nositeljka Bez Firme', $display);
+        $this->assertSame('Milica Milić', $display);
+        $this->assertStringNotContainsString('DOO', $display);
+        $this->assertStringNotContainsString('Tuđe Društvo', $display);
         $this->assertStringNotContainsString('BP Ne Koristiti Kao Naziv', $display);
-        $this->assertStringNotContainsString('"Profil Korisnica"', $display);
-        $this->assertStringNotContainsString('Profil Korisnica DOO', $display);
-        $this->assertStringNotContainsString(' DOO,', $display);
+        $this->assertNull($application->decisionIdentityBlockReason());
     }
 
-    public function test_ostalo_uses_canonical_legal_name_without_doo_suffix(): void
+    public function test_youth_company_person_is_not_rewritten_and_youth_screens_do_not_use_this_decision_text(): void
     {
         $application = $this->applicationWithUser([
-            'applicant_type' => 'ostalo',
-            'doo_name' => 'Nositeljka Ostalo',
-        ], 'Profil Korisnica');
-        $application->setRelation('businessPlan', new BusinessPlan([
-            'company_name' => 'BP Ignorisati',
-        ]));
-        $this->withCanonicalLegalEntity($application, 'Udruzenje Epsilon');
+            'applicant_type' => 'privredno_drustvo',
+            'is_registered' => false,
+            'doo_name' => 'Milica Milić',
+            'company_legal_form' => 'doo',
+        ], 'Profil Nalog');
 
         $display = $application->getApplicantDisplayForDecision();
 
-        $this->assertSame(
-            '"Udruzenje Epsilon", koga zastupa osnivačica i izvršna direktorica Nositeljka Ostalo.',
-            $display
-        );
-        $this->assertStringNotContainsString('BP Ignorisati', $display);
+        $this->assertSame('Milica Milić', $display);
+        $this->assertStringNotContainsString('DOO', $display);
+        $this->assertStringNotContainsString('Profil Nalog', $display);
+        $this->assertNull($application->decisionIdentityBlockReason());
+
+        foreach ([
+            'resources/views/evaluation/youth-ranking.blade.php',
+            'resources/views/evaluation/_youth_preliminary_ranking.blade.php',
+            'resources/views/evaluation/_youth_equal_score_voting.blade.php',
+            'resources/views/evaluation/_youth_allocation_list_confirmation.blade.php',
+        ] as $relative) {
+            $this->assertStringNotContainsString(
+                'getApplicantDisplayForDecision',
+                (string) file_get_contents(base_path($relative)),
+                $relative
+            );
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function registeredCompany(array $overrides, ?string $legalName, string $userName = 'Profil Korisnica'): Application
+    {
+        $application = $this->applicationWithUser(array_merge([
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'doo_name' => null,
+            'founder_name' => null,
+            'director_name' => null,
+        ], $overrides), $userName);
+
+        if ($legalName !== null) {
+            $this->withCanonicalLegalEntity($application, $legalName);
+        }
+
+        return $application;
     }
 }

@@ -771,62 +771,218 @@ class Application extends Model
         });
     }
 
+    public const DECISION_IDENTITY_REGISTERED_NAME_MISSING =
+        'Odluka se ne može generisati jer prijavi nedostaje registrovani naziv.';
+
+    public const DECISION_IDENTITY_REPRESENTATION_MISSING =
+        'Odluka se ne može generisati jer nije upisano ko zastupa privredno društvo.';
+
+    public const DECISION_IDENTITY_LEGAL_FORM_CONTRADICTS =
+        'Odluka se ne može generisati jer se pravni oblik prijave i registrovani oblik ne slažu.';
+
+    public const DECISION_IDENTITY_APPLICANT_NAME_MISSING =
+        'Odluka se ne može generisati jer prijavi nedostaje ime podnositeljke.';
+
     /**
-     * Vraća tekst podnosioca prijave u formatu za Odluku o dodjeli.
-     * Identitet: Application snapshot gdje postoji; naziv registrovanog DOO iz kanonskog legal entity.
-     * DOO: "NAZIV" DOO, koga zastupa osnivačica i izvršna direktorica [Nositeljka]
-     * Preduzetnica: Preduzetnica [Ime] koja obavlja djelatnost u [oblast]
-     * Fizičko lice: [Ime]
+     * Razlog zašto se nova odluka ne smije generisati. Pregled već zatvorenog konkursa ovo ne poziva.
+     */
+    public function decisionIdentityBlockReason(): ?string
+    {
+        $this->loadMissing(['user.identity.legalEntity']);
+
+        if ($this->applicant_type === 'fizicko_lice') {
+            return $this->cleanDecisionPersonName($this->physical_person_name) !== null
+                ? null
+                : self::DECISION_IDENTITY_APPLICANT_NAME_MISSING;
+        }
+
+        if (in_array($this->applicant_type, ['preduzetnica', 'preduzetnik'], true)) {
+            return $this->cleanDecisionPersonName($this->preduzetnik_name) !== null
+                ? null
+                : self::DECISION_IDENTITY_APPLICANT_NAME_MISSING;
+        }
+
+        if (! in_array($this->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
+            return self::DECISION_IDENTITY_APPLICANT_NAME_MISSING;
+        }
+
+        if (! $this->is_registered) {
+            return $this->cleanDecisionPersonName($this->doo_name) !== null
+                ? null
+                : self::DECISION_IDENTITY_APPLICANT_NAME_MISSING;
+        }
+
+        if ($this->decisionLegalFormConflict()) {
+            return self::DECISION_IDENTITY_LEGAL_FORM_CONTRADICTS;
+        }
+
+        if ($this->registeredCompanyLegalName() === null) {
+            return self::DECISION_IDENTITY_REGISTERED_NAME_MISSING;
+        }
+
+        if ($this->cleanDecisionPersonName($this->director_name) === null) {
+            return self::DECISION_IDENTITY_REPRESENTATION_MISSING;
+        }
+
+        return null;
+    }
+
+    /**
+     * Tekst podnositeljke u odluci. Ne dodaje pravni oblik na naziv i ne uzima ime sa korisničkog naloga.
      */
     public function getApplicantDisplayForDecision(): string
     {
-        $userName = filled($this->user?->name) ? (string) $this->user->name : '';
+        $this->loadMissing(['user.identity.legalEntity']);
 
-        if (in_array($this->applicant_type, ['doo', 'ostalo'], true)) {
-            $legalName = $this->user?->identity?->legalEntity?->legal_name;
-            $companyName = filled($legalName) ? (string) $legalName : '';
-
-            $nositeljka = filled($this->doo_name)
-                ? (string) $this->doo_name
-                : (filled($this->founder_name)
-                    ? (string) $this->founder_name
-                    : (filled($this->director_name)
-                        ? (string) $this->director_name
-                        : $userName));
-
-            if ($companyName === '' && $nositeljka === '') {
-                return 'N/A';
-            }
-
-            $suffix = $this->applicant_type === 'doo' ? ' DOO' : '';
-
-            if ($companyName !== '') {
-                $quoted = str_contains($companyName, '"') ? $companyName : '"' . $companyName . '"';
-                if ($nositeljka !== '') {
-                    return $quoted . $suffix . ', koga zastupa osnivačica i izvršna direktorica ' . $nositeljka . '.';
-                }
-
-                return $quoted . $suffix . '.';
-            }
-
-            // Bez kanonskog legal_name: ne izmišljati naziv iz BP ili user.name.
-            return $nositeljka !== '' ? $nositeljka : 'N/A';
+        if ($this->applicant_type === 'fizicko_lice') {
+            return $this->cleanDecisionPersonName($this->physical_person_name)
+                ?? 'Ime podnositeljke nije upisano u prijavi.';
         }
 
         if ($this->applicant_type === 'preduzetnica') {
-            $name = filled($this->preduzetnik_name)
-                ? (string) $this->preduzetnik_name
-                : ($userName !== '' ? $userName : 'N/A');
-            $oblast = $this->business_area ? ' u ' . $this->business_area : '';
+            $name = $this->cleanDecisionPersonName($this->preduzetnik_name);
 
-            return 'Preduzetnica ' . $name . ' koja obavlja djelatnost' . $oblast . '.';
+            return $name !== null
+                ? 'Preduzetnica '.$name.'.'
+                : 'Ime preduzetnice nije upisano u prijavi.';
         }
 
-        if (filled($this->physical_person_name)) {
-            return (string) $this->physical_person_name;
+        if ($this->applicant_type === 'preduzetnik') {
+            $name = $this->cleanDecisionPersonName($this->preduzetnik_name);
+
+            return $name !== null
+                ? 'Preduzetnik '.$name.'.'
+                : 'Ime podnositeljke nije upisano u prijavi.';
         }
 
-        return $userName !== '' ? $userName : 'N/A';
+        if (! in_array($this->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
+            return 'Identitet podnositeljke nije utvrđen.';
+        }
+
+        if (! $this->is_registered) {
+            return $this->cleanDecisionPersonName($this->doo_name)
+                ?? 'Ime podnositeljke nije upisano u prijavi.';
+        }
+
+        if ($this->decisionLegalFormConflict()) {
+            return 'Pravni oblik prijave i registrovani oblik se ne slažu.';
+        }
+
+        $legalName = $this->registeredCompanyLegalName();
+        if ($legalName === null) {
+            return 'Registrovani naziv nije upisan.';
+        }
+
+        return $this->formatRegisteredCompanyForDecision($legalName);
+    }
+
+    private function formatRegisteredCompanyForDecision(string $legalName): string
+    {
+        $head = $legalName;
+        $formLabel = $this->decisionLegalFormLabel();
+        if ($formLabel !== null && ! str_contains(mb_strtolower($legalName), mb_strtolower($formLabel))) {
+            $head .= ', pravni oblik: '.$formLabel;
+        }
+
+        $founder = $this->cleanDecisionPersonName($this->founder_name);
+        $director = $this->cleanDecisionPersonName($this->director_name);
+        $samePerson = $founder !== null
+            && $director !== null
+            && mb_strtolower($founder) === mb_strtolower($director);
+
+        if ($samePerson) {
+            return $head.', koga zastupa osnivačica i izvršna direktorica '.$founder.'.';
+        }
+
+        if ($director !== null && $founder !== null) {
+            return $head.', koga zastupa izvršna direktorica '.$director.'. Osnivačica: '.$founder.'.';
+        }
+
+        if ($director !== null) {
+            return $head.', koga zastupa izvršna direktorica '.$director.'.';
+        }
+
+        if ($founder !== null) {
+            return $head.'. Osnivačica: '.$founder.'.';
+        }
+
+        return $head.'.';
+    }
+
+    private function decisionLegalFormLabel(): ?string
+    {
+        $code = $this->decisionCommercialFormCode();
+        if ($code === null || $code === \App\Support\KnCommercialCompanyForm::DOO) {
+            $registration = $this->cleanDecisionPersonName($this->registration_form);
+            if ($code === null && $registration !== null && $this->applicant_type !== 'doo') {
+                return $registration;
+            }
+
+            return null;
+        }
+
+        return \App\Support\KnCommercialCompanyForm::registrationFormLabel($code);
+    }
+
+    private function decisionCommercialFormCode(): ?string
+    {
+        if (\App\Support\KnCommercialCompanyForm::isValid($this->company_legal_form)) {
+            return (string) $this->company_legal_form;
+        }
+
+        return \App\Support\KnCommercialCompanyForm::fromRegistrationForm(
+            is_string($this->registration_form) ? $this->registration_form : null
+        );
+    }
+
+    private function decisionLegalFormConflict(): bool
+    {
+        $companyCode = \App\Support\KnCommercialCompanyForm::isValid($this->company_legal_form)
+            ? (string) $this->company_legal_form
+            : null;
+        $registrationCode = \App\Support\KnCommercialCompanyForm::fromRegistrationForm(
+            is_string($this->registration_form) ? $this->registration_form : null
+        );
+
+        if ($companyCode !== null && $registrationCode !== null && $companyCode !== $registrationCode) {
+            return true;
+        }
+
+        $applicationCode = $companyCode ?? $registrationCode;
+        $identityForm = $this->user?->identity?->legalEntity?->legal_form;
+        $identityForm = is_string($identityForm) && $identityForm !== '' ? $identityForm : null;
+
+        if ($applicationCode !== null && $identityForm !== null && $applicationCode !== $identityForm) {
+            return true;
+        }
+
+        if ($this->applicant_type === 'doo') {
+            if ($applicationCode !== null && $applicationCode !== \App\Support\KnCommercialCompanyForm::DOO) {
+                return true;
+            }
+
+            if ($identityForm !== null && $identityForm !== \App\Support\KnCommercialCompanyForm::DOO) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function registeredCompanyLegalName(): ?string
+    {
+        return $this->cleanDecisionPersonName($this->user?->identity?->legalEntity?->legal_name);
+    }
+
+    private function cleanDecisionPersonName(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $name = trim($value);
+
+        return $name === '' ? null : $name;
     }
 
     /**

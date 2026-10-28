@@ -3094,6 +3094,13 @@ class AdminController extends Controller
                     ->route('admin.competitions.ranking', $competition)
                     ->withErrors(['error' => $equalScoreBlock]);
             }
+
+            $identityBlock = $this->decisionIdentityBlockMessage($competition);
+            if ($identityBlock !== null) {
+                return redirect()
+                    ->route('admin.competitions.ranking', $competition)
+                    ->withErrors(['error' => $identityBlock]);
+            }
         }
 
         $documentData = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)
@@ -3103,6 +3110,33 @@ class AdminController extends Controller
             'isSuperAdmin' => $isSuperAdmin,
             'isChairman' => $isChairman,
         ]));
+    }
+
+    private function decisionIdentityBlockMessage(Competition $competition): ?string
+    {
+        $winners = Application::query()
+            ->where('competition_id', $competition->id)
+            ->whereNotNull('approved_amount')
+            ->where('approved_amount', '>', 0)
+            ->with(['user.identity.legalEntity'])
+            ->orderBy('ranking_position')
+            ->orderBy('id')
+            ->get();
+
+        $lines = [];
+        foreach ($winners as $winner) {
+            $reason = $winner->decisionIdentityBlockReason();
+            if ($reason === null) {
+                continue;
+            }
+
+            $label = filled($winner->business_plan_name)
+                ? (string) $winner->business_plan_name
+                : 'Prijava #'.$winner->id;
+            $lines[] = $label.': '.$reason;
+        }
+
+        return $lines === [] ? null : implode(' ', $lines);
     }
 
     private function assertCompetitionAdminRole(): void

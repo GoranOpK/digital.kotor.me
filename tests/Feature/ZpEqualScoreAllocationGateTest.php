@@ -127,6 +127,42 @@ class ZpEqualScoreAllocationGateTest extends TestCase
             ->assertOk();
     }
 
+    public function test_new_decision_blocks_when_winner_identity_is_missing_and_archive_view_stays_open(): void
+    {
+        [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 50000, requested: 30000);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $start), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 30000,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $dev), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Sredstva dodijeljena prijavi za započinjanje.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $start->forceFill(['preduzetnik_name' => null])->save();
+
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->get(route('admin.competitions.decision', $competition))
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors([
+                'error' => $start->business_plan_name.': '.Application::DECISION_IDENTITY_APPLICANT_NAME_MISSING,
+            ]);
+
+        $competition->forceFill(['status' => 'completed', 'closed_at' => now()])->save();
+
+        $this->actingAs($president->user)
+            ->get(route('admin.competitions.decision', $competition))
+            ->assertOk()
+            ->assertSee('Ime preduzetnice nije upisano u prijavi.', false);
+    }
+
     public function test_same_stage_podrzava_requires_justification_when_budget_insufficient(): void
     {
         [$competition, $president, $a, $b] = $this->equalScoreSameStagePair(
@@ -325,6 +361,7 @@ class ZpEqualScoreAllocationGateTest extends TestCase
             'user_id' => $this->userWithRole('korisnik')->id,
             'business_plan_name' => 'Biznis plan '.uniqid(),
             'applicant_type' => 'preduzetnica',
+            'preduzetnik_name' => 'Test Preduzetnica',
             'business_stage' => 'započinjanje',
             'status' => 'submitted',
             'submitted_at' => now()->subDays(25),
