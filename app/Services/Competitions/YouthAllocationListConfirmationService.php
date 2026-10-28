@@ -12,7 +12,6 @@ use App\Models\YouthEqualScoreRoundApplication;
 use App\Models\YouthEqualScoreVote;
 use App\Services\CanonicalIndividualScoringService;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Youth 6.17.1 final list confirmation. Confirms the whole list in one transaction.
@@ -67,6 +66,9 @@ final class YouthAllocationListConfirmationService
 
     public const LIST_CONFIRMED_LOCKED_MESSAGE =
         'Konačna lista raspodjele za mlade je potvrđena i zaključana.';
+
+    public const LIST_CONFIRMATION_RETIRED_MESSAGE =
+        'Potvrda cijele omladinske liste je isključena i ne mijenja pojedinačne odluke.';
 
     public const BELOW_THRESHOLD_REASON =
         'Prijava nije ostvarila minimalni prag od 30 bodova.';
@@ -193,17 +195,11 @@ final class YouthAllocationListConfirmationService
             }
         }
 
-        $chairman = $this->activeChairman($competition, $user);
-
         return [
             'visible' => true,
             'ranking_ready' => $rankingReady,
             'confirmed' => $confirmed,
-            'can_confirm' => $chairman !== null
-                && $rankingReady
-                && ! $confirmed
-                && $blockReason === null
-                && ! in_array($competition->status, ['closed', 'completed'], true),
+            'can_confirm' => false,
             'block_reason' => $blockReason,
             'supported' => $supported,
             'rejected' => $rejected,
@@ -217,116 +213,9 @@ final class YouthAllocationListConfirmationService
 
     public function confirm(Competition $competition, User $user, array $ignoredPayload = []): void
     {
-        unset($ignoredPayload);
-        $this->assertOmladinsko($competition);
+        unset($competition, $user, $ignoredPayload);
 
-        if (in_array($competition->status, ['closed', 'completed'], true)) {
-            abort(403, self::COMPLETED_LOCKED_MESSAGE);
-        }
-
-        $chairman = $this->activeChairman($competition, $user);
-        if ($chairman === null) {
-            abort(403, self::CHAIRMAN_ONLY_MESSAGE);
-        }
-
-        DB::transaction(function () use ($competition, $user, $chairman) {
-            $lockedCompetition = Competition::query()
-                ->whereKey($competition->id)
-                ->lockForUpdate()
-                ->first();
-            if ($lockedCompetition === null) {
-                abort(404);
-            }
-
-            $this->assertOmladinsko($lockedCompetition);
-
-            if (in_array($lockedCompetition->status, ['closed', 'completed'], true)) {
-                abort(403, self::COMPLETED_LOCKED_MESSAGE);
-            }
-
-            if ($lockedCompetition->youth_allocation_list_confirmed_at !== null) {
-                abort(403, self::ALREADY_CONFIRMED_MESSAGE);
-            }
-
-            Application::query()
-                ->where('competition_id', $lockedCompetition->id)
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
-
-            $groups = YouthEqualScoreGroup::query()
-                ->where('competition_id', $lockedCompetition->id)
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get();
-            $groupIds = $groups->pluck('id')->all();
-
-            $rounds = $groupIds === []
-                ? collect()
-                : YouthEqualScoreRound::query()
-                    ->whereIn('group_id', $groupIds)
-                    ->orderBy('id')
-                    ->lockForUpdate()
-                    ->get();
-            $roundIds = $rounds->pluck('id')->all();
-
-            if ($roundIds !== []) {
-                YouthEqualScoreRoundApplication::query()
-                    ->whereIn('round_id', $roundIds)
-                    ->orderBy('id')
-                    ->lockForUpdate()
-                    ->get();
-                YouthEqualScoreVote::query()
-                    ->whereIn('round_id', $roundIds)
-                    ->orderBy('id')
-                    ->lockForUpdate()
-                    ->get();
-            }
-
-            $lockedCompetition = $lockedCompetition->fresh();
-            $block = $this->validationBlockReason($lockedCompetition);
-            if ($block !== null) {
-                abort(403, $block);
-            }
-
-            $plan = $this->plannedOutcomes($lockedCompetition);
-            $total = '0.00';
-            foreach ($plan as $row) {
-                if ($row['status'] === 'approved') {
-                    $total = bcadd($total, $this->money((string) $row['approved_amount']), 2);
-                }
-            }
-            $budget = $this->money((string) ($lockedCompetition->budget ?? 0));
-            if (bccomp($total, $budget, 2) === 1) {
-                abort(403, self::TOTAL_EXCEEDS_BUDGET_MESSAGE);
-            }
-
-            $now = now();
-            $chairmanName = $this->memberDisplayName($chairman, $user);
-
-            foreach ($plan as $row) {
-                /** @var Application $application */
-                $application = Application::query()->whereKey($row['application']->id)->first();
-                if ($application === null) {
-                    continue;
-                }
-                $application->forceFill([
-                    'status' => $row['status'],
-                    'commission_decision' => $row['commission_decision'],
-                    'approved_amount' => $row['approved_amount'],
-                    'commission_justification' => $row['commission_justification'],
-                    'rejection_reason' => $row['rejection_reason'],
-                    'commission_decision_date' => $now,
-                ])->save();
-            }
-
-            $lockedCompetition->forceFill([
-                'youth_allocation_list_confirmed_at' => $now,
-                'youth_allocation_list_confirmed_by_user_id' => $user->id,
-                'youth_allocation_list_confirmed_by_commission_member_id' => $chairman->id,
-                'youth_allocation_list_confirmed_by_name' => $chairmanName,
-            ])->save();
-        });
+        abort(403, self::LIST_CONFIRMATION_RETIRED_MESSAGE);
     }
 
     public function validationBlockReason(Competition $competition): ?string

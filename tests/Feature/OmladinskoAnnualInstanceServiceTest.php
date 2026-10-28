@@ -76,7 +76,8 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
-        $second = $this->newOmladinskoCall(2, '100000.00', '40000.01', 2026);
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $second = $this->newOmladinskoCall(2, '100000.00', '100000.01', 2026);
 
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('Budžet drugog Poziva ne smije premašiti preostala godišnja sredstva.');
@@ -88,16 +89,18 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
-        $second = $this->newOmladinskoCall(2, '100000.00', '40000.00', 2026);
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $second = $this->newOmladinskoCall(2, '100000.00', '100000.00', 2026);
 
         $this->service->validateSecondCall($second);
-        $this->assertSame('40000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
     public function test_second_call_below_remaining_after_first_is_allowed(): void
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
         $second = $this->newOmladinskoCall(2, '100000.00', '25000.00', 2026);
 
         $this->service->validateSecondCall($second);
@@ -181,20 +184,20 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->storeAnnualInstanceApplication($first, 'approved', null, '5000.00');
         $this->storeAnnualInstanceApplication($first, 'approved', 'podrzava_potpuno', null);
 
-        $this->assertSame('40000.00', $this->service->confirmedAllocation($first));
-        $this->assertSame('60000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertFalse($this->service->youthAllocationListIsComplete($first));
+        $this->assertSame('0.00', $this->service->confirmedAllocation($first));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
-    public function test_annual_overflow_is_a_controlled_domain_error(): void
+    public function test_incomplete_rows_above_the_budget_do_not_enter_the_annual_sum(): void
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '100000.00');
         $this->createConfirmedApplication($first, '1.00');
 
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage(CompetitionAnnualInstance::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET);
-
-        $this->service->remainingAfterFirst('omladinsko', 2026);
+        $this->assertFalse($this->service->youthAllocationListIsComplete($first));
+        $this->assertSame('0.00', $this->service->confirmedAllocation($first));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
     public function test_example_one_hundred_thousand_sixty_thousand_forty_thousand(): void
@@ -202,7 +205,8 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
 
-        $this->assertSame('40000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertNotSame('40000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
 
         $second = $this->newOmladinskoCall(2, '100000.00', '40000.00', 2026);
         $this->service->validateSecondCall($second);
@@ -214,10 +218,11 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $first = $this->createOmladinskoCall(1, '100000.00', '80000.00', 2026);
         $this->createConfirmedApplication($first, '60000.00');
 
-        $this->assertSame('20000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
-        $this->assertNotSame('40000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('80000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertNotSame('20000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertNotSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
 
-        $second = $this->newOmladinskoCall(2, '100000.00', '40000.00', 2026);
+        $second = $this->newOmladinskoCall(2, '100000.00', '80000.01', 2026);
 
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('Budžet drugog Poziva ne smije premašiti preostala godišnja sredstva.');
@@ -260,23 +265,23 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->service->remainingAfterFirst('zensko', 2026);
     }
 
-    public function test_remaining_after_first_is_zero_when_first_allocation_equals_annual_budget(): void
+    public function test_incomplete_allocation_equal_to_budget_does_not_zero_the_remainder(): void
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '100000.00');
 
-        $this->assertSame('0.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertFalse($this->service->youthAllocationListIsComplete($first));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertNotSame('0.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
-    public function test_second_call_is_rejected_when_remaining_after_first_is_zero(): void
+    public function test_incomplete_full_allocation_does_not_block_a_second_call(): void
     {
         $first = $this->createOmladinskoCall(1, '100000.00', '100000.00', 2026);
         $this->createConfirmedApplication($first, '100000.00');
         $second = $this->newOmladinskoCall(2, '100000.00', '0.01', 2026);
 
-        $this->expectException(DomainException::class);
-        $this->expectExceptionMessage('Budžet drugog Poziva ne smije premašiti preostala godišnja sredstva.');
-
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
         $this->service->validateSecondCall($second);
     }
 
@@ -286,8 +291,8 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->createConfirmedApplication($first, '25000.00');
         $this->storeAnnualInstanceApplication($first, 'approved', 'podrzava_djelimicno', '10000.00');
 
-        $this->assertSame('25000.00', $this->service->confirmedAllocation($first));
-        $this->assertSame('75000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('0.00', $this->service->confirmedAllocation($first));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
     public function test_second_call_applications_do_not_enter_first_call_confirmed_allocation(): void
@@ -297,8 +302,8 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->createConfirmedApplication($first, '15000.00');
         $this->createConfirmedApplication($second, '40000.00');
 
-        $this->assertSame('15000.00', $this->service->confirmedAllocation($first));
-        $this->assertSame('85000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('0.00', $this->service->confirmedAllocation($first));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
     public function test_other_profile_or_year_applications_do_not_affect_first_call_allocation(): void
@@ -325,8 +330,8 @@ class OmladinskoAnnualInstanceServiceTest extends TestCase
         $this->createConfirmedApplication($otherYear, '70000.00');
         $this->createConfirmedApplication($zensko, '30000.00');
 
-        $this->assertSame('20000.00', $this->service->confirmedAllocation($first));
-        $this->assertSame('80000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
+        $this->assertSame('0.00', $this->service->confirmedAllocation($first));
+        $this->assertSame('100000.00', $this->service->remainingAfterFirst('omladinsko', 2026));
     }
 
     private function createOmladinskoCall(int $callNumber, string $annualBudget, string $budget, int $year): Competition

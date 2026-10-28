@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Services\Competitions\CanonicalReviewState;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
-use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\CompetitionRanking;
 use App\Support\NamedMysqlUniqueViolation;
@@ -524,7 +523,7 @@ class CanonicalIndividualScoringService
     }
 
     /**
-     * Read-only close gate after the omladinski list is confirmed.
+     * Read-only close gate once the omladinski list is final.
      * Does not persist ranking, rewrite scores, or change confirmation audit.
      */
     public function youthCloseFreezeBlockReason(Competition $competition): ?string
@@ -535,10 +534,6 @@ class CanonicalIndividualScoringService
 
         if ($this->youthPreliminaryRankingBlockReason($competition) !== null) {
             return self::YOUTH_CLOSE_RANKING_NOT_READY_MESSAGE;
-        }
-
-        if (! app(YouthAllocationListConfirmationService::class)->confirmedListIsIntact($competition)) {
-            return self::YOUTH_CLOSE_LIST_NOT_CONFIRMED_MESSAGE;
         }
 
         if (! $competition->hasChairmanCompletedDecisions()) {

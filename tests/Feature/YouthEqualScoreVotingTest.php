@@ -18,6 +18,7 @@ use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
+use DomainException;
 use App\Support\KnApplicationClassification;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,7 +112,7 @@ class YouthEqualScoreVotingTest extends TestCase
             $response->exception?->getMessage()
         );
         $this->assertSame(0, YouthEqualScoreGroup::query()->count());
-        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
     }
 
     public function test_startup_priority_fully_resolves_without_vote(): void
@@ -212,8 +213,8 @@ class YouthEqualScoreVotingTest extends TestCase
             ->all();
         $this->assertContains('30000.00', $amounts);
         $this->assertContains('20000.00', $amounts);
-        $this->assertSame('evaluated', $ctx['tied'][0]->fresh()->status);
-        $this->assertSame('evaluated', $ctx['tied'][1]->fresh()->status);
+        $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('approved', $ctx['tied'][1]->fresh()->status);
     }
 
     public function test_three_votes_are_required_before_lock(): void
@@ -533,14 +534,15 @@ class YouthEqualScoreVotingTest extends TestCase
         $this->assertSame(YouthEqualScoreVotingService::NOT_YOUTH_MESSAGE, $response->exception?->getMessage());
 
         $this->assertSame(0, YouthEqualScoreGroup::query()->count());
-        $this->assertSame('evaluated', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
     }
 
     public function test_status_stays_evaluated_and_remaining_after_first_is_unchanged(): void
     {
         $ctx = $this->twoAppsFundsForOne();
-        $annualBefore = app(CompetitionAnnualInstance::class)
-            ->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year);
+        $annual = app(CompetitionAnnualInstance::class);
+        $allocationBefore = $annual->confirmedAllocation($ctx['competition']->fresh());
+        $overflowBefore = $this->annualOverflowMessage($annual, (int) $ctx['competition']->year);
         $statuses = collect($ctx['tied'])->map(fn (Application $app) => $app->fresh()->status)->all();
         $amounts = collect($ctx['tied'])->map(fn (Application $app) => $app->fresh()->approved_amount)->all();
 
@@ -548,15 +550,15 @@ class YouthEqualScoreVotingTest extends TestCase
 
         foreach ($ctx['tied'] as $i => $app) {
             $fresh = $app->fresh();
-            $this->assertSame('evaluated', $fresh->status);
+            $this->assertSame('approved', $fresh->status);
             $this->assertSame($statuses[$i], $fresh->status);
             $this->assertSame($amounts[$i], $fresh->approved_amount);
-            $this->assertNotSame('approved', $fresh->status);
-            $this->assertNotSame('rejected', $fresh->status);
         }
+        $this->assertSame($allocationBefore, $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame($overflowBefore, $this->annualOverflowMessage($annual, (int) $ctx['competition']->year));
         $this->assertSame(
-            $annualBefore,
-            app(CompetitionAnnualInstance::class)->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year)
+            CompetitionAnnualInstance::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET,
+            $overflowBefore
         );
         $this->assertSame(
             CompetitionProgramCatalog::STATUS_ACTIVE,
@@ -596,7 +598,7 @@ class YouthEqualScoreVotingTest extends TestCase
             ->assertSessionHasNoErrors();
         $this->assertSame('10000.00', $ctx['startup']->fresh()->approved_amount);
         $this->assertSame('podrzava_potpuno', $ctx['startup']->fresh()->commission_decision);
-        $this->assertSame('evaluated', $ctx['startup']->fresh()->status);
+        $this->assertSame('approved', $ctx['startup']->fresh()->status);
         $this->assertSame(0, YouthEqualScoreRound::query()->count());
         $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
     }
@@ -646,7 +648,7 @@ class YouthEqualScoreVotingTest extends TestCase
         );
         $this->assertSame('30000.00', $ctx['tied'][0]->fresh()->approved_amount);
         $this->assertSame('30000.00', $ctx['tied'][1]->fresh()->approved_amount);
-        $this->assertSame('evaluated', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
         $groups = $voting->detectBoundaryGroups($ctx['competition']->fresh());
         $this->assertCount(1, $groups);
         $this->assertTrue($groups[0]['can_create_round']);
@@ -664,7 +666,7 @@ class YouthEqualScoreVotingTest extends TestCase
         );
         foreach ($ctx['tied'] as $application) {
             $this->assertSame('30000.00', $application->fresh()->approved_amount);
-            $this->assertSame('evaluated', $application->fresh()->status);
+            $this->assertSame('approved', $application->fresh()->status);
         }
         $groups = $voting->detectBoundaryGroups($ctx['competition']->fresh());
         $this->assertCount(1, $groups);
@@ -738,7 +740,7 @@ class YouthEqualScoreVotingTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
         $this->assertSame('10000.00', $lower->fresh()->approved_amount);
-        $this->assertSame('evaluated', $lower->fresh()->status);
+        $this->assertSame('approved', $lower->fresh()->status);
     }
 
     public function test_rejected_round_still_blocks_lower_rank_draft(): void
@@ -909,6 +911,17 @@ class YouthEqualScoreVotingTest extends TestCase
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, tied: list<Application>}
      */
+    private function annualOverflowMessage(CompetitionAnnualInstance $annual, int $year): ?string
+    {
+        try {
+            $annual->remainingAfterFirst('omladinsko', $year);
+
+            return null;
+        } catch (DomainException $exception) {
+            return $exception->getMessage();
+        }
+    }
+
     private function twoAppsFundsForOne(): array
     {
         $ctx = $this->youthReadyToLock();

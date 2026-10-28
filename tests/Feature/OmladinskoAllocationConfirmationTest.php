@@ -19,6 +19,7 @@ use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
 use App\Support\CommissionCanonicalSeat;
 use Database\Seeders\RoleSeeder;
+use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -50,7 +51,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::RANKING_NOT_READY_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
         $this->assertNull($ctx['competition']->fresh()->youth_allocation_list_confirmed_at);
@@ -64,7 +65,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::INCOMPLETE_DRAFTS_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
         $this->assertSame('evaluated', $ctx['application']->fresh()->status);
@@ -81,7 +82,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::FACTS_REQUIRED_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
     }
@@ -95,10 +96,10 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::AMOUNT_INVALID_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
     }
 
     public function test_unresolved_boundary_group_blocks_confirmation(): void
@@ -108,10 +109,10 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::UNRESOLVED_GROUP_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
-        $this->assertSame('evaluated', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
     }
 
     public function test_fewer_than_three_votes_blocks_confirmation(): void
@@ -137,7 +138,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::THREE_VOTES_REQUIRED_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
     }
@@ -150,7 +151,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::REJECTED_WITHOUT_ADOPTED_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
     }
@@ -159,16 +160,30 @@ class OmladinskoAllocationConfirmationTest extends TestCase
     {
         $twoOne = $this->twoAppsFundsForOne();
         $this->saveAndLock($twoOne, [$twoOne['tied'][0]->id], ['for', 'for', 'against']);
-        $this->confirmList($twoOne);
-        $this->assertNotNull($twoOne['competition']->fresh()->youth_allocation_list_confirmed_at);
+        $before = $this->decisionSnapshot($twoOne['competition']);
+        $response = $this->actingAs($twoOne['chairman']->user)
+            ->post(route('evaluation.youth-allocation-list', $twoOne['competition']));
+        $response->assertForbidden();
+        $this->assertSame(
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
+            $response->exception?->getMessage()
+        );
+        $this->assertSame($before, $this->decisionSnapshot($twoOne['competition']));
+        $this->assertNull($twoOne['competition']->fresh()->youth_allocation_list_confirmed_at);
         $this->assertSame('approved', $twoOne['tied'][0]->fresh()->status);
-        $this->assertSame('rejected', $twoOne['tied'][1]->fresh()->status);
+        $this->assertSame('approved', $twoOne['tied'][1]->fresh()->status);
+        $this->assertSame('30000.00', $twoOne['tied'][1]->fresh()->approved_amount);
 
         $threeZero = $this->twoAppsFundsForOne();
+        $beforeThree = $this->decisionSnapshot($threeZero['competition']);
         $this->saveAndLock($threeZero, [$threeZero['tied'][0]->id], ['for', 'for', 'for']);
-        $this->confirmList($threeZero);
+        $this->actingAs($threeZero['chairman']->user)
+            ->post(route('evaluation.youth-allocation-list', $threeZero['competition']))
+            ->assertForbidden();
         $this->assertSame('approved', $threeZero['tied'][0]->fresh()->status);
-        $this->assertSame('rejected', $threeZero['tied'][1]->fresh()->status);
+        $this->assertSame('approved', $threeZero['tied'][1]->fresh()->status);
+        $this->assertSame('podrzava_potpuno', $threeZero['tied'][1]->fresh()->commission_decision);
+        $this->assertSame($beforeThree, $this->decisionSnapshot($threeZero['competition']));
     }
 
     public function test_changed_draft_after_adopted_round_blocks_confirmation(): void
@@ -187,10 +202,10 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
         $response->assertForbidden();
         $this->assertSame(
-            YouthAllocationListConfirmationService::SNAPSHOT_CHANGED_MESSAGE,
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
             $response->exception?->getMessage()
         );
-        $this->assertSame('evaluated', $ctx['tied'][0]->fresh()->status);
+        $this->assertSame('approved', $ctx['tied'][0]->fresh()->status);
     }
 
     public function test_statuses_scores_ranks_budget_and_lock_after_confirmation(): void
@@ -213,40 +228,44 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->assertNotSame((int) $ctx['tied'][1]->fresh()->ranking_position, (int) $rejectedDraft->ranking_position);
         $this->assertSame('odbija', $rejectedDraft->commission_decision);
         $this->assertSame('Komisija nije podržala prijavu.', $rejectedDraft->commission_justification);
-        $this->assertNull($rejectedDraft->approved_amount);
+        $this->assertSame('0.00', $rejectedDraft->approved_amount);
+        $this->assertSame('rejected', $rejectedDraft->status);
         $this->saveAndLock($ctx, [$ctx['tied'][0]->id], ['for', 'for', 'for']);
         $scoreBefore = $ctx['tied'][0]->fresh()->final_score;
         $rankBefore = $ctx['tied'][0]->fresh()->ranking_position;
         $belowRank = $below->fresh()->ranking_position;
         $annual = app(CompetitionAnnualInstance::class);
-        $beforeRemaining = $annual->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year);
+        $this->assertTrue($annual->youthAllocationListIsComplete($ctx['competition']->fresh()));
+        $this->assertSame('120000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        try {
+            $annual->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year);
+            $this->fail('Prekoračenje budžeta mora ostati vidljivo prije potvrde liste.');
+        } catch (DomainException $exception) {
+            $this->assertSame(CompetitionAnnualInstance::MSG_ALLOCATION_EXCEEDS_FIRST_BUDGET, $exception->getMessage());
+        }
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['tied'][0]))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('data-testid="youth-allocation-list-confirm-form"', $html);
-        $this->assertStringContainsString('Potvrdi konačnu listu raspodjele za mlade', $html);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $html);
+        $this->assertStringNotContainsString('Potvrdi konačnu listu raspodjele za mlade', $html);
         $this->assertStringNotContainsString('youth nacrt', $html);
 
-        $this->travelTo(now()->addMinutes(3));
-        $this->actingAs($ctx['chairman']->user)
+        $before = $this->decisionSnapshot($ctx['competition']);
+        $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']), [
                 'youth_allocation_list_confirmed_at' => '2000-01-01 00:00:00',
                 'youth_allocation_list_confirmed_by_user_id' => 999999,
                 'youth_allocation_list_confirmed_by_commission_member_id' => 999999,
                 'youth_allocation_list_confirmed_by_name' => 'Napadač',
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        $confirmed = $ctx['competition']->fresh();
-        $this->assertNotNull($confirmed->youth_allocation_list_confirmed_at);
-        $this->assertSame((int) $ctx['chairman']->user_id, (int) $confirmed->youth_allocation_list_confirmed_by_user_id);
-        $this->assertSame((int) $ctx['chairman']->id, (int) $confirmed->youth_allocation_list_confirmed_by_commission_member_id);
-        $this->assertSame($ctx['chairman']->name, $confirmed->youth_allocation_list_confirmed_by_name);
-        $this->assertNotSame('2000-01-01 00:00:00', $confirmed->youth_allocation_list_confirmed_at->format('Y-m-d H:i:s'));
-        $this->assertNotSame('Napadač', $confirmed->youth_allocation_list_confirmed_by_name);
+            ]);
+        $response->assertForbidden();
+        $this->assertSame(
+            YouthAllocationListConfirmationService::LIST_CONFIRMATION_RETIRED_MESSAGE,
+            $response->exception?->getMessage()
+        );
+        $this->assertSame($before, $this->decisionSnapshot($ctx['competition']));
 
         $supported = $ctx['tied'][0]->fresh();
         $this->assertSame('approved', $supported->status);
@@ -256,79 +275,44 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->assertSame($rankBefore, $supported->ranking_position);
 
         $unselected = $ctx['tied'][1]->fresh();
-        $this->assertSame('rejected', $unselected->status);
-        $this->assertSame('odbija', $unselected->commission_decision);
-        $this->assertNull($unselected->approved_amount);
-        $this->assertSame(
+        $this->assertSame('approved', $unselected->status);
+        $this->assertSame('podrzava_potpuno', $unselected->commission_decision);
+        $this->assertSame('30000.00', $unselected->approved_amount);
+        $this->assertNotSame(
             YouthAllocationListConfirmationService::INSUFFICIENT_FUNDS_REASON,
-            $unselected->rejection_reason
+            (string) $unselected->rejection_reason
         );
 
         $belowFresh = $below->fresh();
-        $this->assertSame('rejected', $belowFresh->status);
+        $this->assertSame('evaluated', $belowFresh->status);
         $this->assertSame($belowRank, $belowFresh->ranking_position);
-        $this->assertSame(
+        $this->assertNotSame(
             YouthAllocationListConfirmationService::BELOW_THRESHOLD_REASON,
-            $belowFresh->rejection_reason
+            (string) $belowFresh->rejection_reason
         );
-        $this->assertNotSame('podrzava_potpuno', $belowFresh->commission_decision);
 
         $draftRejected = $rejectedDraft->fresh();
         $this->assertSame('rejected', $draftRejected->status);
         $this->assertSame('odbija', $draftRejected->commission_decision);
+        $this->assertSame('0.00', $draftRejected->approved_amount);
         $this->assertSame('Komisija nije podržala prijavu.', $draftRejected->commission_justification);
-        $this->assertSame(
-            YouthAllocationListConfirmationService::COMMISSION_REJECT_REASON,
-            $draftRejected->rejection_reason
-        );
+        $this->assertSame('Komisija nije podržala prijavu.', $draftRejected->rejection_reason);
 
-        $allocated = '0.00';
-        foreach ([$ctx['application'], $ctx['tied'][0]] as $app) {
-            $fresh = $app->fresh();
-            if ($fresh->status === 'approved') {
-                $allocated = bcadd($allocated, (string) $fresh->approved_amount, 2);
-            }
-        }
-        $this->assertTrue(bccomp($allocated, (string) $ctx['competition']->budget, 2) <= 0);
-        $afterRemaining = $annual->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year);
-        $this->assertNotSame($beforeRemaining, $afterRemaining);
-        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
-        $this->assertFalse(app(CompetitionAnnualInstance::class)->canCreateSecondCall($ctx['competition']->fresh()));
-
-        $auditAt = $confirmed->youth_allocation_list_confirmed_at->format('Y-m-d H:i:s');
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.youth-allocation-list', $ctx['competition']))
-            ->assertForbidden();
-        $this->assertSame($auditAt, $ctx['competition']->fresh()->youth_allocation_list_confirmed_at->format('Y-m-d H:i:s'));
-        $this->assertSame('approved', $supported->fresh()->status);
+        $this->assertNull($ctx['competition']->fresh()->youth_allocation_list_confirmed_at);
+        $this->assertSame('120000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
+        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
 
         $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $supported))
             ->post(route('evaluation.youth-allocation-draft', $supported), $this->capDraft([
                 'approved_amount' => 10000,
+                'commission_justification' => 'Pojedinačna izmjena i dalje važi.',
             ]))
-            ->assertForbidden();
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.youth-equal-score-round', $ctx['competition']), [
-                'justification' => 'Poslije potvrde.',
-                'selected' => [$ctx['tied'][0]->id],
-            ])
-            ->assertForbidden();
-        $this->assertSame(3, YouthEqualScoreVote::query()
-            ->whereHas('round.group', fn ($q) => $q->where('competition_id', $ctx['competition']->id))
-            ->count());
-
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('admin.competitions.close', $ctx['competition']))
-            ->assertRedirect();
-        $this->assertSame('completed', $ctx['competition']->fresh()->status);
-        $this->assertSame(
-            $afterRemaining,
-            $annual->remainingAfterFirst('omladinsko', (int) $ctx['competition']->year)
-        );
-        $this->assertSame(
-            CompetitionProgramCatalog::STATUS_ACTIVE,
-            CompetitionProgramCatalog::definitions()['omladinsko']['status']
-        );
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $this->assertSame('10000.00', $supported->fresh()->approved_amount);
+        $this->assertSame('approved', $supported->fresh()->status);
     }
 
     public function test_close_keeps_distinct_full_precision_ranks_that_display_the_same(): void
@@ -373,7 +357,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->saveSupport($ctx, $ctx['application'], 5000);
         $this->saveSupport($ctx, $higherFull, 5000);
         $this->saveSupport($ctx, $lowerFull, 5000);
-        $this->confirmList($ctx);
+        $this->seedHistoricalListConfirmation($ctx);
 
         $snapshot = $this->youthCloseFingerprint($ctx['competition'], [
             $ctx['application'],
@@ -420,7 +404,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         foreach ([$ctx['application'], $tiedA, $tiedB, $fourth] as $application) {
             $this->saveSupport($ctx, $application, 5000);
         }
-        $this->confirmList($ctx);
+        $this->seedHistoricalListConfirmation($ctx);
 
         $snapshot = $this->youthCloseFingerprint($ctx['competition'], [
             $ctx['application'],
@@ -532,12 +516,58 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->assertNull(app(ZpEqualScoreAllocationGuard::class)->blockReason($zenskoCompetition->fresh()));
     }
 
-    private function confirmList(array $ctx): void
+    /**
+     * @param  array{competition: Competition, chairman: CommissionMember}  $ctx
+     */
+    private function seedHistoricalListConfirmation(array $ctx): void
     {
-        $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.youth-allocation-list', $ctx['competition']))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+        $scoring = app(CanonicalIndividualScoringService::class);
+        foreach (Application::query()->where('competition_id', $ctx['competition']->id)->orderBy('id')->get() as $application) {
+            if ($scoring->youthMeetsMinimumScore($application) || in_array($application->status, ['approved', 'rejected'], true)) {
+                continue;
+            }
+            $application->forceFill([
+                'status' => 'rejected',
+                'rejection_reason' => YouthAllocationListConfirmationService::BELOW_THRESHOLD_REASON,
+            ])->save();
+        }
+
+        $ctx['competition']->forceFill([
+            'youth_allocation_list_confirmed_at' => now(),
+            'youth_allocation_list_confirmed_by_user_id' => $ctx['chairman']->user_id,
+            'youth_allocation_list_confirmed_by_commission_member_id' => $ctx['chairman']->id,
+            'youth_allocation_list_confirmed_by_name' => $ctx['chairman']->name,
+        ])->save();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decisionSnapshot(Competition $competition): array
+    {
+        $competition = $competition->fresh();
+
+        return [
+            'status' => $competition->status,
+            'confirmed_at' => $competition->youth_allocation_list_confirmed_at?->format('Y-m-d H:i:s'),
+            'confirmed_by_user_id' => $competition->youth_allocation_list_confirmed_by_user_id,
+            'confirmed_by_member_id' => $competition->youth_allocation_list_confirmed_by_commission_member_id,
+            'confirmed_by_name' => $competition->youth_allocation_list_confirmed_by_name,
+            'rows' => Application::query()
+                ->where('competition_id', $competition->id)
+                ->orderBy('id')
+                ->get()
+                ->map(fn (Application $application) => [
+                    'id' => $application->id,
+                    'status' => $application->status,
+                    'commission_decision' => $application->commission_decision,
+                    'approved_amount' => $application->approved_amount,
+                    'commission_justification' => $application->commission_justification,
+                    'rejection_reason' => $application->rejection_reason,
+                    'ranking_position' => $application->ranking_position,
+                    'final_score' => $application->final_score,
+                ])->all(),
+        ];
     }
 
     /**

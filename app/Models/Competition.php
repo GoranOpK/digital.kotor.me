@@ -638,8 +638,7 @@ class Competition extends Model
         }
 
         if ($this->isOmladinskoProfile()) {
-            return app(\App\Services\Competitions\YouthAllocationListConfirmationService::class)
-                ->confirmedListIsIntact($this);
+            return $this->youthAllocationRankingIsFinal();
         }
 
         $allApplications = $this->applications()
@@ -673,5 +672,30 @@ class Competition extends Model
 
             return false;
         });
+    }
+
+    /**
+     * Omladinska lista je konačna kada su pojedinačne odluke potpune, zbir staje u budžet
+     * poziva i nema neriješenog izjednačenja. Stara potvrda liste ostaje važeća za ranije zapise.
+     * Ne zatvara konkurs i ne traži elektronsko glasanje.
+     */
+    private function youthAllocationRankingIsFinal(): bool
+    {
+        if (app(\App\Services\Competitions\YouthAllocationListConfirmationService::class)->confirmedListIsIntact($this)) {
+            return true;
+        }
+
+        $annual = app(\App\Support\CompetitionAnnualInstance::class);
+        if (! $annual->youthAllocationListIsComplete($this)) {
+            return false;
+        }
+
+        $budget = bcadd((string) ($this->budget ?? '0'), '0', 2);
+        if (bccomp($annual->confirmedAllocation($this), $budget, 2) === 1) {
+            return false;
+        }
+
+        return app(\App\Services\Competitions\YouthEqualScoreVotingService::class)
+            ->detectBoundaryGroups($this) === [];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Application;
 use App\Models\Competition;
+use App\Services\CanonicalIndividualScoringService;
 use DomainException;
 
 /**
@@ -85,6 +86,10 @@ final class CompetitionAnnualInstance
     {
         $this->assertBcMath();
 
+        if ($call->isOmladinskoProfile() && ! $this->youthAllocationListIsComplete($call)) {
+            return '0.00';
+        }
+
         $amounts = Application::query()
             ->where('competition_id', $call->id)
             ->where('status', self::CONFIRMED_APPLICATION_STATUS)
@@ -99,6 +104,35 @@ final class CompetitionAnnualInstance
         }
 
         return $this->normalizeDecimal($total);
+    }
+
+    /**
+     * Omladinska lista je konačna za godišnji zbir tek kada je preliminarni rang spreman
+     * i svaka prijava na pragu ili iznad njega ima konačnu pojedinačnu odluku.
+     * Prijave ispod praga ne traže odluku. Stari zapis potvrde cijele liste nije uslov.
+     */
+    public function youthAllocationListIsComplete(Competition $call): bool
+    {
+        if (! $call->isOmladinskoProfile()) {
+            return false;
+        }
+
+        $scoring = app(CanonicalIndividualScoringService::class);
+        if (! $scoring->isYouthPreliminaryRankingReady($call)) {
+            return false;
+        }
+
+        foreach ($scoring->youthScoringCycleApplications($call) as $application) {
+            if (! $scoring->youthMeetsMinimumScore($application)) {
+                continue;
+            }
+
+            if (! $this->applicationHasFinalYouthAllocationDecision($application)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function remainingAfterFirst(string $type, int $year): string
@@ -326,6 +360,39 @@ final class CompetitionAnnualInstance
         }
 
         return null;
+    }
+
+    private function applicationHasFinalYouthAllocationDecision(Application $application): bool
+    {
+        if ($application->status === self::CONFIRMED_APPLICATION_STATUS
+            && $application->commission_decision === self::CONFIRMED_COMMISSION_DECISION
+            && bccomp($this->normalizeDecimal((string) ($application->approved_amount ?? '0')), '0.00', 2) === 1
+            && $this->youthSupportCapFactsAreConfirmed($application)) {
+            return true;
+        }
+
+        if ($application->status === 'rejected' && $application->commission_decision === 'odbija') {
+            return trim((string) $application->commission_justification) !== ''
+                || trim((string) $application->rejection_reason) !== '';
+        }
+
+        return false;
+    }
+
+    /**
+     * Iste činjenice kao YouthAllocationDraftService::capSnapshot(): oba odgovora i oba vremena potvrde.
+     */
+    private function youthSupportCapFactsAreConfirmed(Application $application): bool
+    {
+        $startup = $application->getAttributes()['youth_innovative_tech_startup'] ?? null;
+        $prior = $application->getAttributes()['youth_prior_municipal_youth_funding'] ?? null;
+
+        return $startup !== null
+            && $startup !== ''
+            && $prior !== null
+            && $prior !== ''
+            && $application->youth_innovative_tech_startup_confirmed_at !== null
+            && $application->youth_prior_municipal_youth_funding_confirmed_at !== null;
     }
 
     private function findCall(string $type, int $year, int $callNumber): ?Competition

@@ -27,12 +27,5 @@
         <p style="margin: 0 0 4px; font-size: 13px;">Zbir raspodjele: {{ number_format((float) ($youthAllocationConfirmationBoard['total_allocation'] ?? 0), 2, ',', '.') }} EUR</p>
         <p style="margin: 0 0 4px; font-size: 13px;">Preostali budžet: {{ number_format((float) ($youthAllocationConfirmationBoard['remaining_budget'] ?? 0), 2, ',', '.') }} EUR</p>
         <p style="margin: 0 0 12px; font-size: 13px;">Riješene granične grupe: {{ (int) ($youthAllocationConfirmationBoard['resolved_groups'] ?? 0) }}</p>
-        @if($youthAllocationConfirmationBoard['can_confirm'] ?? false)
-            <p style="margin: 0 0 12px; color: #991b1b; font-weight: 600;">Potvrda zaključava cijelu listu raspodjele za mlade i iznose. Izmjena nacrta, krugova i glasova poslije potvrde nije dozvoljena.</p>
-            <form method="POST" action="{{ route('evaluation.youth-allocation-list', $youthEqualScoreCompetition) }}" class="no-print" data-testid="youth-allocation-list-confirm-form" onsubmit="return confirm('Potvrda zaključava cijelu listu raspodjele za mlade i iznose. Da li želite da nastavite?');">
-                @csrf
-                <button type="submit" class="btn-primary">Potvrdi konačnu listu raspodjele za mlade</button>
-            </form>
-        @endif
     </div>
 @endif

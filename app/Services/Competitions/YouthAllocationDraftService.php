@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Youth 6.15.3 allocation draft: chairman records facts and applies 30/20/15.
- * Does not confirm ranking, resolve equal-score, or change application status.
+ * Youth allocation decision: chairman records one final decision and applies 30/20/15.
+ * Does not confirm the whole list, resolve equal-score voting, or close the competition.
  */
 final class YouthAllocationDraftService
 {
@@ -286,10 +286,13 @@ final class YouthAllocationDraftService
                 }
 
                 $locked->forceFill([
+                    'status' => 'approved',
                     'commission_decision' => 'podrzava_potpuno',
                     'approved_amount' => $amount,
                     'commission_justification' => $justification !== '' ? $justification : null,
+                    'rejection_reason' => null,
                     'commission_decision_date' => now(),
+                    'signed_by_chairman' => true,
                     'youth_innovative_tech_startup' => $startup,
                     'youth_innovative_tech_startup_confirmed_at' => $confirmedAt,
                     'youth_innovative_tech_startup_confirmed_by_user_id' => $user->id,
@@ -306,10 +309,13 @@ final class YouthAllocationDraftService
                 }
 
                 $rejectFill = [
+                    'status' => 'rejected',
                     'commission_decision' => 'odbija',
-                    'approved_amount' => null,
+                    'approved_amount' => '0.00',
                     'commission_justification' => $justification,
+                    'rejection_reason' => $justification,
                     'commission_decision_date' => now(),
+                    'signed_by_chairman' => true,
                     'youth_applied_cap_percent' => null,
                 ];
 
@@ -327,11 +333,6 @@ final class YouthAllocationDraftService
                 throw ValidationException::withMessages([
                     'commission_decision' => 'Morate odabrati zaključak komisije.',
                 ]);
-            }
-
-            $locked->refresh();
-            if ($locked->status !== 'evaluated') {
-                $locked->forceFill(['status' => 'evaluated'])->save();
             }
         });
     }

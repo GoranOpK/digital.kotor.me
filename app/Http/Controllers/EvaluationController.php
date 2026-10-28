@@ -1160,7 +1160,7 @@ class EvaluationController extends Controller
     }
 
     /**
-     * Potvrda konačne liste raspodjele za mlade. Ne generiše Predlog odluke.
+     * Stara potvrda cijele liste je isključena. Ne upisuje odluke, iznose ni statuse.
      */
     public function confirmYouthAllocationList(Request $request, \App\Models\Competition $competition): RedirectResponse
     {
@@ -1169,7 +1169,7 @@ class EvaluationController extends Controller
 
         $this->youthAllocationListConfirmation->confirm($competition, Auth::user(), $request->all());
 
-        return redirect()->back()->with('success', 'Konačna lista raspodjele za mlade je potvrđena.');
+        return redirect()->back();
     }
 
     /**

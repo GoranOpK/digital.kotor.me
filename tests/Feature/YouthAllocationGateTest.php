@@ -95,7 +95,9 @@ class YouthAllocationGateTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
+        $this->assertTrue($ctx['application']->fresh()->signed_by_chairman);
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
         $this->assertSame('podrzava_potpuno', $ctx['application']->fresh()->commission_decision);
         $this->assertSame('5000.00', $ctx['application']->fresh()->approved_amount);
         $this->assertSame(
@@ -395,7 +397,8 @@ class YouthAllocationGateTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
+        $this->assertTrue($ctx['application']->fresh()->signed_by_chairman);
         $this->assertSame('2000.00', $ctx['application']->fresh()->approved_amount);
         $this->assertSame('Djelimična podrška zbog budžeta.', $ctx['application']->fresh()->commission_justification);
     }
@@ -404,9 +407,12 @@ class YouthAllocationGateTest extends TestCase
     {
         $ctx = $this->rankingReady();
         $ctx['application']->update(['requested_amount' => 8000]);
+        $second = $this->addRankedApplication($ctx, 'Druga odluka', 8000);
         $year = (int) $ctx['competition']->year;
         $annual = app(CompetitionAnnualInstance::class);
-        $before = $annual->remainingAfterFirst('omladinsko', $year);
+        $rankBefore = $ctx['application']->fresh()->ranking_position;
+        $secondRank = $second->fresh()->ranking_position;
+        $this->assertSame('100000.00', $annual->remainingAfterFirst('omladinsko', $year));
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
@@ -415,8 +421,43 @@ class YouthAllocationGateTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
 
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
-        $this->assertSame($before, $annual->remainingAfterFirst('omladinsko', $year));
+        $supported = $ctx['application']->fresh();
+        $this->assertSame('approved', $supported->status);
+        $this->assertSame('podrzava_potpuno', $supported->commission_decision);
+        $this->assertSame('8000.00', $supported->approved_amount);
+        $this->assertTrue($supported->signed_by_chairman);
+        $this->assertNotNull($supported->commission_decision_date);
+        $this->assertSame($rankBefore, $supported->ranking_position);
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
+        $this->assertFalse($annual->youthAllocationListIsComplete($ctx['competition']->fresh()));
+        $this->assertSame('0.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('100000.00', $annual->remainingAfterFirst('omladinsko', $year));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $ctx['application']))
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
+                'approved_amount' => 6000,
+                'commission_justification' => 'Iznos je umanjen.',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(2, Application::query()->where('competition_id', $ctx['competition']->id)->count());
+        $this->assertSame('6000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertSame('0.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $second))
+            ->post(route('evaluation.youth-allocation-draft', $second), $this->supportDraft([
+                'approved_amount' => 5000,
+                'commission_justification' => 'Djelimična podrška.',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue($annual->youthAllocationListIsComplete($ctx['competition']->fresh()));
+        $this->assertSame('11000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('11000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('89000.00', $annual->remainingAfterFirst('omladinsko', $year));
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
@@ -427,11 +468,20 @@ class YouthAllocationGateTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $fresh = $ctx['application']->fresh();
-        $this->assertSame('evaluated', $fresh->status);
+        $this->assertSame('rejected', $fresh->status);
         $this->assertSame('odbija', $fresh->commission_decision);
-        $this->assertNull($fresh->approved_amount);
-        $this->assertSame($before, $annual->remainingAfterFirst('omladinsko', $year));
-        $this->assertNotSame('rejected', $fresh->status);
+        $this->assertSame('0.00', $fresh->approved_amount);
+        $this->assertSame('Nema dovoljno sredstava za cijeli iznos.', $fresh->commission_justification);
+        $this->assertSame('Nema dovoljno sredstava za cijeli iznos.', $fresh->rejection_reason);
+        $this->assertTrue($fresh->signed_by_chairman);
+        $this->assertSame($rankBefore, $fresh->ranking_position);
+        $this->assertSame($secondRank, $second->fresh()->ranking_position);
+        $this->assertSame('approved', $second->fresh()->status);
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
+        $this->assertSame(2, Application::query()->where('competition_id', $ctx['competition']->id)->count());
+        $this->assertTrue($annual->youthAllocationListIsComplete($ctx['competition']->fresh()));
+        $this->assertSame('5000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('95000.00', $annual->remainingAfterFirst('omladinsko', $year));
     }
 
     public function test_womens_entries_are_closed_and_forty_five_day_deadline_is_not_applied(): void
@@ -477,7 +527,7 @@ class YouthAllocationGateTest extends TestCase
             ]))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
         $this->assertSame('4000.00', $ctx['application']->fresh()->approved_amount);
     }
 
@@ -511,7 +561,7 @@ class YouthAllocationGateTest extends TestCase
             ]))
             ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
 
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
         $this->assertSame('evaluated', $tied->fresh()->status);
         $this->assertNull($tied->fresh()->commission_decision);
         $this->assertSame(
@@ -595,8 +645,13 @@ class YouthAllocationGateTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
         $this->assertSame(15, (int) $fifteen->fresh()->youth_applied_cap_percent);
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
-        $this->assertSame($remainingAfterFirstBefore, $annual->remainingAfterFirst('omladinsko', $year));
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $twenty->fresh()->status);
+        $this->assertSame('approved', $fifteen->fresh()->status);
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
+        $this->assertSame('10000.00', $remainingAfterFirstBefore);
+        $this->assertSame('6500.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('3500.00', $annual->remainingAfterFirst('omladinsko', $year));
     }
 
     public function test_thirty_percent_beats_fifteen_without_summing(): void
@@ -669,8 +724,10 @@ class YouthAllocationGateTest extends TestCase
             ]))
             ->assertSessionHasNoErrors();
         $this->assertSame(20, (int) $first['application']->fresh()->youth_applied_cap_percent);
-        $this->assertSame('evaluated', $first['application']->fresh()->status);
-        $this->assertSame('evaluated', $second['application']->fresh()->status);
+        $this->assertSame('approved', $first['application']->fresh()->status);
+        $this->assertSame('approved', $second['application']->fresh()->status);
+        $this->assertSame('published', $first['competition']->fresh()->status);
+        $this->assertSame('published', $second['competition']->fresh()->status);
     }
 
     public function test_amount_above_percent_requested_or_remaining_fails(): void
@@ -797,9 +854,12 @@ class YouthAllocationGateTest extends TestCase
 
         $rejected = $ctx['application']->fresh();
         $this->assertSame('odbija', $rejected->commission_decision);
-        $this->assertSame('evaluated', $rejected->status);
+        $this->assertSame('rejected', $rejected->status);
+        $this->assertSame('0.00', $rejected->approved_amount);
+        $this->assertSame('Nema dovoljno sredstava.', $rejected->commission_justification);
+        $this->assertTrue($rejected->signed_by_chairman);
         $this->assertNull($rejected->youth_applied_cap_percent);
-        $this->assertNotSame('rejected', $rejected->status);
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
     }
 
     public function test_malicious_audit_payload_is_ignored_and_chairman_sees_server_facts(): void
@@ -884,7 +944,8 @@ class YouthAllocationGateTest extends TestCase
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft())
             ->assertSessionHasNoErrors();
         $this->assertSame($replacement->id, $ctx['application']->fresh()->youth_innovative_tech_startup_confirmed_by_user_id);
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
+        $this->assertTrue($ctx['application']->fresh()->signed_by_chairman);
     }
 
     public function test_womens_twenty_percent_green_cap_is_unchanged(): void
