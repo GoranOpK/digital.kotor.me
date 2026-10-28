@@ -153,7 +153,9 @@
                         <select name="status" class="form-control @error('status') error @enderror" required>
                             <option value="draft" {{ $displayStatus === 'draft' ? 'selected' : '' }}>Nacrt</option>
                             <option value="published" {{ $displayStatus === 'published' ? 'selected' : '' }}>Objavljen</option>
-                            <option value="completed" {{ $displayStatus === 'completed' ? 'selected' : '' }}>Završen</option>
+                            @if($competition->type !== 'zensko')
+                                <option value="completed" {{ $displayStatus === 'completed' ? 'selected' : '' }}>Završen</option>
+                            @endif
                         </select>
                         @error('status')
                             <div class="error-message">{{ $message }}</div>

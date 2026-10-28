@@ -7,7 +7,20 @@
             <h1 style="color:#fff; font-size:28px; font-weight:700; margin:0;">Odluka o dodjeli sredstava</h1>
         </div>
 
-        @include('competitions.partials.decision-document')
+        @if(isset($storedDecisionError) && $storedDecisionError)
+            <div role="alert" style="background:#fee2e2; color:#7f1d1d; border:2px solid #dc2626; border-radius:12px; padding:16px 20px; margin-bottom:24px; font-weight:700;">
+                {{ $storedDecisionError }}
+            </div>
+        @elseif(isset($storedDecisionHtml))
+            {!! $storedDecisionHtml !!}
+        @else
+            @if(isset($legacyDecisionNotice) && $legacyDecisionNotice)
+                <div role="status" style="background:#fef3c7; color:#78350f; border:2px solid #d97706; border-radius:12px; padding:16px 20px; margin-bottom:24px; font-weight:700;">
+                    {{ $legacyDecisionNotice }}
+                </div>
+            @endif
+            @include('competitions.partials.decision-document')
+        @endif
 
         <div style="text-align: center; margin-top: 24px;" class="no-print">
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))

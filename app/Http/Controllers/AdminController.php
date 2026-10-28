@@ -28,6 +28,10 @@ use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Competitions\ZenskoDecisionProposalCloseResult;
+use App\Services\Competitions\ZenskoDecisionProposalCloseService;
+use App\Services\Competitions\ZenskoDecisionProposalHtmlReader;
+use App\Services\Competitions\ZenskoDecisionProposalReadException;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Support\CommissionProfileConfig;
 use App\Support\CompetitionAnnualInstance;
@@ -1054,6 +1058,16 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
         }
 
+        $requestedStatus = $request->input('status');
+        if (
+            ($competition->type === 'zensko' || $request->input('type') === 'zensko')
+            && in_array($requestedStatus, ['completed', 'closed'], true)
+        ) {
+            return back()->withErrors([
+                'status' => 'Konkurs ženskog preduzetništva zatvara se kroz radnju za zatvaranje konkursa.',
+            ])->withInput();
+        }
+
         $isOmladinsko = $competition->isOmladinskoProfile();
         if ($isOmladinsko) {
             $competition->loadMissing('upNumber');
@@ -1378,6 +1392,12 @@ class AdminController extends Controller
                 : redirect()->back()->withErrors(['error' => $result->error]);
         }
 
+        if ($competition->type === 'zensko') {
+            return $this->finishZenskoClose(
+                app(ZenskoDecisionProposalCloseService::class)->close($competition, auth()->user())
+            );
+        }
+
         // KN-FS-003 §15.4.1: zatvaranje je isključivo poslovna radnja Predsjednika Komisije.
         if (! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za zatvaranje konkursa. Samo predsjednik komisije može zatvarati konkurse.');
@@ -1495,6 +1515,25 @@ class AdminController extends Controller
             'status' => 'completed',
             'closed_at' => now(),
         ]);
+
+        return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren. Status konkursa je Završen.');
+    }
+
+    private function finishZenskoClose(ZenskoDecisionProposalCloseResult $result)
+    {
+        if ($result->abortStatus !== null) {
+            abort($result->abortStatus, (string) $result->abortMessage);
+        }
+
+        if ($result->redirectRoute !== null) {
+            return redirect()
+                ->route($result->redirectRoute, $result->redirectParameters)
+                ->withErrors(['error' => $result->error]);
+        }
+
+        if (! $result->succeeded) {
+            return redirect()->back()->withErrors(['error' => $result->error]);
+        }
 
         return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren. Status konkursa je Završen.');
     }
@@ -3071,6 +3110,10 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
         }
 
+        if ($this->closedZenskoHasStoredProposal($competition)) {
+            return $this->renderStoredZenskoDecision($competition, $isSuperAdmin, $isChairman);
+        }
+
         if ($competition->isCommissionProcessingBlocked()) {
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
@@ -3109,7 +3152,52 @@ class AdminController extends Controller
         return view('admin.competitions.decision', array_merge($documentData, [
             'isSuperAdmin' => $isSuperAdmin,
             'isChairman' => $isChairman,
+            'legacyDecisionNotice' => $this->legacyZenskoDecisionNotice($competition),
         ]));
+    }
+
+    private function closedZenskoHasStoredProposal(Competition $competition): bool
+    {
+        return $competition->type === 'zensko'
+            && in_array($competition->status, ['closed', 'completed'], true)
+            && $competition->zensko_decision_proposal_snapshot_id !== null;
+    }
+
+    private function legacyZenskoDecisionNotice(Competition $competition): ?string
+    {
+        if ($competition->type !== 'zensko' || ! in_array($competition->status, ['closed', 'completed'], true)) {
+            return null;
+        }
+
+        if ($competition->zensko_decision_proposal_snapshot_id !== null) {
+            return null;
+        }
+
+        return ZenskoDecisionProposalHtmlReader::LEGACY_NOTICE;
+    }
+
+    /**
+     * Sačuvani HTML dolazi samo iz čitača koji je provjerio snimak i SHA-256.
+     * Zahtjev korisnika se ne prihvata kao sadržaj dokumenta.
+     */
+    private function renderStoredZenskoDecision(Competition $competition, bool $isSuperAdmin, bool $isChairman)
+    {
+        $storedDecisionHtml = null;
+        $storedDecisionError = null;
+
+        try {
+            $storedDecisionHtml = app(ZenskoDecisionProposalHtmlReader::class)->read($competition);
+        } catch (ZenskoDecisionProposalReadException $exception) {
+            $storedDecisionError = $exception->getMessage();
+        }
+
+        return view('admin.competitions.decision', [
+            'competition' => $competition,
+            'isSuperAdmin' => $isSuperAdmin,
+            'isChairman' => $isChairman,
+            'storedDecisionHtml' => $storedDecisionHtml,
+            'storedDecisionError' => $storedDecisionError,
+        ]);
     }
 
     private function decisionIdentityBlockMessage(Competition $competition): ?string

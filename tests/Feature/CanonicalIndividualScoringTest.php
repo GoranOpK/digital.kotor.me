@@ -17,6 +17,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CanonicalIndividualScoringTest extends TestCase
@@ -1071,6 +1072,8 @@ class CanonicalIndividualScoringTest extends TestCase
         }
 
         $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+
+        Storage::fake('local');
 
         $this->actingAs($president->user)
             ->from(route('admin.competitions.ranking', $competition))

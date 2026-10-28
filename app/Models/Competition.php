@@ -233,6 +233,11 @@ class Competition extends Model
         return $this->hasMany(CompetitionOfficialDecisionCopy::class);
     }
 
+    public function zenskoDecisionProposalSnapshot()
+    {
+        return $this->belongsTo(ZenskoDecisionProposalSnapshot::class, 'zensko_decision_proposal_snapshot_id');
+    }
+
     /**
      * Izračunava datum i vreme isteka konkursa
      */

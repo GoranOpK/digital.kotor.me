@@ -504,6 +504,8 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
         $this->assertSame('draft', $draft->status);
         $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
 
+        Storage::fake('local');
+
         $this->actingAs($president->user)
             ->from(route('admin.competitions.ranking', $competition))
             ->post(route('admin.competitions.close', $competition))
@@ -519,6 +521,7 @@ class ApplicationSubmitLockAndDeadlineTest extends TestCase
     public function test_close_competition_is_forbidden_for_non_chairman_actors(): void
     {
         [$competition, $president, $member, $draft] = $this->createCloseableCompetitionWithDraft();
+        Storage::fake('local');
 
         $admin = User::factory()->create([
             'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
