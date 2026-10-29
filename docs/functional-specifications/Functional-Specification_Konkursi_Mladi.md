@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.18
+**Verzija:** 1.0.19
 **Datum:** 2026-10-29
 
 Povezani dokumenti:
@@ -19,7 +19,7 @@ Povezani dokumenti:
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.18** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.14** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.15** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -58,6 +58,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.16 | 2026-10-23 | KN-PATCH-FS-021 — Individualna ocjena mladih nema privremeni nacrt ni dugme `Sačuvaj nacrt`. Forma ima jedno dugme `Sačuvaj ocjene`: svih 10 kriterijuma je obavezno, potvrda zaključava ocjenu, odustanak ne šalje ni ne čuva. Serverska validacija odbija nepotpun unos i `save_as_draft` bez upisa. Raniji djelimični unosi ostaju u tragu i nijesu konačni dok isti član ne sačuva svih deset. Nacrt dodatnih bodova ostaje zaseban. Kapije M3, prigovora, statusa prijave i kompletne Komisije ostaju. Ženski tok, MMSP i kanonski tok nijesu dirani. |
 | 1.0.17 | 2026-10-28 | KN-PATCH-FS-023 — Prvo uspješno čuvanje pojedinačne odluke Komisije za mlade zaključava ishod, odobreni iznos i obrazloženje. Ponovni unos, uključujući direktan HTTP zahtjev, odbija se bez izmjene. Zaključana odluka prikazuje se samo za čitanje. Iznos van traženog iznosa, limita 30/20/15 ili preostalog budžeta ne upisuje se. Izjednačena prijava i dalje dobija sopstvenu prvu odluku u preostalom budžetu ili odbijanje. Elektronsko glasanje i potvrda cijele liste ne uvode se. Zatvaranje poziva ostaje ručno. Ženski tok nije diran. |
 | 1.0.18 | 2026-10-29 | KN-PATCH-FS-024 — Čuvanje odluke ne zavisi od redoslijeda rang-liste. Iznos se odbija ako bi poslije upisa nestao zakonit završetak: viši rang i otpočinjanje sa istim bodovima moraju i dalje moći dobiti iznos do traženog i limita. Dok činjenice limita nijesu potvrđene rezerviše se 30%. Istovremeni upisi ne mogu zajedno preći budžet. Elektronsko glasanje i potvrda cijele liste ne uvode se. |
+| 1.0.19 | 2026-10-29 | KN-PATCH-FS-025 — Predsjednik poslije konačne rang-liste preuzima radni Word predlog Odluke. Broj Odluke i, po potrebi, datumi sjednica i usmenog obrazloženja unose se ručno. Ručna korekcija ne mijenja vremenske tragove. Potpisani PDF ostaje zvanična verzija kroz postojeće učitavanje. Generisanje nije uslov zatvaranja. Ženski tok nije diran. |
 
 Napomena:
 
@@ -4627,6 +4628,16 @@ Izvor: `BM-ML-054`; `BM-ML-058`.
 **Onda:** arhiviranje ne zavisi od ugovora, isplate, realizacije, M4/M4a, faktura, de minimis dokumentacije, praćenja ugovornih obaveza ni javnog objavljivanja službenih akata. Javni PDF tok Odluke se ne pokreće. Postojeće zatvaranje postavlja `completed` i zaključava prvi Poziv. To je tehnička kapija V1 poslije koje se drugi Poziv može ručno kreirati. Arhiviranje prvog Poziva ne kreira drugi Poziv. Preostala sredstva ostaju evidentirana. Zatvaranje prvog ne mijenja status njegovih prijava, nije brisanje i nije javna objava. Prvi Poziv se ne otključava zbog drugog Poziva. Drugi Poziv može nastati tek nakon što je prvi Poziv zatvoren postojećom akcijom `closeCompetition()` i dobije status `completed`; prije ispunjenja te kapije kreiranje drugog Poziva nije dozvoljeno. `closeCompetition()` ne kreira drugi Poziv automatski. Administrator drugi Poziv pokreće posebno i ručno, tek kada su sve odluke predsjednika završene, `remaining_after_first` je veći od nule i drugi Poziv još ne postoji. Treći Poziv nije dozvoljen.
 
 Izvor: F-05; `BM-ML-051`; `BM-ML-056`; `BM-ML-057`; `KN-PATCH-BM-010`.
+
+## 23.9. Radni predlog Odluke
+
+Kada je konačna rang-lista spremna, predsjednik Komisije može da generiše radni Word predlog Odluke o raspodjeli sredstava.
+
+Prije preuzimanja unosi broj Odluke. Datumi prve, druge i treće sjednice predlažu se iz posljednjeg odgovarajućeg traga tog Poziva, a predsjednik ih može izmijeniti. Datum usmenog obrazloženja predlaže se samo kada je u sistemu jedan pouzdan dan; inače ga predsjednik unosi. Ručna izmjena ne mijenja izvorne tragove.
+
+Dokument služi za pregled i pripremu potpisa. Zvanična verzija je potpisani PDF koji se naknadno učitava postojećim mehanizmom objavljivanja i arhiviranja. Generisanje predloga nije preduslov zatvaranja Poziva i ne pokreće javni PDF tok Odluke.
+
+Izvor: KN-TS-002 §12.14.
 
 ---
 

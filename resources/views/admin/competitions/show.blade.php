@@ -166,7 +166,7 @@
                     @if(isset($showRankingLink) && $showRankingLink)
                         <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                     @endif
-                    @if(in_array($competition->status, ['closed', 'completed']))
+                    @if(in_array($competition->status, ['closed', 'completed']) && ! $competition->isOmladinskoProfile())
                         <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn" style="background: #0b3d91; color: #fff;">Pregled odluke</a>
                     @endif
                 </div>
@@ -192,7 +192,7 @@
                 @if(isset($showRankingLink) && $showRankingLink)
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                 @endif
-                @if(in_array($competition->status, ['closed', 'completed']) && ((isset($isCompetitionAdmin) && $isCompetitionAdmin) || (isset($isCommissionMember) && $isCommissionMember) || (isset($isChairman) && $isChairman) || (isset($isSuperAdmin) && $isSuperAdmin)))
+                @if(! $competition->isOmladinskoProfile() && in_array($competition->status, ['closed', 'completed']) && ((isset($isCompetitionAdmin) && $isCompetitionAdmin) || (isset($isCommissionMember) && $isCommissionMember) || (isset($isChairman) && $isChairman) || (isset($isSuperAdmin) && $isSuperAdmin)))
                     <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn" style="background: #0b3d91; color: #fff;">Pregled odluke</a>
                 @endif
                 @if(isset($isAdmin) && $isAdmin && !in_array($competition->status, ['closed', 'completed']))

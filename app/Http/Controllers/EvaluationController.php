@@ -14,6 +14,10 @@ use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthDecisionProposalBuilder;
+use App\Services\Competitions\YouthDecisionProposalGate;
+use App\Services\Competitions\YouthDecisionDocxWriter;
+use App\Services\Competitions\YouthDecisionSessionDates;
 use App\Services\Competitions\ZenskoCommissionDecisionWriter;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\YouthEqualScoreVotingService;
@@ -1085,6 +1089,10 @@ class EvaluationController extends Controller
         $this->abortIfCommissionProcessingBlocked($competition);
 
         $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
+        $competition->refresh();
+
+        $decisionGate = app(YouthDecisionProposalGate::class);
+        $canGenerateYouthDecision = $decisionGate->denyReason($competition, $user) === null;
 
         return view('evaluation.youth-ranking', [
             'youthRankingView' => $this->canonicalScoring->youthPreliminaryRankingView($competition),
@@ -1093,7 +1101,52 @@ class EvaluationController extends Controller
             'youthEqualScoreVotingBoard' => $this->youthEqualScoreVoting->board($competition, $user),
             'youthEqualScoreCompetition' => $competition,
             'youthAllocationConfirmationBoard' => $this->youthAllocationListConfirmation->board($competition, $user),
+            'canGenerateYouthDecision' => $canGenerateYouthDecision,
+            'youthDecisionDates' => $canGenerateYouthDecision
+                ? app(YouthDecisionSessionDates::class)->forCompetition($competition)
+                : ['first' => null, 'second' => null, 'third' => null, 'oral' => null],
         ]);
+    }
+
+    /**
+     * Radni Word predlog Odluke. Ne upisuje datume, iznose ni zaključke.
+     */
+    public function generateYouthDecision(
+        Request $request,
+        Competition $competition,
+        YouthDecisionProposalGate $gate,
+        YouthDecisionProposalBuilder $builder,
+        YouthDecisionDocxWriter $writer,
+    ): \Symfony\Component\HttpFoundation\BinaryFileResponse {
+        $reason = $gate->denyReason($competition, Auth::user());
+        if ($reason !== null) {
+            abort(403, $reason);
+        }
+
+        $validated = $request->validate([
+            'decision_number' => ['required', 'string', 'max:80'],
+            'first_session_date' => ['required', 'date_format:Y-m-d'],
+            'second_session_date' => ['required', 'date_format:Y-m-d'],
+            'third_session_date' => ['required', 'date_format:Y-m-d'],
+            'oral_presentation_date' => ['required', 'date_format:Y-m-d'],
+        ], [
+            'decision_number.required' => 'Unesite broj Odluke.',
+            'first_session_date.required' => 'Unesite datum prve sjednice.',
+            'second_session_date.required' => 'Unesite datum druge sjednice.',
+            'third_session_date.required' => 'Unesite datum treće sjednice.',
+            'oral_presentation_date.required' => 'Unesite datum usmenih obrazloženja.',
+            'first_session_date.date_format' => 'Datum prve sjednice nije ispravan.',
+            'second_session_date.date_format' => 'Datum druge sjednice nije ispravan.',
+            'third_session_date.date_format' => 'Datum treće sjednice nije ispravan.',
+            'oral_presentation_date.date_format' => 'Datum usmenih obrazloženja nije ispravan.',
+        ]);
+
+        $proposal = $builder->build($competition, $validated, now());
+        $path = $writer->write($proposal);
+
+        return response()->download($path, $proposal->downloadName(), [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ])->deleteFileAfterSend(true);
     }
 
     /**

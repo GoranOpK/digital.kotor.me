@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.14
+**Verzija:** 1.0.15
 **Datum:** 2026-10-29
 
 Povezani dokumenti:
@@ -52,6 +52,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.12 | 2026-10-23 | KN-PATCH-TS-012 — HTTP tok omladinske individualne ocjene nema `save_as_draft`. `storeYouthScore` odbija `save_as_draft` i nepotpunih 10 kriterijuma bez upisa. Forma ima jedno dugme `Sačuvaj ocjene` sa potvrdom; odustanak ne šalje zahtjev. Raniji redovi sa `completed_at` null ostaju; nijesu konačni dok isti član ne sačuva svih 10. `youth_bonus_action` draft ostaje. Kapije M3, prigovora, statusa i kompletne Komisije ostaju. Nema migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.13 | 2026-10-28 | KN-PATCH-TS-013 — `YouthAllocationDraftService::saveDraft` poslije `lockForUpdate` odbija drugi upis ako `commission_decision` već ima `podrzava_potpuno` ili `odbija`. Nema nove tabele ni migracije. HTTP `POST /applications/{application}/youth-allocation-draft` vraća 403 i ne mijenja ishod, iznos ni obrazloženje. Forma zaključane odluke nema polja za unos. Rute glasanja i potvrde liste ostaju 403. `closeCompetition` ostaje ručan. Ženski `storeDecision` nije diran. |
 | 1.0.14 | 2026-10-29 | KN-PATCH-TS-014 — `saveDraft` zaključava Poziv i prijave u jednoj transakciji, pa dva istovremena upisa ne mogu zajedno preći budžet. Redoslijedne zabrane `lowerRankDraftBlockReason` i `startupPrioritySupportBlockReason` više ne blokiraju čuvanje. `AllocationCompletionGuard` prima iznos samo ako neriješene više prijave i otpočinjanje istog ranga i dalje imaju prostor do traženog iznosa i limita; bez potvrđenih činjenica rezervacija je 30%. Odbijanje otpočinjanja dok je razvoj istog ranga podržan vraća 403. Rute glasanja i potvrde liste ostaju 403. |
+| 1.0.15 | 2026-10-29 | KN-PATCH-TS-015 — Predsjednik, tek kad je konačna rang-lista spremna, preuzima radni DOCX Odluke iz službenog template-a. Datumi sjednica su posljednji trag tog Poziva, uz ručnu korekciju koja se ne upisuje u bazu. Potpisani PDF ostaje postojeći mehanizam. Nema nove tabele ni migracije. Ženski generator odluke nije diran. |
 
 Napomena:
 
@@ -2892,6 +2893,27 @@ Izvor: `KN-FS-002` §23.5.
 **Onda:** postojeće zatvaranje ženskog konkursa ostaje nepromijenjeno.
 
 Izvor: ovaj dokument §2.3.
+
+## 12.14. Radni Word predlog Odluke
+
+Poslije konačne rang-liste (`hasChairmanCompletedDecisions()` za `omladinsko`) aktivni predsjednik Komisije tog Poziva vidi akciju „Generiši odluku“ i preuzima `.docx`.
+
+Izvor teksta i izgleda je `resources/templates/pm/odluka-o-raspodjeli-sredstava.docx`. Popunjavanje mijenja tekstualne čvorove i umnožava postojeći blok člana 1. Zaglavlje, stilovi i slika ostaju iz template-a. Ženski HTML predlog se ne koristi. `GET admin.competitions.decision` za `omladinsko` i dalje vraća 403.
+
+Automatski predlošci datuma, samo za taj `competition_id`:
+
+* prva sjednica: posljednji `application_eliminatory_checks.confirmed_at`;
+* druga sjednica: posljednji `evaluation_scores.completed_at`;
+* treća sjednica: posljednji `applications.commission_decision_date` sačuvanog zaključka;
+* usmeno obrazloženje: `application_oral_presentations.held_at` samo ako svi takvi tragovi padaju na isti kalendarski dan; inače polje ostaje prazno.
+
+Predsjednik unosi broj Odluke i može izmijeniti ta četiri datuma prije preuzimanja. U dokument ulaze potvrđene vrijednosti. Upis u navedene kolone se ne radi. Ako automatskog datuma nema, generisanje čeka ručni unos.
+
+Datum Odluke je datum generisanja. Mjesto je Kotor. Godina konkursa, bodovi, odobreni iznosi i `business_plans.required_amount` dolaze iz baze. Identitet se ne dopisuje kada podatak nedostaje. Potpisnik u dokumentu je VD SEKRETARA Vladan Barović. Dostava: broj podržanih podnosilaca, broj aktivnih članova Komisije, Sekretarijat u 2 primjerka i arhiva.
+
+Word fajl je radni dokument. Zvanična verzija ostaje potpisani PDF koji se učitava postojećim mehanizmom poslije zatvaranja. Generisanje nije preduslov zatvaranja i ne uvodi novu arhivu, glasanje ni potvrdu cijele liste.
+
+Izvor: KN-FS-002 §23.9.
 
 ---
 
