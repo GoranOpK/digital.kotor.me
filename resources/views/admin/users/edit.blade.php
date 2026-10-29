@@ -106,6 +106,34 @@
                 </div>
             </div>
 
+            @if(($user->role->name ?? null) === 'korisnik')
+            <div class="mt-6 rounded-md border border-amber-300 bg-amber-50 p-4">
+                <h2 class="text-base font-semibold text-gray-900 mb-2">MMSP testni pristup</h2>
+                <input type="hidden" name="mmsp_test_access" value="0">
+                <label class="flex items-start gap-2 text-sm text-gray-800">
+                    <input
+                        type="checkbox"
+                        name="mmsp_test_access"
+                        value="1"
+                        class="mt-1"
+                        {{ old('mmsp_test_access', ! empty($mmspTestAccessAllowed) ? '1' : '0') == '1' ? 'checked' : '' }}
+                    >
+                    <span>Dozvoli pristup MMSP testnom režimu</span>
+                </label>
+                @if(! empty($mmspTestAccessLatest))
+                    <p class="mt-2 text-xs text-gray-600">
+                        Posljednja promjena:
+                        {{ $mmspTestAccessLatest->action === \App\Models\MmspTestAccessGrant::ACTION_GRANTED ? 'odobreno' : 'ukinuto' }}
+                        ({{ $mmspTestAccessLatest->reason === \App\Models\MmspTestAccessGrant::REASON_ROLE_CHANGED ? 'promjena uloge' : 'ručno' }}),
+                        {{ $mmspTestAccessLatest->created_at?->timezone(config('app.timezone'))->format('d.m.Y H:i') }}
+                        @if($mmspTestAccessLatest->actor)
+                            — {{ $mmspTestAccessLatest->actor->name }}
+                        @endif
+                    </p>
+                @endif
+            </div>
+            @endif
+
             <div class="mt-6 flex gap-4">
                 <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
                     Sačuvaj izmjene

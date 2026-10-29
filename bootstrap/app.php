@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // 'role' je alias koji koristimo u rutama, a desno je putanja do tvog middleware-a
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'module_access_restrict' => \App\Http\Middleware\RestrictRoleModuleAccess::class,
+            'mmsp_test_access' => \App\Http\Middleware\EnsureMmspTestAccess::class,
             'cultural.portal' => \App\Http\Middleware\EnsureCulturalEditorialPortalAccess::class,
             'cultural.moderator' => \App\Http\Middleware\EnsureActiveCulturalModerator::class,
         ]);

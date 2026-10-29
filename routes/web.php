@@ -81,7 +81,7 @@ Route::middleware('guest')->group(function () {
 });
 
 // Grupe ruta dostupne samo prijavljenim korisnicima
-Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(function () {
+Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_access'])->group(function () {
     // Dashboard - profil korisnika nakon prijave
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard'); // Prikaz korisničkog panela
 

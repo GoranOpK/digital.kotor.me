@@ -21,6 +21,7 @@ use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
+use App\Services\MmspTestAccessService;
 use App\Services\Competitions\CallPublicationService;
 use App\Services\Competitions\CanonicalTestApplicationPhaseService;
 use App\Services\Competitions\Commission\CanonicalCommissionAdministrationService;
@@ -411,8 +412,16 @@ class AdminController extends Controller
 
         $user->load('role');
         $roles = Role::assignableForUsersAdministration();
+        $mmspTestAccess = app(MmspTestAccessService::class);
+        $mmspTestAccessAllowed = $mmspTestAccess->allows($user);
+        $mmspTestAccessLatest = $mmspTestAccess->latest($user);
 
-        return view('admin.users.edit', compact('user', 'roles'));
+        return view('admin.users.edit', compact(
+            'user',
+            'roles',
+            'mmspTestAccessAllowed',
+            'mmspTestAccessLatest',
+        ));
     }
 
     /**
@@ -435,9 +444,20 @@ class AdminController extends Controller
             'role_id' => 'required|exists:roles,id',
             'activation_status' => 'required|in:active,deactivated',
             'password' => 'nullable|min:8|confirmed',
+            'mmsp_test_access' => 'sometimes|boolean',
         ]);
 
         $this->assertRoleIdAssignableViaUsersAdministration((int) $validated['role_id']);
+
+        $requestedGrant = $request->exists('mmsp_test_access')
+            ? $request->boolean('mmsp_test_access')
+            : null;
+        if ($requestedGrant !== null) {
+            $actorRole = $currentUser->role?->name;
+            if (! in_array($actorRole, ['admin', 'superadmin'], true)) {
+                abort(403, 'MMSP testni pristup mogu mijenjati samo administrator i superadministrator.');
+            }
+        }
 
         $identityService = app(CanonicalHttpIdentityService::class);
         $guard = app(IdentityMutationGuard::class);
@@ -455,22 +475,39 @@ class AdminController extends Controller
             } catch (CanonicalIdentityWriteException $e) {
                 return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
             }
-        } elseif ($guard->legacyIdentityMutationAllowed()) {
-            $user->first_name = $validated['first_name'];
-            $user->last_name = $validated['last_name'];
-            $user->name = $validated['first_name'].' '.$validated['last_name'];
-            $user->phone = $validated['phone'] ?? null;
         }
 
-        $user->email = $validated['email'];
-        $user->role_id = $validated['role_id'];
-        $user->activation_status = $validated['activation_status'];
+        DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant, $guard) {
+            $locked = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $locked->load('role');
+            $previousRole = $locked->role?->name;
 
-        if (! empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-        }
+            if (! $guard->canonicalHttpWriteAllowed() && $guard->legacyIdentityMutationAllowed()) {
+                $locked->first_name = $validated['first_name'];
+                $locked->last_name = $validated['last_name'];
+                $locked->name = $validated['first_name'].' '.$validated['last_name'];
+                $locked->phone = $validated['phone'] ?? null;
+            }
 
-        $user->save();
+            $locked->email = $validated['email'];
+            $locked->role_id = $validated['role_id'];
+            $locked->activation_status = $validated['activation_status'];
+
+            if (! empty($validated['password'])) {
+                $locked->password = Hash::make($validated['password']);
+            }
+
+            $locked->save();
+
+            app(MmspTestAccessService::class)->reconcile(
+                $locked,
+                $currentUser,
+                $previousRole,
+                $requestedGrant,
+            );
+        });
+
+        $user->refresh();
 
         if ($user->activation_status === 'active') {
             app(ModeratorEligibilityResolver::class)

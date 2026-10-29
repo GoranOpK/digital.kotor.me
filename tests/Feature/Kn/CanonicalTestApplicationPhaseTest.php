@@ -13,6 +13,7 @@ use App\Models\Competition;
 use App\Models\CompetitionPublicationClaim;
 use App\Models\EvaluationScore;
 use App\Models\FinalApplicationClaim;
+use App\Models\MmspTestAccessGrant;
 use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
@@ -632,7 +633,7 @@ class CanonicalTestApplicationPhaseTest extends TestCase
 
     private function owner(): User
     {
-        return User::factory()->create([
+        $user = User::factory()->create([
             'email' => 'podnosilac-'.uniqid().'@example.test',
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
             'activation_status' => 'active',
@@ -644,6 +645,14 @@ class CanonicalTestApplicationPhaseTest extends TestCase
             'phone' => '067000000',
             'user_type' => UserType::ENTREPRENEUR,
         ]);
+        MmspTestAccessGrant::query()->create([
+            'user_id' => $user->id,
+            'actor_user_id' => $user->id,
+            'action' => MmspTestAccessGrant::ACTION_GRANTED,
+            'reason' => MmspTestAccessGrant::REASON_MANUAL,
+        ]);
+
+        return $user;
     }
 
     /**

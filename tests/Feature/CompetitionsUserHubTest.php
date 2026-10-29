@@ -179,7 +179,7 @@ class CompetitionsUserHubTest extends TestCase
             ->assertDontSee('Uputstvo za podnosioce (PDF)');
     }
 
-    public function test_canonical_test_preview_stays_off_the_hub_and_remains_reachable_by_direct_url(): void
+    public function test_canonical_test_preview_stays_off_the_hub_and_direct_url_is_hidden_without_a_grant(): void
     {
         $user = $this->userWithRole('korisnik');
         $preview = $this->competition(
@@ -201,8 +201,7 @@ class CompetitionsUserHubTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('competitions.show', $preview))
-            ->assertOk()
-            ->assertSee($preview->title);
+            ->assertNotFound();
     }
 
     public function test_restricted_roles_keep_their_competition_access_rules(): void
