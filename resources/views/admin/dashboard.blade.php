@@ -238,7 +238,7 @@
     }
     .program-stats {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 12px;
         padding-top: 8px;
         border-top: 1px solid #f3f4f6;
@@ -306,10 +306,6 @@
                         <div>
                             <span class="program-stat-label">Ukupno</span>
                             <span class="program-stat-value">{{ $program['total_competitions'] }}</span>
-                        </div>
-                        <div>
-                            <span class="program-stat-label">Prijave</span>
-                            <span class="program-stat-value">{{ $program['total_applications'] }}</span>
                         </div>
                     </div>
                     @if($program['next_deadline_competition'] && $program['next_deadline_days'] !== null)

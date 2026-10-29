@@ -66,6 +66,28 @@
         background: #fef3c7;
         color: #92400e;
     }
+    .program-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #f3f4f6;
+    }
+    .program-stat-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 4px;
+    }
+    .program-stat-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1;
+    }
 </style>
 
 <div class="programs-grid">
@@ -94,6 +116,16 @@
                 <div>
                     <h2>{{ $program['title'] }}</h2>
                     <p>{{ $program['description'] }}</p>
+                </div>
+                <div class="program-stats">
+                    <div>
+                        <span class="program-stat-label">Aktivni</span>
+                        <span class="program-stat-value">{{ $program['active_competitions'] ?? 0 }}</span>
+                    </div>
+                    <div>
+                        <span class="program-stat-label">Ukupno</span>
+                        <span class="program-stat-value">{{ $program['total_competitions'] ?? 0 }}</span>
+                    </div>
                 </div>
         @if($isAvailable)
             </a>

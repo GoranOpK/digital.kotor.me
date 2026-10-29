@@ -61,9 +61,22 @@ class CompetitionsUserHubTest extends TestCase
         );
         $this->assertStringNotContainsString(route('admin.competitions.index', absolute: false), $html);
         $this->assertStringNotContainsString(route('admin.commissions.index', absolute: false), $html);
-        $this->assertStringNotContainsString('program-stat', $html);
         $this->assertStringNotContainsString($draft->title, $html);
         $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $html);
+        $this->assertStringContainsString('class="page-header is-hub"', $html);
+        $this->assertStringContainsString('Konkursi za podršku preduzetništvu', $text);
+        $this->assertStringNotContainsString(
+            'Pregled objavljenih konkursa za podršku preduzetništvu iz budžeta Opštine Kotor',
+            $text
+        );
+        $this->assertSame(3, $this->programCardCount($html));
+        $this->assertSame(3, substr_count($html, 'program-stat-label">Aktivni'));
+        $this->assertSame(3, substr_count($html, 'program-stat-label">Ukupno'));
+        $this->assertStringNotContainsString('program-stat-label">Prijave', $html);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, 1fr)', $html);
+
+        $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($html, 'zensko')));
+        $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($html, 'omladinsko')));
 
         $development = $this->developmentCardHtml($html);
         $this->assertStringContainsString('is-development', $development);
@@ -71,6 +84,7 @@ class CompetitionsUserHubTest extends TestCase
         $this->assertStringNotContainsString('href', $development);
         $this->assertStringNotContainsString('admin', $development);
         $this->assertStringNotContainsString('Prijavi', $development);
+        $this->assertSame([0, 0], $this->programStatValues($development));
 
         $this->assertSame(2, $this->programCardLinkCount($html));
     }
@@ -119,12 +133,15 @@ class CompetitionsUserHubTest extends TestCase
             ->assertDontSee($youth->title)
             ->assertDontSee($draft->title)
             ->assertDontSee($canonical->title);
+        $womenHtml = $womenList->getContent();
         $this->assertStringContainsString(
             'href="'.route('competitions.index').'"',
-            $womenList->getContent()
+            $womenHtml
         );
+        $this->assertStringNotContainsString('program-stat', $womenHtml);
+        $this->assertStringNotContainsString('page-header is-hub', $womenHtml);
 
-        $this->actingAs($user)
+        $youthHtml = $this->actingAs($user)
             ->get(route('competitions.index', ['type' => 'omladinsko']))
             ->assertOk()
             ->assertSee($youth->title)
@@ -132,7 +149,10 @@ class CompetitionsUserHubTest extends TestCase
             ->assertDontSee('Uputstvo za podnosioce (PDF)')
             ->assertDontSee($women->title)
             ->assertDontSee($upcoming->title)
-            ->assertDontSee($canonical->title);
+            ->assertDontSee($canonical->title)
+            ->getContent();
+        $this->assertStringNotContainsString('program-stat', $youthHtml);
+        $this->assertStringNotContainsString('page-header is-hub', $youthHtml);
 
         $this->actingAs($user)
             ->get(route('competitions.show', $women))
@@ -206,6 +226,70 @@ class CompetitionsUserHubTest extends TestCase
         $this->assertStringNotContainsString(route('admin.competitions.index', absolute: false), $html);
     }
 
+    public function test_user_stats_count_only_the_public_set_and_admin_counts_stay_by_status(): void
+    {
+        $user = $this->userWithRole('korisnik');
+        $admin = $this->userWithRole('konkurs_admin');
+
+        $this->competition('zensko', 'Otvoren zenski poziv', 'published');
+        $this->competition('zensko', 'Istekao zenski poziv', 'published', [
+            'start_date' => now()->subDays(40)->toDateString(),
+            'published_at' => now()->subDays(40),
+        ]);
+        $this->competition('zensko', 'Nacrt zenskog poziva', 'draft');
+        $this->competition('zensko', 'Buduci zenski poziv', 'published', [
+            'start_date' => now()->addDays(5)->toDateString(),
+        ]);
+        $this->competition('zensko', 'Zatvoren zenski poziv', 'closed');
+        $this->competition('zensko', 'Zavrsen zenski poziv', 'completed');
+        $this->competition(
+            CompetitionProfileResolver::TYPE_CANONICAL,
+            'MMSP testni pregled',
+            'draft',
+            ['is_test_preview' => true]
+        );
+
+        $userHtml = $this->actingAs($user)
+            ->get(route('competitions.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(3, $this->programCardCount($userHtml));
+        $this->assertSame([1, 2], $this->programStatValues($this->linkedProgramCardHtml($userHtml, 'zensko')));
+        $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($userHtml, 'omladinsko')));
+        $development = $this->developmentCardHtml($userHtml);
+        $this->assertSame([0, 0], $this->programStatValues($development));
+        $this->assertStringNotContainsString('href', $development);
+        $this->assertStringNotContainsString('MMSP testni pregled', $userHtml);
+        $this->assertStringNotContainsString('program-stat-label">Prijave', $userHtml);
+
+        $adminHtml = $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Rok za prijavu', false)
+            ->getContent();
+
+        $this->assertSame(3, $this->programCardCount($adminHtml));
+        $this->assertStringContainsString('grid-template-columns: repeat(2, 1fr)', $adminHtml);
+        $this->assertStringNotContainsString('repeat(3, 1fr)', $adminHtml);
+        $this->assertStringNotContainsString('program-stat-label">Prijave', $adminHtml);
+        $this->assertSame([4, 6], $this->programStatValues($this->linkedProgramCardHtml($adminHtml, 'zensko')));
+        $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($adminHtml, 'omladinsko')));
+        $this->assertSame(
+            [1, 1],
+            $this->programStatValues($this->linkedProgramCardHtml(
+                $adminHtml,
+                CompetitionProfileResolver::TYPE_CANONICAL
+            ))
+        );
+        foreach (['zensko', 'omladinsko', CompetitionProfileResolver::TYPE_CANONICAL] as $type) {
+            $this->assertStringContainsString(
+                'href="'.e(route('admin.competitions.index', ['type' => $type, 'tab' => 'active'])).'"',
+                $adminHtml
+            );
+        }
+    }
+
     private function userWithRole(string $role): User
     {
         return User::factory()->create([
@@ -272,5 +356,53 @@ class CompetitionsUserHubTest extends TestCase
         $this->assertNotFalse($nodes);
 
         return $nodes->length;
+    }
+
+    private function programCardCount(string $html): int
+    {
+        $xpath = $this->htmlXpath($html);
+        $nodes = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " program-card ")]');
+        $this->assertNotFalse($nodes);
+
+        return $nodes->length;
+    }
+
+    private function linkedProgramCardHtml(string $html, string $type): string
+    {
+        $xpath = $this->htmlXpath($html);
+        $nodes = $xpath->query(
+            '//a[contains(concat(" ", normalize-space(@class), " "), " program-card ") and contains(@href, "type='.$type.'")]'
+        );
+        $this->assertNotFalse($nodes);
+        $this->assertSame(1, $nodes->length);
+        $card = $xpath->document->saveHTML($nodes->item(0));
+        $this->assertIsString($card);
+
+        return $card;
+    }
+
+    /**
+     * @return array{0: int, 1: int}
+     */
+    private function programStatValues(string $cardHtml): array
+    {
+        preg_match_all('/class="program-stat-value">([^<]*)</', $cardHtml, $matches);
+        $this->assertCount(2, $matches[1], $cardHtml);
+        $this->assertStringContainsString('Aktivni', $cardHtml);
+        $this->assertStringContainsString('Ukupno', $cardHtml);
+        $this->assertStringNotContainsString('Prijave', $cardHtml);
+
+        return [(int) trim($matches[1][0]), (int) trim($matches[1][1])];
+    }
+
+    private function htmlXpath(string $html): \DOMXPath
+    {
+        $dom = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        $dom->loadHTML($html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        return new \DOMXPath($dom);
     }
 }

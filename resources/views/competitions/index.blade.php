@@ -34,6 +34,12 @@
         font-weight: 700;
         margin: 0 0 8px;
     }
+    .page-header.is-hub {
+        padding: 20px;
+    }
+    .page-header.is-hub h1 {
+        margin: 0;
+    }
     .page-header-back {
         display: inline-flex;
         align-items: center;
@@ -166,19 +172,21 @@
 
 <div class="competitions-page">
     <div class="container mx-auto px-4">
-        <div class="page-header">
+        <div class="page-header {{ !empty($showHub) ? 'is-hub' : '' }}">
             <div class="page-header-main">
                 @if(empty($showHub))
                     <a href="{{ route('competitions.index') }}" class="page-header-back">← Nazad na konkurse</a>
                 @endif
                 <h1>Konkursi za podršku preduzetništvu</h1>
+                @if(empty($showHub))
                 <p style="color: rgba(255,255,255,0.9); margin: 0;">
-                    @if(empty($showHub) && !empty($selectedProgramTitle))
+                    @if(!empty($selectedProgramTitle))
                         {{ $selectedProgramTitle }}
                     @else
                         Pregled objavljenih konkursa za podršku preduzetništvu iz budžeta Opštine Kotor
                     @endif
                 </p>
+                @endif
             </div>
             @if($showZenskoGuidePdf)
             <a

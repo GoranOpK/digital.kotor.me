@@ -29,7 +29,7 @@ class CompetitionsController extends Controller
         if (! $this->isPublicCompetitionListType($requestedType)) {
             return view('competitions.index', [
                 'showHub' => true,
-                'programs' => CompetitionProgramCatalog::definitions(),
+                'programs' => $this->programsWithPublicStats(),
                 'competitions' => collect(),
                 'showZenskoGuidePdf' => false,
                 'selectedProgramTitle' => null,
@@ -54,6 +54,37 @@ class CompetitionsController extends Controller
     {
         return is_string($type)
             && in_array($type, CompetitionProgramCatalog::publiclyAvailableTypes(), true);
+    }
+
+    /**
+     * Javni brojevi po programu. Program u razvoju ostaje na nuli, bez upita.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function programsWithPublicStats(): array
+    {
+        $programs = [];
+
+        foreach (CompetitionProgramCatalog::definitions() as $type => $definition) {
+            $programType = is_string($definition['type'] ?? null) ? $definition['type'] : null;
+            $isPublic = ($definition['status'] ?? '') === CompetitionProgramCatalog::STATUS_ACTIVE
+                && CompetitionProgramCatalog::isPubliclyAvailable($programType);
+
+            if ($isPublic && is_string($programType)) {
+                $competitions = $this->publicCompetitions($programType);
+                $definition['active_competitions'] = $competitions
+                    ->filter(fn (Competition $competition) => (bool) $competition->is_open)
+                    ->count();
+                $definition['total_competitions'] = $competitions->count();
+            } else {
+                $definition['active_competitions'] = 0;
+                $definition['total_competitions'] = 0;
+            }
+
+            $programs[$type] = $definition;
+        }
+
+        return $programs;
     }
 
     /**
