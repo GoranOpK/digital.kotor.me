@@ -95,13 +95,13 @@
 
                 <div class="md:col-span-2">
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Nova lozinka (ostavite prazno ako ne želite da je mijenjate)</label>
-                    <input type="password" name="password" id="password" 
+                    <input type="password" name="password" id="password" autocomplete="new-password"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <div class="md:col-span-2">
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">Potvrda lozinke</label>
-                    <input type="password" name="password_confirmation" id="password_confirmation" 
+                    <input type="password" name="password_confirmation" id="password_confirmation" autocomplete="new-password"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
             </div>

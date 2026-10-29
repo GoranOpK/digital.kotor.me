@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\MmspTestAccessGrant;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdminUsersSuperadminProtectionTest extends TestCase
@@ -177,6 +179,100 @@ class AdminUsersSuperadminProtectionTest extends TestCase
             ->assertRedirect(route('cultural-calendar.index'));
 
         $this->assertSame($this->korisnikRole->id, (int) $target->fresh()->role_id);
+    }
+
+    public function test_optional_password_stays_unchanged_until_a_confirmed_replacement(): void
+    {
+        $omitted = $this->userWithRole('korisnik', 'Bez Lozinke', 'adm-pass-omitted@example.com');
+        $omittedHash = $omitted->password;
+        $this->actingAs($this->admin)
+            ->put(route('admin.users.update', $omitted), $this->updatePayload($omitted, [
+                'first_name' => 'Izmjena',
+            ]))
+            ->assertRedirect(route('admin.users.show', $omitted));
+        $this->assertSame($omittedHash, $omitted->fresh()->password);
+        $this->assertSame('Izmjena', $omitted->fresh()->first_name);
+
+        $blank = $this->userWithRole('korisnik', 'Prazna Lozinka', 'adm-pass-blank@example.com');
+        $blankHash = $blank->password;
+        $this->actingAs($this->admin)
+            ->put(route('admin.users.update', $blank), $this->updatePayload($blank, [
+                'password' => '',
+                'password_confirmation' => '',
+            ]))
+            ->assertRedirect(route('admin.users.show', $blank));
+        $this->assertSame($blankHash, $blank->fresh()->password);
+
+        $granted = $this->userWithRole('korisnik', 'Mmsp Lozinka', 'adm-pass-mmsp@example.com');
+        $grantedHash = $granted->password;
+        $this->actingAs($this->admin)
+            ->put(route('admin.users.update', $granted), $this->updatePayload($granted, [
+                'mmsp_test_access' => '1',
+            ]))
+            ->assertRedirect(route('admin.users.show', $granted));
+        $this->assertSame($grantedHash, $granted->fresh()->password);
+        $this->assertSame(
+            MmspTestAccessGrant::ACTION_GRANTED,
+            MmspTestAccessGrant::query()->where('user_id', $granted->id)->orderByDesc('id')->value('action')
+        );
+
+        $missingConfirmation = $this->userWithRole('korisnik', 'Bez Potvrde', 'adm-pass-missing@example.com');
+        $missingHash = $missingConfirmation->password;
+        $this->actingAs($this->admin)
+            ->from(route('admin.users.edit', $missingConfirmation))
+            ->put(route('admin.users.update', $missingConfirmation), $this->updatePayload($missingConfirmation, [
+                'password' => 'new-password-1',
+            ]))
+            ->assertSessionHasErrors(['password' => 'validation.confirmed']);
+        $this->assertSame($missingHash, $missingConfirmation->fresh()->password);
+
+        $mismatch = $this->userWithRole('korisnik', 'Razlicita Lozinka', 'adm-pass-mismatch@example.com');
+        $mismatchHash = $mismatch->password;
+        $this->actingAs($this->admin)
+            ->from(route('admin.users.edit', $mismatch))
+            ->put(route('admin.users.update', $mismatch), $this->updatePayload($mismatch, [
+                'password' => 'new-password-1',
+                'password_confirmation' => 'new-password-2',
+            ]))
+            ->assertSessionHasErrors(['password' => 'validation.confirmed']);
+        $this->assertSame($mismatchHash, $mismatch->fresh()->password);
+
+        $tooShort = $this->userWithRole('korisnik', 'Kratka Lozinka', 'adm-pass-short@example.com');
+        $shortHash = $tooShort->password;
+        $this->actingAs($this->admin)
+            ->from(route('admin.users.edit', $tooShort))
+            ->put(route('admin.users.update', $tooShort), $this->updatePayload($tooShort, [
+                'password' => 'short',
+                'password_confirmation' => 'short',
+            ]))
+            ->assertSessionHasErrors('password');
+        $this->assertSame($shortHash, $tooShort->fresh()->password);
+
+        $replaced = $this->userWithRole('korisnik', 'Nova Lozinka', 'adm-pass-new@example.com');
+        $replacedHash = $replaced->password;
+        $this->actingAs($this->admin)
+            ->put(route('admin.users.update', $replaced), $this->updatePayload($replaced, [
+                'password' => 'new-password-1',
+                'password_confirmation' => 'new-password-1',
+            ]))
+            ->assertRedirect(route('admin.users.show', $replaced));
+        $this->assertNotSame($replacedHash, $replaced->fresh()->password);
+        $this->assertTrue(Hash::check('new-password-1', $replaced->fresh()->password));
+    }
+
+    public function test_edit_form_marks_both_password_fields_as_new_password(): void
+    {
+        $this->withoutVite();
+        $target = $this->userWithRole('korisnik', 'Html Lozinka', 'adm-pass-html@example.com');
+
+        $html = $this->actingAs($this->admin)
+            ->get(route('admin.users.edit', $target))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(2, substr_count($html, 'autocomplete="new-password"'));
+        $this->assertStringContainsString('name="password"', $html);
+        $this->assertStringContainsString('name="password_confirmation"', $html);
     }
 
     /**
