@@ -34,6 +34,22 @@
         font-weight: 700;
         margin: 0 0 8px;
     }
+    .page-header-back {
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 12px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+    }
+    .page-header-back:hover {
+        background: #eff6ff;
+        color: var(--primary-dark);
+    }
     .page-header-guide-btn {
         display: inline-flex;
         align-items: center;
@@ -152,8 +168,17 @@
     <div class="container mx-auto px-4">
         <div class="page-header">
             <div class="page-header-main">
+                @if(empty($showHub))
+                    <a href="{{ route('competitions.index') }}" class="page-header-back">← Nazad na konkurse</a>
+                @endif
                 <h1>Konkursi za podršku preduzetništvu</h1>
-                <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled objavljenih konkursa za podršku preduzetništvu iz budžeta Opštine Kotor</p>
+                <p style="color: rgba(255,255,255,0.9); margin: 0;">
+                    @if(empty($showHub) && !empty($selectedProgramTitle))
+                        {{ $selectedProgramTitle }}
+                    @else
+                        Pregled objavljenih konkursa za podršku preduzetništvu iz budžeta Opštine Kotor
+                    @endif
+                </p>
             </div>
             @if($showZenskoGuidePdf)
             <a
@@ -168,7 +193,9 @@
             @endif
         </div>
 
-        @if($competitions->count() > 0)
+        @if(!empty($showHub))
+            @include('competitions.partials.program-hub', ['programs' => $programs])
+        @elseif($competitions->count() > 0)
             <div class="competitions-grid">
                 @foreach($competitions as $competition)
                     <a href="{{ route('competitions.show', $competition) }}" class="competition-card">
@@ -243,8 +270,14 @@
         @else
             <div class="empty-state">
                 <div class="empty-state-icon">📋</div>
-                <h3 style="color: #374151; margin-bottom: 8px;">Trenutno nema aktivnih konkursa</h3>
-                <p style="color: #6b7280; margin: 0;">Novi konkursi će biti objavljeni kada budu raspisani.</p>
+                <h3 style="color: #374151; margin-bottom: 8px;">Trenutno nema objavljenih konkursa</h3>
+                <p style="color: #6b7280; margin: 0;">
+                    @if(!empty($selectedProgramTitle))
+                        U kategoriji „{{ $selectedProgramTitle }}“ trenutno nema konkursa dostupnih za pregled.
+                    @else
+                        Novi konkursi će biti objavljeni kada budu raspisani.
+                    @endif
+                </p>
             </div>
         @endif
 

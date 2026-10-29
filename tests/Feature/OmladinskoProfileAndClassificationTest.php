@@ -99,16 +99,34 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
         $this->get(route('competitions.index'))->assertRedirect(route('login'));
 
-        $html = $this->actingAs($user)
+        $hub = $this->actingAs($user)
             ->get(route('competitions.index'))
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString($zensko->title, $html);
-        $this->assertStringContainsString($omladinsko->title, $html);
-        $this->assertStringNotContainsString($draft->title, $html);
-        $this->assertStringContainsString('Konkursi za podršku preduzetništvu', $html);
-        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $html);
+        $this->assertStringContainsString('Konkursi za podršku preduzetništvu', $hub);
+        $this->assertStringNotContainsString($zensko->title, $hub);
+        $this->assertStringNotContainsString($omladinsko->title, $hub);
+        $this->assertStringNotContainsString($draft->title, $hub);
+        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $hub);
+
+        $youth = $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($omladinsko->title, $youth);
+        $this->assertStringNotContainsString($zensko->title, $youth);
+        $this->assertStringNotContainsString($draft->title, $youth);
+        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $youth);
+
+        $women = $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => 'zensko']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($zensko->title, $women);
+        $this->assertStringNotContainsString($omladinsko->title, $women);
+        $this->assertStringNotContainsString($draft->title, $women);
+        $this->assertStringContainsString(route('competitions.guide.pdf', absolute: false), $women);
     }
 
     public function test_draft_omladinsko_is_not_public_and_does_not_accept_applications(): void
@@ -158,13 +176,29 @@ class OmladinskoProfileAndClassificationTest extends TestCase
 
         $this->get(route('competitions.index'))->assertRedirect(route('login'));
 
-        $index = $this->actingAs($user)
+        $hub = $this->actingAs($user)
             ->get(route('competitions.index'))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString($omladinsko->title, $index);
-        $this->assertStringContainsString($zensko->title, $index);
-        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $index);
+        $this->assertStringNotContainsString($omladinsko->title, $hub);
+        $this->assertStringNotContainsString($zensko->title, $hub);
+        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $hub);
+
+        $youthList = $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($omladinsko->title, $youthList);
+        $this->assertStringNotContainsString($zensko->title, $youthList);
+        $this->assertStringNotContainsString(route('competitions.guide.pdf', absolute: false), $youthList);
+
+        $womenList = $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => 'zensko']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($zensko->title, $womenList);
+        $this->assertStringNotContainsString($omladinsko->title, $womenList);
+        $this->assertStringContainsString(route('competitions.guide.pdf', absolute: false), $womenList);
 
         $omladinskoShow = $this->actingAs($user)
             ->get(route('competitions.show', $omladinsko))
@@ -209,6 +243,14 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $this->assertStringNotContainsString($upcoming->title, $index);
         $this->assertStringNotContainsString($closed->title, $index);
         $this->assertStringNotContainsString($completed->title, $index);
+
+        $youthList = $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString($upcoming->title, $youthList);
+        $this->assertStringNotContainsString($closed->title, $youthList);
+        $this->assertStringNotContainsString($completed->title, $youthList);
 
         $this->actingAs($user)->get(route('competitions.show', $upcoming))->assertNotFound();
         $this->actingAs($user)->get(route('competitions.show', $closed))->assertNotFound();

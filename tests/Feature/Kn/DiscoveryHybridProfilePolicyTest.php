@@ -134,9 +134,29 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('competitions.index'))
             ->assertOk()
-            ->assertSee('KN-SYNC-002-PUBLIC-WOMEN')
-            ->assertSee('KN-SYNC-002-PUBLIC-YOUTH')
+            ->assertDontSee('KN-SYNC-002-PUBLIC-WOMEN')
+            ->assertDontSee('KN-SYNC-002-PUBLIC-YOUTH')
             ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL');
+
+        $this->actingAs($viewer)
+            ->get(route('competitions.index', ['type' => 'zensko']))
+            ->assertOk()
+            ->assertSee('KN-SYNC-002-PUBLIC-WOMEN')
+            ->assertDontSee('KN-SYNC-002-PUBLIC-YOUTH')
+            ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL');
+
+        $this->actingAs($viewer)
+            ->get(route('competitions.index', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->assertSee('KN-SYNC-002-PUBLIC-YOUTH')
+            ->assertDontSee('KN-SYNC-002-PUBLIC-WOMEN')
+            ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL');
+
+        $this->actingAs($viewer)
+            ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
+            ->assertOk()
+            ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL')
+            ->assertSee('U razvoju');
 
         $this->actingAs($viewer)
             ->get(route('competitions.show', $youth))

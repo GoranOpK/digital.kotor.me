@@ -18,12 +18,52 @@ use Carbon\Carbon;
 class CompetitionsController extends Controller
 {
     /**
-     * Prikaz liste aktivnih konkursa
+     * Prikaz programskog huba ili filtrirane liste javno dostupnih konkursa.
+     * Tip je dodatni uslov postojećeg javnog upita. Nepoznat tip i MMSP vraćaju hub.
      */
-    public function index(): View
+    public function index(Request $request): View
+    {
+        $requestedType = $request->query('type');
+        $requestedType = is_string($requestedType) ? $requestedType : null;
+
+        if (! $this->isPublicCompetitionListType($requestedType)) {
+            return view('competitions.index', [
+                'showHub' => true,
+                'programs' => CompetitionProgramCatalog::definitions(),
+                'competitions' => collect(),
+                'showZenskoGuidePdf' => false,
+                'selectedProgramTitle' => null,
+            ]);
+        }
+
+        $competitions = $this->publicCompetitions($requestedType);
+        $showZenskoGuidePdf = $competitions->isNotEmpty()
+            && $competitions->every(fn (Competition $competition) => $competition->type === 'zensko');
+        $selectedProgramTitle = CompetitionProgramCatalog::definitions()[$requestedType]['title'] ?? null;
+
+        return view('competitions.index', [
+            'showHub' => false,
+            'programs' => [],
+            'competitions' => $competitions,
+            'showZenskoGuidePdf' => $showZenskoGuidePdf,
+            'selectedProgramTitle' => $selectedProgramTitle,
+        ]);
+    }
+
+    private function isPublicCompetitionListType(?string $type): bool
+    {
+        return is_string($type)
+            && in_array($type, CompetitionProgramCatalog::publiclyAvailableTypes(), true);
+    }
+
+    /**
+     * Postojeći javni upit, sužen na jedan javno dostupan tip.
+     */
+    private function publicCompetitions(string $type)
     {
         $now = now();
-        $competitions = Competition::query()
+
+        return Competition::query()
             ->where(function ($query) {
                 $query->where(function ($published) {
                     $published->where('status', 'published')
@@ -47,11 +87,12 @@ class CompetitionsController extends Controller
                               ->whereNotNull('canonical_test_applications_closed_at');
                       });
             })
+            ->where('type', $type)
             ->orderBy('start_date', 'asc')
             ->get()
             ->map(function ($competition) {
                 $competition->is_open = $competition->is_open;
-                
+
                 if ($competition->is_open) {
                     $diff = now()->diff($competition->deadline);
                     $competition->days_remaining = $diff->days;
@@ -62,13 +103,9 @@ class CompetitionsController extends Controller
                     $competition->hours_remaining = 0;
                     $competition->minutes_remaining = 0;
                 }
+
                 return $competition;
             });
-
-        $showZenskoGuidePdf = $competitions->isNotEmpty()
-            && $competitions->every(fn (Competition $competition) => $competition->type === 'zensko');
-
-        return view('competitions.index', compact('competitions', 'showZenskoGuidePdf'));
     }
 
     /**

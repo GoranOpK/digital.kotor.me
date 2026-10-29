@@ -407,6 +407,14 @@ class CallPublicationGuardTest extends TestCase
             ->get(route('competitions.index'))
             ->assertOk()
             ->assertDontSee('KN-SYNC-003-DEV-PUBLIC');
+        $this->actingAs($admin)
+            ->get(route('competitions.index', ['type' => 'zensko']))
+            ->assertOk()
+            ->assertDontSee('KN-SYNC-003-DEV-PUBLIC');
+        $this->actingAs($admin)
+            ->get(route('competitions.index', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->assertDontSee('KN-SYNC-003-DEV-PUBLIC');
     }
 
     public function test_fail_closed_profile_does_not_publish_or_consume_canonical_slot(): void

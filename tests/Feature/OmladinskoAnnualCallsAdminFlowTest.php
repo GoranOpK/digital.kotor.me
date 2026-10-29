@@ -76,6 +76,10 @@ class OmladinskoAnnualCallsAdminFlowTest extends TestCase
             ->assertOk()
             ->assertDontSee('Omladinsko prvi Poziv');
         $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => 'omladinsko']))
+            ->assertOk()
+            ->assertDontSee('Omladinsko prvi Poziv');
+        $this->actingAs($user)
             ->get(route('competitions.show', $created))
             ->assertNotFound();
     }
