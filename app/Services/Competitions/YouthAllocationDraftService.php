@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Youth allocation decision: chairman records one final decision and applies 30/20/15.
+ * The first successful save locks the outcome, amount and justification.
  * Does not confirm the whole list, resolve equal-score voting, or close the competition.
  */
 final class YouthAllocationDraftService
@@ -64,9 +65,16 @@ final class YouthAllocationDraftService
     public const REDUCED_AMOUNT_JUSTIFICATION_REQUIRED_MESSAGE =
         'Kada je iznos manji od traženog, obrazloženje je obavezno.';
 
+    public const DECISION_LOCKED_MESSAGE =
+        'Odluka je konačna i ne može se mijenjati.';
+
+    public const DECISION_LOCK_NOTICE =
+        'Nakon čuvanja odluka je konačna i ne može se mijenjati.';
+
     public function __construct(
         protected CanonicalIndividualScoringService $canonicalScoring,
         protected YouthEqualScoreVotingService $youthEqualScoreVoting,
+        protected AllocationCompletionGuard $completion,
     ) {}
 
     public function canEditDraft(Competition $competition, User $user): bool
@@ -215,30 +223,45 @@ final class YouthAllocationDraftService
         }
 
         DB::transaction(function () use ($application, $input, $competition, $user) {
-            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->first();
+            $lockedCompetition = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
+            if ($lockedCompetition === null || ! $lockedCompetition->isOmladinskoProfile()) {
+                abort(403, self::NOT_YOUTH_MESSAGE);
+            }
+
+            if (in_array($lockedCompetition->status, ['closed', 'completed'], true)) {
+                abort(403, self::COMPLETED_LOCKED_MESSAGE);
+            }
+
+            if ($lockedCompetition->youth_allocation_list_confirmed_at !== null) {
+                abort(403, YouthAllocationListConfirmationService::LIST_CONFIRMED_LOCKED_MESSAGE);
+            }
+
+            $lockedRows = Application::query()
+                ->where('competition_id', $lockedCompetition->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            $locked = $lockedRows->firstWhere('id', $application->id);
             if ($locked === null) {
                 abort(404);
             }
 
-            $locked->loadMissing('competition');
-            $lockedCompetition = $locked->competition ?? $competition->fresh();
+            $locked->setRelation('competition', $lockedCompetition);
 
             if (! $this->canonicalScoring->youthMeetsMinimumScore($locked)) {
                 abort(403, self::BELOW_THRESHOLD_MESSAGE);
             }
 
-            $decision = (string) ($input['commission_decision'] ?? '');
-            $lowerRankBlock = $this->youthEqualScoreVoting->lowerRankDraftBlockReason($lockedCompetition, $locked, $decision);
-            if ($lowerRankBlock !== null) {
-                abort(403, $lowerRankBlock);
+            if ($this->decisionIsLocked($locked)) {
+                abort(403, self::DECISION_LOCKED_MESSAGE);
             }
 
-            if ($decision === 'podrzava_potpuno') {
-                $priorityBlock = $this->youthEqualScoreVoting->startupPrioritySupportBlockReason($lockedCompetition, $locked);
-                if ($priorityBlock !== null) {
-                    abort(403, $priorityBlock);
-                }
-            }
+            $decision = (string) ($input['commission_decision'] ?? '');
+            $pool = $lockedRows
+                ->filter(fn (Application $row) => $row->ranking_position !== null
+                    && $this->canonicalScoring->youthMeetsMinimumScore($row))
+                ->each(fn (Application $row) => $row->setRelation('competition', $lockedCompetition))
+                ->values();
             $justification = trim((string) ($input['commission_justification'] ?? ''));
             $approvedAmount = array_key_exists('approved_amount', $input) ? $input['approved_amount'] : null;
             $startup = $this->nullableBoolFromInput($input, 'youth_innovative_tech_startup');
@@ -288,7 +311,17 @@ final class YouthAllocationDraftService
                     ]);
                 }
 
-                $remaining = $this->youthEqualScoreVoting->liveSupportRoom($lockedCompetition, $locked);
+                if ($this->completion->developmentSupportBlocked($pool, $locked)) {
+                    abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
+                }
+
+                $budget = $this->money((string) ($lockedCompetition->budget ?? 0));
+                $remaining = $this->completion->supportRoom(
+                    $budget,
+                    $pool,
+                    $locked,
+                    fn (Application $other) => $this->completion->youthMaxClaim($other, $budget),
+                );
                 if (bccomp($amount, $remaining, 2) === 1) {
                     throw ValidationException::withMessages([
                         'approved_amount' => self::AMOUNT_EXCEEDS_REMAINING_MESSAGE,
@@ -318,6 +351,10 @@ final class YouthAllocationDraftService
                     ]);
                 }
 
+                if ($this->completion->startupRejectionBlocked($pool, $locked)) {
+                    abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
+                }
+
                 $rejectFill = [
                     'status' => 'rejected',
                     'commission_decision' => 'odbija',
@@ -345,6 +382,11 @@ final class YouthAllocationDraftService
                 ]);
             }
         });
+    }
+
+    public function decisionIsLocked(Application $application): bool
+    {
+        return in_array($application->commission_decision, ['podrzava_potpuno', 'odbija'], true);
     }
 
     public function appliedCapPercent(bool $innovativeTechStartup, bool $priorMunicipalYouthFunding): int

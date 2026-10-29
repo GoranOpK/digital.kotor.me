@@ -537,11 +537,12 @@
                         $youthDraftService = app(\App\Services\Competitions\YouthAllocationDraftService::class);
                         $remainingForDraft = $youthDraftService->remainingBudget($ranked->competition, $ranked->id);
                         $youthCap = $youthDraftService->capSnapshot($ranked);
+                        $youthDecisionLocked = $youthDraftService->decisionIsLocked($ranked);
                         $startupValue = old('youth_innovative_tech_startup', $ranked->getAttributes()['youth_innovative_tech_startup'] ?? null);
                         $priorValue = old('youth_prior_municipal_youth_funding', $ranked->getAttributes()['youth_prior_municipal_youth_funding'] ?? null);
                     @endphp
-                    <div class="commission-decision-block{{ $ranked->signed_by_chairman ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                        @if($canEditYouthAllocationDraft)
+                    <div class="commission-decision-block{{ $youthDecisionLocked ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                        @if($canEditYouthAllocationDraft && ! $youthDecisionLocked)
                             <div class="commission-decision-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb; gap: 12px; flex-wrap: wrap;">
                                 <div>
                                     <h3 style="font-size: 18px; font-weight: 700; color: #0B3D91; margin: 0 0 4px 0;">
@@ -559,6 +560,9 @@
                                     </span>
                                 @endif
                             </div>
+                            <p class="no-print" data-testid="youth-allocation-decision-lock-notice" style="margin: 0 0 16px; color: #92400e; font-size: 14px; font-weight: 600;">
+                                {{ \App\Services\Competitions\YouthAllocationDraftService::DECISION_LOCK_NOTICE }}
+                            </p>
                             <form method="POST" action="{{ route('evaluation.youth-allocation-draft', $ranked) }}" class="no-print youth-allocation-draft-form" data-testid="youth-allocation-draft-form">
                                 @csrf
                                 <div style="margin-bottom: 24px;">
@@ -613,17 +617,6 @@
                                         </select>
                                     </label>
                                 </div>
-                                @if($youthCap['facts_confirmed'])
-                                    <div style="margin-bottom: 16px; color: #374151; font-size: 13px;" data-testid="youth-allocation-cap-summary">
-                                        <p style="margin: 0 0 4px;">Inovativni tehnološki start-up: {{ $youthCap['startup'] ? 'Da' : 'Ne' }}</p>
-                                        <p style="margin: 0 0 4px;">Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih: {{ $youthCap['prior_funding'] ? 'Da' : 'Ne' }}</p>
-                                        <p style="margin: 0 0 4px;">Primijenjeni maksimum: {{ $youthCap['percent'] }}% ({{ number_format((float) $youthCap['percent_max'], 2) }} EUR)</p>
-                                        <p style="margin: 0 0 4px;">{{ \App\Services\Competitions\YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE }}</p>
-                                        @if($youthCap['confirmed_by_name'])
-                                            <p style="margin: 0;">Potvrdio: {{ $youthCap['confirmed_by_name'] }}@if($youthCap['confirmed_at']) — {{ $youthCap['confirmed_at'] }}@endif</p>
-                                        @endif
-                                    </div>
-                                @endif
                                 @error('approved_amount')
                                     <div class="error-message">{{ $message }}</div>
                                 @enderror
@@ -643,6 +636,10 @@
                                     <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; min-width: 160px;">Sačuvaj zaključak</button>
                                 </div>
                             </form>
+                        @elseif($youthDecisionLocked)
+                            <p data-testid="youth-allocation-decision-locked" style="margin: 0 0 16px; color: #065f46; font-weight: 600;">
+                                {{ \App\Services\Competitions\YouthAllocationDraftService::DECISION_LOCKED_MESSAGE }}
+                            </p>
                         @endif
                         @if($ranked->commission_decision)
                             <table class="commission-decision-table" style="width: 100%; border-collapse: collapse; margin-top: 16px;">
@@ -670,6 +667,17 @@
                                     @endif
                                 </tbody>
                             </table>
+                        @endif
+                        @if($youthCap['facts_confirmed'])
+                            <div style="margin-top: 16px; color: #374151; font-size: 13px;" data-testid="youth-allocation-cap-summary">
+                                <p style="margin: 0 0 4px;">Inovativni tehnološki start-up: {{ $youthCap['startup'] ? 'Da' : 'Ne' }}</p>
+                                <p style="margin: 0 0 4px;">Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih: {{ $youthCap['prior_funding'] ? 'Da' : 'Ne' }}</p>
+                                <p style="margin: 0 0 4px;">Primijenjeni maksimum: {{ $youthCap['percent'] }}% ({{ number_format((float) $youthCap['percent_max'], 2) }} EUR)</p>
+                                <p style="margin: 0 0 4px;">{{ \App\Services\Competitions\YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE }}</p>
+                                @if($youthCap['confirmed_by_name'])
+                                    <p style="margin: 0;">Potvrdio: {{ $youthCap['confirmed_by_name'] }}@if($youthCap['confirmed_at']) — {{ $youthCap['confirmed_at'] }}@endif</p>
+                                @endif
+                            </div>
                         @endif
                     </div>
                 @endforeach

@@ -1324,7 +1324,8 @@ class CanonicalIndividualScoringTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        // E. EDIT već podržane: current amount isključen iz zbira (available = 30000, ne 10000)
+        // E. Nova odluka vidi ostatak poslije više rangirane podrške. Drugi upis je zaključan.
+        // Stara odluka bez vremena zaključavanja i dalje se može ispraviti, bez duplog uračunavanja.
         [$competitionE, $membersE, $presidentE, $appsE] = $this->completeCycleWithUniformCriteria([
             [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
             [5, 5, 5, 4, 4, 4, 4, 4, 4, 4],
@@ -1344,26 +1345,6 @@ class CanonicalIndividualScoringTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->actingAs($presidentE->user)
-            ->post(route('evaluation.store-decision', $current), [
-                'commission_decision' => 'podrzava_potpuno',
-                'approved_amount' => 20000,
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        // Re-edit current to 30000 (remaining for current = 100000-70000 = 30000)
-        $this->actingAs($presidentE->user)
-            ->post(route('evaluation.store-decision', $current), [
-                'commission_decision' => 'podrzava_potpuno',
-                'approved_amount' => 30000,
-            ])
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        $this->assertSame(30000.0, (float) $current->fresh()->approved_amount);
-
-        // 30001 would wrongly fail if current's 20000 were double-counted (available would look like 10000)
-        $this->actingAs($presidentE->user)
             ->from(route('admin.competitions.ranking', $competitionE))
             ->post(route('evaluation.store-decision', $current), [
                 'commission_decision' => 'podrzava_potpuno',
@@ -1371,8 +1352,40 @@ class CanonicalIndividualScoringTest extends TestCase
             ])
             ->assertRedirect(route('admin.competitions.ranking', $competitionE))
             ->assertSessionHasErrors('approved_amount');
+        $this->assertNull($current->fresh()->commission_decision);
 
+        $this->actingAs($presidentE->user)
+            ->post(route('evaluation.store-decision', $current), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 30000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $this->assertNotNull($current->fresh()->commission_decision_locked_at);
+
+        $this->actingAs($presidentE->user)
+            ->post(route('evaluation.store-decision', $current), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 20000,
+            ])
+            ->assertForbidden();
         $this->assertSame(30000.0, (float) $current->fresh()->approved_amount);
+
+        $current->refresh();
+        $current->forceFill([
+            'approved_amount' => 20000,
+            'commission_decision_locked_at' => null,
+        ])->save();
+        $this->assertNull($current->fresh()->commission_decision_locked_at);
+        $this->actingAs($presidentE->user)
+            ->post(route('evaluation.store-decision', $current), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 30000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $this->assertSame(30000.0, (float) $current->fresh()->approved_amount);
+        $this->assertNull($current->fresh()->commission_decision_locked_at);
     }
 
     public function test_green_innovative_bonus_enforces_twenty_percent_budget_cap(): void
@@ -1389,6 +1402,17 @@ class CanonicalIndividualScoringTest extends TestCase
         ]);
 
         $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('evaluation.store-decision', $application), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 20000.01,
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors('approved_amount');
+        $this->assertNull($application->fresh()->commission_decision);
+        $this->assertNull($application->fresh()->commission_decision_locked_at);
+
+        $this->actingAs($president->user)
             ->post(route('evaluation.store-decision', $application), [
                 'commission_decision' => 'podrzava_potpuno',
                 'approved_amount' => 20000,
@@ -1397,15 +1421,14 @@ class CanonicalIndividualScoringTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertSame(20000.0, (float) $application->fresh()->approved_amount);
+        $this->assertNotNull($application->fresh()->commission_decision_locked_at);
 
         $this->actingAs($president->user)
-            ->from(route('admin.competitions.ranking', $competition))
             ->post(route('evaluation.store-decision', $application), [
                 'commission_decision' => 'podrzava_potpuno',
                 'approved_amount' => 20000.01,
             ])
-            ->assertRedirect(route('admin.competitions.ranking', $competition))
-            ->assertSessionHasErrors('approved_amount');
+            ->assertForbidden();
 
         $this->assertSame(20000.0, (float) $application->fresh()->approved_amount);
 

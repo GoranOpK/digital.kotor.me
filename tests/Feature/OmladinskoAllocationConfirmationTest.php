@@ -192,16 +192,14 @@ class OmladinskoAllocationConfirmationTest extends TestCase
     {
         $ctx = $this->twoAppsFundsForOne();
         $this->saveAndLock($ctx, [$ctx['tied'][0]->id], ['for', 'for', 'for']);
-        $this->actingAs($ctx['chairman']->user)
+        $rewrite = $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['tied'][0]))
             ->post(route('evaluation.youth-allocation-draft', $ctx['tied'][0]), $this->capDraft([
                 'approved_amount' => 20000,
                 'commission_justification' => 'Izmijenjen iznos nakon usvojenog kruga.',
-            ]))
-            ->assertRedirect()
-            ->assertSessionHasErrors([
-                'approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE,
-            ]);
+            ]));
+        $rewrite->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rewrite->exception?->getMessage());
         $this->assertSame('30000.00', $ctx['tied'][0]->fresh()->approved_amount);
         $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-list', $ctx['competition']));
@@ -309,15 +307,15 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->assertSame('published', $ctx['competition']->fresh()->status);
         $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
 
-        $this->actingAs($ctx['chairman']->user)
+        $rewrite = $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $supported))
             ->post(route('evaluation.youth-allocation-draft', $supported), $this->capDraft([
                 'approved_amount' => 10000,
                 'commission_justification' => 'Pojedinačna izmjena i dalje važi.',
-            ]))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-        $this->assertSame('10000.00', $supported->fresh()->approved_amount);
+            ]));
+        $rewrite->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rewrite->exception?->getMessage());
+        $this->assertSame('30000.00', $supported->fresh()->approved_amount);
         $this->assertSame('approved', $supported->fresh()->status);
     }
 

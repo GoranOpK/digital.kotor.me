@@ -448,6 +448,7 @@ class Application extends Model
         'commission_notes',
         'commission_decision_date',
         'signed_by_chairman',
+        'commission_decision_locked_at',
         'signed_by_members',
         'submitted_at',
         'evaluated_at',
@@ -479,6 +480,7 @@ class Application extends Model
         'interview_scheduled_at' => 'datetime',
         'commission_decision_date' => 'date',
         'signed_by_chairman' => 'boolean',
+        'commission_decision_locked_at' => 'datetime',
         'signed_by_members' => 'array',
     ];
 

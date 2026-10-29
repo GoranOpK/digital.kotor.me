@@ -86,6 +86,7 @@ final class YouthEqualScoreVotingService
 
     public function __construct(
         protected CanonicalIndividualScoringService $canonicalScoring,
+        protected AllocationCompletionGuard $completion,
     ) {}
 
     /**
@@ -211,75 +212,18 @@ final class YouthEqualScoreVotingService
             return $this->remainingBeforeApplication($competition, $application);
         }
 
-        $scored = $this->scoredRankedApplications($competition);
         $budget = $this->money((string) ($competition->budget ?? 0));
-        $selfId = (int) $application->id;
-        $selfRow = $scored->first(fn (array $row) => (int) $row['application']->id === $selfId);
-        $rank = $selfRow !== null ? (int) $selfRow['rank'] : PHP_INT_MAX;
-        $fullScore = $selfRow['full_score'] ?? null;
-
-        $globalUsed = '0.00';
-        foreach ($scored as $row) {
-            $other = $row['application'];
-            if ((int) $other->id === $selfId || ! $this->isCompetingDraft($other)) {
-                continue;
-            }
-            $globalUsed = bcadd($globalUsed, $this->money((string) $other->approved_amount), 2);
-        }
-        $globalRoom = bcsub($budget, $globalUsed, 2);
-        if (bccomp($globalRoom, '0.00', 2) === -1) {
-            $globalRoom = '0.00';
-        }
-
-        $higherUsed = '0.00';
-        foreach ($scored->groupBy('rank')->sortKeys() as $groupRank => $rows) {
-            if ((int) $groupRank >= $rank) {
-                break;
-            }
-            foreach ($rows->groupBy('full_score') as $sameScore) {
-                $higherUsed = bcadd($higherUsed, $this->sumDrafts($this->competingFromRows($sameScore)), 2);
-            }
-        }
-        $beforeSet = bcsub($budget, $higherUsed, 2);
-
-        $sameSet = $fullScore === null
-            ? collect()
-            : $scored->filter(fn (array $row) => (int) $row['rank'] === $rank && $row['full_score'] === $fullScore);
-        $others = $sameSet
+        $pool = $this->scoredRankedApplications($competition)
             ->map(fn (array $row) => $row['application'])
-            ->filter(fn (Application $other) => (int) $other->id !== $selfId)
+            ->filter(fn (Application $ranked) => $this->canonicalScoring->youthMeetsMinimumScore($ranked))
             ->values();
 
-        if (! $this->isStartup($application)) {
-            $startups = $sameSet
-                ->map(fn (array $row) => $row['application'])
-                ->filter(fn (Application $other) => $this->isStartup($other))
-                ->values();
-            foreach ($startups as $startup) {
-                if (! $this->hasCompleteDraft($startup)) {
-                    return '0.00';
-                }
-            }
-            $startupSum = $this->sumDrafts($startups->filter(fn (Application $startup) => $this->isCompetingDraft($startup)));
-            $developmentSum = $this->sumDrafts(
-                $others->filter(fn (Application $other) => ! $this->isStartup($other) && $this->isCompetingDraft($other))
-            );
-            $room = bcsub(bcsub($beforeSet, $startupSum, 2), $developmentSum, 2);
-        } else {
-            $otherStartupSum = $this->sumDrafts(
-                $others->filter(fn (Application $other) => $this->isStartup($other) && $this->isCompetingDraft($other))
-            );
-            $room = bcsub($beforeSet, $otherStartupSum, 2);
-        }
-
-        if (bccomp($room, '0.00', 2) === -1) {
-            $room = '0.00';
-        }
-        if (bccomp($room, $globalRoom, 2) === 1) {
-            return $globalRoom;
-        }
-
-        return $room;
+        return $this->completion->supportRoom(
+            $budget,
+            $pool,
+            $application,
+            fn (Application $other) => $this->completion->youthMaxClaim($other, $budget),
+        );
     }
 
     public function startupPrioritySupportBlockReason(Competition $competition, Application $application): ?string

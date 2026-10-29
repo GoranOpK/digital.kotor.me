@@ -823,6 +823,10 @@
                         @endif
 
                         @foreach($applications as $application)
+                            @php
+                                $zenskoDecisionLocked = $competition->type === 'zensko'
+                                    && $application->commission_decision_locked_at !== null;
+                            @endphp
                             <div class="commission-decision-block{{ $application->signed_by_chairman ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
                                 @if(!in_array($competition->status, ['closed', 'completed']))
                                 <div class="commission-decision-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
@@ -843,6 +847,11 @@
                                     @endif
                                 </div>
 
+                                    @if($zenskoDecisionLocked)
+                                        <p class="no-print" style="margin: 0 0 16px 0; color: #92400e; font-size: 14px;">
+                                            {{ \App\Services\Competitions\ZenskoCommissionDecisionWriter::DECISION_LOCKED_MESSAGE }}
+                                        </p>
+                                    @else
                                     <form class="no-print" method="POST" action="{{ route('evaluation.store-decision', $application) }}">
                                         @csrf
                                         
@@ -910,9 +919,10 @@
                                             <button type="submit" class="btn btn-success" style="padding: 10px 24px; font-size: 14px; min-width: 160px;" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 24px; font-size: 14px; min-width: 160px;" @endif>Sačuvaj zaključak</button>
                                         </div>
                                     </form>
+                                    @endif
                                 @endif
 
-                                <table class="commission-decision-table{{ (!in_array($competition->status, ['closed', 'completed'])) ? ' print-only' : '' }}">
+                                <table class="commission-decision-table{{ (!in_array($competition->status, ['closed', 'completed']) && ! $zenskoDecisionLocked) ? ' print-only' : '' }}">
                                     <tbody>
                                         <tr class="commission-decision-name">
                                             <th colspan="2">{{ $application->business_plan_name }}</th>

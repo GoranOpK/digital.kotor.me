@@ -405,7 +405,7 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame('Djelimična podrška zbog budžeta.', $ctx['application']->fresh()->commission_justification);
     }
 
-    public function test_draft_can_be_edited_without_changing_status_or_remaining_after_first(): void
+    public function test_first_save_locks_the_decision_and_does_not_close_the_call(): void
     {
         $ctx = $this->rankingReady();
         $ctx['application']->update(['requested_amount' => 8000]);
@@ -435,16 +435,28 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame('0.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
         $this->assertSame('100000.00', $annual->remainingAfterFirst('omladinsko', $year));
 
-        $this->actingAs($ctx['chairman']->user)
+        $lockedPage = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $lockedPage);
+        $this->assertStringContainsString('data-testid="youth-allocation-decision-locked"', $lockedPage);
+        $this->assertStringNotContainsString(route('evaluation.youth-allocation-draft', $ctx['application']), $lockedPage);
+        $this->assertStringContainsString(route('evaluation.youth-allocation-draft', $second), $lockedPage);
+        $this->assertStringContainsString(YouthAllocationDraftService::DECISION_LOCK_NOTICE, $lockedPage);
+
+        $rewrite = $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
                 'approved_amount' => 6000,
                 'commission_justification' => 'Iznos je umanjen.',
-            ]))
-            ->assertSessionHasNoErrors();
+            ]));
+        $rewrite->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rewrite->exception?->getMessage());
 
         $this->assertSame(2, Application::query()->where('competition_id', $ctx['competition']->id)->count());
-        $this->assertSame('6000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertSame('8000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
         $this->assertSame('0.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
 
         $this->actingAs($ctx['chairman']->user)
@@ -456,34 +468,72 @@ class YouthAllocationGateTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertTrue($annual->youthAllocationListIsComplete($ctx['competition']->fresh()));
-        $this->assertSame('11000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
-        $this->assertSame('11000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
-        $this->assertSame('89000.00', $annual->remainingAfterFirst('omladinsko', $year));
+        $this->assertSame('13000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('87000.00', $annual->remainingAfterFirst('omladinsko', $year));
         $this->assertSame('published', $ctx['competition']->fresh()->status);
 
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
+        $rejectLocked = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
                 'commission_decision' => 'odbija',
                 'commission_justification' => 'Nema dovoljno sredstava za cijeli iznos.',
-            ])
-            ->assertSessionHasNoErrors();
+            ]);
+        $rejectLocked->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rejectLocked->exception?->getMessage());
 
         $fresh = $ctx['application']->fresh();
-        $this->assertSame('rejected', $fresh->status);
-        $this->assertSame('odbija', $fresh->commission_decision);
-        $this->assertSame('0.00', $fresh->approved_amount);
-        $this->assertSame('Nema dovoljno sredstava za cijeli iznos.', $fresh->commission_justification);
-        $this->assertSame('Nema dovoljno sredstava za cijeli iznos.', $fresh->rejection_reason);
+        $this->assertSame('approved', $fresh->status);
+        $this->assertSame('podrzava_potpuno', $fresh->commission_decision);
+        $this->assertSame('8000.00', $fresh->approved_amount);
+        $this->assertNull($fresh->commission_justification);
+        $this->assertNull($fresh->rejection_reason);
         $this->assertTrue($fresh->signed_by_chairman);
         $this->assertSame($rankBefore, $fresh->ranking_position);
         $this->assertSame($secondRank, $second->fresh()->ranking_position);
         $this->assertSame('approved', $second->fresh()->status);
         $this->assertSame('published', $ctx['competition']->fresh()->status);
         $this->assertSame(2, Application::query()->where('competition_id', $ctx['competition']->id)->count());
-        $this->assertTrue($annual->youthAllocationListIsComplete($ctx['competition']->fresh()));
-        $this->assertSame('5000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
-        $this->assertSame('95000.00', $annual->remainingAfterFirst('omladinsko', $year));
+        $this->assertSame('13000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('87000.00', $annual->remainingAfterFirst('omladinsko', $year));
+    }
+
+    public function test_rejected_decision_is_locked_against_a_second_http_save(): void
+    {
+        $ctx = $this->rankingReady();
+        $ctx['application']->update(['requested_amount' => 8000]);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Komisija odbija prijavu.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $locked = $ctx['application']->fresh();
+        $this->assertSame('rejected', $locked->status);
+        $this->assertSame('odbija', $locked->commission_decision);
+        $this->assertSame('Komisija odbija prijavu.', $locked->commission_justification);
+
+        $rewrite = $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
+                'approved_amount' => 1000,
+                'commission_justification' => 'Pokušaj izmjene odbijene odluke.',
+            ]));
+        $rewrite->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rewrite->exception?->getMessage());
+
+        $fresh = $ctx['application']->fresh();
+        $this->assertSame('rejected', $fresh->status);
+        $this->assertSame('odbija', $fresh->commission_decision);
+        $this->assertSame('0.00', $fresh->approved_amount);
+        $this->assertSame('Komisija odbija prijavu.', $fresh->commission_justification);
+        $this->assertSame('published', $ctx['competition']->fresh()->status);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('data-testid="youth-allocation-decision-locked"', $html);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $html);
     }
 
     public function test_womens_entries_are_closed_and_forty_five_day_deadline_is_not_applied(): void

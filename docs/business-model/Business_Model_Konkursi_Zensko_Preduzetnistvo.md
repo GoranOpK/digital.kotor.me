@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.22
-**Datum:** 2026-09-18
+**Verzija:** 1.0.23
+**Datum:** 2026-10-29
 
 Povezani dokumenti:
 
@@ -52,6 +52,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.20 | 2026-09-18 | Documentation reconciliation §13.6: poslovno pravilo prioriteta finansiranja kod jednakih bodova ostaje **PO USVOJENO**. Eksplicitno: runtime implementacija **ne postoji**; runtime testovi **ne postoje** (TEST GAP); produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.17) **ne** tumači se kao runtime acceptance §13.6. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan. |
 | 1.0.21 | 2026-09-18 | §13.6 runtime closeout (dokumentacija): runtime implementacija evidentirana commitom `35a0da8` (`feat(competitions): enforce equal-score allocation rules`) — IMPLEMENTED IN CODE; TESTED LOCALLY (`ZpEqualScoreAllocationGateTest` i regresija); PUSHED TO `origin/main`. Produkcijski runtime acceptance **nije** još izvršen/potvrđen. Poslovno pravilo §13.6 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.22 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Poslovna pravila KEEP. Status dokumenta ostaje `USVOJEN`. |
+| 1.0.23 | 2026-10-29 | KN-PATCH-BM-027 — Buduća odluka Komisije zaključava se prvim uspješnim čuvanjem. Odluka sačuvana prije toga ostaje bez vremena zaključavanja i može se ispraviti. Prije upisa iznos mora ostaviti zakonit završetak: budžet, postojeći limit od 20% kada je potvrđen zeleni ili inovativni bonus, traženi iznos i prednost otpočinjanja. Limiti 10% i 5% se ne uvode u ovaj upis. Istovremeni upisi dijele jednu transakciju. |
 
 Napomena:
 
@@ -942,6 +943,8 @@ Prioritet se razrješava **samo u obimu potrebnom** da se jednoznačno utvrdi ko
 
 Tehnički identifikator Prijave **nije** poslovni tie-break. Detalj funkcionalnog toka, evidentiranja i gate-ova: `KN-FS-003` §14.9.
 
+Predsjednik može evidentirati odluku bilo kojim redoslijedom. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno zaključava ishod, iznos i obrazloženje. Odluka koja je već bila sačuvana, a nema vrijeme zaključavanja, ostaje ispravljiva i ovim pravilom se ne prepisuje. Upis se odbija ako poslije njega ne ostaje zakonit završetak: zbir u budžetu, traženi iznos, limit od 20% kada je zeleni ili inovativni bonus potvrđen, i prednost otpočinjanja nad razvojem pri istim bodovima. Limiti 10% i 5% ostaju poslovne granice iz §13.4 i ovim upisom se ne mijenjaju. Dva istovremena čuvanja ne mogu zajedno preći budžet.
+
 ## 13.7. Konačna rang-lista
 
 Nakon što Komisija na trećoj sjednici završi potrebne radnje i predsjednik Komisije evidentira potrebne podatke, rang-lista prelazi u **konačno stanje** (čl. 21).
@@ -1139,4 +1142,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.19**
+**Kraj dokumenta KN-BM-003 v1.0.23**

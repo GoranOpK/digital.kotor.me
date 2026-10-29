@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.17
-**Datum:** 2026-09-18
+**Verzija:** 1.0.18
+**Datum:** 2026-10-29
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.22; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9 — runtime implementiran commitom `35a0da8`; V1 **COMPLETE / PRODUCTION ACCEPTED** 2026-09-18; V1 platformski closeout; ŽP V1 documentation corrective; Patch 9 Article 3 wording; §13.6/§14.9 documentation reconciliation; §13.6 runtime closeout; V1 production closeout)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.23; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9 — runtime implementiran commitom `35a0da8`; V1 **COMPLETE / PRODUCTION ACCEPTED** 2026-09-18; V1 platformski closeout; ŽP V1 documentation corrective; Patch 9 Article 3 wording; §13.6/§14.9 documentation reconciliation; §13.6 runtime closeout; V1 production closeout; KN-PATCH-BM-027 zaključavanje budućih odluka)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
 
@@ -72,6 +72,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.15 | 2026-09-18 | Documentation reconciliation §14.9 / §18.6.4 prema `KN-BM-003` v1.0.20: funkcionalni zahtjev prioriteta finansiranja kod jednakih bodova ostaje **USVOJEN / specifikovan**. Eksplicitno: runtime implementacija **ne postoji**; runtime testovi **ne postoje** (TEST GAP); produkcijski runtime acceptance **nije** izvršen. V1 platformski closeout (v1.0.12) **ne** tumači se kao runtime acceptance §14.9. Status dokumenta ostaje `USVOJEN`. Kod nije mijenjan. |
 | 1.0.16 | 2026-09-18 | §14.9 / §18.6.4 runtime closeout (dokumentacija) prema `KN-BM-003` v1.0.21: runtime implementacija evidentirana commitom `35a0da8` — IMPLEMENTED IN CODE; TESTED LOCALLY (`ZpEqualScoreAllocationGateTest` i regresija); PUSHED TO `origin/main`. Produkcijski runtime acceptance **nije** još izvršen/potvrđen. Funkcionalna pravila §14.9 / §18.6.4 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.17 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED prema `KN-BM-003` v1.0.22: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Funkcionalna pravila §14.9 / §18.6.4 KEEP. Status dokumenta ostaje `USVOJEN`. |
+| 1.0.18 | 2026-10-29 | KN-PATCH-FS-025 — Prvo čuvanje buduće odluke zaključava ishod, iznos i obrazloženje. Ranija odluka bez vremena zaključavanja ostaje ispravljiva i ne prepisuje se. Iznos se odbija ako bi onemogućio zakonit završetak, uključujući prednost otpočinjanja i postojeći limit od 20% za potvrđeni zeleni ili inovativni bonus. Limiti 10% i 5% se ne uvode. Istovremeni upisi ne mogu zajedno preći budžet. |
 
 Napomena:
 
@@ -3005,7 +3006,7 @@ Redoslijed:
 5. kada je §14.9 aktivan, potrebni prioritet finansiranja mora biti razriješen i evidentiran **prije** formiranja / zaključavanja konačne rang-liste (§14.10);
 6. Predlog Odluke **ne** smije biti formiran iz nerazriješenog rezultata (§15.1).
 
-**Ne** uvodi se zabrana samog prethodnog unosa Podržava / Odbija ili iznosa samo zato što §14.9 još nije razriješen.
+**Ne** uvodi se zabrana samog prethodnog unosa Podržava / Odbija ili iznosa samo zato što §14.9 još nije razriješen. Unos je i dalje moguć bilo kojim redoslijedom. Iznos se odbija kada poslije njega ne ostaje zakonit završetak: budžet, traženi iznos, limit od 20% za potvrđeni zeleni ili inovativni bonus i prednost otpočinjanja. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno je zaključava. Odluka sačuvana ranije, bez vremena zaključavanja, ostaje ispravljiva. Limiti 10% i 5% se ovim pravilom ne mijenjaju.
 
 **Ali:** konačna rang-lista i Predlog Odluke moraju biti **blokirani** dok postoji relevantna grupa jednakih bodova koju raspoloživa sredstva ne mogu u cjelosti pokriti, a potrebni prioritet finansiranja nije razriješen. Ako je prioritet razriješen odlukom Komisije, mora postojati i obavezno obrazloženje.
 
@@ -4648,4 +4649,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.14**
+**Kraj dokumenta KN-FS-003 v1.0.18**

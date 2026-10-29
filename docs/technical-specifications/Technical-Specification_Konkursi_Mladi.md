@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.12
-**Datum:** 2026-10-23
+**Verzija:** 1.0.14
+**Datum:** 2026-10-29
 
 Povezani dokumenti:
 
-* Registar oznaka: **KN-RG-001 v1.0.45** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
+* Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.14** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.16** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.16** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.18** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -50,6 +50,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.10 | 2026-10-22 | KN-PATCH-TS-010 — Katalog omladinskog bodovanja prikazuje kriterijum 6 kao punu formulaciju: „Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).“ Niz tačaka se ne prikazuje. Ženski katalog ostaje nepromijenjen. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.11 | 2026-10-22 | KN-PATCH-TS-011 — Digital **ne** vodi omladinsku evidenciju usmenog predstavljanja. Rute `commission-sessions.oral.*` i `commission-sessions.second.*` ne upisuju termin, prisustvo, nedolazak ni završetak. `youthLockEvidence*` nije kapija nacrta, konačne ocjene, ciklusa ni rangiranja. Konačna ocjena zahtijeva svih 10 omladinskih kriterijuma i potvrdu člana, kao ženski tok. Kriterijum 10 ostaje omladinski tekst. Stari redovi `application_oral_presentations` ostaju istorijski; nema migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
 | 1.0.12 | 2026-10-23 | KN-PATCH-TS-012 — HTTP tok omladinske individualne ocjene nema `save_as_draft`. `storeYouthScore` odbija `save_as_draft` i nepotpunih 10 kriterijuma bez upisa. Forma ima jedno dugme `Sačuvaj ocjene` sa potvrdom; odustanak ne šalje zahtjev. Raniji redovi sa `completed_at` null ostaju; nijesu konačni dok isti član ne sačuva svih 10. `youth_bonus_action` draft ostaje. Kapije M3, prigovora, statusa i kompletne Komisije ostaju. Nema migracije. Ženski tok, MMSP i kanonsko upravljanje nijesu dirani. |
+| 1.0.13 | 2026-10-28 | KN-PATCH-TS-013 — `YouthAllocationDraftService::saveDraft` poslije `lockForUpdate` odbija drugi upis ako `commission_decision` već ima `podrzava_potpuno` ili `odbija`. Nema nove tabele ni migracije. HTTP `POST /applications/{application}/youth-allocation-draft` vraća 403 i ne mijenja ishod, iznos ni obrazloženje. Forma zaključane odluke nema polja za unos. Rute glasanja i potvrde liste ostaju 403. `closeCompetition` ostaje ručan. Ženski `storeDecision` nije diran. |
+| 1.0.14 | 2026-10-29 | KN-PATCH-TS-014 — `saveDraft` zaključava Poziv i prijave u jednoj transakciji, pa dva istovremena upisa ne mogu zajedno preći budžet. Redoslijedne zabrane `lowerRankDraftBlockReason` i `startupPrioritySupportBlockReason` više ne blokiraju čuvanje. `AllocationCompletionGuard` prima iznos samo ako neriješene više prijave i otpočinjanje istog ranga i dalje imaju prostor do traženog iznosa i limita; bez potvrđenih činjenica rezervacija je 30%. Odbijanje otpočinjanja dok je razvoj istog ranga podržan vraća 403. Rute glasanja i potvrde liste ostaju 403. |
 
 Napomena:
 
@@ -2487,11 +2489,11 @@ Izvor: `BM-ML-045`.
 
 ## 11.2. Konačna rang-lista
 
-Na trećoj sjednici Komisija za svaki plan konstatuje podršku ili odbijanje i iznos. **Ne** uvodi se obavezni elektronski `TYPE_THIRD` kao kapija. Poslovni događaj može biti van Platforme. Platforma evidentira zaključke, glasove i konačnu potvrdu. Nacrt raspodjele može biti pripremljen ranije; **nema** konačno dejstvo i **ne** mijenja `applications.status`.
+Na trećoj sjednici Komisija za svaki plan konstatuje podršku ili odbijanje i iznos. **Ne** uvodi se obavezni elektronski `TYPE_THIRD` kao kapija. Poslovni događaj može biti van Platforme. Platforma taj zaključak čuva po prijavi. Prvo uspješno čuvanje postavlja `applications.status` na `approved` ili `rejected` i zaključava `commission_decision`, `approved_amount` i `commission_justification`.
 
-Rang-lista prelazi u konačnu fazu tek kada predsjednik potvrdi **cijelu listu odjednom**. Prije potvrde: svaka granična izjednačena grupa ima usvojen i zaključan predlog raspodjele; limiti 30/20/15 potvrđeni za svaku podržanu prijavu. Ženski rok od 45 dana **ne** primjenjuje se.
+Elektronsko glasanje i potvrda cijele liste **ne** uvode se. Postojeće rute i dalje vraćaju 403 i ne pišu odluku. Ženski rok od 45 dana **ne** primjenjuje se.
 
-Preliminarni sadržaj ostaje radi sljedivosti. Prelazak **ne** mijenja zaključane ocjene i **ne** računa bodove ponovo. Nacrt i činjenice se zaključavaju.
+Preliminarni bodovi i rang ostaju. Čuvanje odluke **ne** računa bodove ponovo i **ne** zatvara poziv.
 
 Javni PDF lifecycle službenih akata ostaje van V1.
 
@@ -2545,13 +2547,13 @@ Izvor: `BM-ML-046`; `BM-ML-044`; `KN-FS-002` §20.4 i §20.7.5.
 
 Platforma **ne** određuje iznos automatski i **ne** dodjeljuje maksimalni dozvoljeni iznos.
 
-Komisija određuje iznos. Predsjednik ga evidentira u ime Komisije.
+Komisija određuje iznos. Predsjednik ga evidentira u ime Komisije, jednim čuvanjem po prijavi.
 
 Manji iznos od traženog zahtijeva obrazloženje.
 
-Potvrda čuva izvršioca, datum i vrijeme.
+Čuvanje upisuje izvršioca, datum i vrijeme. Ako `commission_decision` već ima `podrzava_potpuno` ili `odbija`, `saveDraft` unutar transakcije, nad redom zaključanim sa `lockForUpdate`, prekida zahtjev sa 403 i ne upisuje novo stanje. Nema nove kolone: postojeća vrijednost odluke je brava.
 
-Zbir potvrđenih iznosa **ne smije** preći budžet Poziva. Potvrda koja krši ograničenja je blokirana, sa razlogom.
+Zbir sačuvanih iznosa **ne smije** preći budžet Poziva. Iznos koji krši traženi iznos, procenat ili preostali budžet odbija se prije upisa, sa razlogom. Takav pokušaj ne zaključava praznu odluku.
 
 Izvor: `BM-ML-048`; `KN-FS-002` §21.3.
 
@@ -3103,7 +3105,7 @@ Ponovo se koristi `evaluation_scores`. Živi katalog je deset `criterion_*` kolo
 | Konačni bodovi | `final_score` `decimal(5,2)` | da kao prikaz/sačuvani rezultat | **ne** širiti kolonu u ovom nacrtu; prag i rang iz izvornih ocjena | puna vrijednost za prag i rang; prikaz 2 decimale |
 | Rang `1, 2, 2, 4` | `ranking_position` | da, integer može čuvati isti broj na dvije prijave | **nema** nove kolone; mijenja se algoritam | nema ID/vrijeme/abeceda tie-breaka |
 | Poslovna faza | `business_stage` | da za prednost otpočinjanja u `BM-ML-046` | **ne** mapirati na 30% | nije evidencija inovativnog tehnološkog start-upa |
-| Odobreni iznos | `approved_amount` | da kao polje nacrta i konačnog iznosa | Platforma ne računa iznos; nacrt nema konačno dejstvo | Komisija određuje; predsjednik evidentira; `remaining_after_first` samo od `status=approved` |
+| Odobreni iznos | `approved_amount` | da, uz odluku | Prvo čuvanje je konačno; drugi upis je 403 | Komisija određuje; predsjednik evidentira; `remaining_after_first` samo od `status=approved` kada su sve odluke na pragu zaključane |
 | Odluka | `commission_decision`, obrazloženje, potpisi | da za nacrt | konačni `approved`/`rejected` tek pri potvrdi cijele liste | manji iznos zahtijeva obrazloženje |
 | Inovativni tehnološki start-up (čl. 19) | **ne postoji** kao posebna evidencija | ne | predložena youth-only polja ispod; **ne** ženske kolone | ne izvoditi iz `business_stage` ni +3 |
 | Ranije youth finansiranje (20%/15%) | **ne postoji** kao posebna evidencija | ne | predložena youth-only polja ispod; **ne** M3 `criterion_2` | ne izvoditi iz eliminatornog M4/M4a |
@@ -3726,4 +3728,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.12**
+**Kraj dokumenta KN-TS-002 v1.0.14**

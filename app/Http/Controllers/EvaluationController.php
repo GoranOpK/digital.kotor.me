@@ -14,6 +14,7 @@ use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\ZenskoCommissionDecisionWriter;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
@@ -38,6 +39,7 @@ class EvaluationController extends Controller
         protected YouthAllocationDraftService $youthAllocationDrafts,
         protected YouthEqualScoreVotingService $youthEqualScoreVoting,
         protected YouthAllocationListConfirmationService $youthAllocationListConfirmation,
+        protected ZenskoCommissionDecisionWriter $zenskoDecisions,
     ) {}
 
     /**
@@ -1219,6 +1221,18 @@ class EvaluationController extends Controller
         $decision = $validated['commission_decision'];
         $justification = trim((string) ($validated['commission_justification'] ?? ''));
         $approvedAmount = array_key_exists('approved_amount', $validated) ? $validated['approved_amount'] : null;
+
+        if ($competition && $competition->type === 'zensko') {
+            $this->zenskoDecisions->store($application, [
+                'commission_decision' => $decision,
+                'commission_justification' => $justification,
+                'commission_notes' => $validated['commission_notes'] ?? null,
+                'approved_amount' => $approvedAmount,
+            ]);
+
+            return redirect()->route('admin.competitions.ranking', $application->competition)
+                ->with('success', 'Zaključak komisije je uspješno sačuvan.');
+        }
 
         // §13.6 same-stage: require obrazloženje only when equal-score / same-stage budget choice is active.
         // Does not block mid-flow for mixed-stage priority (that is enforced at Predlog).
