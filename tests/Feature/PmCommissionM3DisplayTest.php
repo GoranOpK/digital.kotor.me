@@ -104,6 +104,7 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertStringNotContainsString('Dugme Štampaj otvara prozor za štampu pregledača', $html);
         $this->assertStringContainsString('window.print()', $html);
         $this->assertMatchesRegularExpression('/id="youth-save-scores"[^>]*disabled/', $html);
+        $this->assertStringNotContainsString('Čuvanjem ocjena završavate pojedinačno ocjenjivanje. Nakon potvrde, unesene ocjene više nije moguće mijenjati.', $html);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.store', $physical), ['criterion_1' => 5])
@@ -279,6 +280,68 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/id="youth-save-scores"[^>]*disabled/', $html);
     }
 
+    public function test_pm_score_button_explains_completion_only_while_it_is_available(): void
+    {
+        $explanation = 'Čuvanjem ocjena završavate pojedinačno ocjenjivanje. Nakon potvrde, unesene ocjene više nije moguće mijenjati.';
+        $ctx = $this->youthCommission();
+        $application = $this->application($ctx['competition'], 'fizicko_lice', [
+            'physical_person_name' => 'Ana Anić',
+        ], 'Nalog Ocjene');
+
+        $blocked = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('>Sačuvaj ocjene<', $blocked);
+        $this->assertMatchesRegularExpression('/id="youth-save-scores"[^>]*disabled/', $blocked);
+        $this->assertStringNotContainsString($explanation, $blocked);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $application), [
+                'criterion_1' => '1',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => '',
+                'confirmation_acknowledged' => '0',
+            ])
+            ->assertRedirect(route('evaluation.create', $application));
+
+        $open = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('>Sačuvaj ocjene<', $open);
+        $this->assertDoesNotMatchRegularExpression('/id="youth-save-scores"[^>]*disabled/', $open);
+        $this->assertSame(1, substr_count($open, $explanation));
+        $this->assertMatchesRegularExpression(
+            '/<p class="no-print"[^>]*>'.preg_quote($explanation, '/').'<\/p>/',
+            $open
+        );
+
+        $payload = ['scoring_confirmed' => '1', 'notes' => null];
+        for ($i = 1; $i <= 10; $i++) {
+            $payload["criterion_{$i}"] = 4;
+        }
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $application), $payload)
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
+        $this->assertNotNull(
+            EvaluationScore::query()
+                ->where('application_id', $application->id)
+                ->whereNotNull('completed_at')
+                ->first()
+        );
+
+        $locked = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Individualna ocjena je zaključana i ne može se mijenjati.', $locked);
+        $this->assertStringNotContainsString($explanation, $locked);
+    }
+
     public function test_saved_m3_show_keeps_the_m1_memorandum(): void
     {
         $ctx = $this->youthCommission();
@@ -363,6 +426,7 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertStringContainsString('Potvrdi Obrazac 3', $html);
         $this->assertStringNotContainsString('Potvrdi eliminatornu provjeru', $html);
         $this->assertStringNotContainsString('Korak 1 — Eliminatorna provjera', $html);
+        $this->assertStringNotContainsString('Čuvanjem ocjena završavate pojedinačno ocjenjivanje. Nakon potvrde, unesene ocjene više nije moguće mijenjati.', $html);
         $this->assertStringNotContainsString('pm-m3-memorandum', $html);
         $this->assertStringNotContainsString('srednji_grb.png', $html);
         $this->assertStringContainsString('margin: 10mm 8mm', $html);

@@ -1325,6 +1325,9 @@
                             @endif
                             <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
                             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                            @if(! $isDeadlinePassed && $scoringIsAllowed)
+                                <p class="no-print" style="margin: 8px auto 0; max-width: 42rem; font-size: 13px; font-weight: 400; color: #6b7280; line-height: 1.5;">Čuvanjem ocjena završavate pojedinačno ocjenjivanje. Nakon potvrde, unesene ocjene više nije moguće mijenjati.</p>
+                            @endif
                         @else
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
