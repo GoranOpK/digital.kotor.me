@@ -612,7 +612,12 @@
                 </div>
             </div>
             <div class="obrazac-broj-i-naslov">
-                <div class="obrazac-1a-1b">Obrazac 2</div>
+                @php
+                    $businessPlanFormTitle = ($application->competition?->type === 'omladinsko')
+                        ? 'Obrazac M2'
+                        : 'Obrazac 2';
+                @endphp
+                <div class="obrazac-1a-1b">{{ $businessPlanFormTitle }}</div>
             </div>
             <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
         </div>
