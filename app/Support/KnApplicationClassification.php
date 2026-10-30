@@ -189,6 +189,50 @@ final class KnApplicationClassification
         return in_array($type, [self::FORM_DOO, self::FORM_OSTALO, self::FORM_PRIVREDNO_DRUSTVO], true);
     }
 
+    /**
+     * Naziv prijavnog obrasca. Potpunost nije dio naziva.
+     * Za omladinsko: M1a / M1b. Za ostale tipove ostaju postojeći ženski nazivi.
+     * Nepoznat ženski tip vraća null da ekran zadrži „Nije popunjen“.
+     */
+    public static function applicationFormDisplayName(?string $applicantType, ?string $competitionType): ?string
+    {
+        if ($competitionType === 'omladinsko') {
+            if (self::isM1a($applicantType)) {
+                return 'Obrazac M1a';
+            }
+            if (self::isM1b($applicantType)) {
+                return 'Obrazac M1b';
+            }
+
+            return null;
+        }
+
+        if ($applicantType === self::FORM_PREDUZETNICA) {
+            return 'Obrazac 1a';
+        }
+        if (in_array($applicantType, [self::FORM_DOO, self::FORM_OSTALO], true)) {
+            return 'Obrazac 1b';
+        }
+        if ($applicantType === self::FORM_FIZICKO_LICE) {
+            return 'Obrazac 1a/1b';
+        }
+
+        return null;
+    }
+
+    /**
+     * Bedž na statusu: postojeći naziv plus postojeća oznaka popunjenosti.
+     */
+    public static function applicationFormStatusBadge(?string $applicantType, bool $isComplete, ?string $competitionType): ?string
+    {
+        $name = self::applicationFormDisplayName($applicantType, $competitionType);
+        if ($name === null) {
+            return null;
+        }
+
+        return $isComplete ? $name.' popunjen' : $name.' - Nacrt';
+    }
+
     public static function isRegisteredEntrepreneurType(?string $type): bool
     {
         return in_array($type, [self::FORM_PREDUZETNICA, self::FORM_PREDUZETNIK], true);

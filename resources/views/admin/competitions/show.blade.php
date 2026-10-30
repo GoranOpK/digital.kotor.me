@@ -625,31 +625,15 @@
                                 $statusClass = 'status-' . $app->status;
                                 
                                 // Badge za Obrazac
-                                $obrazacLabel = null;
-                                $obrazacClass = 'status-draft';
-                                $obrazacUrl = null;
-                                if ($isObrazacComplete) {
-                                    if ($app->applicant_type === 'preduzetnica') {
-                                        $obrazacLabel = 'Obrazac 1a popunjen';
-                                        $obrazacClass = 'status-evaluated';
-                                    } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
-                                        $obrazacLabel = 'Obrazac 1b popunjen';
-                                        $obrazacClass = 'status-evaluated';
-                                    } elseif ($app->applicant_type === 'fizicko_lice') {
-                                        $obrazacLabel = 'Obrazac 1a/1b popunjen';
-                                        $obrazacClass = 'status-evaluated';
-                                    }
-                                    $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
-                                } else {
-                                    if ($app->applicant_type === 'preduzetnica') {
-                                        $obrazacLabel = 'Obrazac 1a - Nacrt';
-                                    } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
-                                        $obrazacLabel = 'Obrazac 1b - Nacrt';
-                                    } elseif ($app->applicant_type === 'fizicko_lice') {
-                                        $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
-                                    }
-                                    $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
-                                }
+                                $obrazacLabel = \App\Support\KnApplicationClassification::applicationFormStatusBadge(
+                                    $app->applicant_type,
+                                    $isObrazacComplete,
+                                    $competition->type
+                                );
+                                $obrazacClass = $isObrazacComplete ? 'status-evaluated' : 'status-draft';
+                                $obrazacUrl = $obrazacLabel
+                                    ? route('applications.create', $app->competition_id) . '?application_id=' . $app->id
+                                    : null;
                                 
                                 // Badge za Biznis Plan
                                 $bizPlanLabel = null;

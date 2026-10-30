@@ -503,34 +503,15 @@
                                             }
                                         } elseif ($app->applicant_type) {
                                             $isObrazacComplete = $app->isObrazacComplete();
-
-                                            if ($isObrazacComplete) {
-                                                // Obrazac je kompletan
-                                                if ($app->applicant_type === 'preduzetnica') {
-                                                    $obrazacLabel = 'Obrazac 1a popunjen';
-                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
-                                                } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
-                                                    $obrazacLabel = 'Obrazac 1b popunjen';
-                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
-                                                } elseif ($app->applicant_type === 'fizicko_lice') {
-                                                    $obrazacLabel = 'Obrazac 1a/1b popunjen';
-                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
-                                                }
-                                                // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
-                                                $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
-                                            } else {
-                                                // Obrazac nije kompletan (nacrt)
-                                                if ($app->applicant_type === 'preduzetnica') {
-                                                    $obrazacLabel = 'Obrazac 1a - Nacrt';
-                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
-                                                } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
-                                                    $obrazacLabel = 'Obrazac 1b - Nacrt';
-                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
-                                                } elseif ($app->applicant_type === 'fizicko_lice') {
-                                                    $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
-                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
-                                                }
-                                                // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
+                                            $obrazacLabel = \App\Support\KnApplicationClassification::applicationFormStatusBadge(
+                                                $app->applicant_type,
+                                                $isObrazacComplete,
+                                                $app->competition?->type
+                                            );
+                                            if ($obrazacLabel !== null) {
+                                                $obrazacStyle = $isObrazacComplete
+                                                    ? 'background: #d1fae5; color: #065f46;'
+                                                    : 'background: #fef3c7; color: #92400e;';
                                                 $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                             }
                                         }
@@ -819,28 +800,15 @@
                                     $statusClass = 'status-' . $app->status;
                                     
                                     // Badge za Obrazac
-                                    $obrazacLabel = null;
                                     $obrazacClass = 'status-draft';
                                     $obrazacUrl = route('admin.applications.show', $app);
-                                    if ($isObrazacComplete) {
-                                        if ($app->applicant_type === 'preduzetnica') {
-                                            $obrazacLabel = 'Obrazac 1a popunjen';
-                                            $obrazacClass = 'status-evaluated';
-                                        } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
-                                            $obrazacLabel = 'Obrazac 1b popunjen';
-                                            $obrazacClass = 'status-evaluated';
-                                        } elseif ($app->applicant_type === 'fizicko_lice') {
-                                            $obrazacLabel = 'Obrazac 1a/1b popunjen';
-                                            $obrazacClass = 'status-evaluated';
-                                        }
-                                    } else {
-                                        if ($app->applicant_type === 'preduzetnica') {
-                                            $obrazacLabel = 'Obrazac 1a - Nacrt';
-                                        } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
-                                            $obrazacLabel = 'Obrazac 1b - Nacrt';
-                                        } elseif ($app->applicant_type === 'fizicko_lice') {
-                                            $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
-                                        }
+                                    $obrazacLabel = \App\Support\KnApplicationClassification::applicationFormStatusBadge(
+                                        $app->applicant_type,
+                                        $isObrazacComplete,
+                                        $app->competition?->type
+                                    );
+                                    if ($obrazacLabel !== null && $isObrazacComplete) {
+                                        $obrazacClass = 'status-evaluated';
                                     }
                                     
                                     // Badge za Biznis Plan

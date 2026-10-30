@@ -105,6 +105,39 @@ class KnApplicationClassificationTest extends TestCase
         );
     }
 
+    public function test_form_display_name_is_separate_from_completeness(): void
+    {
+        $this->assertSame('Obrazac M1a', KnApplicationClassification::applicationFormDisplayName('fizicko_lice', 'omladinsko'));
+        $this->assertSame('Obrazac M1a', KnApplicationClassification::applicationFormDisplayName('preduzetnica', 'omladinsko'));
+        $this->assertSame('Obrazac M1a', KnApplicationClassification::applicationFormDisplayName('preduzetnik', 'omladinsko'));
+        $this->assertSame('Obrazac M1b', KnApplicationClassification::applicationFormDisplayName('privredno_drustvo', 'omladinsko'));
+        $this->assertSame('Obrazac M1b', KnApplicationClassification::applicationFormDisplayName('doo', 'omladinsko'));
+        $this->assertSame('Obrazac M1b', KnApplicationClassification::applicationFormDisplayName('ostalo', 'omladinsko'));
+
+        $this->assertSame('Obrazac 1a', KnApplicationClassification::applicationFormDisplayName('preduzetnica', 'zensko'));
+        $this->assertSame('Obrazac 1b', KnApplicationClassification::applicationFormDisplayName('doo', 'zensko'));
+        $this->assertSame('Obrazac 1a/1b', KnApplicationClassification::applicationFormDisplayName('fizicko_lice', 'zensko'));
+        $this->assertNull(KnApplicationClassification::applicationFormDisplayName('preduzetnik', 'zensko'));
+        $this->assertNull(KnApplicationClassification::applicationFormDisplayName('privredno_drustvo', 'zensko'));
+
+        $this->assertSame(
+            'Obrazac M1a popunjen',
+            KnApplicationClassification::applicationFormStatusBadge('fizicko_lice', true, 'omladinsko')
+        );
+        $this->assertSame(
+            'Obrazac M1a - Nacrt',
+            KnApplicationClassification::applicationFormStatusBadge('preduzetnik', false, 'omladinsko')
+        );
+        $this->assertSame(
+            'Obrazac 1a/1b popunjen',
+            KnApplicationClassification::applicationFormStatusBadge('fizicko_lice', true, 'zensko')
+        );
+        $this->assertSame(
+            'Obrazac 1a - Nacrt',
+            KnApplicationClassification::applicationFormStatusBadge('preduzetnica', false, 'zensko')
+        );
+    }
+
     public function test_new_business_bonus_eligibility_matches_unregistered_planned_paths_only(): void
     {
         // A: FL plans entrepreneur registration
