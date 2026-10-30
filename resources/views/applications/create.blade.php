@@ -1360,27 +1360,36 @@
         </form>
 
         @php
-            // Dugme "Štampa" za Obrazac 1a/1b
-            // Vidljivo je:
-            // - kandidatu koji popunjava obrazac (readOnly = false)
-            // - predsjedniku komisije koji gleda obrazac u read-only modu za odgovarajući konkurs
+            // Dugme "Štampaj" na kraju obrasca.
+            // PM M1a/M1b: samo podnosilac te prijave ili predsjednik Komisije tog konkursa.
+            // ŽP zadržava prethodno pravilo (kandidat u izmjeni, ili predsjednik u pregledu).
             $canPrintObrazac = false;
-            $currentUser = $user ?? auth()->user();
+            $viewer = auth()->user();
+            $currentUser = $user ?? $viewer;
+            $printApplication = (isset($existingApplication) && $existingApplication) ? $existingApplication : null;
 
-            if (!($readOnly ?? false)) {
-                // Kandidat koji popunjava obrazac
+            if ($isOmladinsko) {
+                $ownsApplication = $viewer
+                    && $printApplication
+                    && (int) $printApplication->user_id === (int) $viewer->id;
+                $fillingOwnNewForm = ! ($readOnly ?? false) && $viewer && ! $printApplication;
+                $isChairmanOfThisCall = false;
+                $commissionId = $printApplication?->competition?->commission_id ?? ($competition->commission_id ?? null);
+                if ($viewer && $printApplication && $commissionId) {
+                    $commissionMember = \App\Models\CommissionMember::activeForCommission($viewer->id, (int) $commissionId);
+                    $isChairmanOfThisCall = $commissionMember && $commissionMember->position === 'predsjednik';
+                }
+                $canPrintObrazac = $ownsApplication || $fillingOwnNewForm || $isChairmanOfThisCall;
+            } elseif (! ($readOnly ?? false)) {
                 $canPrintObrazac = true;
-            } else {
-                // Read-only prikaz – provjeri da li je korisnik predsjednik komisije za ovaj konkurs
-                if ($currentUser && isset($existingApplication) && $existingApplication && $existingApplication->competition) {
-                    $competitionId = $existingApplication->competition->commission_id;
-                    $commissionMember = $competitionId
-                        ? \App\Models\CommissionMember::activeForCommission($currentUser->id, $competitionId)
-                        : null;
+            } elseif ($currentUser && $printApplication && $printApplication->competition) {
+                $competitionId = $printApplication->competition->commission_id;
+                $commissionMember = $competitionId
+                    ? \App\Models\CommissionMember::activeForCommission($currentUser->id, $competitionId)
+                    : null;
 
-                    if ($commissionMember && $commissionMember->position === 'predsjednik') {
-                        $canPrintObrazac = true;
-                    }
+                if ($commissionMember && $commissionMember->position === 'predsjednik') {
+                    $canPrintObrazac = true;
                 }
             }
         @endphp
