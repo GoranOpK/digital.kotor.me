@@ -51,8 +51,11 @@ class PmM1PrintButtonTest extends TestCase
 
         $this->actingAs($stranger)->get(route('applications.show', $application))->assertForbidden();
 
-        $form = $this->actingAs($stranger)->get($this->formUrl($application))->assertOk();
-        $this->assertOkWithoutPrintButton($form->getContent());
+        $form = $this->actingAs($stranger)->get($this->formUrl($application))->assertForbidden();
+        $form->assertDontSee($application->business_plan_name, false);
+        $form->assertDontSee($application->physical_person_email, false);
+        $form->assertDontSee($application->physical_person_phone, false);
+        $form->assertDontSee($application->physical_person_jmbg, false);
     }
 
     public function test_competent_pm_chairman_sees_button_and_another_chairman_does_not_gain_access(): void

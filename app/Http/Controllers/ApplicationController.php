@@ -174,6 +174,10 @@ class ApplicationController extends Controller
             // Ako je proslijeđen application_id, provjeri da li je član komisije
             $existingApplication = Application::with('competition')->find($request->application_id);
 
+            if ($existingApplication && (int) $existingApplication->competition_id !== (int) $competition->id) {
+                abort(404);
+            }
+
             if ($existingApplication
                 && (int) $existingApplication->user_id !== (int) $user->id
                 && $existingApplication->competition
@@ -319,6 +323,12 @@ class ApplicationController extends Controller
                         ->with('info', 'Već ste podneli prijavu na ovaj konkurs.');
                 }
             }
+        }
+
+        if ($existingApplication
+            && (int) $existingApplication->user_id !== (int) $user->id
+            && ! $readOnly) {
+            abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
         if ($readOnly && $existingApplication?->user) {

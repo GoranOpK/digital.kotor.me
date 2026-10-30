@@ -256,7 +256,8 @@ class ZenskoPreDeadlineAccessTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.applications.show', $youthApplication))
             ->assertOk()
-            ->assertSee('Omladinski Podnosilac');
+            ->assertSee('Omladinski Podnosilac')
+            ->assertSee('Plan Omladinski');
 
         $this->actingAs($admin)
             ->get(route('admin.applications.show', $mmspApplication))
@@ -265,8 +266,9 @@ class ZenskoPreDeadlineAccessTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('applications.create', $youth).'?application_id='.$youthApplication->id)
-            ->assertOk()
-            ->assertSee('Plan Omladinski');
+            ->assertForbidden()
+            ->assertDontSee('Plan Omladinski')
+            ->assertDontSee('Omladinski Podnosilac');
     }
 
     private function userWithRole(string $role, ?string $name = null): User
