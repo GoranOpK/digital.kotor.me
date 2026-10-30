@@ -180,10 +180,10 @@ final class ScoringProfileConfig
             4 => 'Prepoznata je i navedena konkurencija kao i slabosti i snage iste.',
             5 => 'Jasno su navedeni potrebni resursi i identifikovani dobavljači.',
             6 => 'Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).',
-            7 => 'Podaci o preduzetniku (fizičko lice/preduzetnik posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
-            8 => 'Preduzetnik planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
+            7 => 'Podaci o podnosiocu prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
+            8 => 'Podnosilac prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
             9 => 'Razvijena matrica rizika je jasna i logična.',
-            10 => 'Usmeno obrazloženje biznis plana (preduzetnik je uvjerljivi siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovora na sva pitanja).',
+            10 => 'Usmeno obrazloženje biznis plana (podnosilac prijave je uvjerljiv i siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).',
         ];
     }
 }

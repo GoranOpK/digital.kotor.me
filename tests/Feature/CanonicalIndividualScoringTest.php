@@ -884,17 +884,20 @@ class CanonicalIndividualScoringTest extends TestCase
         // Read-only guard: youth criteria SSOT must remain untouched by ŽP label updates.
         $youthCriteria = \App\Support\ScoringProfileConfig::youthCriteria();
         $this->assertSame(
-            'Podaci o preduzetniku (fizičko lice/preduzetnik posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
+            'Podaci o podnosiocu prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).',
             $youthCriteria[7]
         );
         $this->assertSame(
-            'Preduzetnik planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
+            'Podnosilac prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.',
             $youthCriteria[8]
         );
         $this->assertSame(
-            'Usmeno obrazloženje biznis plana (preduzetnik je uvjerljivi siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovora na sva pitanja).',
+            'Usmeno obrazloženje biznis plana (podnosilac prijave je uvjerljiv i siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).',
             $youthCriteria[10]
         );
+        $this->assertNotSame($youthCriteria[7], $zenskoCriteria[7]);
+        $this->assertNotSame($youthCriteria[8], $zenskoCriteria[8]);
+        $this->assertNotSame($youthCriteria[10], $zenskoCriteria[10]);
     }
 
     public function test_chairman_cannot_persist_new_business_bonus_on_registered_preduzetnica(): void

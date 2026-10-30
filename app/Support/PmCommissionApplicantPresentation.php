@@ -11,14 +11,7 @@ final class PmCommissionApplicantPresentation
 {
     public static function line(Application $application): string
     {
-        $label = self::categoryLabel($application);
-        if ($label === null) {
-            return '—';
-        }
-
-        $name = self::subjectName($application);
-
-        return $name === null ? $label : $label.' - '.$name;
+        return self::subjectName($application) ?? '—';
     }
 
     public static function categoryLabel(Application $application): ?string

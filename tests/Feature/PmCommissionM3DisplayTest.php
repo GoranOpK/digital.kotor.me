@@ -75,7 +75,13 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $html);
         $this->assertStringContainsString('Potvrdi Obrazac M3', $html);
         $this->assertStringContainsString('placeholder="Napomena Obrasca M3"', $html);
-        $this->assertStringContainsString('value="Fizičko lice - Ana Anić"', $html);
+        $this->assertStringContainsString('value="Ana Anić"', $html);
+        $this->assertStringNotContainsString('Fizičko lice -', $html);
+        $this->assertStringContainsString('Podaci o podnosiocu prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).', $html);
+        $this->assertStringContainsString('Podnosilac prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.', $html);
+        $this->assertStringContainsString('Usmeno obrazloženje biznis plana (podnosilac prijave je uvjerljiv i siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).', $html);
+        $this->assertStringNotContainsString('Podaci o preduzetniku', $html);
+        $this->assertStringNotContainsString('Podaci o podnositeljki prijave', $html);
         $this->assertStringNotContainsString('Ostalo', $html);
         $this->assertStringNotContainsString('Obrazac 3', $html);
         $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
@@ -93,14 +99,16 @@ class PmCommissionM3DisplayTest extends TestCase
             ->get(route('evaluation.create', $entrepreneur))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('value="Preduzetnik - Marko Marković"', $entrepreneurHtml);
+        $this->assertStringContainsString('value="Marko Marković"', $entrepreneurHtml);
+        $this->assertStringNotContainsString('Preduzetnik -', $entrepreneurHtml);
         $this->assertStringNotContainsString('Ostalo - Nalog Preduzetnik', $entrepreneurHtml);
 
         $companyHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $company))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('value="AD - Jadran AD"', $companyHtml);
+        $this->assertStringContainsString('value="Jadran AD"', $companyHtml);
+        $this->assertStringNotContainsString('AD -', $companyHtml);
         $this->assertStringNotContainsString('Ostalo - Nalog Društva', $companyHtml);
         $this->assertStringNotContainsString('Nalog Društva', $companyHtml);
 
@@ -173,6 +181,11 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertStringContainsString('size: A4', $html);
         $this->assertStringContainsString('margin: 12mm 10mm', $html);
         $this->assertStringNotContainsString('Obrazac 3', $html);
+        $this->assertStringContainsString('value="Ana Anić"', $html);
+        $this->assertStringNotContainsString('Fizičko lice -', $html);
+        $this->assertStringContainsString('Podaci o podnosiocu prijave (posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).', $html);
+        $this->assertStringContainsString('Podnosilac prijave planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.', $html);
+        $this->assertStringContainsString('Usmeno obrazloženje biznis plana (podnosilac prijave je uvjerljiv i siguran u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).', $html);
     }
 
     public function test_unregistered_planned_company_shows_the_applicant_on_m3(): void
@@ -191,7 +204,8 @@ class PmCommissionM3DisplayTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Obrazac M3', $html);
-        $this->assertStringContainsString('value="AD - Jelena Jovanović"', $html);
+        $this->assertStringContainsString('value="Jelena Jovanović"', $html);
+        $this->assertStringNotContainsString('AD -', $html);
         $this->assertStringNotContainsString('Nalog Osnivača', $html);
     }
 

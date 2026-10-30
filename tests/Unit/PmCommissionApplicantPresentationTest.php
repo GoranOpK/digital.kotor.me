@@ -20,7 +20,8 @@ class PmCommissionApplicantPresentationTest extends TestCase
         ]);
         $application->setRelation('user', new User(['name' => 'Nalog Korisnika']));
 
-        $this->assertSame('Fizičko lice - Ana Anić', PmCommissionApplicantPresentation::line($application));
+        $this->assertSame('Ana Anić', PmCommissionApplicantPresentation::line($application));
+        $this->assertStringNotContainsString('Fizičko lice', PmCommissionApplicantPresentation::line($application));
     }
 
     public function test_entrepreneur_uses_the_application_name(): void
@@ -31,7 +32,8 @@ class PmCommissionApplicantPresentationTest extends TestCase
         ]);
         $application->setRelation('user', new User(['name' => 'Nalog Korisnika']));
 
-        $this->assertSame('Preduzetnik - Marko Marković', PmCommissionApplicantPresentation::line($application));
+        $this->assertSame('Marko Marković', PmCommissionApplicantPresentation::line($application));
+        $this->assertStringNotContainsString('Preduzetnik', PmCommissionApplicantPresentation::line($application));
     }
 
     public function test_registered_company_uses_the_legal_name_and_registration_form(): void
@@ -44,7 +46,8 @@ class PmCommissionApplicantPresentationTest extends TestCase
             registered: true,
         );
 
-        $this->assertSame('AD - Jadran AD', PmCommissionApplicantPresentation::line($application));
+        $this->assertSame('Jadran AD', PmCommissionApplicantPresentation::line($application));
+        $this->assertStringNotContainsString('AD -', PmCommissionApplicantPresentation::line($application));
         $this->assertStringNotContainsString('Nalog Društva', PmCommissionApplicantPresentation::line($application));
     }
 
@@ -58,7 +61,8 @@ class PmCommissionApplicantPresentationTest extends TestCase
             registered: true,
         );
 
-        $this->assertSame('KD - Boka KD', PmCommissionApplicantPresentation::line($application));
+        $this->assertSame('Boka KD', PmCommissionApplicantPresentation::line($application));
+        $this->assertStringNotContainsString('KD -', PmCommissionApplicantPresentation::line($application));
     }
 
     public function test_unresolved_historical_ostalo_is_not_labeled_ostalo(): void
@@ -93,7 +97,8 @@ class PmCommissionApplicantPresentationTest extends TestCase
 
         $line = PmCommissionApplicantPresentation::line($application);
 
-        $this->assertSame('DOO - Petar Petrović', $line);
+        $this->assertSame('Petar Petrović', $line);
+        $this->assertStringNotContainsString('DOO', $line);
         $this->assertStringNotContainsString('Nalog Društva', $line);
         $this->assertStringNotContainsString('Buduće društvo DOO', $line);
     }
@@ -108,7 +113,8 @@ class PmCommissionApplicantPresentationTest extends TestCase
             registered: true,
         );
 
-        $this->assertSame('DOO', PmCommissionApplicantPresentation::line($application));
+        $this->assertSame('—', PmCommissionApplicantPresentation::line($application));
+        $this->assertStringNotContainsString('DOO', PmCommissionApplicantPresentation::line($application));
     }
 
     private function company(
@@ -135,5 +141,19 @@ class PmCommissionApplicantPresentationTest extends TestCase
         $application->setRelation('user', $user);
 
         return $application;
+    }
+
+    public function test_company_name_keeps_doo_when_it_is_part_of_the_legal_name(): void
+    {
+        $application = $this->company(
+            applicantType: 'privredno_drustvo',
+            registrationForm: UserType::LIMITED_LIABILITY_COMPANY,
+            legalName: 'Primjer d.o.o.',
+            accountName: 'Nalog Društva',
+            registered: true,
+        );
+
+        $this->assertSame('Primjer d.o.o.', PmCommissionApplicantPresentation::line($application));
+        $this->assertStringNotContainsString('DOO -', PmCommissionApplicantPresentation::line($application));
     }
 }
