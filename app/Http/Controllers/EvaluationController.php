@@ -1494,13 +1494,13 @@ class EvaluationController extends Controller
 
         $rules = [
             'decision_note' => 'required|string|max:5000',
-            'criterion_outcomes' => 'nullable|array',
-            'criterion_outcomes.1' => 'nullable|in:otklonjen,ostaje',
-            'criterion_outcomes.2' => 'nullable|in:otklonjen,ostaje',
-            'criterion_outcomes.3' => 'nullable|in:otklonjen,ostaje',
+            'odluka' => 'required|in:prihvacen,odbijen',
         ];
         if (! $isYouth) {
-            $rules['odluka'] = 'required|in:prihvacen,odbijen';
+            $rules['criterion_outcomes'] = 'nullable|array';
+            $rules['criterion_outcomes.1'] = 'nullable|in:otklonjen,ostaje';
+            $rules['criterion_outcomes.2'] = 'nullable|in:otklonjen,ostaje';
+            $rules['criterion_outcomes.3'] = 'nullable|in:otklonjen,ostaje';
         }
 
         $validated = $request->validate($rules);

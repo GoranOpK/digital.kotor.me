@@ -212,7 +212,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $application), [
             'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
-            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+            'odluka' => 'prihvacen',
         ])->assertRedirect();
 
         $application = $application->fresh();
@@ -246,7 +246,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
         $ctx['application']->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
         $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $ctx['application']), [
             'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
-            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+            'odluka' => 'prihvacen',
         ])->assertRedirect();
 
         $application = $ctx['application']->fresh();

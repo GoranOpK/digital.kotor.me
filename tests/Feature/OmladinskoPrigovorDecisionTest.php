@@ -116,7 +116,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->actingAs($late['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $late['application']), [
                 'decision_note' => 'Odluka nakon isteka prikaznog roka.',
-                'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
             ])
             ->assertRedirect();
 
@@ -162,33 +162,34 @@ class OmladinskoPrigovorDecisionTest extends TestCase
             ->get(route('evaluation.create', $application))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('name="criterion_outcomes[1]"', $html);
-        $this->assertStringContainsString('name="criterion_outcomes[2]"', $html);
-        $this->assertStringNotContainsString('name="criterion_outcomes[3]"', $html);
-        $this->assertStringNotContainsString('Nije osporen. Ishod: <strong>Ostaje</strong>', $html);
-        $this->assertStringNotContainsString('name="odluka"', $html);
+        $this->assertStringContainsString('Odluka Komisije o prigovoru', $html);
+        $this->assertStringContainsString('Prigovor prihvaćen', $html);
+        $this->assertStringContainsString('Prigovor odbijen', $html);
+        $this->assertStringContainsString('name="odluka"', $html);
+        $this->assertStringContainsString('value="prihvacen"', $html);
+        $this->assertStringContainsString('value="odbijen"', $html);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $html);
         $this->assertStringContainsString('Obrazloženje odluke Komisije', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), [
-                'decision_note' => 'Prvi razlog je otklonjen. Drugi ostaje.',
-                'criterion_outcomes' => [1 => 'otklonjen', 2 => 'ostaje'],
+                'decision_note' => 'Prigovor se prihvata za oba aktivirana kriterijuma.',
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
             ])
             ->assertRedirect();
 
         $application->refresh();
         $prigovor = $application->prigovor;
-        $this->assertTrue($prigovor->isRejected());
+        $this->assertTrue($prigovor->isAccepted());
+        $this->assertFalse((bool) $prigovor->eliminatory_reason_remaining);
         $this->assertFalse((bool) $prigovor->criterion_1_remaining);
-        $this->assertNotNull($prigovor->criterion_1_remaining);
-        $this->assertTrue($prigovor->criterionRemainingIsTrue(2));
+        $this->assertFalse((bool) $prigovor->criterion_2_remaining);
         $this->assertNull($prigovor->criterion_3_remaining);
-        $this->assertSame('rejected', $application->status);
-        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', (string) $application->rejection_reason);
-        $this->assertStringNotContainsString('Dostavljena je potpuna dokumentacija?', (string) $application->rejection_reason);
+        $this->assertSame('submitted', $application->status);
+        $this->assertNull($application->rejection_reason);
         $this->assertSame($m3Before, $this->m3Snapshot($application));
-        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
     }
 
     public function test_only_documentation_activated_shows_and_decides_only_that_criterion(): void
@@ -205,19 +206,21 @@ class OmladinskoPrigovorDecisionTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
         $this->assertStringContainsString('Dokumentacija je kompletna.', $html);
-        $this->assertStringContainsString('name="criterion_outcomes[1]"', $html);
-        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringNotContainsString('name="criterion_outcomes[2]"', $html);
-        $this->assertStringNotContainsString('name="criterion_outcomes[3]"', $html);
+        $this->assertStringContainsString('name="odluka"', $html);
+        $this->assertStringContainsString('value="prihvacen"', $html);
+        $this->assertStringContainsString('value="odbijen"', $html);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $html);
+        $activated = $this->activatedPrigovorSection($html);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $activated);
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
         $this->assertStringNotContainsString('nije osporen', $html);
 
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
-                'decision_note' => 'Pokušaj označavanja neaktiviranog M4/M4a.',
-                'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+                'decision_note' => 'Jedini aktivirani razlog je otklonjen.',
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.2']);
+            ->assertJsonValidationErrors(['odluka']);
 
         $this->assertTrue($application->fresh()->prigovor->isPodnesen());
         $this->assertSame('submitted', $application->fresh()->status);
@@ -227,7 +230,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Jedini aktivirani razlog je otklonjen.',
-                'criterion_outcomes' => [1 => 'otklonjen'],
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
             ])
             ->assertRedirect();
 
@@ -263,10 +266,11 @@ class OmladinskoPrigovorDecisionTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringContainsString('name="criterion_outcomes[1]"', $html);
-        $this->assertStringContainsString('name="criterion_outcomes[2]"', $html);
-        $this->assertStringNotContainsString('name="criterion_outcomes[3]"', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertSame(2, substr_count($html, 'name="odluka"'));
+        $this->assertStringNotContainsString('name="criterion_outcomes', $html);
+        $activated = $this->activatedPrigovorSection($html);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $activated);
         $this->assertSame(
             [1, 2],
             $application->fresh('eliminatoryCheck')->eliminatoryCheck->activatedCriterionNumbers()
@@ -287,18 +291,19 @@ class OmladinskoPrigovorDecisionTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
-        $this->assertStringContainsString('name="criterion_outcomes[1]"', $html);
-        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringNotContainsString('name="criterion_outcomes[2]"', $html);
-        $this->assertStringNotContainsString($m4Explanation, $html);
+        $this->assertStringContainsString('name="odluka"', $html);
+        $activated = $this->activatedPrigovorSection($html);
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $html);
+        $this->assertStringNotContainsString($m4Explanation, $activated);
 
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
-                'decision_note' => 'Neaktivirani M4 se ne može otkloniti.',
+                'decision_note' => 'Nedostaje odluka.',
                 'criterion_outcomes' => [2 => 'otklonjen'],
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.1', 'criterion_outcomes.2']);
+            ->assertJsonValidationErrors(['odluka']);
 
         $unchanged = $application->fresh(['prigovor']);
         $this->assertTrue($unchanged->prigovor->isPodnesen());
@@ -313,7 +318,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Odluka po zaključanom M3, bez premještanja obrazloženja.',
-                'criterion_outcomes' => [1 => 'ostaje'],
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
             ])
             ->assertRedirect();
 
@@ -335,23 +340,17 @@ class OmladinskoPrigovorDecisionTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
-                'decision_note' => 'Nedostaje ishod za osporeni kriterijum.',
-                'criterion_outcomes' => [2 => 'otklonjen'],
+                'decision_note' => 'Nedostaje odluka.',
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.1']);
+            ->assertJsonValidationErrors(['odluka']);
 
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
-                'decision_note' => 'Pokušaj odluke o neaktiviranom kriterijumu.',
-                'criterion_outcomes' => [
-                    1 => 'otklonjen',
-                    2 => 'otklonjen',
-                    3 => 'otklonjen',
-                ],
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.3']);
+            ->assertJsonValidationErrors(['decision_note']);
 
         $this->assertTrue($application->fresh()->prigovor->isPodnesen());
     }
@@ -363,11 +362,11 @@ class OmladinskoPrigovorDecisionTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
-                'decision_note' => 'Nedostaje ishod za drugi aktivirani kriterijum.',
-                'criterion_outcomes' => [1 => 'otklonjen'],
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => '',
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.2']);
+            ->assertJsonValidationErrors(['decision_note']);
 
         $this->assertTrue($application->fresh()->prigovor->isPodnesen());
         $this->assertSame('submitted', $application->fresh()->status);
@@ -382,24 +381,24 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
-                'decision_note' => 'Prvi razlog otklonjen, drugi ostaje.',
+                'decision_note' => 'Prigovor se prihvata bez obzira na broj aktiviranih kriterijuma.',
                 'criterion_outcomes' => [1 => 'otklonjen', 2 => 'ostaje'],
             ])
             ->assertRedirect();
 
         $application->refresh();
         $prigovor = $application->prigovor;
-        $this->assertTrue($prigovor->isRejected());
+        $this->assertTrue($prigovor->isAccepted());
         $this->assertSame($ctx['chairman']->id, $prigovor->decided_by_commission_member_id);
         $this->assertSame($ctx['chairman']->user_id, $prigovor->decided_by_user_id);
         $this->assertSame($ctx['chairman']->name, $prigovor->decided_by_name);
         $this->assertFalse((bool) $prigovor->criterion_1_remaining);
-        $this->assertTrue($prigovor->criterionRemainingIsTrue(2));
+        $this->assertFalse((bool) $prigovor->criterion_2_remaining);
         $this->assertNull($prigovor->criterion_3_remaining);
-        $this->assertSame('rejected', $application->status);
-        $this->assertSame('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $application->rejection_reason);
+        $this->assertSame('submitted', $application->status);
+        $this->assertNull($application->rejection_reason);
         $this->assertSame($m3Before, $this->m3Snapshot($application));
-        $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
+        $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application));
     }
 
     public function test_all_reasons_lifted_keeps_submitted_and_scoring_closed(): void
@@ -516,7 +515,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Odluka ostaje važeća i ako mail padne.',
-                'criterion_outcomes' => [1 => 'ostaje', 2 => 'ostaje'],
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
             ])
             ->assertRedirect();
 
@@ -569,11 +568,21 @@ class OmladinskoPrigovorDecisionTest extends TestCase
     /**
      * @return array<string, mixed>
      */
+    private function activatedPrigovorSection(string $html): string
+    {
+        $start = strpos($html, 'Aktivirani kriterijumi i obrazloženja podnosioca:');
+        $this->assertNotFalse($start);
+        $end = strpos($html, 'Odluka Komisije o prigovoru', $start);
+        $this->assertNotFalse($end);
+
+        return substr($html, $start, $end - $start);
+    }
+
     private function liftAllContestedPayload(): array
     {
         return [
             'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
-            'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+            'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
         ];
     }
 

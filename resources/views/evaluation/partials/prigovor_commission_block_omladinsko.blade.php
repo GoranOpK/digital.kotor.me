@@ -169,47 +169,28 @@
         @elseif($canDecidePrigovor)
             <form method="POST" action="{{ route('evaluation.prigovor.decide', $application) }}">
                 @csrf
-                <p>
-                    Za svaki aktivirani kriterijum označite <strong>Otklonjen</strong> ili <strong>Ostaje</strong>.
-                    Konačni ishod izračunava Platforma.
-                </p>
                 @if((int) $application->id === \App\Services\YouthPrigovorMappingCorrectionService::APPLICATION_ID)
                     <p>
                         Za kriterijum dokumentacije smiju se uzeti u obzir samo prilozi koji su blagovremeno bili dio prijave.
                         Dokument dodat nakon roka za prijave ne otklanja razlog iz Obrasca 3.
                     </p>
                 @endif
-                @foreach($activatedReasons as $reason)
-                    @php $n = $reason['number']; @endphp
-                    <div class="kn-prigovor-outcome">
-                        <p><strong>{{ $reason['statement'] }}</strong></p>
-                        @if(($submittedExplanations[$n] ?? '') !== '')
-                            <p>Obrazloženje podnosioca:</p>
-                            <p style="white-space: pre-wrap;">{{ $submittedExplanations[$n] }}</p>
-                        @endif
-                        <div class="kn-prigovor-actions">
-                            <label>
-                                <input type="radio"
-                                    name="criterion_outcomes[{{ $n }}]"
-                                    value="otklonjen"
-                                    required
-                                    {{ old('criterion_outcomes.'.$n) === 'otklonjen' ? 'checked' : '' }}>
-                                Otklonjen
-                            </label>
-                            <label>
-                                <input type="radio"
-                                    name="criterion_outcomes[{{ $n }}]"
-                                    value="ostaje"
-                                    required
-                                    {{ old('criterion_outcomes.'.$n) === 'ostaje' ? 'checked' : '' }}>
-                                Ostaje
-                            </label>
-                        </div>
-                        @error('criterion_outcomes.'.$n)
-                            <p style="color: #ef4444;">{{ $message }}</p>
-                        @enderror
-                    </div>
-                @endforeach
+                <p><strong>Odluka Komisije o prigovoru</strong></p>
+                <div class="kn-prigovor-actions">
+                    <label>
+                        <input type="radio" name="odluka" value="prihvacen" required
+                            {{ old('odluka') === 'prihvacen' ? 'checked' : '' }}>
+                        Prigovor prihvaćen
+                    </label>
+                    <label>
+                        <input type="radio" name="odluka" value="odbijen" required
+                            {{ old('odluka') === 'odbijen' ? 'checked' : '' }}>
+                        Prigovor odbijen
+                    </label>
+                </div>
+                @error('odluka')
+                    <p style="color: #ef4444;">{{ $message }}</p>
+                @enderror
 
                 <label for="kn-prigovor-decision-note"><strong>Obrazloženje odluke Komisije</strong></label>
                 <textarea id="kn-prigovor-decision-note" name="decision_note" class="kn-prigovor-textarea" required>{{ old('decision_note') }}</textarea>

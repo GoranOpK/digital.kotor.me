@@ -351,11 +351,17 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $commissionHtml);
-        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $commissionHtml);
         $this->assertStringNotContainsString($m4Explanation, $commissionHtml);
         $this->assertStringNotContainsString('nije osporen', $commissionHtml);
-        $this->assertStringContainsString('name="criterion_outcomes[1]"', $commissionHtml);
-        $this->assertStringNotContainsString('name="criterion_outcomes[2]"', $commissionHtml);
+        $this->assertStringContainsString('name="odluka"', $commissionHtml);
+        $this->assertStringContainsString('Prigovor prihvaćen', $commissionHtml);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $commissionHtml);
+        $activatedStart = strpos($commissionHtml, 'Aktivirani kriterijumi i obrazloženja podnosioca:');
+        $activatedEnd = strpos($commissionHtml, 'Odluka Komisije o prigovoru', (int) $activatedStart);
+        $this->assertNotFalse($activatedStart);
+        $this->assertNotFalse($activatedEnd);
+        $activated = substr($commissionHtml, $activatedStart, $activatedEnd - $activatedStart);
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
 
         $fresh = $application->fresh(['prigovor', 'eliminatoryCheck']);
         $this->assertTrue($fresh->prigovor->criterionIsContested(2));
@@ -688,7 +694,10 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Evidentiraj odluku Komisije', $html);
         $this->assertStringContainsString('7 kalendarskih dana od prijema', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
-        $this->assertStringNotContainsString('name="odluka"', $html);
+        $this->assertStringContainsString('name="odluka"', $html);
+        $this->assertStringContainsString('Prigovor prihvaćen', $html);
+        $this->assertStringContainsString('Prigovor odbijen', $html);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $html);
         $this->assertStringNotContainsString('Odluka Komisije nije dostupna u ovom koraku', $html);
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
     }

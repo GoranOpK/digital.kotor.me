@@ -69,7 +69,10 @@ class OmladinskoPrigovor107MappingCorrectionTest extends TestCase
         $this->assertStringContainsString('name="correction_reason"', $html);
         $this->assertStringContainsString('Evidentiraj korekciju mapiranja', $html);
         $this->assertStringNotContainsString('name="criterion_outcomes[1]"', $html);
-        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
+        $activatedStart = strpos($html, 'Aktivirani kriterijumi i obrazloženja podnosioca:');
+        $this->assertNotFalse($activatedStart);
+        $activated = substr($html, $activatedStart, 800);
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
     }
 
@@ -149,7 +152,7 @@ class OmladinskoPrigovor107MappingCorrectionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Odluka prije korekcije.',
-                'criterion_outcomes' => [1 => 'ostaje'],
+                'odluka' => 'odbijen',
             ])
             ->assertForbidden();
         $this->assertTrue($application->fresh()->prigovor->isPodnesen());
@@ -196,11 +199,17 @@ class OmladinskoPrigovor107MappingCorrectionTest extends TestCase
             ->get(route('evaluation.create', $fresh))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Korekcija mapiranja evidentirana', $html);
-        $this->assertStringContainsString('name="criterion_outcomes[1]"', $html);
-        $this->assertStringNotContainsString('name="criterion_outcomes[2]"', $html);
+        $this->assertStringContainsString('Jednokratna korekcija mapiranja evidentirana', $html);
+        $this->assertStringContainsString('name="odluka"', $html);
+        $this->assertStringContainsString('Prigovor prihvaćen', $html);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $html);
         $this->assertStringNotContainsString($m4Text, $html);
-        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
+        $activatedStart = strpos($html, 'Aktivirani kriterijumi i obrazloženja podnosioca:');
+        $activatedEnd = strpos($html, 'Odluka Komisije o prigovoru', (int) $activatedStart);
+        $this->assertNotFalse($activatedStart);
+        $this->assertNotFalse($activatedEnd);
+        $activated = substr($html, $activatedStart, $activatedEnd - $activatedStart);
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
         $this->assertStringNotContainsString('Evidentiraj korekciju mapiranja', $html);
     }
 
@@ -227,18 +236,18 @@ class OmladinskoPrigovor107MappingCorrectionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Pokušaj otklanjanja kasnim dokumentom.',
-                'criterion_outcomes' => [1 => 'otklonjen'],
+                'odluka' => 'prihvacen',
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.1']);
+            ->assertJsonValidationErrors(['odluka']);
 
         $this->actingAs($ctx['chairman']->user)
             ->postJson(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Pokušaj odluke o M4.',
-                'criterion_outcomes' => [1 => 'ostaje', 2 => 'otklonjen'],
+                'criterion_outcomes' => [2 => 'otklonjen'],
             ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['criterion_outcomes.2']);
+            ->assertJsonValidationErrors(['odluka']);
 
         $stillOpen = $application->fresh(['prigovor']);
         $this->assertTrue($stillOpen->prigovor->isPodnesen());
@@ -248,7 +257,7 @@ class OmladinskoPrigovor107MappingCorrectionTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), [
                 'decision_note' => 'Kasni prilog se ne računa. Razlog dokumentacije ostaje.',
-                'criterion_outcomes' => [1 => 'ostaje'],
+                'odluka' => 'odbijen',
             ])
             ->assertRedirect();
 

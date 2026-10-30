@@ -230,7 +230,7 @@ class ApplicationPrigovorService
         LegacyCommissionFlowGuard::abortUnlessAllowed($application->competition);
 
         if ($application->competition?->isOmladinskoProfile()) {
-            return $this->decideYouth($application, $chairman, $decisionNote, $criterionOutcomes);
+            return $this->decideYouth($application, $chairman, $odluka, $decisionNote);
         }
 
         if ($chairman->position !== 'predsjednik' || $chairman->status !== 'active') {
@@ -303,14 +303,11 @@ class ApplicationPrigovorService
         return $prigovor;
     }
 
-    /**
-     * @param  array<int|string, mixed>  $criterionOutcomes
-     */
     private function decideYouth(
         Application $application,
         CommissionMember $chairman,
+        string $odluka,
         ?string $decisionNote,
-        array $criterionOutcomes,
     ): ApplicationPrigovor {
         if ($chairman->position !== 'predsjednik' || $chairman->status !== 'active') {
             abort(403, 'Samo predsjednik Komisije, u ime Komisije, može evidentirati odluku o Prigovoru.');
@@ -327,8 +324,14 @@ class ApplicationPrigovorService
             ]);
         }
 
+        if (! in_array($odluka, [ApplicationPrigovor::STATUS_PRIHVACEN, ApplicationPrigovor::STATUS_ODBIJEN], true)) {
+            throw ValidationException::withMessages([
+                'odluka' => 'Odluka Komisije mora biti Prigovor prihvaćen ili Prigovor odbijen.',
+            ]);
+        }
+
         try {
-            $prigovor = DB::transaction(function () use ($application, $chairman, $decisionNote, $criterionOutcomes) {
+            $prigovor = DB::transaction(function () use ($application, $chairman, $odluka, $decisionNote) {
                 /** @var Application $locked */
                 $locked = Application::query()
                     ->whereKey($application->id)
@@ -367,15 +370,31 @@ class ApplicationPrigovorService
                     abort(403, 'Odluka po prigovoru je moguća samo uz aktivirane razloge iz zaključanog Obrasca 3.');
                 }
 
-                $this->youthMappingCorrections->assertDecisionAllowed($locked, $prigovor, $criterionOutcomes);
+                if ($odluka === ApplicationPrigovor::STATUS_PRIHVACEN) {
+                    try {
+                        $this->youthMappingCorrections->assertDecisionAllowed($locked, $prigovor, [
+                            YouthPrigovorMappingCorrectionService::TO_CRITERION => ApplicationPrigovor::OUTCOME_OTKLONJEN,
+                        ]);
+                    } catch (ValidationException $exception) {
+                        $message = collect($exception->errors())->flatten()->first();
+                        throw ValidationException::withMessages([
+                            'odluka' => is_string($message) && $message !== ''
+                                ? $message
+                                : 'Prigovor ne može biti prihvaćen.',
+                        ]);
+                    }
+                } else {
+                    $this->youthMappingCorrections->assertDecisionAllowed($locked, $prigovor, []);
+                }
 
                 $this->assertYouthCommissionDecisionGate($locked, $chairman);
 
-                $remainingByCriterion = $this->validatedYouthRemainingByCriterion($check, $criterionOutcomes);
-                $anyRemaining = in_array(true, $remainingByCriterion, true);
-                $odluka = $anyRemaining
-                    ? ApplicationPrigovor::STATUS_ODBIJEN
-                    : ApplicationPrigovor::STATUS_PRIHVACEN;
+                $accepted = $odluka === ApplicationPrigovor::STATUS_PRIHVACEN;
+                $remainingByCriterion = [1 => null, 2 => null, 3 => null];
+                foreach ($check->activatedCriterionNumbers() as $number) {
+                    $remainingByCriterion[$number] = ! $accepted;
+                }
+                $anyRemaining = ! $accepted;
 
                 $prigovor->status = $odluka;
                 $prigovor->decided_at = now();

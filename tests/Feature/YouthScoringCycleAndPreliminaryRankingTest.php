@@ -124,7 +124,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $failed), [
                 'decision_note' => 'Razlog ostaje.',
-                'criterion_outcomes' => [1 => 'ostaje', 2 => 'ostaje'],
+                'odluka' => 'odbijen',
             ])
             ->assertRedirect();
         $this->assertSame('rejected', $failed->fresh()->status);
@@ -153,7 +153,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $failed), [
                 'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
-                'criterion_outcomes' => [1 => 'otklonjen', 2 => 'otklonjen'],
+                'odluka' => 'prihvacen',
             ])
             ->assertRedirect();
         $this->assertSame('submitted', $failed->fresh()->status);
