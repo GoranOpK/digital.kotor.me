@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Application;
 use App\Models\Competition;
 use App\Models\Role;
+use App\Models\UpNumber;
 use App\Models\User;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -33,6 +35,7 @@ class PmBusinessPlanFormTitleTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('class="obrazac-1a-1b">Obrazac M2</div>', $first);
         $this->assertStringNotContainsString('class="obrazac-1a-1b">Obrazac 2</div>', $first);
+        $this->assertPmMemorandum($first, '—/—');
 
         $this->actingAs($owner)
             ->post(route('applications.business-plan.store', $application), [
@@ -68,6 +71,38 @@ class PmBusinessPlanFormTitleTest extends TestCase
 
         $this->assertStringContainsString('class="obrazac-1a-1b">Obrazac 2</div>', $html);
         $this->assertStringNotContainsString('Obrazac M2', $html);
+        $this->assertStringNotContainsString('Broj prijave:', $html);
+        $this->assertStringNotContainsString('class="obrazac-zaglavlje obrazac-zaglavlje-pm"', $html);
+        $this->assertSame(1, substr_count($html, '<div class="obrazac-zaglavlje">'));
+        $this->assertStringContainsString('FORMA ZA BIZNIS PLAN', $html);
+        $this->assertStringContainsString('1. Naziv biznis ideje:', $html);
+    }
+
+    public function test_pm_memorandum_shows_the_applications_existing_number(): void
+    {
+        [$owner, $application] = $this->application('omladinsko');
+        UpNumber::create([
+            'competition_id' => $application->competition_id,
+            'number' => 'UP-M2-01',
+        ]);
+        $application->update(['redni_broj' => 4]);
+
+        $html = $this->actingAs($owner)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertPmMemorandum($html, 'UP-M2-01/4');
+        $this->assertStringNotContainsString('—/—', $html);
+    }
+
+    public function test_mmsp_business_plan_route_does_not_open_this_form(): void
+    {
+        [$owner, $application] = $this->application(CompetitionProfileResolver::TYPE_CANONICAL);
+
+        $this->actingAs($owner)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertRedirect();
     }
 
     /**
@@ -109,5 +144,35 @@ class PmBusinessPlanFormTitleTest extends TestCase
         ]);
 
         return [$owner, $application];
+    }
+
+    private function assertPmMemorandum(string $html, string $brojPrijave): void
+    {
+        $this->assertSame(1, substr_count($html, '<div class="obrazac-zaglavlje obrazac-zaglavlje-pm">'));
+        $this->assertStringContainsString('images/srednji_grb.png', $html);
+        $this->assertStringContainsString('height: 2cm', $html);
+        $this->assertStringContainsString('Crna Gora', $html);
+        $this->assertStringContainsString('Opština Kotor', $html);
+        $this->assertStringContainsString('Sekretarijat za razvoj preduzetništva', $html);
+        $this->assertStringContainsString('komunalne poslove i saobraćaj', $html);
+        $this->assertStringContainsString('Stari grad 317', $html);
+        $this->assertStringContainsString('85330 Kotor, Crna Gora', $html);
+        $this->assertStringContainsString('tel. +382(0)32 325 865', $html);
+        $this->assertStringContainsString('privreda@kotor.me', $html);
+        $this->assertStringContainsString('www.kotor.me', $html);
+        $this->assertStringContainsString('Broj prijave: '.$brojPrijave, $html);
+        $this->assertStringContainsString('class="obrazac-1a-1b">Obrazac M2</div>', $html);
+        $this->assertStringContainsString('FORMA ZA BIZNIS PLAN', $html);
+        $this->assertStringContainsString('1. Naziv biznis ideje:', $html);
+        $this->assertStringContainsString('class="form-card no-print"', $html);
+        $this->assertMatchesRegularExpression(
+            '/@media print\s*\{.*?\.no-print,\s*\n\s*button,/s',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media print\s*\{.*?\.obrazac-zaglavlje-pm\s*\{[^}]*border:\s*1px solid #ccc;/s',
+            $html
+        );
+        $this->assertStringContainsString('size: A4;', $html);
     }
 }

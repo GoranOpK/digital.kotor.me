@@ -340,6 +340,17 @@
         font-weight: 700;
         color: #374151;
     }
+    .obrazac-broj-prijave {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+    }
+    .obrazac-zaglavlje-pm .obrazac-zaglavlje-top {
+        margin-bottom: 16px;
+    }
+    .obrazac-zaglavlje-pm .obrazac-broj-i-naslov {
+        justify-content: space-between;
+    }
     .obrazac-naslov-prijava {
         width: 100%;
         text-align: center;
@@ -376,17 +387,34 @@
             max-width: 100%;
         }
 
-        .obrazac-zaglavlje {
+        .obrazac-zaglavlje:not(.obrazac-zaglavlje-pm) {
             box-shadow: none;
             border: none !important;
             border-radius: 0;
             padding: 0 0 8px 0;
             margin-bottom: 8px;
         }
+        .obrazac-zaglavlje-pm {
+            box-shadow: none;
+            border: 1px solid #ccc;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+        }
         .obrazac-grb img { height: 2cm; }
-        .obrazac-broj-i-naslov {
+        .obrazac-zaglavlje:not(.obrazac-zaglavlje-pm) .obrazac-broj-i-naslov {
             border-top: none !important;
             padding-top: 6px;
+        }
+        .obrazac-zaglavlje-pm .obrazac-org,
+        .obrazac-zaglavlje-pm .obrazac-contact {
+            font-size: 11.7px;
+        }
+        .obrazac-zaglavlje-pm .obrazac-broj-prijave,
+        .obrazac-zaglavlje-pm .obrazac-1a-1b {
+            font-size: 12.6px;
+        }
+        .obrazac-zaglavlje-pm .obrazac-naslov-prijava {
+            font-size: 19.8px;
         }
 
         .form-card {
@@ -592,7 +620,14 @@
 
 <div class="business-plan-page">
     <div class="container mx-auto px-4">
-        <div class="obrazac-zaglavlje">
+        @php
+            $isPmBusinessPlan = $application->competition?->type === 'omladinsko';
+            $businessPlanFormTitle = $isPmBusinessPlan ? 'Obrazac M2' : 'Obrazac 2';
+            $upBroj = $application->competition?->upNumber?->number ?? '—';
+            $redniBroj = $application->redni_broj ?? '—';
+            $brojPrijave = $upBroj.'/'.$redniBroj;
+        @endphp
+        <div class="obrazac-zaglavlje{{ $isPmBusinessPlan ? ' obrazac-zaglavlje-pm' : '' }}">
             <div class="obrazac-zaglavlje-top">
                 <div class="obrazac-grb">
                     <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" class="obrazac-grb-img" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';" style="height: 2cm; width: auto; display: block;">
@@ -612,11 +647,11 @@
                 </div>
             </div>
             <div class="obrazac-broj-i-naslov">
-                @php
-                    $businessPlanFormTitle = ($application->competition?->type === 'omladinsko')
-                        ? 'Obrazac M2'
-                        : 'Obrazac 2';
-                @endphp
+                @if($isPmBusinessPlan)
+                    <div class="obrazac-broj-prijave">
+                        Broj prijave: {{ $brojPrijave }}
+                    </div>
+                @endif
                 <div class="obrazac-1a-1b">{{ $businessPlanFormTitle }}</div>
             </div>
             <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
