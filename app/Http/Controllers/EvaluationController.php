@@ -1505,13 +1505,26 @@ class EvaluationController extends Controller
 
         $validated = $request->validate($rules);
 
-        $this->prigovors->decide(
+        $prigovor = $this->prigovors->decide(
             $application,
             $chairman,
             $validated['odluka'] ?? '',
             $validated['decision_note'],
             $validated['criterion_outcomes'] ?? [],
         );
+
+        if ($isYouth && $prigovor->isRejected()) {
+            return redirect()->route('evaluation.index', [
+                'competition_id' => $application->competition_id,
+                'filter' => 'rejected',
+            ])->with('success', 'Prigovor je odbijen. Odluka Komisije je evidentirana.');
+        }
+
+        if ($isYouth && $prigovor->isAccepted()) {
+            return redirect()->route('evaluation.index', [
+                'competition_id' => $application->competition_id,
+            ])->with('success', 'Prigovor je prihvaćen. Prijava može nastaviti postupak.');
+        }
 
         return redirect()->route('evaluation.create', $application)
             ->with('success', 'Odluka Komisije o Prigovoru je evidentirana.');

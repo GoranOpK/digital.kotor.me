@@ -58,9 +58,98 @@ class OmladinskoPrigovorDecisionTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $application), $payload)
-            ->assertRedirect(route('evaluation.create', $application));
+            ->assertRedirect(route('evaluation.index', [
+                'competition_id' => $application->competition_id,
+            ]));
 
         $this->assertTrue($application->fresh()->prigovor->isAccepted());
+    }
+
+    public function test_youth_decision_redirects_chairman_to_the_competition_application_list(): void
+    {
+        $rejected = $this->submittedYouthPrigovor();
+        $rejectedApplication = $rejected['application'];
+        $rejectedNote = 'Prigovor se odbija. Eliminatorni razlog ostaje.';
+        $stillOpen = Application::create([
+            'competition_id' => $rejectedApplication->competition_id,
+            'user_id' => $rejectedApplication->user_id,
+            'business_plan_name' => 'Plan koji ostaje u postupku',
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'status' => 'submitted',
+            'submitted_at' => now()->subDays(25),
+        ]);
+
+        $rejectedResponse = $this->actingAs($rejected['chairman']->user)
+            ->post(route('evaluation.prigovor.decide', $rejectedApplication), [
+                'odluka' => ApplicationPrigovor::STATUS_ODBIJEN,
+                'decision_note' => $rejectedNote,
+            ]);
+
+        $rejectedResponse->assertRedirect(route('evaluation.index', [
+            'competition_id' => $rejectedApplication->competition_id,
+            'filter' => 'rejected',
+        ]));
+        $rejectedResponse->assertSessionHas(
+            'success',
+            'Prigovor je odbijen. Odluka Komisije je evidentirana.',
+        );
+
+        $rejectedApplication->refresh();
+        $this->assertTrue($rejectedApplication->prigovor->isRejected());
+        $this->assertSame($rejectedNote, $rejectedApplication->prigovor->decision_note);
+        $this->assertSame('rejected', $rejectedApplication->status);
+        $this->assertSame('submitted', $stillOpen->fresh()->status);
+
+        $this->actingAs($rejected['chairman']->user)
+            ->get(route('evaluation.index', [
+                'competition_id' => $rejectedApplication->competition_id,
+                'filter' => 'rejected',
+            ]))
+            ->assertOk()
+            ->assertSee('Prigovor je odbijen. Odluka Komisije je evidentirana.', false)
+            ->assertSee('Ocjenjivanje prijava', false)
+            ->assertSee($rejectedApplication->business_plan_name, false)
+            ->assertDontSee($stillOpen->business_plan_name, false);
+
+        $accepted = $this->submittedYouthPrigovor();
+        $acceptedApplication = $accepted['application'];
+        $acceptedNote = 'Svi osporeni razlozi su otklonjeni.';
+
+        $acceptedResponse = $this->actingAs($accepted['chairman']->user)
+            ->post(route('evaluation.prigovor.decide', $acceptedApplication), [
+                'odluka' => ApplicationPrigovor::STATUS_PRIHVACEN,
+                'decision_note' => $acceptedNote,
+            ]);
+
+        $acceptedLocation = $acceptedResponse->headers->get('Location');
+        $acceptedResponse->assertRedirect(route('evaluation.index', [
+            'competition_id' => $acceptedApplication->competition_id,
+        ]));
+        $this->assertIsString($acceptedLocation);
+        $this->assertStringNotContainsString('filter=rejected', $acceptedLocation);
+        $this->assertStringContainsString(
+            'competition_id='.$acceptedApplication->competition_id,
+            $acceptedLocation,
+        );
+        $acceptedResponse->assertSessionHas(
+            'success',
+            'Prigovor je prihvaćen. Prijava može nastaviti postupak.',
+        );
+
+        $acceptedApplication->refresh();
+        $this->assertTrue($acceptedApplication->prigovor->isAccepted());
+        $this->assertSame($acceptedNote, $acceptedApplication->prigovor->decision_note);
+        $this->assertSame('submitted', $acceptedApplication->status);
+
+        $this->actingAs($accepted['chairman']->user)
+            ->get(route('evaluation.index', [
+                'competition_id' => $acceptedApplication->competition_id,
+            ]))
+            ->assertOk()
+            ->assertSee('Prigovor je prihvaćen. Prijava može nastaviti postupak.', false)
+            ->assertSee('Ocjenjivanje prijava', false)
+            ->assertSee($acceptedApplication->business_plan_name, false);
     }
 
     public function test_incomplete_commission_and_inactive_chairman_cannot_decide(): void

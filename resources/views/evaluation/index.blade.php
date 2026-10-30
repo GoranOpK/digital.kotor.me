@@ -123,6 +123,12 @@
             @endif
         </div>
 
+        @if(session('success'))
+            <div class="alert no-print" role="status" style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                {{ session('success') }}
+            </div>
+        @endif
+
         @php
             $pmRankingCompetitions = collect($competitions ?? [])
                 ->filter(fn ($comp) => $comp->isOmladinskoProfile())
