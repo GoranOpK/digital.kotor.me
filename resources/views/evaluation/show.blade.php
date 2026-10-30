@@ -462,9 +462,7 @@
                 </div>
                 </div>
             @else
-                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
-                    Obrazac M3
-                </div>
+                @include('evaluation.partials.pm_m3_memorandum')
                 <div class="form-title">
                     LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
                 </div>

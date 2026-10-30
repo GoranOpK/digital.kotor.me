@@ -36,6 +36,7 @@ class PmCommissionM3DisplayTest extends TestCase
         $ctx = $this->youthCommission();
         $physical = $this->application($ctx['competition'], 'fizicko_lice', [
             'physical_person_name' => 'Ana Anić',
+            'redni_broj' => 7,
         ], 'Nalog Fizičko');
         $entrepreneur = $this->application($ctx['competition'], 'preduzetnik', [
             'preduzetnik_name' => 'Marko Marković',
@@ -51,8 +52,23 @@ class PmCommissionM3DisplayTest extends TestCase
             ->assertOk()
             ->getContent();
 
+        $upNumber = $ctx['competition']->fresh('upNumber')->upNumber->number;
         $this->assertStringContainsString('Obrazac M3', $html);
         $this->assertStringContainsString('LISTA ZA OCJENJIVANJE BIZNIS PLANOVA', $html);
+        $this->assertStringContainsString('class="pm-m3-memorandum"', $html);
+        $this->assertStringContainsString('Broj prijave: '.$upNumber.'/7', $html);
+        $this->assertStringContainsString('images/srednji_grb.png', $html);
+        $this->assertStringContainsString('Crna Gora', $html);
+        $this->assertStringContainsString('Opština Kotor', $html);
+        $this->assertStringContainsString('Sekretarijat za razvoj preduzetništva', $html);
+        $this->assertStringContainsString('komunalne poslove i saobraćaj', $html);
+        $this->assertStringContainsString('Stari grad 317', $html);
+        $this->assertStringContainsString('privreda@kotor.me', $html);
+        $this->assertStringContainsString('www.kotor.me', $html);
+        $this->assertStringContainsString('size: A4', $html);
+        $this->assertStringContainsString('margin: 12mm 10mm', $html);
+        $this->assertStringContainsString('border: 1px solid #ccc', $html);
+        $this->assertSame(1, substr_count($html, 'class="obrazac-1a-1b"'));
         $this->assertStringNotContainsString('class="youth-ranking-print-root is-blocked"', $html);
         $this->assertStringContainsString('Info dan i obuka (+1)', $html);
         $this->assertStringContainsString('Planirana registracija (+2)', $html);
@@ -125,6 +141,40 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $physical->id)->count());
     }
 
+    public function test_saved_m3_show_keeps_the_m1_memorandum(): void
+    {
+        $ctx = $this->youthCommission();
+        $application = $this->application($ctx['competition'], 'fizicko_lice', [
+            'physical_person_name' => 'Ana Anić',
+            'redni_broj' => 4,
+        ], 'Nalog Fizičko');
+        $score = [
+            'application_id' => $application->id,
+            'commission_member_id' => $ctx['chairman']->id,
+            'canonical_seat_no' => 1,
+            'completed_at' => now(),
+        ];
+        for ($i = 1; $i <= 10; $i++) {
+            $score["criterion_{$i}"] = 3;
+        }
+        EvaluationScore::create($score);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $upNumber = $ctx['competition']->fresh('upNumber')->upNumber->number;
+        $this->assertStringContainsString('class="pm-m3-memorandum"', $html);
+        $this->assertStringContainsString('Broj prijave: '.$upNumber.'/4', $html);
+        $this->assertStringContainsString('class="obrazac-1a-1b">Obrazac M3', $html);
+        $this->assertStringContainsString('LISTA ZA OCJENJIVANJE BIZNIS PLANOVA', $html);
+        $this->assertStringContainsString('images/srednji_grb.png', $html);
+        $this->assertStringContainsString('size: A4', $html);
+        $this->assertStringContainsString('margin: 12mm 10mm', $html);
+        $this->assertStringNotContainsString('Obrazac 3', $html);
+    }
+
     public function test_unregistered_planned_company_shows_the_applicant_on_m3(): void
     {
         $ctx = $this->youthCommission();
@@ -166,6 +216,9 @@ class PmCommissionM3DisplayTest extends TestCase
 
         $this->assertStringContainsString('Obrazac 3', $html);
         $this->assertStringContainsString('Potvrdi Obrazac 3', $html);
+        $this->assertStringNotContainsString('pm-m3-memorandum', $html);
+        $this->assertStringNotContainsString('srednji_grb.png', $html);
+        $this->assertStringContainsString('margin: 10mm 8mm', $html);
         $this->assertStringContainsString('placeholder="Napomena Obrasca 3"', $html);
         $this->assertStringContainsString('value="Ostalo - Milica Ostalo"', $html);
         $this->assertStringNotContainsString('Obrazac M3', $html);
