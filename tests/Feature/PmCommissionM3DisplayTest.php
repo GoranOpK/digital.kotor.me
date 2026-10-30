@@ -13,6 +13,7 @@ use App\Models\Role;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\CanonicalIndividualScoringService;
+use App\Support\EliminatoryProfileConfig;
 use App\Support\ScoringProfileConfig;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
@@ -73,7 +74,20 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertStringContainsString('Info dan i obuka (+1)', $html);
         $this->assertStringContainsString('Planirana registracija (+2)', $html);
         $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $html);
-        $this->assertStringContainsString('Potvrdi Obrazac M3', $html);
+        $this->assertStringContainsString('Korak 1 — Eliminatorna provjera', $html);
+        $this->assertStringContainsString('Predsjednik Komisije označava da li prijava ispunjava eliminatorne uslove.', $html);
+        $this->assertStringContainsString('Potvrdi eliminatornu provjeru', $html);
+        $this->assertStringContainsString('Zaključava provjeru. Ako su svi uslovi ispunjeni, omogućava bodovanje.', $html);
+        $this->assertStringContainsString('acknowledgeEliminatoryConfirm', $html);
+        $this->assertStringContainsString('window.confirm', $html);
+        $this->assertStringContainsString(
+            trim(json_encode(EliminatoryProfileConfig::YOUTH_FAIL_CONFIRMATION_MESSAGE), '"'),
+            $html
+        );
+        $this->assertStringNotContainsString('Potvrdi Obrazac M3', $html);
+        $eliminatoryForm = substr($html, (int) strpos($html, 'id="eliminatoryForm"'), (int) strpos($html, '</form>', (int) strpos($html, 'id="eliminatoryForm"')) - (int) strpos($html, 'id="eliminatoryForm"'));
+        $this->assertStringNotContainsString('>Sačuvaj<', $eliminatoryForm);
+        $this->assertSame(1, substr_count($eliminatoryForm, '<button'));
         $this->assertStringContainsString('placeholder="Napomena Obrasca M3"', $html);
         $this->assertStringContainsString('value="Ana Anić"', $html);
         $this->assertStringNotContainsString('Fizičko lice -', $html);
@@ -147,6 +161,122 @@ class PmCommissionM3DisplayTest extends TestCase
             ])
             ->assertSessionHasErrors(['criterion_2', 'criterion_10']);
         $this->assertSame(0, EvaluationScore::query()->where('application_id', $physical->id)->count());
+    }
+
+    public function test_pm_confirm_persists_current_answers_without_a_prior_draft(): void
+    {
+        $ctx = $this->youthCommission();
+        $application = $this->application($ctx['competition'], 'fizicko_lice', [
+            'physical_person_name' => 'Ana Anić',
+        ], 'Nalog Bez nacrta');
+
+        $this->assertNull($application->eliminatoryCheck);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $application), [
+                'criterion_1' => 5,
+                'scoring_confirmed' => '1',
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.eliminatory.confirm', $application), [
+                'criterion_1' => '0',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => '',
+                'confirmation_acknowledged' => '1',
+            ])
+            ->assertRedirect(route('evaluation.create', $application))
+            ->assertSessionHasErrors('note');
+        $this->assertNull($application->fresh()->eliminatoryCheck);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.eliminatory.confirm', $application), [
+                'criterion_1' => '0',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => 'Nedostaje dokument',
+                'confirmation_acknowledged' => '0',
+            ])
+            ->assertRedirect(route('evaluation.create', $application))
+            ->assertSessionHasErrors('confirmation_acknowledged');
+        $this->assertNull($application->fresh()->eliminatoryCheck);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $application), [
+                'criterion_1' => '0',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => 'Nedostaje dokument',
+                'confirmation_acknowledged' => '1',
+            ])
+            ->assertRedirect(route('evaluation.create', $application))
+            ->assertSessionHas('success', 'Obrazac M3 je potvrđen.');
+
+        $check = $application->fresh()->eliminatoryCheck;
+        $this->assertNotNull($check);
+        $this->assertNotNull($check->confirmed_at);
+        $this->assertFalse((bool) $check->criterion_1);
+        $this->assertTrue((bool) $check->criterion_2);
+        $this->assertTrue((bool) $check->criterion_3);
+        $this->assertSame('Nedostaje dokument', EliminatoryProfileConfig::youthSharedNote($check->note));
+        $this->assertSame($ctx['chairman']->id, $check->confirmed_by_commission_member_id);
+        $this->assertSame($ctx['chairman']->user_id, $check->confirmed_by_user_id);
+        $this->assertSame($ctx['chairman']->name, $check->confirmed_by_name);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $application), [
+                'criterion_1' => '1',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => 'Nova napomena',
+                'confirmation_acknowledged' => '1',
+            ])
+            ->assertForbidden();
+        $this->assertSame(
+            'Nedostaje dokument',
+            EliminatoryProfileConfig::youthSharedNote($application->fresh()->eliminatoryCheck->note)
+        );
+        $this->assertNotNull($application->fresh()->eliminatoryCheck->confirmed_at);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $application), [
+                'criterion_1' => 5,
+                'scoring_confirmed' => '1',
+            ])
+            ->assertForbidden();
+
+        $passed = $this->application($ctx['competition'], 'fizicko_lice', [
+            'physical_person_name' => 'Jovo Jović',
+        ], 'Nalog Prolaz');
+        $this->assertNull($passed->eliminatoryCheck);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.eliminatory.confirm', $passed), [
+                'criterion_1' => '1',
+                'criterion_2' => '1',
+                'criterion_3' => '1',
+                'note' => 'Sve dostavljeno',
+                'confirmation_acknowledged' => '0',
+            ])
+            ->assertRedirect(route('evaluation.create', $passed))
+            ->assertSessionHas('success', 'Obrazac M3 je potvrđen.');
+
+        $passedCheck = $passed->fresh()->eliminatoryCheck;
+        $this->assertNotNull($passedCheck->confirmed_at);
+        $this->assertTrue($passedCheck->isConfirmedPass());
+        $this->assertSame('Sve dostavljeno', EliminatoryProfileConfig::youthSharedNote($passedCheck->note));
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $passed))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Potvrdi eliminatornu provjeru', $html);
+        $this->assertStringContainsString('Sačuvaj ocjene', $html);
+        $this->assertDoesNotMatchRegularExpression('/id="youth-save-scores"[^>]*disabled/', $html);
     }
 
     public function test_saved_m3_show_keeps_the_m1_memorandum(): void
@@ -229,7 +359,10 @@ class PmCommissionM3DisplayTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Obrazac 3', $html);
+        $this->assertStringContainsString('>Sačuvaj</button>', $html);
         $this->assertStringContainsString('Potvrdi Obrazac 3', $html);
+        $this->assertStringNotContainsString('Potvrdi eliminatornu provjeru', $html);
+        $this->assertStringNotContainsString('Korak 1 — Eliminatorna provjera', $html);
         $this->assertStringNotContainsString('pm-m3-memorandum', $html);
         $this->assertStringNotContainsString('srednji_grb.png', $html);
         $this->assertStringContainsString('margin: 10mm 8mm', $html);

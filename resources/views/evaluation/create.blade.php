@@ -710,14 +710,18 @@
                 </div>
 
                 <div class="form-section form-section-compact">
+                    <div class="no-print" style="margin-bottom: 16px;">
+                        <div class="form-label form-label-large" style="margin-bottom: 6px;">Korak 1 — Eliminatorna provjera</div>
+                        <p style="margin: 0; font-size: 13px; color: #4b5563; line-height: 1.5;">Predsjednik Komisije označava da li prijava ispunjava eliminatorne uslove.</p>
+                    </div>
                     @if($canEditEliminatory)
                         <form method="POST" action="{{ route('evaluation.eliminatory.store', $application) }}" id="eliminatoryForm">
                             @csrf
                             <input type="hidden" name="confirmation_acknowledged" id="confirmation_acknowledged" value="0">
                             @include('evaluation.partials.eliminatory_check', ['mode' => 'edit'])
                             <div class="no-print" style="margin-top: 16px;">
-                                <button type="submit" class="btn-primary">Sačuvaj</button>
-                                <button type="submit" class="btn-primary" formaction="{{ route('evaluation.eliminatory.confirm', $application) }}" onclick="return acknowledgeEliminatoryConfirm(this.form);" style="margin-left: 12px;">Potvrdi Obrazac M3</button>
+                                <button type="submit" class="btn-primary" formaction="{{ route('evaluation.eliminatory.confirm', $application) }}" onclick="return acknowledgeEliminatoryConfirm(this.form);">Potvrdi eliminatornu provjeru</button>
+                                <p style="margin: 8px 0 0; font-size: 13px; color: #4b5563; line-height: 1.5;">Zaključava provjeru. Ako su svi uslovi ispunjeni, omogućava bodovanje.</p>
                             </div>
                         </form>
                     @else
@@ -735,6 +739,7 @@
                             </div>
                         </div>
                     @endif
+                    <div class="no-print" style="margin-top: 24px; border-top: 2px solid #d1d5db;"></div>
                 </div>
                 </div>
             @endif
