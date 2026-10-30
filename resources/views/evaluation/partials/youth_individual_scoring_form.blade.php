@@ -4,13 +4,9 @@
     $scoreInputsLocked = ! $scoringIsAllowed || ($isRejected ?? false) || ($isApplicant ?? false) || ($hasCompletedEvaluation ?? false);
 @endphp
 
-@if(! $scoringIsAllowed)
+@if(! $scoringIsAllowed && ($eliminatoryIsConfirmedFail ?? false))
     <div class="alert no-print" style="background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
-        @if($eliminatoryIsConfirmedFail ?? false)
-            {{ \App\Services\ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE }}
-        @else
-            {{ $scoringLockedMessage ?? \App\Support\ScoringProfileConfig::YOUTH_SCORING_LOCKED_MESSAGE }}
-        @endif
+        {{ \App\Services\ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE }}
     </div>
 @endif
 
@@ -23,11 +19,6 @@
         <div class="no-print" style="margin-bottom: 12px; color: #374151; font-size: 13px;">
             Skala: 1 — {{ \App\Support\ScoringProfileConfig::SCALE_MIN_LABEL }}; 5 — {{ \App\Support\ScoringProfileConfig::SCALE_MAX_LABEL }}. Vrijednosti 2, 3 i 4 su međuvrijednosti.
         </div>
-        @if(!($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false))
-            <div class="no-print" style="margin-bottom: 16px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e; font-size: 13px;">
-                Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.
-            </div>
-        @endif
         <table class="evaluation-table evaluation-table-criteria">
             <thead>
                 <tr>

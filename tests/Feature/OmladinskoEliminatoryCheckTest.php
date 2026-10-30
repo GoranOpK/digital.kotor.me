@@ -474,7 +474,8 @@ class OmladinskoEliminatoryCheckTest extends TestCase
         $this->assertStringContainsString($zensko['application']->business_plan_name, $html);
         $this->assertStringNotContainsString($third['competition']->title, $html);
         $this->assertStringNotContainsString($third['application']->business_plan_name, $html);
-        $this->assertStringContainsString('Obrazac 3', $html);
+        $this->assertStringContainsString('Obrazac M3', $html);
+        $this->assertStringNotContainsString('Obrazac 3', $html);
         $this->assertStringContainsString('Ocjeni', $html);
 
         $this->actingAs($shared)

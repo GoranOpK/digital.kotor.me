@@ -498,6 +498,7 @@
             'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
             'youthEqualScoreCompetition' => $application->competition ?? null,
             'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
+            'hideYouthCycleIncompleteNotice' => true,
         ])
 
 
@@ -689,7 +690,7 @@
             @else
                 <div class="print-document-header">
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
-                    Obrazac 3
+                    Obrazac M3
                 </div>
                 <div class="form-title">
                     LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
@@ -702,16 +703,7 @@
                 <div class="print-segment-intro">
                 <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">1. Podnosilac:</label>
-                    @php
-                        $applicantLabel = $application->applicant_type === 'preduzetnica'
-                            ? 'Preduzetnica'
-                            : ($application->applicant_type === 'doo'
-                                ? 'DOO'
-                                : ($application->applicant_type === 'fizicko_lice'
-                                    ? 'Fizičko lice'
-                                    : 'Ostalo'));
-                    @endphp
-                    <input type="text" class="form-control form-control-readonly" value="{{ $applicantLabel }} - {{ $application->user->name }}" readonly>
+                    <input type="text" class="form-control form-control-readonly" value="{{ \App\Support\PmCommissionApplicantPresentation::line($application) }}" readonly>
                 </div>
 
                 <div class="form-section form-section-compact">
@@ -727,7 +719,7 @@
                             @include('evaluation.partials.eliminatory_check', ['mode' => 'edit'])
                             <div class="no-print" style="margin-top: 16px;">
                                 <button type="submit" class="btn-primary">Sačuvaj</button>
-                                <button type="submit" class="btn-primary" formaction="{{ route('evaluation.eliminatory.confirm', $application) }}" onclick="return acknowledgeEliminatoryConfirm(this.form);" style="margin-left: 12px;">Potvrdi Obrazac 3</button>
+                                <button type="submit" class="btn-primary" formaction="{{ route('evaluation.eliminatory.confirm', $application) }}" onclick="return acknowledgeEliminatoryConfirm(this.form);" style="margin-left: 12px;">Potvrdi Obrazac M3</button>
                             </div>
                         </form>
                     @else
@@ -750,7 +742,7 @@
             @endif
 
             @if(! $eliminatoryProfile->usesStructuredNotes || ! ($isApplicant ?? false))
-            @if(! $scoringIsAllowed)
+            @if(! $scoringIsAllowed && ($eliminatoryIsConfirmedFail || ! ($isOmladinskoScoring ?? false)))
                 <div class="alert no-print" style="background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
                     @if($eliminatoryIsConfirmedFail)
                         {{ \App\Services\ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE }}
@@ -771,11 +763,6 @@
                         <div class="no-print" style="margin-bottom: 12px; color: #374151; font-size: 13px;">
                             Skala: 1 — {{ \App\Support\ScoringProfileConfig::SCALE_MIN_LABEL }}; 5 — {{ \App\Support\ScoringProfileConfig::SCALE_MAX_LABEL }}. Vrijednosti 2, 3 i 4 su međuvrijednosti.
                         </div>
-                        @if(!($hasCompletedEvaluation ?? false) && !($isApplicant ?? false) && !($isRejected ?? false))
-                            <div class="no-print" style="margin-bottom: 16px; padding: 12px 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; color: #92400e; font-size: 13px;">
-                                Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.
-                            </div>
-                        @endif
                     @endif
 
                     @php
@@ -1261,9 +1248,6 @@
                         </div>
                         @if($rejectedForDocuments)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
-                            @if($isOmladinskoScoring)
-                                @include('evaluation.partials.youth_print_hint')
-                            @endif
                         @endif
                         @if($isApplicant)
                             <a href="{{ route('applications.show', $application) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
@@ -1285,7 +1269,6 @@
                             @endif
                             @if($canPrintNow)
                                 <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
-                                @include('evaluation.partials.youth_print_hint')
                             @endif
                             <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                                 Nazad na listu
@@ -1302,9 +1285,6 @@
                         {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
-                            @if($isOmladinskoScoring)
-                                @include('evaluation.partials.youth_print_hint')
-                            @endif
                         @endif
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
@@ -1317,9 +1297,6 @@
                         @endif
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
-                            @if($isOmladinskoScoring)
-                                @include('evaluation.partials.youth_print_hint')
-                            @endif
                         @endif
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
@@ -1333,9 +1310,6 @@
                         @endif
                         @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
-                            @if($isOmladinskoScoring)
-                                @include('evaluation.partials.youth_print_hint')
-                            @endif
                         @endif
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
@@ -1345,7 +1319,6 @@
                         @if($isOmladinskoScoring)
                             @if($canPrintNow)
                                 <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
-                                @include('evaluation.partials.youth_print_hint')
                             @endif
                             <button type="submit" form="evaluationForm" id="youth-save-scores" class="btn-primary" @if($isDeadlinePassed || ! $scoringIsAllowed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj ocjene</button>
                             <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>

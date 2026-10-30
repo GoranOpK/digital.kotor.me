@@ -30,7 +30,7 @@
     <p style="margin-top: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Models\ApplicationEliminatoryCheck::NE_STAR_FOOTNOTE }}</p>
 
     <label class="form-label" style="margin-top: 16px;">Napomena</label>
-    <textarea name="note" class="form-control" rows="4" placeholder="Napomena Obrasca 3">{{ old('note', $youthSharedNote) }}</textarea>
+    <textarea name="note" class="form-control" rows="4" placeholder="Napomena Obrasca M3">{{ old('note', $youthSharedNote) }}</textarea>
     @error('note')
         <div class="error-message">{{ $message }}</div>
     @enderror

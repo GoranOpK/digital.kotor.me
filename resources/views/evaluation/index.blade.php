@@ -325,7 +325,7 @@
                                     @else
                                         {{-- Dok nisu svi ocjenili, normalni flow --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
-                                            {{ $isYouthApplication ? 'Obrazac 3' : ($isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni') }}
+                                            {{ $isYouthApplication ? 'Obrazac M3' : ($isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni') }}
                                         </a>
                                     @endif
                                 </div>

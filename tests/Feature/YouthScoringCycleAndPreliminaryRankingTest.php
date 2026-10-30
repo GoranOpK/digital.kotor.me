@@ -58,7 +58,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
+        $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
         $this->assertStringNotContainsString('Napomena mjesta 1', $html);
         $this->assertStringNotContainsString('Napomena mjesta 2', $html);
         $this->assertStringNotContainsString('Ostale napomene', $html);

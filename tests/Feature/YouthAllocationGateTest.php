@@ -62,7 +62,7 @@ class YouthAllocationGateTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
+        $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $html);
         $this->assertStringNotContainsString('name="approved_amount"', $html);
 

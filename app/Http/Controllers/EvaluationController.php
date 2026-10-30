@@ -1465,8 +1465,10 @@ class EvaluationController extends Controller
         $answers = $this->validatedEliminatoryAnswers($request, $application, requireNotesIfFail: false);
         $this->eliminatoryChecks->saveDraft($application, $chairman, $answers);
 
+        $formName = $application->competition?->isOmladinskoProfile() ? 'Obrazac M3' : 'Obrazac 3';
+
         return redirect()->route('evaluation.create', $application)
-            ->with('success', 'Eliminatorna provjera je sačuvana. Obrazac 3 još nije potvrđen.');
+            ->with('success', 'Eliminatorna provjera je sačuvana. '.$formName.' još nije potvrđen.');
     }
 
     public function confirmEliminatory(Request $request, Application $application): RedirectResponse
@@ -1478,8 +1480,10 @@ class EvaluationController extends Controller
 
         $this->eliminatoryChecks->confirm($application, $chairman, $answers, $acknowledgement);
 
+        $formName = $application->competition?->isOmladinskoProfile() ? 'Obrazac M3' : 'Obrazac 3';
+
         return redirect()->route('evaluation.create', $application)
-            ->with('success', 'Obrazac 3 je potvrđen.');
+            ->with('success', $formName.' je potvrđen.');
     }
 
     public function decidePrigovor(Request $request, Application $application): RedirectResponse

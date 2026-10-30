@@ -381,6 +381,7 @@
             'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
             'youthEqualScoreCompetition' => $application->competition ?? null,
             'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
+            'hideYouthCycleIncompleteNotice' => true,
         ])
 
         <!-- Forma za prikaz ocjene -->
@@ -462,7 +463,7 @@
                 </div>
             @else
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
-                    Obrazac 3
+                    Obrazac M3
                 </div>
                 <div class="form-title">
                     LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
@@ -473,16 +474,7 @@
                 <div class="print-segment-intro">
                 <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">1. Podnosilac:</label>
-                    @php
-                        $applicantLabel = $application->applicant_type === 'preduzetnica'
-                            ? 'Preduzetnica'
-                            : ($application->applicant_type === 'doo'
-                                ? 'DOO'
-                                : ($application->applicant_type === 'fizicko_lice'
-                                    ? 'Fizičko lice'
-                                    : 'Ostalo'));
-                    @endphp
-                    <input type="text" class="form-control-readonly" value="{{ $applicantLabel }} - {{ $application->user->name }}" readonly>
+                    <input type="text" class="form-control-readonly" value="{{ \App\Support\PmCommissionApplicantPresentation::line($application) }}" readonly>
                 </div>
                 <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">2. Naziv biznis plana:</label>
@@ -675,7 +667,6 @@
                     <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
                     @if($youthShowPrintShown)
                         <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
-                        @include('evaluation.partials.youth_print_hint')
                     @endif
                     <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
                 </div>

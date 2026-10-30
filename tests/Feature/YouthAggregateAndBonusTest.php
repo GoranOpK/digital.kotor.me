@@ -490,7 +490,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_info_day"', $memberHtml);
-        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $memberHtml);
+        $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $memberHtml);
 
         $chairmanHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))

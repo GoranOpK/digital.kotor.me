@@ -186,7 +186,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('id="youth-finish-scoring"', $html);
         $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
         $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
-        $this->assertStringContainsString('Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.', $html);
+        $this->assertStringNotContainsString('Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.', $html);
         $this->assertStringContainsString('Info dan i obuka (+1)', $html);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $html);
         $this->assertStringNotContainsString('Potvrdi i zaključaj bonuse', $html);
@@ -963,11 +963,10 @@ class YouthIndividualScoringTest extends TestCase
 
     private function assertYouthPrintHintBesideButton(string $html): void
     {
-        $this->assertMatchesRegularExpression(
-            '/>Štampaj<\/button>\s*<span\b[^>]*\bid="evaluation-print-hint"/',
-            $html
-        );
-        $this->assertStringContainsString(
+        $this->assertStringContainsString('>Štampaj</button>', $html);
+        $this->assertStringContainsString('window.print()', $html);
+        $this->assertStringNotContainsString('id="evaluation-print-hint"', $html);
+        $this->assertStringNotContainsString(
             'Dugme Štampaj otvara prozor za štampu pregledača. U njemu možete izabrati štampač ili opciju Sačuvaj kao PDF.',
             $html
         );
@@ -975,7 +974,7 @@ class YouthIndividualScoringTest extends TestCase
 
     private function assertYouthOthersRemainHiddenBeforeCycle(string $html): void
     {
-        $this->assertStringContainsString(
+        $this->assertStringNotContainsString(
             CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE,
             $html
         );
