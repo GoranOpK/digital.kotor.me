@@ -154,11 +154,19 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
         $response->assertRedirect(route('applications.show', $application));
         $response->assertSessionHasNoErrors();
-        $response->assertSessionHas('omladinsko_confirm_missing_documents');
+        $response->assertSessionHas('omladinsko_confirm_incomplete_forms');
         $this->assertSame('draft', $application->fresh()->status);
         $this->assertNull($application->fresh()->submitted_at);
 
+        $afterForms = $this->actingAs($owner)->post(route('applications.final-submit', $application), [
+            'confirm_incomplete_forms' => '1',
+        ]);
+        $afterForms->assertRedirect(route('applications.show', $application));
+        $afterForms->assertSessionHas('omladinsko_confirm_missing_documents');
+        $this->assertSame('draft', $application->fresh()->status);
+
         $confirmed = $this->actingAs($owner)->post(route('applications.final-submit', $application), [
+            'confirm_incomplete_forms' => '1',
             'confirm_missing_documents' => '1',
         ]);
         $confirmed->assertRedirect(route('applications.show', $application));
@@ -172,6 +180,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
     {
         [$owner, $application] = $this->createOmladinskoReadyDraft();
         $this->actingAs($owner)->post(route('applications.final-submit', $application), [
+            'confirm_incomplete_forms' => '1',
             'confirm_missing_documents' => '1',
         ]);
         $application->refresh();
@@ -202,10 +211,11 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->actingAs($owner)
             ->get(route('applications.show', $application))
             ->assertOk()
-            ->assertSee('Biznis plan nije kompletno popunjen. Prijavu možete podnijeti, ali će Komisija ocjenjivati isključivo dostavljeni sadržaj. Nakon podnošenja izmjene više neće biti moguće.', false);
+            ->assertSee('Jedan ili više obrazaca vaše prijave nijesu u potpunosti popunjeni.', false);
 
         $this->actingAs($owner)
             ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
                 'confirm_missing_documents' => '1',
             ])
             ->assertSessionHasNoErrors();
@@ -233,6 +243,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
         $this->actingAs($owner)
             ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
                 'confirm_missing_documents' => '1',
             ])
             ->assertSessionHasNoErrors();
@@ -285,6 +296,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             'promotion' => 'Dostavljeni sadržaj za Komisiju',
         ]);
         $this->actingAs($owner)->post(route('applications.final-submit', $application), [
+            'confirm_incomplete_forms' => '1',
             'confirm_missing_documents' => '1',
         ]);
         $application->refresh();
@@ -395,6 +407,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             'files' => [UploadedFile::fake()->create('lk.pdf', 20, 'application/pdf')],
         ])->assertSessionHasNoErrors();
         $this->actingAs($owner)->post(route('applications.final-submit', $first), [
+            'confirm_incomplete_forms' => '1',
             'confirm_missing_documents' => '1',
         ]);
         $first->refresh();

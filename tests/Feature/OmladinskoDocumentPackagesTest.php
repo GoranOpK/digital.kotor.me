@@ -270,7 +270,9 @@ class OmladinskoDocumentPackagesTest extends TestCase
 
         $first = $this->actingAs($owner)
             ->followingRedirects()
-            ->post(route('applications.final-submit', $application));
+            ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
+            ]);
 
         $first->assertOk();
         $application->refresh();
@@ -288,13 +290,16 @@ class OmladinskoDocumentPackagesTest extends TestCase
         $this->assertStringContainsString('Podnesi prijavu uprkos nedostajućim prilozima', $html);
         $this->assertStringContainsString('#application-documents', $html);
 
-        $direct = $this->actingAs($owner)->post(route('applications.final-submit', $application));
+        $direct = $this->actingAs($owner)->post(route('applications.final-submit', $application), [
+            'confirm_incomplete_forms' => '1',
+        ]);
         $direct->assertRedirect(route('applications.show', $application));
         $direct->assertSessionHas('omladinsko_confirm_missing_documents', true);
         $this->assertSame('draft', $application->fresh()->status);
         $this->assertNull($application->fresh()->submitted_at);
 
         $confirmed = $this->actingAs($owner)->post(route('applications.final-submit', $application), [
+            'confirm_incomplete_forms' => '1',
             'confirm_missing_documents' => '1',
         ]);
         $confirmed->assertRedirect(route('applications.show', $application));
@@ -336,6 +341,7 @@ class OmladinskoDocumentPackagesTest extends TestCase
     public function test_omladinsko_complete_documents_submit_without_confirmation_step(): void
     {
         [$owner, $application] = $this->createOmladinskoReadyDraft();
+        $application->businessPlan->update(['summary' => 'Potpun sažetak']);
         foreach ($application->getStrictlyRequiredDocuments() as $type) {
             $this->attachDocument($application, $type);
         }

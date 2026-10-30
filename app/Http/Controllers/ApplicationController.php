@@ -866,12 +866,23 @@ class ApplicationController extends Controller
                            ($application->competition?->is_open ?? false) &&
                            $this->kotorAddressErrorForApplication($application) === null;
 
+        $pmNeedsIncompleteFormsConfirmation = $application->isOmladinskoProfile()
+            && $application->status === 'draft'
+            && $application->businessPlan !== null
+            && (bool) $application->businessPlan->finances_notice_confirmed
+            && ($application->competition?->is_open ?? false)
+            && $this->kotorAddressErrorForApplication($application) === null
+            && (
+                ! $application->isObrazacComplete()
+                || ! $application->businessPlan->isComplete()
+            );
+
         // Samo vlasnik može da mijenja dok Prijava nije zaključana (podnesena ili draft nakon isteka roka)
         $canManage = $isOwner && ! $application->isApplicantContentWriteLocked();
         $canSubmitPrigovor = $isOwner
             && app(\App\Services\ApplicationPrigovorService::class)->applicantCanSubmit($application, $user);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation'));
     }
 
     /**
@@ -965,7 +976,7 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => 'Rok za prijave je istekao ili konkurs nije otvoren za prijave.']);
         }
 
-        if (!$application->isObrazacComplete()) {
+        if (!$application->isObrazacComplete() && !$application->isOmladinskoProfile()) {
             return back()->withErrors(['error' => 'Obrazac 1a/1b mora biti kompletan prije konačne predaje prijave.']);
         }
 
@@ -983,6 +994,14 @@ class ApplicationController extends Controller
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
         if ($kotorAddressError !== null) {
             return back()->withErrors(['error' => $kotorAddressError]);
+        }
+
+        if ($application->isOmladinskoProfile()
+            && (! $application->isObrazacComplete() || ! $application->businessPlan->isComplete())
+            && (string) $request->input('confirm_incomplete_forms') !== '1') {
+            return redirect()
+                ->route('applications.show', $application)
+                ->with('omladinsko_confirm_incomplete_forms', true);
         }
 
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.

@@ -331,6 +331,7 @@ class FinalClaimAndFreezeTest extends TestCase
 
         $this->actingAs($owner)
             ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
                 'confirm_missing_documents' => '1',
             ])
             ->assertRedirect(route('applications.show', $application));

@@ -332,6 +332,9 @@
                     <form method="POST" action="{{ route('applications.final-submit', $application) }}">
                         @csrf
                         <input type="hidden" name="confirm_missing_documents" value="1">
+                        @if(!empty($pmNeedsIncompleteFormsConfirmation))
+                            <input type="hidden" name="confirm_incomplete_forms" value="1">
+                        @endif
                         <button type="submit" class="btn btn-primary" style="background: #10b981;">
                             Podnesi prijavu uprkos nedostajućim prilozima
                         </button>
@@ -357,6 +360,7 @@
 
         @php
             $canManage = $canManage ?? false;
+            $pmNeedsIncompleteFormsConfirmation = $pmNeedsIncompleteFormsConfirmation ?? false;
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
 
@@ -480,7 +484,7 @@
                             @php
                                 $statusLabels = [
                                     'draft' => 'Nacrt',
-                                    'submitted' => 'U obradi',
+                                    'submitted' => ($application->competition?->type === 'omladinsko') ? 'Podnesena' : 'U obradi',
                                     'evaluated' => 'Ocijenjena',
                                     'approved' => 'Odobrena',
                                     'rejected' => 'Odbijena',
@@ -572,7 +576,18 @@
                                 $bizPlanLabel = null;
                                 $bizPlanClass = 'status-draft';
                                 
-                                if ($application->businessPlan) {
+                                if ($application->competition?->type === 'omladinsko') {
+                                    if (! $application->businessPlan) {
+                                        $bizPlanLabel = 'Nije kreiran';
+                                        $bizPlanClass = 'status-draft';
+                                    } elseif ($application->businessPlan->isComplete()) {
+                                        $bizPlanLabel = 'Popunjen';
+                                        $bizPlanClass = 'status-evaluated';
+                                    } else {
+                                        $bizPlanLabel = 'Nacrt';
+                                        $bizPlanClass = 'status-draft';
+                                    }
+                                } elseif ($application->businessPlan) {
                                     if ($application->businessPlan->isComplete()) {
                                         $bizPlanLabel = 'Biznis Plan - popunjen';
                                         $bizPlanClass = 'status-evaluated';
@@ -590,7 +605,7 @@
                                 <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
                                     {{ $bizPlanLabel }}
                                 </a>
-                                @if($application->businessPlan && $application->businessPlan->isComplete())
+                                @if($application->competition?->type !== 'omladinsko' && $application->businessPlan && $application->businessPlan->isComplete())
                                     {{-- UX napomena: objašnjenje šta znači status "Biznis plan - popunjen" (lako uklonjivo ako ne odgovara) --}}
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 4px; max-width: 460px;">
                                         Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
@@ -644,7 +659,23 @@
                     @endif
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                            @if($isReadyToSubmit && $competition?->is_open)
+                            @if(!empty($pmNeedsIncompleteFormsConfirmation))
+                                <div id="pm-incomplete-forms-warning" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Jedan ili više obrazaca vaše prijave nijesu u potpunosti popunjeni.</p>
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Prijavu možete podnijeti i u ovom stanju, ali Komisija će ocjenjivati isključivo dostavljene podatke i dokumentaciju. Nepopunjena polja mogu uticati na broj ostvarenih bodova.</p>
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Da li želite da podnesete prijavu sa nepotpunim obrascima?</p>
+                                    <p style="margin: 0 0 8px 0;">
+                                        <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}">Povratak na uređivanje</a>
+                                    </p>
+                                    <form method="POST" action="{{ route('applications.final-submit', $application) }}">
+                                        @csrf
+                                        <input type="hidden" name="confirm_incomplete_forms" value="1">
+                                        <button type="submit" class="btn btn-primary" style="background: #10b981; width: 100%; font-size: 13px;">
+                                            Podnesi prijavu sa nepotpunim obrascima
+                                        </button>
+                                    </form>
+                                </div>
+                            @elseif($isReadyToSubmit && $competition?->is_open)
                                 @if($omladinskoPackage && $application->businessPlan && \App\Support\KnOmladinskoDocumentPackage::isContentIncomplete($application->businessPlan))
                                     <div style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
                                         <p style="font-size: 12px; color: #92400e; margin: 0;">
