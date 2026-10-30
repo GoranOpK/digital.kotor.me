@@ -612,6 +612,11 @@
                                         Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
                                     </div>
                                 @endif
+                                @if($application->businessPlan?->isComplete() && in_array($application->competition?->type, ['omladinsko', 'zensko'], true))
+                                    <div id="business-plan-filled-notice" style="margin-top: 8px; padding: 10px; background: #eff6ff; border-left: 4px solid #2563eb; border-radius: 4px; max-width: 460px;">
+                                        <p style="font-size: 12px; color: #1e3a8a; margin: 0;"><strong>Važna napomena:</strong> Status „Popunjen“ potvrđuje da su uneseni osnovni obavezni podaci biznis plana. Preporučujemo da popunite i sve ostale relevantne djelove obrasca, jer nepotpuni podaci mogu uticati na ocjenu Komisije.</p>
+                                    </div>
+                                @endif
                             @else
                                 <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">
                                     Nije dostupan

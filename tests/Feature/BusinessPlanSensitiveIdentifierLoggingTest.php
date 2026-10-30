@@ -72,7 +72,7 @@ class BusinessPlanSensitiveIdentifierLoggingTest extends TestCase
                 'applicant_email' => $owner->email,
                 'summary' => 'Sažetak nacrta.',
             ])
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('applications.show', $application));
 
         $application->refresh();
         $this->assertNotNull($application->businessPlan);

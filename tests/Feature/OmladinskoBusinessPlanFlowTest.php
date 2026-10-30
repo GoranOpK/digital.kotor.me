@@ -53,9 +53,9 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
                 'business_idea_name' => 'Djelimična ideja',
                 'funding_sources_table' => [['type' => '', 'price' => '']],
             ])
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect(route('applications.show', $application))
             ->assertSessionHasNoErrors()
-            ->assertSessionHas('success', 'Nacrt biznis plana je sačuvan. Biznis plan još nije kompletan. Nedostajuće podatke možete dopuniti prije konačnog podnošenja prijave.');
+            ->assertSessionHas('success', 'Nacrt biznis plana je uspješno sačuvan.');
 
         $application->refresh();
         $this->assertNotNull($application->businessPlan);
@@ -135,10 +135,10 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
         $this->actingAs($owner)
             ->post(route('applications.business-plan.store', $application), $this->completeYouthDraftPayload($owner))
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect(route('applications.show', $application))
             ->assertSessionHas('success')
             ->assertSessionMissing('errors');
-        $this->assertStringContainsString('sačuvan kao nacrt', (string) session('success'));
+        $this->assertStringContainsString('Nacrt biznis plana je uspješno sačuvan.', (string) session('success'));
         $this->assertStringNotContainsString('još nije kompletan', (string) session('success'));
 
         $this->assertFalse(KnOmladinskoDocumentPackage::isContentIncomplete($application->fresh()->businessPlan));
@@ -483,9 +483,9 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
                 'business_idea_name' => 'Ženska djelimična ideja',
                 'funding_sources_table' => [['type' => '', 'price' => '']],
             ])
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect(route('applications.show', $application))
             ->assertSessionHas('success');
-        $this->assertStringContainsString('sačuvan kao nacrt', (string) session('success'));
+        $this->assertStringContainsString('Nacrt biznis plana je uspješno sačuvan.', (string) session('success'));
         $this->assertStringNotContainsString('još nije kompletan', (string) session('success'));
 
         $this->assertSame('Ženska djelimična ideja', $application->fresh()->businessPlan->business_idea_name);

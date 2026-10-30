@@ -40,7 +40,7 @@ class PmBusinessPlanFormTitleTest extends TestCase
                 'has_registered_business' => '0',
                 'business_idea_name' => 'Sačuvana PM ideja',
             ])
-            ->assertRedirect(route('dashboard'))
+            ->assertRedirect(route('applications.show', $application))
             ->assertSessionHasNoErrors();
 
         $saved = $application->fresh()->businessPlan;

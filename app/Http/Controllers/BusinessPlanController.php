@@ -866,27 +866,16 @@ class BusinessPlanController extends Controller
             'business_plan_id' => $businessPlan->id,
             'is_draft' => $isDraft,
             'is_complete' => $businessPlan->isComplete(),
-            'redirect' => $isDraft ? 'dashboard' : 'applications.show',
+            'redirect' => 'applications.show',
         ]);
 
-        $application->loadMissing('competition');
-        $youthIncompleteNotice = $application->isOmladinskoProfile()
-            && KnOmladinskoDocumentPackage::isContentIncomplete($businessPlan);
-        $youthIncompleteMessage = 'Nacrt biznis plana je sačuvan. Biznis plan još nije kompletan. Nedostajuće podatke možete dopuniti prije konačnog podnošenja prijave.';
-
-        // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
         if ($isDraft) {
-            return redirect()->route('dashboard')
-                ->with('success', $youthIncompleteNotice
-                    ? $youthIncompleteMessage
-                    : 'Biznis plan je sačuvan kao nacrt. Možete ga nastaviti popunjavati iz sekcije \"Moje prijave\".');
+            return redirect()->route('applications.show', $application)
+                ->with('success', 'Nacrt biznis plana je uspješno sačuvan.');
         }
 
-        // U suprotnom, vrati na prikaz prijave
         return redirect()->route('applications.show', $application)
-            ->with('success', $youthIncompleteNotice
-                ? $youthIncompleteMessage
-                : 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
+            ->with('success', 'Biznis plan je uspješno sačuvan.');
     }
 }
 
