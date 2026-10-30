@@ -361,6 +361,7 @@
         @php
             $canManage = $canManage ?? false;
             $pmNeedsIncompleteFormsConfirmation = $pmNeedsIncompleteFormsConfirmation ?? false;
+            $kotorAddressError = $kotorAddressError ?? null;
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
 
@@ -736,8 +737,27 @@
                                 <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
                                     Podnesi prijavu
                                 </button>
-                                <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">Morate popuniti biznis plan prije podnošenja prijave</p>
+                                @if($application->competition?->type === 'omladinsko')
+                                    @php
+                                        if (! $application->businessPlan) {
+                                            $pmBlockMessage = 'Morate kreirati biznis plan prije podnošenja prijave.';
+                                        } elseif (! $application->businessPlan->finances_notice_confirmed) {
+                                            $pmBlockMessage = 'Morate potvrditi napomenu o finansijama u biznis planu prije konačne predaje.';
+                                        } else {
+                                            $pmBlockMessage = $kotorAddressError;
+                                        }
+                                    @endphp
+                                    @if($pmBlockMessage)
+                                        <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">{{ $pmBlockMessage }}</p>
+                                    @endif
+                                @else
+                                    <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">Morate popuniti biznis plan prije podnošenja prijave</p>
+                                @endif
                             @endif
+                        </div>
+                    @elseif($application->status === 'draft' && $application->competition?->type === 'omladinsko' && (int) auth()->id() === (int) $application->user_id && ! ($competition?->is_open))
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                            <p style="font-size: 10px; color: #ef4444; margin: 0; text-align: center;">Rok za prijave je istekao ili konkurs nije otvoren za prijave.</p>
                         </div>
                     @endif
                 </div>

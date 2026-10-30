@@ -881,8 +881,10 @@ class ApplicationController extends Controller
         $canManage = $isOwner && ! $application->isApplicantContentWriteLocked();
         $canSubmitPrigovor = $isOwner
             && app(\App\Services\ApplicationPrigovorService::class)->applicantCanSubmit($application, $user);
+        // Isti rezultat koji submit() već vraća. Ekran ga ne može izračunati bez ponavljanja pravila adrese.
+        $kotorAddressError = $this->kotorAddressErrorForApplication($application);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'kotorAddressError'));
     }
 
     /**
