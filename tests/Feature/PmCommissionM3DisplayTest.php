@@ -52,6 +52,11 @@ class PmCommissionM3DisplayTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Obrazac M3', $html);
+        $this->assertStringContainsString('LISTA ZA OCJENJIVANJE BIZNIS PLANOVA', $html);
+        $this->assertStringNotContainsString('class="youth-ranking-print-root is-blocked"', $html);
+        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
+        $this->assertStringContainsString('Planirana registracija (+2)', $html);
+        $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $html);
         $this->assertStringContainsString('Potvrdi Obrazac M3', $html);
         $this->assertStringContainsString('placeholder="Napomena Obrasca M3"', $html);
         $this->assertStringContainsString('value="Fizičko lice - Ana Anić"', $html);

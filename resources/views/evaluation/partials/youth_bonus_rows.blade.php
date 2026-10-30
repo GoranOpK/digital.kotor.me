@@ -76,7 +76,7 @@
 
 <tr>
     <td class="criterion-col">
-        Planirana registracija
+        Planirana registracija (+2)
         @if(! $youthPlannedRegistrationBonusEligible)
             <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280;">
                 Nije dostupna za ovu prijavu.
@@ -111,7 +111,7 @@
 @enderror
 
 <tr>
-    <td class="criterion-col">Inovativno/zeleno poslovanje</td>
+    <td class="criterion-col">Inovativno/zeleno poslovanje (+3)</td>
     @foreach($allMembers as $member)
         @php
             $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;

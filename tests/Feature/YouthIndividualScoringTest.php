@@ -334,8 +334,8 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertSame(1, substr_count($html, 'type="checkbox" name="bonus_info_and_training"'));
         $this->assertStringNotContainsString('name="bonus_info_day"', $html);
         $this->assertStringNotContainsString('name="bonus_training"', $html);
-        $this->assertStringContainsString('Planirana registracija', $html);
-        $this->assertStringContainsString('Inovativno/zeleno poslovanje', $html);
+        $this->assertStringContainsString('Planirana registracija (+2)', $html);
+        $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $html);
         $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $html);
         $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $html);
         $this->assertStringNotContainsString('KONAČNA OCJENA', $html);

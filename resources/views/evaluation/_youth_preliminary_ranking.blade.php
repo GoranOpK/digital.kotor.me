@@ -409,15 +409,26 @@
         window.print();
     };
 </script>
+    @php
+        $hideYouthCycleIncompleteNotice = $hideYouthCycleIncompleteNotice ?? false;
+        $youthCycleIncompleteMessage = \App\Services\CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
+        $showYouthCycleIncompleteNotice = ! $youthRankingView['ranking_ready']
+            && ! ($youthRankingView['cycle_complete'] ?? false)
+            && ! $hideYouthCycleIncompleteNotice;
+        $showYouthRankingBlockReason = ! $youthRankingView['ranking_ready']
+            && ($youthRankingView['cycle_complete'] ?? false)
+            && ! ($hideYouthCycleIncompleteNotice && ($youthRankingView['block_reason'] ?? '') === $youthCycleIncompleteMessage);
+        $showYouthRankingShell = (bool) $youthRankingView['ranking_ready']
+            || filled($youthRankingTitle)
+            || $showYouthCycleIncompleteNotice
+            || $showYouthRankingBlockReason;
+    @endphp
+    @if($showYouthRankingShell)
     <div class="youth-ranking-print-root{{ $youthRankingView['ranking_ready'] ? '' : ' is-blocked' }}">
         @if(! $youthRankingView['ranking_ready'])
             @if($youthRankingTitle)
                 <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #111827;">{{ $youthRankingTitle }}</h3>
             @endif
-            @php
-                $hideYouthCycleIncompleteNotice = $hideYouthCycleIncompleteNotice ?? false;
-                $youthCycleIncompleteMessage = \App\Services\CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
-            @endphp
             @if(! $youthRankingView['cycle_complete'])
                 @unless($hideYouthCycleIncompleteNotice)
                     <p style="margin: 0; color: #92400e; font-weight: 600;">{{ $youthCycleIncompleteMessage }}</p>
@@ -757,4 +768,5 @@
             </div>
         @endif
     </div>
+    @endif
 @endif

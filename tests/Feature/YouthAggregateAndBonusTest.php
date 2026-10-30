@@ -83,8 +83,8 @@ class YouthAggregateAndBonusTest extends TestCase
         $this->assertSame(1, substr_count($list, 'Info dan i obuka (+1)'));
         $this->assertStringNotContainsString('>Info dan</td>', $list);
         $this->assertStringNotContainsString('>Obuka</td>', $list);
-        $this->assertStringContainsString('Planirana registracija', $list);
-        $this->assertStringContainsString('Inovativno/zeleno poslovanje', $list);
+        $this->assertStringContainsString('Planirana registracija (+2)', $list);
+        $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $list);
         $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $list);
         $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $list);
         $this->assertStringNotContainsString('KONAČNA OCJENA', $list);
