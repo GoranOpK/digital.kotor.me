@@ -178,6 +178,12 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             'Podrška mikro, malim i srednjim preduzećima',
             $options[CompetitionProfileResolver::TYPE_CANONICAL]
         );
+        $this->assertSame('Preduzetništvo mladih', $options['omladinsko']);
+        $this->assertSame('Žensko preduzetništvo', $options['zensko']);
+        $this->assertSame(
+            'Podrška preduzetništvu mladih',
+            CompetitionProgramCatalog::definitions()['omladinsko']['title']
+        );
 
         foreach (CompetitionProfileResolver::storableKeys() as $type) {
             $this->assertTrue(
@@ -202,7 +208,46 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             ->assertSee('value="omladinsko"', false)
             ->assertSee('value="ostalo"', false)
             ->assertSee('value="'.CompetitionProfileResolver::TYPE_CANONICAL.'"', false)
-            ->assertSee('Podrška mikro, malim i srednjim preduzećima', false);
+            ->assertSee('Podrška mikro, malim i srednjim preduzećima', false)
+            ->assertSee('Preduzetništvo mladih', false)
+            ->assertSee('Žensko preduzetništvo', false)
+            ->assertDontSee('Omladinsko preduzetništvo', false);
+        $this->assertMatchesRegularExpression(
+            '/<option value="omladinsko"[^>]*>\s*Preduzetništvo mladih\s*<\/option>/',
+            $this->actingAs($admin)->get(route('admin.competitions.create'))->assertOk()->getContent()
+        );
+    }
+
+    public function test_youth_type_label_is_preduzetnistvo_mladih_on_edit_and_in_the_list(): void
+    {
+        $admin = User::factory()->create([
+            'role_id' => Role::where('name', 'konkurs_admin')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $youth = $this->competition('omladinsko', 'Poziv mladih '.uniqid());
+
+        $edit = $this->actingAs($admin)
+            ->get(route('admin.competitions.edit', $youth))
+            ->assertOk()
+            ->getContent();
+        $this->assertMatchesRegularExpression(
+            '/<input type="hidden" name="type" value="omladinsko">/',
+            $edit
+        );
+        $this->assertMatchesRegularExpression(
+            '/<input type="text" class="form-control" value="Preduzetništvo mladih" readonly>/',
+            $edit
+        );
+        $this->assertStringNotContainsString('Omladinsko preduzetništvo', $edit);
+
+        $index = $this->actingAs($admin)
+            ->get(route('admin.competitions.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Preduzetništvo mladih', $index);
+        $this->assertStringContainsString($youth->title, $index);
+        $this->assertStringNotContainsString('Omladinsko preduzetništvo', $index);
     }
 
     /**

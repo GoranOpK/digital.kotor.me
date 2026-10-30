@@ -129,7 +129,7 @@
                         <label class="form-label">Tip konkursa *</label>
                         @if($lockTypeYear)
                             <input type="hidden" name="type" value="omladinsko">
-                            <input type="text" class="form-control" value="Omladinsko preduzetništvo" readonly>
+                            <input type="text" class="form-control" value="{{ \App\Services\Competitions\Profile\CompetitionProfileResolver::adminTypeOptions()['omladinsko'] }}" readonly>
                         @else
                         <select name="type" class="form-control @error('type') error @enderror" required>
                             @foreach(\App\Services\Competitions\Profile\CompetitionProfileResolver::adminTypeOptions() as $typeKey => $typeLabel)

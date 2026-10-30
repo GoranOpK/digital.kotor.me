@@ -286,7 +286,7 @@
                             @if(empty($type))
                             <td>
                                 @if($competition->type === 'zensko') Žensko preduzetništvo
-                                @elseif($competition->type === 'omladinsko') Omladinsko preduzetništvo
+                                @elseif($competition->type === 'omladinsko') {{ \App\Services\Competitions\Profile\CompetitionProfileResolver::adminTypeOptions()['omladinsko'] }}
                                 @else Ostalo
                                 @endif
                             </td>

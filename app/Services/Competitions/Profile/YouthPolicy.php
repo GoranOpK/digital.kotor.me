@@ -14,7 +14,7 @@ final class YouthPolicy extends CompetitionProfilePolicy
 
     public function displayName(): string
     {
-        return 'Omladinsko preduzetništvo';
+        return 'Preduzetništvo mladih';
     }
 
     public function requiresKotorAddress(): bool
