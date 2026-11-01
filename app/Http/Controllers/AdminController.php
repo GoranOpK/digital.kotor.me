@@ -29,6 +29,9 @@ use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Models\YouthDecisionDocument;
+use App\Services\Competitions\YouthDecisionDocumentStore;
+use App\Services\Competitions\YouthDecisionDocumentStoreException;
 use App\Services\Competitions\ZenskoDecisionProposalCloseResult;
 use App\Services\Competitions\ZenskoDecisionProposalCloseService;
 use App\Services\Competitions\ZenskoDecisionProposalHtmlReader;
@@ -1455,6 +1458,10 @@ class AdminController extends Controller
                 ->withErrors(['error' => 'Ne možete zatvoriti konkurs prije nego što donesete zaključak za sve prijave i generišete odluku o dodjeli sredstava.']);
         }
 
+        if ($competition->isOmladinskoProfile()) {
+            return $this->closeOmladinskoCompetition($competition);
+        }
+
         // §13.6: ne finalizovati konkurs sa raspodjelom koja krši prednost započinjanja (ŽP).
         $equalScoreBlock = app(\App\Services\Competitions\ZpEqualScoreAllocationGuard::class)
             ->blockReason($competition);
@@ -1554,6 +1561,118 @@ class AdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren. Status konkursa je Završen.');
+    }
+
+    /**
+     * PM zatvaranje. Sve provjere koje mogu odbiti zatvaranje rade se prije
+     * upisa statusa prijava. Upis je u istoj transakciji kao i završetak konkursa.
+     */
+    private function closeOmladinskoCompetition(Competition $competition)
+    {
+        $store = app(YouthDecisionDocumentStore::class);
+
+        try {
+            return DB::transaction(function () use ($competition, $store) {
+                $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
+                if ($locked === null || ! $locked->isOmladinskoProfile()) {
+                    return redirect()->back()->withErrors([
+                        'error' => 'Zatvaranje konkursa trenutno nije moguće jer stanje konkursa nije moglo biti ponovo pročitano.',
+                    ]);
+                }
+
+                if (in_array($locked->status, ['closed', 'completed'], true)) {
+                    return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren. Status konkursa je Završen.');
+                }
+
+                if (! $locked->hasChairmanCompletedDecisions()) {
+                    return redirect()->back()
+                        ->withErrors(['error' => 'Ne možete zatvoriti konkurs prije nego što donesete zaključak za sve prijave i generišete odluku o dodjeli sredstava.']);
+                }
+
+                $youthCloseBlock = app(\App\Services\CanonicalIndividualScoringService::class)
+                    ->youthCloseFreezeBlockReason($locked);
+                if ($youthCloseBlock !== null) {
+                    return redirect()->back()->withErrors(['error' => $youthCloseBlock]);
+                }
+
+                try {
+                    $document = $store->latestValidDocument($locked);
+                } catch (YouthDecisionDocumentStoreException $exception) {
+                    if ($exception->getMessage() !== YouthDecisionDocumentStore::HASH_MISMATCH) {
+                        throw $exception;
+                    }
+                    $document = null;
+                }
+
+                if ($document === null) {
+                    return redirect()->back()->withErrors(['error' => YouthDecisionDocumentStore::CLOSE_BLOCKED]);
+                }
+
+                $lockedDocument = YouthDecisionDocument::query()->whereKey($document->id)->lockForUpdate()->first();
+                if ($lockedDocument === null || (int) $lockedDocument->competition_id !== (int) $locked->id) {
+                    return redirect()->back()->withErrors(['error' => YouthDecisionDocumentStore::CLOSE_BLOCKED]);
+                }
+
+                try {
+                    $confirmed = $store->latestValidDocument($locked);
+                } catch (YouthDecisionDocumentStoreException $exception) {
+                    if ($exception->getMessage() !== YouthDecisionDocumentStore::HASH_MISMATCH) {
+                        throw $exception;
+                    }
+                    $confirmed = null;
+                }
+
+                if ($confirmed === null || (int) $confirmed->id !== (int) $lockedDocument->id) {
+                    return redirect()->back()->withErrors(['error' => YouthDecisionDocumentStore::CLOSE_BLOCKED]);
+                }
+
+                $submittedApplications = $locked->applications()
+                    ->where('status', 'submitted')
+                    ->get();
+                $toReject = [];
+                $commission = $locked->commission;
+                if ($submittedApplications->count() > 0 && $commission) {
+                    $activeMemberIds = $commission->activeMembers()->get()->pluck('id');
+                    foreach ($submittedApplications as $application) {
+                        $hasBusinessPlan = $application->businessPlan !== null;
+                        $isObrazacComplete = $application->isObrazacComplete();
+                        if (! $hasBusinessPlan || ! $isObrazacComplete) {
+                            if ($application->status === 'submitted') {
+                                $toReject[] = $application;
+                            }
+
+                            continue;
+                        }
+
+                        $evaluatedByMemberIds = $application->evaluationScores()
+                            ->whereIn('commission_member_id', $activeMemberIds)
+                            ->pluck('commission_member_id');
+                        if ($activeMemberIds->diff($evaluatedByMemberIds)->count() > 0) {
+                            return redirect()->route('evaluation.index', ['competition_id' => $locked->id])
+                                ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok postoje prijave koje nisu ocijenjene od svih članova komisije. Molimo prvo ocijenite sve prijave.']);
+                        }
+                    }
+                }
+
+                foreach ($toReject as $application) {
+                    $application->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => 'Prijava je nepotpuna (nedostaje biznis plan ili obrazac nije kompletan) i rok za prijave je istekao.',
+                    ]);
+                }
+
+                $locked->update([
+                    'status' => 'completed',
+                    'closed_at' => now(),
+                ]);
+
+                return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren. Status konkursa je Završen.');
+            });
+        } catch (YouthDecisionDocumentStoreException) {
+            return redirect()->back()->withErrors([
+                'error' => 'Zatvaranje konkursa trenutno nije moguće jer sačuvana Word odluka nije mogla biti provjerena.',
+            ]);
+        }
     }
 
     private function finishZenskoClose(ZenskoDecisionProposalCloseResult $result)

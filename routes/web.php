@@ -501,6 +501,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
             Route::get('/youth/{competition}/ranking', [EvaluationController::class, 'youthRanking'])->name('youth-ranking');
             Route::get('/youth/{competition}/decision', [EvaluationController::class, 'youthDecision'])->name('youth-decision');
             Route::post('/youth/{competition}/decision', [EvaluationController::class, 'generateYouthDecision'])->name('youth-decision.generate');
+            Route::get('/youth/{competition}/decision/download', [EvaluationController::class, 'downloadYouthDecision'])->name('youth-decision.download');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
             // Kanonski MMSP — sjednice Komisije: redovna, intervju, treća sjednica (KN-SYNC-013)
             Route::get('/competitions/{competition}/canonical-sessions', [CanonicalSessionController::class, 'show'])->name('canonical-sessions.show');

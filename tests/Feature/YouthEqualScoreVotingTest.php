@@ -132,7 +132,7 @@ class YouthEqualScoreVotingTest extends TestCase
     {
         $two = $this->twoAppsFundsForOne();
         $html = $this->actingAs($two['chairman']->user)
-            ->get(route('evaluation.create', $two['tied'][0]))
+            ->get(route('evaluation.youth-ranking', $two['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('data-testid="youth-equal-score-voting"', $html);
@@ -448,7 +448,7 @@ class YouthEqualScoreVotingTest extends TestCase
         ];
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
-            ->get(route('evaluation.create', $ctx['tied'][0]))
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('data-testid="youth-equal-score-voting"', $memberHtml);
@@ -1026,11 +1026,11 @@ class YouthEqualScoreVotingTest extends TestCase
         $this->assertSame(0, YouthEqualScoreRound::query()->count());
 
         $chairmanHtml = $this->actingAs($ctx['chairman']->user)
-            ->get(route('evaluation.create', $tiedB))
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
-            ->get(route('evaluation.create', $tiedB))
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString($reason, $chairmanHtml);
@@ -1257,6 +1257,8 @@ class YouthEqualScoreVotingTest extends TestCase
         $this->assertSame($boundaryRank, (int) $boundaryB->fresh()->ranking_position);
         $this->assertSame($boundaryScore, (string) $boundaryA->fresh()->final_score);
         $this->assertSame($boundaryScore, (string) $boundaryB->fresh()->final_score);
+
+        $this->storeClosingYouthDecision($boundary['competition'], $boundary['chairman']->user);
 
         $this->actingAs($boundary['chairman']->user)
             ->post(route('admin.competitions.close', $boundary['competition']))
@@ -2052,5 +2054,20 @@ class YouthEqualScoreVotingTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    private function storeClosingYouthDecision(Competition $competition, User $chairman): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'pm-close-');
+        if ($path === false) {
+            $this->fail('Testni ulazni fajl odluke nije kreiran.');
+        }
+        file_put_contents($path, "PK\x03\x04odluka");
+        try {
+            app(\App\Services\Competitions\YouthDecisionDocumentStore::class)
+                ->store($competition, $chairman, $path);
+        } finally {
+            @unlink($path);
+        }
     }
 }

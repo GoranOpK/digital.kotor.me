@@ -251,7 +251,8 @@ class YouthDecisionProposalTest extends TestCase
             ->assertOk();
         $chairmanPage->assertSee('data-testid="youth-decision-generate-form"', false);
         $chairmanPage->assertSee('data-testid="youth-allocation-list-confirmation"', false);
-        $chairmanPage->assertSee('data-testid="youth-close-competition"', false);
+        $chairmanPage->assertDontSee('data-testid="youth-close-competition"', false);
+        $chairmanPage->assertSee('Zatvaranje konkursa nije dozvoljeno dok Word odluka nije uspješno generisana i trajno sačuvana.', false);
         $chairmanPage->assertSee('value="2026-01-05"', false);
         $chairmanPage->assertSee('value="2026-02-06"', false);
         $chairmanPage->assertSee('value="2026-03-07"', false);

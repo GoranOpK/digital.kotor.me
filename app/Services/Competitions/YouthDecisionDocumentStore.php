@@ -36,6 +36,8 @@ class YouthDecisionDocumentStore
 
     public const NOT_STORED = 'PM Word odluka nije trajno sačuvana.';
 
+    public const CLOSE_BLOCKED = 'Zatvaranje konkursa nije dozvoljeno dok Word odluka nije uspješno generisana i trajno sačuvana.';
+
     public function __construct(
         private readonly YouthDecisionRankingIdentity $ranking,
     ) {}
@@ -73,6 +75,115 @@ class YouthDecisionDocumentStore
 
             throw new YouthDecisionDocumentStoreException(self::NOT_STORED, 0, $exception);
         }
+    }
+
+    /**
+     * Vraća stvarnu putanju već sačuvanog dokumenta nakon provjere putanje i SHA-256.
+     * Ne generiše dokument i ne mijenja red ni fajl.
+     */
+    public function verifiedDownloadPath(Competition $competition, YouthDecisionDocument $document): string
+    {
+        $this->assertPrivateLocalDisk();
+        if ((int) $document->competition_id !== (int) $competition->id) {
+            throw new YouthDecisionDocumentStoreException(self::NOT_STORED);
+        }
+
+        $relative = (string) $document->storage_path;
+        if (preg_match(
+            '#^youth-decision-documents/([0-9]+)/([0-9A-HJKMNP-TV-Z]{26})\.docx$#',
+            $relative,
+            $matches
+        ) !== 1 || (int) $matches[1] !== (int) $competition->id) {
+            throw new YouthDecisionDocumentStoreException(self::NOT_STORED);
+        }
+
+        $absolute = $this->privateDisk()->path($relative);
+        if (is_link($absolute) || ! is_file($absolute) || ! is_readable($absolute)) {
+            throw new YouthDecisionDocumentStoreException(self::NOT_STORED);
+        }
+
+        $real = realpath($absolute);
+        $documentsRoot = realpath($this->privateRoot().DIRECTORY_SEPARATOR.'youth-decision-documents');
+        $expected = $this->normalizePath($this->privateRoot().'/'.$relative);
+        if (
+            $real === false
+            || $documentsRoot === false
+            || $this->samePath($real, $documentsRoot)
+            || ! $this->isInside($real, $documentsRoot)
+            || $this->normalizePath($real) !== $expected
+        ) {
+            throw new YouthDecisionDocumentStoreException(self::NOT_STORED);
+        }
+
+        $storedHash = strtolower((string) $document->content_sha256);
+        $actualHash = hash_file('sha256', $real);
+        if (! is_string($actualHash) || ! preg_match('/^[0-9a-f]{64}$/', $storedHash)) {
+            throw new YouthDecisionDocumentStoreException(self::NOT_STORED);
+        }
+        if (! hash_equals($storedHash, $actualHash)) {
+            throw new YouthDecisionDocumentStoreException(self::HASH_MISMATCH);
+        }
+
+        return $real;
+    }
+
+    /**
+     * Posljednji ispravan dokument: generated_at opadajuće, zatim id opadajuće.
+     * Neispravan noviji zapis se preskače. Neispravni redovi i fajlovi ostaju netaknuti.
+     * Ne generiše dokument.
+     */
+    public function latestValidDocument(Competition $competition): ?YouthDecisionDocument
+    {
+        $this->assertPrivateLocalDisk();
+        if (! $competition->isOmladinskoProfile()) {
+            return null;
+        }
+
+        $expectedRanking = strtolower($this->ranking->rankingSha256($competition));
+        if (! preg_match('/^[0-9a-f]{64}$/', $expectedRanking)) {
+            throw new YouthDecisionDocumentStoreException(self::NOT_STORED);
+        }
+
+        $documents = YouthDecisionDocument::query()
+            ->where('competition_id', $competition->id)
+            ->orderByDesc('generated_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $integrityFailed = false;
+        foreach ($documents as $document) {
+            if ((int) $document->competition_id !== (int) $competition->id) {
+                continue;
+            }
+
+            $storedRanking = strtolower((string) $document->ranking_sha256);
+            if (! preg_match('/^[0-9a-f]{64}$/', $storedRanking) || ! hash_equals($expectedRanking, $storedRanking)) {
+                continue;
+            }
+
+            try {
+                $this->verifiedDownloadPath($competition, $document);
+            } catch (YouthDecisionDocumentStoreException $exception) {
+                if ($exception->getMessage() === self::HASH_MISMATCH) {
+                    $integrityFailed = true;
+
+                    continue;
+                }
+                if ($exception->getMessage() === self::NOT_STORED) {
+                    continue;
+                }
+
+                throw $exception;
+            }
+
+            return $document;
+        }
+
+        if ($integrityFailed) {
+            throw new YouthDecisionDocumentStoreException(self::HASH_MISMATCH);
+        }
+
+        return null;
     }
 
     protected function relativePath(Competition $competition): string

@@ -346,6 +346,8 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
         $competition = $ctx['competition']->fresh();
         $this->assertTrue($competition->hasChairmanCompletedDecisions());
 
+        $this->storeClosingYouthDecision($competition, $ctx['chairman']->user);
+
         $this->actingAs($ctx['chairman']->user)
             ->post(route('admin.competitions.close', $competition))
             ->assertRedirect()
@@ -604,5 +606,20 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    private function storeClosingYouthDecision(Competition $competition, User $chairman): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'pm-close-');
+        if ($path === false) {
+            $this->fail('Testni ulazni fajl odluke nije kreiran.');
+        }
+        file_put_contents($path, "PK\x03\x04odluka");
+        try {
+            app(\App\Services\Competitions\YouthDecisionDocumentStore::class)
+                ->store($competition, $chairman, $path);
+        } finally {
+            @unlink($path);
+        }
     }
 }

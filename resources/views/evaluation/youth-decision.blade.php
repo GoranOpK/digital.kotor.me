@@ -57,12 +57,17 @@
     @endif
 
     <div class="no-print" style="margin: 24px 0 8px 0; text-align: center;">
+        @if(!empty($canDownloadYouthDecision))
+            <a href="{{ route('evaluation.youth-decision.download', $competition) }}" data-testid="youth-decision-download" class="btn" style="background: #0B3D91; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; margin-right: 8px;">Preuzmi odluku</a>
+        @endif
         <a href="{{ route('evaluation.youth-ranking', $competition) }}" class="btn" style="background: #6b7280; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">Nazad na rang listu</a>
         @if(!empty($canCloseYouthCompetition))
             <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline; margin-left: 8px;">
                 @csrf
                 <button type="submit" class="btn" data-testid="youth-close-competition" style="background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Zatvori konkurs</button>
             </form>
+        @elseif(!empty($youthCloseBlockedByDocument))
+            <p data-testid="youth-close-document-required" style="display: inline; margin-left: 8px; color: #991b1b;">{{ $youthCloseDocumentMessage }}</p>
         @endif
     </div>
 </div>

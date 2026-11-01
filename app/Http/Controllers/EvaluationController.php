@@ -1106,19 +1106,88 @@ class EvaluationController extends Controller
         $decisionGate = app(YouthDecisionProposalGate::class);
         $canGenerateYouthDecision = $decisionGate->denyReason($competition, $user) === null;
         $isChairman = $member->position === 'predsjednik';
-        $canCloseYouthCompetition = $isChairman
+        $existingCloseConditions = $isChairman
             && ! in_array($competition->status, ['closed', 'completed'], true)
             && $competition->hasChairmanCompletedDecisions();
+        $validYouthDecision = null;
+        if ($isChairman) {
+            try {
+                $validYouthDecision = app(YouthDecisionDocumentStore::class)->latestValidDocument($competition);
+            } catch (YouthDecisionDocumentStoreException) {
+                $validYouthDecision = null;
+            }
+        }
+        $canCloseYouthCompetition = $existingCloseConditions && $validYouthDecision !== null;
+        $youthCloseBlockedByDocument = $existingCloseConditions && $validYouthDecision === null;
+        $canDownloadYouthDecision = $isChairman && $validYouthDecision !== null;
 
         return view('evaluation.youth-decision', [
             'competition' => $competition,
             'youthAllocationConfirmationBoard' => $this->youthAllocationListConfirmation->board($competition, $user),
             'canGenerateYouthDecision' => $canGenerateYouthDecision,
+            'canDownloadYouthDecision' => $canDownloadYouthDecision,
             'canCloseYouthCompetition' => $canCloseYouthCompetition,
+            'youthCloseBlockedByDocument' => $youthCloseBlockedByDocument,
+            'youthCloseDocumentMessage' => YouthDecisionDocumentStore::CLOSE_BLOCKED,
             'youthDecisionDates' => $canGenerateYouthDecision
                 ? app(YouthDecisionSessionDates::class)->forCompetition($competition)
                 : ['first' => null, 'second' => null, 'third' => null, 'oral' => null],
         ]);
+    }
+
+    /**
+     * Preuzima posljednji ispravan trajno sačuvani PM Word dokument bez ponovnog generisanja.
+     */
+    public function downloadYouthDecision(Competition $competition, YouthDecisionDocumentStore $store): Response
+    {
+        $user = Auth::user();
+        if (! $user instanceof User || ! $this->isActiveYouthDecisionChairman($competition, $user)) {
+            abort(403, 'Samo aktivni predsjednik Komisije može preuzeti odluku.');
+        }
+
+        try {
+            $document = $store->latestValidDocument($competition);
+        } catch (YouthDecisionDocumentStoreException $exception) {
+            if ($exception->getMessage() === YouthDecisionDocumentStore::HASH_MISMATCH) {
+                abort(409, YouthDecisionDocumentStore::HASH_MISMATCH);
+            }
+
+            abort(404);
+        }
+
+        if ($document === null) {
+            abort(404);
+        }
+
+        try {
+            $absolute = $store->verifiedDownloadPath($competition, $document);
+        } catch (YouthDecisionDocumentStoreException $exception) {
+            if ($exception->getMessage() === YouthDecisionDocumentStore::HASH_MISMATCH) {
+                abort(409, YouthDecisionDocumentStore::HASH_MISMATCH);
+            }
+
+            abort(404);
+        }
+
+        return response()->download($absolute, $this->youthDecisionDownloadName($competition), [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]);
+    }
+
+    private function isActiveYouthDecisionChairman(Competition $competition, User $user): bool
+    {
+        if (! $competition->isOmladinskoProfile() || ! $competition->commission_id) {
+            return false;
+        }
+
+        $member = CommissionMember::activeForCommission((int) $user->id, (int) $competition->commission_id);
+
+        return $member !== null && $member->position === 'predsjednik' && $member->status === 'active';
+    }
+
+    private function youthDecisionDownloadName(Competition $competition): string
+    {
+        return 'Odluka-o-raspodjeli-sredstava-mladi-'.$competition->year.'-'.$competition->id.'.docx';
     }
 
     /**
