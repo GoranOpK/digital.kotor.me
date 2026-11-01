@@ -366,8 +366,7 @@ final class CompetitionAnnualInstance
     {
         if ($application->status === self::CONFIRMED_APPLICATION_STATUS
             && $application->commission_decision === self::CONFIRMED_COMMISSION_DECISION
-            && bccomp($this->normalizeDecimal((string) ($application->approved_amount ?? '0')), '0.00', 2) === 1
-            && $this->youthSupportCapFactsAreConfirmed($application)) {
+            && bccomp($this->normalizeDecimal((string) ($application->approved_amount ?? '0')), '0.00', 2) === 1) {
             return true;
         }
 
@@ -377,22 +376,6 @@ final class CompetitionAnnualInstance
         }
 
         return false;
-    }
-
-    /**
-     * Iste činjenice kao YouthAllocationDraftService::capSnapshot(): oba odgovora i oba vremena potvrde.
-     */
-    private function youthSupportCapFactsAreConfirmed(Application $application): bool
-    {
-        $startup = $application->getAttributes()['youth_innovative_tech_startup'] ?? null;
-        $prior = $application->getAttributes()['youth_prior_municipal_youth_funding'] ?? null;
-
-        return $startup !== null
-            && $startup !== ''
-            && $prior !== null
-            && $prior !== ''
-            && $application->youth_innovative_tech_startup_confirmed_at !== null
-            && $application->youth_prior_municipal_youth_funding_confirmed_at !== null;
     }
 
     private function findCall(string $type, int $year, int $callNumber): ?Competition

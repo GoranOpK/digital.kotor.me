@@ -61,15 +61,15 @@ class AllocationCompletionGuardTest extends TestCase
         $this->assertSame('50000.00', $room);
     }
 
-    public function test_youth_claim_uses_thirty_percent_until_cap_facts_exist(): void
+    public function test_youth_claim_reserves_requested_amount_without_percent(): void
     {
         $guard = new AllocationCompletionGuard;
         $higher = $this->application(1, 1, 'započinjanje', '100000.00');
         $lower = $this->application(2, 2, 'započinjanje', '80000.00');
 
-        $this->assertSame('30000.00', $guard->youthMaxClaim($higher, '100000.00'));
+        $this->assertSame('100000.00', $guard->youthMaxClaim($higher, '100000.00'));
         $this->assertSame(
-            '70000.00',
+            '0.00',
             $guard->supportRoom(
                 '100000.00',
                 collect([$higher, $lower]),
@@ -77,6 +77,10 @@ class AllocationCompletionGuardTest extends TestCase
                 fn (Application $application) => $guard->youthMaxClaim($application, '100000.00'),
             )
         );
+        $this->assertSame('40000.00', $guard->youthMaxClaim(
+            $this->application(3, 1, 'započinjanje', '40000.00'),
+            '100000.00'
+        ));
     }
 
     private function application(int $id, int $rank, string $stage, string $requested): Application

@@ -814,6 +814,10 @@ final class YouthEqualScoreVotingService
     }
 
     /**
+     * Samo prijave na pragu ili iznad njega ulaze u izjednačene grupe.
+     * Prijave ispod 30 zadržavaju rang i automatski rejected, ali ne traže zaključak
+     * ni kada dijele rang-mjesto, i ne troše budžet raspodjele.
+     *
      * @return Collection<int, array{application: Application, full_score: string, rank: int}>
      */
     private function scoredRankedApplications(Competition $competition): Collection
@@ -833,7 +837,9 @@ final class YouthEqualScoreVotingService
                     'full_score' => $this->fullScore($aggregate['final_score_full'] ?? '0'),
                     'rank' => (int) $application->ranking_position,
                 ];
-            });
+            })
+            ->filter(fn (array $row) => $this->canonicalScoring->youthMeetsMinimumScore($row['application']))
+            ->values();
     }
 
     /**

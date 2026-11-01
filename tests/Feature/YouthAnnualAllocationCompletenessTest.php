@@ -286,7 +286,7 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
 
         $this->assertTrue($competition->hasChairmanCompletedDecisions());
         $this->assertNull($below->fresh()->commission_decision);
-        $this->assertSame('evaluated', $below->fresh()->status);
+        $this->assertSame('rejected', $below->fresh()->status);
         $this->assertNull($competition->youth_allocation_list_confirmed_at);
         $this->assertSame(0, \App\Models\YouthEqualScoreRound::query()->count());
         $this->assertSame('published', $competition->status);
@@ -355,7 +355,7 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
 
         $closed = $competition->fresh();
         $this->assertSame('completed', $closed->status);
-        $this->assertSame('evaluated', $below->fresh()->status);
+        $this->assertSame('rejected', $below->fresh()->status);
         $this->assertSame('80000.00', $this->annual->remainingAfterFirst('omladinsko', (int) $closed->year));
         $this->assertTrue($this->annual->canCreateSecondCall($closed));
 
@@ -402,6 +402,10 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
             'youth_allocation_list_confirmed_by_name' => $historical['chairman']->name,
         ])->save();
 
+        $this->assertTrue($this->annual->youthAllocationListIsComplete($historical['competition']->fresh()));
+        $this->assertTrue($historical['competition']->fresh()->hasChairmanCompletedDecisions());
+
+        $historical['application']->forceFill(['approved_amount' => '0.00'])->save();
         $this->assertFalse($this->annual->youthAllocationListIsComplete($historical['competition']->fresh()));
         $this->assertTrue($historical['competition']->fresh()->hasChairmanCompletedDecisions());
     }

@@ -91,14 +91,7 @@ final class AllocationCompletionGuard
 
     public function youthMaxClaim(Application $application, string $budget): string
     {
-        $percent = 30;
-        if ($this->youthCapFactsConfirmed($application)) {
-            $startup = (int) $application->getAttributes()['youth_innovative_tech_startup'] === 1;
-            $prior = (int) $application->getAttributes()['youth_prior_municipal_youth_funding'] === 1;
-            $percent = $startup ? 30 : ($prior ? 15 : 20);
-        }
-
-        return $this->capClaim($application, $budget, $this->percentOfBudget($this->money($budget), $percent));
+        return $this->capClaim($application, $budget, null);
     }
 
     public function zenskoMaxClaim(Application $application, string $budget): string
@@ -166,24 +159,6 @@ final class AllocationCompletionGuard
         }
 
         return $this->isStartup($other) && ! $this->isStartup($candidate);
-    }
-
-    private function youthCapFactsConfirmed(Application $application): bool
-    {
-        $startup = $application->getAttributes()['youth_innovative_tech_startup'] ?? null;
-        $prior = $application->getAttributes()['youth_prior_municipal_youth_funding'] ?? null;
-
-        return $startup !== null
-            && $startup !== ''
-            && $prior !== null
-            && $prior !== ''
-            && $application->youth_innovative_tech_startup_confirmed_at !== null
-            && $application->youth_prior_municipal_youth_funding_confirmed_at !== null;
-    }
-
-    private function percentOfBudget(string $budget, int $percent): string
-    {
-        return bcmul($budget, bcdiv((string) $percent, '100', 2), 2);
     }
 
     private function minMoney(string $left, string $right): string

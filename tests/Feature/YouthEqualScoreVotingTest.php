@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\BusinessPlan;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -14,6 +15,7 @@ use App\Models\YouthEqualScoreRound;
 use App\Models\YouthEqualScoreRoundApplication;
 use App\Models\YouthEqualScoreVote;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthDecisionProposalBuilder;
 use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CompetitionAnnualInstance;
@@ -1230,10 +1232,8 @@ class YouthEqualScoreVotingTest extends TestCase
         $this->assertSame(0, $roundsFor($covered['competition']));
         $covered['application']->fresh()->forceFill([
             'youth_innovative_tech_startup' => null,
-        ])->save();
-        $this->assertFalse($covered['competition']->fresh()->hasChairmanCompletedDecisions());
-        $covered['application']->fresh()->forceFill([
-            'youth_innovative_tech_startup' => 0,
+            'youth_prior_municipal_youth_funding' => null,
+            'youth_applied_cap_percent' => null,
         ])->save();
         $this->assertTrue($covered['competition']->fresh()->hasChairmanCompletedDecisions());
 
@@ -1401,6 +1401,94 @@ class YouthEqualScoreVotingTest extends TestCase
             CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['omladinsko']['status']
         );
+    }
+
+    public function test_mixed_historical_percents_do_not_change_tied_allocation_word_or_close(): void
+    {
+        $ctx = $this->rankingReady();
+        $ctx['application']->update(['requested_amount' => 40000]);
+        $tied = $this->addScoredApplication($ctx, 'Izjednačena bez procenta', 40000, 3);
+        $ctx['application']->forceFill(['youth_applied_cap_percent' => 20])->save();
+        $this->assertSame(
+            (int) $ctx['application']->fresh()->ranking_position,
+            (int) $tied->fresh()->ranking_position
+        );
+
+        $voting = app(YouthEqualScoreVotingService::class);
+        $this->assertSame(
+            '100000.00',
+            $voting->liveSupportRoom($ctx['competition']->fresh(), $ctx['application']->fresh())
+        );
+        $this->assertSame(
+            '100000.00',
+            $voting->liveSupportRoom($ctx['competition']->fresh(), $tied->fresh())
+        );
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-equal-score-round', $ctx['competition']), [
+                'justification' => 'Stari tok.',
+                'selected' => [$ctx['application']->id],
+            ])
+            ->assertForbidden();
+        $this->assertSame(0, YouthEqualScoreRound::query()->count());
+
+        foreach ([$ctx['application'], $tied] as $application) {
+            $this->actingAs($ctx['chairman']->user)
+                ->post(route('evaluation.youth-allocation-draft', $application), [
+                    'commission_decision' => 'podrzava_potpuno',
+                    'approved_amount' => 30000,
+                    'commission_justification' => 'Iznos određuje predsjednik u okviru traženog iznosa i budžeta.',
+                ])
+                ->assertRedirect()
+                ->assertSessionHasNoErrors();
+        }
+
+        $withPercent = $ctx['application']->fresh();
+        $withoutPercent = $tied->fresh();
+        $this->assertSame('30000.00', $withPercent->approved_amount);
+        $this->assertSame('30000.00', $withoutPercent->approved_amount);
+        $this->assertSame(20, (int) $withPercent->youth_applied_cap_percent);
+        $this->assertNull($withoutPercent->youth_applied_cap_percent);
+        $this->assertSame(
+            (int) $withPercent->ranking_position,
+            (int) $withoutPercent->ranking_position
+        );
+        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+
+        foreach ([$withPercent, $withoutPercent] as $application) {
+            $application->forceFill([
+                'applicant_type' => 'fizicko_lice',
+                'physical_person_name' => 'Ana Anić',
+            ])->save();
+            BusinessPlan::query()->create([
+                'application_id' => $application->id,
+                'required_amount' => '50000.00',
+            ]);
+        }
+
+        $proposal = app(YouthDecisionProposalBuilder::class)->build(
+            $ctx['competition']->fresh(),
+            [
+                'first_session_date' => '2026-02-02',
+                'second_session_date' => '2026-03-03',
+                'third_session_date' => '2026-04-04',
+                'oral_presentation_date' => '2026-05-05',
+            ],
+            now()
+        );
+        $this->assertSame(['30.000,00', '30.000,00'], array_column($proposal->winners, 'approved'));
+        $this->assertSame('60.000,00', $proposal->awardedTotal);
+
+        $this->storeClosingYouthDecision($ctx['competition']->fresh(), $ctx['chairman']->user);
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('admin.competitions.close', $ctx['competition']))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $this->assertSame('completed', $ctx['competition']->fresh()->status);
+        $this->assertSame(20, (int) $ctx['application']->fresh()->youth_applied_cap_percent);
+        $this->assertNull($tied->fresh()->youth_applied_cap_percent);
+        $this->assertSame('30000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertSame('30000.00', $tied->fresh()->approved_amount);
     }
 
     /**

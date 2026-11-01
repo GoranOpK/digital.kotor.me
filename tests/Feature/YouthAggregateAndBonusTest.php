@@ -448,9 +448,9 @@ class YouthAggregateAndBonusTest extends TestCase
         $belowApp = $below['application']->fresh();
         $this->assertSame('29.67', $belowApp->final_score);
         $this->assertFalse($belowApp->meetsMinimumScore());
-        $this->assertSame('evaluated', $belowApp->status);
-        $this->assertNotSame('approved', $belowApp->status);
-        $this->assertNotSame('rejected', $belowApp->status);
+        $this->assertSame('rejected', $belowApp->status);
+        $this->assertSame(1, (int) $belowApp->ranking_position);
+        $this->assertSame('29.67', (string) $belowApp->final_score);
 
         $roundedDisplay = $this->youthReadyToLock();
         $this->lockThreeSeats($roundedDisplay, [1 => ['criterion_1' => 2]]);
@@ -458,7 +458,7 @@ class YouthAggregateAndBonusTest extends TestCase
         $roundedDisplay['application']->fresh()->forceFill(['final_score' => '30.00'])->save();
         $this->assertSame('30.00', $roundedDisplay['application']->fresh()->final_score);
         $this->assertFalse($roundedDisplay['application']->fresh()->meetsMinimumScore());
-        $this->assertSame('evaluated', $roundedDisplay['application']->fresh()->status);
+        $this->assertSame('rejected', $roundedDisplay['application']->fresh()->status);
     }
 
     public function test_secrecy_hides_totals_and_other_scores_before_cycle_complete(): void

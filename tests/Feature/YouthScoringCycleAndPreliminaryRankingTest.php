@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\BusinessPlan;
 use App\Models\ApplicationEliminatoryNotice;
 use App\Models\ApplicationPrigovor;
 use App\Models\Commission;
@@ -14,6 +15,10 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthDecisionProposalBuilder;
+use App\Services\Competitions\YouthDecisionRankingIdentity;
+use App\Services\Competitions\YouthEqualScoreVotingService;
 use App\Services\YouthSecondSessionGate;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationClassification;
@@ -191,10 +196,13 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $ctx = $this->youthReadyToLock();
         $this->lockThreeSeats($ctx);
         $service = app(CanonicalIndividualScoringService::class);
+        $locked = $ctx['application']->fresh();
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
-        $this->assertFalse($ctx['competition']->fresh()->isRankingFormed());
-        $this->assertNull($ctx['application']->fresh()->final_score);
-        $this->assertNull($ctx['application']->fresh()->ranking_position);
+        $this->assertTrue($ctx['competition']->fresh()->isRankingFormed());
+        $this->assertNotNull($locked->bonuses_confirmed_at);
+        $this->assertSame('30.00', (string) $locked->final_score);
+        $this->assertSame(1, (int) $locked->ranking_position);
+        $this->assertSame('evaluated', $locked->status);
 
         foreach ($ctx['members'] as $member) {
             $html = $this->actingAs($member->fresh('user')->user)
@@ -211,8 +219,9 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
                 ->get(route('evaluation.youth-ranking', $ctx['competition']))
                 ->assertOk()
                 ->getContent();
-            $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $rankingHtml);
-            $this->assertStringNotContainsString('Preliminarna rang-lista', $rankingHtml);
+            $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $rankingHtml);
+            $this->assertStringContainsString('Preliminarna rang-lista', $rankingHtml);
+            $this->assertStringContainsString('30.00 / 56', $rankingHtml);
         }
 
         $this->actingAs($this->userWithRole('admin'))
@@ -238,7 +247,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->actingAs($other['chairman']->user)
             ->get(route('evaluation.index', ['competition_id' => $ctx['competition']->id]))
             ->assertForbidden();
-        $this->assertNull($ctx['application']->fresh()->ranking_position);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame('30.00', (string) $ctx['application']->fresh()->final_score);
 
         $sharedUser = $other['members'][1]->user;
         $ctx['members'][1]->update(['user_id' => $sharedUser->id, 'name' => $sharedUser->name]);
@@ -283,11 +293,10 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             3 => $this->allCriteria(3),
         ], $fourth);
 
-        $this->confirmYouthBonuses($ctx);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $second]);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $third]);
-        $this->assertNull($ctx['application']->fresh()->ranking_position);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $fourth]);
+        $this->assertTrue($ctx['competition']->fresh()->isRankingFormed());
+        $this->assertNotNull($ctx['application']->fresh()->bonuses_confirmed_at);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame('50.00', (string) $ctx['application']->fresh()->final_score);
 
         $first = $ctx['application']->fresh();
         $second = $second->fresh();
@@ -310,11 +319,10 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
 
         $below = $this->addPassedApplication($ctx, 'Ispod praga');
         $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $below]);
         $below = $below->fresh();
         $this->assertSame('29.67', $below->final_score);
-        $this->assertSame('evaluated', $below->status);
-        $this->assertNull($below->ranking_position);
+        $this->assertSame('rejected', $below->status);
+        $this->assertSame(5, (int) $below->ranking_position);
         $this->assertNull($below->approved_amount);
         $this->assertSame(1, (int) $first->fresh()->ranking_position);
         $this->assertSame(4, (int) $fourth->fresh()->ranking_position);
@@ -334,8 +342,11 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('Preliminarna rang-lista', $html);
         $this->assertStringContainsString('Ispod praga', $html);
-        $this->assertStringContainsString('nije konačna odluka o podršci', $html);
-        $this->assertStringContainsString($below->business_plan_name, $html);
+        $belowHeading = strpos($html, 'Prijave ispod minimuma (30 bodova)');
+        $belowName = strpos($html, $below->business_plan_name);
+        $this->assertNotFalse($belowHeading);
+        $this->assertNotFalse($belowName);
+        $this->assertGreaterThan($belowHeading, $belowName);
         $this->assertStringNotContainsString('Dobitnik sredstava', $html);
         $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $html);
         $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
@@ -361,8 +372,6 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $displayTieB = $this->addPassedApplication($ctx, 'Prikaz B');
         $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 3], 2 => ['criterion_1' => 3], 3 => ['criterion_1' => 4]], $displayTieA);
         $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 3], 2 => ['criterion_1' => 4], 3 => ['criterion_1' => 4]], $displayTieB);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $displayTieA]);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $displayTieB]);
         $displayTieA->fresh()->forceFill(['final_score' => '30.33'])->save();
         $displayTieB->fresh()->forceFill(['final_score' => '30.33'])->save();
         $this->assertSame('30.33', $displayTieA->fresh()->final_score);
@@ -391,7 +400,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertSame($before[$second->id], $second->fresh()->ranking_position);
         $this->assertSame($before[$third->id], $third->fresh()->ranking_position);
         $this->assertSame($before[$fourth->id], $fourth->fresh()->ranking_position);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame($before[$below->id], $below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
         $this->assertSame($evaluatedAt, $first->fresh()->evaluated_at->toDateTimeString());
         $this->assertSame('50.00', $first->fresh()->final_score);
         $this->assertSame('evaluated', $first->fresh()->status);
@@ -436,10 +446,13 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertLessThan($highLater->id, $lowFirst->id);
         $this->assertLessThan($tieLater->id, $tieEarlier->id);
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
-        $this->assertNull($lowFirst->ranking_position);
-        $this->assertNull($highLater->ranking_position);
-        $this->assertNull($tieEarlier->ranking_position);
-        $this->assertNull($tieLater->ranking_position);
+        $this->assertSame(5, (int) $lowFirst->ranking_position);
+        $this->assertSame(2, (int) $highLater->ranking_position);
+        $this->assertSame(3, (int) $tieEarlier->ranking_position);
+        $this->assertSame(3, (int) $tieLater->ranking_position);
+        $this->assertSame('rejected', $lowFirst->status);
+        $this->assertSame('rejected', $highLater->status);
+        $this->assertSame('29.67', $highLater->final_score);
 
         $service = app(CanonicalIndividualScoringService::class);
         $view = $service->youthPreliminaryRankingView($ctx['competition']->fresh());
@@ -518,25 +531,35 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
     {
         $first = $this->youthReadyToLock();
         $this->lockThreeSeats($first);
-        $this->confirmYouthBonuses($first);
+        $this->assertTrue($first['competition']->fresh()->isRankingFormed());
+        $this->assertNotNull($first['application']->fresh()->bonuses_confirmed_at);
         $this->assertSame(1, (int) $first['application']->fresh()->ranking_position);
+        $this->assertSame('30.00', (string) $first['application']->fresh()->final_score);
 
         $second = $this->youthReadyToLock(2, $first['competition']->year);
         $this->lockThreeSeats($second, [
-            1 => $this->allCriteria(5),
+            1 => $this->allCriteria(5) + ['bonus_green_innovative' => '1'],
             2 => $this->allCriteria(5),
             3 => $this->allCriteria(5),
         ]);
         $this->assertTrue(app(CanonicalIndividualScoringService::class)->isYouthIndividualScoringCycleComplete($first['competition']->fresh()));
         $this->assertTrue(app(CanonicalIndividualScoringService::class)->isYouthIndividualScoringCycleComplete($second['competition']->fresh()));
-        $this->assertFalse($second['competition']->fresh()->isRankingFormed());
-        $this->confirmYouthBonuses($second, [
-            'bonus_green_innovative' => '1',
-        ]);
+        $this->assertTrue($second['competition']->fresh()->isRankingFormed());
         $this->assertSame(1, (int) $first['application']->fresh()->ranking_position);
-        $this->assertSame('30.00', $first['application']->fresh()->final_score);
+        $this->assertSame('30.00', (string) $first['application']->fresh()->final_score);
         $this->assertSame(1, (int) $second['application']->fresh()->ranking_position);
-        $this->assertSame('53.00', $second['application']->fresh()->final_score);
+        $this->assertSame('53.00', (string) $second['application']->fresh()->final_score);
+
+        $reopen = $this->actingAs($second['chairman']->user)
+            ->post(route('evaluation.store', $second['application']), $this->bonusPayload([
+                'bonus_green_innovative' => '0',
+            ], 'confirm'));
+        $reopen->assertForbidden();
+        $this->assertSame(CanonicalIndividualScoringService::YOUTH_BONUS_LOCKED_MESSAGE, $reopen->exception?->getMessage());
+        $this->assertSame('53.00', (string) $second['application']->fresh()->final_score);
+        $this->assertSame(1, (int) $second['application']->fresh()->ranking_position);
+        $this->assertSame('30.00', (string) $first['application']->fresh()->final_score);
+        $this->assertSame(1, (int) $first['application']->fresh()->ranking_position);
     }
 
     public function test_expired_window_forms_ranking_on_authorized_index_and_zensko_cycle_remains(): void
@@ -569,10 +592,14 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertSame('rejected', $failed->fresh()->status);
+        $this->assertNull($failed->fresh()->ranking_position);
+        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
+        $this->assertSame('30.00', (string) $ctx['application']->fresh()->final_score);
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
         $this->assertStringContainsString('Preliminarna rang-lista', $html);
         $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $html);
-        $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
+        $this->assertStringNotContainsString('Prijave ispod minimuma (30 bodova)', $html);
+        $this->assertStringNotContainsString($failed->fresh()->business_plan_name, $html);
         $this->assertStringContainsString('ranking-badge', $html);
         $this->assertStringContainsString('data-testid="youth-ranking-print"', $html);
         $this->assertStringContainsString('printYouthPreliminaryRanking(this)', $html);
@@ -624,7 +651,9 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertTrue($service->isYouthPreliminaryRankingReady($competition));
         $this->assertTrue($competition->isRankingFormed());
         $this->assertNotNull($ctx['application']->fresh()->ranking_position);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame(2, (int) $below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
+        $this->assertSame('29.67', (string) $below->fresh()->final_score);
 
         $ctx['application']->fresh()->forceFill([
             'status' => 'approved',
@@ -643,7 +672,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             'commission_justification' => 'Ispod praga.',
             'rejection_reason' => 'Ispod praga.',
         ])->save();
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame(2, (int) $below->fresh()->ranking_position);
         $this->assertTrue($service->youthPositiveScoringApplications($ctx['competition']->fresh())->isEmpty());
         $competition = $ctx['competition']->fresh();
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($competition));
@@ -651,8 +680,9 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertTrue($competition->isRankingFormed());
         $service->persistYouthPreliminaryRankingIfReady($competition);
         $this->assertNotNull($ctx['application']->fresh()->ranking_position);
-        $this->assertNull($below->fresh()->ranking_position);
-        $this->assertFalse($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+        $this->assertSame(2, (int) $below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
+        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
 
         $bare = $this->makeYouthContext();
         $bare['application']->forceFill([
@@ -678,6 +708,280 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $zensko['application']->fresh()->forceFill(['status' => 'approved'])->save();
         $this->assertTrue($zensko['competition']->fresh()->isRankingFormed());
         $this->assertTrue($zensko['competition']->fresh()->isIndividualScoringCycleComplete());
+    }
+
+    public function test_below_threshold_is_ranked_rejected_and_frozen_after_finality(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $ctx['application']->update(['requested_amount' => 1000]);
+        $tieHighA = $this->addPassedApplication($ctx, 'Cetiri A');
+        $tieHighB = $this->addPassedApplication($ctx, 'Cetiri B');
+        $atThreshold = $this->addPassedApplication($ctx, 'Tacno trideset');
+        $below = $this->addPassedApplication($ctx, 'Ispod 2967');
+        $tieLowA = $this->addPassedApplication($ctx, 'Dvadeset osam A');
+        $tieLowB = $this->addPassedApplication($ctx, 'Dvadeset osam B');
+        foreach ([$tieHighA, $tieHighB, $atThreshold] as $application) {
+            $application->update(['requested_amount' => 1000]);
+        }
+
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(5),
+            2 => $this->allCriteria(5),
+            3 => $this->allCriteria(5),
+        ]);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(4),
+            2 => $this->allCriteria(4),
+            3 => $this->allCriteria(4),
+        ], $tieHighA);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(4),
+            2 => $this->allCriteria(4),
+            3 => $this->allCriteria(4),
+        ], $tieHighB);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(3),
+            2 => $this->allCriteria(3),
+            3 => $this->allCriteria(3),
+        ], $atThreshold);
+        $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
+        $lowSeat = [
+            'criterion_1' => 2,
+            'criterion_2' => 2,
+        ];
+        $this->lockThreeSeats($ctx, [1 => $lowSeat, 2 => $lowSeat, 3 => $lowSeat], $tieLowA);
+        $this->lockThreeSeats($ctx, [1 => $lowSeat, 2 => $lowSeat, 3 => $lowSeat], $tieLowB);
+
+        $this->assertSame('50.00', (string) $ctx['application']->fresh()->final_score);
+        $this->assertSame('40.00', (string) $tieHighA->fresh()->final_score);
+        $this->assertSame('40.00', (string) $tieHighB->fresh()->final_score);
+        $this->assertSame('30.00', (string) $atThreshold->fresh()->final_score);
+        $this->assertSame('29.67', (string) $below->fresh()->final_score);
+        $this->assertSame('28.00', (string) $tieLowA->fresh()->final_score);
+        $this->assertSame('28.00', (string) $tieLowB->fresh()->final_score);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(2, (int) $tieHighA->fresh()->ranking_position);
+        $this->assertSame(2, (int) $tieHighB->fresh()->ranking_position);
+        $this->assertSame(4, (int) $atThreshold->fresh()->ranking_position);
+        $this->assertSame(5, (int) $below->fresh()->ranking_position);
+        $this->assertSame(6, (int) $tieLowA->fresh()->ranking_position);
+        $this->assertSame(6, (int) $tieLowB->fresh()->ranking_position);
+        $this->assertSame('evaluated', $atThreshold->fresh()->status);
+        $this->assertSame('rejected', $below->fresh()->status);
+        $this->assertNull($below->fresh()->commission_decision);
+        $this->assertSame('29.67', (string) $below->fresh()->final_score);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $html);
+        $this->assertStringContainsString($below->fresh()->business_plan_name, $html);
+        $heading = strpos($html, 'Prijave ispod minimuma (30 bodova)');
+        $belowName = strpos($html, $below->fresh()->business_plan_name);
+        $this->assertNotFalse($heading);
+        $this->assertNotFalse($belowName);
+        $this->assertGreaterThan($heading, $belowName);
+        $this->assertStringNotContainsString('Dobitnik sredstava', substr($html, $heading));
+
+        $forbidden = $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-allocation-draft', $below), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 1000,
+            ]);
+        $forbidden->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::BELOW_THRESHOLD_MESSAGE, $forbidden->exception?->getMessage());
+        $this->assertNull($below->fresh()->commission_decision);
+        $this->assertNull($below->fresh()->approved_amount);
+
+        $service = app(CanonicalIndividualScoringService::class);
+        $service->persistYouthPreliminaryRankingIfReady($ctx['competition']->fresh());
+        $this->assertSame(6, (int) $tieLowA->fresh()->ranking_position);
+        $this->assertSame(6, (int) $tieLowB->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
+        $this->assertSame('29.67', (string) $below->fresh()->final_score);
+
+        foreach ([$ctx['application'], $tieHighA, $tieHighB, $atThreshold] as $application) {
+            $application->forceFill(['physical_person_name' => 'Podnosilac '.$application->id])->save();
+            BusinessPlan::create([
+                'application_id' => $application->id,
+                'required_amount' => '2500.00',
+            ]);
+            $this->actingAs($ctx['chairman']->user)
+                ->post(route('evaluation.youth-allocation-draft', $application), [
+                    'commission_decision' => 'podrzava_potpuno',
+                    'approved_amount' => 1000,
+                    'youth_innovative_tech_startup' => '0',
+                    'youth_prior_municipal_youth_funding' => '0',
+                ])
+                ->assertSessionHasNoErrors();
+        }
+
+        $competition = $ctx['competition']->fresh();
+        $proposal = app(YouthDecisionProposalBuilder::class)->build($competition, [
+            'first_session_date' => '2026-01-05',
+            'second_session_date' => '2026-02-06',
+            'third_session_date' => '2026-03-07',
+            'oral_presentation_date' => '2026-02-20',
+        ], now());
+        $plans = array_column($proposal->winners, 'plan');
+        $this->assertNotContains($below->fresh()->business_plan_name, $plans);
+        $this->assertNotContains($tieLowA->fresh()->business_plan_name, $plans);
+        $this->assertNotContains($tieLowB->fresh()->business_plan_name, $plans);
+        $this->assertContains($ctx['application']->fresh()->business_plan_name, $plans);
+
+        $voting = app(YouthEqualScoreVotingService::class);
+        $this->assertFalse($voting->hasUnresolvedLiveAllocation($competition));
+        $this->assertSame([], $voting->detectBoundaryGroups($competition));
+        $this->assertTrue($competition->hasChairmanCompletedDecisions());
+        $this->assertNull($tieLowA->fresh()->commission_decision);
+        $this->assertNull($tieLowB->fresh()->commission_decision);
+        $this->assertSame('rejected', $tieLowA->fresh()->status);
+        $this->assertSame('rejected', $tieLowB->fresh()->status);
+        $this->assertSame(2, (int) $tieHighA->fresh()->ranking_position);
+        $this->assertSame(2, (int) $tieHighB->fresh()->ranking_position);
+
+        $identity = app(YouthDecisionRankingIdentity::class);
+        $beforeHash = $identity->rankingSha256($competition);
+        $service->persistYouthPreliminaryRankingIfReady($competition->fresh());
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk();
+        $this->assertSame(6, (int) $tieLowA->fresh()->ranking_position);
+        $this->assertSame(6, (int) $tieLowB->fresh()->ranking_position);
+        $this->assertSame('rejected', $tieLowA->fresh()->status);
+        $this->assertSame('29.67', (string) $below->fresh()->final_score);
+        $this->assertSame($beforeHash, $identity->rankingSha256($competition->fresh()));
+    }
+
+    public function test_all_below_threshold_shared_ranks_still_finalize(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $twin = $this->addPassedApplication($ctx, 'Isto ispod');
+        $lower = $this->addPassedApplication($ctx, 'Nize ispod');
+        $lowSeat = [
+            'criterion_1' => 2,
+            'criterion_2' => 2,
+        ];
+        $this->lockThreeSeats($ctx, [1 => $lowSeat, 2 => $lowSeat, 3 => $lowSeat]);
+        $this->lockThreeSeats($ctx, [1 => $lowSeat, 2 => $lowSeat, 3 => $lowSeat], $twin);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(2),
+            2 => $this->allCriteria(2),
+            3 => $this->allCriteria(2),
+        ], $lower);
+
+        $this->assertSame('28.00', (string) $ctx['application']->fresh()->final_score);
+        $this->assertSame('28.00', (string) $twin->fresh()->final_score);
+        $this->assertSame('20.00', (string) $lower->fresh()->final_score);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(1, (int) $twin->fresh()->ranking_position);
+        $this->assertSame(3, (int) $lower->fresh()->ranking_position);
+        foreach ([$ctx['application'], $twin, $lower] as $application) {
+            $fresh = $application->fresh();
+            $this->assertSame('rejected', $fresh->status);
+            $this->assertNull($fresh->commission_decision);
+        }
+
+        $competition = $ctx['competition']->fresh();
+        $voting = app(YouthEqualScoreVotingService::class);
+        $this->assertFalse($voting->hasUnresolvedLiveAllocation($competition));
+        $this->assertSame([], $voting->detectBoundaryGroups($competition));
+        $this->assertTrue($competition->hasChairmanCompletedDecisions());
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk()
+            ->getContent();
+        $heading = strpos($html, 'Prijave ispod minimuma (30 bodova)');
+        $this->assertNotFalse($heading);
+        $this->assertGreaterThan($heading, strpos($html, $twin->fresh()->business_plan_name));
+        $this->assertGreaterThan($heading, strpos($html, $lower->fresh()->business_plan_name));
+
+        $proposal = app(YouthDecisionProposalBuilder::class)->build($competition->fresh(), [
+            'first_session_date' => '2026-01-05',
+            'second_session_date' => '2026-02-06',
+            'third_session_date' => '2026-03-07',
+            'oral_presentation_date' => '2026-02-20',
+        ], now());
+        $this->assertSame([], $proposal->winners);
+
+        $identity = app(YouthDecisionRankingIdentity::class);
+        $beforeHash = $identity->rankingSha256($competition);
+        $service = app(CanonicalIndividualScoringService::class);
+        $service->persistYouthPreliminaryRankingIfReady($competition);
+        $service->persistYouthPreliminaryRankingIfReady($competition->fresh());
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(1, (int) $twin->fresh()->ranking_position);
+        $this->assertSame(3, (int) $lower->fresh()->ranking_position);
+        $this->assertSame('rejected', $ctx['application']->fresh()->status);
+        $this->assertSame('rejected', $twin->fresh()->status);
+        $this->assertSame('20.00', (string) $lower->fresh()->final_score);
+        $this->assertSame($beforeHash, $identity->rankingSha256($competition->fresh()));
+    }
+
+    public function test_final_ranking_keeps_below_threshold_rank_and_hash(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $ctx['application']->update(['requested_amount' => 1000]);
+        $second = $this->addPassedApplication($ctx, 'Cetrdeset');
+        $third = $this->addPassedApplication($ctx, 'Tacno trideset');
+        $below = $this->addPassedApplication($ctx, 'Ispod praga');
+        foreach ([$second, $third] as $application) {
+            $application->update(['requested_amount' => 1000]);
+        }
+
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(5),
+            2 => $this->allCriteria(5),
+            3 => $this->allCriteria(5),
+        ]);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(4),
+            2 => $this->allCriteria(4),
+            3 => $this->allCriteria(4),
+        ], $second);
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(3),
+            2 => $this->allCriteria(3),
+            3 => $this->allCriteria(3),
+        ], $third);
+        $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
+
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(2, (int) $second->fresh()->ranking_position);
+        $this->assertSame(3, (int) $third->fresh()->ranking_position);
+        $this->assertSame(4, (int) $below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
+        $this->assertSame('evaluated', $third->fresh()->status);
+
+        foreach ([$ctx['application'], $second, $third] as $application) {
+            $this->actingAs($ctx['chairman']->user)
+                ->post(route('evaluation.youth-allocation-draft', $application), [
+                    'commission_decision' => 'podrzava_potpuno',
+                    'approved_amount' => 1000,
+                    'youth_innovative_tech_startup' => '0',
+                    'youth_prior_municipal_youth_funding' => '0',
+                ])
+                ->assertSessionHasNoErrors();
+        }
+
+        $competition = $ctx['competition']->fresh();
+        $this->assertTrue($competition->hasChairmanCompletedDecisions());
+        $identity = app(YouthDecisionRankingIdentity::class);
+        $beforeHash = $identity->rankingSha256($competition);
+        $service = app(CanonicalIndividualScoringService::class);
+        $service->persistYouthPreliminaryRankingIfReady($competition);
+        $service->persistYouthPreliminaryRankingIfReady($competition->fresh());
+        $frozen = $below->fresh();
+        $this->assertSame('rejected', $frozen->status);
+        $this->assertSame(4, (int) $frozen->ranking_position);
+        $this->assertSame('29.67', (string) $frozen->final_score);
+        $this->assertNull($frozen->commission_decision);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+        $this->assertSame(3, (int) $third->fresh()->ranking_position);
+        $this->assertSame('1000.00', (string) $ctx['application']->fresh()->approved_amount);
+        $this->assertSame($beforeHash, $identity->rankingSha256($competition->fresh()));
     }
 
     /**

@@ -258,13 +258,8 @@ final class YouthAllocationListConfirmationService
             }
 
             if ($application->commission_decision === 'podrzava_potpuno') {
-                $facts = $this->youthAllocationDrafts->capSnapshot($application);
-                if (! $facts['facts_confirmed']) {
-                    return self::FACTS_REQUIRED_MESSAGE;
-                }
-
                 $amount = $this->money((string) $application->approved_amount);
-                if ($this->amountExceedsLimits($application, $amount, $facts)) {
+                if ($this->amountExceedsRequested($application, $amount)) {
                     return self::AMOUNT_INVALID_MESSAGE;
                 }
             }
@@ -564,30 +559,11 @@ final class YouthAllocationListConfirmationService
             && trim((string) $application->commission_justification) !== '';
     }
 
-    /**
-     * @param  array<string, mixed>  $facts
-     */
-    private function amountExceedsLimits(Application $application, string $amount, array $facts): bool
+    private function amountExceedsRequested(Application $application, string $amount): bool
     {
         $requested = $application->requested_amount;
-        if ($requested !== null && bccomp($amount, $this->money((string) $requested), 2) === 1) {
-            return true;
-        }
 
-        $percentMax = $facts['percent_max'] ?? null;
-        if ($percentMax !== null && bccomp($amount, $this->money((string) $percentMax), 2) === 1) {
-            return true;
-        }
-
-        $expectedPercent = $this->youthAllocationDrafts->appliedCapPercent(
-            (bool) $facts['startup'],
-            (bool) $facts['prior_funding']
-        );
-        if ((int) ($application->youth_applied_cap_percent ?? 0) !== $expectedPercent) {
-            return true;
-        }
-
-        return false;
+        return $requested !== null && bccomp($amount, $this->money((string) $requested), 2) === 1;
     }
 
     private function adoptedLockedRound(Competition $competition, string $groupKey): ?YouthEqualScoreRound

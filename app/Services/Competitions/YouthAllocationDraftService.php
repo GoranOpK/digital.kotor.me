@@ -222,7 +222,7 @@ final class YouthAllocationDraftService
             abort(403, self::RANKING_NOT_READY_MESSAGE);
         }
 
-        DB::transaction(function () use ($application, $input, $competition, $user) {
+        DB::transaction(function () use ($application, $input, $competition) {
             $lockedCompetition = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
             if ($lockedCompetition === null || ! $lockedCompetition->isOmladinskoProfile()) {
                 abort(403, self::NOT_YOUTH_MESSAGE);
@@ -264,18 +264,8 @@ final class YouthAllocationDraftService
                 ->values();
             $justification = trim((string) ($input['commission_justification'] ?? ''));
             $approvedAmount = array_key_exists('approved_amount', $input) ? $input['approved_amount'] : null;
-            $startup = $this->nullableBoolFromInput($input, 'youth_innovative_tech_startup');
-            $prior = $this->nullableBoolFromInput($input, 'youth_prior_municipal_youth_funding');
-            $confirmedAt = now();
 
             if ($decision === 'podrzava_potpuno') {
-                if ($startup === null || $prior === null) {
-                    throw ValidationException::withMessages([
-                        'youth_innovative_tech_startup' => self::FACTS_REQUIRED_FOR_SUPPORT_MESSAGE,
-                        'youth_prior_municipal_youth_funding' => self::FACTS_REQUIRED_FOR_SUPPORT_MESSAGE,
-                    ]);
-                }
-
                 if ($approvedAmount === null || $approvedAmount === '' || bccomp($this->money((string) $approvedAmount), '0', 2) <= 0) {
                     throw ValidationException::withMessages([
                         'approved_amount' => self::AMOUNT_REQUIRED_MESSAGE,
@@ -297,17 +287,6 @@ final class YouthAllocationDraftService
                 ) {
                     throw ValidationException::withMessages([
                         'commission_justification' => self::REDUCED_AMOUNT_JUSTIFICATION_REQUIRED_MESSAGE,
-                    ]);
-                }
-
-                $percent = $this->appliedCapPercent($startup, $prior);
-                $percentMax = $this->percentOfBudget(
-                    $this->money((string) ($lockedCompetition->budget ?? 0)),
-                    $percent
-                );
-                if (bccomp($amount, $percentMax, 2) === 1) {
-                    throw ValidationException::withMessages([
-                        'approved_amount' => self::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE,
                     ]);
                 }
 
@@ -336,13 +315,6 @@ final class YouthAllocationDraftService
                     'rejection_reason' => null,
                     'commission_decision_date' => now(),
                     'signed_by_chairman' => true,
-                    'youth_innovative_tech_startup' => $startup,
-                    'youth_innovative_tech_startup_confirmed_at' => $confirmedAt,
-                    'youth_innovative_tech_startup_confirmed_by_user_id' => $user->id,
-                    'youth_prior_municipal_youth_funding' => $prior,
-                    'youth_prior_municipal_youth_funding_confirmed_at' => $confirmedAt,
-                    'youth_prior_municipal_youth_funding_confirmed_by_user_id' => $user->id,
-                    'youth_applied_cap_percent' => $percent,
                 ])->save();
             } elseif ($decision === 'odbija') {
                 if ($justification === '') {
@@ -355,7 +327,7 @@ final class YouthAllocationDraftService
                     abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
                 }
 
-                $rejectFill = [
+                $locked->forceFill([
                     'status' => 'rejected',
                     'commission_decision' => 'odbija',
                     'approved_amount' => '0.00',
@@ -363,19 +335,7 @@ final class YouthAllocationDraftService
                     'rejection_reason' => $justification,
                     'commission_decision_date' => now(),
                     'signed_by_chairman' => true,
-                    'youth_applied_cap_percent' => null,
-                ];
-
-                if ($startup !== null && $prior !== null) {
-                    $rejectFill['youth_innovative_tech_startup'] = $startup;
-                    $rejectFill['youth_innovative_tech_startup_confirmed_at'] = $confirmedAt;
-                    $rejectFill['youth_innovative_tech_startup_confirmed_by_user_id'] = $user->id;
-                    $rejectFill['youth_prior_municipal_youth_funding'] = $prior;
-                    $rejectFill['youth_prior_municipal_youth_funding_confirmed_at'] = $confirmedAt;
-                    $rejectFill['youth_prior_municipal_youth_funding_confirmed_by_user_id'] = $user->id;
-                }
-
-                $locked->forceFill($rejectFill)->save();
+                ])->save();
             } else {
                 throw ValidationException::withMessages([
                     'commission_decision' => 'Morate odabrati zaključak komisije.',

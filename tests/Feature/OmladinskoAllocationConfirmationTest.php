@@ -288,9 +288,9 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         );
 
         $belowFresh = $below->fresh();
-        $this->assertSame('evaluated', $belowFresh->status);
+        $this->assertSame('rejected', $belowFresh->status);
         $this->assertSame($belowRank, $belowFresh->ranking_position);
-        $this->assertNotSame(
+        $this->assertSame(
             YouthAllocationListConfirmationService::BELOW_THRESHOLD_REASON,
             (string) $belowFresh->rejection_reason
         );
@@ -352,7 +352,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
         $this->assertSame(2, (int) $higherFull->fresh()->ranking_position);
         $this->assertSame(3, (int) $lowerFull->fresh()->ranking_position);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame(4, (int) $below->fresh()->ranking_position);
         $this->assertNotSame(
             (int) $higherFull->fresh()->ranking_position,
             (int) $lowerFull->fresh()->ranking_position
@@ -387,7 +387,7 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         ]));
         $this->assertSame(2, (int) $higherFull->fresh()->ranking_position);
         $this->assertSame(3, (int) $lowerFull->fresh()->ranking_position);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame(4, (int) $below->fresh()->ranking_position);
     }
 
     public function test_close_keeps_true_equal_full_scores_as_one_two_two_four(): void
@@ -405,7 +405,8 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->assertSame(2, (int) $tiedA->fresh()->ranking_position);
         $this->assertSame(2, (int) $tiedB->fresh()->ranking_position);
         $this->assertSame(4, (int) $fourth->fresh()->ranking_position);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame(5, (int) $below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
 
         foreach ([$ctx['application'], $tiedA, $tiedB, $fourth] as $application) {
             $this->saveSupport($ctx, $application, 5000);
@@ -442,7 +443,8 @@ class OmladinskoAllocationConfirmationTest extends TestCase
             (int) $tiedB->fresh()->ranking_position,
             (int) $fourth->fresh()->ranking_position,
         ]);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertSame(5, (int) $below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
     }
 
     public function test_authorization_dual_membership_and_womens_flow_untouched(): void

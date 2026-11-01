@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
+use App\Models\BusinessPlan;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -11,8 +12,12 @@ use App\Models\EvaluationScore;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\YouthDecisionDocument;
+use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\YouthDecisionDocumentStore;
+use App\Services\Competitions\YouthDecisionProposalBuilder;
 use App\Services\Competitions\YouthDecisionRankingIdentity;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -137,6 +142,29 @@ class YouthDecisionCloseGuardTest extends TestCase
         $this->assertUnchangedOpenCompetition($ctx['competition']);
         $this->assertSame(str_repeat('ab', 32), $document->fresh()->ranking_sha256);
         $this->assertSame($bytes, Storage::disk('local')->get($relative));
+    }
+
+    public function test_mismatched_ranking_position_still_blocks_close(): void
+    {
+        $ctx = $this->closeableYouthCompetition();
+        $this->storeBytes($ctx, "PK\x03\x04neuskadjen-rang");
+        $ctx['application']->forceFill(['ranking_position' => 9])->save();
+
+        $this->postClose($ctx)->assertRedirect()->assertSessionHasErrors('error');
+
+        $this->assertSame(
+            CanonicalIndividualScoringService::YOUTH_CLOSE_POSITIONS_MISMATCH_MESSAGE,
+            session('errors')->first('error')
+        );
+        $this->assertUnchangedOpenCompetition($ctx['competition']);
+        $fresh = $ctx['application']->fresh();
+        $this->assertSame('rejected', $fresh->status);
+        $this->assertSame(9, (int) $fresh->ranking_position);
+        $this->assertNull($fresh->commission_decision);
+        $this->assertSame(
+            YouthAllocationListConfirmationService::BELOW_THRESHOLD_REASON,
+            $fresh->rejection_reason
+        );
     }
 
     public function test_valid_document_closes_the_competition_and_rejects_an_incomplete_application(): void
@@ -430,6 +458,57 @@ class YouthDecisionCloseGuardTest extends TestCase
         $this->assertStringNotContainsString(YouthDecisionDocumentStore::CLOSE_BLOCKED, $memberHtml);
     }
 
+    public function test_historical_cap_percent_does_not_change_locked_decision_word_or_close(): void
+    {
+        foreach ([15, 20, 30] as $percent) {
+            $ctx = $this->youthCompetition();
+            $application = $this->scoredAboveThresholdApplication($ctx, 'Plan '.$percent);
+            $application->forceFill([
+                'status' => 'approved',
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => '40000.00',
+                'requested_amount' => '40000.00',
+                'commission_justification' => 'Istorijski zaključak.',
+                'commission_decision_date' => now(),
+                'signed_by_chairman' => true,
+                'youth_applied_cap_percent' => $percent,
+            ])->save();
+
+            $rewrite = $this->actingAs($ctx['chairman'])
+                ->post(route('evaluation.youth-allocation-draft', $application), [
+                    'commission_decision' => 'odbija',
+                    'commission_justification' => 'Naknadna izmjena.',
+                ]);
+            $rewrite->assertForbidden();
+            $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rewrite->exception?->getMessage());
+
+            $locked = $application->fresh();
+            $this->assertSame('40000.00', $locked->approved_amount);
+            $this->assertSame('podrzava_potpuno', $locked->commission_decision);
+            $this->assertSame($percent, (int) $locked->youth_applied_cap_percent);
+            $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+
+            $proposal = app(YouthDecisionProposalBuilder::class)->build(
+                $ctx['competition']->fresh(),
+                [
+                    'first_session_date' => '2026-02-02',
+                    'second_session_date' => '2026-03-03',
+                    'third_session_date' => '2026-04-04',
+                    'oral_presentation_date' => '2026-05-05',
+                ],
+                now()
+            );
+            $this->assertSame('40.000,00', $proposal->winners[0]['approved']);
+            $this->assertSame('40.000,00', $proposal->awardedTotal);
+
+            $this->storeBytes($ctx, "PK\x03\x04istorijski-{$percent}");
+            $this->postClose($ctx)->assertRedirect()->assertSessionHasNoErrors();
+            $this->assertSame('completed', $ctx['competition']->fresh()->status);
+            $this->assertSame($percent, (int) $application->fresh()->youth_applied_cap_percent);
+            $this->assertSame('40000.00', $application->fresh()->approved_amount);
+        }
+    }
+
     private function postClose(array $ctx)
     {
         return $this->actingAs($ctx['chairman'])
@@ -558,10 +637,70 @@ class YouthDecisionCloseGuardTest extends TestCase
         $application->forceFill([
             'bonuses_confirmed_at' => now()->subDay(),
             'final_score' => '10.00',
+            'status' => 'rejected',
+            'ranking_position' => 1,
+            'commission_decision' => null,
+            'approved_amount' => null,
+            'rejection_reason' => YouthAllocationListConfirmationService::BELOW_THRESHOLD_REASON,
         ])->save();
         $ctx['application'] = $application->fresh();
 
         return $ctx;
+    }
+
+    /**
+     * @param  array{competition: Competition, chairman: User, chairmanMember: CommissionMember, members: list<CommissionMember>}  $ctx
+     */
+    private function scoredAboveThresholdApplication(array $ctx, string $plan): Application
+    {
+        $application = Application::query()->create([
+            'competition_id' => $ctx['competition']->id,
+            'user_id' => User::factory()->create()->id,
+            'business_plan_name' => $plan,
+            'applicant_type' => 'fizicko_lice',
+            'physical_person_name' => 'Ana Anić',
+            'status' => 'evaluated',
+            'submitted_at' => now()->subDays(40),
+            'evaluated_at' => now()->subDays(20),
+            'requested_amount' => '40000.00',
+        ]);
+        ApplicationEliminatoryCheck::query()->create([
+            'application_id' => $application->id,
+            'criterion_1' => true,
+            'criterion_2' => true,
+            'criterion_3' => true,
+            'confirmed_at' => now()->subDays(30),
+            'confirmed_by_user_id' => $ctx['chairman']->id,
+            'confirmed_by_commission_member_id' => $ctx['chairmanMember']->id,
+            'confirmed_by_name' => $ctx['chairman']->name,
+        ]);
+        foreach ([0, 1, 2] as $index) {
+            $payload = [
+                'application_id' => $application->id,
+                'commission_member_id' => $ctx['members'][$index]->id,
+                'canonical_seat_no' => $index + 1,
+                'completed_at' => now()->subDay(),
+            ];
+            for ($criterion = 1; $criterion <= 10; $criterion++) {
+                $payload['criterion_'.$criterion] = 5;
+            }
+            EvaluationScore::query()->create($payload);
+        }
+        $application->forceFill([
+            'bonuses_confirmed_at' => now()->subDay(),
+            'final_score' => '50.00',
+        ])->save();
+        BusinessPlan::query()->create([
+            'application_id' => $application->id,
+            'required_amount' => '50000.00',
+        ]);
+        app(CanonicalIndividualScoringService::class)
+            ->persistYouthPreliminaryRankingIfReady($ctx['competition']->fresh());
+        $ranked = $application->fresh();
+        $this->assertSame(1, (int) $ranked->ranking_position);
+        $this->assertSame('50.00', (string) $ranked->final_score);
+
+        return $ranked;
     }
 
     /**

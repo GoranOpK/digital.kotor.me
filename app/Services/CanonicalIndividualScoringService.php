@@ -9,6 +9,7 @@ use App\Models\Competition;
 use App\Models\EvaluationScore;
 use App\Models\User;
 use App\Services\Competitions\CanonicalReviewState;
+use App\Services\Competitions\YouthAllocationListConfirmationService;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionCanonicalSeat;
@@ -442,11 +443,19 @@ class CanonicalIndividualScoringService
                 return;
             }
 
+            if (in_array($lockedCompetition->status, ['closed', 'completed'], true)) {
+                return;
+            }
+
             if ($this->youthPreliminaryRankingBlockReason($lockedCompetition) !== null) {
                 return;
             }
 
             $eligible = $this->youthScoringCycleApplications($lockedCompetition);
+            if ($this->youthPreliminaryRankingIsFrozen($lockedCompetition, $eligible)) {
+                return;
+            }
+
             $this->assignYouthPreliminaryRankingPositions($eligible);
 
             $keepIds = $eligible
@@ -594,17 +603,10 @@ class CanonicalIndividualScoringService
             return $a['application']->id <=> $b['application']->id;
         });
 
-        $above = [];
-        foreach ($rows as $row) {
-            if (bccomp($row['full'], '30', self::YOUTH_BONUS_SCALE) >= 0) {
-                $above[] = $row;
-            }
-        }
-
         $previousFull = null;
         $previousRank = 0;
         $expected = [];
-        foreach ($above as $index => $row) {
+        foreach ($rows as $index => $row) {
             $rank = ($previousFull !== null && bccomp($row['full'], $previousFull, self::YOUTH_BONUS_SCALE) === 0)
                 ? $previousRank
                 : $index + 1;
@@ -636,7 +638,59 @@ class CanonicalIndividualScoringService
             if ((int) $application->ranking_position !== $rank) {
                 $application->forceFill(['ranking_position' => $rank])->save();
             }
+
+            $this->rejectYouthApplicationBelowThreshold($application);
         }
+    }
+
+    /**
+     * Konačna lista se ne prepisuje. Prvi upis i dalje prolazi i kada iznad praga
+     * nema prijave koja čeka zaključak, jer taj skup već ispunjava uslov konačnosti.
+     *
+     * @param  Collection<int, Application>  $eligible
+     */
+    private function youthPreliminaryRankingIsFrozen(Competition $competition, Collection $eligible): bool
+    {
+        if (! $competition->hasChairmanCompletedDecisions()) {
+            return false;
+        }
+
+        $expected = $this->expectedYouthRankingPositions($eligible);
+        if ($expected === []) {
+            return false;
+        }
+
+        foreach ($eligible as $application) {
+            if (! isset($expected[$application->id])) {
+                continue;
+            }
+
+            if ($application->ranking_position === null) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Ispod praga: status rejected u istom upisu kao rang. Bodovi i pozicija ostaju.
+     * Tačno 30 i više se ne dira. Eliminatorni razlozi nisu u ovom skupu.
+     */
+    private function rejectYouthApplicationBelowThreshold(Application $application): void
+    {
+        if ($this->youthMeetsMinimumScore($application)) {
+            return;
+        }
+
+        if (! in_array($application->status, ['submitted', 'evaluated'], true)) {
+            return;
+        }
+
+        $application->forceFill([
+            'status' => 'rejected',
+            'rejection_reason' => YouthAllocationListConfirmationService::BELOW_THRESHOLD_REASON,
+        ])->save();
     }
 
     /**

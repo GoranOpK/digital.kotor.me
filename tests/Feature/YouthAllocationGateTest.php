@@ -144,9 +144,11 @@ class YouthAllocationGateTest extends TestCase
         $this->assertStringContainsString('Prijave ispod minimuma (30 bodova)', $chairmanHtml);
         $this->assertStringContainsString('Ispod praga', $chairmanHtml);
         $this->assertStringContainsString('data-testid="youth-ranking-print"', $chairmanHtml);
-        $this->assertStringContainsString('data-testid="youth-allocation-facts"', $chairmanHtml);
-        $this->assertStringContainsString('Inovativni tehnološki start-up', $chairmanHtml);
-        $this->assertStringContainsString('Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih', $chairmanHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-facts"', $chairmanHtml);
+        $this->assertStringNotContainsString('name="youth_innovative_tech_startup"', $chairmanHtml);
+        $this->assertStringNotContainsString('name="youth_prior_municipal_youth_funding"', $chairmanHtml);
+        $this->assertStringNotContainsString('Inovativni tehnološki start-up', $chairmanHtml);
+        $this->assertStringNotContainsString('Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih', $chairmanHtml);
         $this->assertStringContainsString(' / 56', $chairmanHtml);
         $this->assertStringNotContainsString(' / 58', $chairmanHtml);
         $this->assertStringNotContainsString('Preduzetnica', $chairmanHtml);
@@ -314,7 +316,8 @@ class YouthAllocationGateTest extends TestCase
         $below->update(['requested_amount' => 5000]);
         $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $below]);
-        $this->assertNull($below->fresh()->ranking_position);
+        $this->assertNotNull($below->fresh()->ranking_position);
+        $this->assertSame('rejected', $below->fresh()->status);
 
         $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-allocation-draft', $below), [
@@ -325,7 +328,8 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame(YouthAllocationDraftService::BELOW_THRESHOLD_MESSAGE, $response->exception?->getMessage());
 
         $this->assertNull($below->fresh()->commission_decision);
-        $this->assertSame('evaluated', $below->fresh()->status);
+        $this->assertSame('rejected', $below->fresh()->status);
+        $this->assertSame('29.67', (string) $below->fresh()->final_score);
     }
 
     public function test_amount_cannot_exceed_requested_or_remaining_and_green_cap_is_not_applied(): void
@@ -356,32 +360,21 @@ class YouthAllocationGateTest extends TestCase
                 'approved_amount' => 3000,
             ]))
             ->assertRedirect()
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
-        $this->assertNull($ctx['application']->fresh()->commission_decision);
-        $this->assertSame('evaluated', $ctx['application']->fresh()->status);
-
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
-                'approved_amount' => 2000,
-                'commission_justification' => 'Odobren je manji iznos u skladu sa primjenjivim procentualnim limitom.',
-            ]))
-            ->assertRedirect()
             ->assertSessionHasNoErrors();
-        $this->assertSame('2000.00', $ctx['application']->fresh()->approved_amount);
-        $this->assertSame(20, (int) $ctx['application']->fresh()->youth_applied_cap_percent);
+        $this->assertSame('3000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertNull($ctx['application']->fresh()->youth_applied_cap_percent);
+        $this->assertNull($ctx['application']->fresh()->youth_innovative_tech_startup);
+        $this->assertNull($ctx['application']->fresh()->youth_prior_municipal_youth_funding);
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $second))
             ->post(route('evaluation.youth-allocation-draft', $second), $this->supportDraft([
-                'youth_innovative_tech_startup' => '1',
-                'youth_prior_municipal_youth_funding' => '0',
                 'approved_amount' => 3000,
             ]))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
         $this->assertSame('3000.00', $second->fresh()->approved_amount);
-        $this->assertSame(30, (int) $second->fresh()->youth_applied_cap_percent);
+        $this->assertNull($second->fresh()->youth_applied_cap_percent);
     }
 
     public function test_reject_and_reduced_amount_require_justification(): void
@@ -616,8 +609,8 @@ class YouthAllocationGateTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
-                'approved_amount' => 10000,
-                'commission_justification' => 'Odobren je manji iznos u skladu sa primjenjivim procentualnim limitom.',
+                'approved_amount' => 20000,
+                'commission_justification' => 'Odobren je manji iznos u okviru raspoloživog budžeta.',
             ]))
             ->assertSessionHasNoErrors();
 
@@ -626,7 +619,7 @@ class YouthAllocationGateTest extends TestCase
             ->post(route('evaluation.youth-allocation-draft', $tied), $this->supportDraft([
                 'approved_amount' => 40000,
             ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
+            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE]);
 
         $this->assertSame('approved', $ctx['application']->fresh()->status);
         $this->assertSame('evaluated', $tied->fresh()->status);
@@ -655,70 +648,48 @@ class YouthAllocationGateTest extends TestCase
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 4000,
                 'youth_innovative_tech_startup' => '1',
                 'youth_prior_municipal_youth_funding' => '0',
-                'approved_amount' => 3001,
-                'commission_justification' => self::REDUCED_WITHIN_CAP_JUSTIFICATION,
-            ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
-
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
-                'youth_innovative_tech_startup' => '1',
-                'youth_prior_municipal_youth_funding' => '0',
-                'approved_amount' => 3000,
-                'commission_justification' => self::REDUCED_WITHIN_CAP_JUSTIFICATION,
-            ]))
+            ])
             ->assertSessionHasNoErrors();
-        $this->assertSame(30, (int) $ctx['application']->fresh()->youth_applied_cap_percent);
-        $this->assertSame('3000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertSame('4000.00', $ctx['application']->fresh()->approved_amount);
+        $this->assertNull($ctx['application']->fresh()->youth_applied_cap_percent);
+        $this->assertNull($ctx['application']->fresh()->youth_innovative_tech_startup);
+        $this->assertNull($ctx['application']->fresh()->youth_prior_municipal_youth_funding);
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $twenty))
             ->post(route('evaluation.youth-allocation-draft', $twenty), $this->supportDraft([
+                'approved_amount' => 4000,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.create', $fifteen))
+            ->post(route('evaluation.youth-allocation-draft', $fifteen), $this->supportDraft([
                 'approved_amount' => 2001,
                 'commission_justification' => self::REDUCED_WITHIN_CAP_JUSTIFICATION,
             ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
+            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE]);
 
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $twenty))
-            ->post(route('evaluation.youth-allocation-draft', $twenty), $this->supportDraft([
+            ->from(route('evaluation.create', $fifteen))
+            ->post(route('evaluation.youth-allocation-draft', $fifteen), $this->supportDraft([
                 'approved_amount' => 2000,
                 'commission_justification' => self::REDUCED_WITHIN_CAP_JUSTIFICATION,
             ]))
             ->assertSessionHasNoErrors();
-        $this->assertSame(20, (int) $twenty->fresh()->youth_applied_cap_percent);
-
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $fifteen))
-            ->post(route('evaluation.youth-allocation-draft', $fifteen), $this->supportDraft([
-                'youth_innovative_tech_startup' => '0',
-                'youth_prior_municipal_youth_funding' => '1',
-                'approved_amount' => 1501,
-                'commission_justification' => self::REDUCED_WITHIN_CAP_JUSTIFICATION,
-            ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
-
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $fifteen))
-            ->post(route('evaluation.youth-allocation-draft', $fifteen), $this->supportDraft([
-                'youth_innovative_tech_startup' => '0',
-                'youth_prior_municipal_youth_funding' => '1',
-                'approved_amount' => 1500,
-                'commission_justification' => self::REDUCED_WITHIN_CAP_JUSTIFICATION,
-            ]))
-            ->assertSessionHasNoErrors();
-        $this->assertSame(15, (int) $fifteen->fresh()->youth_applied_cap_percent);
+        $this->assertNull($fifteen->fresh()->youth_applied_cap_percent);
         $this->assertSame('approved', $ctx['application']->fresh()->status);
         $this->assertSame('approved', $twenty->fresh()->status);
         $this->assertSame('approved', $fifteen->fresh()->status);
         $this->assertSame('published', $ctx['competition']->fresh()->status);
         $this->assertSame('10000.00', $remainingAfterFirstBefore);
-        $this->assertSame('6500.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
-        $this->assertSame('3500.00', $annual->remainingAfterFirst('omladinsko', $year));
+        $this->assertSame('10000.00', $annual->confirmedAllocation($ctx['competition']->fresh()));
+        $this->assertSame('0.00', $annual->remainingAfterFirst('omladinsko', $year));
     }
 
     public function test_thirty_percent_beats_fifteen_without_summing(): void
@@ -730,28 +701,26 @@ class YouthAllocationGateTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
-                'youth_innovative_tech_startup' => '1',
-                'youth_prior_municipal_youth_funding' => '1',
-                'approved_amount' => 4500,
-                'commission_justification' => 'Ne sabiraju se procenti.',
+                'approved_amount' => 4501,
+                'commission_justification' => 'Iznad traženog iznosa.',
             ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
+            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REQUESTED_MESSAGE]);
 
         $this->actingAs($ctx['chairman']->user)
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft([
                 'youth_innovative_tech_startup' => '1',
                 'youth_prior_municipal_youth_funding' => '1',
-                'approved_amount' => 3000,
-                'commission_justification' => 'Maksimum 30%.',
+                'approved_amount' => 4500,
+                'commission_justification' => 'Iznos određuje predsjednik.',
             ]))
             ->assertSessionHasNoErrors();
 
         $fresh = $ctx['application']->fresh();
-        $this->assertSame(30, (int) $fresh->youth_applied_cap_percent);
-        $this->assertSame('3000.00', $fresh->approved_amount);
-        $this->assertSame(1, (int) $fresh->youth_innovative_tech_startup);
-        $this->assertSame(1, (int) $fresh->youth_prior_municipal_youth_funding);
+        $this->assertNull($fresh->youth_applied_cap_percent);
+        $this->assertSame('4500.00', $fresh->approved_amount);
+        $this->assertNull($fresh->youth_innovative_tech_startup);
+        $this->assertNull($fresh->youth_prior_municipal_youth_funding);
     }
 
     public function test_second_call_uses_its_own_budget(): void
@@ -767,30 +736,28 @@ class YouthAllocationGateTest extends TestCase
         $this->actingAs($second['chairman']->user)
             ->from(route('evaluation.create', $second['application']))
             ->post(route('evaluation.youth-allocation-draft', $second['application']), $this->supportDraft([
-                'approved_amount' => 9000,
-                'commission_justification' => 'Iznad 20% drugog Poziva.',
+                'approved_amount' => 12001,
+                'commission_justification' => 'Iznad traženog iznosa drugog Poziva.',
             ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
+            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REQUESTED_MESSAGE]);
 
         $this->actingAs($second['chairman']->user)
             ->from(route('evaluation.create', $second['application']))
             ->post(route('evaluation.youth-allocation-draft', $second['application']), $this->supportDraft([
-                'youth_innovative_tech_startup' => '1',
-                'youth_prior_municipal_youth_funding' => '0',
                 'approved_amount' => 12000,
             ]))
             ->assertSessionHasNoErrors();
-        $this->assertSame(30, (int) $second['application']->fresh()->youth_applied_cap_percent);
+        $this->assertNull($second['application']->fresh()->youth_applied_cap_percent);
         $this->assertSame('12000.00', $second['application']->fresh()->approved_amount);
 
         $this->actingAs($first['chairman']->user)
             ->from(route('evaluation.create', $first['application']))
             ->post(route('evaluation.youth-allocation-draft', $first['application']), $this->supportDraft([
                 'approved_amount' => 12000,
-                'commission_justification' => '20% prvog Poziva.',
+                'commission_justification' => 'Iznos prvog Poziva.',
             ]))
             ->assertSessionHasNoErrors();
-        $this->assertSame(20, (int) $first['application']->fresh()->youth_applied_cap_percent);
+        $this->assertNull($first['application']->fresh()->youth_applied_cap_percent);
         $this->assertSame('approved', $first['application']->fresh()->status);
         $this->assertSame('approved', $second['application']->fresh()->status);
         $this->assertSame('published', $first['competition']->fresh()->status);
@@ -837,15 +804,6 @@ class YouthAllocationGateTest extends TestCase
             ]))
             ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REQUESTED_MESSAGE]);
 
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $apps[0]))
-            ->post(route('evaluation.youth-allocation-draft', $apps[0]), $this->supportDraft([
-                'youth_innovative_tech_startup' => '1',
-                'approved_amount' => 3001,
-                'commission_justification' => 'Iznad 30%.',
-            ]))
-            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_PERCENT_CAP_MESSAGE]);
-
         for ($i = 0; $i < 3; $i++) {
             $this->actingAs($ctx['chairman']->user)
                 ->from(route('evaluation.create', $apps[$i]))
@@ -878,55 +836,59 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame('evaluated', $apps[3]->fresh()->status);
     }
 
-    public function test_unconfirmed_facts_block_support_but_allow_reject(): void
+    public function test_support_and_reject_save_without_startup_or_prior_funding_fields(): void
     {
         $ctx = $this->rankingReady();
         $ctx['application']->update(['requested_amount' => 5000]);
+        $other = $this->addRankedApplication($ctx, 'Druga prijava', 4000);
 
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
+            ->from(route('evaluation.youth-ranking', $ctx['competition']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
                 'commission_decision' => 'podrzava_potpuno',
                 'approved_amount' => 5000,
             ])
             ->assertRedirect()
-            ->assertSessionHasErrors([
-                'youth_innovative_tech_startup' => YouthAllocationDraftService::FACTS_REQUIRED_FOR_SUPPORT_MESSAGE,
-                'youth_prior_municipal_youth_funding' => YouthAllocationDraftService::FACTS_REQUIRED_FOR_SUPPORT_MESSAGE,
-            ]);
-        $blocked = $ctx['application']->fresh();
-        $this->assertNull($blocked->commission_decision);
-        $this->assertNull($blocked->youth_innovative_tech_startup);
-        $this->assertNull($blocked->youth_prior_municipal_youth_funding);
-        $this->assertSame('evaluated', $blocked->status);
+            ->assertSessionHasNoErrors();
+        $supported = $ctx['application']->fresh();
+        $this->assertSame('podrzava_potpuno', $supported->commission_decision);
+        $this->assertSame('approved', $supported->status);
+        $this->assertSame('5000.00', $supported->approved_amount);
+        $this->assertNull($supported->youth_innovative_tech_startup);
+        $this->assertNull($supported->youth_prior_municipal_youth_funding);
+        $this->assertNull($supported->youth_applied_cap_percent);
+        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions() === false);
 
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
-                'commission_decision' => 'podrzava_potpuno',
-                'approved_amount' => 5000,
-                'youth_innovative_tech_startup' => '1',
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Naknadna izmjena.',
             ])
-            ->assertSessionHasErrors([
-                'youth_prior_municipal_youth_funding' => YouthAllocationDraftService::FACTS_REQUIRED_FOR_SUPPORT_MESSAGE,
-            ]);
+            ->assertForbidden();
+        $this->assertSame('approved', $ctx['application']->fresh()->status);
 
         $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.create', $ctx['application']))
-            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+            ->from(route('evaluation.youth-ranking', $ctx['competition']))
+            ->post(route('evaluation.youth-allocation-draft', $other), [
                 'commission_decision' => 'odbija',
                 'commission_justification' => 'Nema dovoljno sredstava.',
             ])
             ->assertSessionHasNoErrors();
-
-        $rejected = $ctx['application']->fresh();
+        $rejected = $other->fresh();
         $this->assertSame('odbija', $rejected->commission_decision);
         $this->assertSame('rejected', $rejected->status);
-        $this->assertSame('0.00', $rejected->approved_amount);
-        $this->assertSame('Nema dovoljno sredstava.', $rejected->commission_justification);
-        $this->assertTrue($rejected->signed_by_chairman);
-        $this->assertNull($rejected->youth_applied_cap_percent);
-        $this->assertSame('published', $ctx['competition']->fresh()->status);
+        $this->assertNull($rejected->youth_innovative_tech_startup);
+        $this->assertNull($rejected->youth_prior_municipal_youth_funding);
+        $this->assertTrue($ctx['competition']->fresh()->hasChairmanCompletedDecisions());
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('name="youth_innovative_tech_startup"', $html);
+        $this->assertStringNotContainsString('name="youth_prior_municipal_youth_funding"', $html);
+        $this->assertStringNotContainsString('Inovativni tehnološki start-up', $html);
+        $this->assertStringNotContainsString('Ranije dodijeljena sredstva', $html);
     }
 
     public function test_malicious_audit_payload_is_ignored_and_chairman_sees_server_facts(): void
@@ -951,27 +913,26 @@ class YouthAllocationGateTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $fresh = $ctx['application']->fresh();
-        $this->assertSame($ctx['chairman']->user_id, $fresh->youth_innovative_tech_startup_confirmed_by_user_id);
-        $this->assertSame($ctx['chairman']->user_id, $fresh->youth_prior_municipal_youth_funding_confirmed_by_user_id);
+        $this->assertSame('approved', $fresh->status);
+        $this->assertSame('5000.00', $fresh->approved_amount);
+        $this->assertNull($fresh->youth_innovative_tech_startup);
+        $this->assertNull($fresh->youth_innovative_tech_startup_confirmed_by_user_id);
+        $this->assertNull($fresh->youth_innovative_tech_startup_confirmed_at);
+        $this->assertNull($fresh->youth_prior_municipal_youth_funding);
+        $this->assertNull($fresh->youth_prior_municipal_youth_funding_confirmed_by_user_id);
+        $this->assertNull($fresh->youth_applied_cap_percent);
         $this->assertNotSame($spoofed->id, $fresh->youth_innovative_tech_startup_confirmed_by_user_id);
-        $this->assertSame($confirmedAt->format('Y-m-d H:i:s'), $fresh->youth_innovative_tech_startup_confirmed_at?->format('Y-m-d H:i:s'));
-        $this->assertSame(20, (int) $fresh->youth_applied_cap_percent);
-        $this->assertSame(0, (int) $fresh->youth_innovative_tech_startup);
-        $this->assertSame(0, (int) $fresh->youth_prior_municipal_youth_funding);
 
         $html = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('data-testid="youth-allocation-cap-summary"', $html);
-        $this->assertStringContainsString('Inovativni tehnološki start-up: Ne', $html);
-        $this->assertStringContainsString('Ranije dodijeljena sredstva Opštine Kotor za podršku preduzetništvu mladih: Ne', $html);
-        $this->assertStringContainsString('Primijenjeni maksimum: 20%', $html);
-        $this->assertStringContainsString('20,000.00', $html);
-        $this->assertStringContainsString(YouthAllocationDraftService::CAP_IS_NOT_AUTOMATIC_AWARD_MESSAGE, $html);
-        $this->assertStringContainsString('Potvrdio: '.e($ctx['chairman']->name), $html);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-cap-summary"', $html);
+        $this->assertStringNotContainsString('Inovativni tehnološki start-up', $html);
+        $this->assertStringNotContainsString('Ranije dodijeljena sredstva', $html);
         $this->assertStringNotContainsString('Napadač', $html);
-        $this->assertStringNotContainsString('name="youth_innovative_tech_startup_confirmed_by_user_id"', $html);
+        $this->assertStringNotContainsString('name="youth_innovative_tech_startup"', $html);
+        $this->assertStringNotContainsString('name="youth_prior_municipal_youth_funding"', $html);
         $this->assertStringNotContainsString('name="youth_applied_cap_percent"', $html);
     }
 
@@ -1010,7 +971,7 @@ class YouthAllocationGateTest extends TestCase
             ->from(route('evaluation.create', $ctx['application']))
             ->post(route('evaluation.youth-allocation-draft', $ctx['application']), $this->supportDraft())
             ->assertSessionHasNoErrors();
-        $this->assertSame($replacement->id, $ctx['application']->fresh()->youth_innovative_tech_startup_confirmed_by_user_id);
+        $this->assertNull($ctx['application']->fresh()->youth_innovative_tech_startup_confirmed_by_user_id);
         $this->assertSame('approved', $ctx['application']->fresh()->status);
         $this->assertTrue($ctx['application']->fresh()->signed_by_chairman);
     }
@@ -1052,6 +1013,50 @@ class YouthAllocationGateTest extends TestCase
         $this->assertNull($fresh->youth_innovative_tech_startup_confirmed_at);
         $this->assertNull($fresh->youth_prior_municipal_youth_funding_confirmed_at);
         $this->assertSame('30.00', $competition->fresh()->max_support_percentage);
+    }
+
+    public function test_new_support_ignores_historical_fifteen_percent_and_keeps_the_budget_limit(): void
+    {
+        $ctx = $this->rankingReady();
+        $ctx['application']->update(['requested_amount' => 20000]);
+        $ctx['application']->forceFill(['youth_applied_cap_percent' => 15])->save();
+        $second = $this->addRankedApplication($ctx, 'Druga za budžet', 90000);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.youth-ranking', $ctx['competition']))
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 20000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $saved = $ctx['application']->fresh();
+        $this->assertSame('approved', $saved->status);
+        $this->assertSame('podrzava_potpuno', $saved->commission_decision);
+        $this->assertSame('20000.00', $saved->approved_amount);
+        $this->assertSame(15, (int) $saved->youth_applied_cap_percent);
+        $this->assertNull($saved->youth_innovative_tech_startup);
+        $this->assertNull($saved->youth_prior_municipal_youth_funding);
+
+        $rewrite = $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Naknadna izmjena.',
+            ]);
+        $rewrite->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $rewrite->exception?->getMessage());
+        $this->assertSame('20000.00', $ctx['application']->fresh()->approved_amount);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->from(route('evaluation.youth-ranking', $ctx['competition']))
+            ->post(route('evaluation.youth-allocation-draft', $second), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 90000,
+            ])
+            ->assertSessionHasErrors(['approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE]);
+        $this->assertNull($second->fresh()->commission_decision);
+        $this->assertSame('20000.00', $ctx['application']->fresh()->approved_amount);
     }
 
     /**
@@ -1105,8 +1110,6 @@ class YouthAllocationGateTest extends TestCase
         return array_merge([
             'commission_decision' => 'podrzava_potpuno',
             'approved_amount' => 5000,
-            'youth_innovative_tech_startup' => '0',
-            'youth_prior_municipal_youth_funding' => '0',
         ], $overrides);
     }
 
