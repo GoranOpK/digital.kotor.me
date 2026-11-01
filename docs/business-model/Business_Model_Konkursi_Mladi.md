@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.17
-**Datum:** 2026-10-31
+**Verzija:** 1.0.20
+**Datum:** 2026-11-01
 
 Povezani dokumenti:
 
