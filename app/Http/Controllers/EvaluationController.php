@@ -6,6 +6,8 @@ use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
+use App\Models\User;
+use App\Models\YouthDecisionDocument;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
@@ -14,9 +16,12 @@ use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthDecisionDocumentStore;
+use App\Services\Competitions\YouthDecisionDocumentStoreException;
 use App\Services\Competitions\YouthDecisionProposalBuilder;
 use App\Services\Competitions\YouthDecisionProposalGate;
 use App\Services\Competitions\YouthDecisionDocxWriter;
+use App\Services\Competitions\YouthDecisionRankingIdentity;
 use App\Services\Competitions\YouthDecisionSessionDates;
 use App\Services\Competitions\ZenskoCommissionDecisionWriter;
 use App\Services\Competitions\YouthAllocationListConfirmationService;
@@ -28,9 +33,14 @@ use App\Support\ScoringProfileConfig;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Throwable;
 
 class EvaluationController extends Controller
 {
@@ -328,9 +338,6 @@ class EvaluationController extends Controller
         $scoringProfile = ScoringProfileConfig::for($competition?->type);
         $isOmladinskoScoring = $scoringProfile->isOmladinsko();
         $canViewOtherMembersScores = false;
-        $youthRankingView = null;
-        $youthEqualScoreVotingBoard = null;
-        $youthAllocationConfirmationBoard = null;
 
         if ($isOmladinskoScoring) {
             $commissionId = (int) ($competition?->commission_id ?? 0);
@@ -344,16 +351,8 @@ class EvaluationController extends Controller
                     ->orderBy('id')
                     ->get()
                 : collect();
-            $youthRankingView = ($commissionMember && $competition)
-                ? $this->canonicalScoring->youthPreliminaryRankingView($competition)
-                : null;
-            $youthEqualScoreVotingBoard = ($commissionMember && $competition)
-                ? $this->youthEqualScoreVoting->board($competition, $user)
-                : null;
-            $youthAllocationConfirmationBoard = ($commissionMember && $competition)
-                ? $this->youthAllocationListConfirmation->board($competition, $user)
-                : null;
-            $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
+            $youthCycleComplete = $commissionMember && $competition
+                && $this->canonicalScoring->isYouthIndividualScoringCycleComplete($competition);
             $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
             $application->unsetRelation('evaluationScores');
             $allScores = $canViewOtherMembersScores
@@ -470,9 +469,6 @@ class EvaluationController extends Controller
         $youthPlannedRegistrationBonusEligible = $isOmladinskoScoring
             && $this->canonicalScoring->youthQualifiesForPlannedRegistrationBonus($application);
         $youthBonusesLocked = $isOmladinskoScoring && $application->bonuses_confirmed_at !== null;
-        $canEditYouthAllocationDraft = $isOmladinskoScoring
-            && $competition
-            && $this->youthAllocationDrafts->canEditDraft($competition, $user);
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
@@ -508,10 +504,6 @@ class EvaluationController extends Controller
             'youthPlannedRegistrationBonusEligible',
             'youthBonusesLocked',
             'youthFinalScoreDisplay',
-            'youthRankingView',
-            'youthEqualScoreVotingBoard',
-            'youthAllocationConfirmationBoard',
-            'canEditYouthAllocationDraft',
         ));
     }
 
@@ -946,9 +938,6 @@ class EvaluationController extends Controller
         $isOmladinskoScoring = $scoringProfile->isOmladinsko();
         $competition = $application->competition;
         $canViewOtherMembersScores = false;
-        $youthRankingView = null;
-        $youthEqualScoreVotingBoard = null;
-        $youthAllocationConfirmationBoard = null;
 
         if ($isOmladinskoScoring) {
             $commissionId = (int) ($competition?->commission_id ?? 0);
@@ -962,16 +951,8 @@ class EvaluationController extends Controller
                     ->orderBy('id')
                     ->get()
                 : collect();
-            $youthRankingView = ($commissionMember && $competition)
-                ? $this->canonicalScoring->youthPreliminaryRankingView($competition)
-                : null;
-            $youthEqualScoreVotingBoard = ($commissionMember && $competition)
-                ? $this->youthEqualScoreVoting->board($competition, $user)
-                : null;
-            $youthAllocationConfirmationBoard = ($commissionMember && $competition)
-                ? $this->youthAllocationListConfirmation->board($competition, $user)
-                : null;
-            $youthCycleComplete = (bool) ($youthRankingView['individual_cycle_complete'] ?? false);
+            $youthCycleComplete = $commissionMember && $competition
+                && $this->canonicalScoring->isYouthIndividualScoringCycleComplete($competition);
             $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
             $application->unsetRelation('evaluationScores');
             $allScores = $canViewOtherMembersScores
@@ -1036,9 +1017,6 @@ class EvaluationController extends Controller
         $canDecidePrigovor = $this->chairmanCanDecidePrigovor($commissionMember, $application, $prigovor);
         $canCorrectYouth107Mapping = $this->youthMappingCorrections->chairmanCanCorrect($commissionMember, $application, $prigovor);
         $youth107MappingCorrection = $this->youthMappingCorrections->recordedCorrection($application);
-        $canEditYouthAllocationDraft = $isOmladinskoScoring
-            && $competition
-            && $this->youthAllocationDrafts->canEditDraft($competition, $user);
 
         return view('evaluation.show', compact(
             'application',
@@ -1060,10 +1038,6 @@ class EvaluationController extends Controller
             'scoringProfile',
             'isOmladinskoScoring',
             'youthFinalScoreDisplay',
-            'youthRankingView',
-            'youthEqualScoreVotingBoard',
-            'youthAllocationConfirmationBoard',
-            'canEditYouthAllocationDraft',
         ));
     }
 
@@ -1100,8 +1074,47 @@ class EvaluationController extends Controller
             'canEditYouthAllocationDraft' => $this->youthAllocationDrafts->canEditDraft($competition, $user),
             'youthEqualScoreVotingBoard' => $this->youthEqualScoreVoting->board($competition, $user),
             'youthEqualScoreCompetition' => $competition,
+            'canGenerateYouthDecision' => $canGenerateYouthDecision,
+        ]);
+    }
+
+    /**
+     * PM stranica odluke i zatvaranja. Ista ovlašćenja kao rang-lista za uvid,
+     * a Word i zatvaranje samo kada postojeći POST to već dozvoljava predsjedniku.
+     */
+    public function youthDecision(Competition $competition): View
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            abort(403, 'Odluka mladih dostupna je samo za omladinski Poziv.');
+        }
+
+        $user = Auth::user();
+        $member = CommissionMember::activeForCompetition($user->id, $competition);
+        if ($member === null) {
+            abort(403, 'Niste član komisije tog Poziva.');
+        }
+
+        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
+        }
+
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $this->canonicalScoring->persistYouthPreliminaryRankingIfReady($competition);
+        $competition->refresh();
+
+        $decisionGate = app(YouthDecisionProposalGate::class);
+        $canGenerateYouthDecision = $decisionGate->denyReason($competition, $user) === null;
+        $isChairman = $member->position === 'predsjednik';
+        $canCloseYouthCompetition = $isChairman
+            && ! in_array($competition->status, ['closed', 'completed'], true)
+            && $competition->hasChairmanCompletedDecisions();
+
+        return view('evaluation.youth-decision', [
+            'competition' => $competition,
             'youthAllocationConfirmationBoard' => $this->youthAllocationListConfirmation->board($competition, $user),
             'canGenerateYouthDecision' => $canGenerateYouthDecision,
+            'canCloseYouthCompetition' => $canCloseYouthCompetition,
             'youthDecisionDates' => $canGenerateYouthDecision
                 ? app(YouthDecisionSessionDates::class)->forCompetition($competition)
                 : ['first' => null, 'second' => null, 'third' => null, 'oral' => null],
@@ -1109,7 +1122,8 @@ class EvaluationController extends Controller
     }
 
     /**
-     * Radni Word predlog Odluke. Ne upisuje datume, iznose ni zaključke.
+     * Generiše PM Word odluku i preuzima samo trajno sačuvani dokument.
+     * Ne upisuje datume, iznose ni zaključke i ne zatvara konkurs.
      */
     public function generateYouthDecision(
         Request $request,
@@ -1117,20 +1131,21 @@ class EvaluationController extends Controller
         YouthDecisionProposalGate $gate,
         YouthDecisionProposalBuilder $builder,
         YouthDecisionDocxWriter $writer,
-    ): \Symfony\Component\HttpFoundation\BinaryFileResponse {
-        $reason = $gate->denyReason($competition, Auth::user());
-        if ($reason !== null) {
-            abort(403, $reason);
+        YouthDecisionDocumentStore $store,
+        YouthDecisionRankingIdentity $ranking,
+    ): Response {
+        $user = Auth::user();
+        $reason = $gate->denyReason($competition, $user);
+        if ($reason !== null || ! $user instanceof User) {
+            abort(403, $reason ?? YouthDecisionProposalGate::CHAIRMAN_ONLY_MESSAGE);
         }
 
         $validated = $request->validate([
-            'decision_number' => ['required', 'string', 'max:80'],
             'first_session_date' => ['required', 'date_format:Y-m-d'],
             'second_session_date' => ['required', 'date_format:Y-m-d'],
             'third_session_date' => ['required', 'date_format:Y-m-d'],
             'oral_presentation_date' => ['required', 'date_format:Y-m-d'],
         ], [
-            'decision_number.required' => 'Unesite broj Odluke.',
             'first_session_date.required' => 'Unesite datum prve sjednice.',
             'second_session_date.required' => 'Unesite datum druge sjednice.',
             'third_session_date.required' => 'Unesite datum treće sjednice.',
@@ -1141,12 +1156,217 @@ class EvaluationController extends Controller
             'oral_presentation_date.date_format' => 'Datum usmenih obrazloženja nije ispravan.',
         ]);
 
-        $proposal = $builder->build($competition, $validated, now());
-        $path = $writer->write($proposal);
+        $temporaryPath = null;
+        $storedPath = null;
 
-        return response()->download($path, $proposal->downloadName(), [
+        try {
+            [$document, $proposal] = DB::transaction(function () use (
+                $competition,
+                $user,
+                $gate,
+                $builder,
+                $writer,
+                $store,
+                $ranking,
+                $validated,
+                &$temporaryPath,
+                &$storedPath,
+            ) {
+                $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
+                if ($locked === null) {
+                    abort(404);
+                }
+
+                $lockedReason = $gate->denyReason($locked, $user);
+                if ($lockedReason !== null) {
+                    abort(403, $lockedReason);
+                }
+
+                $before = $ranking->rankingSha256($locked);
+                $proposal = $builder->build($locked, $validated, now());
+                $temporaryPath = $writer->write($proposal);
+                $after = $ranking->rankingSha256($locked);
+                if (! hash_equals($before, $after)) {
+                    throw ValidationException::withMessages([
+                        'decision' => 'Rang-lista je izmijenjena tokom generisanja. Odluka nije sačuvana.',
+                    ]);
+                }
+
+                $document = $store->store($locked, $user, $temporaryPath);
+                $storedPath = $document->storage_path;
+                if (! hash_equals($before, $document->ranking_sha256)) {
+                    throw ValidationException::withMessages([
+                        'decision' => 'Rang-lista je izmijenjena tokom generisanja. Odluka nije sačuvana.',
+                    ]);
+                }
+
+                return [$document, $proposal];
+            });
+        } catch (HttpException|ValidationException $exception) {
+            $this->discardFailedYouthDecisionFiles($temporaryPath, $storedPath);
+            throw $exception;
+        } catch (YouthDecisionDocumentStoreException $exception) {
+            $this->discardFailedYouthDecisionFiles($temporaryPath, $storedPath);
+
+            return back()->withErrors([
+                'decision' => $this->publicYouthDecisionMessage($exception->getMessage()),
+            ])->withInput();
+        } catch (Throwable $exception) {
+            $this->discardFailedYouthDecisionFiles($temporaryPath, $storedPath);
+
+            return back()->withErrors([
+                'decision' => 'Odluka nije generisana i nije trajno sačuvana.',
+            ])->withInput();
+        }
+
+        if (is_string($temporaryPath) && is_file($temporaryPath)) {
+            @unlink($temporaryPath);
+        }
+
+        $absolute = Storage::disk('local')->path($document->storage_path);
+        if (! is_file($absolute)) {
+            return back()->withErrors([
+                'decision' => 'Odluka nije generisana i nije trajno sačuvana.',
+            ])->withInput();
+        }
+
+        return response()->download($absolute, $proposal->downloadName(), [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ])->deleteFileAfterSend(true);
+        ]);
+    }
+
+    private function discardFailedYouthDecisionFiles(?string $temporaryPath, ?string $storedPath): void
+    {
+        try {
+            $this->removeTemporaryYouthDecisionFile($temporaryPath);
+            $this->removeUnreferencedYouthDecisionFile($storedPath);
+        } catch (Throwable) {
+            $this->logYouthDecisionCleanup('cleanup_failed');
+        }
+    }
+
+    private function removeTemporaryYouthDecisionFile(?string $temporaryPath): void
+    {
+        if (! is_string($temporaryPath) || $temporaryPath === '' || is_link($temporaryPath) || ! is_file($temporaryPath)) {
+            return;
+        }
+
+        try {
+            $deleted = unlink($temporaryPath);
+        } catch (Throwable) {
+            $deleted = false;
+        }
+        clearstatcache(true, $temporaryPath);
+        if ($deleted !== true || is_file($temporaryPath)) {
+            $this->logYouthDecisionCleanup('temporary_delete_failed');
+        }
+    }
+
+    private function removeUnreferencedYouthDecisionFile(?string $storedPath): void
+    {
+        if (! is_string($storedPath) || $storedPath === '') {
+            return;
+        }
+
+        if (preg_match(
+            '#^youth-decision-documents/([0-9]+)/([0-9A-HJKMNP-TV-Z]{26})\.docx$#',
+            $storedPath,
+            $matches
+        ) !== 1) {
+            $this->logYouthDecisionCleanup('path_not_allowed');
+
+            return;
+        }
+
+        $competitionId = (int) $matches[1];
+        $documentId = $matches[2];
+
+        try {
+            $referenced = YouthDecisionDocument::query()->where('storage_path', $storedPath)->exists();
+        } catch (Throwable) {
+            $this->logYouthDecisionCleanup('reference_check_failed', $competitionId, $documentId);
+
+            return;
+        }
+
+        if ($referenced) {
+            return;
+        }
+
+        $absolute = Storage::disk('local')->path($storedPath);
+        if (is_link($absolute)) {
+            $this->logYouthDecisionCleanup('path_not_allowed', $competitionId, $documentId);
+
+            return;
+        }
+
+        if (! is_file($absolute)) {
+            return;
+        }
+
+        $real = realpath($absolute);
+        $root = realpath(storage_path('app/private').DIRECTORY_SEPARATOR.'youth-decision-documents');
+        if ($real === false || $root === false || ! $this->youthDecisionFileIsInsideRoot($real, $root)) {
+            $this->logYouthDecisionCleanup('path_not_allowed', $competitionId, $documentId);
+
+            return;
+        }
+
+        try {
+            $deleted = unlink($real);
+        } catch (Throwable) {
+            $deleted = false;
+        }
+        clearstatcache(true, $real);
+        if ($deleted !== true || is_file($real)) {
+            $this->logYouthDecisionCleanup('delete_failed', $competitionId, $documentId);
+        }
+    }
+
+    private function youthDecisionFileIsInsideRoot(string $real, string $root): bool
+    {
+        $realPath = strtolower(str_replace('\\', '/', $real));
+        $rootPath = rtrim(strtolower(str_replace('\\', '/', $root)), '/');
+
+        return $realPath !== $rootPath && str_starts_with($realPath, $rootPath.'/');
+    }
+
+    private function logYouthDecisionCleanup(string $outcome, ?int $competitionId = null, ?string $documentId = null): void
+    {
+        $context = [
+            'operation' => 'youth_decision_cleanup',
+            'outcome' => $outcome,
+        ];
+        if ($competitionId !== null) {
+            $context['competition_id'] = $competitionId;
+        }
+        if (is_string($documentId) && preg_match('/^[0-9A-HJKMNP-TV-Z]{26}$/', $documentId) === 1) {
+            $context['document_id'] = $documentId;
+        }
+
+        try {
+            Log::warning('Čišćenje PM odluke nije završeno.', $context);
+        } catch (Throwable) {
+        }
+    }
+
+    private function publicYouthDecisionMessage(string $message): string
+    {
+        $allowed = [
+            YouthDecisionDocumentStore::DISK_UNAVAILABLE,
+            YouthDecisionDocumentStore::UNREADABLE,
+            YouthDecisionDocumentStore::EMPTY_DOCUMENT,
+            YouthDecisionDocumentStore::NOT_YOUTH,
+            YouthDecisionDocumentStore::NOT_CHAIRMAN,
+            YouthDecisionDocumentStore::WRITE_FAILED,
+            YouthDecisionDocumentStore::NOT_OVERWRITTEN,
+            YouthDecisionDocumentStore::HASH_MISMATCH,
+            YouthDecisionDocumentStore::NOT_STORED,
+        ];
+
+        return in_array($message, $allowed, true)
+            ? $message
+            : 'Odluka nije generisana i nije trajno sačuvana.';
     }
 
     /**

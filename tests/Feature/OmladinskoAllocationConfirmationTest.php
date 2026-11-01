@@ -449,10 +449,12 @@ class OmladinskoAllocationConfirmationTest extends TestCase
         $this->saveSupport($other, $other['application'], 5000);
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
-            ->get(route('evaluation.create', $ctx['application']))
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('data-testid="youth-allocation-list-confirmation"', $memberHtml);
+        $this->assertStringNotContainsString('data-testid="youth-decision-generate-form"', $memberHtml);
+        $this->assertStringNotContainsString('data-testid="youth-close-competition"', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $memberHtml);
 
         $this->actingAs($ctx['members'][1]->fresh('user')->user)

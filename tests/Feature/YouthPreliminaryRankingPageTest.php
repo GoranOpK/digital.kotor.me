@@ -54,8 +54,39 @@ class YouthPreliminaryRankingPageTest extends TestCase
 
         $this->assertStringContainsString('data-testid="youth-allocation-draft-form"', $chairmanHtml);
         $this->assertStringContainsString(route('evaluation.youth-allocation-draft', $ctx['application']), $chairmanHtml);
-        $this->assertStringContainsString('data-testid="youth-allocation-list-confirmation"', $chairmanHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirmation"', $chairmanHtml);
+        $this->assertStringNotContainsString('data-testid="youth-decision-generate-form"', $chairmanHtml);
         $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $chairmanHtml);
+
+        $chairmanDecisionHtml = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('data-testid="youth-allocation-list-confirmation"', $chairmanDecisionHtml);
+        $this->assertStringNotContainsString('data-testid="youth-decision-generate-form"', $chairmanDecisionHtml);
+        $this->assertStringNotContainsString('data-testid="youth-close-competition"', $chairmanDecisionHtml);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->assertDontSee('Preliminarna rang-lista', false)
+            ->assertDontSee('RANG LISTA BIZNIS PLANOVA', false);
+
+        $outsider = User::factory()->create([
+            'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
+        ]);
+        $this->actingAs($outsider)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertForbidden();
+        $this->actingAs($outsider)
+            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), [
+                'decision_number' => '01-1',
+                'first_session_date' => '2026-02-02',
+                'second_session_date' => '2026-03-03',
+                'third_session_date' => '2026-04-04',
+                'oral_presentation_date' => '2026-05-05',
+            ])
+            ->assertForbidden();
 
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
@@ -64,7 +95,7 @@ class YouthPreliminaryRankingPageTest extends TestCase
 
         $this->assertStringContainsString('Preliminarna rang-lista', $memberHtml);
         $this->assertStringContainsString('data-testid="youth-ranking-print"', $memberHtml);
-        $this->assertStringContainsString('data-testid="youth-allocation-list-confirmation"', $memberHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirmation"', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-equal-score-round-form"', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-allocation-list-confirm-form"', $memberHtml);
@@ -89,8 +120,15 @@ class YouthPreliminaryRankingPageTest extends TestCase
         $this->assertStringContainsString('>Nazad<', $openHtml);
         $this->assertStringContainsString('Štampaj', $openHtml);
         $this->assertStringContainsString('@media (max-width: 768px)', $openHtml);
-        $this->assertStringContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $openHtml);
-        $this->assertStringContainsString('Budžet poziva', $openHtml);
+        $this->assertStringNotContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $openHtml);
+        $this->assertStringNotContainsString('Budžet poziva', $openHtml);
+
+        $openDecisionHtml = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $openDecisionHtml);
+        $this->assertStringContainsString('Budžet poziva', $openDecisionHtml);
         $this->assertStringNotContainsString('Zaključi krug', $openHtml);
         $this->assertStringNotContainsString('Ranije zaključani krugovi', $openHtml);
         $this->assertStringNotContainsString('tri glasa', $openHtml);
@@ -111,10 +149,17 @@ class YouthPreliminaryRankingPageTest extends TestCase
             ->getContent();
         $this->assertStringContainsString($reason, $memberHtml);
         $this->assertStringContainsString('Odbija', $memberHtml);
-        $this->assertStringContainsString('0,00 €', $memberHtml);
-        $this->assertStringContainsString('100.000,00 €', $memberHtml);
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberHtml);
         $this->assertStringNotContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $memberHtml);
+        $this->assertStringNotContainsString('100.000,00 €', $memberHtml);
+
+        $memberDecisionHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('0,00 €', $memberDecisionHtml);
+        $this->assertStringContainsString('100.000,00 €', $memberDecisionHtml);
+        $this->assertStringNotContainsString(YouthAllocationListConfirmationService::LIVE_UNRESOLVED_ALLOCATION_MESSAGE, $memberDecisionHtml);
 
         $ctx['competition']->update([
             'youth_allocation_list_confirmed_at' => now(),
@@ -123,7 +168,7 @@ class YouthPreliminaryRankingPageTest extends TestCase
             'youth_allocation_list_confirmed_by_commission_member_id' => $ctx['chairman']->id,
         ]);
         $archivedHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
-            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('Lista je potvrđena i zaključana.', $archivedHtml);

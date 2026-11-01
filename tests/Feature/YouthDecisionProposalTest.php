@@ -25,6 +25,7 @@ use App\Services\Competitions\YouthDecisionSessionDates;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use PhpZip\ZipFile;
 use Tests\TestCase;
 
@@ -33,6 +34,9 @@ class YouthDecisionProposalTest extends TestCase
     use RefreshDatabase;
 
     private static int $yearSerial = 2140;
+
+    /** @var list<string> */
+    private array $storedDecisionDirectories = [];
 
     protected function setUp(): void
     {
@@ -177,11 +181,11 @@ class YouthDecisionProposalTest extends TestCase
         $path = app(YouthDecisionDocxWriter::class)->write($proposal);
         try {
             $text = $this->docxText($path);
+            $this->assertEmptyRegistrySlot($path, '29.10.2026.');
         } finally {
             @unlink($path);
         }
 
-        $this->assertStringContainsString('01-2140/1', $text);
         $this->assertStringContainsString('29.10.2026.', $text);
         $this->assertStringContainsString('Kotor', $text);
         $this->assertStringContainsString('Plan Alfa', $text);
@@ -234,32 +238,60 @@ class YouthDecisionProposalTest extends TestCase
         $decisionDate = $application->fresh()->commission_decision_date->toDateString();
         $approved = (string) $application->fresh()->approved_amount;
 
-        $chairmanPage = $this->actingAs($ctx['chairman']->user)
+        $rankingPage = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk();
+        $rankingPage->assertDontSee('data-testid="youth-decision-generate-form"', false);
+        $rankingPage->assertDontSee('data-testid="youth-allocation-list-confirmation"', false);
+        $rankingPage->assertSee('data-testid="youth-decision-open"', false);
+        $rankingPage->assertSee(route('evaluation.youth-decision', $ctx['competition']), false);
+
+        $chairmanPage = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk();
         $chairmanPage->assertSee('data-testid="youth-decision-generate-form"', false);
+        $chairmanPage->assertSee('data-testid="youth-allocation-list-confirmation"', false);
+        $chairmanPage->assertSee('data-testid="youth-close-competition"', false);
         $chairmanPage->assertSee('value="2026-01-05"', false);
         $chairmanPage->assertSee('value="2026-02-06"', false);
         $chairmanPage->assertSee('value="2026-03-07"', false);
+        $chairmanPage->assertSee(route('evaluation.youth-ranking', $ctx['competition']), false);
 
         $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
-            ->assertDontSee('data-testid="youth-decision-generate-form"', false);
+            ->assertDontSee('data-testid="youth-decision-generate-form"', false)
+            ->assertDontSee('data-testid="youth-decision-open"', false);
 
-        $response = $this->actingAs($ctx['chairman']->user)
-            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), [
-                'decision_number' => '01-2148/2',
-                'first_session_date' => '2026-02-02',
-                'second_session_date' => '2026-03-03',
-                'third_session_date' => '2026-04-04',
-                'oral_presentation_date' => '2026-05-05',
-            ]);
+        $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->assertDontSee('data-testid="youth-decision-generate-form"', false)
+            ->assertDontSee('data-testid="youth-close-competition"', false);
+
+        $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->post(route('admin.competitions.close', $ctx['competition']))
+            ->assertForbidden();
+
+        $generatedAt = \Illuminate\Support\Carbon::now(config('app.timezone'));
+        \Illuminate\Support\Carbon::setTestNow($generatedAt);
+        try {
+            $response = $this->actingAs($ctx['chairman']->user)
+                ->post(route('evaluation.youth-decision.generate', $ctx['competition']), [
+                    'decision_number' => '01-2148/2',
+                    'first_session_date' => '2026-02-02',
+                    'second_session_date' => '2026-03-03',
+                    'third_session_date' => '2026-04-04',
+                    'oral_presentation_date' => '2026-05-05',
+                ]);
+        } finally {
+            \Illuminate\Support\Carbon::setTestNow();
+        }
         $response->assertOk();
         $file = $response->baseResponse->getFile()->getPathname();
+        $this->rememberStoredDecision($file);
         $text = $this->docxText($file);
-
-        $this->assertStringContainsString('01-2148/2', $text);
+        $this->assertEmptyRegistrySlot($file, $generatedAt->format('d.m.Y.'));
         $this->assertStringContainsString('02.02.2026', $text);
         $this->assertStringContainsString('03.03.2026', $text);
         $this->assertStringContainsString('04.04.2026', $text);
@@ -291,7 +323,14 @@ class YouthDecisionProposalTest extends TestCase
         $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
-            ->assertDontSee('data-testid="youth-decision-generate-form"', false);
+            ->assertDontSee('data-testid="youth-decision-generate-form"', false)
+            ->assertDontSee('data-testid="youth-decision-open"', false);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->assertDontSee('data-testid="youth-decision-generate-form"', false)
+            ->assertDontSee('data-testid="youth-close-competition"', false);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())
@@ -599,6 +638,38 @@ class YouthDecisionProposalTest extends TestCase
         return $payload;
     }
 
+    protected function tearDown(): void
+    {
+        if ($this->app) {
+            foreach ($this->storedDecisionDirectories as $relative) {
+                Storage::disk('local')->deleteDirectory($relative);
+            }
+        }
+
+        parent::tearDown();
+    }
+
+    private function rememberStoredDecision(string $path): void
+    {
+        $real = realpath($path);
+        $root = realpath(storage_path('app/private/youth-decision-documents'));
+        if (! is_string($real) || ! is_string($root)) {
+            return;
+        }
+
+        $realPath = strtolower(str_replace('\\', '/', $real));
+        $rootPath = rtrim(strtolower(str_replace('\\', '/', $root)), '/');
+        if (! str_starts_with($realPath, $rootPath.'/')) {
+            return;
+        }
+
+        $relative = ltrim(substr($realPath, strlen($rootPath)), '/');
+        $competitionId = strtok($relative, '/');
+        if ($competitionId !== false && ctype_digit($competitionId)) {
+            $this->storedDecisionDirectories[] = 'youth-decision-documents/'.$competitionId;
+        }
+    }
+
     private function docxText(string $path): string
     {
         $zip = new ZipFile();
@@ -609,5 +680,58 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertNotSame('', $image);
 
         return strip_tags($text);
+    }
+
+    private function assertEmptyRegistrySlot(string $path, string $headerDate): void
+    {
+        $zip = new ZipFile();
+        $zip->openFile($path);
+        $document = $zip->getEntryContents('word/document.xml');
+        $header = $zip->getEntryContents('word/header1.xml');
+        $zip->close();
+
+        $nodes = $this->brojTextNodes($document);
+        $this->assertCount(9, $nodes);
+        $this->assertSame('Broj', $nodes[0]);
+        $this->assertSame(':  ', $nodes[1]);
+        $this->assertSame('', $nodes[2]);
+        $this->assertMatchesRegularExpression('/^\s+$/', $nodes[3]);
+        $this->assertDoesNotMatchRegularExpression('/XX/', $nodes[1].$nodes[2].$nodes[3]);
+        $this->assertDoesNotMatchRegularExpression('/\d/', $nodes[1].$nodes[2].$nodes[3]);
+        $this->assertSame('Kotor', $nodes[4]);
+        $this->assertSame(', ', $nodes[5]);
+        $this->assertSame($headerDate, $nodes[6]);
+        $this->assertSame(' ', $nodes[7]);
+        $this->assertSame('godine', $nodes[8]);
+        $this->assertStringContainsString(
+            'Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj',
+            strip_tags($header)
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function brojTextNodes(string $documentXml): array
+    {
+        $document = new \DOMDocument();
+        $this->assertTrue($document->loadXML($documentXml));
+        $xpath = new \DOMXPath($document);
+        $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+        foreach ($xpath->query('//w:p') ?: [] as $paragraph) {
+            if (! $paragraph instanceof \DOMElement) {
+                continue;
+            }
+            $nodes = [];
+            foreach ($xpath->query('.//w:t', $paragraph) ?: [] as $node) {
+                $nodes[] = $node->textContent;
+            }
+            if (($nodes[0] ?? '') === 'Broj') {
+                return $nodes;
+            }
+        }
+
+        $this->fail('Dokument nema pasus Broj:.');
     }
 }

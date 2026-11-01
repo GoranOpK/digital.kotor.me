@@ -122,8 +122,16 @@ class YouthAllocationGateTest extends TestCase
             'company_legal_form' => KnCommercialCompanyForm::KD,
         ])->save();
 
-        $chairmanHtml = $this->actingAs($ctx['chairman']->user)
+        $scoringHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $scoringHtml);
+        $this->assertStringNotContainsString('RANG LISTA BIZNIS PLANOVA', $scoringHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $scoringHtml);
+
+        $chairmanHtml = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertTrue(
@@ -175,8 +183,15 @@ class YouthAllocationGateTest extends TestCase
         $this->assertGreaterThan($belowHeadingPos, $kdPos);
         $this->assertStringNotContainsString('Ostalo - Započinjanje', $chairmanHtml);
 
-        $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+        $memberScoringHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $memberScoringHtml);
+        $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberScoringHtml);
+
+        $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('data-testid="youth-allocation-draft-form"', $memberHtml);
@@ -436,7 +451,7 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame('100000.00', $annual->remainingAfterFirst('omladinsko', $year));
 
         $lockedPage = $this->actingAs($ctx['chairman']->user)
-            ->get(route('evaluation.create', $ctx['application']))
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString(YouthAllocationDraftService::DECISION_LOCKED_MESSAGE, $lockedPage);
@@ -529,7 +544,7 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame('published', $ctx['competition']->fresh()->status);
 
         $html = $this->actingAs($ctx['chairman']->user)
-            ->get(route('evaluation.create', $ctx['application']))
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('data-testid="youth-allocation-decision-locked"', $html);
@@ -945,7 +960,7 @@ class YouthAllocationGateTest extends TestCase
         $this->assertSame(0, (int) $fresh->youth_prior_municipal_youth_funding);
 
         $html = $this->actingAs($ctx['chairman']->user)
-            ->get(route('evaluation.create', $ctx['application']))
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('data-testid="youth-allocation-cap-summary"', $html);

@@ -15,7 +15,7 @@ class YouthDecisionProposalBuilder
     ) {}
 
     /**
-     * @param  array{decision_number: string, first_session_date: string, second_session_date: string, third_session_date: string, oral_presentation_date: string}  $input
+     * @param  array{first_session_date: string, second_session_date: string, third_session_date: string, oral_presentation_date: string}  $input
      */
     public function build(Competition $competition, array $input, Carbon $generatedAt): YouthDecisionProposal
     {
@@ -24,13 +24,6 @@ class YouthDecisionProposalBuilder
         if (! $competition->isOmladinskoProfile()) {
             throw ValidationException::withMessages([
                 'decision' => YouthDecisionProposalGate::NOT_YOUTH_MESSAGE,
-            ]);
-        }
-
-        $decisionNumber = trim($input['decision_number']);
-        if ($decisionNumber === '') {
-            throw ValidationException::withMessages([
-                'decision_number' => 'Unesite broj Odluke.',
             ]);
         }
 
@@ -56,12 +49,6 @@ class YouthDecisionProposalBuilder
             ->orderBy('id')
             ->get();
 
-        if ($winners->isEmpty()) {
-            throw ValidationException::withMessages([
-                'decision' => 'Odluka se ne može generisati jer nema podržanih biznis planova.',
-            ]);
-        }
-
         $rows = [];
         $awarded = '0.00';
         foreach ($winners as $application) {
@@ -75,7 +62,7 @@ class YouthDecisionProposalBuilder
 
         return new YouthDecisionProposal(
             competitionId: (int) $competition->id,
-            decisionNumber: $decisionNumber,
+            decisionNumber: '',
             decisionDate: $generatedAt->timezone(config('app.timezone'))->format('d.m.Y.'),
             competitionYear: (string) $competition->year,
             publishedOn: $publishedOn->timezone(config('app.timezone'))->format('d.m.Y.'),

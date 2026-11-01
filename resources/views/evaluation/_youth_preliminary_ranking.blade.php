@@ -534,10 +534,60 @@
                 </tbody>
             </table>
             </div>
+            @endif
+            @endif
+            @if(count($youthRankingView['below'] ?? []) > 0)
+            <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
+                <div class="below-minimum-heading" style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
+                    ——— Prijave ispod minimuma (30 bodova) ———
+                </div>
+                <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
+                <div class="youth-ranking-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Naziv biznis plana</th>
+                            <th>Podnosilac</th>
+                            <th>Tip</th>
+                            <th style="text-align: center;">Ocjena</th>
+                            <th style="text-align: right;">Traženi iznos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($youthRankingView['below'] as $below)
+                            @php
+                                $belowType = $youthApplicantTypeLabel($below);
+                                $belowStage = $below->business_stage === 'započinjanje' ? 'Započinjanje' : ($below->business_stage === 'razvoj' ? 'Razvoj' : null);
+                            @endphp
+                            <tr style="background: #f9fafb;">
+                                <td>{{ $below->business_plan_name }}</td>
+                                <td>{{ $below->user->name ?? 'N/A' }}</td>
+                                <td>
+                                    {{ $belowType }}@if($belowStage) - {{ $belowStage }}@endif
+                                </td>
+                                <td style="text-align: center;">
+                                    <span class="score-badge score-low">
+                                        {{ number_format((float) $below->final_score, 2) }} / 56
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    {{ $below->requested_amount !== null ? number_format((float) $below->requested_amount, 2, ',', '.').' €' : '—' }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" style="padding: 8px; color: #6b7280;">Nema prijava ispod praga.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            @endif
             @php
                 $youthHasSavedDecision = collect($youthRankingView['above'])->contains(fn ($row) => filled($row->commission_decision));
             @endphp
-            @if($canEditYouthAllocationDraft || $youthHasSavedDecision)
+            @if(count($youthRankingView['above'] ?? []) > 0 && ($canEditYouthAllocationDraft || $youthHasSavedDecision))
             <div class="info-card commission-decision-section" style="background: transparent; box-shadow: none; padding: 24px 0 0; margin-bottom: 0;">
                 <h2>Zaključak komisije i obrazloženje</h2>
                 @if($canEditYouthAllocationDraft)
@@ -700,56 +750,6 @@
                 @endforeach
             </div>
             @endif
-            @endif
-            @endif
-            @if(count($youthRankingView['below'] ?? []) > 0)
-            <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
-                <div class="below-minimum-heading" style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
-                    ——— Prijave ispod minimuma (30 bodova) ———
-                </div>
-                <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
-                <div class="youth-ranking-table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Naziv biznis plana</th>
-                            <th>Podnosilac</th>
-                            <th>Tip</th>
-                            <th style="text-align: center;">Ocjena</th>
-                            <th style="text-align: right;">Traženi iznos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($youthRankingView['below'] as $below)
-                            @php
-                                $belowType = $youthApplicantTypeLabel($below);
-                                $belowStage = $below->business_stage === 'započinjanje' ? 'Započinjanje' : ($below->business_stage === 'razvoj' ? 'Razvoj' : null);
-                            @endphp
-                            <tr style="background: #f9fafb;">
-                                <td>{{ $below->business_plan_name }}</td>
-                                <td>{{ $below->user->name ?? 'N/A' }}</td>
-                                <td>
-                                    {{ $belowType }}@if($belowStage) - {{ $belowStage }}@endif
-                                </td>
-                                <td style="text-align: center;">
-                                    <span class="score-badge score-low">
-                                        {{ number_format((float) $below->final_score, 2) }} / 56
-                                    </span>
-                                </td>
-                                <td style="text-align: right;">
-                                    {{ $below->requested_amount !== null ? number_format((float) $below->requested_amount, 2, ',', '.').' €' : '—' }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" style="padding: 8px; color: #6b7280;">Nema prijava ispod praga.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                </div>
-            </div>
-            @endif
             </div>
             <div class="youth-ranking-no-print no-print" style="margin: 24px 0 8px 0; text-align: center;">
                 <button type="button" onclick="printYouthPreliminaryRanking(this);" class="youth-ranking-print-btn" data-testid="youth-ranking-print">
@@ -759,10 +759,6 @@
             <div class="youth-ranking-no-print no-print">
             @include('evaluation._youth_equal_score_voting', [
                 'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
-                'youthEqualScoreCompetition' => $youthEqualScoreCompetition ?? $youthAboveFirst?->competition,
-            ])
-            @include('evaluation._youth_allocation_list_confirmation', [
-                'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
                 'youthEqualScoreCompetition' => $youthEqualScoreCompetition ?? $youthAboveFirst?->competition,
             ])
             </div>

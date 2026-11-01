@@ -376,14 +376,6 @@
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
-        @include('evaluation._youth_preliminary_ranking', [
-            'youthRankingView' => $youthRankingView ?? null,
-            'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
-            'youthEqualScoreCompetition' => $application->competition ?? null,
-            'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
-            'hideYouthCycleIncompleteNotice' => true,
-        ])
-
         <!-- Forma za prikaz ocjene -->
             <div class="form-card">
             @if(! ($eliminatoryProfile ?? \App\Support\EliminatoryProfileConfig::for($application->competition?->type))->usesStructuredNotes)

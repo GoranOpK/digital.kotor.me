@@ -102,8 +102,15 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertStringContainsString('Član 1', $memberHtml);
         $this->assertStringContainsString('Član 2', $memberHtml);
         $this->assertGreaterThan(10, substr_count($memberHtml, 'class="score-display"'));
-        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE, $memberHtml);
+        $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE, $memberHtml);
         $this->assertStringNotContainsString('Preliminarna rang-lista', $memberHtml);
+
+        $rankingHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE, $rankingHtml);
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $rankingHtml);
 
         $this->actingAs($failed->user)
             ->post(route('applications.prigovor.store', $failed), [
@@ -198,8 +205,14 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             $this->assertStringNotContainsString('Napomena mjesta 2', $html);
             $this->assertStringNotContainsString('Napomena mjesta 3', $html);
             $this->assertStringNotContainsString('Ostale napomene', $html);
-            $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $html);
+            $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $html);
             $this->assertStringNotContainsString('Preliminarna rang-lista', $html);
+            $rankingHtml = $this->actingAs($member->fresh('user')->user)
+                ->get(route('evaluation.youth-ranking', $ctx['competition']))
+                ->assertOk()
+                ->getContent();
+            $this->assertStringContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $rankingHtml);
+            $this->assertStringNotContainsString('Preliminarna rang-lista', $rankingHtml);
         }
 
         $this->actingAs($this->userWithRole('admin'))

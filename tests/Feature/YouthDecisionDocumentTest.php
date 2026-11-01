@@ -94,11 +94,11 @@ class YouthDecisionDocumentTest extends TestCase
         $path = app(YouthDecisionDocxWriter::class)->write($proposal);
         try {
             $text = $this->docxText($path);
+            $this->assertEmptyRegistrySlot($path, '29.10.2026.');
         } finally {
             @unlink($path);
         }
 
-        $this->assertStringContainsString('01-2140/1', $text);
         $this->assertStringContainsString('29.10.2026.', $text);
         $this->assertStringContainsString('Plan Alfa', $text);
         $this->assertStringContainsString('Plan Beta', $text);
@@ -159,5 +159,53 @@ class YouthDecisionDocumentTest extends TestCase
         $this->assertNotSame('', $image);
 
         return $text;
+    }
+
+    private function assertEmptyRegistrySlot(string $path, string $headerDate): void
+    {
+        $zip = new ZipFile();
+        $zip->openFile($path);
+        $document = $zip->getEntryContents('word/document.xml');
+        $zip->close();
+
+        $nodes = $this->brojTextNodes($document);
+        $this->assertCount(9, $nodes);
+        $this->assertSame('Broj', $nodes[0]);
+        $this->assertSame(':  ', $nodes[1]);
+        $this->assertSame('', $nodes[2]);
+        $this->assertMatchesRegularExpression('/^\s+$/', $nodes[3]);
+        $this->assertDoesNotMatchRegularExpression('/XX/', $nodes[1].$nodes[2].$nodes[3]);
+        $this->assertDoesNotMatchRegularExpression('/\d/', $nodes[1].$nodes[2].$nodes[3]);
+        $this->assertSame('Kotor', $nodes[4]);
+        $this->assertSame(', ', $nodes[5]);
+        $this->assertSame($headerDate, $nodes[6]);
+        $this->assertSame(' ', $nodes[7]);
+        $this->assertSame('godine', $nodes[8]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function brojTextNodes(string $documentXml): array
+    {
+        $document = new \DOMDocument();
+        $this->assertTrue($document->loadXML($documentXml));
+        $xpath = new \DOMXPath($document);
+        $xpath->registerNamespace('w', 'http://schemas.openxmlformats.org/wordprocessingml/2006/main');
+
+        foreach ($xpath->query('//w:p') ?: [] as $paragraph) {
+            if (! $paragraph instanceof \DOMElement) {
+                continue;
+            }
+            $nodes = [];
+            foreach ($xpath->query('.//w:t', $paragraph) ?: [] as $node) {
+                $nodes[] = $node->textContent;
+            }
+            if (($nodes[0] ?? '') === 'Broj') {
+                return $nodes;
+            }
+        }
+
+        $this->fail('Dokument nema pasus Broj:.');
     }
 }

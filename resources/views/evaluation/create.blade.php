@@ -493,15 +493,6 @@
             </div>
         @endif
 
-        @include('evaluation._youth_preliminary_ranking', [
-            'youthRankingView' => $youthRankingView ?? null,
-            'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
-            'youthEqualScoreCompetition' => $application->competition ?? null,
-            'youthAllocationConfirmationBoard' => $youthAllocationConfirmationBoard ?? null,
-            'hideYouthCycleIncompleteNotice' => true,
-        ])
-
-
         <!-- Forma za ocjenjivanje -->
         <div class="form-card">
             @php

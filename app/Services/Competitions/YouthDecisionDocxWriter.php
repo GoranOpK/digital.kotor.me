@@ -108,7 +108,7 @@ class YouthDecisionDocxWriter
         if (count($markers) < 2) {
             throw new RuntimeException('Template nema polje za broj i datum Odluke.');
         }
-        $markers[0]->textContent = $proposal->decisionNumber;
+        $markers[0]->textContent = '';
         $markers[1]->textContent = $proposal->decisionDate;
         $this->replaceExact($paragraph, ' 2026. ', ' ');
 
@@ -117,6 +117,19 @@ class YouthDecisionDocxWriter
 
     private function fillWinners(DOMDocument $document, YouthDecisionProposal $proposal): void
     {
+        if ($proposal->winners === []) {
+            $this->setParagraphText(
+                $this->requireParagraph($document, 'finansiraju'),
+                'Na osnovu utvrđenih kriterijuma vrednovanja i konačne rang-liste, Komisija konstatuje da sredstva nijesu dodijeljena.'
+            );
+            $block = $this->winnerBlock($document);
+            foreach ($block as $paragraph) {
+                $this->setParagraphText($paragraph, '');
+            }
+
+            return;
+        }
+
         $block = $this->winnerBlock($document);
         $groups = [$block];
         $end = $block[4];
@@ -178,6 +191,22 @@ class YouthDecisionDocxWriter
             throw new RuntimeException('Template nema zbirna polja predloga Odluke.');
         }
         $fields[0]->textContent = $proposal->competitionYear;
+        if ($proposal->winners === []) {
+            $this->replaceContaining(
+                $closing,
+                'kojom se dodijeljuju sredstva za ',
+                'kojom se konstatuje da sredstva nijesu dodijeljena. '
+            );
+            $fields[1]->textContent = '';
+            $fields[2]->textContent = '';
+            $this->replaceExact($closing, 'biznis plan', '');
+            $this->replaceExact($closing, '/ova', '');
+            $this->replaceExact($closing, ' u ukupnom iznosu ', '');
+            $this->replaceExact($closing, ' eura', '');
+
+            return;
+        }
+
         $fields[1]->textContent = (string) count($proposal->winners);
         $fields[2]->textContent = $proposal->awardedTotal;
         $this->planWord($closing, count($proposal->winners));
