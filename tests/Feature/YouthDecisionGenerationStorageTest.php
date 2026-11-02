@@ -367,6 +367,8 @@ class YouthDecisionGenerationStorageTest extends TestCase
         $zip->close();
 
         $this->assertEmptyRegistrySlot($documentXml, $generatedAt->format('d.m.Y.'));
+        $this->assertStringNotContainsString('<w:highlight', $documentXml);
+        $this->assertStringContainsString('<w:rPr', $documentXml);
         $text = strip_tags($documentXml);
         $this->assertStringContainsString('02.02.2026', $text);
         $this->assertStringContainsString('03.03.2026', $text);

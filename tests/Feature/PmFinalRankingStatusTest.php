@@ -39,6 +39,17 @@ class PmFinalRankingStatusTest extends TestCase
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
+        $this->assertStringContainsString('<h2>Preliminarna rang-lista</h2>', $before);
+        $this->assertStringNotContainsString('Konačna rang-lista', $before);
+        $this->assertStringNotContainsString('data-testid="youth-ranking-signatures"', $before);
+        $this->assertStringNotContainsString('data-testid="youth-decision-open"', $before);
+        $this->assertStringContainsString('Štampaj rang-listu', $before);
+        $indexBefore = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Preliminarna rang-lista — PM — '.$ctx['competition']->title, $indexBefore);
+        $this->assertStringNotContainsString('Konačna rang-lista — PM — '.$ctx['competition']->title, $indexBefore);
 
         $this->assertStringNotContainsString('Dobitnik sredstava', $before);
         $this->assertStringNotContainsString('Odbijena prijava', $before);
@@ -99,6 +110,43 @@ class PmFinalRankingStatusTest extends TestCase
             $this->assertStringNotContainsString('Dobitnik sredstava', $belowRow);
         }
 
+        $finalHtml = $first;
+        $this->assertStringContainsString('<h2>Konačna rang-lista</h2>', $finalHtml);
+        $this->assertStringNotContainsString('<h2>Preliminarna rang-lista</h2>', $finalHtml);
+        $this->assertStringContainsString('data-testid="youth-decision-open"', $finalHtml);
+        $this->assertStringContainsString('Štampaj rang-listu', $finalHtml);
+        $this->assertStringContainsString('youth-ranking-no-print no-print', $finalHtml);
+        $signatures = $this->signatureBlock($finalHtml);
+        $this->assertStringNotContainsString('no-print', $signatures);
+        $this->assertStringContainsString('Potpis komisije', $signatures);
+        $this->assertStringContainsString('Predsjednik Komisije', $signatures);
+        $this->assertStringContainsString('Član 1', $signatures);
+        $this->assertStringContainsString('Član 2', $signatures);
+        $chairmanAt = strpos($signatures, $ctx['chairman']->name);
+        $memberAt = strpos($signatures, $ctx['members'][1]->name);
+        $lastAt = strpos($signatures, $ctx['members'][2]->name);
+        $this->assertNotFalse($chairmanAt);
+        $this->assertNotFalse($memberAt);
+        $this->assertNotFalse($lastAt);
+        $this->assertLessThan($memberAt, $chairmanAt);
+        $this->assertLessThan($lastAt, $memberAt);
+        $this->assertStringContainsString('printYouthPreliminaryRanking(this)', $finalHtml);
+
+        $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('<h2>Konačna rang-lista</h2>', $memberHtml);
+        $this->assertStringContainsString($ctx['chairman']->name, $this->signatureBlock($memberHtml));
+        $this->assertStringNotContainsString('data-testid="youth-decision-open"', $memberHtml);
+
+        $indexAfter = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Konačna rang-lista — PM — '.$ctx['competition']->title, $indexAfter);
+        $this->assertStringNotContainsString('Preliminarna rang-lista — PM — '.$ctx['competition']->title, $indexAfter);
+
         $lockedWinner = $winner->fresh()->only([
             'status', 'commission_decision', 'approved_amount', 'rejection_reason', 'commission_justification',
         ]);
@@ -141,6 +189,16 @@ class PmFinalRankingStatusTest extends TestCase
             ->get(route('evaluation.youth-ranking', $ctx['competition']))
             ->assertOk()
             ->getContent();
+    }
+
+    private function signatureBlock(string $html): string
+    {
+        $start = strpos($html, 'data-testid="youth-ranking-signatures"');
+        $this->assertNotFalse($start);
+        $end = strpos($html, 'youth-ranking-no-print', $start);
+        $this->assertNotFalse($end);
+
+        return substr($html, $start, $end - $start);
     }
 
     private function row(string $html, string $name): string

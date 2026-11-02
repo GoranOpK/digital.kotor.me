@@ -9,7 +9,8 @@ use PhpZip\ZipFile;
 use RuntimeException;
 
 /**
- * Popunjava službeni DOCX. Mijenja samo tekstualne čvorove i umnožava postojeći blok člana 1.
+ * Popunjava službeni DOCX. Mijenja tekstualne čvorove, umnožava postojeći blok člana 1
+ * i uklanja žuto označavanje teksta iz novog dokumenta.
  */
 class YouthDecisionDocxWriter
 {
@@ -38,6 +39,7 @@ class YouthDecisionDocxWriter
         $this->fillWinners($document, $proposal);
         $this->fillNarrative($document, $proposal);
         $this->fillSignatureAndDelivery($document, $proposal);
+        $this->removeTextHighlights($document);
 
         $zip->addFromString('word/document.xml', $this->saveXml($document));
         $zip->addFromString('word/header1.xml', $this->saveXml($header));
@@ -449,6 +451,24 @@ class YouthDecisionDocxWriter
             if (str_contains($node->textContent, $from)) {
                 $node->textContent = str_replace($from, $to, $node->textContent);
             }
+        }
+    }
+
+    private function removeTextHighlights(DOMDocument $document): void
+    {
+        $xpath = new DOMXPath($document);
+        $xpath->registerNamespace('w', self::W);
+        $highlights = $xpath->query('//w:highlight');
+        if ($highlights === false) {
+            return;
+        }
+
+        $nodes = [];
+        foreach ($highlights as $highlight) {
+            $nodes[] = $highlight;
+        }
+        foreach ($nodes as $highlight) {
+            $highlight->parentNode?->removeChild($highlight);
         }
     }
 

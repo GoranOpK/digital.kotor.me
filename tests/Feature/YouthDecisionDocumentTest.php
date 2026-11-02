@@ -95,9 +95,21 @@ class YouthDecisionDocumentTest extends TestCase
         try {
             $text = $this->docxText($path);
             $this->assertEmptyRegistrySlot($path, '29.10.2026.');
+            $generated = new ZipFile();
+            $generated->openFile($path);
+            $documentXml = $generated->getEntryContents('word/document.xml');
+            $generated->close();
+            $this->assertStringNotContainsString('<w:highlight', $documentXml);
+            $this->assertStringContainsString('<w:rPr', $documentXml);
         } finally {
             @unlink($path);
         }
+
+        $template = new ZipFile();
+        $template->openFile(app(YouthDecisionDocxWriter::class)->templatePath());
+        $templateXml = $template->getEntryContents('word/document.xml');
+        $template->close();
+        $this->assertStringContainsString('w:highlight w:val="yellow"', $templateXml);
 
         $this->assertStringContainsString('29.10.2026.', $text);
         $this->assertStringContainsString('Plan Alfa', $text);

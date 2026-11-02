@@ -143,7 +143,7 @@
         @if($pmRankingCompetitions->isNotEmpty())
             <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
                 @foreach($pmRankingCompetitions as $pmCompetition)
-                    <a href="{{ route('evaluation.youth-ranking', ['competition' => $pmCompetition]) }}">Preliminarna rang-lista — PM — {{ $pmCompetition->title }}</a>
+                    <a href="{{ route('evaluation.youth-ranking', ['competition' => $pmCompetition]) }}">{{ $pmCompetition->hasChairmanCompletedDecisions() ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }} — PM — {{ $pmCompetition->title }}</a>
                 @endforeach
             </div>
         @endif

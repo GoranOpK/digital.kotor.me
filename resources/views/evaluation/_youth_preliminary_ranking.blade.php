@@ -8,6 +8,19 @@
         ?? $youthAboveFirst?->competition
         ?? $youthBelowFirst?->competition;
     $youthRankingCompetition?->loadMissing('upNumber');
+    $youthRankingIsFinal = (bool) ($youthRankingCompetition?->isOmladinskoProfile()
+        && $youthRankingCompetition->hasChairmanCompletedDecisions());
+    $youthRankingSignatories = collect();
+    if ($youthRankingIsFinal) {
+        $youthRankingCompetition->loadMissing('commission');
+        $youthRankingSignatories = $youthRankingCompetition->commission
+            ? $youthRankingCompetition->commission->members()
+                ->where('status', 'active')
+                ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+                ->orderBy('id')
+                ->get()
+            : collect();
+    }
     $youthApplicantTypeLabel = static function ($application): string {
         $commercialForm = null;
         foreach ([
@@ -468,7 +481,7 @@
             </div>
 
             <div class="youth-ranking-list-card">
-            <h2>Preliminarna rang-lista</h2>
+            <h2>{{ $youthRankingIsFinal ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }}</h2>
             @if(count($youthRankingView['above'] ?? []) === 0 && count($youthRankingView['below'] ?? []) === 0)
                 <div style="text-align: center; padding: 40px; color: #6b7280;">
                     <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema ocijenjenih prijava za ovaj konkurs.</p>
@@ -723,9 +736,25 @@
             </div>
             @endif
             </div>
+            @if($youthRankingIsFinal)
+                <div class="info-card" id="signature-block" data-testid="youth-ranking-signatures" style="padding: 16px 24px;">
+                    <h2 style="margin-bottom: 12px; font-size: 18px;">Potpis komisije</h2>
+                    <div style="margin-top: 16px; font-size: 13px; line-height: 1.5;">
+                        <p style="margin-bottom: 14px;">Kotor, _______________ god.</p>
+                        @php $clanNum = 0; @endphp
+                        @foreach($youthRankingSignatories as $member)
+                            <div style="margin-bottom: 6px;">
+                                <div style="font-weight: 600; color: #374151;">{{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . (++$clanNum) }}</div>
+                                <div style="margin: 2px 0 0 0;">{{ $member->name ?? '' }}</div>
+                                <div style="width: 200px; border-bottom: 1px solid #111; min-height: 1px; margin-top: 8px;"></div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             <div class="youth-ranking-no-print no-print" style="margin: 24px 0 8px 0; text-align: center;">
                 <button type="button" onclick="printYouthPreliminaryRanking(this);" class="youth-ranking-print-btn" data-testid="youth-ranking-print">
-                    Štampaj
+                    Štampaj rang-listu
                 </button>
             </div>
             <div class="youth-ranking-no-print no-print">

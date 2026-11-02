@@ -324,9 +324,23 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
         $this->markSupported($sameScore, '60000.00');
         $this->assertFalse($tied['competition']->fresh()->hasChairmanCompletedDecisions());
         $this->assertSame(0, \App\Models\YouthEqualScoreRound::query()->count());
+        $tiedPage = $this->actingAs($tied['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $tied['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('<h2>Preliminarna rang-lista</h2>', $tiedPage);
+        $this->assertStringNotContainsString('Konačna rang-lista', $tiedPage);
+        $this->assertStringNotContainsString('data-testid="youth-ranking-signatures"', $tiedPage);
+        $this->assertStringNotContainsString('data-testid="youth-decision-open"', $tiedPage);
 
         $this->markRejected($sameScore->fresh());
         $this->assertTrue($tied['competition']->fresh()->hasChairmanCompletedDecisions());
+        $resolvedPage = $this->actingAs($tied['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $tied['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('<h2>Konačna rang-lista</h2>', $resolvedPage);
+        $this->assertStringContainsString('data-testid="youth-ranking-signatures"', $resolvedPage);
         $this->assertSame('60000.00', $this->annual->confirmedAllocation($tied['competition']->fresh()));
         $this->assertSame(0, \App\Models\YouthEqualScoreRound::query()->count());
 
@@ -336,6 +350,13 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
         $this->markSupported($lower, '50000.00');
         $this->assertTrue($this->annual->youthAllocationListIsComplete($over['competition']->fresh()));
         $this->assertFalse($over['competition']->fresh()->hasChairmanCompletedDecisions());
+        $overPage = $this->actingAs($over['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $over['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('<h2>Preliminarna rang-lista</h2>', $overPage);
+        $this->assertStringNotContainsString('Konačna rang-lista', $overPage);
+        $this->assertStringNotContainsString('data-testid="youth-decision-open"', $overPage);
     }
 
     public function test_final_list_can_close_and_then_open_a_second_call(): void
@@ -345,6 +366,14 @@ class YouthAnnualAllocationCompletenessTest extends TestCase
         $this->markSupported($ctx['application'], '20000.00');
         $competition = $ctx['competition']->fresh();
         $this->assertTrue($competition->hasChairmanCompletedDecisions());
+        $this->assertNull($below->fresh()->commission_decision);
+        $withBelow = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('<h2>Konačna rang-lista</h2>', $withBelow);
+        $this->assertStringContainsString($below->business_plan_name, $withBelow);
+        $this->assertStringContainsString('Ispod bodovnog praga', $withBelow);
 
         $this->storeClosingYouthDecision($competition, $ctx['chairman']->user);
 
