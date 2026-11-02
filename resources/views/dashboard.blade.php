@@ -748,6 +748,10 @@
                                             <a href="{{ route('evaluation.canonical-outcome.show', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
                                                 Rang lista
                                             </a>
+                                        @elseif($competition->isOmladinskoProfile())
+                                            <a href="{{ route('evaluation.youth-ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
+                                                Rang lista
+                                            </a>
                                         @else
                                             <a href="{{ route('admin.competitions.ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
                                                 Rang lista

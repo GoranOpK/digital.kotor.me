@@ -164,7 +164,11 @@
                 </div>
                 <div>
                     @if(isset($showRankingLink) && $showRankingLink)
-                        <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                        @if($competition->isOmladinskoProfile())
+                            <a href="{{ route('evaluation.youth-ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                        @else
+                            <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                        @endif
                     @endif
                     @if(in_array($competition->status, ['closed', 'completed']) && ! $competition->isOmladinskoProfile())
                         <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn" style="background: #0b3d91; color: #fff;">Pregled odluke</a>
