@@ -296,7 +296,9 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertStringContainsString('02.02.2026', $text);
         $this->assertStringContainsString('03.03.2026', $text);
         $this->assertStringContainsString('04.04.2026', $text);
-        $this->assertStringContainsString('05.05.2026', $text);
+        $this->assertStringContainsString('na drugoj sjednici Komisije održanoj dana 03.03.2026. godine', $text);
+        $this->assertStringNotContainsString('05.05.2026', $text);
+        $this->assertGreaterThanOrEqual(2, substr_count($text, '03.03.2026'));
         $this->assertStringContainsString('Petar Petrović', $text);
         $this->assertStringContainsString($application->business_plan_name, $text);
         $this->assertStringNotContainsString('05.01.2026', $text);

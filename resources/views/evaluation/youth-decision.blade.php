@@ -36,14 +36,12 @@
                     'first_session_date' => 'Datum prve sjednice',
                     'second_session_date' => 'Datum druge sjednice',
                     'third_session_date' => 'Datum treće sjednice',
-                    'oral_presentation_date' => 'Datum usmenih obrazloženja',
                 ] as $field => $label)
                     @php
                         $suggested = match ($field) {
                             'first_session_date' => $youthDecisionDates['first'] ?? null,
                             'second_session_date' => $youthDecisionDates['second'] ?? null,
                             'third_session_date' => $youthDecisionDates['third'] ?? null,
-                            default => $youthDecisionDates['oral'] ?? null,
                         };
                     @endphp
                     <label style="display: block; margin-bottom: 12px;">

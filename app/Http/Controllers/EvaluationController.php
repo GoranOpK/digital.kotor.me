@@ -1213,16 +1213,13 @@ class EvaluationController extends Controller
             'first_session_date' => ['required', 'date_format:Y-m-d'],
             'second_session_date' => ['required', 'date_format:Y-m-d'],
             'third_session_date' => ['required', 'date_format:Y-m-d'],
-            'oral_presentation_date' => ['required', 'date_format:Y-m-d'],
         ], [
             'first_session_date.required' => 'Unesite datum prve sjednice.',
             'second_session_date.required' => 'Unesite datum druge sjednice.',
             'third_session_date.required' => 'Unesite datum treće sjednice.',
-            'oral_presentation_date.required' => 'Unesite datum usmenih obrazloženja.',
             'first_session_date.date_format' => 'Datum prve sjednice nije ispravan.',
             'second_session_date.date_format' => 'Datum druge sjednice nije ispravan.',
             'third_session_date.date_format' => 'Datum treće sjednice nije ispravan.',
-            'oral_presentation_date.date_format' => 'Datum usmenih obrazloženja nije ispravan.',
         ]);
 
         $temporaryPath = null;

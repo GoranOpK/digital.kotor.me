@@ -15,7 +15,7 @@ class YouthDecisionProposalBuilder
     ) {}
 
     /**
-     * @param  array{first_session_date: string, second_session_date: string, third_session_date: string, oral_presentation_date: string}  $input
+     * @param  array{first_session_date: string, second_session_date: string, third_session_date: string}  $input
      */
     public function build(Competition $competition, array $input, Carbon $generatedAt): YouthDecisionProposal
     {
@@ -70,7 +70,7 @@ class YouthDecisionProposalBuilder
             firstSessionDate: $this->documentDate($input['first_session_date']),
             secondSessionDate: $this->documentDate($input['second_session_date']),
             thirdSessionDate: $this->documentDate($input['third_session_date']),
-            oralDate: $this->documentDate($input['oral_presentation_date']),
+            oralDate: $this->documentDate($input['second_session_date']),
             winners: $rows,
             receivedCount: $received->count(),
             incompleteCount: $incomplete,

@@ -93,7 +93,7 @@ class YouthDecisionGenerationStorageTest extends TestCase
         $this->assertSame('02.02.2026', $proposal->firstSessionDate);
         $this->assertSame('03.03.2026', $proposal->secondSessionDate);
         $this->assertSame('04.04.2026', $proposal->thirdSessionDate);
-        $this->assertSame('05.05.2026', $proposal->oralDate);
+        $this->assertSame('03.03.2026', $proposal->oralDate);
     }
 
     public function test_builder_rejects_other_profiles(): void
@@ -164,19 +164,24 @@ class YouthDecisionGenerationStorageTest extends TestCase
                 'first_session_date',
                 'second_session_date',
                 'third_session_date',
-                'oral_presentation_date',
             ])
-            ->assertSessionDoesntHaveErrors('decision_number');
+            ->assertSessionDoesntHaveErrors(['decision_number', 'oral_presentation_date']);
 
         $html = $this->actingAs($ctx['chairman'])
             ->get(route('evaluation.youth-decision', $ctx['competition']))
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('name="decision_number"', $html);
+        $this->assertStringNotContainsString('name="oral_presentation_date"', $html);
+        $this->assertStringNotContainsString('Datum usmenih obrazloženja', $html);
+        $formStart = strpos($html, 'data-testid="youth-decision-generate-form"');
+        $formEnd = strpos($html, '</form>', $formStart);
+        $this->assertNotFalse($formStart);
+        $this->assertNotFalse($formEnd);
+        $this->assertSame(3, substr_count(substr($html, $formStart, $formEnd - $formStart), 'type="date"'));
         $this->assertStringContainsString('name="first_session_date"', $html);
         $this->assertStringContainsString('name="second_session_date"', $html);
         $this->assertStringContainsString('name="third_session_date"', $html);
-        $this->assertStringContainsString('name="oral_presentation_date"', $html);
         $this->assertSame(0, YouthDecisionDocument::query()->count());
     }
 
@@ -366,7 +371,20 @@ class YouthDecisionGenerationStorageTest extends TestCase
         $this->assertStringContainsString('02.02.2026', $text);
         $this->assertStringContainsString('03.03.2026', $text);
         $this->assertStringContainsString('04.04.2026', $text);
-        $this->assertStringContainsString('05.05.2026', $text);
+        $this->assertStringContainsString('na drugoj sjednici Komisije održanoj dana 03.03.2026. godine', $text);
+        $this->assertStringNotContainsString('05.05.2026', $text);
+        $this->assertGreaterThanOrEqual(2, substr_count($text, '03.03.2026'));
+
+        $previousBytes = $storedBytes;
+        $previousPath = $storedPath;
+        $again = $this->dates();
+        unset($again['oral_presentation_date']);
+        $again['second_session_date'] = '2026-06-06';
+        $this->actingAs($ctx['chairman'])
+            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $again)
+            ->assertOk();
+        $this->assertSame($previousBytes, file_get_contents($previousPath));
+        $this->assertSame(2, YouthDecisionDocument::query()->count());
 
         $this->assertFileExists($storedPath);
         $this->assertSame($downloadBytes, file_get_contents($storedPath));
