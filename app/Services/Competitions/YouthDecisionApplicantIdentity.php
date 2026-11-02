@@ -9,6 +9,10 @@ use App\Models\Application;
  */
 class YouthDecisionApplicantIdentity
 {
+    public const COMPANY_NAME_AS_FOUNDER = 'Unesite ime i prezime fizičkog lica koje je osnivač. Naziv privrednog društva nije ime osnivača.';
+
+    public const COMPANY_NAME_AS_DIRECTOR = 'Unesite ime i prezime fizičkog lica koje je izvršni direktor. Naziv privrednog društva nije ime izvršnog direktora.';
+
     public function line(Application $application): ?string
     {
         $this->loadLegalIdentity($application);
@@ -35,6 +39,9 @@ class YouthDecisionApplicantIdentity
         if ($legalName === null || $founder === null || $director === null) {
             return null;
         }
+        if ($this->companyNameUsedAsOfficer($founder, $legalName) || $this->companyNameUsedAsOfficer($director, $legalName)) {
+            return null;
+        }
 
         $samePerson = mb_strtolower($founder) === mb_strtolower($director);
         if ($samePerson) {
@@ -42,6 +49,33 @@ class YouthDecisionApplicantIdentity
         }
 
         return $legalName.', koga zastupa osnivač/ica '.$founder.' i izvršni direktor/ica '.$director;
+    }
+
+    public function companyNameUsedAsOfficer(?string $officer, ?string $companyName): bool
+    {
+        $officerName = $this->normalizeComparableName($officer);
+        $company = $this->normalizeComparableName($companyName);
+
+        return $officerName !== null && $company !== null && $officerName === $company;
+    }
+
+    public function companyOfficerConflictMessage(Application $application): ?string
+    {
+        $this->loadLegalIdentity($application);
+        if (! $application->is_registered || ! in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
+            return null;
+        }
+
+        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        $messages = [];
+        if ($this->companyNameUsedAsOfficer($application->founder_name, $legalName)) {
+            $messages[] = self::COMPANY_NAME_AS_FOUNDER;
+        }
+        if ($this->companyNameUsedAsOfficer($application->director_name, $legalName)) {
+            $messages[] = self::COMPANY_NAME_AS_DIRECTOR;
+        }
+
+        return $messages === [] ? null : implode(' ', $messages);
     }
 
     private function loadLegalIdentity(Application $application): void
@@ -62,5 +96,17 @@ class YouthDecisionApplicantIdentity
         $name = trim($value);
 
         return $name === '' ? null : $name;
+    }
+
+    private function normalizeComparableName(mixed $value): ?string
+    {
+        $cleaned = $this->clean($value);
+        if ($cleaned === null) {
+            return null;
+        }
+
+        $collapsed = preg_replace('/\s+/u', ' ', $cleaned);
+
+        return mb_strtolower(is_string($collapsed) ? $collapsed : $cleaned);
     }
 }

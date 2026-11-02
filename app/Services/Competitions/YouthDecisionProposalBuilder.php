@@ -89,6 +89,12 @@ class YouthDecisionProposalBuilder
     {
         $plan = trim((string) $application->business_plan_name);
         $label = $plan !== '' ? $plan : 'prijava '.$application->id;
+        $officerConflict = $this->identity->companyOfficerConflictMessage($application);
+        if ($officerConflict !== null) {
+            throw ValidationException::withMessages([
+                'decision' => 'Odluka se ne može generisati jer prijavi „'.$label.'“ nedostaje ime fizičkog lica. '.$officerConflict,
+            ]);
+        }
         $identity = $this->identity->line($application);
         if ($identity === null) {
             throw ValidationException::withMessages([

@@ -1040,6 +1040,12 @@
                         @enderror
                     </div>
 
+                    @php
+                        $savedFounderName = (isset($existingApplication) && $existingApplication) ? $existingApplication->founder_name : null;
+                        $savedDirectorName = (isset($existingApplication) && $existingApplication) ? $existingApplication->director_name : null;
+                        $founderFieldValue = $isOmladinsko ? ($savedFounderName ?? '') : ($savedFounderName ?? auth()->user()->name);
+                        $directorFieldValue = $isOmladinsko ? ($savedDirectorName ?? '') : ($savedDirectorName ?? auth()->user()->name);
+                    @endphp
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Ime i prezime osnivačice/osnivačica:</label>
@@ -1047,7 +1053,7 @@
                                 type="text" 
                                 name="founder_name" 
                                 class="form-control @error('founder_name') error @enderror"
-                                value="{{ old('founder_name', isset($existingApplication) && $existingApplication ? $existingApplication->founder_name : auth()->user()->name) }}"
+                                value="{{ old('founder_name', $founderFieldValue) }}"
                                 maxlength="255"
                                 required
                             >
@@ -1062,7 +1068,7 @@
                                 type="text" 
                                 name="director_name" 
                                 class="form-control @error('director_name') error @enderror"
-                                value="{{ old('director_name', isset($existingApplication) && $existingApplication ? $existingApplication->director_name : auth()->user()->name) }}"
+                                value="{{ old('director_name', $directorFieldValue) }}"
                                 maxlength="255"
                                 required
                             >

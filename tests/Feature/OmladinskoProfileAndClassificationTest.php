@@ -4,8 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Application;
 use App\Models\Competition;
+use App\Models\LegalEntityIdentity;
+use App\Models\PlatformIdentity;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Competitions\YouthDecisionApplicantIdentity;
 use App\Services\KnApplicationStartContextFactory;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\KnApplicationStartContext;
@@ -789,6 +792,152 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $omladinskoApplication = Application::query()->where('user_id', $omladinskoUser->id)->firstOrFail();
         $this->assertSame('privredno_drustvo', $omladinskoApplication->applicant_type);
         $this->assertSame('kd', $omladinskoApplication->company_legal_form);
+    }
+
+    public function test_pm_company_form_keeps_officer_names_distinct_from_the_company(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'name' => 'Stefan doo',
+            'company_name' => 'Stefan doo',
+            'pib' => $this->validPib(880),
+            'residential_status' => null,
+            'jmb' => $this->validJmb(880),
+        ]);
+        $this->attachLegalName($user, 'Stefan doo');
+        $competition = $this->openCompetition('omladinsko');
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+        $html = $this->createHtml($user, $competition, $token);
+
+        $this->assertSame('', $this->inputValue($html, 'founder_name'));
+        $this->assertSame('', $this->inputValue($html, 'director_name'));
+        $this->assertStringNotContainsString('value="Stefan doo"', $this->inputTag($html, 'founder_name'));
+        $this->assertStringNotContainsString('value="Stefan doo"', $this->inputTag($html, 'director_name'));
+
+        $base = [
+            'start_context_token' => $token,
+            'applicant_type' => 'privredno_drustvo',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'doo_jmbg' => $user->jmb,
+            'doo_name' => 'Nosilac prijave',
+            'doo_phone' => '+38267111002',
+            'doo_email' => 'pm-officer@example.test',
+            'doo_address' => 'Njegoševa 12, Kotor',
+            'company_seat' => 'Sjedište 8, Kotor',
+            'crps_number' => $this->validCrps(6, 880),
+            'pib' => $this->validPib(881),
+            'accuracy_declaration' => '1',
+        ];
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->finalStorePayload($base))
+            ->assertRedirect()
+            ->assertSessionHasErrors(['founder_name', 'director_name']);
+        $this->assertNull(Application::query()->where('user_id', $user->id)->first());
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->finalStorePayload($base + [
+                'founder_name' => '  stefan   DOO ',
+                'director_name' => 'Ana Anić',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors([
+                'founder_name' => YouthDecisionApplicantIdentity::COMPANY_NAME_AS_FOUNDER,
+            ]);
+        $this->assertNull(Application::query()->where('user_id', $user->id)->first());
+
+        $this->actingAs($user)
+            ->from(route('applications.create', $competition))
+            ->post(route('applications.store', $competition), $this->finalStorePayload($base + [
+                'founder_name' => 'Ana Anić',
+                'director_name' => 'stefan doo',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors([
+                'director_name' => YouthDecisionApplicantIdentity::COMPANY_NAME_AS_DIRECTOR,
+            ]);
+        $this->assertNull(Application::query()->where('user_id', $user->id)->first());
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->finalStorePayload($base + [
+                'founder_name' => 'Ana Anić',
+                'director_name' => 'Ana Anić',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['founder_name', 'director_name']);
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame('Ana Anić', $application->founder_name);
+        $this->assertSame('Ana Anić', $application->director_name);
+
+        $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->finalStorePayload($base + [
+                'founder_name' => 'Ana Anić',
+                'director_name' => 'Marko Marković',
+            ]))
+            ->assertRedirect()
+            ->assertSessionDoesntHaveErrors(['founder_name', 'director_name']);
+
+        $application->refresh();
+        $this->assertSame('Ana Anić', $application->founder_name);
+        $this->assertSame('Marko Marković', $application->director_name);
+
+        $savedHtml = $this->createHtml($user, $competition, $token);
+        $this->assertSame('Ana Anić', $this->inputValue($savedHtml, 'founder_name'));
+        $this->assertSame('Marko Marković', $this->inputValue($savedHtml, 'director_name'));
+
+        $zenskoUser = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'first_name' => 'Ženska',
+            'last_name' => 'Firma',
+            'name' => 'Ženska Firma',
+            'company_name' => 'Ženska Firma',
+            'pib' => $this->validPib(882),
+            'residential_status' => null,
+            'jmb' => $this->validJmb(882),
+        ]);
+        $this->attachLegalName($zenskoUser, 'Ženska Firma');
+        $zensko = $this->openCompetition('zensko');
+        $zenskoToken = $this->issueStartToken($zenskoUser, $zensko, ['business_stage' => 'započinjanje']);
+        $zenskoHtml = $this->createHtml($zenskoUser, $zensko, $zenskoToken);
+        $this->assertSame('Ženska Firma', $this->inputValue($zenskoHtml, 'founder_name'));
+        $this->assertSame('Ženska Firma', $this->inputValue($zenskoHtml, 'director_name'));
+    }
+
+    private function attachLegalName(User $user, string $legalName): void
+    {
+        $platform = PlatformIdentity::query()->create([
+            'user_id' => $user->id,
+            'subject_type' => PlatformIdentity::SUBJECT_LEGAL_ENTITY,
+        ]);
+        LegalEntityIdentity::query()->create([
+            'platform_identity_id' => $platform->id,
+            'legal_form' => LegalEntityIdentity::FORM_DOO,
+            'legal_name' => $legalName,
+            'street_and_number' => 'Njegoševa 12',
+            'city' => 'Kotor',
+        ]);
+    }
+
+    private function inputTag(string $html, string $name): string
+    {
+        $this->assertSame(1, preg_match(
+            '/<input\b[^>]*\bname="'.preg_quote($name, '/').'"[^>]*>/',
+            $html,
+            $matches
+        ));
+
+        return $matches[0];
+    }
+
+    private function inputValue(string $html, string $name): string
+    {
+        $tag = $this->inputTag($html, $name);
+        $this->assertSame(1, preg_match('/\bvalue="([^"]*)"/', $tag, $matches));
+
+        return html_entity_decode($matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     /**

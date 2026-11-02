@@ -22,6 +22,7 @@ use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Support\UserType;
 use App\Models\CanonicalApplicantForm;
 use App\Services\Competitions\CanonicalApplicantFormService;
+use App\Services\Competitions\YouthDecisionApplicantIdentity;
 use App\Services\Competitions\CanonicalBeneficiaryApplications;
 use App\Services\Competitions\CanonicalDocumentService;
 use App\Services\Competitions\ComplaintService;
@@ -628,6 +629,22 @@ class ApplicationController extends Controller
                 return back()
                     ->withErrors(['error' => $profileAddressError . ' Ažurirajte adresu u profilu.'])
                     ->withInput();
+            }
+        }
+
+        if ($competition->isOmladinskoProfile() && $isCompanyForm && $resolvedIsRegistered) {
+            $request->user()?->loadMissing('identity.legalEntity');
+            $companyName = $request->user()?->identity?->legalEntity?->legal_name;
+            $officers = app(YouthDecisionApplicantIdentity::class);
+            $officerErrors = [];
+            if ($request->filled('founder_name') && $officers->companyNameUsedAsOfficer((string) $request->input('founder_name'), $companyName)) {
+                $officerErrors['founder_name'] = YouthDecisionApplicantIdentity::COMPANY_NAME_AS_FOUNDER;
+            }
+            if ($request->filled('director_name') && $officers->companyNameUsedAsOfficer((string) $request->input('director_name'), $companyName)) {
+                $officerErrors['director_name'] = YouthDecisionApplicantIdentity::COMPANY_NAME_AS_DIRECTOR;
+            }
+            if ($officerErrors !== []) {
+                return back()->withErrors($officerErrors)->withInput();
             }
         }
 

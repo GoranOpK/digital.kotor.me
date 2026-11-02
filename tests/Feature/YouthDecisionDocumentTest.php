@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Services\Competitions\YouthDecisionApplicantIdentity;
 use App\Services\Competitions\YouthDecisionDocxWriter;
 use App\Services\Competitions\YouthDecisionProposal;
+use App\Services\Competitions\YouthDecisionProposalBuilder;
+use Illuminate\Validation\ValidationException;
 use PhpZip\ZipFile;
 use Tests\TestCase;
 
@@ -51,6 +53,30 @@ class YouthDecisionDocumentTest extends TestCase
         ]);
         $entrepreneur->setRelation('user', new User(['name' => 'Nalog Preduzetnika']));
         $this->assertSame('Jovo Jović', $identity->line($entrepreneur));
+
+        $this->assertNull($identity->line($this->company('Stefan doo', '  stefan   DOO ', 'Ana Anić')));
+        $this->assertNull($identity->line($this->company('Stefan doo', 'Ana Anić', 'STEFAN DOO')));
+        $this->assertSame(
+            'Stefan doo, koga zastupa osnivač/ica i izvršni direktor/ica Ana Anić',
+            $identity->line($this->company('Stefan doo', 'Ana Anić', 'ana anić'))
+        );
+        $this->assertSame(
+            'Stefan doo, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković',
+            $identity->line($this->company('Stefan doo', 'Ana Anić', 'Marko Marković'))
+        );
+
+        $rejected = $this->company('Stefan doo', 'Stefan doo', 'Ana Anić');
+        $rejected->business_plan_name = 'Plan Stefan';
+        $method = new \ReflectionMethod(YouthDecisionProposalBuilder::class, 'winnerRow');
+        try {
+            $method->invoke(app(YouthDecisionProposalBuilder::class), $rejected);
+            $this->fail('Odluka sa nazivom društva umjesto imena osnivača ne smije biti sastavljena.');
+        } catch (ValidationException $exception) {
+            $this->assertStringContainsString(
+                YouthDecisionApplicantIdentity::COMPANY_NAME_AS_FOUNDER,
+                $exception->validator->errors()->first('decision')
+            );
+        }
     }
 
     public function test_word_document_keeps_the_template_and_manual_dates(): void
