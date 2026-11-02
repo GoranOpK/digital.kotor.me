@@ -523,7 +523,9 @@
                                 @endif
                             </td>
                             <td style="text-align: center;">
-                                @if($ranked->status === 'approved')
+                                @if($ranked->commission_decision === 'odbija')
+                                    <span class="score-badge score-low">Odbijena prijava</span>
+                                @elseif($ranked->status === 'approved' && $ranked->commission_decision === 'podrzava_potpuno')
                                     <span style="font-weight: 600;">✓ Dobitnik sredstava</span>
                                 @else
                                     <span style="color: #6b7280;">-</span>
@@ -552,6 +554,7 @@
                             <th>Tip</th>
                             <th style="text-align: center;">Ocjena</th>
                             <th style="text-align: right;">Traženi iznos</th>
+                            <th style="text-align: center;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -577,10 +580,13 @@
                                 <td style="text-align: right;">
                                     {{ $below->requested_amount !== null ? number_format((float) $below->requested_amount, 2, ',', '.').' €' : '—' }}
                                 </td>
+                                <td style="text-align: center;">
+                                    <span class="score-badge score-low">Ispod bodovnog praga</span>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="padding: 8px; color: #6b7280;">Nema prijava ispod praga.</td>
+                                <td colspan="7" style="padding: 8px; color: #6b7280;">Nema prijava ispod praga.</td>
                             </tr>
                         @endforelse
                     </tbody>
