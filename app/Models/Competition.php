@@ -26,6 +26,7 @@ class Competition extends Model
         'call_number',
         'status',
         'is_test_preview',
+        'is_test',
         'canonical_test_applications_closed_at',
         'competition_number',
         'year',
@@ -58,6 +59,7 @@ class Competition extends Model
         'call_number' => 'integer',
         'deadline_days' => 'integer',
         'is_test_preview' => 'boolean',
+        'is_test' => 'boolean',
         'canonical_test_applications_closed_at' => 'datetime',
     ];
 

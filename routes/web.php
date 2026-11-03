@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\ArchivedTestCompetitionMarkingController;
+use App\Http\Controllers\Admin\ArchivedTestCompetitionRemovalController;
 use App\Http\Controllers\Admin\CompetitionOfficialDecisionController;
 use App\Http\Controllers\CulturalActivityAdminController;
 use App\Http\Controllers\ApplicationController;
@@ -637,6 +639,22 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
                 Route::post('/settings', [\App\Http\Controllers\Admin\EpModuleSettingsController::class, 'update'])->name('settings.update');
             });
         });
+    });
+
+    // Odvojeno od redovnog brisanja: samo super administrator, jedan zatvoreni PM ili ŽP konkurs.
+    Route::middleware('role:superadmin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/competitions/archive-removal', [ArchivedTestCompetitionRemovalController::class, 'show'])
+            ->name('archive-test-competition.show');
+        Route::post('/competitions/archive-removal/preview', [ArchivedTestCompetitionRemovalController::class, 'preview'])
+            ->name('archive-test-competition.preview');
+        Route::post('/competitions/archive-removal', [ArchivedTestCompetitionRemovalController::class, 'destroy'])
+            ->name('archive-test-competition.destroy');
+        Route::get('/competitions/archive-test-mark', [ArchivedTestCompetitionMarkingController::class, 'show'])
+            ->name('archive-test-mark.show');
+        Route::post('/competitions/archive-test-mark/preview', [ArchivedTestCompetitionMarkingController::class, 'preview'])
+            ->name('archive-test-mark.preview');
+        Route::post('/competitions/archive-test-mark', [ArchivedTestCompetitionMarkingController::class, 'store'])
+            ->name('archive-test-mark.store');
     });
 
     // Rute za upravljanje konkursima (samo za admin i konkurs_admin - kreiranje, editovanje, brisanje)

@@ -324,6 +324,7 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        $isPlatformSuperadmin = $user->role && $user->role->name === 'superadmin';
         $competitionPrograms = $isCompetitionAdmin ? $this->getCompetitionProgramsOverview() : null;
 
         // Statistike za admin dashboard
@@ -365,6 +366,7 @@ class AdminController extends Controller
             'recent_users',
             'recent_applications',
             'isCompetitionAdmin',
+            'isPlatformSuperadmin',
             'active_competitions',
             'competitionPrograms'
         ));
@@ -708,13 +710,14 @@ class AdminController extends Controller
         }
 
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
+        $isPlatformSuperadmin = $user->role && $user->role->name === 'superadmin';
         $presetType = request('type');
         $allowedTypes = array_keys($this->getCompetitionProgramDefinitions());
         if (! $presetType || ! in_array($presetType, $allowedTypes, true)) {
             $presetType = null;
         }
 
-        return view('admin.competitions.create', compact('commissions', 'presetType'));
+        return view('admin.competitions.create', compact('commissions', 'presetType', 'isPlatformSuperadmin'));
     }
 
     /**
@@ -759,6 +762,7 @@ class AdminController extends Controller
             'commission_id' => $validated['commission_id'] ?? null,
             'deadline_days' => 20,
             'status' => 'draft',
+            'is_test' => $this->explicitTestFlagForCreate($request),
         ];
 
         if (! empty($validated['commission_id'])) {
@@ -862,6 +866,8 @@ class AdminController extends Controller
         $typeLabel = $this->getCompetitionTypeLabel($competition->type);
         $isSecondCallForm = true;
         $firstCall = $competition;
+        $actor = auth()->user();
+        $isPlatformSuperadmin = $actor && $actor->role && $actor->role->name === 'superadmin';
 
         return view('admin.competitions.create', compact(
             'commissions',
@@ -869,7 +875,8 @@ class AdminController extends Controller
             'firstCall',
             'confirmedAllocation',
             'remainingAfterFirst',
-            'typeLabel'
+            'typeLabel',
+            'isPlatformSuperadmin'
         ));
     }
 
@@ -935,6 +942,7 @@ class AdminController extends Controller
                     'deadline_days' => 20,
                     'status' => 'draft',
                     'competition_number' => $validated['up_number'],
+                    'is_test' => $this->explicitTestFlagForCreate($request),
                 ];
 
                 if (! empty($validated['start_date'])) {
@@ -1076,8 +1084,9 @@ class AdminController extends Controller
         }
 
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
+        $isPlatformSuperadmin = $user->role && $user->role->name === 'superadmin';
 
-        return view('admin.competitions.edit', compact('competition', 'commissions', 'isAdmin'));
+        return view('admin.competitions.edit', compact('competition', 'commissions', 'isAdmin', 'isPlatformSuperadmin'));
     }
 
     /**
@@ -1316,6 +1325,7 @@ class AdminController extends Controller
         }
 
         $wasOmladinskoDraft = $isOmladinsko && $competition->status === 'draft';
+        $data['is_test'] = $this->resolvedTestFlag($request, $competition);
 
         $competition->update($data);
 
@@ -1695,6 +1705,42 @@ class AdminController extends Controller
     }
 
     /**
+     * Izričita oznaka testnog konkursa. Naziv, datum i ID je ne određuju.
+     */
+    private function explicitTestFlagForCreate(Request $request): bool
+    {
+        $user = auth()->user();
+        if (! $user || ! $user->role || $user->role->name !== 'superadmin') {
+            return false;
+        }
+
+        return $request->boolean('is_test');
+    }
+
+    private function resolvedTestFlag(Request $request, Competition $competition): bool
+    {
+        if (! $request->exists('is_test')) {
+            return (bool) $competition->is_test;
+        }
+
+        $posted = $request->boolean('is_test');
+        if ($posted === (bool) $competition->is_test) {
+            return $posted;
+        }
+
+        $user = auth()->user();
+        if (! $user || ! $user->role || $user->role->name !== 'superadmin') {
+            abort(403, 'Samo super administrator može označiti konkurs kao testni.');
+        }
+
+        if ($competition->status !== 'draft') {
+            abort(422, 'Oznaka testnog konkursa ne može se mijenjati nakon objavljivanja.');
+        }
+
+        return $posted;
+    }
+
+    /**
      * Brisanje konkursa
      */
     public function destroyCompetition(Competition $competition)
@@ -1703,15 +1749,13 @@ class AdminController extends Controller
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
 
+        if (in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, 'Arhivirani konkurs ne može da se obriše redovnim brisanjem. Zatvoren ili završen konkurs ostaje u arhivi.');
+        }
+
         $deleteBlockReason = app(PublishedCallLifecycleLock::class)->deleteBlockReason($competition);
         if ($deleteBlockReason !== null) {
             abort(403, $deleteBlockReason);
-        }
-
-        // Privremeno: Administrator konkursa može brisati sve konkurse
-        // Ostali ne mogu brisati završene konkurse
-        if (in_array($competition->status, ['closed', 'completed']) && ! $isCompetitionAdmin && ! $isAdmin) {
-            abort(403, 'Ne možete obrisati završeni konkurs.');
         }
 
         // Ako nije admin i nije konkurs_admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji

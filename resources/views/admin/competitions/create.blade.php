@@ -270,6 +270,19 @@
                     })();
                 </script>
 
+                @if(!empty($isPlatformSuperadmin))
+                <div class="form-group">
+                    <input type="hidden" name="is_test" value="0">
+                    <label style="display:flex; gap:10px; align-items:flex-start;">
+                        <input type="checkbox" name="is_test" value="1" {{ old('is_test') ? 'checked' : '' }} style="margin-top:3px;">
+                        <span>
+                            <strong>Ovo je testni konkurs</strong><br>
+                            <span style="font-size:12px; color:#6b7280;">Oznaka se upisuje samo ako je izričito izabrana. Naziv, datum i ID je ne uključuju.</span>
+                        </span>
+                    </label>
+                </div>
+                @endif
+
                 <div style="margin-top: 24px;">
                     <button type="submit" class="btn-primary">{{ $isSecondCallForm ? 'Sačuvaj drugi Poziv' : 'Sačuvaj konkurs' }}</button>
                     <a href="{{ $isSecondCallForm ? route('admin.competitions.show', $firstCall) : route('admin.competitions.index') }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>

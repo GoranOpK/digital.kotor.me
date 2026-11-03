@@ -370,6 +370,14 @@
                     📁 Arhiva konkursa
                 </a>
                 @endif
+                @if(!empty($isPlatformSuperadmin))
+                <a href="{{ route('admin.archive-test-competition.show') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    Uklanjanje testnog konkursa iz arhive
+                </a>
+                <a href="{{ route('admin.archive-test-mark.show') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    Označavanje ranijeg testnog konkursa
+                </a>
+                @endif
                 @if(!$isCompetitionAdmin)
                 <a href="{{ route('admin.applications.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     📝 Prijave

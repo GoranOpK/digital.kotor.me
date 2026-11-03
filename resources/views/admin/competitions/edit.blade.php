@@ -232,6 +232,24 @@
                     </div>
                 </div>
 
+                @if(!empty($isPlatformSuperadmin) && $competition->status === 'draft')
+                    <div class="form-group">
+                        <input type="hidden" name="is_test" value="0">
+                        <label style="display:flex; gap:10px; align-items:flex-start;">
+                            <input type="checkbox" name="is_test" value="1" {{ old('is_test', $competition->is_test) ? 'checked' : '' }} style="margin-top:3px;">
+                            <span>
+                                <strong>Ovo je testni konkurs</strong><br>
+                                <span style="font-size:12px; color:#6b7280;">Oznaka se može mijenjati dok je konkurs nacrt.</span>
+                            </span>
+                        </label>
+                    </div>
+                @elseif($competition->status !== 'draft')
+                    <div class="form-group">
+                        <p style="margin:0;"><strong>Oznaka testnog konkursa:</strong> {{ $competition->is_test ? 'da' : 'ne' }}</p>
+                        <p style="margin:4px 0 0; font-size:12px; color:#6b7280;">Nakon objavljivanja oznaka se ne mijenja na ovom obrascu.</p>
+                    </div>
+                @endif
+
                 @if($isAdmin
                     && $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL
                     && $competition->status === 'draft')

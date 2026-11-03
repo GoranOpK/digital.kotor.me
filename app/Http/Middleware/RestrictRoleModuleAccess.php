@@ -22,6 +22,14 @@ class RestrictRoleModuleAccess
         $roleName = $user->role->name;
         $routeName = $request->route()?->getName();
 
+        if (is_string($routeName) && str_starts_with($routeName, 'admin.archive-test-competition.') && $roleName !== 'superadmin') {
+            abort(403, 'Samo super administrator može ukloniti odobreni testni konkurs iz arhive.');
+        }
+
+        if (is_string($routeName) && str_starts_with($routeName, 'admin.archive-test-mark.') && $roleName !== 'superadmin') {
+            abort(403, 'Samo super administrator može označiti raniji konkurs kao testni.');
+        }
+
         $commonAllowed = [
             'home',
             'dashboard',
