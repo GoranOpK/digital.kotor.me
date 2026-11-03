@@ -4,12 +4,13 @@ namespace App\Services\Competitions;
 
 use App\Models\Competition;
 use App\Models\User;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Kontrolisano označavanje jednog već objavljenog PM ili ŽP konkursa kao testnog.
- * Ne zaključuje oznaku iz naziva, datuma ili ID-a i ne briše konkurs.
+ * Kontrolisano označavanje jednog već objavljenog PM, ŽP ili MMSP konkursa kao testnog.
+ * Ne zaključuje oznaku iz naziva, datuma ili ID-a, ne briše konkurs i ne dira is_test_preview.
  */
 class ArchivedTestCompetitionMarking
 {
@@ -117,8 +118,8 @@ class ArchivedTestCompetitionMarking
 
     private function ineligibilityReason(Competition $competition): ?string
     {
-        if (! in_array($competition->type, ['omladinsko', 'zensko'], true)) {
-            return 'Oznaka se ovim postupkom može dodati samo konkursu podrške preduzetništvu mladih ili ženskom preduzetništvu.';
+        if (! in_array($competition->type, self::supportedTypes(), true)) {
+            return 'Oznaka se ovim postupkom može dodati samo konkursu podrške preduzetništvu mladih, ženskom preduzetništvu ili mikro, malim i srednjim preduzećima.';
         }
 
         if ($competition->status === 'draft') {
@@ -138,6 +139,18 @@ class ArchivedTestCompetitionMarking
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function supportedTypes(): array
+    {
+        return [
+            CompetitionProfileResolver::TYPE_YOUTH,
+            CompetitionProfileResolver::TYPE_WOMEN,
+            CompetitionProfileResolver::TYPE_CANONICAL,
+        ];
     }
 
     /**

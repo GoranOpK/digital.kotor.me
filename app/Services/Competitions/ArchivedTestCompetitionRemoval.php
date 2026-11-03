@@ -4,14 +4,15 @@ namespace App\Services\Competitions;
 
 use App\Models\Competition;
 use App\Models\User;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Jednokratno uklanjanje tačno jednog zatvorenog PM ili ŽP konkursa.
- * Ne prepoznaje testne konkurse i ne dira redovno brisanje ni MMSP pravila.
+ * Jednokratno uklanjanje tačno jednog zatvorenog testnog PM, ŽP ili MMSP konkursa.
+ * Ne prepoznaje testne konkurse po nazivu i ne dira redovno brisanje ni MMSP pravila.
  * Eloquent zabrane na zapisima odluke ostaju za sve ostale putanje;
  * ovaj postupak briše samo redove izabranog konkursa preko query buildera.
  */
@@ -158,8 +159,8 @@ class ArchivedTestCompetitionRemoval
 
     private function ineligibilityReason(Competition $competition): ?string
     {
-        if (! in_array($competition->type, ['omladinsko', 'zensko'], true)) {
-            return 'Ovaj postupak važi samo za konkurs podrške preduzetništvu mladih ili ženskom preduzetništvu.';
+        if (! in_array($competition->type, self::supportedTypes(), true)) {
+            return 'Ovaj postupak važi samo za konkurs podrške preduzetništvu mladih, ženskom preduzetništvu ili mikro, malim i srednjim preduzećima.';
         }
 
         if (! in_array($competition->status, ['closed', 'completed'], true)) {
@@ -170,7 +171,19 @@ class ArchivedTestCompetitionRemoval
             return 'Trajno uklanjanje je dozvoljeno samo za konkurs koji je izričito označen kao testni.';
         }
 
-        return null;
+        return $this->externalDependencyReason((int) $competition->id);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function supportedTypes(): array
+    {
+        return [
+            CompetitionProfileResolver::TYPE_YOUTH,
+            CompetitionProfileResolver::TYPE_WOMEN,
+            CompetitionProfileResolver::TYPE_CANONICAL,
+        ];
     }
 
     /**
@@ -350,12 +363,7 @@ class ArchivedTestCompetitionRemoval
             $this->deleteWhereCompetition($table, $competitionId);
         }
 
-        if (Schema::hasTable('notices')) {
-            DB::table('notices')
-                ->where('source_type', 'competition_decision')
-                ->where('source_id', $competitionId)
-                ->delete();
-        }
+        $this->deleteOwnNotices($competitionId);
 
         $this->deleteWhereCompetition('competition_official_decision_copies', $competitionId);
 
@@ -367,6 +375,206 @@ class ArchivedTestCompetitionRemoval
 
         $this->deleteWhereCompetition('zensko_decision_proposal_snapshots', $competitionId);
         $this->deleteWhereCompetition('youth_decision_documents', $competitionId);
+    }
+
+    private function externalDependencyReason(int $competitionId): ?string
+    {
+        $message = 'Uklanjanje je zaustavljeno jer obavještenje ili dokument drugog konkursa zavisi od zapisa ovog konkursa.';
+        $noticeIds = $this->ownNoticeIds($competitionId);
+        $copyIds = $this->idsForCompetition('competition_official_decision_copies', $competitionId);
+
+        if ($noticeIds !== [] && $this->foreignNoticeReferences('superseded_notice_id', $noticeIds, $competitionId)) {
+            return $message;
+        }
+
+        if ($copyIds !== [] && $this->foreignNoticeReferences('source_object_id', $copyIds, $competitionId)) {
+            return $message;
+        }
+
+        if ($copyIds !== [] && $this->otherCompetitionReferences(
+            'competition_official_decision_lifecycle_events',
+            'competition_official_decision_copy_id',
+            $copyIds,
+            $competitionId
+        )) {
+            return $message;
+        }
+
+        if ($copyIds !== [] && $this->otherCompetitionReferences(
+            'canonical_formal_decisions',
+            'official_decision_copy_id',
+            $copyIds,
+            $competitionId
+        )) {
+            return $message;
+        }
+
+        if ($noticeIds !== [] && $this->otherCompetitionReferences(
+            'canonical_formal_decisions',
+            'published_notice_id',
+            $noticeIds,
+            $competitionId
+        )) {
+            return $message;
+        }
+
+        $predlogIds = $this->idsForCompetition('canonical_predlogs', $competitionId);
+        if ($predlogIds !== [] && (
+            $this->otherCompetitionReferences('canonical_formal_decisions', 'predlog_id', $predlogIds, $competitionId)
+            || $this->otherCompetitionReferences('canonical_secretariat_handoffs', 'predlog_id', $predlogIds, $competitionId)
+        )) {
+            return $message;
+        }
+
+        $handoffIds = $this->idsForCompetition('canonical_secretariat_handoffs', $competitionId);
+        if ($handoffIds !== [] && $this->otherCompetitionReferences(
+            'canonical_formal_decisions',
+            'handoff_id',
+            $handoffIds,
+            $competitionId
+        )) {
+            return $message;
+        }
+
+        $rankingIds = $this->idsForCompetition('canonical_final_rankings', $competitionId);
+        if ($rankingIds !== [] && (
+            $this->otherCompetitionReferences('canonical_outcomes', 'final_ranking_id', $rankingIds, $competitionId)
+            || $this->otherCompetitionReferences('canonical_predlogs', 'final_ranking_id', $rankingIds, $competitionId)
+        )) {
+            return $message;
+        }
+
+        $assessmentIds = $this->idsForCompetition('application_completeness_assessments', $competitionId);
+        if ($assessmentIds !== [] && $this->otherCompetitionReferences(
+            'application_complaints',
+            'completeness_assessment_id',
+            $assessmentIds,
+            $competitionId
+        )) {
+            return $message;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    private function foreignNoticeReferences(string $column, array $ids, int $competitionId): bool
+    {
+        if ($ids === [] || ! Schema::hasTable('notices') || ! Schema::hasColumn('notices', $column)) {
+            return false;
+        }
+
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $found = DB::table('notices')
+                ->whereIn($column, $chunk)
+                ->where(function ($query) use ($competitionId): void {
+                    $query->where('source_type', '!=', 'competition_decision')
+                        ->orWhere('source_id', '!=', $competitionId);
+                })
+                ->exists();
+            if ($found) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    private function otherCompetitionReferences(string $table, string $column, array $ids, int $competitionId): bool
+    {
+        if ($ids === [] || ! Schema::hasTable($table) || ! Schema::hasColumn($table, $column) || ! Schema::hasColumn($table, 'competition_id')) {
+            return false;
+        }
+
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $found = DB::table($table)
+                ->where('competition_id', '!=', $competitionId)
+                ->whereIn($column, $chunk)
+                ->exists();
+            if ($found) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function ownNoticeIds(int $competitionId): array
+    {
+        if (! Schema::hasTable('notices')) {
+            return [];
+        }
+
+        return DB::table('notices')
+            ->where('source_type', 'competition_decision')
+            ->where('source_id', $competitionId)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function idsForCompetition(string $table, int $competitionId): array
+    {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'competition_id')) {
+            return [];
+        }
+
+        return DB::table($table)
+            ->where('competition_id', $competitionId)
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    private function deleteOwnNotices(int $competitionId): void
+    {
+        if (! Schema::hasTable('notices')) {
+            return;
+        }
+
+        $remaining = $this->ownNoticeIds($competitionId);
+        $guard = 0;
+        while ($remaining !== []) {
+            $guard++;
+            if ($guard > 1000) {
+                throw new ArchivedTestCompetitionRemovalException(
+                    'Obavještenja ovog konkursa ne mogu da se uklone zbog međusobne veze.',
+                    422
+                );
+            }
+
+            $blocked = [];
+            if (Schema::hasColumn('notices', 'superseded_notice_id')) {
+                $blocked = DB::table('notices')
+                    ->whereIn('id', $remaining)
+                    ->whereIn('superseded_notice_id', $remaining)
+                    ->pluck('superseded_notice_id')
+                    ->map(fn ($id): int => (int) $id)
+                    ->all();
+            }
+
+            $ready = array_values(array_diff($remaining, $blocked));
+            if ($ready === []) {
+                throw new ArchivedTestCompetitionRemovalException(
+                    'Obavještenja ovog konkursa ne mogu da se uklone zbog međusobne veze.',
+                    422
+                );
+            }
+
+            DB::table('notices')->whereIn('id', $ready)->delete();
+            $remaining = array_values(array_diff($remaining, $ready));
+        }
     }
 
     /**

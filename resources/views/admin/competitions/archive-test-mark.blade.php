@@ -176,9 +176,9 @@
         <div class="page-header">
             <h1>Označavanje ranijeg konkursa kao testnog</h1>
             <p>
-                Postupak samo upisuje oznaku na jedan već objavljen konkurs podrške preduzetništvu mladih
-                ili ženskom preduzetništvu čiji je ID na odobrenom spisku. Ne briše konkurs i ne prepoznaje
-                test po nazivu, datumu ili ID-u.
+                Postupak samo upisuje oznaku na jedan već objavljen konkurs podrške preduzetništvu mladih,
+                ženskom preduzetništvu ili mikro, malim i srednjim preduzećima čiji je ID na odobrenom spisku.
+                Ne briše konkurs i ne prepoznaje test po nazivu, datumu ili ID-u.
             </p>
         </div>
 

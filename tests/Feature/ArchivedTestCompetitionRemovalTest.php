@@ -186,7 +186,7 @@ class ArchivedTestCompetitionRemovalTest extends TestCase
                 'competition_id' => $mmsp->id,
             ])
             ->assertOk()
-            ->assertSee('samo za konkurs podrške preduzetništvu mladih');
+            ->assertSee('dozvoljeno samo za konkurs koji je izričito označen kao testni');
         $this->actingAs($superadmin)
             ->post(route('admin.archive-test-competition.destroy'), [
                 'competition_id' => $mmsp->id,

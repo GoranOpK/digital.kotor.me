@@ -238,7 +238,8 @@
             <h1>Uklanjanje jednog arhiviranog testnog konkursa</h1>
             <p>
                 Postupak je odvojen od redovnog brisanja. Super administrator unosi ID jednog zatvorenog ili završenog
-                konkursa koji je izričito označen kao testni. Naziv, datum i ID ne određuju tu oznaku.
+                konkursa podrške preduzetništvu mladih, ženskom preduzetništvu ili mikro, malim i srednjim preduzećima
+                koji je izričito označen kao testni. Naziv, datum i ID ne određuju tu oznaku.
             </p>
         </div>
 
