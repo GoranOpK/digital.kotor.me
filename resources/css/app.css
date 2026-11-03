@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+/* Obrazac form/print standard is included per-page via
+   resources/views/partials/obrazac-form-styles.blade.php (M1b source of truth).
+   Keep resources/css/obrazac-form.css in sync with that partial. */
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';

@@ -1,6 +1,6 @@
 # Konvencije projekta (digital.kotor.me)
 
-**Poslednje ažuriranje:** 2026-09-11
+**Poslednje ažuriranje:** 2026-11-03
 
 **Za AI i ljude:** držati se ovoga pri novim izmenama da ostane konzistentno.
 
@@ -91,6 +91,20 @@ Detalji: [project-operations.md](project-operations.md#jezik-i-terminologija).
 
 ---
 
-## 4. Konvencije su žive
+## 4. Vizuelni standard obrazaca, izvještaja i štampe
+
+**Referenca:** Obrazac M1b (izgled obrasca prijave u `resources/views/applications/create.blade.php`). Dodatna referenca za dokument-header bez podnaslova prijave: Obrazac 2 (`business-plans/create.blade.php`).
+
+**Dijeljeni stilovi:** `@include('partials.obrazac-form-styles')` + klasa omotača `obrazac-form-page`. Izvor tokena: `resources/css/obrazac-form.css` (držati usklađen sa partialom). Cursor pravilo: `.cursor/rules/obrazac-form-visual-standard.mdc`.
+
+**Dijeljeno službeno zaglavlje:** `@include('partials.obrazac-zaglavlje', ['obrazacLabel' => …, 'obrazacTitle' => …])` (+ opciono `brojPrijave`, `podnaslov`). Obavezno za **Obrazac 4**, **Obrazac 4a** i sve buduće izvještaje/obrasce sa službenim headerom. Ne uvoditi zaseban plavi `page-header` / gradient banner.
+
+Nova forma / izvještaj / print pregled: koristiti dijeljene stilove; ne duplicirati brand boje, padding/radius kontrola ni tipografiju labela. Page-specific print (npr. page-break, handwriting box) ostaje u bladeu. Akcione kolone tabela označiti sa `col-actions`.
+
+**Izuzeci u migraciji (još lokalni CSS):** MMSP `canonical-ui`, evaluation Obrazac 3, ranking/odluka, većina admin/landing stranica — pri izmjeni ih uskladiti sa M1b tokenima i dijeljenim zaglavljem gdje postoji službeni header.
+
+---
+
+## 5. Konvencije su žive
 
 Ove konvencije mogu se prilagođavati i dopunjavati prema potrebama projekta. Svaka izmjena ovog fajla: ažurirati datum na vrhu i jednu rečenicu u `project-done.md`.

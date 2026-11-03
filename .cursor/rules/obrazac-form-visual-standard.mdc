@@ -1,0 +1,51 @@
+---
+description: Visual standard for forms, reports, and printable obrazac views (M1b reference)
+globs: resources/views/**/*.blade.php,resources/css/obrazac-form.css,resources/css/app.css
+alwaysApply: false
+---
+
+# Obrazac form / report / print visual standard
+
+## Approved reference
+
+**Obrazac M1b** appearance (Women/Youth application form) is the source of truth for shared visual styling of forms, reports, and printable views.
+
+Do **not** invent a new design language. Match M1b for equivalent elements.
+
+## Shared source files
+
+- **Include in blades:** `@include('partials.obrazac-form-styles')` → `resources/views/partials/obrazac-form-styles.blade.php`
+- **Keep CSS copy in sync:** `resources/css/obrazac-form.css` (edit both or regenerate the partial from the CSS file)
+- Scope wrapper class: `obrazac-form-page` (add next to the page root, e.g. `application-form-page obrazac-form-page`)
+- MMSP canonical layer remains separate: `resources/views/partials/canonical-ui.blade.php` (`.canonical-ui-page`) — align new MMSP visuals with the same M1b tokens when touching those pages
+
+## Required for all future forms / reports / printables
+
+1. Wrap the page root with `obrazac-form-page` (or reuse canonical-ui after aligning its tokens to M1b).
+2. Reuse shared classes: `.form-card`, `.form-section`, `.form-label`, `.form-control`, `.form-text`, `.btn-primary`, `.obrazac-zaglavlje`, `.dynamic-table`, etc.
+3. **Official header (zaglavlje):** Every obrazac/report with an official document header **must** use `@include('partials.obrazac-zaglavlje', …)` (or the identical markup already present on M1b / Obrazac 2). Pass `obrazacLabel` + `obrazacTitle` (and optional `brojPrijave` / `podnaslov`). Do **not** invent a separate blue `page-header`, gradient banner, or independently styled report title block. **Obrazac 4** and **Obrazac 4a** are in scope and must keep this shared header.
+4. Do **not** hardcode independent copies of brand colors, label colors, input padding/radius, or card chrome when the shared file already defines them.
+5. Change common visual rules in `obrazac-form.css`, not by duplicating overrides in one blade.
+6. Keep intentional functional and print-layout differences (field sets, chapter page-breaks, handwriting boxes) in the page blade as **page-specific** CSS only.
+7. Mark removable table action columns with `col-actions` so print hides them without leaving surplus trailing cells; keep intentional empty data cells.
+8. Verify both screen and print appearance when changing forms or print CSS.
+
+## M1b token summary (do not diverge)
+
+| Token / role | Value |
+|---|---|
+| `--primary` / `--primary-dark` / `--secondary` | `#0B3D91` / `#0A347B` / `#B8860B` |
+| Body / zaglavlje text | `#111` (`--obrazac-text`) |
+| Labels / muted headings | `#374151` (`--obrazac-label`) |
+| Helper text | `#6b7280` (`--obrazac-muted`) |
+| Input border / padding / radius | `#d1d5db` / `10px 14px` / `8px` |
+| Card radius / shadow | `16px` / `0 1px 3px rgba(0,0,0,0.1)` |
+| Print zaglavlje border | `1px solid #ccc` |
+| Focus ring | `0 0 0 3px rgba(11,61,145,0.1)` |
+
+## Anti-patterns
+
+- Forcing print text to pure `#000` when M1b uses `#111` / `#374151`
+- Local redefinitions of `.form-control` padding/radius that fight the shared file
+- Trailing empty action cells without `col-actions` (prints as surplus columns)
+- Blanket global selectors or new UI libraries for these forms

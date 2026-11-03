@@ -1,236 +1,19 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.obrazac-form-styles')
 <style>
-    :root {
-        --primary: #0B3D91;
-        --primary-dark: #0A347B;
-        --secondary: #B8860B;
-    }
-    .business-plan-page {
-        background: #f9fafb;
-        min-height: 100vh;
-        padding: 24px 0;
-    }
-    .page-header {
-        background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-        color: #fff;
-        padding: 24px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-    }
-    .page-header h1 {
-        color: #fff;
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0 0 8px;
-    }
-    .form-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
-    }
-    .form-section {
-        margin-bottom: 32px;
-    }
-    .form-section:last-child {
-        margin-bottom: 0;
-    }
-    .form-section h2 {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--primary);
-        margin: 0 0 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #e5e7eb;
-    }
-    .form-group {
-        margin-bottom: 16px;
-    }
-    .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-    }
-    .form-label .required {
-        color: #ef4444;
-        margin-left: 4px;
-    }
-    .form-control {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border-color 0.2s;
-        font-family: inherit;
-    }
-    textarea.form-control {
-        min-height: 80px;
-        resize: vertical;
-    }
-    textarea.form-control[rows="2"] {
-        min-height: 60px;
-    }
-    textarea.form-control[rows="1"] {
-        min-height: 40px;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.1);
-    }
-    .form-control.error {
-        border-color: #ef4444;                                                         
-    }
-    .form-text {
-        font-size: 12px;
-        color: #6b7280;
-        margin-top: 4px;
-    }
-    .error-message {
-        color: #ef4444;
-        font-size: 12px;
-        margin-top: 4px;
-    }
-    .btn-primary {
-        background: var(--primary);
-        color: #fff;
-        padding: 12px 32px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .btn-primary:hover {
-        background: var(--primary-dark);
-    }
-    .bp-back-to-application {
-        margin: 0 0 16px;
-    }
-    .bp-back-to-application a {
-        color: var(--primary);
-        font-weight: 600;
-        text-decoration: none;
-        font-size: 14px;
-    }
-    .bp-back-to-application a:hover {
-        text-decoration: underline;
-    }
-    .btn-secondary {
-        background: #6b7280;
-        color: #fff;
-        padding: 8px 16px;
-        border: none;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-    }
-    .btn-secondary:hover {
-        background: #4b5563;
-    }
-    .alert {
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border: 1px solid;
-    }
-    .alert-info {
-        background: #dbeafe;
-        border-color: #3b82f6;
-        color: #1e40af;
-    }
-    .section-number {
-        display: inline-block;
-        width: 28px;
-        height: 28px;
-        background: var(--primary);
-        color: #fff;
-        border-radius: 50%;
-        text-align: center;
-        line-height: 28px;
-        font-weight: 700;
-        font-size: 14px;
-        margin-right: 12px;
-    }
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    @media (min-width: 768px) {
-        .form-row {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    .radio-group {
-        display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
-    }
-    .radio-option {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .radio-option input[type="radio"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-    }
-    .radio-option label {
-        font-size: 14px;
-        color: #374151;
-        cursor: pointer;
-        margin: 0;
-    }
-    .dynamic-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 16px 0;
-    }
-    .dynamic-table th,
-    .dynamic-table td {
-        padding: 12px;
-        border: 1px solid #e5e7eb;
-        text-align: left;
-    }
-    .dynamic-table th {
-        background: #f9fafb;
-        font-weight: 600;
-        color: #374151;
-    }
-    .dynamic-table input,
-    .dynamic-table textarea {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #d1d5db;
-        border-radius: 4px;
-        font-size: 14px;
-    }
-    .conditional-field {
-        display: none;
-    }
-    .conditional-field.show {
-        display: block;
-    }
-    .info-box {
+    /* M2/Obrazac 2 page-specific: chapter page breaks + fill-in print tables. */
+    .obrazac-form-page .info-box {
         background: #f0f9ff;
         border-left: 4px solid var(--primary);
         padding: 16px;
         border-radius: 8px;
         margin: 16px 0;
         font-size: 14px;
-        color: #374151;
+        color: var(--obrazac-label);
     }
-    .finances-notice-box {
+    .obrazac-form-page .finances-notice-box {
         background: #fffbeb;
         border: 1px solid #f59e0b;
         border-left: 4px solid #f59e0b;
@@ -238,107 +21,67 @@
         border-radius: 8px;
         margin: 20px 0 16px;
         font-size: 14px;
-        color: #374151;
+        color: var(--obrazac-label);
         line-height: 1.6;
     }
-    .finances-notice-box h3 {
+    .obrazac-form-page .finances-notice-box h3 {
         margin: 0 0 12px;
         font-size: 15px;
         font-weight: 700;
         color: #92400e;
     }
-    .finances-notice-box ol {
+    .obrazac-form-page .finances-notice-box ol {
         margin: 0;
         padding-left: 20px;
     }
-    .finances-notice-box li {
+    .obrazac-form-page .finances-notice-box li {
         margin-bottom: 12px;
     }
-    .finances-notice-box li:last-child {
+    .obrazac-form-page .finances-notice-box li:last-child {
         margin-bottom: 0;
     }
-    .finances-notice-confirm {
+    .obrazac-form-page .finances-notice-confirm {
         margin: 16px 0 20px;
         padding: 14px 16px;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
+        background: var(--obrazac-page-bg);
+        border: 1px solid var(--obrazac-border);
         border-radius: 8px;
     }
-    .finances-notice-confirm label {
+    .obrazac-form-page .finances-notice-confirm label {
         display: flex;
         align-items: flex-start;
         gap: 10px;
         cursor: pointer;
         font-weight: 600;
-        color: #111827;
+        color: var(--obrazac-text);
         margin: 0;
     }
-    .finances-notice-confirm input[type="checkbox"] {
+    .obrazac-form-page .finances-notice-confirm input[type="checkbox"] {
         margin-top: 3px;
         width: 18px;
         height: 18px;
         flex-shrink: 0;
     }
-    .finances-notice-confirm.has-error {
-        border-color: #ef4444;
+    .obrazac-form-page .finances-notice-confirm.has-error {
+        border-color: var(--obrazac-danger);
         background: #fef2f2;
     }
-    .finances-after-notice.locked {
+    .obrazac-form-page .finances-after-notice.locked {
         opacity: 0.55;
         pointer-events: none;
         user-select: none;
     }
-    /* Memorandum (zaglavlje) kao u Obrascima 1a/1b */
-    .obrazac-zaglavlje {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    .obrazac-form-page .bp-back-to-application {
+        margin: 0 0 16px;
     }
-    .obrazac-zaglavlje-top {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-    }
-    .obrazac-grb {
-        flex-shrink: 0;
-        line-height: 0;
-    }
-    .obrazac-grb img {
-        height: 2cm;
-        width: auto;
-        display: block;
-    }
-    .obrazac-org {
-        flex: 1;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #111;
-    }
-    .obrazac-org p { margin: 0 0 2px 0; }
-    .obrazac-contact {
-        text-align: right;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #111;
-    }
-    .obrazac-contact p { margin: 0 0 2px 0; }
-    .obrazac-broj-i-naslov {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid #e5e7eb;
-    }
-    .obrazac-1a-1b {
+    .obrazac-form-page .bp-back-to-application a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
         font-size: 14px;
-        font-weight: 700;
-        color: #374151;
+    }
+    .obrazac-form-page .bp-back-to-application a:hover {
+        text-decoration: underline;
     }
     .obrazac-broj-prijave {
         font-size: 14px;
@@ -360,20 +103,20 @@
         color: #111;
         margin: 8px 0 0 0;
     }
+    .obrazac-form-page .obrazac-broj-i-naslov {
+        justify-content: flex-end;
+    }
+
     @media print {
         @page {
             size: A4;
             margin: 12mm 10mm;
         }
 
-        nav,
-        .no-print,
-        button,
-        .btn-primary,
-        .btn-secondary,
-        a[href],
-        .error-message,
-        .form-label .required {
+        .obrazac-form-page button,
+        .obrazac-form-page .btn-primary,
+        .obrazac-form-page .btn-secondary,
+        .obrazac-form-page a[href] {
             display: none !important;
         }
 
@@ -424,48 +167,58 @@
             border-radius: 0;
             padding: 0;
             margin-bottom: 10px;
+        }
+        .obrazac-form-page .form-card {
             page-break-before: always;
             break-before: page;
         }
-        .form-card:first-of-type {
+        .obrazac-form-page .form-card:first-of-type {
             page-break-before: auto;
             break-before: auto;
         }
-        .print-chapter-group {
-            page-break-before: always;
-            break-before: page;
+        /*
+         * LJUDI + RIZICI share one chapter after FINANSIJE.
+         * Use a single break-after on FINANSIJE (not break-before on LJUDI / wrapper):
+         * Chromium otherwise inserts a blank page when both sides force a break.
+         */
+        .obrazac-form-page .form-card.print-break-after {
+            page-break-after: always;
+            break-after: page;
+            margin-bottom: 0 !important;
         }
-        .print-chapter-group > .form-card {
+        .obrazac-form-page .print-chapter-group {
+            page-break-before: auto;
+            break-before: auto;
+        }
+        .obrazac-form-page .print-chapter-group > .form-card {
             page-break-before: auto !important;
             break-before: auto !important;
         }
 
-        .form-section {
+        .obrazac-form-page .form-section {
             margin-bottom: 14px;
         }
-        .form-section h2 {
-            border-bottom: 1px solid #000;
+        .obrazac-form-page .form-section h2 {
+            border-bottom: 1px solid var(--obrazac-border);
             padding-bottom: 4px;
             margin-bottom: 8px;
             font-size: 12pt;
-            color: #000;
             page-break-after: avoid;
             break-after: avoid;
         }
-        .form-group {
-            margin-bottom: 8px;
+        .obrazac-form-page .form-group {
             page-break-inside: avoid;
             break-inside: avoid-page;
         }
-        .dynamic-table,
-        .form-group:has(.dynamic-table) {
+        .obrazac-form-page .dynamic-table,
+        .obrazac-form-page .form-group:has(.dynamic-table) {
             page-break-inside: auto;
             break-inside: auto;
         }
-        .section-number {
+        .obrazac-form-page .section-number {
             background: transparent;
-            color: #000;
-            border: 1px solid #000;
+            color: var(--primary);
+            border: 1px solid var(--primary);
             border-radius: 0;
             width: auto;
             height: auto;
@@ -474,151 +227,89 @@
             font-size: 11pt;
         }
 
-        .form-label {
-            font-size: 10pt;
-            margin-bottom: 2px;
-            color: #000;
-        }
-        .form-text {
-            font-size: 9pt;
-            color: #000;
-        }
-
-        .form-control,
-        .dynamic-table input,
-        .dynamic-table textarea,
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"],
-        input[type="number"],
-        textarea,
-        select {
+        .obrazac-form-page .form-control,
+        .obrazac-form-page .dynamic-table input,
+        .obrazac-form-page .dynamic-table textarea {
             border: none !important;
             background: transparent !important;
             box-shadow: none !important;
             border-radius: 0 !important;
             padding: 1px 0 !important;
             font-size: 10pt;
-            color: #000 !important;
+            color: var(--obrazac-text) !important;
             min-height: 0 !important;
         }
-        textarea.form-control {
-            resize: none;
-            overflow: visible;
-        }
-
-        /* Narrative fill-out areas (outside tables) – visible box for handwriting/answers */
-        .form-group > textarea.form-control,
-        .form-group .form-group > textarea.form-control {
-            border: 1px solid #000 !important;
+        .obrazac-form-page .form-group > textarea.form-control,
+        .obrazac-form-page .form-group .form-group > textarea.form-control {
+            border: 1px solid var(--obrazac-input-border) !important;
             background: #fff !important;
             padding: 6px 8px !important;
             min-height: 5em;
             margin-top: 2px;
+            color: var(--obrazac-text) !important;
         }
-        .form-group > textarea.form-control[rows="1"],
-        .form-group > textarea.form-control[rows="2"],
-        .form-group .form-group > textarea.form-control[rows="1"],
-        .form-group .form-group > textarea.form-control[rows="2"] {
+        .obrazac-form-page .form-group > textarea.form-control[rows="1"],
+        .obrazac-form-page .form-group > textarea.form-control[rows="2"],
+        .obrazac-form-page .form-group .form-group > textarea.form-control[rows="1"],
+        .obrazac-form-page .form-group .form-group > textarea.form-control[rows="2"] {
             min-height: 2.5em;
         }
-        .form-group > textarea.form-control[rows="6"],
-        .form-group .form-group > textarea.form-control[rows="6"] {
+        .obrazac-form-page .form-group > textarea.form-control[rows="6"],
+        .obrazac-form-page .form-group .form-group > textarea.form-control[rows="6"] {
             min-height: 8em;
         }
 
-        .form-control[readonly],
-        .form-control:disabled,
-        input[style*="background"] {
-            color: #000 !important;
-            opacity: 1 !important;
-            background: transparent !important;
-            -webkit-text-fill-color: #000;
-        }
-        .form-group > textarea.form-control[readonly],
-        .form-group > textarea.form-control:disabled,
-        .form-group .form-group > textarea.form-control[readonly],
-        .form-group .form-group > textarea.form-control:disabled {
-            background: #fff !important;
-        }
-
-        .info-box,
-        .finances-notice-box,
-        .finances-notice-confirm,
-        .alert {
+        .obrazac-form-page .info-box,
+        .obrazac-form-page .finances-notice-box,
+        .obrazac-form-page .alert {
             background: transparent !important;
             border: none !important;
             border-left: none !important;
             box-shadow: none !important;
             padding: 4px 0 !important;
             margin: 6px 0 !important;
-            color: #000 !important;
+            color: var(--obrazac-label) !important;
         }
-        .finances-notice-box h3 {
-            color: #000;
+        .obrazac-form-page .finances-notice-box h3 {
+            color: var(--obrazac-label);
             font-size: 10pt;
         }
-        .finances-notice-confirm {
+        .obrazac-form-page .finances-notice-confirm {
             display: none !important;
         }
-        .finances-after-notice.locked {
+        .obrazac-form-page .finances-after-notice.locked {
             opacity: 1 !important;
             pointer-events: auto !important;
         }
 
-        .radio-group {
-            gap: 12px;
-        }
-        .radio-option label {
-            font-size: 10pt;
-            color: #000;
-        }
-
-        .dynamic-table {
+        .obrazac-form-page .dynamic-table {
             font-size: 9pt;
             margin: 8px 0;
         }
-        .dynamic-table th,
-        .dynamic-table td {
-            border: 1px solid #000 !important;
+        .obrazac-form-page .dynamic-table th,
+        .obrazac-form-page .dynamic-table td {
+            border: 1px solid var(--obrazac-border) !important;
             padding: 3px 5px;
             background: transparent !important;
         }
-        .dynamic-table th {
+        .obrazac-form-page .dynamic-table th {
             font-weight: bold;
-            color: #000;
+            color: var(--obrazac-label);
         }
-        .dynamic-table td:last-child:has(button),
-        .dynamic-table th:last-child:empty {
-            display: none !important;
-        }
-        .dynamic-table input,
-        .dynamic-table textarea,
-        .dynamic-table input.form-control,
-        .dynamic-table textarea.form-control,
-        .form-group .dynamic-table input,
-        .form-group .dynamic-table textarea,
-        .form-group .form-group .dynamic-table textarea.form-control,
-        .form-group .form-group .dynamic-table input.form-control {
-            border: none !important;
-            background: transparent !important;
-            padding: 0 !important;
+        .obrazac-form-page .dynamic-table input,
+        .obrazac-form-page .dynamic-table textarea {
             font-size: 9pt;
-            min-height: 0 !important;
-            margin-top: 0 !important;
-            box-shadow: none !important;
+            color: var(--obrazac-text) !important;
         }
-
-        div[style*="background: #f9fafb"],
-        div[style*="background:#f9fafb"] {
-            background: transparent !important;
-            border: none !important;
-            padding: 0 !important;
+        .obrazac-form-page .dynamic-table td:last-child:has(button),
+        .obrazac-form-page .dynamic-table th:last-child:empty {
+            display: none !important;
         }
     }
 </style>
 
-<div class="business-plan-page">
+<div class="business-plan-page obrazac-form-page">
+
     <div class="container mx-auto px-4">
         @php
             $isPmBusinessPlan = $application->competition?->type === 'omladinsko';
@@ -924,7 +615,7 @@
                                     <tr>
                                         <th>Proizvod/usluga</th>
                                         <th>Opis i karakteristike</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="productsServicesTableBody">
@@ -946,7 +637,7 @@
                                         <tr>
                                             <td><input type="text" name="products_services_table[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
                                             <td><textarea name="products_services_table[{{ $index }}][description]" class="form-control" rows="2">{{ $item['description'] ?? '' }}</textarea></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1004,7 +695,7 @@
                                 <tr>
                                     <th>Ciljna grupa</th>
                                     <th>Opis</th>
-                                    <th></th>
+                                    <th class="col-actions"></th>
                                 </tr>
                             </thead>
                             <tbody id="targetCustomersTableBody">
@@ -1015,7 +706,7 @@
                                     <tr>
                                         <td><input type="text" name="target_customers[{{ $index }}][group]" class="form-control" value="{{ $item['group'] ?? '' }}"></td>
                                         <td><textarea name="target_customers[{{ $index }}][description]" class="form-control" rows="2">{{ $item['description'] ?? '' }}</textarea></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -1036,7 +727,7 @@
                                     <tr>
                                         <th>Lokacija prodaje</th>
                                         <th>Opis</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="salesLocationsTableBody">
@@ -1047,7 +738,7 @@
                                         <tr>
                                             <td><input type="text" name="sales_locations[{{ $index }}][location]" class="form-control" value="{{ $item['location'] ?? '' }}"></td>
                                             <td><textarea name="sales_locations[{{ $index }}][description]" class="form-control" rows="2">{{ $item['description'] ?? '' }}</textarea></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1092,7 +783,7 @@
                                     <tr>
                                         <th>Proizvod/usluga</th>
                                         <th>Cijena (u EUR)</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="pricingTableBody">
@@ -1114,7 +805,7 @@
                                         <tr>
                                             <td><input type="text" name="pricing_table[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
                                             <td><input type="text" name="pricing_table[{{ $index }}][price]" class="form-control" value="{{ $item['price'] ?? '' }}"></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1136,7 +827,7 @@
                                     <tr>
                                         <th>Proizvod/usluga</th>
                                         <th>Učešće u ukupnim prihodima (%)</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="revenueShareTableBody">
@@ -1158,7 +849,7 @@
                                         <tr>
                                             <td><input type="text" name="revenue_share_table[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
                                             <td><input type="number" name="revenue_share_table[{{ $index }}][share]" class="form-control" value="{{ $item['share'] ?? '' }}" step="0.01" min="0" max="100"></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1200,7 +891,7 @@
                                         <th>Godina</th>
                                         <th>Broj stalno zaposlenih</th>
                                         <th>Kvalifikaciona struktura zaposlenih</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="employmentStructureTableBody">
@@ -1212,7 +903,7 @@
                                             <td><input type="text" name="employment_structure[{{ $index }}][year]" class="form-control" value="{{ $item['year'] ?? '' }}"></td>
                                             <td><input type="number" name="employment_structure[{{ $index }}][employees]" class="form-control" value="{{ $item['employees'] ?? '' }}" min="0"></td>
                                             <td><textarea name="employment_structure[{{ $index }}][qualifications]" class="form-control" rows="2">{{ $item['qualifications'] ?? '' }}</textarea></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1292,7 +983,7 @@
                                         <th>Broj zaposlenih</th>
                                         <th>Godišnji promet</th>
                                         <th>Važne prekretnice u razvoju biznisa</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="businessHistoryTableBody">
@@ -1305,7 +996,7 @@
                                             <td><input type="number" name="business_history[{{ $index }}][employees]" class="form-control" value="{{ $item['employees'] ?? '' }}" min="0"></td>
                                             <td><input type="number" name="business_history[{{ $index }}][revenue]" class="form-control" value="{{ $item['revenue'] ?? '' }}" step="0.01" min="0"></td>
                                             <td><textarea name="business_history[{{ $index }}][milestones]" class="form-control" rows="2">{{ $item['milestones'] ?? '' }}</textarea></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1334,7 +1025,7 @@
                                     <tr>
                                         <th>Potrebno mi je</th>
                                         <th>Dobavljač</th>
-                                        <th></th>
+                                        <th class="col-actions"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="suppliersTableBody">
@@ -1356,7 +1047,7 @@
                                         <tr>
                                             <td><input type="text" name="suppliers_table[{{ $index }}][item]" class="form-control" value="{{ $item['item'] ?? '' }}"></td>
                                             <td><input type="text" name="suppliers_table[{{ $index }}][supplier]" class="form-control" value="{{ $item['supplier'] ?? '' }}"></td>
-                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                            <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -1374,7 +1065,7 @@
             </div>
 
             <!-- IV. FINANSIJE -->
-            <div class="form-card">
+            <div class="form-card print-break-after">
                 <div class="form-section">
                     <h2>
                         <span class="section-number">IV</span>
@@ -1448,7 +1139,7 @@
                                     <th>Vrsta nabavke</th>
                                     <th>Cijena po predračunu (u EUR)</th>
                                     <th>Ukupno</th>
-                                    <th></th>
+                                    <th class="col-actions"></th>
                                 </tr>
                             </thead>
                             <tbody id="fundingSourcesTableBody">
@@ -1471,7 +1162,7 @@
                                         <td><input type="text" name="funding_sources_table[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}"></td>
                                         <td><input type="number" name="funding_sources_table[{{ $index }}][price]" class="form-control funding-price" value="{{ $item['price'] ?? '' }}" step="0.01" min="0" oninput="calculateFundingTotal()"></td>
                                         <td><input type="text" class="form-control funding-total" value="{{ $item['price'] ?? '' }}" readonly style="background: #f9fafb;"></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -1479,7 +1170,7 @@
                                 <tr style="background: #f9fafb; font-weight: 600;">
                                     <td colspan="2" style="text-align: right;">UKUPNO:</td>
                                     <td><input type="text" id="fundingGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
-                                    <td></td>
+                                    <td class="col-actions"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -1526,7 +1217,7 @@
                                     <th>II godina</th>
                                     <th>III godina</th>
                                     <th>Ukupno</th>
-                                    <th></th>
+                                    <th class="col-actions"></th>
                                 </tr>
                             </thead>
                             <tbody id="revenueProjectionTableBody">
@@ -1554,7 +1245,7 @@
                                         <td><input type="number" name="revenue_projection[{{ $index }}][year2]" class="form-control revenue-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateRevenueRowTotal(this)"></td>
                                         <td><input type="number" name="revenue_projection[{{ $index }}][year3]" class="form-control revenue-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateRevenueRowTotal(this)"></td>
                                         <td><input type="text" class="form-control revenue-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -1565,7 +1256,7 @@
                                     <td><input type="text" id="revenueYear2Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td><input type="text" id="revenueYear3Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td><input type="text" id="revenueGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
-                                    <td></td>
+                                    <td class="col-actions"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -1584,13 +1275,14 @@
                                     <th>II godina</th>
                                     <th>III godina</th>
                                     <th>Ukupno</th>
-                                    <th></th>
+                                    <th class="col-actions"></th>
                                 </tr>
                             </thead>
                             <tbody id="expenseProjectionTableBody">
                                 <!-- Investicioni troškovi kategorija -->
                                 <tr class="category-header" style="background: #f3f4f6; font-weight: 600;">
-                                    <td colspan="6">Investicioni troškovi (alati, oprema, mašine, software, licence, osiguranja, amortizacija i sl.)</td>
+                                    <td colspan="5">Investicioni troškovi (alati, oprema, mašine, software, licence, osiguranja, amortizacija i sl.)</td>
+                                    <td class="col-actions"></td>
                                 </tr>
                                 @php
                                     $investmentExpenses = old('investment_expenses', $businessPlan->investment_expenses ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
@@ -1608,13 +1300,14 @@
                                         <td><input type="number" name="investment_expenses[{{ $index }}][year2]" class="form-control expense-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
                                         <td><input type="number" name="investment_expenses[{{ $index }}][year3]" class="form-control expense-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
                                         <td><input type="text" class="form-control expense-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                                 
                                 <!-- Tekući troškovi kategorija -->
                                 <tr class="category-header" style="background: #f3f4f6; font-weight: 600;">
-                                    <td colspan="6">Tekući troškovi (sirovine, bruto zarade, renta, struja, voda, telefon, internet, marketing itd.)</td>
+                                    <td colspan="5">Tekući troškovi (sirovine, bruto zarade, renta, struja, voda, telefon, internet, marketing itd.)</td>
+                                    <td class="col-actions"></td>
                                 </tr>
                                 @php
                                     $operatingExpenses = old('operating_expenses', $businessPlan->operating_expenses ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
@@ -1632,7 +1325,7 @@
                                         <td><input type="number" name="operating_expenses[{{ $index }}][year2]" class="form-control expense-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
                                         <td><input type="number" name="operating_expenses[{{ $index }}][year3]" class="form-control expense-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
                                         <td><input type="text" class="form-control expense-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -1643,11 +1336,11 @@
                                     <td><input type="text" id="expenseYear2Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td><input type="text" id="expenseYear3Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td><input type="text" id="expenseGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
-                                    <td></td>
+                                    <td class="col-actions"></td>
                                 </tr>
                             </tfoot>
                         </table>
-                        <div style="margin-top: 12px;">
+                        <div class="no-print" style="margin-top: 12px;">
                             <button type="button" class="btn-secondary" onclick="addExpenseRow('investment')">+ Dodaj red (Investicioni troškovi)</button>
                             <button type="button" class="btn-secondary" onclick="addExpenseRow('operating')">+ Dodaj red (Tekući troškovi)</button>
                         </div>
@@ -1771,7 +1464,7 @@
                                     <th>Uticaj na Vaše poslovanje</th>
                                     <th>Mjere koje ćete preduzeti</th>
                                     <th>Odgovorna osoba (Ko će to uraditi?)</th>
-                                    <th></th>
+                                    <th class="col-actions"></th>
                                 </tr>
                             </thead>
                             <tbody id="riskMatrixTableBody">
@@ -1785,7 +1478,7 @@
                                         <td><textarea name="risk_matrix[{{ $index }}][impact]" class="form-control" rows="2">{{ $item['impact'] ?? '' }}</textarea></td>
                                         <td><textarea name="risk_matrix[{{ $index }}][measures]" class="form-control" rows="2">{{ $item['measures'] ?? '' }}</textarea></td>
                                         <td><input type="text" name="risk_matrix[{{ $index }}][responsible]" class="form-control" value="{{ $item['responsible'] ?? '' }}"></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -1970,6 +1663,7 @@ function addTableRow(tableBodyId, fieldNames) {
     }
     
     const actionCell = document.createElement('td');
+    actionCell.className = 'col-actions';
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'btn-secondary';
@@ -2213,7 +1907,7 @@ function addExpenseRow(category) {
         <td><input type="number" name="${fieldName}[${rowIndex}][year2]" class="form-control expense-year" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
         <td><input type="number" name="${fieldName}[${rowIndex}][year3]" class="form-control expense-year" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
         <td><input type="text" class="form-control expense-total" value="0.00" readonly style="background: #f9fafb;"></td>
-        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+        <td class="col-actions"><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
     `;
     
     lastRowInCategory.insertAdjacentElement('afterend', newRow);

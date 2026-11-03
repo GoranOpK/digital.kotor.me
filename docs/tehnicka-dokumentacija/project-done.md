@@ -1,10 +1,21 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-09-11
+**Poslednje ažuriranje:** 2026-11-03
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-11-03 — Obrazac 4 / 4a shared zaglavlje header
+
+- Obrazac 4 i 4a koriste `@include('partials.obrazac-zaglavlje')` umjesto lokalnog plavog `page-header`
+- Partial: `resources/views/partials/obrazac-zaglavlje.blade.php`; konvencije §4 + Cursor pravilo zahtijevaju dijeljeni header za izvještaje
+
+## 2026-11-03 — Obrazac M1b visual standard (shared form/print CSS)
+
+- Dijeljeni stilovi: `resources/css/obrazac-form.css` + `@include('partials.obrazac-form-styles')`
+- M1a/M1b i M2 (Obrazac 2) koriste `obrazac-form-page`; M2 boje usklađene sa M1b; tabele 22/24/25 `col-actions`
+- Cursor pravilo: `.cursor/rules/obrazac-form-visual-standard.mdc`; konvencije: §4 u `project-conventions.md`
 
 ## 2026-09-11 — JMB/JMBG plaintext retirement production closeout
 
