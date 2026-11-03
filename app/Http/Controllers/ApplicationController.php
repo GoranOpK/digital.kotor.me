@@ -1555,6 +1555,10 @@ class ApplicationController extends Controller
 
     private function redirectIfCompetitionProfileUnavailable(Competition $competition): ?RedirectResponse
     {
+        if ($competition->isOmladinskoProfile()) {
+            return null;
+        }
+
         if ($competition->isPubliclyAccessibleForApplications()) {
             return null;
         }
