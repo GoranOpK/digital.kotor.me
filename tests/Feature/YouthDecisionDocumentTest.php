@@ -61,6 +61,10 @@ class YouthDecisionDocumentTest extends TestCase
             $identity->line($this->company('Stefan doo', 'Ana Anić', 'ana anić'))
         );
         $this->assertSame(
+            'Stefan doo, koga zastupa osnivač/ica i izvršni direktor/ica Stefan Stefanović',
+            $identity->line($this->company('Stefan doo', 'Stefan Stefanović', 'Stefan Stefanović'))
+        );
+        $this->assertSame(
             'Stefan doo, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković',
             $identity->line($this->company('Stefan doo', 'Ana Anić', 'Marko Marković'))
         );

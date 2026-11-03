@@ -3,6 +3,7 @@
 namespace App\Services\Competitions;
 
 use App\Models\Application;
+use App\Models\User;
 
 /**
  * Identitet podnosioca u PM Odluci. Ne koristi ženski tekst odluke i ne dopisuje podatke kojih nema.
@@ -12,6 +13,8 @@ class YouthDecisionApplicantIdentity
     public const COMPANY_NAME_AS_FOUNDER = 'Unesite ime i prezime fizičkog lica koje je osnivač. Naziv privrednog društva nije ime osnivača.';
 
     public const COMPANY_NAME_AS_DIRECTOR = 'Unesite ime i prezime fizičkog lica koje je izvršni direktor. Naziv privrednog društva nije ime izvršnog direktora.';
+
+    public const REGISTERED_PERSON_NAME_MISSING = 'Profil registrovanog korisnika nema ime i prezime fizičkog lica. Unesite ime drugog fizičkog lica ili dopunite profil ovlašćenog lica.';
 
     public function line(Application $application): ?string
     {
@@ -76,6 +79,27 @@ class YouthDecisionApplicantIdentity
         }
 
         return $messages === [] ? null : implode(' ', $messages);
+    }
+
+    public function registeredNaturalPersonName(?User $user): ?string
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        $user->loadMissing('identity.legalEntity.authorizedPerson');
+        $person = $user->identity?->legalEntity?->authorizedPerson;
+        $name = $this->clean(trim((string) ($person?->first_name ?? '').' '.(string) ($person?->last_name ?? '')));
+        if ($name === null) {
+            return null;
+        }
+
+        $legalName = $user->identity?->legalEntity?->legal_name;
+        if ($this->companyNameUsedAsOfficer($name, $legalName)) {
+            return null;
+        }
+
+        return $name;
     }
 
     private function loadLegalIdentity(Application $application): void

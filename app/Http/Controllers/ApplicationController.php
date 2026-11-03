@@ -633,14 +633,28 @@ class ApplicationController extends Controller
         }
 
         if ($competition->isOmladinskoProfile() && $isCompanyForm && $resolvedIsRegistered) {
-            $request->user()?->loadMissing('identity.legalEntity');
+            $request->user()?->loadMissing('identity.legalEntity.authorizedPerson');
             $companyName = $request->user()?->identity?->legalEntity?->legal_name;
             $officers = app(YouthDecisionApplicantIdentity::class);
+            $registeredPersonName = $officers->registeredNaturalPersonName($request->user());
             $officerErrors = [];
-            if ($request->filled('founder_name') && $officers->companyNameUsedAsOfficer((string) $request->input('founder_name'), $companyName)) {
+            foreach ([
+                'registered_user_is_founder' => 'founder_name',
+                'registered_user_is_director' => 'director_name',
+            ] as $confirmation => $field) {
+                if (! $request->boolean($confirmation)) {
+                    continue;
+                }
+                if ($registeredPersonName === null) {
+                    $officerErrors[$field] = YouthDecisionApplicantIdentity::REGISTERED_PERSON_NAME_MISSING;
+                    continue;
+                }
+                $request->merge([$field => $registeredPersonName]);
+            }
+            if (! isset($officerErrors['founder_name']) && $request->filled('founder_name') && $officers->companyNameUsedAsOfficer((string) $request->input('founder_name'), $companyName)) {
                 $officerErrors['founder_name'] = YouthDecisionApplicantIdentity::COMPANY_NAME_AS_FOUNDER;
             }
-            if ($request->filled('director_name') && $officers->companyNameUsedAsOfficer((string) $request->input('director_name'), $companyName)) {
+            if (! isset($officerErrors['director_name']) && $request->filled('director_name') && $officers->companyNameUsedAsOfficer((string) $request->input('director_name'), $companyName)) {
                 $officerErrors['director_name'] = YouthDecisionApplicantIdentity::COMPANY_NAME_AS_DIRECTOR;
             }
             if ($officerErrors !== []) {

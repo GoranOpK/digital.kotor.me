@@ -1045,10 +1045,26 @@
                         $savedDirectorName = (isset($existingApplication) && $existingApplication) ? $existingApplication->director_name : null;
                         $founderFieldValue = $isOmladinsko ? ($savedFounderName ?? '') : ($savedFounderName ?? auth()->user()->name);
                         $directorFieldValue = $isOmladinsko ? ($savedDirectorName ?? '') : ($savedDirectorName ?? auth()->user()->name);
+                        $registeredPersonName = ($isOmladinsko && isset($user) && $user)
+                            ? (app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->registeredNaturalPersonName($user) ?? '')
+                            : '';
                     @endphp
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Ime i prezime osnivačice/osnivačica:</label>
+                            @if($isOmladinsko && empty($readOnly))
+                                <label class="form-label" style="font-weight: 500;">
+                                    <input
+                                        type="checkbox"
+                                        name="registered_user_is_founder"
+                                        value="1"
+                                        data-person-name="{{ $registeredPersonName }}"
+                                        data-testid="registered-user-is-founder"
+                                        @checked(old('registered_user_is_founder'))
+                                    >
+                                    Registrovani korisnik je osnivač
+                                </label>
+                            @endif
                             <input 
                                 type="text" 
                                 name="founder_name" 
@@ -1064,6 +1080,19 @@
 
                         <div class="form-group">
                             <label class="form-label">Ime i prezime izvršne direktorice:</label>
+                            @if($isOmladinsko && empty($readOnly))
+                                <label class="form-label" style="font-weight: 500;">
+                                    <input
+                                        type="checkbox"
+                                        name="registered_user_is_director"
+                                        value="1"
+                                        data-person-name="{{ $registeredPersonName }}"
+                                        data-testid="registered-user-is-director"
+                                        @checked(old('registered_user_is_director'))
+                                    >
+                                    Registrovani korisnik je izvršni direktor
+                                </label>
+                            @endif
                             <input 
                                 type="text" 
                                 name="director_name" 
@@ -2317,7 +2346,7 @@
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         // Ne uklanjaj disabled sa polja koja se šalju samo iz aktivne sekcije
-                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat', 'business_stage'];
+                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat', 'business_stage', 'registered_user_is_founder', 'registered_user_is_director'];
                         if (fieldsToKeepDisabled.includes(field.name)) {
                             return; // Već postavljen na disabled
                         }
@@ -2330,6 +2359,34 @@
             });
         }
         @endif
+
+        function bindRegisteredOfficerRole(checkboxName, inputName) {
+            const checkbox = document.querySelector('#obrazac1b input[name="' + checkboxName + '"]');
+            const input = document.querySelector('#obrazac1b input[name="' + inputName + '"]');
+            if (!checkbox || !input) {
+                return;
+            }
+            const personName = checkbox.dataset.personName || '';
+            const applyRole = function () {
+                if (checkbox.checked && personName !== '') {
+                    if (!Object.prototype.hasOwnProperty.call(input.dataset, 'previousValue')) {
+                        input.dataset.previousValue = input.value;
+                    }
+                    input.value = personName;
+                    input.readOnly = true;
+                    return;
+                }
+                if (Object.prototype.hasOwnProperty.call(input.dataset, 'previousValue')) {
+                    input.value = input.dataset.previousValue;
+                    delete input.dataset.previousValue;
+                }
+                input.readOnly = false;
+            };
+            checkbox.addEventListener('change', applyRole);
+            applyRole();
+        }
+        bindRegisteredOfficerRole('registered_user_is_founder', 'founder_name');
+        bindRegisteredOfficerRole('registered_user_is_director', 'director_name');
     });
 </script>
 @endsection
