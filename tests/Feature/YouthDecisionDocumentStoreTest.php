@@ -17,6 +17,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -24,16 +25,31 @@ class YouthDecisionDocumentStoreTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @var list<int> */
-    private array $cleanupCompetitionIds = [];
-
     /** @var list<string> */
     private array $tempFiles = [];
+
+    /**
+     * Dokumenti koje je ovaj test sam kreirao. tearDown briše samo ove putanje.
+     *
+     * @var list<string>
+     */
+    private array $ownedDocumentPaths = [];
+
+    /**
+     * Dokumenti koji su postojali prije testa. Ključ je relativna putanja, vrijednost je SHA-256.
+     *
+     * @var array<string, string>
+     */
+    private array $documentsBeforeTest = [];
+
+    private bool $capturedExistingDocuments = false;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));
+        $this->documentsBeforeTest = $this->privateDecisionInventory();
+        $this->capturedExistingDocuments = true;
     }
 
     protected function tearDown(): void
@@ -44,11 +60,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
             }
         }
 
-        if ($this->app) {
-            foreach ($this->cleanupCompetitionIds as $id) {
-                Storage::disk('local')->deleteDirectory('youth-decision-documents/'.$id);
-            }
-        }
+        $this->deleteOwnedDocuments();
 
         parent::tearDown();
     }
@@ -74,7 +86,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
         $source = $this->sourceFile($bytes);
         $store = app(YouthDecisionDocumentStore::class);
 
-        $document = $store->store($ctx['competition'], $ctx['chairman'], $source);
+        $document = $this->storeOwned($store, $ctx['competition'], $ctx['chairman'], $source);
 
         $this->assertSame($bytes, file_get_contents($source));
         $this->assertSame($bytes, Storage::disk('local')->get($document->storage_path));
@@ -106,8 +118,8 @@ class YouthDecisionDocumentStoreTest extends TestCase
         $store = app(YouthDecisionDocumentStore::class);
         $firstBytes = "PK\x03\x04verzija-1";
         $secondBytes = "PK\x03\x04verzija-2";
-        $first = $store->store($ctx['competition'], $ctx['chairman'], $this->sourceFile($firstBytes));
-        $second = $store->store($ctx['competition'], $ctx['chairman'], $this->sourceFile($secondBytes));
+        $first = $this->storeOwned($store, $ctx['competition'], $ctx['chairman'], $this->sourceFile($firstBytes));
+        $second = $this->storeOwned($store, $ctx['competition'], $ctx['chairman'], $this->sourceFile($secondBytes));
 
         $this->assertNotSame($first->storage_path, $second->storage_path);
         $this->assertSame($firstBytes, Storage::disk('local')->get($first->storage_path));
@@ -124,6 +136,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
         $ctx = $this->youthCompetition();
         $store = app(YouthDecisionDocumentStore::class);
         $missing = sys_get_temp_dir().DIRECTORY_SEPARATOR.'pm-ydd-missing-'.uniqid().'.docx';
+        $before = $this->privateDecisionInventory((int) $ctx['competition']->id);
 
         try {
             $store->store($ctx['competition'], $ctx['chairman'], $missing);
@@ -140,7 +153,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
         }
 
         $this->assertSame(0, YouthDecisionDocument::query()->count());
-        $this->assertSame([], Storage::disk('local')->allFiles('youth-decision-documents/'.$ctx['competition']->id));
+        $this->assertSame($before, $this->privateDecisionInventory((int) $ctx['competition']->id));
     }
 
     public function test_storage_write_failure_creates_no_record(): void
@@ -154,6 +167,8 @@ class YouthDecisionDocumentStoreTest extends TestCase
             }
         };
 
+        $before = $this->privateDecisionInventory((int) $ctx['competition']->id);
+
         try {
             $store->store($ctx['competition'], $ctx['chairman'], $this->sourceFile("PK\x03\x04neuspjeh"));
             $this->fail('Neuspješan upis mora biti odbijen.');
@@ -162,7 +177,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
         }
 
         $this->assertSame(0, YouthDecisionDocument::query()->count());
-        $this->assertSame([], Storage::disk('local')->allFiles('youth-decision-documents/'.$ctx['competition']->id));
+        $this->assertSame($before, $this->privateDecisionInventory((int) $ctx['competition']->id));
     }
 
     public function test_hash_mismatch_removes_only_the_new_unreferenced_file(): void
@@ -170,7 +185,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
         $ctx = $this->youthCompetition();
         $store = app(YouthDecisionDocumentStore::class);
         $firstBytes = "PK\x03\x04sacuvana-verzija";
-        $first = $store->store($ctx['competition'], $ctx['chairman'], $this->sourceFile($firstBytes));
+        $first = $this->storeOwned($store, $ctx['competition'], $ctx['chairman'], $this->sourceFile($firstBytes));
 
         $mismatch = new class(app(YouthDecisionRankingIdentity::class)) extends YouthDecisionDocumentStore
         {
@@ -197,7 +212,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
         $ctx = $this->youthCompetition();
         $bytes = "PK\x03\x04referencirana";
         $source = $this->sourceFile($bytes);
-        $first = app(YouthDecisionDocumentStore::class)->store($ctx['competition'], $ctx['chairman'], $source);
+        $first = $this->storeOwned(app(YouthDecisionDocumentStore::class), $ctx['competition'], $ctx['chairman'], $source);
 
         $failing = new class(app(YouthDecisionRankingIdentity::class)) extends YouthDecisionDocumentStore
         {
@@ -244,7 +259,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
             }
         };
         $firstBytes = "PK\x03\x04ne-prepisuj";
-        $first = $store->store($ctx['competition'], $ctx['chairman'], $this->sourceFile($firstBytes));
+        $first = $this->storeOwned($store, $ctx['competition'], $ctx['chairman'], $this->sourceFile($firstBytes));
 
         try {
             $store->store($ctx['competition'], $ctx['chairman'], $this->sourceFile("PK\x03\x04drugi-sadrzaj"));
@@ -264,13 +279,14 @@ class YouthDecisionDocumentStoreTest extends TestCase
 
         foreach (['zensko', 'ostalo'] as $type) {
             $competition = $this->plainCompetition($type);
+            $before = $this->privateDecisionInventory((int) $competition->id);
             try {
                 $store->store($competition, User::factory()->create(), $source);
                 $this->fail($type.' konkurs ne smije dobiti PM zapis.');
             } catch (YouthDecisionDocumentStoreException $exception) {
                 $this->assertSame(YouthDecisionDocumentStore::NOT_YOUTH, $exception->getMessage());
             }
-            $this->assertSame([], Storage::disk('local')->allFiles('youth-decision-documents/'.$competition->id));
+            $this->assertSame($before, $this->privateDecisionInventory((int) $competition->id));
         }
 
         $ctx = $this->youthCompetition();
@@ -290,7 +306,8 @@ class YouthDecisionDocumentStoreTest extends TestCase
         DB::flushQueryLog();
         DB::enableQueryLog();
 
-        app(YouthDecisionDocumentStore::class)->store(
+        $this->storeOwned(
+            app(YouthDecisionDocumentStore::class),
             $ctx['competition'],
             $ctx['chairman'],
             $this->sourceFile("PK\x03\x04zakljucavanje")
@@ -299,6 +316,57 @@ class YouthDecisionDocumentStoreTest extends TestCase
         $sql = strtolower(implode("\n", array_column(DB::getQueryLog(), 'query')));
         $this->assertStringContainsString('for update', $sql);
         $this->assertStringContainsString('competitions', $sql);
+    }
+
+    public function test_cleanup_deletes_only_documents_recorded_by_this_test(): void
+    {
+        $ctx = $this->youthCompetition();
+        $competitionId = (int) $ctx['competition']->id;
+        $directory = 'youth-decision-documents/'.$competitionId;
+        $disk = Storage::disk('local');
+
+        $existingPath = $directory.'/'.Str::ulid().'.docx';
+        $intruderPath = $directory.'/'.Str::ulid().'.docx';
+        $this->assertNotSame($existingPath, $intruderPath);
+        $this->assertFalse($disk->exists($existingPath));
+        $this->assertFalse($disk->exists($intruderPath));
+
+        $existingBytes = "PK\x03\x04vec-postoji";
+        $intruderBytes = "PK\x03\x04tudji-tokom-testa";
+        $disk->put($existingPath, $existingBytes);
+        $disk->put($intruderPath, $intruderBytes);
+
+        try {
+            $this->documentsBeforeTest[$existingPath] = hash('sha256', $existingBytes);
+
+            $helperPath = $this->writeOwnedDecisionFile($directory.'/owned-helper.docx', "PK\x03\x04pomocna-metoda");
+            $stored = $this->storeOwned(
+                app(YouthDecisionDocumentStore::class),
+                $ctx['competition'],
+                $ctx['chairman'],
+                $this->sourceFile("PK\x03\x04vlastiti-zapis")
+            );
+
+            $this->assertNotContains($existingPath, $this->ownedDocumentPaths);
+            $this->assertNotContains($intruderPath, $this->ownedDocumentPaths);
+            $this->assertContains($helperPath, $this->ownedDocumentPaths);
+            $this->assertContains($stored->storage_path, $this->ownedDocumentPaths);
+
+            $beforeCleanup = $this->privateDecisionInventory($competitionId);
+            $this->deleteOwnedDocuments();
+            $afterCleanup = $this->privateDecisionInventory($competitionId);
+
+            unset($beforeCleanup[$helperPath], $beforeCleanup[$stored->storage_path]);
+            $this->assertSame($beforeCleanup, $afterCleanup);
+            $this->assertSame(hash('sha256', $existingBytes), $afterCleanup[$existingPath]);
+            $this->assertSame(hash('sha256', $intruderBytes), $afterCleanup[$intruderPath]);
+            $this->assertArrayNotHasKey($helperPath, $afterCleanup);
+            $this->assertArrayNotHasKey($stored->storage_path, $afterCleanup);
+            $this->assertTrue($disk->directoryExists($directory));
+        } finally {
+            $disk->delete($existingPath);
+            $disk->delete($intruderPath);
+        }
     }
 
     /**
@@ -354,6 +422,87 @@ class YouthDecisionDocumentStoreTest extends TestCase
         return $path;
     }
 
+    private function storeOwned(
+        YouthDecisionDocumentStore $store,
+        Competition $competition,
+        User $actor,
+        string $sourcePath
+    ): YouthDecisionDocument {
+        $document = $store->store($competition, $actor, $sourcePath);
+        $this->recordOwnedDocumentPath((string) $document->storage_path);
+
+        return $document;
+    }
+
+    private function writeOwnedDecisionFile(string $relativePath, string $bytes): string
+    {
+        $path = str_replace('\\', '/', $relativePath);
+        $this->assertArrayNotHasKey($path, $this->documentsBeforeTest);
+        $this->assertFalse(Storage::disk('local')->exists($path));
+        Storage::disk('local')->put($path, $bytes);
+
+        return $this->recordOwnedDocumentPath($path);
+    }
+
+    private function recordOwnedDocumentPath(string $path): string
+    {
+        $this->assertTrue($this->capturedExistingDocuments);
+        $normalized = str_replace('\\', '/', $path);
+        $this->assertNotSame('', $normalized);
+        $this->assertArrayNotHasKey($normalized, $this->documentsBeforeTest);
+        if (! in_array($normalized, $this->ownedDocumentPaths, true)) {
+            $this->ownedDocumentPaths[] = $normalized;
+        }
+
+        return $normalized;
+    }
+
+    private function deleteOwnedDocuments(): void
+    {
+        if (! $this->app) {
+            return;
+        }
+
+        $disk = Storage::disk('local');
+        foreach ($this->ownedDocumentPaths as $path) {
+            $disk->delete($path);
+        }
+    }
+
+    /**
+     * Sortiran spisak postojećih privatnih PM odluka: relativna putanja => SHA-256.
+     *
+     * @return array<string, string>
+     */
+    private function privateDecisionInventory(?int $competitionId = null): array
+    {
+        $prefix = 'youth-decision-documents';
+        if ($competitionId !== null) {
+            $prefix .= '/'.$competitionId;
+        }
+
+        $disk = Storage::disk('local');
+        $inventory = [];
+        foreach ($disk->allFiles($prefix) as $path) {
+            $normalized = str_replace('\\', '/', $path);
+            $absolute = $disk->path($path);
+            if (! is_file($absolute)) {
+                continue;
+            }
+
+            $hash = hash_file('sha256', $absolute);
+            if (! is_string($hash)) {
+                continue;
+            }
+
+            $inventory[$normalized] = $hash;
+        }
+
+        ksort($inventory, SORT_STRING);
+
+        return $inventory;
+    }
+
     private function plainCompetition(string $type): Competition
     {
         $competition = Competition::query()->create([
@@ -367,8 +516,6 @@ class YouthDecisionDocumentStoreTest extends TestCase
             'deadline_days' => 20,
             'published_at' => now()->subDays(30),
         ]);
-        $this->cleanupCompetitionIds[] = (int) $competition->id;
-
         return $competition;
     }
 
@@ -417,8 +564,6 @@ class YouthDecisionDocumentStoreTest extends TestCase
             'published_at' => now()->subDays(30),
             'commission_id' => $commission->id,
         ]);
-        $this->cleanupCompetitionIds[] = (int) $competition->id;
-
         return [
             'competition' => $competition,
             'chairman' => $chairman,

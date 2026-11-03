@@ -915,7 +915,7 @@ class AdminController extends Controller
         $instance = app(CompetitionAnnualInstance::class);
 
         try {
-            $second = DB::transaction(function () use ($validated, $competition, $instance) {
+            $second = DB::transaction(function () use ($request, $validated, $competition, $instance) {
                 $first = Competition::query()
                     ->whereKey($competition->id)
                     ->lockForUpdate()
