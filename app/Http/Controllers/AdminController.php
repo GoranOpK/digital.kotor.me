@@ -18,6 +18,7 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Identity\CanonicalIdentityWriteException;
 use App\Identity\Runtime\CanonicalHttpIdentityService;
+use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Identity\Runtime\IdentityMutationGuard;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
@@ -467,50 +468,55 @@ class AdminController extends Controller
         $identityService = app(CanonicalHttpIdentityService::class);
         $guard = app(IdentityMutationGuard::class);
 
-        if ($guard->canonicalHttpWriteAllowed()) {
-            try {
-                $identityService->updateAdminIdentityContact(
-                    $user,
-                    $validated['first_name'],
-                    $validated['last_name'],
-                    $validated['phone'] ?? null
+        try {
+            DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant, $guard, $identityService) {
+                $locked = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $locked->load('role');
+                $previousRole = $locked->role?->name;
+                $syncedFromCanonical = false;
+
+                if ($guard->canonicalHttpWriteAllowed()) {
+                    try {
+                        $identityService->updateAdminIdentityContact(
+                            $locked,
+                            $validated['first_name'],
+                            $validated['last_name'],
+                            $validated['phone'] ?? null
+                        );
+                        $this->syncAccountNameFromSavedCanonicalIdentity($locked);
+                        $syncedFromCanonical = true;
+                    } catch (IdentityUseGateException) {
+                        // NON_SUBJECT / no graph: account-layer only
+                    }
+                }
+
+                if (! $syncedFromCanonical && ! $guard->canonicalHttpWriteAllowed() && $guard->legacyIdentityMutationAllowed()) {
+                    $locked->first_name = $validated['first_name'];
+                    $locked->last_name = $validated['last_name'];
+                    $locked->name = $validated['first_name'].' '.$validated['last_name'];
+                    $locked->phone = $validated['phone'] ?? null;
+                }
+
+                $locked->email = $validated['email'];
+                $locked->role_id = $validated['role_id'];
+                $locked->activation_status = $validated['activation_status'];
+
+                if (! empty($validated['password'])) {
+                    $locked->password = Hash::make($validated['password']);
+                }
+
+                $locked->save();
+
+                app(MmspTestAccessService::class)->reconcile(
+                    $locked,
+                    $currentUser,
+                    $previousRole,
+                    $requestedGrant,
                 );
-            } catch (IdentityUseGateException) {
-                // NON_SUBJECT / no graph: account-layer only
-            } catch (CanonicalIdentityWriteException $e) {
-                return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
-            }
+            });
+        } catch (CanonicalIdentityWriteException) {
+            return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
         }
-
-        DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant, $guard) {
-            $locked = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
-            $locked->load('role');
-            $previousRole = $locked->role?->name;
-
-            if (! $guard->canonicalHttpWriteAllowed() && $guard->legacyIdentityMutationAllowed()) {
-                $locked->first_name = $validated['first_name'];
-                $locked->last_name = $validated['last_name'];
-                $locked->name = $validated['first_name'].' '.$validated['last_name'];
-                $locked->phone = $validated['phone'] ?? null;
-            }
-
-            $locked->email = $validated['email'];
-            $locked->role_id = $validated['role_id'];
-            $locked->activation_status = $validated['activation_status'];
-
-            if (! empty($validated['password'])) {
-                $locked->password = Hash::make($validated['password']);
-            }
-
-            $locked->save();
-
-            app(MmspTestAccessService::class)->reconcile(
-                $locked,
-                $currentUser,
-                $previousRole,
-                $requestedGrant,
-            );
-        });
 
         $user->refresh();
 
@@ -521,6 +527,21 @@ class AdminController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Korisnik je uspješno ažuriran.');
+    }
+
+    /**
+     * Account name follows the canonical identity that was just saved.
+     * Company name and submitted application snapshots are left unchanged.
+     */
+    private function syncAccountNameFromSavedCanonicalIdentity(User $user): void
+    {
+        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
+        $firstName = $identity->firstName;
+        $lastName = $identity->lastName;
+
+        $user->first_name = $firstName;
+        $user->last_name = $lastName;
+        $user->name = trim((string) $firstName.' '.(string) $lastName);
     }
 
     /**
