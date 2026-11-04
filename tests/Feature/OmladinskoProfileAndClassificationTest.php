@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Identity\CanonicalIdentityWriter;
 use App\Models\Application;
 use App\Models\Competition;
 use App\Models\LegalEntityAuthorizedPerson;
@@ -19,11 +20,13 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\MakesCanonicalUsers;
+use Tests\Support\MakesIdentitySnapshots;
 use Tests\TestCase;
 
 class OmladinskoProfileAndClassificationTest extends TestCase
 {
     use MakesCanonicalUsers;
+    use MakesIdentitySnapshots;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -1287,6 +1290,262 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $this->assertSame(1, preg_match('/\bvalue="([^"]*)"/', $tag, $matches));
 
         return html_entity_decode($matches[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    public function test_pm_m1a_prefills_crps_from_identity_without_overwriting_a_saved_application(): void
+    {
+        $identityCrps = $this->validCrps(1, 86);
+        $identityPib = $this->validPib(86);
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'jmb' => null,
+            'pib' => null,
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => [
+                'streetAndNumber' => 'Njegoševa 12',
+                'city' => 'Kotor',
+                'jmb' => $this->validJmb(86),
+                'isEntrepreneur' => true,
+                'entrepreneurBusinessName' => 'Radnja Ana',
+                'pib' => $identityPib,
+                'crpsNumber' => $identityCrps,
+            ],
+        ]));
+        config(['identity.canonical_read' => true]);
+        $competition = $this->openCompetition('omladinsko', 'PM CRPS prefill');
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
+            ->assertOk()
+            ->getContent();
+
+        $m1a = $this->formSectionHtml($html, 'obrazac1a', 'obrazac1b');
+        $m1b = $this->formSectionHtml($html, 'obrazac1b', 'additional-data-section');
+        $this->assertInputValue($m1a, 'crps_number', $identityCrps);
+        $this->assertInputValue($m1a, 'pib', $identityPib);
+        $this->assertInputValue($m1b, 'crps_number', $identityCrps);
+        $this->assertInputValue($m1b, 'pib', $identityPib);
+
+        $typedCrps = $this->validCrps(1, 87);
+        $this->actingAs($user)
+            ->from(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'preduzetnik',
+                'registration_form' => UserType::ENTREPRENEUR,
+                'business_plan_name' => '',
+                'crps_number' => $typedCrps,
+                'pib' => $identityPib,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_plan_name');
+
+        $oldHtml = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
+            ->assertOk()
+            ->getContent();
+        $this->assertInputValue($this->formSectionHtml($oldHtml, 'obrazac1a', 'obrazac1b'), 'crps_number', $typedCrps);
+        $this->assertSame(0, Application::query()->where('user_id', $user->id)->count());
+
+        $savedCrps = $this->validCrps(1, 88);
+        $savedPib = $this->validPib(88);
+        Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Sačuvan plan',
+            'applicant_type' => 'preduzetnik',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'registration_form' => UserType::ENTREPRENEUR,
+            'is_registered' => true,
+            'status' => 'draft',
+            'crps_number' => $savedCrps,
+            'pib' => $savedPib,
+        ]);
+
+        $savedHtml = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+        $savedM1a = $this->formSectionHtml($savedHtml, 'obrazac1a', 'obrazac1b');
+        $this->assertInputValue($savedM1a, 'crps_number', $savedCrps);
+        $this->assertInputValue($savedM1a, 'pib', $savedPib);
+        $this->assertStringNotContainsString('value="'.$identityCrps.'"', $savedM1a);
+
+        $emptyUser = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'jmb' => null,
+            'pib' => null,
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($emptyUser, $this->flSnapshot($emptyUser, [
+            'person' => [
+                'jmb' => $this->validJmb(89),
+                'isEntrepreneur' => true,
+                'entrepreneurBusinessName' => 'Radnja Prazna',
+                'pib' => $this->validPib(89),
+                'crpsNumber' => $this->validCrps(1, 89),
+            ],
+        ]));
+        $emptyCompetition = $this->openCompetition('omladinsko', 'PM CRPS empty snapshot');
+        Application::create([
+            'competition_id' => $emptyCompetition->id,
+            'user_id' => $emptyUser->id,
+            'business_plan_name' => 'Prazan CRPS',
+            'applicant_type' => 'preduzetnik',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'registration_form' => UserType::ENTREPRENEUR,
+            'is_registered' => true,
+            'status' => 'draft',
+            'crps_number' => null,
+            'pib' => $this->validPib(90),
+        ]);
+
+        $emptyHtml = $this->actingAs($emptyUser)
+            ->get(route('applications.create', $emptyCompetition))
+            ->assertOk()
+            ->getContent();
+        $emptyM1a = $this->formSectionHtml($emptyHtml, 'obrazac1a', 'obrazac1b');
+        $this->assertInputValue($emptyM1a, 'crps_number', '');
+        $this->assertStringNotContainsString('value="'.$this->validCrps(1, 89).'"', $emptyM1a);
+    }
+
+    public function test_pm_m1b_prefills_crps_from_legal_entity_without_overwriting_a_saved_application(): void
+    {
+        $identityCrps = $this->validCrps(5, 91);
+        $identityPib = $this->validPib(91);
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'jmb' => null,
+            'pib' => null,
+            'company_name' => 'Mladi DOO',
+            'residential_status' => null,
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->plSnapshot($user, [
+            'jmb' => $this->validJmb(91),
+        ], [
+            'streetAndNumber' => 'Njegoševa 12',
+            'city' => 'Kotor',
+            'legalName' => 'Mladi DOO',
+            'pib' => $identityPib,
+            'crpsNumber' => $identityCrps,
+        ]));
+        config(['identity.canonical_read' => true]);
+        $competition = $this->openCompetition('omladinsko', 'PM M1b CRPS prefill');
+        $token = $this->issueStartToken($user, $competition, ['business_stage' => 'započinjanje']);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
+            ->assertOk()
+            ->getContent();
+
+        $m1b = $this->formSectionHtml($html, 'obrazac1b', 'additional-data-section');
+        $this->assertInputValue($m1b, 'crps_number', $identityCrps);
+        $this->assertInputValue($m1b, 'pib', $identityPib);
+
+        $typedCrps = $this->validCrps(5, 92);
+        $this->actingAs($user)
+            ->from(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'privredno_drustvo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+                'business_plan_name' => '',
+                'crps_number' => $typedCrps,
+                'pib' => $identityPib,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasErrors('business_plan_name');
+
+        $oldHtml = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'start_token' => $token]))
+            ->assertOk()
+            ->getContent();
+        $this->assertInputValue($this->formSectionHtml($oldHtml, 'obrazac1b', 'additional-data-section'), 'crps_number', $typedCrps);
+        $this->assertSame(0, Application::query()->where('user_id', $user->id)->count());
+
+        $savedCrps = $this->validCrps(5, 93);
+        $savedPib = $this->validPib(93);
+        Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Sačuvan plan društva',
+            'applicant_type' => 'privredno_drustvo',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'company_legal_form' => 'doo',
+            'is_registered' => true,
+            'status' => 'draft',
+            'crps_number' => $savedCrps,
+            'pib' => $savedPib,
+        ]);
+
+        $savedHtml = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+        $savedM1b = $this->formSectionHtml($savedHtml, 'obrazac1b', 'additional-data-section');
+        $this->assertInputValue($savedM1b, 'crps_number', $savedCrps);
+        $this->assertInputValue($savedM1b, 'pib', $savedPib);
+        $this->assertStringNotContainsString('value="'.$identityCrps.'"', $savedM1b);
+
+        $emptyUser = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'jmb' => null,
+            'pib' => null,
+            'residential_status' => null,
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($emptyUser, $this->plSnapshot($emptyUser, [
+            'jmb' => $this->validJmb(94),
+        ], [
+            'pib' => $this->validPib(94),
+            'crpsNumber' => $this->validCrps(5, 94),
+        ]));
+        $emptyCompetition = $this->openCompetition('omladinsko', 'PM M1b CRPS empty snapshot');
+        Application::create([
+            'competition_id' => $emptyCompetition->id,
+            'user_id' => $emptyUser->id,
+            'business_plan_name' => 'Prazan CRPS društva',
+            'applicant_type' => 'privredno_drustvo',
+            'business_stage' => 'započinjanje',
+            'business_area' => 'Usluge',
+            'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+            'company_legal_form' => 'doo',
+            'is_registered' => true,
+            'status' => 'draft',
+            'crps_number' => null,
+            'pib' => $this->validPib(95),
+        ]);
+
+        $emptyHtml = $this->actingAs($emptyUser)
+            ->get(route('applications.create', $emptyCompetition))
+            ->assertOk()
+            ->getContent();
+        $emptyM1b = $this->formSectionHtml($emptyHtml, 'obrazac1b', 'additional-data-section');
+        $this->assertInputValue($emptyM1b, 'crps_number', '');
+        $this->assertStringNotContainsString('value="'.$this->validCrps(5, 94).'"', $emptyM1b);
+    }
+
+    private function formSectionHtml(string $html, string $startId, string $endId): string
+    {
+        $start = strpos($html, 'id="'.$startId.'"');
+        $end = strpos($html, 'id="'.$endId.'"');
+        $this->assertNotFalse($start);
+        $this->assertNotFalse($end);
+        $this->assertGreaterThan($start, $end);
+
+        return substr($html, $start, $end - $start);
+    }
+
+    private function assertInputValue(string $html, string $name, string $expected): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/name="'.preg_quote($name, '/').'"[^>]*value="'.preg_quote($expected, '/').'"/s',
+            $html
+        );
     }
 
     /**

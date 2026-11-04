@@ -61,6 +61,12 @@
             );
             $userProfileAddress = \App\Support\KotorAddress::formatStreetAndCity($subjectIdentity->address, $subjectIdentity->city);
             $existingApplicationModel = (isset($existingApplication) && $existingApplication) ? $existingApplication : null;
+            $crpsFieldValue = old(
+                'crps_number',
+                $existingApplicationModel !== null
+                    ? (string) ($existingApplicationModel->crps_number ?? '')
+                    : (string) ($subjectIdentity->crpsNumber ?? '')
+            );
             $knSnap = function (mixed $saved, ?string $profile) use ($existingApplicationModel): string {
                 return \App\Models\Application::formSnapshotDisplay($existingApplicationModel, $saved, $profile);
             };
@@ -470,7 +476,7 @@
                                 type="text" 
                                 name="crps_number" 
                                 class="form-control @error('crps_number') error @enderror"
-                                value="{{ old('crps_number', $existingApplicationModel?->crps_number) }}"
+                                value="{{ $crpsFieldValue }}"
                                 maxlength="50"
                                 required
                             >
@@ -703,7 +709,7 @@
                                 type="text"
                                 name="crps_number"
                                 class="form-control @error('crps_number') error @enderror"
-                                value="{{ old('crps_number', $existingApplicationModel?->crps_number) }}"
+                                value="{{ $crpsFieldValue }}"
                                 maxlength="50"
                                 required
                             >
@@ -2018,7 +2024,7 @@
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         // Ne uklanjaj disabled sa polja koja se šalju samo iz aktivne sekcije
-                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat', 'business_stage', 'registered_user_is_founder', 'registered_user_is_director'];
+                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat', 'business_stage', 'registered_user_is_founder', 'registered_user_is_director', 'crps_number', 'pib'];
                         if (fieldsToKeepDisabled.includes(field.name)) {
                             return; // Već postavljen na disabled
                         }

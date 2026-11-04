@@ -55,7 +55,7 @@ trait MakesIdentitySnapshots
         ]);
     }
 
-    protected function plSnapshot(User $user, array $personOverrides = []): IdentitySnapshot
+    protected function plSnapshot(User $user, array $personOverrides = [], array $entityOverrides = []): IdentitySnapshot
     {
         $authorized = array_merge([
             'firstName' => 'Marko',
@@ -65,19 +65,21 @@ trait MakesIdentitySnapshots
             'passportNumber' => null,
             'passportIssuingCountryCode' => null,
         ], $personOverrides);
+        $street = $entityOverrides['streetAndNumber'] ?? 'Slobode 1';
+        $city = $entityOverrides['city'] ?? 'Podgorica';
 
         return new IdentitySnapshot(
             userId: $user->id,
             isRegisteredSubject: true,
             subjectType: PlatformIdentity::SUBJECT_LEGAL_ENTITY,
             mobilePhone: '+38267000002',
-            streetAndNumber: 'Slobode 1',
-            city: 'Podgorica',
+            streetAndNumber: $street,
+            city: $city,
             legalEntity: new LegalEntitySnapshot(
-                legalForm: LegalEntityIdentity::FORM_DOO,
-                legalName: 'Primjer DOO',
-                streetAndNumber: 'Slobode 1',
-                city: 'Podgorica',
+                legalForm: $entityOverrides['legalForm'] ?? LegalEntityIdentity::FORM_DOO,
+                legalName: $entityOverrides['legalName'] ?? 'Primjer DOO',
+                streetAndNumber: $street,
+                city: $city,
                 authorizedPerson: new PersonInRoleSnapshot(
                     firstName: $authorized['firstName'],
                     lastName: $authorized['lastName'],
@@ -86,8 +88,8 @@ trait MakesIdentitySnapshots
                     passportNumber: $authorized['passportNumber'],
                     passportIssuingCountryCode: $authorized['passportIssuingCountryCode'],
                 ),
-                pib: '12345672',
-                crpsNumber: '50000001',
+                pib: $entityOverrides['pib'] ?? '12345672',
+                crpsNumber: $entityOverrides['crpsNumber'] ?? '50000001',
             ),
         );
     }
