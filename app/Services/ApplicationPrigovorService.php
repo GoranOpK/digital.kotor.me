@@ -3,19 +3,24 @@
 namespace App\Services;
 
 use App\Mail\ApplicationPrigovorDecisionMail;
+use App\Mail\ApplicationPrigovorSubmittedMail;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\ApplicationEliminatoryNotice;
 use App\Models\ApplicationPrigovor;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\Competition;
 use App\Models\User;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Support\EliminatoryProfileConfig;
 use App\Support\YouthPrigovorObrazlozenje;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -212,6 +217,8 @@ class ApplicationPrigovorService
         if ($windowClosed) {
             abort(403, self::WINDOW_CLOSED_MESSAGE);
         }
+
+        $this->deliverSubmissionNotice($application, $prigovor);
 
         return $prigovor;
     }
@@ -746,6 +753,235 @@ class ApplicationPrigovorService
         }
 
         return $this->isDuplicatePrigovorConstraint($e);
+    }
+
+    /**
+     * Prigovori u stanju Podnesen za konkurse na kojima je korisnik aktivni predsjednik.
+     *
+     * @return Collection<int, array{
+     *     application_number: string,
+     *     competition_title: string,
+     *     submitted_at: ?\Illuminate\Support\Carbon,
+     *     status_label: string,
+     *     review_url: ?string
+     * }>
+     */
+    public function pendingDecisionRowsForChairman(User $user): Collection
+    {
+        $commissionIds = CommissionMember::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('position', 'predsjednik')
+            ->pluck('commission_id');
+
+        if ($commissionIds->isEmpty()) {
+            return collect();
+        }
+
+        return ApplicationPrigovor::query()
+            ->where('status', ApplicationPrigovor::STATUS_PODNESEN)
+            ->whereHas('application.competition', function ($query) use ($commissionIds) {
+                $query->whereIn('commission_id', $commissionIds)
+                    ->whereIn('type', [
+                        CompetitionProfileResolver::TYPE_YOUTH,
+                        CompetitionProfileResolver::TYPE_WOMEN,
+                    ]);
+            })
+            ->with(['application.competition.upNumber'])
+            ->orderBy('submitted_at')
+            ->orderBy('id')
+            ->get()
+            ->map(function (ApplicationPrigovor $prigovor) use ($user) {
+                $application = $prigovor->application;
+
+                return [
+                    'application_number' => $this->applicationNumberLabel($application),
+                    'competition_title' => $application?->competition?->title ?? '—',
+                    'submitted_at' => $prigovor->submitted_at,
+                    'status_label' => $prigovor->statusLabel(),
+                    'review_url' => $application
+                        ? $this->chairmanPrigovorReviewUrl($application, $user)
+                        : null,
+                ];
+            })
+            ->values();
+    }
+
+    /**
+     * Postojeća stranica na kojoj predsjednik smije otvoriti prigovor.
+     * Ne uvodi novo ovlašćenje: prvo stranica ocjenjivanja, pa pregled prijave
+     * ako stranicu ocjenjivanja već postojeće pravilo zatvara.
+     */
+    public function chairmanPrigovorReviewUrl(Application $application, User $user): ?string
+    {
+        if ($this->chairmanMayOpenEvaluationCreate($application, $user)) {
+            return route('evaluation.create', $application);
+        }
+
+        if ($this->chairmanMayOpenAdminApplication($application, $user)) {
+            return route('admin.applications.show', $application);
+        }
+
+        return null;
+    }
+
+    public function applicationNumberLabel(Application $application): string
+    {
+        $application->loadMissing('competition.upNumber');
+        $upBroj = $application->competition?->upNumber?->number ?? '—';
+        $redniBroj = $application->redni_broj ?? '—';
+
+        return $upBroj.'/'.$redniBroj;
+    }
+
+    private function deliverSubmissionNotice(Application $application, ApplicationPrigovor $prigovor): void
+    {
+        $application->loadMissing(['competition.upNumber']);
+        $competition = $application->competition;
+
+        if (! $this->isYouthOrWomenCompetition($competition)) {
+            return;
+        }
+
+        $commissionId = $competition?->commission_id;
+        if (! $commissionId) {
+            Log::warning('Prigovor submission mail skipped: competition has no commission.', [
+                'application_id' => $application->id,
+                'prigovor_id' => $prigovor->id,
+            ]);
+
+            return;
+        }
+
+        $presidents = CommissionMember::query()
+            ->where('commission_id', $commissionId)
+            ->where('position', 'predsjednik')
+            ->where('status', 'active')
+            ->with('user')
+            ->orderBy('id')
+            ->get();
+
+        if ($presidents->count() !== 1) {
+            Log::warning('Prigovor submission mail skipped: expected exactly one active president.', [
+                'application_id' => $application->id,
+                'prigovor_id' => $prigovor->id,
+                'commission_id' => $commissionId,
+                'president_count' => $presidents->count(),
+            ]);
+
+            return;
+        }
+
+        $president = $presidents->first();
+        $recipient = $president?->user?->email;
+        if (! is_string($recipient) || trim($recipient) === '' || $president->user === null) {
+            Log::warning('Prigovor submission mail skipped: president has no email.', [
+                'application_id' => $application->id,
+                'prigovor_id' => $prigovor->id,
+                'commission_member_id' => $president?->id,
+            ]);
+
+            return;
+        }
+
+        try {
+            Mail::to($recipient)->send(new ApplicationPrigovorSubmittedMail(
+                $application,
+                $prigovor,
+                $this->applicationNumberLabel($application),
+                $this->chairmanPrigovorReviewUrl($application, $president->user),
+            ));
+        } catch (Throwable $e) {
+            Log::warning('Prigovor submission mail failed.', [
+                'application_id' => $application->id,
+                'prigovor_id' => $prigovor->id,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function isYouthOrWomenCompetition(?Competition $competition): bool
+    {
+        return in_array($competition?->type, [
+            CompetitionProfileResolver::TYPE_YOUTH,
+            CompetitionProfileResolver::TYPE_WOMEN,
+        ], true);
+    }
+
+    private function activePresident(Application $application, User $user): ?CommissionMember
+    {
+        $application->loadMissing('competition');
+        $competition = $application->competition;
+        if (! $this->isYouthOrWomenCompetition($competition) || ! $competition?->commission_id) {
+            return null;
+        }
+
+        $member = CommissionMember::activeForCommission($user->id, (int) $competition->commission_id);
+
+        if ($member === null || $member->position !== 'predsjednik') {
+            return null;
+        }
+
+        return $member;
+    }
+
+    private function chairmanMayOpenEvaluationCreate(Application $application, User $user): bool
+    {
+        if ($this->activePresident($application, $user) === null) {
+            return false;
+        }
+
+        $competition = $application->competition;
+        if ($application->status === 'draft') {
+            return false;
+        }
+
+        if ($competition && ZenskoPreDeadlineContentGate::individualContentIsLocked($competition)) {
+            return false;
+        }
+
+        if ($competition
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            return false;
+        }
+
+        if ($competition?->isCommissionProcessingBlocked()) {
+            return false;
+        }
+
+        if ($competition
+            && ! $competition->isOmladinskoProfile()
+            && $competition->isEvaluationDeadlinePassed()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function chairmanMayOpenAdminApplication(Application $application, User $user): bool
+    {
+        if ($this->activePresident($application, $user) === null) {
+            return false;
+        }
+
+        $competition = $application->competition;
+        if ($application->status === 'draft') {
+            return false;
+        }
+
+        if ($competition && ZenskoPreDeadlineContentGate::individualContentIsLocked($competition)) {
+            return false;
+        }
+
+        if ($competition
+            && ! $competition->isCanonicalTestPreview()
+            && ! in_array($competition->status, ['closed', 'completed'], true)
+            && ! $competition->isApplicationDeadlinePassed()) {
+            return false;
+        }
+
+        return $competition !== null;
     }
 
     private function deliverDecisionEmail(Application $application, ApplicationPrigovor $prigovor): void

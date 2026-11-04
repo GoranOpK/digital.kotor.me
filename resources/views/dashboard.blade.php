@@ -770,6 +770,53 @@
                 </div>
             </div>
 
+            @if(isset($pendingEliminatoryPrigovori))
+            <div class="info-card" style="margin-top: 24px;">
+                <div class="info-card-header">
+                    <h2>Prigovori na eliminatorne odluke</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p style="margin: 0 0 16px; font-size: 14px;">
+                        Čeka odluku: <strong>{{ $pendingEliminatoryPrigovori->count() }}</strong>
+                    </p>
+                    @if($pendingEliminatoryPrigovori->isEmpty())
+                        <p style="margin: 0; color: #6b7280; font-size: 14px;">Nema prigovora koji čekaju odluku.</p>
+                    @else
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; min-width: 720px;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #e5e7eb;">
+                                        <th style="padding: 12px; text-align: left;">Broj prijave</th>
+                                        <th style="padding: 12px; text-align: left;">Konkurs</th>
+                                        <th style="padding: 12px; text-align: left;">Datum podnošenja</th>
+                                        <th style="padding: 12px; text-align: left;">Status</th>
+                                        <th style="padding: 12px; text-align: left;">Pregled</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pendingEliminatoryPrigovori as $row)
+                                        <tr style="border-bottom: 1px solid #e5e7eb;">
+                                            <td style="padding: 12px;">{{ $row['application_number'] }}</td>
+                                            <td style="padding: 12px;">{{ $row['competition_title'] }}</td>
+                                            <td style="padding: 12px;">{{ $row['submitted_at']?->format('d.m.Y. H:i') ?? '—' }}</td>
+                                            <td style="padding: 12px;">{{ $row['status_label'] }}</td>
+                                            <td style="padding: 12px;">
+                                                @if($row['review_url'])
+                                                    <a href="{{ $row['review_url'] }}">Otvori prigovor</a>
+                                                @else
+                                                    Pregled trenutno nije dozvoljen
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             <!-- Prijave za ocjenjivanje – vidljivo tek nakon isteka roka za prijavljivanje -->
             @if(isset($showEvaluationSection) && $showEvaluationSection)
             @if(isset($applications) && $applications->count() > 0)

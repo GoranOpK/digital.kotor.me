@@ -11,6 +11,7 @@ use App\Http\Requests\RegisterSubjectRequest;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Services\ApplicationPrigovorService;
 use App\Models\Notice;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
@@ -352,6 +353,24 @@ class HomeController extends Controller
                 // Prikaži sve konkurse dodijeljene svim komisijama, uključujući kanonski TEST draft-preview.
                 $competitions = \App\Models\Competition::whereIn('id', $competitionIds)->get();
 
+                $pendingEliminatoryPrigovori = null;
+                $chairsYouthOrWomen = $commissionMemberships->contains(function ($membership) {
+                    if ($membership->position !== 'predsjednik' || $membership->status !== 'active') {
+                        return false;
+                    }
+
+                    return $membership->commission->competitions->contains(
+                        fn ($competition) => in_array($competition->type, [
+                            CompetitionProfileResolver::TYPE_YOUTH,
+                            CompetitionProfileResolver::TYPE_WOMEN,
+                        ], true)
+                    );
+                });
+                if ($chairsYouthOrWomen) {
+                    $pendingEliminatoryPrigovori = app(ApplicationPrigovorService::class)
+                        ->pendingDecisionRowsForChairman($user);
+                }
+
                 return view('dashboard', compact(
                     'applications',
                     'commissionMember',
@@ -361,7 +380,8 @@ class HomeController extends Controller
                     'isKomisija',
                     'myApplications',
                     'competitions',
-                    'showEvaluationSection'
+                    'showEvaluationSection',
+                    'pendingEliminatoryPrigovori'
                 ));
             }
 
