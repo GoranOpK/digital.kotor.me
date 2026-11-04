@@ -113,7 +113,12 @@ class ApplicationFinalSubmitDeadlineTest extends TestCase
             'applicant_name' => $owner->name,
             'applicant_address' => 'Njegoševa 1, 85330 Kotor',
             'applicant_phone' => '067000000',
+            'applicant_jmbg' => '0101990123456',
             'applicant_email' => $owner->email,
+            'summary' => 'Sažetak',
+            'realization_type' => 'stvori_novi',
+            'has_business_space' => 'nemam',
+            'has_seasonal_workers' => false,
             'finances_notice_confirmed' => true,
         ]);
 

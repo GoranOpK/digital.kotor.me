@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Competitions\YouthDecisionApplicantIdentity;
 use App\Services\KnApplicationStartContextFactory;
 use App\Support\CompetitionProgramCatalog;
+use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
@@ -618,6 +619,187 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $this->assertNotSame('privredno_drustvo', $application->applicant_type);
         $this->assertTrue($application->is_registered);
         $this->assertTrue($application->isObrazacComplete());
+    }
+
+    public function test_completed_pm_m2_notice_uses_classified_form_and_zensko_keeps_1a_1b(): void
+    {
+        $m1aMessage = 'Obrazac M1a je kompletno popunjen. Nastavite sa popunjavanjem Obrasca M2 – Biznis plan.';
+        $m1bMessage = 'Obrazac M1b je kompletno popunjen. Nastavite sa popunjavanjem Obrasca M2 – Biznis plan.';
+        $zenskoMessage = 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.';
+
+        $m1aUser = $this->makeKorisnik(['jmb' => $this->validJmb(610)]);
+        $m1aCompetition = $this->openCompetition('omladinsko');
+        $m1aToken = $this->issueStartToken($m1aUser, $m1aCompetition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
+        ]);
+        $m1aStore = $this->actingAs($m1aUser)
+            ->post(route('applications.store', $m1aCompetition), $this->finalStorePayload([
+                'start_context_token' => $m1aToken,
+                'applicant_type' => 'fizicko_lice',
+                'physical_person_name' => 'Ana Anić',
+                'physical_person_jmbg' => $m1aUser->jmb,
+                'physical_person_phone' => '+38267111011',
+                'physical_person_email' => 'm1a@example.test',
+                'physical_person_address' => 'Njegoševa 1, Kotor',
+                'accuracy_declaration' => '1',
+            ]));
+        $m1aApplication = Application::query()->where('user_id', $m1aUser->id)->firstOrFail();
+        $this->assertSame('fizicko_lice', $m1aApplication->applicant_type);
+        $this->assertSame(
+            'Obrazac M1a',
+            KnApplicationClassification::applicationFormDisplayName($m1aApplication->applicant_type, 'omladinsko')
+        );
+        $this->assertTrue($m1aApplication->isObrazacComplete());
+        $m1aStore->assertRedirect(route('applications.business-plan.create', $m1aApplication));
+        $m1aStore->assertSessionHas('success', $m1aMessage);
+        $this->actingAs($m1aUser)
+            ->get(route('applications.business-plan.create', $m1aApplication))
+            ->assertOk()
+            ->assertSee($m1aMessage, false)
+            ->assertDontSee($m1bMessage, false)
+            ->assertDontSee($zenskoMessage, false);
+
+        $m1bUser = $this->makeKorisnik(['jmb' => $this->validJmb(611)]);
+        $m1bCompetition = $this->openCompetition('omladinsko');
+        $m1bToken = $this->issueStartToken($m1bUser, $m1bCompetition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_PLANNED_COMPANY,
+            'planned_company_form' => 'doo',
+        ]);
+        $m1bStore = $this->actingAs($m1bUser)
+            ->post(route('applications.store', $m1bCompetition), $this->finalStorePayload([
+                'start_context_token' => $m1bToken,
+                'applicant_type' => 'privredno_drustvo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+                'doo_jmbg' => $m1bUser->jmb,
+                'doo_name' => 'Nosilac plana doo',
+                'doo_phone' => '+38267111012',
+                'doo_email' => 'm1b@example.test',
+                'doo_address' => 'Njegoševa 12, Kotor',
+                'accuracy_declaration' => '1',
+            ]));
+        $m1bApplication = Application::query()->where('user_id', $m1bUser->id)->firstOrFail();
+        $this->assertSame('privredno_drustvo', $m1bApplication->applicant_type);
+        $this->assertSame(
+            'Obrazac M1b',
+            KnApplicationClassification::applicationFormDisplayName($m1bApplication->applicant_type, 'omladinsko')
+        );
+        $this->assertTrue($m1bApplication->isObrazacComplete());
+        $m1bStore->assertRedirect(route('applications.business-plan.create', $m1bApplication));
+        $m1bStore->assertSessionHas('success', $m1bMessage);
+        $this->actingAs($m1bUser)
+            ->get(route('applications.business-plan.create', $m1bApplication))
+            ->assertOk()
+            ->assertSee($m1bMessage, false)
+            ->assertDontSee($m1aMessage, false)
+            ->assertDontSee($zenskoMessage, false);
+
+        $zenskoUser = $this->makeKorisnik([
+            'user_type' => UserType::NGO_ASSOCIATION,
+            'residential_status' => null,
+            'company_name' => 'NVO Poruka',
+            'pib' => $this->validPib(670),
+            'jmb' => $this->validJmb(671),
+        ]);
+        $zensko = $this->openCompetition('zensko');
+        $zenskoToken = $this->issueStartToken($zenskoUser, $zensko, ['business_stage' => 'započinjanje']);
+        $zenskoStore = $this->actingAs($zenskoUser)
+            ->post(route('applications.store', $zensko), $this->finalStorePayload([
+                'start_context_token' => $zenskoToken,
+                'applicant_type' => 'ostalo',
+                'registration_form' => UserType::NGO_ASSOCIATION,
+                'doo_jmbg' => $zenskoUser->jmb,
+                'doo_name' => 'Nosilac NVO',
+                'doo_phone' => '+38267111013',
+                'doo_email' => 'zp-notice@example.test',
+                'doo_address' => 'Njegoševa 12, Kotor',
+                'founder_name' => 'Osnivač NVO',
+                'director_name' => 'Direktor NVO',
+                'company_seat' => 'Sjedište 8, Kotor',
+                'crps_number' => $this->validCrps(7, 70),
+                'pib' => $this->validPib(671),
+                'accuracy_declaration' => '1',
+            ]));
+        $zenskoApplication = Application::query()->where('user_id', $zenskoUser->id)->firstOrFail();
+        $this->assertSame('ostalo', $zenskoApplication->applicant_type);
+        $this->assertSame(
+            'Obrazac 1b',
+            KnApplicationClassification::applicationFormDisplayName($zenskoApplication->applicant_type, 'zensko')
+        );
+        $this->assertTrue($zenskoApplication->isObrazacComplete());
+        $zenskoStore->assertRedirect(route('applications.business-plan.create', $zenskoApplication));
+        $zenskoStore->assertSessionHas('success', $zenskoMessage);
+        $this->actingAs($zenskoUser)
+            ->get(route('applications.business-plan.create', $zenskoApplication))
+            ->assertOk()
+            ->assertSee($zenskoMessage, false)
+            ->assertDontSee('Obrazac M1a je kompletno popunjen', false)
+            ->assertDontSee('Obrazac M1b je kompletno popunjen', false)
+            ->assertDontSee('Obrasca M2', false);
+    }
+
+    public function test_physical_person_planning_doo_sees_m1b_notice_from_the_selected_form(): void
+    {
+        $m1aMessage = 'Obrazac M1a je kompletno popunjen. Nastavite sa popunjavanjem Obrasca M2 – Biznis plan.';
+        $m1bMessage = 'Obrazac M1b je kompletno popunjen. Nastavite sa popunjavanjem Obrasca M2 – Biznis plan.';
+
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::PHYSICAL_PERSON,
+            'jmb' => $this->validJmb(612),
+        ]);
+        $this->assertSame(UserType::PHYSICAL_PERSON, $user->user_type);
+        $registration = KnApplicationClassification::fromUserType($user->user_type, 'omladinsko');
+        $this->assertSame(KnApplicationClassification::FORM_FIZICKO_LICE, $registration->defaultFormApplicantType());
+        $this->assertSame(
+            'Obrazac M1a',
+            KnApplicationClassification::applicationFormDisplayName($registration->defaultFormApplicantType(), 'omladinsko')
+        );
+
+        $competition = $this->openCompetition('omladinsko');
+        $token = $this->issueStartToken($user, $competition, [
+            'planned_intent' => KnApplicationStartContext::INTENT_PLANNED_COMPANY,
+            'planned_company_form' => 'doo',
+        ]);
+        $form = $this->createHtml($user, $competition, $token);
+        $this->assertMatchesRegularExpression('/id="kn_locked_applicant_type"[^>]*value="privredno_drustvo"/', $form);
+        $this->assertStringContainsString('id="obrazacLabelHeader">Obrazac M1b</div>', $form);
+        $this->assertStringNotContainsString('id="obrazacLabelHeader">Obrazac M1a</div>', $form);
+
+        $store = $this->actingAs($user)
+            ->post(route('applications.store', $competition), $this->finalStorePayload([
+                'start_context_token' => $token,
+                'applicant_type' => 'privredno_drustvo',
+                'registration_form' => UserType::LIMITED_LIABILITY_COMPANY,
+                'doo_jmbg' => $user->jmb,
+                'doo_name' => 'Planirano DOO',
+                'doo_phone' => '+38267111014',
+                'doo_email' => 'planirano-doo@example.test',
+                'doo_address' => 'Njegoševa 12, Kotor',
+                'accuracy_declaration' => '1',
+            ]));
+
+        $application = Application::query()->where('user_id', $user->id)->firstOrFail();
+        $this->assertSame(UserType::PHYSICAL_PERSON, $user->fresh()->user_type);
+        $this->assertSame('privredno_drustvo', $application->applicant_type);
+        $this->assertSame('doo', $application->company_legal_form);
+        $this->assertSame('započinjanje', $application->business_stage);
+        $this->assertFalse($application->is_registered);
+        $this->assertTrue($application->isObrazacComplete());
+        $this->assertSame(
+            'Obrazac M1b',
+            KnApplicationClassification::applicationFormDisplayName($application->applicant_type, 'omladinsko')
+        );
+        $this->assertNotSame(
+            KnApplicationClassification::applicationFormDisplayName($registration->defaultFormApplicantType(), 'omladinsko'),
+            KnApplicationClassification::applicationFormDisplayName($application->applicant_type, 'omladinsko')
+        );
+
+        $store->assertRedirect(route('applications.business-plan.create', $application));
+        $store->assertSessionHas('success', $m1bMessage);
+        $this->actingAs($user)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->assertSee($m1bMessage, false)
+            ->assertDontSee($m1aMessage, false);
     }
 
     public function test_zensko_ostalo_does_not_use_omladinsko_m1b_registration_default(): void

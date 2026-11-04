@@ -914,13 +914,18 @@
                             <label class="form-label">
                                 16. Da li ćete angažovati sezonske radnike (označiti odgovarajuću kolonu sa x)? <span class="required">*</span>
                             </label>
+                            @php
+                                $seasonalRaw = old('has_seasonal_workers', $businessPlan?->has_seasonal_workers);
+                                $seasonalYes = $seasonalRaw === true || $seasonalRaw === 1 || $seasonalRaw === '1';
+                                $seasonalNo = $seasonalRaw === false || $seasonalRaw === 0 || $seasonalRaw === '0';
+                            @endphp
                             <div class="radio-group">
                                 <div class="radio-option">
-                                    <input type="radio" name="has_seasonal_workers" value="1" id="seasonal_yes" {{ old('has_seasonal_workers', $businessPlan->has_seasonal_workers ?? false) ? 'checked' : '' }}>
+                                    <input type="radio" name="has_seasonal_workers" value="1" id="seasonal_yes" {{ $seasonalYes ? 'checked' : '' }}>
                                     <label for="seasonal_yes">Da</label>
                                 </div>
                                 <div class="radio-option">
-                                    <input type="radio" name="has_seasonal_workers" value="0" id="seasonal_no" {{ old('has_seasonal_workers') === '0' || ($businessPlan && !$businessPlan->has_seasonal_workers) ? 'checked' : '' }}>
+                                    <input type="radio" name="has_seasonal_workers" value="0" id="seasonal_no" {{ $seasonalNo ? 'checked' : '' }}>
                                     <label for="seasonal_no">Ne</label>
                                 </div>
                             </div>
@@ -962,7 +967,7 @@
                         POSLOVANJE
                     </h2>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="question18WhenRegistered">
                         <label class="form-label">
                             18. Analiza dosadašnjeg poslovanja (Ne popunjavate ukoliko još niste registrovali biznis.)
                         </label>
@@ -1085,6 +1090,28 @@
                             $businessPlan?->finances_notice_confirmed ?? false
                         );
                     @endphp
+                    @if($isOmladinsko)
+                    <div class="finances-notice-box" id="financesNoticeBox">
+                        <h3>Napomena — član 19 Odluke</h3>
+                        <p style="margin: 0 0 12px;">
+                            Fizičko lice, preduzetnik ili privredno društvo može konkurisati za cjelokupan iznos ili dio sredstava potrebnih za realizaciju biznis plana.
+                        </p>
+                        <p style="margin: 0 0 12px;">
+                            Maksimalan iznos dodijeljenih sredstava za jedan biznis plan ne može biti veći od:
+                        </p>
+                        <ol>
+                            <li>
+                                <strong>30%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za start-up (inovativni tehnološki biznis).
+                            </li>
+                            <li>
+                                <strong>20%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za fizička lica, preduzetnike i društva kojima ranije nijesu dodjeljivana budžetska sredstva Opštine Kotor za podršku preduzetništvu mladih.
+                            </li>
+                            <li>
+                                <strong>15%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za preduzetnike i društva kojima su ranije dodjeljivana budžetska sredstva Opštine Kotor za podršku preduzetništvu mladih.
+                            </li>
+                        </ol>
+                    </div>
+                    @else
                     <div class="finances-notice-box" id="financesNoticeBox">
                         <h3>Napomena:</h3>
                         <p style="margin: 0 0 12px;">
@@ -1106,6 +1133,7 @@
                             </li>
                         </ol>
                     </div>
+                    @endif
 
                     <div class="finances-notice-confirm" id="financesNoticeConfirmWrap">
                         <label>
@@ -1494,7 +1522,7 @@
                 <div class="form-card no-print" style="text-align: center;">
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="bpSubmitBtn" class="btn-primary" style="padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
-                            <span id="bpSubmitBtnText">{{ $isOmladinsko ? 'Sačuvaj nacrt biznis plana' : 'Sačuvaj Nacrt plana' }}</span>
+                            <span id="bpSubmitBtnText">{{ ($businessPlan && \App\Support\BusinessPlanM2Completeness::isFullyFilled($businessPlan, $application)) ? 'Sačuvaj biznis plan' : 'Sačuvaj nacrt biznis plana' }}</span>
                         </button>
                     </div>
                 </div>
@@ -2031,33 +2059,162 @@ document.addEventListener('DOMContentLoaded', function() {
         return allFilled;
     }
 
+    function m2FieldShown(field) {
+        if (!field || field.disabled || field.type === 'hidden') {
+            return false;
+        }
+        const conditional = field.closest('.conditional-field');
+        if (conditional && !conditional.classList.contains('show')) {
+            return false;
+        }
+        const question18 = field.closest('#question18WhenRegistered');
+        const registered = bpForm.querySelector('input[name="has_registered_business"]')?.value === '1';
+        if (question18 && !registered) {
+            return false;
+        }
+        if (field.name === 'vat_number') {
+            return false;
+        }
+        if (field.name === 'realization_other_text') {
+            return isOmladinsko && bpForm.querySelector('input[name="realization_type"]:checked')?.value === 'nista_od_navedenog';
+        }
+        return true;
+    }
+
+    function m2ValueFilled(field) {
+        return !!field && field.value.trim() !== '';
+    }
+
+    function m2RowHasAnswer(row) {
+        const fields = row.querySelectorAll('input[name], textarea[name]');
+        for (const field of fields) {
+            if (field.readOnly || field.disabled || field.type === 'hidden') {
+                continue;
+            }
+            if (m2ValueFilled(field)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function m2TableAnswered(tbodyId) {
+        const body = document.getElementById(tbodyId);
+        if (!body || !m2FieldShown(body)) {
+            return true;
+        }
+        for (const row of body.querySelectorAll('tr')) {
+            if (!row.classList.contains('category-header') && m2RowHasAnswer(row)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function m2ExpenseAnswered(category) {
+        const rows = bpForm.querySelectorAll('tr[data-category="' + category + '"]');
+        for (const row of rows) {
+            if (m2RowHasAnswer(row)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function m2JobScheduleAnswered() {
+        const body = document.getElementById('jobScheduleTableBody');
+        if (!body) {
+            return false;
+        }
+        for (const row of body.querySelectorAll('tr')) {
+            const initially = row.querySelector('[name$="[initially]"]');
+            const later = row.querySelector('[name$="[later]"]');
+            const part = row.querySelector('[name$="[part]"]');
+            if (row.dataset.fixed === 'true') {
+                if (!m2ValueFilled(initially) || !m2ValueFilled(later)) {
+                    return false;
+                }
+                continue;
+            }
+            if (!m2RowHasAnswer(row)) {
+                continue;
+            }
+            if (!m2ValueFilled(part) || !m2ValueFilled(initially) || !m2ValueFilled(later)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function m2RadioAnswered(name) {
+        return !!bpForm.querySelector('input[type="radio"][name="' + name + '"]:checked');
+    }
+
+    function m2ScalarAnswered(name) {
+        const field = bpForm.querySelector('[name="' + name + '"]');
+        if (!field || !m2FieldShown(field)) {
+            return true;
+        }
+        return m2ValueFilled(field);
+    }
+
+    function isDisplayedM2Complete() {
+        if (!bpForm) {
+            return false;
+        }
+
+        const scalars = [
+            'business_idea_name', 'applicant_name', 'applicant_jmbg', 'applicant_address',
+            'applicant_phone', 'applicant_email', 'summary', 'promotion', 'required_resources',
+            'work_experience', 'personal_strengths_weaknesses', 'biggest_support',
+            'annual_sales_volume', 'annual_purchases_volume', 'required_amount', 'requested_amount',
+            'competition_analysis_part1', 'competition_analysis_part2',
+            'registration_form', 'company_name', 'pib', 'company_address', 'company_phone',
+            'company_email', 'company_website', 'bank_account', 'business_analysis',
+            'realization_other_text'
+        ];
+        if (scalars.some(name => !m2ScalarAnswered(name))) {
+            return false;
+        }
+
+        if (!m2RadioAnswered('realization_type') || !m2RadioAnswered('has_business_space')
+            || !m2RadioAnswered('has_seasonal_workers') || !m2RadioAnswered('funding_alternative')) {
+            return false;
+        }
+
+        const notice = bpForm.querySelector('#finances_notice_confirmed');
+        if (!notice || !notice.checked) {
+            return false;
+        }
+
+        const tables = [
+            'productsServicesTableBody', 'targetCustomersTableBody', 'salesLocationsTableBody',
+            'pricingTableBody', 'revenueShareTableBody', 'employmentStructureTableBody',
+            'suppliersTableBody', 'fundingSourcesTableBody', 'revenueProjectionTableBody',
+            'riskMatrixTableBody'
+        ];
+        const registered = bpForm.querySelector('input[name="has_registered_business"]')?.value === '1';
+        if (registered) {
+            tables.push('businessHistoryTableBody');
+        }
+        if (tables.some(id => !m2TableAnswered(id))) {
+            return false;
+        }
+
+        return m2ExpenseAnswered('investment')
+            && m2ExpenseAnswered('operating')
+            && m2JobScheduleAnswered();
+    }
+
     // Funkcija za ažuriranje teksta dugmeta i informacije
     function updateSubmitButton() {
         if (!bpForm || !bpSubmitBtn) return;
 
-        if (isOmladinsko) {
-            bpSubmitBtnText.textContent = 'Sačuvaj nacrt biznis plana';
-            bpSubmitBtn.className = 'btn-secondary';
-            bpSubmitBtn.style.padding = '12px 24px';
-            bpSubmitBtn.style.fontSize = '14px';
-            return;
-        }
-        
-        const allFilled = checkRequiredFields();
-        
-        if (allFilled) {
-            // Ako su sva polja popunjena, prikaži "Sačuvaj Biznis plan"
-            bpSubmitBtnText.textContent = 'Sačuvaj Biznis plan';
-            bpSubmitBtn.className = 'btn-primary';
-            bpSubmitBtn.style.padding = '12px 24px';
-            bpSubmitBtn.style.fontSize = '14px';
-        } else {
-            // Ako nisu sva polja popunjena, prikaži "Sačuvaj Nacrt plana"
-            bpSubmitBtnText.textContent = 'Sačuvaj Nacrt plana';
-            bpSubmitBtn.className = 'btn-secondary';
-            bpSubmitBtn.style.padding = '12px 24px';
-            bpSubmitBtn.style.fontSize = '14px';
-        }
+        const allFilled = isDisplayedM2Complete();
+        bpSubmitBtnText.textContent = allFilled ? 'Sačuvaj biznis plan' : 'Sačuvaj nacrt biznis plana';
+        bpSubmitBtn.className = allFilled ? 'btn-primary' : 'btn-secondary';
+        bpSubmitBtn.style.padding = '12px 24px';
+        bpSubmitBtn.style.fontSize = '14px';
     }
 
     // Funkcija za rukovanje klikom na dugme (samo ako nije readOnly)
@@ -2184,14 +2341,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Postavi event listener za klik (samo ako nije readOnly)
         bpSubmitBtn.addEventListener('click', handleSubmit);
         
-        // Postavi event listenere na sva obavezna polja za dinamičko ažuriranje
-        requiredFields.forEach(fieldName => {
-            const field = bpForm.querySelector(`[name="${fieldName}"]`);
-            if (field) {
-                field.addEventListener('input', updateSubmitButton);
-                field.addEventListener('change', updateSubmitButton);
-            }
-        });
+        bpForm.addEventListener('input', updateSubmitButton);
+        bpForm.addEventListener('change', updateSubmitButton);
         
         // Ažuriraj dugme pri učitavanju stranice
         updateSubmitButton();

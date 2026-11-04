@@ -29,7 +29,7 @@ class PmIncompleteFormsSubmissionTest extends TestCase
 
     public function test_pm_draft_forms_submit_only_after_explicit_confirmation(): void
     {
-        [$owner, $application] = $this->pmApplication(m1Complete: false, m2Complete: false);
+        [$owner, $application] = $this->pmApplication(m1Complete: false, m2Complete: true);
         $this->attachRequiredDocuments($application);
 
         $page = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk()->getContent();
@@ -176,6 +176,8 @@ class PmIncompleteFormsSubmissionTest extends TestCase
                 'applicant_email' => $owner->email,
                 'summary' => $m2Complete ? 'Potpun sažetak' : null,
                 'realization_type' => 'stvori_novi',
+                'has_business_space' => 'nemam',
+                'has_seasonal_workers' => false,
                 'funding_sources_table' => [
                     ['type' => 'Laptop', 'price' => '1200'],
                 ],

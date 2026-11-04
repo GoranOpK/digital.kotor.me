@@ -154,9 +154,11 @@ class BusinessPlanSaveRedirectAndNoticeTest extends TestCase
         $this->assertFalse($pm->fresh()->businessPlan->isComplete());
 
         $this->actingAs($pmOwner)
-            ->post(route('applications.final-submit', $pm))
-            ->assertRedirect(route('applications.show', $pm))
-            ->assertSessionHas('omladinsko_confirm_incomplete_forms');
+            ->post(route('applications.final-submit', $pm), [
+                'confirm_incomplete_forms' => '1',
+                'confirm_missing_documents' => '1',
+            ])
+            ->assertSessionHasErrors('error');
         $this->assertSame('draft', $pm->fresh()->status);
 
         [$zpOwner, $zp] = $this->application('zensko');
@@ -169,6 +171,9 @@ class BusinessPlanSaveRedirectAndNoticeTest extends TestCase
             'applicant_phone' => '067000000',
             'applicant_email' => $zpOwner->email,
             'summary' => 'Sažetak',
+            'realization_type' => 'stvori_novi',
+            'has_business_space' => 'nemam',
+            'has_seasonal_workers' => false,
             'finances_notice_confirmed' => true,
         ]);
         $this->assertTrue($zp->fresh()->isObrazacComplete());

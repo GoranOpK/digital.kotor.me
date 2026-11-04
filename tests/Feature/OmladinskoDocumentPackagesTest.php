@@ -390,6 +390,10 @@ class OmladinskoDocumentPackagesTest extends TestCase
             'applicant_address' => 'Njegoševa 1, 85330 Kotor',
             'applicant_phone' => '067000000',
             'applicant_email' => $owner->email,
+            'summary' => 'Sažetak',
+            'realization_type' => 'stvori_novi',
+            'has_business_space' => 'nemam',
+            'has_seasonal_workers' => false,
             'finances_notice_confirmed' => true,
         ]);
         $application->refresh();
@@ -499,7 +503,10 @@ class OmladinskoDocumentPackagesTest extends TestCase
             'applicant_address' => 'Njegoševa 1, 85330 Kotor',
             'applicant_phone' => '067000000',
             'applicant_email' => $owner->email,
+            'summary' => 'Sažetak',
             'realization_type' => 'stvori_novi',
+            'has_business_space' => 'nemam',
+            'has_seasonal_workers' => false,
             'funding_sources_table' => [
                 ['type' => 'Laptop', 'price' => '1200'],
             ],

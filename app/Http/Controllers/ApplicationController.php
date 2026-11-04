@@ -15,6 +15,7 @@ use App\Identity\Runtime\IdentityUseGateException;
 use App\Security\JmbDualWrite;
 use App\Security\JmbEncryptedReadException;
 use App\Support\CompetitionProgramCatalog;
+use App\Support\BusinessPlanM2Completeness;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
 use App\Support\Pib;
@@ -821,7 +822,7 @@ class ApplicationController extends Controller
         // Ako je obrazac kompletan, preusmeri na formu za biznis plan (bez obzira na $isDraft)
         if ($isObrazacComplete) {
             return redirect()->route('applications.business-plan.create', $application)
-                ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
+                ->with('success', $this->completedObrazacContinueMessage($application));
         }
 
         if ($isDraft) {
@@ -832,6 +833,28 @@ class ApplicationController extends Controller
         return redirect()->to($this->applicationCreateUrl($competition, $application))
             ->with('warning', 'Prijava je sačuvana, ali još nisu popunjena sva obavezna polja. Provjerite formu i pokušajte ponovo.')
             ->withInput();
+    }
+
+    /**
+     * Informativna poruka na ekranu biznis plana nakon kompletnog Obrasca 1.
+     * PM oznaku bira postojeća klasifikacija prijave. ŽP zadržava 1a/1b.
+     */
+    private function completedObrazacContinueMessage(Application $application): string
+    {
+        $legacy = 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.';
+        if ($application->competition?->type !== 'omladinsko') {
+            return $legacy;
+        }
+
+        $label = KnApplicationClassification::applicationFormDisplayName(
+            $application->applicant_type,
+            $application->competition->type
+        );
+        if ($label !== 'Obrazac M1a' && $label !== 'Obrazac M1b') {
+            return $legacy;
+        }
+
+        return $label.' je kompletno popunjen. Nastavite sa popunjavanjem Obrasca M2 – Biznis plan.';
     }
 
     /**
@@ -1025,13 +1048,20 @@ class ApplicationController extends Controller
 
         $application->loadMissing('businessPlan');
 
-        // Provjera biznis plana — mora postojati; puna sadržajna kompletnost nije uslov predaje
+        // Provjera biznis plana — mora postojati. Polja sa zvjezdicom se provjeravaju ispod
+        // i ne mogu se zaobići potvrdom. Prazna neobavezna polja ne zaustavljaju predaju.
         if (!$application->businessPlan) {
             return back()->withErrors(['error' => 'Morate popuniti biznis plan prije podnošenja prijave.']);
         }
 
         if (!$application->businessPlan->finances_notice_confirmed) {
             return back()->withErrors(['error' => 'Morate potvrditi napomenu o finansijama u biznis planu prije konačne predaje.']);
+        }
+
+        if (! BusinessPlanM2Completeness::hasRequiredAsterisks($application->businessPlan)) {
+            return back()->withErrors([
+                'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
+            ]);
         }
 
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);

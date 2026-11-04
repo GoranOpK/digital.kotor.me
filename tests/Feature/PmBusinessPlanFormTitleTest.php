@@ -78,6 +78,151 @@ class PmBusinessPlanFormTitleTest extends TestCase
         $this->assertStringContainsString('1. Naziv biznis ideje:', $html);
     }
 
+    public function test_pm_m2_shows_article_19_note_and_zp_keeps_its_finance_note(): void
+    {
+        [$pmOwner, $pm] = $this->application('omladinsko');
+        $pmHtml = $this->actingAs($pmOwner)
+            ->get(route('applications.business-plan.create', $pm))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertFinanceQuestionRemains($pmHtml);
+        $this->assertArticle19Notice($pmHtml);
+        $this->assertZpFinanceNoteAbsent($pmHtml);
+        $this->assertNoticeConfirmationUnlocksFollowingQuestions($pmHtml);
+
+        $this->actingAs($pmOwner)
+            ->post(route('applications.business-plan.store', $pm), [
+                'save_as_draft' => '1',
+                'has_registered_business' => '0',
+                'business_idea_name' => 'PM finansije',
+                'required_amount' => '1500.50',
+                'requested_amount' => '800.25',
+            ])
+            ->assertRedirect(route('applications.show', $pm))
+            ->assertSessionHasNoErrors();
+
+        $saved = $pm->fresh()->businessPlan;
+        $this->assertNotNull($saved);
+        $this->assertSame('1500.50', number_format((float) $saved->required_amount, 2, '.', ''));
+        $this->assertSame('800.25', number_format((float) $saved->requested_amount, 2, '.', ''));
+
+        $reopened = $this->actingAs($pmOwner)
+            ->get(route('applications.business-plan.create', $pm))
+            ->assertOk()
+            ->getContent();
+        $this->assertFinanceQuestionRemains($reopened);
+        $this->assertArticle19Notice($reopened);
+        $this->assertZpFinanceNoteAbsent($reopened);
+        $this->assertStringContainsString('value="1500.50"', $reopened);
+        $this->assertStringContainsString('value="800.25"', $reopened);
+
+        [$zpOwner, $zp] = $this->application('zensko');
+        $zpHtml = $this->actingAs($zpOwner)
+            ->get(route('applications.business-plan.create', $zp))
+            ->assertOk()
+            ->getContent();
+        $this->assertFinanceQuestionRemains($zpHtml);
+        $this->assertZpFinanceNote($zpHtml);
+        $this->assertNoticeConfirmationUnlocksFollowingQuestions($zpHtml);
+        $zpNotice = $this->financesNoticeHtml($zpHtml);
+        $this->assertStringNotContainsString('Napomena — član 19 Odluke', $zpNotice);
+        $this->assertStringNotContainsString('preduzetništvu mladih', $zpNotice);
+        $this->assertStringNotContainsString('<strong>30%</strong>', $zpNotice);
+        $this->assertStringNotContainsString('<strong>15%</strong>', $zpNotice);
+    }
+
+    private function assertFinanceQuestionRemains(string $html): void
+    {
+        $this->assertStringContainsString(
+            '21. Potrebna sredstva — koliki iznos Vam je potreban za realizaciju biznis ideje?',
+            $html
+        );
+        $this->assertStringContainsString('name="required_amount"', $html);
+        $this->assertStringContainsString('name="requested_amount"', $html);
+        $this->assertStringContainsString('name="funding_sources_table[0][type]"', $html);
+        $this->assertStringContainsString('name="funding_sources_table[0][price]"', $html);
+    }
+
+    private function assertArticle19Notice(string $html): void
+    {
+        $notice = $this->financesNoticeHtml($html);
+        foreach ([
+            'Napomena — član 19 Odluke',
+            'Fizičko lice, preduzetnik ili privredno društvo može konkurisati za cjelokupan iznos ili dio sredstava potrebnih za realizaciju biznis plana.',
+            'Maksimalan iznos dodijeljenih sredstava za jedan biznis plan ne može biti veći od:',
+            '<strong>30%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za start-up (inovativni tehnološki biznis).',
+            '<strong>20%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za fizička lica, preduzetnike i društva kojima ranije nijesu dodjeljivana budžetska sredstva Opštine Kotor za podršku preduzetništvu mladih.',
+            '<strong>15%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za preduzetnike i društva kojima su ranije dodjeljivana budžetska sredstva Opštine Kotor za podršku preduzetništvu mladih.',
+        ] as $marker) {
+            $this->assertStringContainsString($marker, $notice);
+        }
+    }
+
+    private function assertZpFinanceNote(string $html): void
+    {
+        $notice = $this->financesNoticeHtml($html);
+        foreach ($this->zpFinanceNoteMarkers() as $marker) {
+            $this->assertStringContainsString($marker, $notice);
+        }
+    }
+
+    private function assertZpFinanceNoteAbsent(string $html): void
+    {
+        foreach ($this->zpFinanceNoteMarkers() as $marker) {
+            $this->assertStringNotContainsString($marker, $html);
+        }
+    }
+
+    private function assertNoticeConfirmationUnlocksFollowingQuestions(string $html): void
+    {
+        $this->assertStringContainsString('Potvrđujem da je napomena pročitana', $html);
+        $this->assertStringContainsString('id="finances_notice_confirmed"', $html);
+        $this->assertMatchesRegularExpression(
+            '/id="financesAfterNotice" class="finances-after-notice locked"/',
+            $html
+        );
+        $noticeAt = strpos($html, 'id="financesNoticeBox"');
+        $confirmAt = strpos($html, 'id="finances_notice_confirmed"');
+        $questionsAt = strpos($html, 'id="financesAfterNotice"');
+        $question22At = strpos($html, '22. Koliki iznos podrške tražite od Opštine Kotor');
+        $question25At = strpos($html, '25. Projekcija rashoda u naredne 3 godine');
+        $this->assertNotFalse($noticeAt);
+        $this->assertNotFalse($confirmAt);
+        $this->assertNotFalse($questionsAt);
+        $this->assertNotFalse($question22At);
+        $this->assertNotFalse($question25At);
+        $this->assertLessThan($confirmAt, $noticeAt);
+        $this->assertLessThan($questionsAt, $confirmAt);
+        $this->assertLessThan($question22At, $questionsAt);
+        $this->assertLessThan($question25At, $question22At);
+        $this->assertStringContainsString("financesAfterNotice.classList.remove('locked')", $html);
+    }
+
+    private function financesNoticeHtml(string $html): string
+    {
+        $this->assertSame(
+            1,
+            preg_match('/<div class="finances-notice-box" id="financesNoticeBox">[\s\S]*?<\/div>/', $html, $matches)
+        );
+
+        return $matches[0];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function zpFinanceNoteMarkers(): array
+    {
+        return [
+            'Maksimalan iznos dodijeljenih sredstava za jedan biznis plan ne može iznositi više od:',
+            '<strong>20%</strong> od ukupnog iznosa definisanog u Javnim konkursima za tekuću godinu za:',
+            '<strong>10%</strong> od ukupnog iznosa definisanog u Javnim konkursima za tekuću godinu za fizička lica/preduzetnice/društva kojima ranije nisu dodjeljivana budžetska sredstva Opštine Kotor za podršku ženskom preduzetništvu.',
+            '<strong>5%</strong> od ukupnog iznosa definisanog u Javnim konkursima za tekuću godinu za preduzetnice/društva kojima su ranije dodjeljivana budžetska sredstva Opštine Kotor za podršku ženskom preduzetništvu.',
+            'zeleno preduzetništvo',
+        ];
+    }
+
     public function test_pm_memorandum_shows_the_applications_existing_number(): void
     {
         [$owner, $application] = $this->application('omladinsko');

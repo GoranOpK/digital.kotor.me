@@ -154,7 +154,8 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
 
         $response->assertRedirect(route('applications.show', $application));
         $response->assertSessionHasNoErrors();
-        $response->assertSessionHas('omladinsko_confirm_incomplete_forms');
+        $response->assertSessionHas('omladinsko_confirm_missing_documents');
+        $response->assertSessionMissing('omladinsko_confirm_incomplete_forms');
         $this->assertSame('draft', $application->fresh()->status);
         $this->assertNull($application->fresh()->submitted_at);
 
@@ -201,7 +202,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         ]);
     }
 
-    public function test_omladinsko_submit_allows_missing_point_seven_and_keeps_empty_drugo_text(): void
+    public function test_omladinsko_submit_rejects_missing_point_seven_even_with_confirmation(): void
     {
         [$owner, $application] = $this->createOmladinskoReadyDraft([
             'realization_type' => null,
@@ -209,22 +210,15 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         ]);
 
         $this->actingAs($owner)
-            ->get(route('applications.show', $application))
-            ->assertOk()
-            ->assertSee('Jedan ili više obrazaca vaše prijave nijesu u potpunosti popunjeni.', false);
-
-        $this->actingAs($owner)
             ->post(route('applications.final-submit', $application), [
                 'confirm_incomplete_forms' => '1',
                 'confirm_missing_documents' => '1',
             ])
-            ->assertSessionHasNoErrors();
+            ->assertSessionHasErrors('error');
         $application->refresh();
-        $this->assertSame('submitted', $application->status);
-        $this->assertNotNull($application->submitted_at);
-        $this->assertNotSame('rejected', $application->status);
+        $this->assertSame('draft', $application->status);
+        $this->assertNull($application->submitted_at);
         $this->assertNull($application->businessPlan->fresh()->realization_type);
-        $this->assertNull($application->businessPlan->fresh()->product_service);
 
         $application->businessPlan->update([
             'realization_type' => KnOmladinskoDocumentPackage::REALIZATION_DRUGO,
@@ -238,7 +232,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         [$owner, $application] = $this->createOmladinskoReadyDraft([
             'funding_sources_table' => [['type' => '', 'price' => '']],
             'requested_amount' => 9999,
-            'summary' => null,
         ]);
 
         $this->actingAs($owner)
@@ -251,7 +244,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->assertSame('submitted', $application->status);
         $this->assertNotNull($application->submitted_at);
         $this->assertSame(0, KnOmladinskoDocumentPackage::filledPurchaseCount($application->businessPlan->fresh()->funding_sources_table));
-        $this->assertNull($application->businessPlan->fresh()->summary);
+        $this->assertSame('Sažetak', $application->businessPlan->fresh()->summary);
         $this->assertSame(9999.0, (float) $application->businessPlan->fresh()->requested_amount);
 
         $html = $this->actingAs($owner)
@@ -291,7 +284,6 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
     public function test_commission_can_open_incomplete_submitted_youth_plan(): void
     {
         [$owner, $application] = $this->createOmladinskoReadyDraft([
-            'summary' => null,
             'funding_sources_table' => [['type' => '', 'price' => '']],
             'promotion' => 'Dostavljeni sadržaj za Komisiju',
         ]);
@@ -356,7 +348,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         $this->actingAs($member->user)
             ->get($adminUrl)
             ->assertOk();
-        $this->assertNull($application->businessPlan->fresh()->summary);
+        $this->assertSame('Sažetak', $application->businessPlan->fresh()->summary);
         $this->assertSame(0, KnOmladinskoDocumentPackage::filledPurchaseCount($application->businessPlan->fresh()->funding_sources_table));
 
         $this->actingAs($member->user)
@@ -473,8 +465,7 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             ->get(route('applications.business-plan.create', $application))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>', $html);
-        $this->assertStringNotContainsString('id="bpSubmitBtnText">Sačuvaj nacrt biznis plana</span>', $html);
+        $this->assertStringContainsString('id="bpSubmitBtnText">Sačuvaj nacrt biznis plana</span>', $html);
 
         $this->actingAs($owner)
             ->post(route('applications.business-plan.store', $application), [
@@ -534,6 +525,10 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             'applicant_address' => 'Njegoševa 1, 85330 Kotor',
             'applicant_phone' => '067000000',
             'applicant_email' => $owner->email,
+            'summary' => 'Sažetak',
+            'realization_type' => 'stvori_novi',
+            'has_business_space' => 'nemam',
+            'has_seasonal_workers' => false,
             'finances_notice_confirmed' => true,
         ]);
 
@@ -682,7 +677,10 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
             'applicant_address' => 'Njegoševa 1, 85330 Kotor',
             'applicant_phone' => '067000000',
             'applicant_email' => $owner->email,
+            'summary' => 'Sažetak',
             'realization_type' => 'stvori_novi',
+            'has_business_space' => 'nemam',
+            'has_seasonal_workers' => false,
             'funding_sources_table' => [
                 ['type' => 'Laptop', 'price' => '1200'],
             ],
