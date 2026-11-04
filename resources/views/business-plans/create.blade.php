@@ -1534,20 +1534,29 @@
         </p>
 
         @php
-            // Dugme "Štampaj" – vidljivo kandidatu koji popunjava obrazac ili predsjedniku komisije
+            // Dok se obrazac popunjava, štampa ostaje korisniku koji ga smije mijenjati.
+            // Na zaključanom obrascu vlasnik štampa samo PM i ŽP. Predsjednik Komisije zadržava svoje pravo.
             $canPrintBusinessPlan = false;
-            if (!($readOnly ?? false)) {
-                $canPrintBusinessPlan = true; // kandidat
-            } else {
-                $currentUser = auth()->user();
-                if ($currentUser && $application->competition) {
-                    $competitionId = $application->competition->commission_id;
-                    $commissionMember = $competitionId
-                        ? \App\Models\CommissionMember::activeForCommission($currentUser->id, $competitionId)
-                        : null;
-                    if ($commissionMember && $commissionMember->position === 'predsjednik') {
-                        $canPrintBusinessPlan = true;
-                    }
+            $printViewer = auth()->user();
+            $ownsBusinessPlan = $printViewer && (int) $application->user_id === (int) $printViewer->id;
+            $profileKey = \App\Services\Competitions\Profile\CompetitionProfileResolver::resolve(
+                $application->competition?->type
+            )->key();
+            $lockedPmOrZpOwner = ($readOnly ?? false)
+                && $ownsBusinessPlan
+                && in_array($profileKey, [
+                    \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_YOUTH,
+                    \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_WOMEN,
+                ], true);
+            if (! ($readOnly ?? false) || $lockedPmOrZpOwner) {
+                $canPrintBusinessPlan = true;
+            } elseif ($printViewer && $application->competition) {
+                $competitionId = $application->competition->commission_id;
+                $commissionMember = $competitionId
+                    ? \App\Models\CommissionMember::activeForCommission($printViewer->id, $competitionId)
+                    : null;
+                if ($commissionMember && $commissionMember->position === 'predsjednik') {
+                    $canPrintBusinessPlan = true;
                 }
             }
         @endphp
