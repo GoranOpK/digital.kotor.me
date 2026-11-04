@@ -381,9 +381,11 @@
                 <!-- Obavezna dokumentacija -->
                 <div class="info-card">
                     <h2>Obavezna dokumentacija</h2>
+                    @if(empty($requiredDocumentsNotice))
                     <p style="color: #6b7280; margin-bottom: 16px;">
                         Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
                     </p>
+                    @endif
                     
                     @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
                     <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
@@ -504,6 +506,9 @@
                     </div>
                     @endif
                     
+                    @if(!empty($requiredDocumentsNotice))
+                        <p id="pm-documents-notice" style="color: #6b7280; margin-bottom: 0;">{{ $requiredDocumentsNotice }}</p>
+                    @else
                     <ul class="documents-list" id="documents-list">
                         @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
                             @php
@@ -518,6 +523,7 @@
                             @endforeach
                         @endif
                     </ul>
+                    @endif
                 </div>
             @else
                 <!-- Za članove komisije i administratora konkursa: Opis konkursa u istom redu kao Osnovne informacije -->

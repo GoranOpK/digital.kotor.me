@@ -339,7 +339,13 @@ class CompetitionsController extends Controller
 
         // Dodaj obavezne dokumente koje svi moraju imati
         $previewType = $previewApplicantType ?: $applicantType;
-        if ($omladinskoPackage !== null && $omladinskoPackage->number !== null) {
+        $isYouthCompetition = CompetitionProfileResolver::resolve($competition->type)->key()
+            === CompetitionProfileResolver::TYPE_YOUTH;
+        $requiredDocumentsNotice = null;
+        if ($isYouthCompetition && ($omladinskoPackage === null || $omladinskoPackage->number === null)) {
+            $requiredDocuments = [];
+            $requiredDocumentsNotice = 'Obrasci za prijavu određuju se prema tipu podnosioca i fazi razvoja biznisa.';
+        } elseif ($omladinskoPackage !== null && $omladinskoPackage->number !== null) {
             $formTitles = $omladinskoPackage->formTitles();
             array_unshift($requiredDocuments, $formTitles['m2']);
             array_unshift($requiredDocuments, $formTitles['m1']);
@@ -414,6 +420,7 @@ class CompetitionsController extends Controller
             'isOpen',
             'isUpcoming',
             'requiredDocuments',
+            'requiredDocumentsNotice',
             'userApplication',
             'userType',
             'applicantType',
