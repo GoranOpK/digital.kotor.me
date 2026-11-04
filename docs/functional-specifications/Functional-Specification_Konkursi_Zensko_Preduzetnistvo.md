@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.18
-**Datum:** 2026-10-29
+**Verzija:** 1.0.19
+**Datum:** 2026-11-04
 
 Povezani dokumenti:
 
@@ -73,6 +73,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.16 | 2026-09-18 | §14.9 / §18.6.4 runtime closeout (dokumentacija) prema `KN-BM-003` v1.0.21: runtime implementacija evidentirana commitom `35a0da8` — IMPLEMENTED IN CODE; TESTED LOCALLY (`ZpEqualScoreAllocationGateTest` i regresija); PUSHED TO `origin/main`. Produkcijski runtime acceptance **nije** još izvršen/potvrđen. Funkcionalna pravila §14.9 / §18.6.4 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.17 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED prema `KN-BM-003` v1.0.22: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Funkcionalna pravila §14.9 / §18.6.4 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.18 | 2026-10-29 | KN-PATCH-FS-025 — Prvo čuvanje buduće odluke zaključava ishod, iznos i obrazloženje. Ranija odluka bez vremena zaključavanja ostaje ispravljiva i ne prepisuje se. Iznos se odbija ako bi onemogućio zakonit završetak, uključujući prednost otpočinjanja i postojeći limit od 20% za potvrđeni zeleni ili inovativni bonus. Limiti 10% i 5% se ne uvode. Istovremeni upisi ne mogu zajedno preći budžet. |
+| 1.0.19 | 2026-11-04 | Usaglašavanje §10.4 sa commitom `8974e68a`. Poslije uspješnog podnošenja Prigovora aktivni predsjednik nadležne Komisije dobija e-mail, a na kontrolnoj tabli vidi Prigovore u stanju Podnesen. Riješeni Prigovor izlazi iz brojača. Neuspješan e-mail ne poništava Prigovor i ne šalje se ponovo. Član 17, rokovi, stanja Prigovora i postupak odlučivanja nijesu mijenjani. Posebna tehnička specifikacija ŽP nije otvorena. |
 
 Napomena:
 
@@ -2195,6 +2196,10 @@ Nema:
 Administrator platforme i Super administrator **ne** mogu zaobići ovu zabranu samo zbog privilegovane platformske uloge.
 
 Eventualni drugi pravni postupak **nije** ponovno otvaranje ovog Prigovora i **nije** predmet ovog pravila. Ne uvodi se novi pravni lijek ni novo stanje Prigovora.
+
+Kada je Prigovor uspješno sačuvan kao Podnesen, Platforma obavještava aktivnog predsjednika Komisije konkretnog Konkursa. E-mail se šalje samo ako je takav predsjednik tačno jedan i ima registrovanu e-mail adresu. Poruka sadrži naziv Konkursa, broj Prijave, datum i vrijeme podnošenja i link samo ako predsjednik po postojećim pravilima smije otvoriti Prigovor. E-mail ne sadrži JMBG, ime i prezime, kontakt podatke niti priloženu dokumentaciju Podnositeljke. Sadrži isključivo podatke potrebne za identifikaciju Prigovora i pristup ovlašćenog predsjednika Komisije. Ako predsjednika nema, ima ih više ili nema adrese, Prigovor ostaje Podnesen, a e-mail se ne šalje. Ako slanje ne uspije, Prigovor ostaje sačuvan. Nema automatskog ponovnog slanja.
+
+Na kontrolnoj tabli tog predsjednika sekcija „Prigovori na eliminatorne odluke“ broji samo Prigovore njegove Komisije u stanju Podnesen. Prihvaćen i Odbijen se ne broje. Ovo nije brojač nepročitanih poruka.
 
 Ako Prigovor nije podnesen u roku od 3 dana:
 

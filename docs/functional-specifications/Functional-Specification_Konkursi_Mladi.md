@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.23
-**Datum:** 2026-11-01
+**Verzija:** 1.0.24
+**Datum:** 2026-11-04
 
 Povezani dokumenti:
 
@@ -63,6 +63,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.21 | 2026-11-01 | Usaglašavanje važećeg opisa sa implementiranim pravilima PM-01–PM-05. Istorijski redovi, uključujući KN-PATCH-FS-021 i KN-PATCH-FS-026, ostaju neizmijenjeni. Važeći opis je u Poglavljima 16 i 17 i u §19.6.3, §20.2, §20.3, §20.4, §20.5 i §20.7: potvrda dodatnih bodova je isto čuvanje individualne ocjene predsjednika; jedna rang-lista daje rang svim bodovanim prijavama poslije eliminatorne provjere; ispod 30 status `rejected` i rang nastaju pri formiranju liste; dijeljeno mjesto ispod praga ne traži zaključak i ne blokira konačnost; Word odluka ne uključuje te prijave među dobitnike. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.22 | 2026-11-01 | Usaglašavanje rasporeda ekrana Komisije. Istorijski red KN-PATCH-FS-026 ostaje. Važeći raspored je u §20.5 i §23.9: individualno ocjenjivanje, rang-lista sa zaključcima i štampom, te poseban ekran za generisanje Word odluke, preuzimanje i zatvaranje. Na ta tri ekrana nema posebnih mjesta za potpise članova. Redoslijed završetka ostaje neizmijenjen. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.23 | 2026-11-01 | Usaglašavanje GAP-02. Istorijski redovi ostaju. Status inovativnog tehnološkog start-upa i ranije dodijeljenih sredstava utvrđuje se van aplikacije. Aplikacija te činjenice ne prikuplja i ne računa 30/20/15. Predsjednik unosi zaključak, iznos i obrazloženje i dužan je da poštuje te limite. Serverska kontrola je traženi iznos, raspoloživi budžet i trajno zaključavanje. Privremena rezervacija od 30% se ne primjenjuje. Indeks ostaje 142/142. PM-01–PM-05 i raspored tri ekrana ostaju. ŽP i MMSP nijesu dirani. |
+| 1.0.24 | 2026-11-04 | Usaglašavanje sa commitom `8974e68a`. Poslije uspješnog podnošenja eliminatornog prigovora aktivni predsjednik nadležne Komisije dobija e-mail, a na kontrolnoj tabli vidi prigovore u stanju Podnesen. Riješeni prigovor izlazi iz brojača. Neuspješan e-mail ne poništava prigovor i ne šalje se ponovo. Novo poslovno pravilo, rok i stanje prigovora nijesu uvedeni. Indeks ostaje 142/142. ŽP ishod je u KN-FS-003. MMSP nije diran. |
 
 Napomena:
 
@@ -2746,6 +2747,10 @@ Prigovor **može** ukazati da je relevantna činjenica ili dokument već postoja
 * naknadnu dopunu prijave;
 * otključavanje prijave.
 
+Kada je prigovor uspješno sačuvan u stanju Podnesen, Platforma obavještava aktivnog predsjednika Komisije tog Poziva (`BM-ML-036`). E-mail ide samo ako postoji tačno jedan takav predsjednik i ako ima registrovanu e-mail adresu. Poruka sadrži naziv Poziva, broj prijave, datum i vrijeme podnošenja i link samo kada predsjednik po postojećim pravilima smije otvoriti prigovor. E-mail ne sadrži JMBG, ime i prezime, kontakt podatke niti priloženu dokumentaciju podnosioca. Sadrži isključivo podatke potrebne za identifikaciju prigovora i pristup ovlašćenog predsjednika Komisije. Ako predsjednika nema, ima ih više ili nema adrese, prigovor ostaje Podnesen, a e-mail se ne šalje. Ako slanje ne uspije, prigovor ostaje sačuvan. Nema automatskog ponovnog slanja. Ponovljeno podnošenje i dalje nije dozvoljeno i ne proizvodi novi e-mail.
+
+Na kontrolnoj tabli aktivnog predsjednika PM ili ŽP Komisije prikazuje se sekcija „Prigovori na eliminatorne odluke“. Broj „Čeka odluku“ obuhvata samo prigovore te Komisije u stanju Podnesen. Prihvaćen i Odbijen se ne broje. Ovo nije brojač nepročitanih poruka. Član Komisije i predsjednik druge Komisije tuđe prigovore ne vide.
+
 ## 14.3. Odlučivanje Komisije
 
 Komisija provjerava sadržaj koji je postojao **prije isteka roka** Poziva.
@@ -2779,7 +2784,7 @@ Prigovor ostaje odvojen objekat. Stanja prigovora ostaju `Podnesen`, `Prihvaćen
 |---------|-------------------|----------------|-------|----------|-------|------------|
 | Obavještenje | nijedan kriterijum nije aktiviran | slanje | M3 bez aktivnog razloga | prigovorni tok se ne otvara; obavještenje se ne šalje | sistem | `BM-ML-036` |
 | Obavještenje | najmanje jedan aktiviran kriterijum | slanje | evidentiranje u M3 | jedno objedinjeno obavještenje na registrovanu e-mail adresu; svaki aktivirani razlog posebno; rok 3 dana od evidentiranog slanja; nije javno | sistem | `BM-ML-036` |
-| Prigovor | — | podnošenje | najmanje jedan aktiviran razlog; rok 3 dana od slanja; samo funkcija digitalnog servisa; obrazloženje po osporenom kriterijumu | Podnesen; prijava ostaje zaključana; neaktivirani se ne mogu osporavati | podnosilac | `BM-ML-036`; `BM-ML-023` |
+| Prigovor | — | podnošenje | najmanje jedan aktiviran razlog; rok 3 dana od slanja; samo funkcija digitalnog servisa; obrazloženje po osporenom kriterijumu; e-mail samo ako postoji tačno jedan aktivni predsjednik nadležne Komisije sa registrovanom e-mail adresom | Podnesen; prijava ostaje zaključana; neaktivirani se ne mogu osporavati; e-mail sadrži naziv Poziva, broj prijave, datum i vrijeme podnošenja i link samo kada postojeći pristup dozvoljava pregled; kontrolna tabla broji samo stanje Podnesen; pad e-maila ne poništava prigovor i nema automatskog ponovnog slanja; ponovljeno podnošenje ne proizvodi novi e-mail | podnosilac | `BM-ML-036`; `BM-ML-023` |
 | Prigovor | — | pokušaj podnošenja odgovorom na e-mail ili običnim spoljnim e-mailom | — | nije pravilno podnesen prigovor | podnosilac | `BM-ML-036` |
 | Prigovor | Podnesen | odluka | sva tri člana; odluka po svakom osporenom kriterijumu; provjera sadržaja koji je postojao prije isteka roka | pojedinačni ishodi; ako nijedan razlog nije konačno aktivan → `submitted`; ako makar jedan ostane → `rejected` uz sve konačne aktivne razloge | Komisija / predsjednik | `BM-ML-003`; `BM-ML-036`; `BM-ML-037` |
 | Prigovor | Prihvaćen ili Odbijen | ponovno otvaranje ili produženje roka | — | zabranjeno; nema `rejected` → `submitted`; isti ciklus se ne ponavlja | predsjednik / Administrator / svi | `BM-ML-037` |

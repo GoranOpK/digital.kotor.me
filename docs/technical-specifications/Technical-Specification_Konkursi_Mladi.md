@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.20
-**Datum:** 2026-11-01
+**Verzija:** 1.0.21
+**Datum:** 2026-11-04
 
 Povezani dokumenti:
 
@@ -58,6 +58,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.18 | 2026-11-01 | Usaglašavanje važećeg opisa sa implementiranim pravilima PM-01–PM-05. Istorijski redovi, uključujući KN-PATCH-TS-012 i KN-PATCH-TS-016, ostaju neizmijenjeni. Važeći opis je u §10.6, §10.11, §10.12, §11.1, §11.2, §11.4 i §11.5: čuvanje ocjene predsjednika potvrđuje dodatne bodove; `expectedYouthRankingPositions` numeriše cijeli ocijenjeni skup; ispod 30 `rejected` i rang u istom upisu; dijeljeno mjesto ispod praga nije neriješena grupa; poslije konačnosti obračun ne prepisuje listu; Word dobitnici i `ranking_sha256` ostaju usklađeni; zatvaranje odbija neusklađen rang. ŽP i MMSP nijesu dirani. |
 | 1.0.19 | 2026-11-01 | Usaglašavanje rasporeda ekrana Komisije. Istorijski red KN-PATCH-TS-016 ostaje. Važeći raspored je u §11.2 i §12.14: `evaluation.create` za ocjenjivanje, `evaluation.youth-ranking` za rang-listu, zaključke i štampu, te `evaluation.youth-decision` za generisanje, preuzimanje i zatvaranje. Na ta tri ekrana nema posebnih mjesta za potpise članova. Redoslijed završetka i nosilac Word dokumenta ostaju neizmijenjeni. ŽP i MMSP nijesu dirani. |
 | 1.0.20 | 2026-11-01 | Usaglašavanje GAP-02. Istorijski redovi ostaju. `storeYouthAllocationDraft` više ne prima polja start-upa i ranijeg finansiranja. `saveDraft` ih ne upisuje i ne računa 30/20/15. `youthMaxClaim` rezerviše traženi iznos u granicama budžeta Poziva, bez procenta i bez privremenih 30%. Pozitivan zaključak je konačan bez tih činjenica. Postojeće kolone se ne brišu i nova migracija se ne uvodi. PM-01–PM-05, Word odluka i raspored tri ekrana ostaju. ŽP i MMSP nijesu dirani. |
+| 1.0.21 | 2026-11-04 | Usaglašavanje §9.4 i §9.10 sa commitom `8974e68a`. `ApplicationPrigovorService::submit()` i dalje prvo čuva prigovor. `deliverSubmissionNotice()` zatim šalje `ApplicationPrigovorSubmittedMail` samo tačno jednom aktivnom predsjedniku. Nema nove tabele, migracije, statusa ni automatskog ponavljanja. Žensko poslovno pravilo nije mijenjano. MMSP nije diran. |
 
 Napomena:
 
@@ -2022,7 +2023,11 @@ Prigovor **ne** otključava prijavu i **ne** mijenja priloge (`BM-ML-023`; `KN-F
 
 Tri odvojena prigovora, po jedan po kriterijumu, **ne** uvode se.
 
-Izvor: `BM-ML-036`; `KN-FS-002` §14.
+Poslije uspješnog upisa tok je: `ApplicationPrigovorService::submit()` → uspješno čuvanje → `deliverSubmissionNotice()` → `ApplicationPrigovorSubmittedMail`. Slanje je van transakcije podnošenja. Komisija se nalazi preko `competition.commission_id`. E-mail na `users.email` šalje se samo kada među aktivnim članovima te komisije postoji tačno jedan sa položajem `predsjednik` i kada adresa nije prazna. Sadržaj je naziv konkursa, broj prijave iz UP broja i `redni_broj`, te `submitted_at`. Link je `evaluation.create` kada postojeća pravila te stranice dozvoljavaju predsjedniku pristup. Inače je `admin.applications.show`, ako ta postojeća stranica dozvoljava pristup. Ako ne dozvoljava nijedna, e-mail nema link. Izuzetak slanja se evidentira i ne poništava prigovor. Nema kolone o uspjehu slanja ni automatskog ponavljanja. Jedinstveni prigovor po prijavi i dalje sprečava drugi e-mail.
+
+Kontrolna tabla je postojeći `dashboard`. `pendingDecisionRowsForChairman()` vraća samo prigovore statusa `podnesen` za komisije na kojima je korisnik aktivni predsjednik i konkurs je `omladinsko` ili `zensko`. Prihvaćen i odbijen se ne vraćaju. Ne uvodi se nova tabela, migracija, status ni poslovno pravilo.
+
+Izvor: `BM-ML-036`; `KN-FS-002` §14; commit `8974e68a`.
 
 ## 9.5. Aktivirani razlozi
 
@@ -2117,7 +2122,7 @@ Izvor: ovaj dokument §2.2–§2.5; `KN-FS-002` Poglavlja 13–14 i 25.
 |---------|--------|-------|----------|-------|
 | M3 | predsjednik evidentira tri stavke | Komisija profila mladih; rok istekao | zapis provjere; status ostaje `submitted` | `BM-ML-035` |
 | Obavještenje | slanje | ≥1 aktiviran kriterijum | jedan portal+mail zapis; snapshot razloga; rok 3 dana | `BM-ML-036` |
-| Prigovor | podnošenje | prozor otvoren; ≥1 aktiviran; izbor samo aktiviranih | jedan zapis; prijava `submitted` | `BM-ML-036` |
+| Prigovor | podnošenje | prozor otvoren; ≥1 aktiviran; izbor samo aktiviranih; tačno jedan aktivni predsjednik `competition.commission_id` sa `users.email` | jedan zapis statusa `podnesen`; prijava `submitted`; zatim `deliverSubmissionNotice()` van transakcije šalje `ApplicationPrigovorSubmittedMail`; link samo na dozvoljenu postojeću rutu, inače bez linka; pad slanja ne dira zapis i nema ponavljanja; `pendingDecisionRowsForChairman()` broji samo `podnesen` za `omladinsko` i `zensko` | `BM-ML-036`; commit `8974e68a` |
 | Prigovor | pokušaj na neaktiviran | bilo koji | zabranjeno | `KN-FS-002` §14 |
 | Odluka | predsjednik evidentira | preduslov tri člana; jedan zapis | Prihvaćen/Odbijen + ishodi po aktiviranim | `BM-ML-003`; `BM-ML-037` |
 | Konačnost | istek 3 dana bez prigovora | postojeći prozor zatvoren | `rejected`; svi aktivirani razlozi | `BM-ML-036` |
