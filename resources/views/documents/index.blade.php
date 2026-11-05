@@ -740,9 +740,9 @@ function updateFileDisplay(input, addFromInput = true) {
             
             // Dugme za pomeranje dole
             if (index < selectedFiles.length - 1) {
-                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomakni dolje" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomakni dolje" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">Dolje</button>';
             } else {
-                fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
+                fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">Dolje</button>';
             }
             
             // Dugme za uklanjanje
