@@ -507,8 +507,7 @@
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
                         <span style="color: #1e3a8a; font-size: 13px;">
-                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> tim redoslijedom kako su navedeni. 
-                            Možete promijeniti redoslijed fajlova pomoću dugmadi "Gore" i "Dolje" prije upload-a.
+                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong>, redoslijedom kojim su navedeni. Redoslijed fajlova možete promijeniti pomoću dugmadi ‘Gore’ i ‘Dolje’ prije upload-a.
                         </span>
                     </div>
                 </div>
@@ -741,9 +740,9 @@ function updateFileDisplay(input, addFromInput = true) {
             
             // Dugme za pomeranje dole
             if (index < selectedFiles.length - 1) {
-                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomakni dolje" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomakni dolje" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">Dolje</button>';
             } else {
-                fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
+                fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">Dolje</button>';
             }
             
             // Dugme za uklanjanje
