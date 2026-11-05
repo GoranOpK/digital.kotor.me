@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.24
-**Datum:** 2026-11-04
+**Verzija:** 1.0.25
+**Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.17** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.21** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.18** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.15** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.22** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -64,6 +64,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.22 | 2026-11-01 | Usaglašavanje rasporeda ekrana Komisije. Istorijski red KN-PATCH-FS-026 ostaje. Važeći raspored je u §20.5 i §23.9: individualno ocjenjivanje, rang-lista sa zaključcima i štampom, te poseban ekran za generisanje Word odluke, preuzimanje i zatvaranje. Na ta tri ekrana nema posebnih mjesta za potpise članova. Redoslijed završetka ostaje neizmijenjen. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.23 | 2026-11-01 | Usaglašavanje GAP-02. Istorijski redovi ostaju. Status inovativnog tehnološkog start-upa i ranije dodijeljenih sredstava utvrđuje se van aplikacije. Aplikacija te činjenice ne prikuplja i ne računa 30/20/15. Predsjednik unosi zaključak, iznos i obrazloženje i dužan je da poštuje te limite. Serverska kontrola je traženi iznos, raspoloživi budžet i trajno zaključavanje. Privremena rezervacija od 30% se ne primjenjuje. Indeks ostaje 142/142. PM-01–PM-05 i raspored tri ekrana ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.24 | 2026-11-04 | Usaglašavanje sa commitom `8974e68a`. Poslije uspješnog podnošenja eliminatornog prigovora aktivni predsjednik nadležne Komisije dobija e-mail, a na kontrolnoj tabli vidi prigovore u stanju Podnesen. Riješeni prigovor izlazi iz brojača. Neuspješan e-mail ne poništava prigovor i ne šalje se ponovo. Novo poslovno pravilo, rok i stanje prigovora nijesu uvedeni. Indeks ostaje 142/142. ŽP ishod je u KN-FS-003. MMSP nije diran. |
+| 1.0.25 | 2026-11-05 | Usaglašavanje §8.4, §8.5, §8.6.5, §8.6.6, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.21. Odgovor tačke 7 nije obavezan. Dostavljeni odgovor mora biti dozvoljen. Drugo bez obrazloženja i nedozvoljena vrijednost blokiraju konačno podnošenje. Prazna tačka ne blokira. Nacrt se može sačuvati. Indeks ostaje 142/142. Tačka 22, M1 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1803,14 +1804,15 @@ Ostala polja M2, osim tačaka 7 i 22 razrađenih ovdje, zadržavaju strukturu iz
 
 ### Tačka 7
 
-U tački 7 podnosilac bira **tačno jedan** odgovor (`BM-ML-027`):
+Popunjavanje tačke 7 nije obavezno (`BM-ML-027`).
 
-* izbor je obavezan;
-* odgovori su međusobno isključivi;
+* podnosilac može ostaviti tačku nepopunjenu;
+* nepopunjena tačka ne blokira konačno podnošenje;
+* ako odgovori, bira najviše jedan od ponuđenih odgovora iz izvornog obrasca M2; ovaj dokument ih **ne** rekonstruira pretpostavkom;
 * istovremeni izbor više odgovora **nije** dozvoljen;
-* ponuđeni odgovori su oni iz izvornog obrasca M2; ovaj dokument ih **ne** rekonstruira pretpostavkom;
-* ako postoji i izabere se `Drugo`, tekstualno objašnjenje je **obavezno**;
-* najveći broj izbora **nije** izmišljen, jer je uvijek jedan.
+* nedozvoljena vrijednost blokira konačno podnošenje;
+* ako izabere `Drugo`, tekstualno objašnjenje je **obavezno** prije konačnog podnošenja;
+* nepotpuni nacrt, uključujući praznu tačku 7 i `Drugo` bez objašnjenja, može se sačuvati.
 
 Tačan UI element nije određen ovim poglavljem.
 
@@ -1842,8 +1844,8 @@ Odnos ukupne vrijednosti i traženog iznosa **provjerava Komisija**. Platforma *
 |---------|-------------------|----------------|-------|----------|-------|------------|
 | Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira preduzetnika, ili registrovani preduzetnik | prikazuje se M1a; nema ručnog izbora M1b | sistem | `BM-ML-025`; F-06 |
 | Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira društvo, ili registrovano privredno društvo (DOO, AD, OD ili KD) | prikazuje se M1b; nema ručnog izbora M1a | sistem | `BM-ML-025`; F-06 |
-| M2 tačka 7 | U pripremi | izbor odgovora | tačno jedan odgovor | izbor evidentiran | podnosilac | `BM-ML-027` |
-| M2 tačka 7 | U pripremi | izbor `Drugo` | tekst objašnjenja unesen | objašnjenje evidentirano | podnosilac | `BM-ML-027` |
+| M2 tačka 7 | U pripremi | izbor odgovora | nema odgovora, ili tačno jedan dozvoljeni odgovor | prazna tačka ili izbor mogu se sačuvati; prazna tačka ne blokira podnošenje | podnosilac | `BM-ML-027` |
+| M2 tačka 7 | U pripremi | izbor `Drugo` ili nedozvoljena vrijednost | `Drugo` bez teksta, ili vrijednost van ponuđenih odgovora | konačno podnošenje blokirano; nacrt se i dalje može sačuvati | podnosilac | `BM-ML-027` |
 | M2 tačka 22 | U pripremi | dodavanje ili uklanjanje stavke | rok traje | tabela ažurirana; zbir preračunat | podnosilac | `BM-ML-028` |
 
 ## 8.6. Prihvatni kriterijumi — obrasci
@@ -1890,21 +1892,21 @@ Izvor: `BM-ML-026`; `BM-ML-022`.
 
 ### 8.6.5 — Tačka 7
 
-**Ako:** tačka 7 M2 nema tačno jedan izabrani odgovor.
+**Ako:** tačka 7 M2 nema odgovor, ili sadrži vrijednost koja nije jedan od dozvoljenih odgovora.
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
-**Onda:** Platforma blokira podnošenje.
+**Onda:** prazna tačka ne blokira podnošenje. Nedozvoljena neprazna vrijednost blokira podnošenje. Dostavljeni odgovor mora biti dozvoljen. Nacrt se i dalje može sačuvati.
 
 Izvor: `BM-ML-027`; `BM-ML-022`.
 
 ### 8.6.6 — Drugo
 
-**Ako:** u tački 7 je izabrano `Drugo`, a tekstualno objašnjenje nije uneseno.
+**Ako:** u tački 7 je izabrano `Drugo`.
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
-**Onda:** Platforma blokira podnošenje.
+**Onda:** tekstualno objašnjenje je obavezno. Ako nedostaje ili sadrži samo razmake, Platforma blokira podnošenje. Nacrt se i dalje može sačuvati.
 
 Izvor: `BM-ML-027`; `BM-ML-022`.
 
@@ -2156,7 +2158,7 @@ Prije podnošenja Platforma razdvaja (`BM-ML-022`):
 * nije utvrđena poslovna faza započinjanje/razvoj;
 * prikazani M1 ne odgovara namjeri ili registrovanom pravnom obliku;
 * prikazani dokumentacioni paket ne odgovara namjeri, pravnom obliku i poslovnoj fazi;
-* tačka 7 bez tačno jednog odgovora;
+* tačka 7 sa nedozvoljenom vrijednošću;
 * `Drugo` bez objašnjenja;
 * prazna tabela tačke 22 ili bez najmanje jedne stavke;
 * pokušaj podnošenja nakon roka;
@@ -2230,7 +2232,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7, ili tabela 22, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prikazuje šta nedostaje; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora | sistem | `BM-ML-022`; F-06 |
+| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7 ima nedozvoljenu vrijednost ili `Drugo` bez objašnjenja, ili tabela 22, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prikazuje šta nedostaje; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora; prazna tačka 7 ne blokira | sistem | `BM-ML-022`; `BM-ML-027`; F-06 |
 | Prijava | `draft` | provjera prije podnošenja | nedostaju prateći dokumenti paketa, osim žiro računa | upozorenje i lista; podnošenje ostaje moguće | sistem | `BM-ML-022`; `BM-ML-032` |
 | Prijava | `draft` | konačna potvrda | blokirajući uslovi nijesu ispunjeni; rok traje; nema Podnesene na istom Pozivu | `draft` → `submitted`; zaključano | podnosilac | `BM-ML-023`; `BM-KN-015` |
 | Prijava | `submitted` | pokušaj izmjene, dopune, brisanja, povlačenja ili ponovnog podnošenja | — | zabranjeno | svi | `BM-ML-023` |
@@ -2241,7 +2243,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 ### 10.5.1 — Obavezna polja koja blokiraju
 
-**Ako:** nije utvrđen pravni oblik, namjera ili poslovna faza, prikazani M1 ne odgovara namjeri ili registrovanom obliku, prikazani paket ne odgovara utvrđenim podacima, prazna su obavezna polja M1 ili M2, tačka 7 nema jedan odgovor, `Drugo` nema tekst, ili tabela 22 nema najmanje jednu stavku.
+**Ako:** nije utvrđen pravni oblik, namjera ili poslovna faza, prikazani M1 ne odgovara namjeri ili registrovanom obliku, prikazani paket ne odgovara utvrđenim podacima, prazna su obavezna polja M1 ili M2, tačka 7 ima nedozvoljenu vrijednost, `Drugo` nema tekst, ili tabela 22 nema najmanje jednu stavku.
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
@@ -5004,8 +5006,8 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 8.6.2 | M1b | Planirano ili registrovano privredno društvo | Prikazuje se M1b; blok registrovanog društva samo ako je društvo registrovano | 8 | `BM-ML-025` |
 | 8.6.3 | M1 | Unos oblasti | Obavezno slobodno tekstualno polje | 8 | `BM-ML-026` |
 | 8.6.4 | M1 | Unos djelatnosti | Obavezno odvojeno polje; nema šifrarnika | 8 | `BM-ML-026` |
-| 8.6.5 | M2 t.7 | Izbor odgovora | Tačno jedan odgovor | 8 | `BM-ML-027` |
-| 8.6.6 | M2 t.7 | Izbor Drugo | Obavezan tekst | 8 | `BM-ML-027` |
+| 8.6.5 | M2 t.7 | Izbor odgovora | Odgovor nije obavezan; dostavljeni mora biti dozvoljen | 8 | `BM-ML-027` |
+| 8.6.6 | M2 t.7 | Izbor Drugo | Obavezan tekst prije konačnog podnošenja | 8 | `BM-ML-027` |
 | 8.6.7 | M2 t.22 | Tabela nabavki | Obavezna; nije nova tačka | 8 | `BM-ML-028` |
 | 8.6.8 | M2 t.22 | Više stavki | Zbir računa Platforma | 8 | `BM-ML-028` |
 | 8.6.9 | M2 t.22 | Prazna tabela | Podnošenje blokirano | 8 | `BM-ML-028` |
@@ -5392,7 +5394,7 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-024 | Prijava U pripremi nakon isteka roka | 8.6 | §6.7; §12 | 6.8.11; 12.5.2 | Ostaje U pripremi, samo pregled | U V1 |
 | BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | §8.1 | 8.6.1; 8.6.2 | M1a za preduzetnika; M1b za planirano ili registrovano društvo; nema ručnog selektora | U V1 |
 | BM-ML-026 | Obavezni podaci oblast i djelatnost | 9.3 | §8.2 | 8.6.3; 8.6.4 | Dva odvojena obavezna polja; nema šifrarnika | U V1 |
-| BM-ML-027 | Jednostruki izbor u tački 7 obrasca M2 | 9.4 | §8.3 | 8.6.5; 8.6.6 | Tačno jedan odgovor; Drugo zahtijeva tekst | U V1 |
+| BM-ML-027 | Jednostruki izbor u tački 7 obrasca M2 | 9.4 | §8.3 | 8.6.5; 8.6.6 | Odgovor nije obavezan; jedan dozvoljeni ako se popunjava; Drugo zahtijeva tekst; prazno ne blokira | U V1 |
 | BM-ML-028 | Tabela nabavki u tački 22 obrasca M2 | 9.4 | §8.4 | 8.6.7; 8.6.8; 8.6.9 | Obavezna tabela; zbir računa Platforma | U V1 |
 | BM-ML-029 | Katalog dokumentacije prema kategoriji podnosioca | 9.5 | §9 | 9.9.1 | Četiri paketa; nema proizvoljnog paketa | U V1 |
 | BM-ML-030 | Jedan dokument po tipu priloga | 9.6 | §9 | 9.9.4; 9.9.5 | Jedan dokument; zamjena samo u nacrtu | U V1 |
@@ -5534,4 +5536,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.20**
+**Kraj dokumenta KN-FS-002 v1.0.25**

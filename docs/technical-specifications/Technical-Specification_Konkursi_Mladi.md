@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.21
-**Datum:** 2026-11-04
+**Verzija:** 1.0.22
+**Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.17** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.21** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.20** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.25** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -59,6 +59,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.19 | 2026-11-01 | Usaglašavanje rasporeda ekrana Komisije. Istorijski red KN-PATCH-TS-016 ostaje. Važeći raspored je u §11.2 i §12.14: `evaluation.create` za ocjenjivanje, `evaluation.youth-ranking` za rang-listu, zaključke i štampu, te `evaluation.youth-decision` za generisanje, preuzimanje i zatvaranje. Na ta tri ekrana nema posebnih mjesta za potpise članova. Redoslijed završetka i nosilac Word dokumenta ostaju neizmijenjeni. ŽP i MMSP nijesu dirani. |
 | 1.0.20 | 2026-11-01 | Usaglašavanje GAP-02. Istorijski redovi ostaju. `storeYouthAllocationDraft` više ne prima polja start-upa i ranijeg finansiranja. `saveDraft` ih ne upisuje i ne računa 30/20/15. `youthMaxClaim` rezerviše traženi iznos u granicama budžeta Poziva, bez procenta i bez privremenih 30%. Pozitivan zaključak je konačan bez tih činjenica. Postojeće kolone se ne brišu i nova migracija se ne uvodi. PM-01–PM-05, Word odluka i raspored tri ekrana ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.21 | 2026-11-04 | Usaglašavanje §9.4 i §9.10 sa commitom `8974e68a`. `ApplicationPrigovorService::submit()` i dalje prvo čuva prigovor. `deliverSubmissionNotice()` zatim šalje `ApplicationPrigovorSubmittedMail` samo tačno jednom aktivnom predsjedniku. Nema nove tabele, migracije, statusa ni automatskog ponavljanja. Žensko poslovno pravilo nije mijenjano. MMSP nije diran. |
+| 1.0.22 | 2026-11-05 | Usaglašavanje §6.5 sa KN-BM-002 v1.0.21 i KN-FS-002 v1.0.25. Tačka 7 nije obavezna za podnošenje. Dozvoljen je najviše jedan od ponuđenih odgovora. Drugo traži tekst. Prazan odgovor ne blokira. Nedozvoljena vrijednost i Drugo bez teksta blokiraju. Nema nove tabele ni migracije. Tačka 22, ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1171,7 +1172,7 @@ Svaka prijava ima **jedan** poslovni plan (`BM-ML-014`).
 M2:
 
 * ima obavezna polja prema FS;
-* tačka 7: tačno jedan odgovor; ako je „Drugo“, obavezan je tekst (`BM-ML-027`; §8.6.5–8.6.6);
+* tačka 7 nije obavezna; prazan odgovor ne blokira podnošenje; ako je popunjena, vrijednost mora biti jedan od dozvoljenih odgovora; ako je „Drugo“, obavezan je tekst prije konačnog podnošenja (`BM-ML-027`; §8.6.5–8.6.6);
 * tabela nabavki je obavezna i nije nova tačka (`BM-ML-028`);
 * najmanje jedna stavka; prazna tabela blokira podnošenje (§8.6.7–8.6.9);
 * Platforma računa `UKUPNO` zbira stavki;
@@ -3820,4 +3821,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.17**
+**Kraj dokumenta KN-TS-002 v1.0.22**

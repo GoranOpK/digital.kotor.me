@@ -673,12 +673,31 @@
                         </div>
                         @if($isOmladinsko)
                             <div class="form-group" style="margin-top: 12px;">
-                                <label class="form-label" for="realization_other_text">Ako je izabrano „Drugo“, unesite objašnjenje:</label>
+                                <label class="form-label" for="realization_other_text">
+                                    Ako je izabrano „Drugo“, unesite objašnjenje:
+                                    <span id="realizationOtherRequiredMark" hidden> <span class="required">*</span> Obavezno za konačno podnošenje.</span>
+                                </label>
                                 <textarea name="realization_other_text" id="realization_other_text" class="form-control @error('realization_other_text') error @enderror" rows="3">{{ old('realization_other_text', $businessPlan->product_service ?? '') }}</textarea>
                                 @error('realization_other_text')
                                     <div class="error-message">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <script>
+                                (function () {
+                                    const mark = document.getElementById('realizationOtherRequiredMark');
+                                    if (!mark) {
+                                        return;
+                                    }
+                                    const sync = function () {
+                                        const selected = document.querySelector('input[name="realization_type"]:checked');
+                                        mark.hidden = !selected || selected.value !== 'nista_od_navedenog';
+                                    };
+                                    document.querySelectorAll('input[name="realization_type"]').forEach(function (input) {
+                                        input.addEventListener('change', sync);
+                                    });
+                                    sync();
+                                })();
+                            </script>
                         @endif
                         @error('realization_type')
                             <div class="error-message">{{ $message }}</div>

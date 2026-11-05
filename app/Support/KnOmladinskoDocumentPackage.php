@@ -13,6 +13,8 @@ final class KnOmladinskoDocumentPackage
 {
     public const REALIZATION_DRUGO = 'nista_od_navedenog';
 
+    public const REALIZATION_INVALID_MESSAGE = 'U tački 7 biznis plana sačuvani odgovor nije dozvoljen. Dozvoljen je tačno jedan od ponuđenih odgovora.';
+
     public const TYPE_ZIRO = 'dokaz_ziro_racun';
 
     public const TYPE_IOPPD = 'ioppd_obrazac';
@@ -323,22 +325,39 @@ final class KnOmladinskoDocumentPackage
         return self::realizationError($plan) !== null;
     }
 
-    public static function realizationError(?BusinessPlan $plan): ?string
+    public static function realizationChoiceInvalid(mixed $choice): bool
     {
-        $choice = is_string($plan?->realization_type) ? trim($plan->realization_type) : '';
+        $choice = trim((string) $choice);
         if ($choice === '') {
-            return 'Tačka 7 biznis plana mora imati tačno jedan odgovor.';
+            return false;
         }
 
-        $allowed = [
+        return ! in_array($choice, self::realizationChoices(), true);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function realizationChoices(): array
+    {
+        return [
             'stvori_novi',
             'unaprijedi',
             'uveca_obim',
             'nista_se_nece_promijeniti',
             self::REALIZATION_DRUGO,
         ];
-        if (! in_array($choice, $allowed, true)) {
-            return 'Tačka 7 biznis plana mora imati tačno jedan odgovor.';
+    }
+
+    public static function realizationError(?BusinessPlan $plan): ?string
+    {
+        $choice = is_string($plan?->realization_type) ? trim($plan->realization_type) : '';
+        if ($choice === '') {
+            return null;
+        }
+
+        if (! in_array($choice, self::realizationChoices(), true)) {
+            return self::REALIZATION_INVALID_MESSAGE;
         }
 
         if ($choice === self::REALIZATION_DRUGO) {

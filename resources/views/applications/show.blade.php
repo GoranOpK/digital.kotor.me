@@ -362,6 +362,8 @@
             $canManage = $canManage ?? false;
             $pmNeedsIncompleteFormsConfirmation = $pmNeedsIncompleteFormsConfirmation ?? false;
             $pmM1SubmitBlocked = $pmM1SubmitBlocked ?? false;
+            $pmM2DrugoSubmitBlocked = $pmM2DrugoSubmitBlocked ?? false;
+            $pmM2RealizationInvalidSubmitBlocked = $pmM2RealizationInvalidSubmitBlocked ?? false;
             $kotorAddressError = $kotorAddressError ?? null;
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
@@ -675,6 +677,20 @@
                                     <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Http\Controllers\ApplicationController::PM_M1_INCOMPLETE_MESSAGE }}</p>
                                     <p style="margin: 0;">
                                         <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}">Povratak na uređivanje</a>
+                                    </p>
+                                </div>
+                            @elseif(!empty($pmM2DrugoSubmitBlocked))
+                                <div id="pm-m2-drugo-block" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Http\Controllers\ApplicationController::PM_M2_DRUGO_MESSAGE }}</p>
+                                    <p style="margin: 0;">
+                                        <a href="{{ route('applications.business-plan.create', $application) }}">Povratak na uređivanje</a>
+                                    </p>
+                                </div>
+                            @elseif(!empty($pmM2RealizationInvalidSubmitBlocked))
+                                <div id="pm-m2-realization-invalid-block" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Support\KnOmladinskoDocumentPackage::REALIZATION_INVALID_MESSAGE }}</p>
+                                    <p style="margin: 0;">
+                                        <a href="{{ route('applications.business-plan.create', $application) }}">Povratak na uređivanje</a>
                                     </p>
                                 </div>
                             @elseif(!empty($pmNeedsIncompleteFormsConfirmation))

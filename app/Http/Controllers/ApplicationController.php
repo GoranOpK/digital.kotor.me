@@ -18,6 +18,7 @@ use App\Support\CompetitionProgramCatalog;
 use App\Support\BusinessPlanM2Completeness;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
+use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\Pib;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Support\UserType;
@@ -48,6 +49,8 @@ class ApplicationController extends Controller
     public const CANONICAL_OBRAZAC_1_MESSAGE = 'Prijava na javni poziv za preduzetnike i MMSP popunjava se kroz Obrazac P1a (preduzetnik) ili P1b (društvo), ne kroz Obrazac 1a/1b.';
 
     public const PM_M1_INCOMPLETE_MESSAGE = 'Obrazac M1 nije potpuno popunjen. Prije konačnog podnošenja prijave morate popuniti sva obavezna polja.';
+
+    public const PM_M2_DRUGO_MESSAGE = 'U tački 7 biznis plana izabrali ste „Drugo“. Prije konačnog podnošenja prijave morate unijeti obrazloženje.';
 
     /**
      * Autoritativni start-context za novu prijavu. Query parametar nije authority.
@@ -939,8 +942,16 @@ class ApplicationController extends Controller
             && ($application->competition?->is_open ?? false)
             && $this->kotorAddressErrorForApplication($application) === null;
         $pmM1SubmitBlocked = $pmDraftCanReachFormCheck && ! $application->isObrazacComplete();
+        $pmM2DrugoSubmitBlocked = $pmDraftCanReachFormCheck
+            && $application->isObrazacComplete()
+            && $this->pmDrugoExplanationMissing($application);
+        $pmM2RealizationInvalidSubmitBlocked = $pmDraftCanReachFormCheck
+            && $application->isObrazacComplete()
+            && KnOmladinskoDocumentPackage::realizationChoiceInvalid($application->businessPlan->realization_type);
         $pmNeedsIncompleteFormsConfirmation = $pmDraftCanReachFormCheck
             && $application->isObrazacComplete()
+            && ! $pmM2DrugoSubmitBlocked
+            && ! $pmM2RealizationInvalidSubmitBlocked
             && ! $application->businessPlan->isComplete();
 
         // Samo vlasnik može da mijenja dok Prijava nije zaključana (podnesena ili draft nakon isteka roka)
@@ -950,7 +961,7 @@ class ApplicationController extends Controller
         // Isti rezultat koji submit() već vraća. Ekran ga ne može izračunati bez ponavljanja pravila adrese.
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'pmM1SubmitBlocked', 'kotorAddressError'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'pmM1SubmitBlocked', 'pmM2DrugoSubmitBlocked', 'pmM2RealizationInvalidSubmitBlocked', 'kotorAddressError'));
     }
 
     /**
@@ -1075,6 +1086,20 @@ class ApplicationController extends Controller
         if ($application->isOmladinskoProfile() && ! $application->isObrazacComplete()) {
             return back()->withErrors([
                 'error' => self::PM_M1_INCOMPLETE_MESSAGE,
+            ]);
+        }
+
+        // Tačka 7 nije obavezna. „Drugo“ bez obrazloženja i nepoznat odgovor blokiraju prije obje potvrde.
+        if ($this->pmDrugoExplanationMissing($application)) {
+            return back()->withErrors([
+                'error' => self::PM_M2_DRUGO_MESSAGE,
+            ]);
+        }
+
+        if ($application->isOmladinskoProfile()
+            && KnOmladinskoDocumentPackage::realizationChoiceInvalid($application->businessPlan->realization_type)) {
+            return back()->withErrors([
+                'error' => KnOmladinskoDocumentPackage::REALIZATION_INVALID_MESSAGE,
             ]);
         }
 
@@ -1674,6 +1699,23 @@ class ApplicationController extends Controller
 
         return redirect()->route('applications.show', $application)
             ->with('success', 'Dokument je uspješno obrisan.');
+    }
+
+    /**
+     * BM-ML-027: sačuvano obrazloženje tačke 7 kada je izabrano „Drugo“.
+     * Čita business_plans.product_service. Ne dira ostale odgovore ni druge konkurse.
+     */
+    protected function pmDrugoExplanationMissing(Application $application): bool
+    {
+        if (! $application->isOmladinskoProfile() || $application->businessPlan === null) {
+            return false;
+        }
+
+        if (trim((string) $application->businessPlan->realization_type) !== KnOmladinskoDocumentPackage::REALIZATION_DRUGO) {
+            return false;
+        }
+
+        return trim((string) ($application->businessPlan->product_service ?? '')) === '';
     }
 
     /**
