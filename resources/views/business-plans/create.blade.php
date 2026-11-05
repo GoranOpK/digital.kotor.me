@@ -579,12 +579,11 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno): <span class="required">*</span>
+                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):
                         </label>
                         <textarea 
                             name="summary" 
                             class="form-control @error('summary') error @enderror"
-                            required
                             rows="6"
                         >{{ old('summary', $businessPlan->summary ?? '') }}</textarea>
                         @error('summary')
@@ -648,7 +647,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            7. Realizacijom moje biznis ideje (označite odgovarajuću kolonu): <span class="required">*</span>
+                            7. Realizacijom moje biznis ideje (označite odgovarajuću kolonu):
                         </label>
                         <div class="radio-group">
                             <div class="radio-option">
@@ -747,7 +746,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">
-                                10. Ukoliko Vam je za realizaciju biznis ideje potreban poslovni prostor, da li imate lokaciju sa svom potrebnom infrastrukturom: struja, voda, put i dr. (označiti odgovarajući red sa x)? <span class="required">*</span>
+                                10. Ukoliko Vam je za realizaciju biznis ideje potreban poslovni prostor, da li imate lokaciju sa svom potrebnom infrastrukturom: struja, voda, put i dr. (označiti odgovarajući red sa x)?
                             </label>
                             <div class="radio-group">
                                 <div class="radio-option">
@@ -912,7 +911,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">
-                                16. Da li ćete angažovati sezonske radnike (označiti odgovarajuću kolonu sa x)? <span class="required">*</span>
+                                16. Da li ćete angažovati sezonske radnike (označiti odgovarajuću kolonu sa x)?
                             </label>
                             @php
                                 $seasonalRaw = old('has_seasonal_workers', $businessPlan?->has_seasonal_workers);
@@ -2023,8 +2022,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'applicant_jmbg',
         'applicant_address',
         'applicant_phone',
-        'applicant_email',
-        'summary'
+        'applicant_email'
     ];
 
     function isValidPib(value) {
@@ -2174,7 +2172,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const scalars = [
             'business_idea_name', 'applicant_name', 'applicant_jmbg', 'applicant_address',
-            'applicant_phone', 'applicant_email', 'summary', 'promotion', 'required_resources',
+            'applicant_phone', 'applicant_email', 'promotion', 'required_resources',
             'work_experience', 'personal_strengths_weaknesses', 'biggest_support',
             'annual_sales_volume', 'annual_purchases_volume', 'required_amount', 'requested_amount',
             'competition_analysis_part1', 'competition_analysis_part2',
@@ -2186,8 +2184,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        if (!m2RadioAnswered('realization_type') || !m2RadioAnswered('has_business_space')
-            || !m2RadioAnswered('has_seasonal_workers') || !m2RadioAnswered('funding_alternative')) {
+        if (!m2RadioAnswered('funding_alternative')) {
             return false;
         }
 

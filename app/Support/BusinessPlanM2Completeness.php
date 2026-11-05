@@ -17,16 +17,6 @@ class BusinessPlanM2Completeness
 
     public const SAVED_NOTICE = 'Biznis plan je sačuvan. Prije podnošenja prijave provjerite tačnost unesenih podataka.';
 
-    private const REALIZATION = [
-        'stvori_novi',
-        'unaprijedi',
-        'uveca_obim',
-        'nista_se_nece_promijeniti',
-        'nista_od_navedenog',
-    ];
-
-    private const BUSINESS_SPACE = ['sopstveni', 'iznajmljeni', 'trazim', 'nemam'];
-
     private const FUNDING_ALTERNATIVE = ['vlastita', 'pozajmljena', 'kredit', 'ostali', 'ne_znam'];
 
     private const FIXED_JOB_PARTS = ['Marketing', 'Poslovanje', 'Finansije'];
@@ -49,7 +39,6 @@ class BusinessPlanM2Completeness
             'applicant_address',
             'applicant_phone',
             'applicant_email',
-            'summary',
         ] as $field) {
             if (! self::present($plan->{$field})) {
                 $missing[] = $field;
@@ -62,18 +51,6 @@ class BusinessPlanM2Completeness
             }
         } catch (JmbEncryptedReadException) {
             $missing[] = 'applicant_jmbg';
-        }
-
-        if (! in_array(trim((string) $plan->realization_type), self::REALIZATION, true)) {
-            $missing[] = 'realization_type';
-        }
-
-        if (! in_array(trim((string) $plan->has_business_space), self::BUSINESS_SPACE, true)) {
-            $missing[] = 'has_business_space';
-        }
-
-        if ($plan->has_seasonal_workers === null) {
-            $missing[] = 'has_seasonal_workers';
         }
 
         if (! $plan->finances_notice_confirmed) {

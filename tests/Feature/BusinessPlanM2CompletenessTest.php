@@ -116,7 +116,7 @@ class BusinessPlanM2CompletenessTest extends TestCase
 
             [$blockedOwner, $blocked] = $this->application($type);
             $blockedPlan = $this->fullPlan($blocked, $blockedOwner);
-            $blockedPlan->update(['has_business_space' => null]);
+            $blockedPlan->update(['business_idea_name' => null]);
 
             $this->actingAs($blockedOwner)
                 ->post(route('applications.final-submit', $blocked), [
@@ -182,6 +182,106 @@ class BusinessPlanM2CompletenessTest extends TestCase
             ->getContent();
         $this->assertMatchesRegularExpression('/id="seasonal_yes"[^>]*\schecked/', $yes);
         $this->assertDoesNotMatchRegularExpression('/id="seasonal_no"[^>]*\schecked/', $yes);
+    }
+
+    public function test_questions_5_7_10_and_16_may_be_empty_on_submit_and_other_asterisks_still_block(): void
+    {
+        foreach (['omladinsko', 'zensko'] as $type) {
+            [$owner, $application] = $this->application($type);
+
+            $this->actingAs($owner)
+                ->post(route('applications.business-plan.store', $application), [
+                    'save_as_draft' => '1',
+                    'has_registered_business' => '0',
+                    'business_idea_name' => 'Puna ideja',
+                    'applicant_name' => $owner->name,
+                    'applicant_jmbg' => '0101990123456',
+                    'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+                    'applicant_phone' => '067000000',
+                    'applicant_email' => $owner->email,
+                    'summary' => '',
+                    'finances_notice_confirmed' => '1',
+                ])
+                ->assertSessionHasNoErrors();
+
+            $saved = $application->fresh()->businessPlan;
+            $this->assertNull($saved->summary);
+            $this->assertNull($saved->realization_type);
+            $this->assertNull($saved->has_business_space);
+            $this->assertNull($saved->has_seasonal_workers);
+            $this->assertTrue(BusinessPlanM2Completeness::hasRequiredAsterisks($saved));
+            $this->assertTrue($saved->isComplete());
+
+            $this->actingAs($owner)
+                ->post(route('applications.business-plan.store', $application), [
+                    'save_as_draft' => '1',
+                    'has_registered_business' => '0',
+                    'business_idea_name' => 'Puna ideja',
+                    'applicant_name' => $owner->name,
+                    'applicant_jmbg' => '0101990123456',
+                    'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+                    'applicant_phone' => '067000000',
+                    'applicant_email' => $owner->email,
+                    'summary' => 'Sačuvan rezime',
+                    'realization_type' => 'stvori_novi',
+                    'has_business_space' => 'nemam',
+                    'has_seasonal_workers' => '0',
+                    'finances_notice_confirmed' => '1',
+                ])
+                ->assertSessionHasNoErrors();
+            $filled = $saved->fresh();
+            $this->assertSame('Sačuvan rezime', $filled->summary);
+            $this->assertSame('stvori_novi', $filled->realization_type);
+            $this->assertSame('nemam', $filled->has_business_space);
+            $this->assertFalse($filled->has_seasonal_workers);
+
+            $html = $this->actingAs($owner)
+                ->get(route('applications.business-plan.create', $application))
+                ->assertOk()
+                ->getContent();
+            $this->assertStringContainsString('Sačuvan rezime', $html);
+            $this->assertMatchesRegularExpression('/id="realization_new"[^>]*\schecked/', $html);
+            $this->assertMatchesRegularExpression('/id="space_none"[^>]*\schecked/', $html);
+            $this->assertMatchesRegularExpression('/id="seasonal_no"[^>]*\schecked/', $html);
+
+            $filled->update([
+                'summary' => null,
+                'realization_type' => null,
+                'has_business_space' => null,
+                'has_seasonal_workers' => null,
+            ]);
+
+            $payload = $type === 'omladinsko' ? ['confirm_missing_documents' => '1'] : [];
+            $this->actingAs($owner)
+                ->post(route('applications.final-submit', $application), $payload)
+                ->assertSessionHasNoErrors();
+            $this->assertSame('submitted', $application->fresh()->status);
+            $this->assertNull($filled->fresh()->summary);
+            $this->assertNull($filled->fresh()->realization_type);
+            $this->assertNull($filled->fresh()->has_business_space);
+            $this->assertNull($filled->fresh()->has_seasonal_workers);
+
+            [$blockedOwner, $blocked] = $this->application($type);
+            $blockedPlan = $this->fullPlan($blocked, $blockedOwner);
+            $blockedPlan->update([
+                'summary' => null,
+                'realization_type' => null,
+                'has_business_space' => null,
+                'has_seasonal_workers' => null,
+                'applicant_phone' => null,
+            ]);
+            $this->actingAs($blockedOwner)
+                ->post(route('applications.final-submit', $blocked), [
+                    'confirm_incomplete_forms' => '1',
+                    'confirm_missing_documents' => '1',
+                ])
+                ->assertSessionHasErrors('error');
+            $this->assertSame('draft', $blocked->fresh()->status);
+            $this->assertSame(
+                BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
+                session('errors')->first('error')
+            );
+        }
     }
 
     /**

@@ -172,7 +172,7 @@ class PmIncompleteFormsSubmissionTest extends TestCase
                 'applicant_name' => $owner->name,
                 'applicant_jmbg' => '0101990123456',
                 'applicant_address' => 'Njegoševa 1, 85330 Kotor',
-                'applicant_phone' => '067000000',
+                'applicant_phone' => $m2Complete ? '067000000' : null,
                 'applicant_email' => $owner->email,
                 'summary' => $m2Complete ? 'Potpun sažetak' : null,
                 'realization_type' => 'stvori_novi',

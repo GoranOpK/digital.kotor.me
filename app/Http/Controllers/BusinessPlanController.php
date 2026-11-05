@@ -470,7 +470,7 @@ class BusinessPlanController extends Controller
             'company_email' => 'nullable|email|max:255',
             'company_website' => 'nullable|string|max:255',
             'bank_account' => 'nullable|string|max:255',
-            'summary' => $isDraft ? 'nullable|string' : 'required|string',
+            'summary' => 'nullable|string',
             
             // II. MARKETING
             'products_services_table' => 'nullable|array',
@@ -521,7 +521,6 @@ class BusinessPlanController extends Controller
             'applicant_address.required' => 'Adresa je obavezna.',
             'applicant_phone.required' => 'Kontakt telefon je obavezan.',
             'applicant_email.required' => 'E-mail je obavezan.',
-            'summary.required' => 'Rezime je obavezno.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
             'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da je napomena u dijelu IV. Finansije pročitana.',
         ]);
@@ -729,6 +728,12 @@ class BusinessPlanController extends Controller
                         'application_id' => $application->id,
                     ]);
                 }
+            }
+        }
+
+        foreach (['summary', 'realization_type', 'has_business_space'] as $optionalEmpty) {
+            if (array_key_exists($optionalEmpty, $cleanedData) && ! filled($cleanedData[$optionalEmpty])) {
+                $cleanedData[$optionalEmpty] = null;
             }
         }
 
