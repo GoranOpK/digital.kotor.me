@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.24
+**Verzija:** 1.0.25
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.23** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.24** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.27** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.28** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -62,6 +62,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.22 | 2026-11-05 | Usaglašavanje §6.5 sa KN-BM-002 v1.0.21 i KN-FS-002 v1.0.25. Tačka 7 nije obavezna za podnošenje. Dozvoljen je najviše jedan od ponuđenih odgovora. Drugo traži tekst. Prazan odgovor ne blokira. Nedozvoljena vrijednost i Drugo bez teksta blokiraju. Nema nove tabele ni migracije. Tačka 22, ŽP i MMSP nijesu dirani. |
 | 1.0.23 | 2026-11-05 | Usaglašavanje §6.5, §6.10, §6.11.7 i §7.4 sa KN-BM-002 v1.0.22 i KN-FS-002 v1.0.26. Tačka 22 nije obavezna. Prazna tabela nabavki ne blokira podnošenje. UKUPNO se računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Upozorenje za nedostajuće priloge ostaje. Nema nove tabele ni migracije. Tačka 7, M1, ŽP i MMSP nijesu dirani. |
 | 1.0.24 | 2026-11-05 | Usaglašavanje §6.2, §6.3, §6.10 i §7.4 sa KN-BM-002 v1.0.23 i KN-FS-002 v1.0.27. M1a i M1b imaju polje „Oblast u kojoj planirate realizaciju biznis plana“. Oblast je obavezna za konačno podnošenje, a nacrt se može sačuvati bez nje. Zasebno polje djelatnosti, šifra i šifrarnik se ne uvode. Nema nove kolone, request parametra ni validacije djelatnosti. Raniji zahtjev za odvojenim poljem djelatnosti zamijenjen je ovom odlukom. Tačka 7, tačka 22, ŽP i MMSP nijesu dirani. |
+| 1.0.25 | 2026-11-05 | Usaglašavanje §3.3, §3.8, §3.11 i §11.2 sa KN-BM-002 v1.0.24 i KN-FS-002 v1.0.28. Podnosilac nema preliminarnu listu, pojedinačne ocjene, tuđe prijave ni Word predlog. Konačnu rang-listu čita nakon statusa completed, kada je lista konačna i Word predlog evidentiran. Nova ruta, tabela i migracija se ne propisuju. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -395,7 +396,10 @@ Podnosilac:
 * kreira i uređuje **samo** svoju prijavu u statusu nacrta, dok rok traje;
 * podnosi samo svoju prijavu u roku;
 * vidi samo svoje prijave, M1a/M1b, M2, priloge, svoje obavještenje i svoj prigovor;
-* **ne** vidi tuđe prijave, ocjene, rang-listu, raspodjelu ni revizijski trag Komisije;
+* **ne** vidi tuđe prijave, pojedinačne ocjene, preliminarnu rang-listu, interni Word predlog ni revizijski trag Komisije;
+* vidi konačnu rang-listu Komisije samo za čitanje, kada je lista konačna, Word predlog trajno evidentiran i status konkursa `completed`, i samo ako ima podnesenu prijavu na tom omladinskom konkursu;
+* taj pregled daje rang-mjesto, ime i prezime ili naziv društva, naziv biznis plana, konačan broj bodova, traženi iznos i iznos iz konačne rang-liste;
+* taj pregled **ne** otvara tuđu prijavu i **ne** daje pojedinačne ocjene, obrazloženja, JMBG, adrese, kontakt podatke, tuđe obrasce i priloge, glasove članova ni Word dokument;
 * **ne** mijenja podnesenu prijavu, uključujući prigovor kao pokušaj otključavanja.
 
 ## 3.4. Administrator
@@ -456,7 +460,7 @@ Javni korisnik **ne** vidi:
 * obavještenja;
 * prigovore;
 * ocjene;
-* rang-listu kao internu radnu listu Komisije;
+* rang-listu, ni preliminarnu ni konačnu; pristup učesnika zatvorenog konkursa nije javno objavljivanje;
 * raspodjelu;
 * revizijski trag.
 
@@ -514,8 +518,8 @@ Predloženo zajedničko audit rješenje i odnos prema postojećoj tabeli `logs` 
 | Individualne ocjene | Ne tuđe | Ne | Svoja kompletna ocjena | Samo svoja do uvida | Nova kompletna; bez spajanja | Ne |
 | Međusobni uvid | Ne | Ne | Prema `BM-ML-040` | Tek u usvojenom trenutku | Ako ovlašćen | Ne |
 | Dodatni bodovi | Ne | Ne | Da | Ne | Ne, osim ako mijenja predsjednika | Ne |
-| Rang-lista | Ne javna | Ne operativna izrada | Da | Pregled kada je formirana | Ako ovlašćen | Ne |
-| Raspodjela | Ne | Ne | Da | Pregled | Ako ovlašćen | Ne |
+| Rang-lista | Preliminarna ne; konačna samo za čitanje poslije `completed`, uz konačnost liste i evidentiran Word predlog, ako ima podnesenu prijavu na tom konkursu | Ne operativna izrada | Da | Pregled kada je formirana | Ako ovlašćen | Ne |
+| Raspodjela | Iznos iz konačne liste, u istom prikazu; operativnu raspodjelu ne | Ne | Da | Pregled | Ako ovlašćen | Ne |
 | Arhiviranje | Ne | Ne | Da, nakon 15 preduslova | Ne | Samo uz formalno ovlašćenje uloge | Ne |
 | Revizijski trag | Ne | Ne sadržaj razloga | Operativni uvid | Ograničeno | Ograničeno | Ne |
 
@@ -2534,6 +2538,8 @@ Kada je sačuvan posljednji potrebni zaključak za prijave sa najmanje 30 bodova
 
 Komisija radi na tri ekrana. `evaluation.create` je individualno ocjenjivanje. `evaluation.youth-ranking` prikazuje rang-listu sa stvarnim bodovima i prijavama ispod crte, čuva pojedinačne zaključke i štampa rang-listu. `evaluation.youth-decision` generiše Word odluku, preuzima već generisanu Word odluku i prikazuje zatvaranje. Na ova tri ekrana nema posebnih mjesta za potpise članova Komisije. Rečenica u KN-PATCH-TS-016 da isti ekran rang-liste sadrži generisanje, zatvaranje i potpise ostaje istorijski zapis i nije važeći raspored. `GET admin.competitions.ranking` i `GET admin.competitions.decision` za `omladinsko` i dalje vraćaju 403. Zatvaranje i dalje ide kroz `POST admin.competitions.close`, sa ekrana odluke.
 
+Podnosilac nema pristup preliminarnoj listi, ekranu `evaluation.youth-ranking`, pojedinačnim ocjenama ni Word predlogu. Konačnu listu čita tek kada je `competitions.status` `completed`, lista je konačna po postojećem `hasChairmanCompletedDecisions()` i postoji trajno evidentiran Word predlog. Čitanje ne upisuje rang i ne otvara tuđu prijavu. Prikaz nosi naziv „Konačna rang-lista Komisije“ i šest podataka iz `BM-ML-045`. Nova ruta, tabela i migracija ovim poglavljem se ne propisuju.
+
 Čuvanje zaključka **ne** računa bodove ponovo i **ne** zatvara poziv. Ženski rok od 45 dana **ne** primjenjuje se. Javni PDF lifecycle službenih akata ostaje van V1.
 
 Izvor: `BM-ML-045`; `BM-ML-048`; `KN-FS-002` §20.5 i §23.9.
@@ -3831,4 +3837,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.24**
+**Kraj dokumenta KN-TS-002 v1.0.25**

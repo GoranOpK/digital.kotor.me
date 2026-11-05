@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.23
+**Verzija:** 1.0.24
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
@@ -15,9 +15,9 @@ Povezani dokumenti:
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.27** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.28** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.24** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.25** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -77,6 +77,7 @@ Povezani dokumenti:
 | 1.0.21 | 2026-11-05 | Usaglašavanje BM-ML-027 i pitanja 17. Popunjavanje tačke 7 obrasca M2 nije obavezno. Ako se popunjava, bira se samo jedan od ponuđenih odgovora. Drugo traži tekstualno obrazloženje. Prazna tačka ne sprečava konačno podnošenje. Nedozvoljena vrijednost ili Drugo bez obrazloženja sprečavaju ga. Nepotpuni nacrt se može sačuvati. Ranije rješenje pitanja 17 ostaje istorijski zapis: „U tački 7 bira se tačno jedan odgovor. Izbor je obavezan i odgovori su međusobno isključivi. Ako se izabere „Drugo“, obavezan je tekstualni unos objašnjenja.“ Tačka 22, M1, ŽP i MMSP nijesu dirani. |
 | 1.0.22 | 2026-11-05 | Usaglašavanje BM-ML-028 i pitanja 16. Popunjavanje tačke 22 nije obavezno. Prazna tabela nabavki ne sprečava konačno podnošenje. Kada postoje unesene stavke, Platforma i dalje računa UKUPNO. Komisija vrednuje razrađenost nabavki u postojećim kriterijumima, bez automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom i ostaje istorijski zapis: „Tabela pripada tački 22 obrasca M2, obavezna je i mora imati najmanje jednu stavku. Za svaku stavku unose se vrsta nabavke i cijena prema predračunu u eurima. Ako postoji više nabavki, svaka se unosi zasebno, a sistem prikazuje njihov ukupan zbir u eurima. Komisija provjerava predračune, cijene i odnos ukupne vrijednosti prema traženim sredstvima.“ Tačka 7, M1, ŽP i MMSP nijesu dirani. |
 | 1.0.23 | 2026-11-05 | Usaglašavanje BM-ML-026 i pitanja 15. Obrasci M1a i M1b sadrže polje „Oblast u kojoj planirate realizaciju biznis plana“. Oblast je slobodan tekst, obavezna prije konačnog podnošenja, a nacrt se može sačuvati bez nje. Ne uvodi se dodatno polje djelatnosti, šifra ni šifrarnik. Raniji zahtjev za zasebnom djelatnošću zamijenjen je ovom odlukom i ostaje istorijski zapis: „U obrascima M1a i M1b vode se oblast i djelatnost kao dva odvojena obavezna polja sa slobodnim tekstualnim unosom. Oblast predstavlja pretežnu oblast realizacije biznis plana, a djelatnost konkretniju planiranu djelatnost. Polje djelatnost dodaje se u M1. Šifra djelatnosti se ne uvodi i ne koristi se šifrarnik.“ Tačka 7, tačka 22, ŽP i MMSP nijesu dirani. |
+| 1.0.24 | 2026-11-05 | Usaglašavanje BM-ML-045 i BM-ML-054, PM-ALIGN-02A-1. Preliminarna rang-lista ostaje interna. Konačna rang-lista Komisije dostupna je učesniku sa podnesenom prijavom na tom omladinskom konkursu, samo za čitanje, kada je lista konačna, Word predlog generisan i konkurs zatvoren statusom completed. Prikaz nosi naziv „Konačna rang-lista Komisije“ i šest podataka. Pristup tuđoj prijavi, pojedinačnim ocjenama i Word predlogu ostaje zabranjen. Postupak Komisije, Word predlog i postupak Sekretarijata nijesu dirani. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1867,9 +1868,36 @@ Treća sjednica nije obavezni elektronski `TYPE_THIRD`. Poslovni događaj može 
 
 Preliminarni sadržaj ostaje sačuvan radi sljedivosti. Prelazak u konačnu fazu ne mijenja zaključane individualne ocjene niti ponovno računa bodove.
 
-Ovo pravilo ne određuje trenutak javnog objavljivanja rang-liste ili službenih akata.
+Preliminarna rang-lista ostaje interna. Dostupna je ovlašćenim članovima Komisije. Podnosiocima nije dostupna.
 
-**Izvor:** Odluka, članovi 21 i 22; odobrena projektna odluka o jednoj rang-listi sa dvije faze; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`; `KN-PATCH-BM-028`.
+Konačna rang-lista Komisije dostupna je svim učesnicima konkretnog omladinskog konkursa kada su istovremeno ispunjeni ovi uslovi:
+
+1. rang-lista je konačna;
+2. Komisija je završila rad;
+3. Word predlog odluke je generisan i trajno evidentiran;
+4. konkurs je zatvoren, status `completed`;
+5. podnosilac ima podnesenu prijavu na tom konkretnom omladinskom konkursu.
+
+Prikaz je isključivo za čitanje. Naziv prikaza je „Konačna rang-lista Komisije“.
+
+Prikaz sadrži samo:
+
+1. rang-mjesto;
+2. ime i prezime podnosioca ili naziv društva;
+3. naziv biznis plana;
+4. konačan broj bodova;
+5. traženi iznos sredstava;
+6. iznos iz konačne rang-liste Komisije.
+
+Prikaz ne sadrži upozorenje da rang-lista nije službena odluka, oznaku da iznos nije službena dodjela, niti dodatno objašnjenje o odluci Sekretarijata.
+
+Podnosiocima na tom prikazu nijesu dostupni pojedinačne ocjene članova Komisije, interna obrazloženja Komisije, JMBG, adrese i kontakt podaci, tuđi obrasci i prilozi, glasovi članova Komisije i interni Word predlog odluke.
+
+Ovaj prikaz nije pristup tuđoj prijavi. Postojeći interni ekrani Komisije i postupak izrade Word predloga ostaju neizmijenjeni. Dostavljanje pojedinačnih rješenja ostaje u nadležnosti Sekretarijata, van aplikacije.
+
+Ovo pravilo ne određuje trenutak javnog objavljivanja rang-liste ili službenih akata. Javno objavljivanje službene odluke je zaseban proces.
+
+**Izvor:** Odluka, članovi 21 i 22; odobrena projektna odluka o jednoj rang-listi sa dvije faze; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`; `KN-PATCH-BM-028`; odobrena odluka PM-ALIGN-02A-1 od 2026-11-05.
 
 ## 11.9. Jednaki bodovi
 
@@ -2279,6 +2307,8 @@ Kompletan sadržaj prijave dostupan je samo:
 
 Podnosilac može pristupiti samo svojim prijavama. Ne može pristupiti prijavama drugih podnosilaca.
 
+Pristup tuđoj prijavi ostaje zabranjen. Pristup konačnoj rang-listi Komisije, u obimu i pod uslovima iz `BM-ML-045`, nije pristup tuđoj prijavi, tuđim obrascima ni tuđim prilozima. Preliminarna rang-lista ostaje interna. Pojedinačne ocjene članova Komisije ostaju interne.
+
 Članovi Komisije pristupaju samo prijavama konkretnog Poziva koje su konačno podnesene, nakon isteka roka, u skladu sa `BM-ML-005`.
 
 Administrator Konkursa nema sadržajni pristup prijavama, obrascima i prilozima, u skladu sa `BM-ML-004`.
@@ -2675,4 +2705,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.23**
+**Kraj dokumenta KN-BM-002 v1.0.24**

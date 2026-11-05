@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.27
+**Verzija:** 1.0.28
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.23** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.24** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.18** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.24** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.25** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -67,6 +67,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.25 | 2026-11-05 | Usaglašavanje §8.4, §8.5, §8.6.5, §8.6.6, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.21. Odgovor tačke 7 nije obavezan. Dostavljeni odgovor mora biti dozvoljen. Drugo bez obrazloženja i nedozvoljena vrijednost blokiraju konačno podnošenje. Prazna tačka ne blokira. Nacrt se može sačuvati. Indeks ostaje 142/142. Tačka 22, M1 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.26 | 2026-11-05 | Usaglašavanje §8.4, §8.5, §8.6.7, §8.6.9, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.22. Popunjavanje tačke 22 nije obavezno. Prazna tabela nabavki ne blokira konačno podnošenje. UKUPNO se i dalje računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Indeks ostaje 142/142. Upozorenje za nedostajuće priloge, tačka 7, M1 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.27 | 2026-11-05 | Usaglašavanje §8.2, §8.3, §8.5, §8.6.3, §8.6.4, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.23. Oblast je jedno slobodno tekstualno polje, obavezno za konačno podnošenje. Nacrt se može sačuvati bez oblasti. Zasebna djelatnost, šifra i šifrarnik se ne uvode. Raniji zahtjev za odvojenim obaveznim poljem djelatnosti zamijenjen je ovom odlukom. Indeks ostaje 142/142. Druga polja M1, kategorije podnosilaca, tačka 7, tačka 22 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
+| 1.0.28 | 2026-11-05 | Usaglašavanje §3.3, §3.11, §11.2, §11.5.2, §20.5, §20.6 i sljedivosti, PM-ALIGN-02A-1. Preliminarna rang-lista ostaje interna. Konačna rang-lista Komisije dostupna je učesniku sa podnesenom prijavom na tom omladinskom konkursu, samo za čitanje, kada je lista konačna, Word predlog generisan i konkurs completed. Prikaz ima naziv „Konačna rang-lista Komisije“ i šest podataka. Nedovršena apsolutna zabrana sopstvenog broja bodova, sopstvenog ranga i kompletne liste nije usvojeno pravilo. Ranija vidljivost ostaje istorijski zapis: „evidentirani konačan rezultat, rang-lista i raspodjela, samo u obimu V1 evidencije; to nije kompletna prijava drugog podnosioca“. Pristup tuđoj prijavi ostaje zabranjen. Javna objava, §25.4, tok Word odluke, razlog odbijanja i postupak Sekretarijata nijesu dirani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -443,15 +444,53 @@ Prosjek se računa iz tri kompletne zaključene ocjene. Ovaj uslov se **ne** pre
 
 ## 3.3. Podnosilac
 
-Funkcionalni akter: **DA**. Osnov: `KN-BM-002` Poglavlja 7 i 8; `BM-ML-019`–`BM-ML-024`; `BM-ML-054`.
+Funkcionalni akter: **DA**. Osnov: `KN-BM-002` Poglavlja 7 i 8; `BM-ML-019`–`BM-ML-024`; `BM-ML-020`; `BM-ML-044`; `BM-ML-045`; `BM-ML-054`.
 
 ### Vidljivost
 
-* javni podaci objavljenog Poziva;
-* sopstvena prijava, uključujući sopstveno osnovno stanje prijave;
-* evidentirani konačan rezultat, rang-lista i raspodjela, **samo** u obimu V1 evidencije; to **nije** kompletna prijava drugog podnosioca (`BM-ML-054`).
+Podnosilac pristupa isključivo sopstvenoj prijavi. Tuđu prijavu, tuđe obrasce i tuđe priloge ne otvara (`BM-ML-054`).
 
-Platforma u V1 **evidentira** konačan rezultat, rang-listu i raspodjelu. Detaljno javno objavljivanje službenog rezultata ostaje odloženo kroz pitanje 10. V1 **ne** generiše i **ne** objavljuje Odluku o raspodjeli, Rješenje o dodjeli ni Rješenje o odbijanju. Ne uvodi se javni PDF lifecycle ženskog profila. Privatnost prijava ostaje prema `BM-ML-054`. Ovo poglavlje **ne** uvodi novo pravilo o javnim podacima ni javni sadržaj prijave.
+Na svom ekranu vidi:
+
+* javne podatke objavljenog Poziva;
+* sopstvenu prijavu, uključujući sopstveno osnovno stanje prijave (`BM-ML-020`; `BM-ML-054`).
+
+Preliminarna rang-lista ostaje interna. Podnosilac joj ne pristupa (`BM-ML-045`).
+
+Konačna rang-lista Komisije dostupna je učesniku za čitanje kada su istovremeno ispunjeni ovi uslovi (`BM-ML-045`):
+
+* rang-lista je konačna;
+* Komisija je završila rad;
+* Word predlog odluke je generisan i trajno evidentiran;
+* konkurs je zatvoren, status `completed`;
+* podnosilac ima podnesenu prijavu na tom konkretnom omladinskom konkursu.
+
+Naziv prikaza je „Konačna rang-lista Komisije“. Prikaz sadrži samo:
+
+1. rang-mjesto;
+2. ime i prezime podnosioca ili naziv društva;
+3. naziv biznis plana;
+4. konačan broj bodova;
+5. traženi iznos sredstava;
+6. iznos iz konačne rang-liste Komisije.
+
+Na tom prikazu nema upozorenja da rang-lista nije službena odluka, oznake da iznos nije službena dodjela, niti dodatnog objašnjenja o odluci Sekretarijata.
+
+Na prikazu konačne rang-liste podnosiocu nijesu dostupni:
+
+* pojedinačne ocjene članova Komisije;
+* interna obrazloženja Komisije;
+* JMBG;
+* adrese i kontakt podaci;
+* tuđi obrasci i prilozi;
+* glasovi članova Komisije;
+* interni Word predlog odluke.
+
+Pregled konačne rang-liste nije pristup tuđoj prijavi. Ovlašćeni članovi Komisije zadržavaju postojeći interni pristup ocjenama i rang-listi. Dostavljanje pojedinačnih rješenja ostaje u nadležnosti Sekretarijata, van aplikacije.
+
+Platforma u V1 **evidentira** konačan rezultat, rang-listu i raspodjelu. Detaljno javno objavljivanje službenog rezultata ostaje odloženo kroz pitanje 10. V1 **ne** generiše i **ne** objavljuje Odluku o raspodjeli, Rješenje o dodjeli ni Rješenje o odbijanju. Ne uvodi se javni PDF lifecycle ženskog profila. Privatnost prijava ostaje prema `BM-ML-054`. Ovo poglavlje **ne** uvodi novo pravilo o javnim podacima ni javni sadržaj prijave. Javno objavljivanje službene odluke je zaseban proces.
+
+Ranija vidljivost „evidentirani konačan rezultat, rang-lista i raspodjela, samo u obimu V1 evidencije; to nije kompletna prijava drugog podnosioca“ zamijenjena je ovom odredbom i ostaje istorijski zapis.
 
 ### Radnje
 
@@ -476,7 +515,10 @@ Gdje usvojeni tok to predviđa, podnosilac podnosi prigovor Komisiji putem digit
 
 * vidi samo svoje prijave;
 * nema pristup kompletnoj prijavi drugog podnosioca;
-* ograničenje važi tokom roka, nakon isteka, nakon ocjenjivanja i nakon arhiviranja;
+* nema pristup preliminarnoj rang-listi;
+* konačnu rang-listu Komisije čita samo pod uslovima iz odjeljka Vidljivost;
+* na tom prikazu ne vidi pojedinačne ocjene, interna obrazloženja, JMBG, adrese, kontakt podatke, tuđe obrasce i priloge, glasove članova ni Word predlog;
+* zabrana tuđe prijave važi tokom roka, nakon isteka, nakon ocjenjivanja i nakon arhiviranja;
 * arhiviranje samo po sebi ne otvara tuđe prijave.
 
 ## 3.4. Administrator Konkursa
@@ -620,6 +662,8 @@ Vrijednosti se odnose na redovnu interakciju sa Platformom u ovom profilu. `USL`
 | Odluka o prigovoru | NE | NE | USL — u ime Komisije | USL — sva tri člana | USL | NE | NE |
 | Individualno ocjenjivanje | NE | NE | USL — samo svoje ocjene | USL — samo svoje | USL — svoje mjesto, bez spajanja ocjena | NE | NE — ne ocjenjuje |
 | Uvid u tuđe individualne ocjene prije kraja ciklusa | NE | NE | NE | NE | NE | NE | — |
+| Preliminarna rang-lista | NE | NE | USL | USL | USL | NE | — |
+| Konačna rang-lista Komisije | USL — čitanje nakon `completed`, konačne liste i evidentiranog Word predloga, uz podnesenu prijavu tog konkursa | NE | USL | USL | USL | NE | — |
 | Evidentiranje iznosa raspodjele | NE | NE | USL | NE | USL ako mijenja predsjednika | NE | NE — ne određuje iznos |
 | Zaključivanje i arhiviranje Poziva | NE | NE | USL — F-05 | NE | USL ako mijenja predsjednika | NE | blokira ako uslovi nijesu ispunjeni |
 | Automatsko kreiranje drugog Poziva | NE | NE | NE | NE | NE | NE | NE |
@@ -2342,7 +2386,7 @@ Arhiviranje **ne** mijenja privatnost i **ne** otvara sadržaj prijave javnosti.
 
 ## 11.2. Pristup po akterima
 
-**Podnosilac** vidi samo svoje prijave. Ne vidi tuđu prijavu, tuđe obrasce ni tuđe priloge.
+**Podnosilac** vidi samo svoje prijave. Ne vidi tuđu prijavu, tuđe obrasce ni tuđe priloge. Taj pristup i pristup konačnoj rang-listi nijesu isto. Preliminarna rang-lista mu nije dostupna. Konačnu rang-listu Komisije vidi za čitanje, pod uslovima iz §3.3, kada je konkurs zatvoren. Taj pregled ne otvara tuđu prijavu.
 
 **Administrator Konkursa** nema sadržajni pristup prijavama, obrascima, prilozima ni razlozima nepotpunosti (`BM-ML-004`). Dok rok traje vidi samo zbirni broj podnesenih prijava konkretnog Poziva, bez liste identiteta i bez ulaska u pojedinačnu prijavu. Istek roka **ne** daje Administratoru novo pravo sadržajnog uvida.
 
@@ -2396,7 +2440,7 @@ Izvor: `BM-ML-054`.
 
 **Kada:** podnosilac B pokuša otvoriti tu prijavu.
 
-**Onda:** Platforma **ne** prikazuje tuđu prijavu.
+**Onda:** Platforma **ne** prikazuje tuđu prijavu. Ova zabrana ne zatvara konačnu rang-listu Komisije iz §3.3.
 
 Izvor: `BM-ML-054`.
 
@@ -3872,6 +3916,10 @@ Komisija radi na tri ekrana:
 
 Na ova tri ekrana nema posebnih mjesta za potpise članova Komisije. Rečenica u KN-PATCH-FS-026 da isti ekran sadrži generisanje, zatvaranje i potpisna mjesta ostaje istorijski zapis i nije važeći raspored.
 
+Preliminarna rang-lista ostaje na internom ekranu Komisije. Podnosiocima nije dostupna.
+
+Kada je rang-lista konačna, Word predlog odluke generisan i trajno evidentiran i konkurs zatvoren statusom `completed`, učesnik sa podnesenom prijavom na tom omladinskom konkursu čita prikaz „Konačna rang-lista Komisije“. Prikaz je samo za čitanje i sadrži rang-mjesto, ime i prezime podnosioca ili naziv društva, naziv biznis plana, konačan broj bodova, traženi iznos sredstava i iznos iz konačne rang-liste Komisije. Ne sadrži pojedinačne ocjene, interna obrazloženja, JMBG, adrese, kontakt podatke, tuđe obrasce i priloge, glasove članova ni Word predlog. Pregled ne otvara tuđu prijavu. Na prikazu nema upozorenja o službenoj odluci Sekretarijata. Tri ekrana Komisije i tok Word predloga ostaju neizmijenjeni.
+
 Javno objavljivanje službene Odluke **nije** sadržaj ovog poglavlja.
 
 ## 20.6. Funkcionalni prelazi — rangiranje
@@ -3885,6 +3933,7 @@ Javno objavljivanje službene Odluke **nije** sadržaj ovog poglavlja.
 | Izjednačenje | ista puna ocjena; sredstva nijesu dovoljna; prednost kategorije nije dovoljna | pojedinačni zaključak | predsjednik unosi Podržava/Odbija, iznos i obrazloženje u preostalom budžetu | sistem ne bira iznos ni dobitnika; prvo čuvanje zaključava | predsjednik | `BM-ML-046`; `BM-ML-048` |
 | Rang-lista | pojedinačni zaključci | posljednji potrebni zaključak | budžet i izjednačenje ispunjeni | automatski konačna; nema potvrde cijele liste | sistem | `BM-ML-045`; `BM-ML-044`; `BM-ML-048` |
 | Konačna rang-lista | konačna | izmjena bodova ili proizvoljan redosljed | — | zabranjeno | svi | `BM-ML-045` |
+| Konačna rang-lista | konkurs `completed`; lista konačna; Word predlog evidentiran | čitanje | podnesena prijava tog omladinskog konkursa | prikaz „Konačna rang-lista Komisije“, samo čitanje, šest podataka; tuđa prijava ostaje zatvorena | podnosilac | `BM-ML-045` |
 
 ## 20.7. Prihvatni kriterijumi — rangiranje
 
@@ -5025,7 +5074,7 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 10.5.6 | Prigovor | Podnesena prijava | Prigovor ne otključava prijavu | 10 | `BM-ML-023`; `BM-ML-036` |
 | 10.5.7 | Nacrt | Istek roka | Ostaje `draft` / U pripremi, samo pregled; nije `rejected` | 10 | `BM-ML-024` |
 | 11.5.1 | Privatnost | Javni korisnik | Prijava, M1a/M1b, M2 i prilozi nijesu javni | 11 | `BM-ML-054` |
-| 11.5.2 | Privatnost | Podnosilac | Vidi samo svoju prijavu | 11 | `BM-ML-054` |
+| 11.5.2 | Privatnost | Podnosilac | Vidi samo svoju prijavu; tuđu ne otvara | 11 | `BM-ML-054` |
 | 11.5.3 | Privatnost | Administrator | Nema sadržajni pristup ni razlozima | 11 | `BM-ML-004` |
 | 11.5.4 | Privatnost | Rok traje | Komisija nema sadržajni pristup | 11 | `BM-ML-005` |
 | 11.5.5 | Pregled | Komisija nakon isteka | Pregled bez redovnog preuzimanja | 11 | `BM-ML-055` |
@@ -5413,7 +5462,7 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-042 | Dodatni bodovi | 11.5 | §17 | 17.7.1–17.7.6; 26.2.15 | +1/+2/+3; maksimum 6; nema boda Zavoda | U V1 |
 | BM-ML-043 | Eliminatorni kriterijumi | 11.6 | §18 | 18.7.1–18.7.6; 26.2.16 | Tačno tri razloga na M3; nema stanja Eliminisana; konačni razlog daje rejected | U V1 |
 | BM-ML-044 | Konačna ocjena i prag podrške | 11.7 | §19; §20; §21 | 19.6.1; 19.6.3; 20.7.6; 26.2.13 | Maksimum 56; prag 30; ispod 30 rang, ispod crte i `rejected` pri formiranju; tačno 30 iznad crte; na pragu zaključak | U V1 |
-| BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | §20 | 20.7.1; 20.7.2; 20.7.6 | Jedan objekat, dvije faze; automatska konačnost; isti ekran; zatvaranje poslije evidentirane odluke | U V1 |
+| BM-ML-045 | Preliminarna i konačna faza rang-liste | 11.8 | §3.3; §20 | 20.7.1; 20.7.2; 20.7.6 | Jedan objekat, dvije faze; preliminarna interna; konačna lista učesnicima za čitanje nakon completed | U V1 |
 | BM-ML-046 | Jednaki bodovi i rang-pozicije | 11.9 | §20 | 20.7.4; 20.7.5; 26.2.17 | 1, 2, 2, 4; pojedinačni zaključak; nema glasanja | U V1 |
 | BM-ML-047 | Procentualni limiti i njihovo preklapanje | 11.10 | §21; §22.4 | 21.8.1; 21.8.2; 26.2.18 | 30/20/15 budžeta konkretnog Poziva; činjenice van aplikacije; aplikacija ne računa procenat | U V1 |
 | BM-ML-048 | Određivanje i kontrola dodijeljenog iznosa | 11.10 | §21 | 21.8.3–21.8.7; 26.2.19 | Komisija određuje; prvo čuvanje zaključava; remaining_after_first od approved | U V1 |
@@ -5422,7 +5471,7 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-051 | Ručno kreiranje i objavljivanje drugog Poziva | 16.3 | §22.3 | 22.7.3; 22.7.5; 26.2.20 | Administrator ručno nakon kapije; čuvanje nije objava | U V1 |
 | BM-ML-052 | Ponovno konkurisanje na drugom Pozivu | 16.4 | §22.5 | 22.7.10; 26.2.21 | Nova prijava; bez automatskog prenosa | U V1 |
 | BM-ML-053 | Raspisivanje prvog Javnog konkursa | 15.2 | §5.6; §6 | 5.9.2; 6.8.5; 6.8.6 | Prvi Poziv u Q2; ručna objava | U V1 |
-| BM-ML-054 | Privatnost prijave i odvojenost javnih rezultata | 14.1 | §11; §23.4 | 11.5.1–11.5.4; 23.8.9; 26.2.2 | Privatnost ostaje i nakon arhiviranja | U V1 |
+| BM-ML-054 | Privatnost prijave i odvojenost javnih rezultata | 14.1 | §3.3; §11; §23.4 | 11.5.1–11.5.4; 23.8.9; 26.2.2 | Tuđa prijava ostaje zatvorena; konačna lista nije tuđa prijava | U V1 |
 | BM-ML-055 | Pregled dokumentacije bez preuzimanja | 14.2 | §11.3 | 11.5.5 | Pregled u Platformi; nema redovnog masovnog preuzimanja | U V1 |
 | BM-ML-056 | Granica prema ugovoru i početak prihvatljivosti troškova | 13.1 | §1.3; §25; §28.2 | 1.5.1; 23.8.10; 25.6.1 | Evidentirana granica; nema V1 toka ugovora | Van V1 |
 | BM-ML-057 | Granica prema izvještavanju nakon realizacije | 13.2 | §1.3; §25; §28.2 | 1.5.1; 25.6.1 | Evidentirana granica; nema V1 toka M4/M4a | Van V1 |
@@ -5537,4 +5586,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.27**
+**Kraj dokumenta KN-FS-002 v1.0.28**
