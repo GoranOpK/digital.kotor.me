@@ -507,7 +507,7 @@
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
                         <span style="color: #1e3a8a; font-size: 13px;">
-                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong>, redoslijedom kojim su navedeni. Redoslijed fajlova možete promijeniti pomoću dugmadi ‘Gore’ i ‘Dole’ prije upload-a.
+                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong>, redoslijedom kojim su navedeni. Redoslijed fajlova možete promijeniti pomoću dugmadi ‘Gore’ i ‘Dolje’ prije upload-a.
                         </span>
                     </div>
                 </div>
