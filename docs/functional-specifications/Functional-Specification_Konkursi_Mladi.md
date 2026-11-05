@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.26
+**Verzija:** 1.0.27
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.22** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.23** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.18** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.23** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.24** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -66,6 +66,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.24 | 2026-11-04 | Usaglašavanje sa commitom `8974e68a`. Poslije uspješnog podnošenja eliminatornog prigovora aktivni predsjednik nadležne Komisije dobija e-mail, a na kontrolnoj tabli vidi prigovore u stanju Podnesen. Riješeni prigovor izlazi iz brojača. Neuspješan e-mail ne poništava prigovor i ne šalje se ponovo. Novo poslovno pravilo, rok i stanje prigovora nijesu uvedeni. Indeks ostaje 142/142. ŽP ishod je u KN-FS-003. MMSP nije diran. |
 | 1.0.25 | 2026-11-05 | Usaglašavanje §8.4, §8.5, §8.6.5, §8.6.6, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.21. Odgovor tačke 7 nije obavezan. Dostavljeni odgovor mora biti dozvoljen. Drugo bez obrazloženja i nedozvoljena vrijednost blokiraju konačno podnošenje. Prazna tačka ne blokira. Nacrt se može sačuvati. Indeks ostaje 142/142. Tačka 22, M1 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.26 | 2026-11-05 | Usaglašavanje §8.4, §8.5, §8.6.7, §8.6.9, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.22. Popunjavanje tačke 22 nije obavezno. Prazna tabela nabavki ne blokira konačno podnošenje. UKUPNO se i dalje računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Indeks ostaje 142/142. Upozorenje za nedostajuće priloge, tačka 7, M1 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
+| 1.0.27 | 2026-11-05 | Usaglašavanje §8.2, §8.3, §8.5, §8.6.3, §8.6.4, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.23. Oblast je jedno slobodno tekstualno polje, obavezno za konačno podnošenje. Nacrt se može sačuvati bez oblasti. Zasebna djelatnost, šifra i šifrarnik se ne uvode. Raniji zahtjev za odvojenim obaveznim poljem djelatnosti zamijenjen je ovom odlukom. Indeks ostaje 142/142. Druga polja M1, kategorije podnosilaca, tačka 7, tačka 22 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1762,32 +1763,23 @@ Kod planiranog društva M1b je obrazac namjere neregistrovanog fizičkog lica. P
 
 Promjena namjere, pravnog oblika ili poslovne faze unutar nacrta **nije** dozvoljena. **Ne** uvodi se ponašanje brisanja, skrivanja ili prenosa podataka zbog takve promjene.
 
-## 8.2. Oblast i djelatnost
+## 8.2. Oblast realizacije biznis plana
 
-Oblast i djelatnost su **dva različita** obavezna podatka (`BM-ML-026`). Evidentiraju se u **M1a i M1b**.
+Obrasci M1a i M1b sadrže polje „Oblast u kojoj planirate realizaciju biznis plana“ (`BM-ML-026`).
 
-**Oblast:**
+* oblast je slobodan tekst;
+* jedna je vrijednost;
+* obavezna je prije konačnog podnošenja;
+* nacrt se može sačuvati i kada oblast nije popunjena;
+* vezuje se za konkretnu prijavu i prikazuje se Komisiji.
 
-* pretežna oblast realizacije biznis plana;
-* slobodan tekst;
-* obavezna;
-* jedna vrijednost u potvrđenom obimu.
+**Ne** uvodi se dodatno polje djelatnosti. **Ne** uvode se šifra djelatnosti ni šifrarnik djelatnosti.
 
-**Djelatnost:**
-
-* konkretnija djelatnost ili podoblast;
-* slobodan tekst;
-* obavezna;
-* dodaje se u M1;
-* **ne** uvodi se šifra djelatnosti;
-* **ne** uvodi se šifrarnik;
-* **ne** izmišlja se mogućnost više djelatnosti.
-
-Platforma **ne** pretpostavlja da je naziv oblasti istovremeno naziv djelatnosti.
+Raniji zahtjev za zasebnom djelatnošću zamijenjen je ovom odlukom.
 
 ## 8.3. Ostala polja M1a i M1b
 
-Oblast i djelatnost su potvrđene u `BM-ML-026`.
+Oblast je potvrđena u `BM-ML-026`.
 
 Ostala obavezna polja M1a/M1b **ne** izmišljaju se u ovom dokumentu. `KN-FS-002` zadržava strukturu izvornog obrasca iz priloga Odluke. Potpuni katalog polja mora biti prenesen iz tog potvrđenog priloga, bez izmišljanja novih polja.
 
@@ -1849,6 +1841,7 @@ Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom.
 |---------|-------------------|----------------|-------|----------|-------|------------|
 | Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira preduzetnika, ili registrovani preduzetnik | prikazuje se M1a; nema ručnog izbora M1b | sistem | `BM-ML-025`; F-06 |
 | Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira društvo, ili registrovano privredno društvo (DOO, AD, OD ili KD) | prikazuje se M1b; nema ručnog izbora M1a | sistem | `BM-ML-025`; F-06 |
+| M1 | U pripremi | unos oblasti | polje „Oblast u kojoj planirate realizaciju biznis plana“ | slobodan tekst se čuva; prazna oblast dozvoljena u nacrtu; prazna oblast blokira konačno podnošenje; zasebna djelatnost se ne traži | podnosilac | `BM-ML-026` |
 | M2 tačka 7 | U pripremi | izbor odgovora | nema odgovora, ili tačno jedan dozvoljeni odgovor | prazna tačka ili izbor mogu se sačuvati; prazna tačka ne blokira podnošenje | podnosilac | `BM-ML-027` |
 | M2 tačka 7 | U pripremi | izbor `Drugo` ili nedozvoljena vrijednost | `Drugo` bez teksta, ili vrijednost van ponuđenih odgovora | konačno podnošenje blokirano; nacrt se i dalje može sačuvati | podnosilac | `BM-ML-027` |
 | M2 tačka 22 | U pripremi | dodavanje ili uklanjanje stavke | rok traje | tabela ažurirana; zbir preračunat kada postoje stavke; prazna tabela ne blokira podnošenje | podnosilac | `BM-ML-028` |
@@ -1879,21 +1872,21 @@ Izvor: `BM-ML-025`; odluka F-06.
 
 **Ako:** podnosilac popunjava M1a ili M1b.
 
-**Kada:** ostavi oblast praznom i pokuša konačno podnošenje.
+**Kada:** ostavi polje „Oblast u kojoj planirate realizaciju biznis plana“ praznim.
 
-**Onda:** Platforma blokira podnošenje. Oblast je obavezan slobodan tekst, jedna vrijednost, bez šifrarnika.
+**Onda:** nacrt se može sačuvati. Konačno podnošenje Platforma blokira. Oblast je obavezan slobodan tekst, jedna vrijednost, bez šifrarnika.
 
 Izvor: `BM-ML-026`; `BM-ML-022`.
 
-### 8.6.4 — Djelatnost
+### 8.6.4 — Zasebna djelatnost
 
 **Ako:** podnosilac popunjava M1a ili M1b.
 
-**Kada:** ostavi djelatnost praznom i pokuša konačno podnošenje.
+**Kada:** pokuša konačno podnošenje.
 
-**Onda:** Platforma blokira podnošenje. Djelatnost je obavezan slobodan tekst, odvojen od oblasti, bez šifre i bez više vrijednosti.
+**Onda:** odsustvo zasebnog polja djelatnosti ne blokira podnošenje. Platforma ne traži djelatnost, šifru ni šifrarnik. Prazna oblast i dalje blokira podnošenje, prema §8.6.3.
 
-Izvor: `BM-ML-026`; `BM-ML-022`.
+Izvor: `BM-ML-026`.
 
 ### 8.6.5 — Tačka 7
 
@@ -2156,7 +2149,7 @@ Prije podnošenja Platforma razdvaja (`BM-ML-022`):
 
 ### A. Blokiraju
 
-* prazna obavezna polja M1a/M1b, uključujući oblast i djelatnost;
+* prazna obavezna polja M1a/M1b, uključujući oblast;
 * prazna obavezna polja M2;
 * nije utvrđen pravni oblik;
 * nije utvrđena namjera neregistrovanog fizičkog lica, kada je potrebna;
@@ -2169,6 +2162,8 @@ Prije podnošenja Platforma razdvaja (`BM-ML-022`):
 * već postojeća `Podnesena` prijava istog podnosioca na istom Pozivu.
 
 Prazna tabela tačke 22 **ne** blokira konačno podnošenje.
+
+Zasebno polje djelatnosti se **ne** zahtijeva i njegovo odsustvo **ne** blokira podnošenje. Nacrt se može sačuvati bez popunjene oblasti.
 
 Nedostatak PIB-a, CRPS broja, registrovanog sjedišta ili formalnih podataka o osnivaču i izvršnom direktoru **ne** blokira podnošenje planiranog društva. Za registrovano društvo prazan blok tih podataka **blokira** konačno podnošenje.
 
@@ -2238,7 +2233,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7 ima nedozvoljenu vrijednost ili `Drugo` bez objašnjenja, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prikazuje šta nedostaje; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora; prazna tačka 7 i prazna tačka 22 ne blokiraju | sistem | `BM-ML-022`; `BM-ML-027`; `BM-ML-028`; F-06 |
+| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7 ima nedozvoljenu vrijednost ili `Drugo` bez objašnjenja, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prikazuje šta nedostaje; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora; prazna tačka 7 i prazna tačka 22 ne blokiraju; prazna oblast blokira; zasebno polje djelatnosti se ne zahtijeva | sistem | `BM-ML-022`; `BM-ML-026`; `BM-ML-027`; `BM-ML-028`; F-06 |
 | Prijava | `draft` | provjera prije podnošenja | nedostaju prateći dokumenti paketa, osim žiro računa | upozorenje i lista; podnošenje ostaje moguće | sistem | `BM-ML-022`; `BM-ML-032` |
 | Prijava | `draft` | konačna potvrda | blokirajući uslovi nijesu ispunjeni; rok traje; nema Podnesene na istom Pozivu | `draft` → `submitted`; zaključano | podnosilac | `BM-ML-023`; `BM-KN-015` |
 | Prijava | `submitted` | pokušaj izmjene, dopune, brisanja, povlačenja ili ponovnog podnošenja | — | zabranjeno | svi | `BM-ML-023` |
@@ -2253,7 +2248,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
-**Onda:** Platforma blokira podnošenje i prikazuje šta treba popuniti odnosno utvrditi. Faza se **ne** popunjava pretpostavkom. Teritorijalni podatak **ne** blokira podnošenje sam po sebi. Nedostatak PIB-a i CRPS-a **ne** blokira planirano društvo. Registrovano društvo **mora** popuniti blok podataka društva. Prazna tabela tačke 22 **ne** blokira podnošenje.
+**Onda:** Platforma blokira podnošenje i prikazuje šta treba popuniti odnosno utvrditi. Faza se **ne** popunjava pretpostavkom. Teritorijalni podatak **ne** blokira podnošenje sam po sebi. Nedostatak PIB-a i CRPS-a **ne** blokira planirano društvo. Registrovano društvo **mora** popuniti blok podataka društva. Prazna oblast **blokira** podnošenje. Zasebno polje djelatnosti se **ne** zahtijeva. Prazna tabela tačke 22 **ne** blokira podnošenje.
 
 Izvor: `BM-ML-022`; `BM-ML-025`; `BM-ML-026`; `BM-ML-027`; `BM-ML-028`; `BM-ML-009`; `BM-ML-010`; odluka F-06.
 
@@ -5010,8 +5005,8 @@ Ukupno redova ovog indeksa: **142**. Nema preskakanja i nema duplikata.
 | 7.9.7 | Kategorija | Nepodržani identitet ili nedovoljni podaci | Nema proizvoljnog paketa ni `ostalo`; kreiranje i podnošenje zabranjeni | 7 | F-06 |
 | 8.6.1 | M1a | Budući ili registrovani preduzetnik | Prikazuje se M1a | 8 | `BM-ML-025` |
 | 8.6.2 | M1b | Planirano ili registrovano privredno društvo | Prikazuje se M1b; blok registrovanog društva samo ako je društvo registrovano | 8 | `BM-ML-025` |
-| 8.6.3 | M1 | Unos oblasti | Obavezno slobodno tekstualno polje | 8 | `BM-ML-026` |
-| 8.6.4 | M1 | Unos djelatnosti | Obavezno odvojeno polje; nema šifrarnika | 8 | `BM-ML-026` |
+| 8.6.3 | M1 | Unos oblasti | Obavezno za konačno podnošenje; nacrt može bez nje | 8 | `BM-ML-026` |
+| 8.6.4 | M1 | Zasebna djelatnost | Polje se ne uvodi; nema šifre ni šifrarnika | 8 | `BM-ML-026` |
 | 8.6.5 | M2 t.7 | Izbor odgovora | Odgovor nije obavezan; dostavljeni mora biti dozvoljen | 8 | `BM-ML-027` |
 | 8.6.6 | M2 t.7 | Izbor Drugo | Obavezan tekst prije konačnog podnošenja | 8 | `BM-ML-027` |
 | 8.6.7 | M2 t.22 | Tabela nabavki | Nije obavezna; prazna ne blokira | 8 | `BM-ML-028` |
@@ -5399,7 +5394,7 @@ Matrica povezuje tačno `BM-ML-001`–`BM-ML-058` sa razradom u `KN-FS-002`. **N
 | BM-ML-023 | Konačno podnošenje i zaključavanje | 8.5 | §10.2 | 10.5.3; 10.5.4; 10.5.5 | Izričita potvrda; podnesena ostaje zaključana i nakon izmjene naloga | U V1 |
 | BM-ML-024 | Prijava U pripremi nakon isteka roka | 8.6 | §6.7; §12 | 6.8.11; 12.5.2 | Ostaje U pripremi, samo pregled | U V1 |
 | BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | §8.1 | 8.6.1; 8.6.2 | M1a za preduzetnika; M1b za planirano ili registrovano društvo; nema ručnog selektora | U V1 |
-| BM-ML-026 | Obavezni podaci oblast i djelatnost | 9.3 | §8.2 | 8.6.3; 8.6.4 | Dva odvojena obavezna polja; nema šifrarnika | U V1 |
+| BM-ML-026 | Oblast realizacije biznis plana | 9.3 | §8.2 | 8.6.3; 8.6.4 | Jedno slobodno tekstualno polje; obavezno za podnošenje; nacrt može bez nje; nema zasebne djelatnosti ni šifrarnika | U V1 |
 | BM-ML-027 | Jednostruki izbor u tački 7 obrasca M2 | 9.4 | §8.3 | 8.6.5; 8.6.6 | Odgovor nije obavezan; jedan dozvoljeni ako se popunjava; Drugo zahtijeva tekst; prazno ne blokira | U V1 |
 | BM-ML-028 | Tabela nabavki u tački 22 obrasca M2 | 9.4 | §8.4 | 8.6.7; 8.6.8; 8.6.9 | Nije obavezna; prazna ne blokira; zbir računa Platforma | U V1 |
 | BM-ML-029 | Katalog dokumentacije prema kategoriji podnosioca | 9.5 | §9 | 9.9.1 | Četiri paketa; nema proizvoljnog paketa | U V1 |
@@ -5542,4 +5537,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.26**
+**Kraj dokumenta KN-FS-002 v1.0.27**

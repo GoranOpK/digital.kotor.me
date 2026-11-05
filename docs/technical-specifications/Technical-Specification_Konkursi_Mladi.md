@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.23
+**Verzija:** 1.0.24
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.22** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.23** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.26** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.27** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -61,6 +61,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.21 | 2026-11-04 | Usaglašavanje §9.4 i §9.10 sa commitom `8974e68a`. `ApplicationPrigovorService::submit()` i dalje prvo čuva prigovor. `deliverSubmissionNotice()` zatim šalje `ApplicationPrigovorSubmittedMail` samo tačno jednom aktivnom predsjedniku. Nema nove tabele, migracije, statusa ni automatskog ponavljanja. Žensko poslovno pravilo nije mijenjano. MMSP nije diran. |
 | 1.0.22 | 2026-11-05 | Usaglašavanje §6.5 sa KN-BM-002 v1.0.21 i KN-FS-002 v1.0.25. Tačka 7 nije obavezna za podnošenje. Dozvoljen je najviše jedan od ponuđenih odgovora. Drugo traži tekst. Prazan odgovor ne blokira. Nedozvoljena vrijednost i Drugo bez teksta blokiraju. Nema nove tabele ni migracije. Tačka 22, ŽP i MMSP nijesu dirani. |
 | 1.0.23 | 2026-11-05 | Usaglašavanje §6.5, §6.10, §6.11.7 i §7.4 sa KN-BM-002 v1.0.22 i KN-FS-002 v1.0.26. Tačka 22 nije obavezna. Prazna tabela nabavki ne blokira podnošenje. UKUPNO se računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Upozorenje za nedostajuće priloge ostaje. Nema nove tabele ni migracije. Tačka 7, M1, ŽP i MMSP nijesu dirani. |
+| 1.0.24 | 2026-11-05 | Usaglašavanje §6.2, §6.3, §6.10 i §7.4 sa KN-BM-002 v1.0.23 i KN-FS-002 v1.0.27. M1a i M1b imaju polje „Oblast u kojoj planirate realizaciju biznis plana“. Oblast je obavezna za konačno podnošenje, a nacrt se može sačuvati bez nje. Zasebno polje djelatnosti, šifra i šifrarnik se ne uvode. Nema nove kolone, request parametra ni validacije djelatnosti. Raniji zahtjev za odvojenim poljem djelatnosti zamijenjen je ovom odlukom. Tačka 7, tačka 22, ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1129,7 +1130,11 @@ Izvor: `BM-ML-025`; `KN-FS-002` §8.6.1–8.6.2.
 
 M1a se prikazuje za tokove A i C.
 
-Obavezna su polja koja `KN-FS-002` Poglavlje 8 propisuje, uključujući slobodno tekstualno polje oblasti i odvojeno polje djelatnosti, bez šifrarnika (`BM-ML-026`; §8.6.3–8.6.4).
+M1a i M1b sadrže postojeće polje „Oblast u kojoj planirate realizaciju biznis plana“ (`BM-ML-026`; §8.6.3). Oblast je slobodan tekst. Prazna oblast blokira konačno podnošenje. Nacrt se može sačuvati bez popunjene oblasti.
+
+Zasebno polje djelatnosti, šifra i šifrarnik se ne uvode. Ne uvodi se nova kolona, novi request parametar ni posebna validacija djelatnosti (§8.6.4).
+
+Obavezna ostaju i ostala polja koja `KN-FS-002` Poglavlje 8 propisuje.
 
 M1a **nema** company-block društva.
 
@@ -1139,7 +1144,7 @@ Izvor: `BM-ML-025`; `BM-ML-026`.
 
 M1b se prikazuje za tokove B i D.
 
-M1b sadrži podatke nosioca i prijave prema FS. Company-block registrovanog društva je odvojen i važi samo za tok D, odnosno kada je živi `is_registered` za društvo tačan, u skladu sa §6.4.
+M1b sadrži podatke nosioca i prijave prema FS. Isto polje oblasti iz §6.2 važi i za M1b. Zasebno polje djelatnosti se ne uvodi. Company-block registrovanog društva je odvojen i važi samo za tok D, odnosno kada je živi `is_registered` za društvo tačan, u skladu sa §6.4.
 
 Izvor: `BM-ML-025`; `KN-FS-002` §8.6.2.
 
@@ -1252,6 +1257,7 @@ Izvor: `BM-ML-023`; `KN-FS-002` §10.5.3–10.5.6.
 | M1b | sakrivanje company-block | tok B / planirano društvo | nema lažnih zapisa; podnošenje nije blokirano | §8.6.2; §10.5.1 |
 | M2 | unos nabavki | postoje stavke | `UKUPNO` izračunato | `BM-ML-028` |
 | M2 | prazna tabela | podnošenje | nije blokirano | §8.6.7; §8.6.9 |
+| M1 | oblast | konačno podnošenje | prazna oblast blokira; nacrt se može sačuvati; nema zasebnog polja djelatnosti | `BM-ML-026`; §8.6.3; §8.6.4 |
 | Prilozi | paket 2 ili 4 | IOPPD i potvrda oba | odbijeno kombinovanje | `BM-ML-031` |
 | Prilozi | žiro | nije priložen | nije samo zbog toga nepotpuna | `BM-ML-032` |
 | Prilozi | nedostaje obavezni tip | podnošenje | upozorenje; nije M3 odluka | `BM-ML-022` |
@@ -1419,7 +1425,7 @@ Koristi se postojeća kontrola prije potvrde podnošenja, sa parametrima paketa 
 
 Blokira se ako:
 
-* obavezna polja M1 ili M2 nijesu popunjena;
+* obavezna polja M1 ili M2 nijesu popunjena, uključujući praznu oblast (`BM-ML-026`);
 * registrovano društvo nema popunjen company-block;
 * rok je istekao;
 * prijava nije `draft`;
@@ -1430,6 +1436,8 @@ Upozorenje, bez blokade podnošenja:
 * nedostaju obavezni prilozi paketa, osim žiro računa (`BM-ML-022`; `BM-ML-032`).
 
 Prazna tabela nabavki tačke 22 **ne** blokira podnošenje.
+
+Zasebno polje djelatnosti se **ne** zahtijeva. Nema nove kolone, request parametra ni validacije djelatnosti. Nacrt se može sačuvati bez popunjene oblasti.
 
 Planirano društvo se **ne** blokira zbog odsustva PIB, CRPS, sjedišta, osnivača ili direktora.
 
@@ -3823,4 +3831,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.23**
+**Kraj dokumenta KN-TS-002 v1.0.24**

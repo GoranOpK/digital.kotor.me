@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.22
+**Verzija:** 1.0.23
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
@@ -15,9 +15,9 @@ Povezani dokumenti:
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.26** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.27** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.23** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.24** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -76,6 +76,7 @@ Povezani dokumenti:
 | 1.0.20 | 2026-11-01 | Usaglašavanje GAP-02. Istorijski redovi ostaju. Status inovativnog tehnološkog start-upa i ranije dodijeljenih sredstava utvrđuje se van aplikacije. Aplikacija te činjenice ne prikuplja i ne vodi. Predsjednik unosi zaključak, iznos i obrazloženje. Limiti 30/20/15 ostaju njegova obaveza i ne određuju se automatski. Privremena rezervacija od 30% se ne primjenjuje. Serverska kontrola je traženi iznos, raspoloživi budžet i trajno zaključavanje. PM-01–PM-05 i raspored tri ekrana ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.21 | 2026-11-05 | Usaglašavanje BM-ML-027 i pitanja 17. Popunjavanje tačke 7 obrasca M2 nije obavezno. Ako se popunjava, bira se samo jedan od ponuđenih odgovora. Drugo traži tekstualno obrazloženje. Prazna tačka ne sprečava konačno podnošenje. Nedozvoljena vrijednost ili Drugo bez obrazloženja sprečavaju ga. Nepotpuni nacrt se može sačuvati. Ranije rješenje pitanja 17 ostaje istorijski zapis: „U tački 7 bira se tačno jedan odgovor. Izbor je obavezan i odgovori su međusobno isključivi. Ako se izabere „Drugo“, obavezan je tekstualni unos objašnjenja.“ Tačka 22, M1, ŽP i MMSP nijesu dirani. |
 | 1.0.22 | 2026-11-05 | Usaglašavanje BM-ML-028 i pitanja 16. Popunjavanje tačke 22 nije obavezno. Prazna tabela nabavki ne sprečava konačno podnošenje. Kada postoje unesene stavke, Platforma i dalje računa UKUPNO. Komisija vrednuje razrađenost nabavki u postojećim kriterijumima, bez automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom i ostaje istorijski zapis: „Tabela pripada tački 22 obrasca M2, obavezna je i mora imati najmanje jednu stavku. Za svaku stavku unose se vrsta nabavke i cijena prema predračunu u eurima. Ako postoji više nabavki, svaka se unosi zasebno, a sistem prikazuje njihov ukupan zbir u eurima. Komisija provjerava predračune, cijene i odnos ukupne vrijednosti prema traženim sredstvima.“ Tačka 7, M1, ŽP i MMSP nijesu dirani. |
+| 1.0.23 | 2026-11-05 | Usaglašavanje BM-ML-026 i pitanja 15. Obrasci M1a i M1b sadrže polje „Oblast u kojoj planirate realizaciju biznis plana“. Oblast je slobodan tekst, obavezna prije konačnog podnošenja, a nacrt se može sačuvati bez nje. Ne uvodi se dodatno polje djelatnosti, šifra ni šifrarnik. Raniji zahtjev za zasebnom djelatnošću zamijenjen je ovom odlukom i ostaje istorijski zapis: „U obrascima M1a i M1b vode se oblast i djelatnost kao dva odvojena obavezna polja sa slobodnim tekstualnim unosom. Oblast predstavlja pretežnu oblast realizacije biznis plana, a djelatnost konkretniju planiranu djelatnost. Polje djelatnost dodaje se u M1. Šifra djelatnosti se ne uvodi i ne koristi se šifrarnik.“ Tačka 7, tačka 22, ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -478,7 +479,7 @@ Ako iz potvrđenog rješenja nastane poslovno pravilo, pravilo se unosi u odgova
 | 12 | Odluka, čl. 4 i 14 | Član 4 omogućava da podnosilac koji još nema registrovanu djelatnost registraciju, poresku evidenciju i žiro račun obezbijedi do zaključenja ugovora. U listi dokumentacije iz člana 14 za društvo koje započinje poslovanje žiro račun nije naveden. Da li se dokaz o žiro računu za takvo društvo dostavlja tek prije ugovora ili ipak uz prijavu? | Odgovor utiče na obavezne dokumente uz prijavu, provjeru potpunosti i uslov za zaključenje ugovora. | RIJEŠENO ZA TRENUTNU FAZU | Dokaz o žiro računu može se dostaviti uz prijavu, ali tada nije obavezan. Njegov nedostatak ne čini prijavu nepotpunom. Može se dostaviti nakon završetka konkursa, a provjera pripada fazi prije zaključivanja ugovora. |
 | 13 | Odluka, član 14 | Za preduzetnika u razvoju Odluka navodi poreski obrazac IOPPD ili potvrdu da nema zaposlenih, dok za društvo u razvoju navodi samo IOPPD. Koji dokaz dostavlja društvo u razvoju koje nema zaposlenih? | Odgovor utiče na listu obaveznih dokumenata, provjeru potpunosti prijave i mogućnost učešća društva bez zaposlenih. | RIJEŠENO ZA POSLOVNI MODEL | DOO u razvoju koje ima zaposlene dostavlja IOPPD za posljednji mjesec uplate poreza i doprinosa. DOO koje nema zaposlene dostavlja potvrdu Poreske uprave da nema zaposlenih. Dostavlja se jedan odgovarajući dokument, obavezan uz prijavu. Njegov nedostatak čini prijavu nepotpunom. Ne uvodi se ograničenje starosti potvrde bez potvrđenog izvora. |
 | 14 | Odluka, čl. 4, 14 i 16; Obrazac M1b | Član 16 koristi formulaciju „preduzetnik čiji oblik je DOO“. Da li obrazac M1b popunjava privredno društvo, osnivač odnosno izvršni direktor društva ili druga kategorija podnosioca? | Odgovor utiče na izbor prijavne forme, identitet podnosioca, obavezna polja i dokumente uz prijavu. | RIJEŠENO ZA POSLOVNI MODEL | Formalni podnosilac obrasca M1b je DOO. Obrazac u ime DOO popunjava, potpisuje i podnosi lice ovlašćeno za zastupanje ili podnošenje prijave. Podaci DOO i ovlašćenog lica vode se odvojeno. |
-| 15 | Odluka, član 16; Obrazac M1a | Odluka u opisu elektronske prijave koristi pojam djelatnosti, dok obrazac M1a koristi pojam oblasti. Da li platforma treba da vodi djelatnost, oblast ili oba podatka i kakav je njihov međusobni odnos? | Odgovor utiče na polja prijave, dozvoljene vrijednosti, validaciju i kasnije izvještavanje o prijavama. | RIJEŠENO ZA POSLOVNI MODEL | U obrascima M1a i M1b vode se oblast i djelatnost kao dva odvojena obavezna polja sa slobodnim tekstualnim unosom. Oblast predstavlja pretežnu oblast realizacije biznis plana, a djelatnost konkretniju planiranu djelatnost. Polje djelatnost dodaje se u M1. Šifra djelatnosti se ne uvodi i ne koristi se šifrarnik. |
+| 15 | Odluka, član 16; Obrazac M1a | Odluka u opisu elektronske prijave koristi pojam djelatnosti, dok obrazac M1a koristi pojam oblasti. Da li platforma treba da vodi djelatnost, oblast ili oba podatka i kakav je njihov međusobni odnos? | Odgovor utiče na polja prijave, dozvoljene vrijednosti, validaciju i kasnije izvještavanje o prijavama. | RIJEŠENO ZA POSLOVNI MODEL | Obrasci M1a i M1b sadrže jedno polje: „Oblast u kojoj planirate realizaciju biznis plana“. Oblast se unosi slobodnim tekstom i obavezna je prije konačnog podnošenja. Nacrt se može sačuvati bez popunjene oblasti. Dodatno polje djelatnosti, šifra i šifrarnik se ne uvode. Raniji zahtjev za dva odvojena polja zamijenjen je ovom odlukom i ostaje u istoriji verzije 1.0.23. |
 | 16 | Prilog Odluke — forma za biznis plan, tabela poslije tačke 22 | Da li nenumerisana tabela nabavke predstavlja nastavak tačke 22, zasebnu obaveznu cjelinu forme ili pomoćnu tabelu? | Odgovor utiče na strukturu elektronske forme, obaveznost unosa, numeraciju polja i povezivanje planiranih nabavki sa troškovima biznis plana. | RIJEŠENO ZA POSLOVNI MODEL | Tabela pripada tački 22 obrasca M2 i nije posebna tačka. Popunjavanje nije obavezno. Prazna tabela ne sprečava konačno podnošenje. Kada postoje unesene stavke, sistem računa njihov zbir. Komisija vrednuje razrađenost nabavki u postojećim kriterijumima, bez automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom i ostaje u istoriji verzije 1.0.22. |
 | 17 | Prilog Odluke — forma za biznis plan, tačka 7 | Da li podnosilac u tački 7 bira samo jednu ponuđenu mogućnost ili može označiti više mogućnosti? | Odgovor utiče na tip polja u elektronskoj formi, validaciju unosa i način prikaza odgovora Komisiji. | RIJEŠENO ZA POSLOVNI MODEL | Popunjavanje nije obavezno. Ako se popunjava, bira se samo jedan od ponuđenih odgovora. Ako se izabere „Drugo“, obavezan je tekstualni unos objašnjenja. Nepopunjavanje ne sprečava konačno podnošenje. Nedozvoljena vrijednost ili „Drugo“ bez objašnjenja sprečavaju konačno podnošenje. Ranije rješenje da je izbor obavezan ostaje u istoriji verzije 1.0.21. |
 | 18 | Odluka, čl. 5 i 19; `KN-BM-001` — godišnja instanca i poziv | Da li drugi Javni konkurs raspisan zbog preostalih sredstava predstavlja novu godišnju instancu ili novi raspis u okviru postojeće godišnje instance? | Odgovor utiče na identitet godišnje instance, povezivanje prijava, budžeta, rang-lista, odluka i arhive prvog i ponovljenog raspisa. | RIJEŠENO ZA POSLOVNI MODEL | Drugi Javni konkurs predstavlja ponovljeni raspis u okviru iste godišnje instance konkursa za mlade. Ne kreira se nova godišnja instanca samo zato što se konkurs raspisuje drugi put u istoj godini. |
@@ -1092,28 +1093,21 @@ Kod registrovanog društva formalni podnosilac je privredno društvo, dok se nos
 
 **Izvor:** Odluka, članovi 14 i 16; odobrena rješenja pitanja 7 i 14 iz Poglavlja 4; `KN-PATCH-BM-014`.
 
-## 9.3. Oblast i djelatnost
+## 9.3. Oblast realizacije biznis plana
 
-### BM-ML-026 — Obavezni podaci oblast i djelatnost
+### BM-ML-026 — Oblast u kojoj se planira realizacija biznis plana
 
-Oblast i djelatnost predstavljaju dva različita podatka:
+Obrasci M1a i M1b sadrže polje „Oblast u kojoj planirate realizaciju biznis plana“.
 
-- oblast predstavlja pretežnu oblast u kojoj podnosilac planira realizaciju biznis plana;
-- djelatnost predstavlja konkretniju aktivnost ili podoblast unutar te oblasti.
+Oblast se unosi slobodnim tekstom. Jedna je vrijednost, vezuje se za konkretnu prijavu i prikazuje se Komisiji.
 
-Oba podatka:
+Oblast je obavezna prije konačnog podnošenja prijave. Nacrt se može sačuvati i kada oblast nije popunjena.
 
-- obavezna su;
-- unose se slobodnim tekstom;
-- evidentiraju se u M1a i M1b;
-- prikazuju se Komisiji;
-- povezuju se sa konkretnom prijavom.
+Ne uvodi se dodatno polje djelatnosti, šifra djelatnosti ni šifrarnik djelatnosti.
 
-Ne uvode se šifra djelatnosti ni šifrarnik djelatnosti.
+Raniji zahtjev da se na M1a i M1b vode oblast i djelatnost kao dva odvojena obavezna polja, i da se polje djelatnost dodaje u M1, zamijenjen je ovom odlukom. Taj zahtjev ostaje istorijski zapis u verziji 1.0.23. Važeće pravilo je ova odredba.
 
-Platforma ne pretpostavlja da je naziv oblasti istovremeno i naziv djelatnosti.
-
-**Izvor:** Odluka, član 16; obrazac M1a; odobreno rješenje pitanja 15 iz Poglavlja 4.
+**Izvor:** obrasci M1a i M1b; odobreno rješenje pitanja 15 iz Poglavlja 4; odluka od 2026-11-05.
 
 ## 9.4. Posebna pravila obrasca M2
 
@@ -2645,7 +2639,7 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 | BM-ML-023 | Konačno podnošenje i zaključavanje | 8.5 | Projektna odluka; BM-KN-015 | USVOJENO |
 | BM-ML-024 | Prijava U pripremi nakon isteka roka | 8.6 | Projektna odluka | USVOJENO |
 | BM-ML-025 | Izbor obrasca M1a ili M1b | 9.2 | Odluka, članovi 14 i 16; Poglavlje 4, pitanja 7 i 14; KN-PATCH-BM-014 | USVOJENO |
-| BM-ML-026 | Obavezni podaci oblast i djelatnost | 9.3 | Odluka, član 16; Poglavlje 4, pitanje 15 | USVOJENO |
+| BM-ML-026 | Oblast realizacije biznis plana | 9.3 | Obrasci M1a i M1b; Poglavlje 4, pitanje 15; odluka od 2026-11-05 | USVOJENO |
 | BM-ML-027 | Jednostruki izbor u tački 7 obrasca M2 | 9.4 | Prilog, M2, tačka 7; Poglavlje 4, pitanje 17; odluka od 2026-11-05 | USVOJENO |
 | BM-ML-028 | Tabela nabavki u tački 22 obrasca M2 | 9.4 | Prilog, M2, tačka 22; Poglavlje 4, pitanje 16; odluka od 2026-11-05 | USVOJENO |
 | BM-ML-029 | Katalog dokumentacije prema kategoriji podnosioca | 9.5 | Odluka, član 14; KN-PATCH-BM-014 | USVOJENO |
@@ -2681,4 +2675,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.22**
+**Kraj dokumenta KN-BM-002 v1.0.23**
