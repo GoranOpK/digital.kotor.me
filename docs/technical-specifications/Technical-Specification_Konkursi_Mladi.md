@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.22
+**Verzija:** 1.0.23
 **Datum:** 2026-11-05
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.21** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.22** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.25** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.26** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -60,6 +60,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.20 | 2026-11-01 | Usaglašavanje GAP-02. Istorijski redovi ostaju. `storeYouthAllocationDraft` više ne prima polja start-upa i ranijeg finansiranja. `saveDraft` ih ne upisuje i ne računa 30/20/15. `youthMaxClaim` rezerviše traženi iznos u granicama budžeta Poziva, bez procenta i bez privremenih 30%. Pozitivan zaključak je konačan bez tih činjenica. Postojeće kolone se ne brišu i nova migracija se ne uvodi. PM-01–PM-05, Word odluka i raspored tri ekrana ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.21 | 2026-11-04 | Usaglašavanje §9.4 i §9.10 sa commitom `8974e68a`. `ApplicationPrigovorService::submit()` i dalje prvo čuva prigovor. `deliverSubmissionNotice()` zatim šalje `ApplicationPrigovorSubmittedMail` samo tačno jednom aktivnom predsjedniku. Nema nove tabele, migracije, statusa ni automatskog ponavljanja. Žensko poslovno pravilo nije mijenjano. MMSP nije diran. |
 | 1.0.22 | 2026-11-05 | Usaglašavanje §6.5 sa KN-BM-002 v1.0.21 i KN-FS-002 v1.0.25. Tačka 7 nije obavezna za podnošenje. Dozvoljen je najviše jedan od ponuđenih odgovora. Drugo traži tekst. Prazan odgovor ne blokira. Nedozvoljena vrijednost i Drugo bez teksta blokiraju. Nema nove tabele ni migracije. Tačka 22, ŽP i MMSP nijesu dirani. |
+| 1.0.23 | 2026-11-05 | Usaglašavanje §6.5, §6.10, §6.11.7 i §7.4 sa KN-BM-002 v1.0.22 i KN-FS-002 v1.0.26. Tačka 22 nije obavezna. Prazna tabela nabavki ne blokira podnošenje. UKUPNO se računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Upozorenje za nedostajuće priloge ostaje. Nema nove tabele ni migracije. Tačka 7, M1, ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1173,9 +1174,9 @@ M2:
 
 * ima obavezna polja prema FS;
 * tačka 7 nije obavezna; prazan odgovor ne blokira podnošenje; ako je popunjena, vrijednost mora biti jedan od dozvoljenih odgovora; ako je „Drugo“, obavezan je tekst prije konačnog podnošenja (`BM-ML-027`; §8.6.5–8.6.6);
-* tabela nabavki je obavezna i nije nova tačka (`BM-ML-028`);
-* najmanje jedna stavka; prazna tabela blokira podnošenje (§8.6.7–8.6.9);
-* Platforma računa `UKUPNO` zbira stavki;
+* tabela nabavki nije obavezna i nije nova tačka; prazna tabela ne blokira podnošenje (`BM-ML-028`; §8.6.7; §8.6.9);
+* kada postoje unesene stavke, Platforma računa `UKUPNO` njihova zbira (§8.6.8);
+* nema automatskog oduzimanja bodova ni novog kriterijuma zbog nedostajućih nabavki;
 * **ne** izmišlja se automatska jednakost `UKUPNO` i traženog iznosa ako FS to ne zahtijeva;
 * prihvatljivost konkretnog troška prema članu 13 Odluke utvrđuje Komisija; Platforma smije aritmetički sabirati, ali **ne** odlučuje da li je trošak opravdan (`BM-ML-016`);
 * početak prihvatljivosti troškova i kontrola prije ugovora ostaju van V1 (`BM-ML-017`).
@@ -1249,8 +1250,8 @@ Izvor: `BM-ML-023`; `KN-FS-002` §10.5.3–10.5.6.
 | Prijava | utvrđen tok | snapshot | M1 i paket izvedeni, ne izabrani | `BM-ML-025`; `BM-ML-029` |
 | M1b | prikaz company-block | tok D / registrovano društvo | block vidljiv i obavezan | §8.6.2 |
 | M1b | sakrivanje company-block | tok B / planirano društvo | nema lažnih zapisa; podnošenje nije blokirano | §8.6.2; §10.5.1 |
-| M2 | unos nabavki | ≥1 stavka | `UKUPNO` izračunato | `BM-ML-028` |
-| M2 | prazna tabela | podnošenje | blokirano | §8.6.9 |
+| M2 | unos nabavki | postoje stavke | `UKUPNO` izračunato | `BM-ML-028` |
+| M2 | prazna tabela | podnošenje | nije blokirano | §8.6.7; §8.6.9 |
 | Prilozi | paket 2 ili 4 | IOPPD i potvrda oba | odbijeno kombinovanje | `BM-ML-031` |
 | Prilozi | žiro | nije priložen | nije samo zbog toga nepotpuna | `BM-ML-032` |
 | Prilozi | nedostaje obavezni tip | podnošenje | upozorenje; nije M3 odluka | `BM-ML-022` |
@@ -1325,7 +1326,7 @@ Izvor: `BM-ML-032`; `KN-FS-002` §9.9.3.
 
 **Kada:** se podnosi prijava.
 
-**Onda:** podnošenje je blokirano. Ako ima stavke, Platforma računa `UKUPNO` i ne nameće jednakost sa traženim iznosom osim ako FS to izričito zahtijeva.
+**Onda:** podnošenje nije blokirano. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Ako ima unesene stavke, Platforma računa `UKUPNO` i ne nameće jednakost sa traženim iznosom osim ako FS to izričito zahtijeva. Nema automatskog oduzimanja bodova.
 
 Izvor: `BM-ML-028`; `KN-FS-002` §8.6.7–8.6.9.
 
@@ -1419,7 +1420,6 @@ Koristi se postojeća kontrola prije potvrde podnošenja, sa parametrima paketa 
 Blokira se ako:
 
 * obavezna polja M1 ili M2 nijesu popunjena;
-* tabela nabavki nema stavku;
 * registrovano društvo nema popunjen company-block;
 * rok je istekao;
 * prijava nije `draft`;
@@ -1428,6 +1428,8 @@ Blokira se ako:
 Upozorenje, bez blokade podnošenja:
 
 * nedostaju obavezni prilozi paketa, osim žiro računa (`BM-ML-022`; `BM-ML-032`).
+
+Prazna tabela nabavki tačke 22 **ne** blokira podnošenje.
 
 Planirano društvo se **ne** blokira zbog odsustva PIB, CRPS, sjedišta, osnivača ili direktora.
 
@@ -3821,4 +3823,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.22**
+**Kraj dokumenta KN-TS-002 v1.0.23**
