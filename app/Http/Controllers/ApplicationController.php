@@ -47,6 +47,8 @@ class ApplicationController extends Controller
 {
     public const CANONICAL_OBRAZAC_1_MESSAGE = 'Prijava na javni poziv za preduzetnike i MMSP popunjava se kroz Obrazac P1a (preduzetnik) ili P1b (društvo), ne kroz Obrazac 1a/1b.';
 
+    public const PM_M1_INCOMPLETE_MESSAGE = 'Obrazac M1 nije potpuno popunjen. Prije konačnog podnošenja prijave morate popuniti sva obavezna polja.';
+
     /**
      * Autoritativni start-context za novu prijavu. Query parametar nije authority.
      */
@@ -930,16 +932,16 @@ class ApplicationController extends Controller
                            ($application->competition?->is_open ?? false) &&
                            $this->kotorAddressErrorForApplication($application) === null;
 
-        $pmNeedsIncompleteFormsConfirmation = $application->isOmladinskoProfile()
+        $pmDraftCanReachFormCheck = $application->isOmladinskoProfile()
             && $application->status === 'draft'
             && $application->businessPlan !== null
             && (bool) $application->businessPlan->finances_notice_confirmed
             && ($application->competition?->is_open ?? false)
-            && $this->kotorAddressErrorForApplication($application) === null
-            && (
-                ! $application->isObrazacComplete()
-                || ! $application->businessPlan->isComplete()
-            );
+            && $this->kotorAddressErrorForApplication($application) === null;
+        $pmM1SubmitBlocked = $pmDraftCanReachFormCheck && ! $application->isObrazacComplete();
+        $pmNeedsIncompleteFormsConfirmation = $pmDraftCanReachFormCheck
+            && $application->isObrazacComplete()
+            && ! $application->businessPlan->isComplete();
 
         // Samo vlasnik može da mijenja dok Prijava nije zaključana (podnesena ili draft nakon isteka roka)
         $canManage = $isOwner && ! $application->isApplicantContentWriteLocked();
@@ -948,7 +950,7 @@ class ApplicationController extends Controller
         // Isti rezultat koji submit() već vraća. Ekran ga ne može izračunati bez ponavljanja pravila adrese.
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'kotorAddressError'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'pmM1SubmitBlocked', 'kotorAddressError'));
     }
 
     /**
@@ -1069,8 +1071,15 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => $kotorAddressError]);
         }
 
+        // BM-ML-022: obavezna polja M1 ne može zaobići potvrda nepotpunih obrazaca.
+        if ($application->isOmladinskoProfile() && ! $application->isObrazacComplete()) {
+            return back()->withErrors([
+                'error' => self::PM_M1_INCOMPLETE_MESSAGE,
+            ]);
+        }
+
         if ($application->isOmladinskoProfile()
-            && (! $application->isObrazacComplete() || ! $application->businessPlan->isComplete())
+            && ! $application->businessPlan->isComplete()
             && (string) $request->input('confirm_incomplete_forms') !== '1') {
             return redirect()
                 ->route('applications.show', $application)

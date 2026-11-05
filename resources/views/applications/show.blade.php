@@ -361,6 +361,7 @@
         @php
             $canManage = $canManage ?? false;
             $pmNeedsIncompleteFormsConfirmation = $pmNeedsIncompleteFormsConfirmation ?? false;
+            $pmM1SubmitBlocked = $pmM1SubmitBlocked ?? false;
             $kotorAddressError = $kotorAddressError ?? null;
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
@@ -669,7 +670,14 @@
                     @endif
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                            @if(!empty($pmNeedsIncompleteFormsConfirmation))
+                            @if(!empty($pmM1SubmitBlocked))
+                                <div id="pm-m1-incomplete-block" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Http\Controllers\ApplicationController::PM_M1_INCOMPLETE_MESSAGE }}</p>
+                                    <p style="margin: 0;">
+                                        <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}">Povratak na uređivanje</a>
+                                    </p>
+                                </div>
+                            @elseif(!empty($pmNeedsIncompleteFormsConfirmation))
                                 <div id="pm-incomplete-forms-warning" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
                                     <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Jedan ili više obrazaca vaše prijave nijesu u potpunosti popunjeni.</p>
                                     <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Prijavu možete podnijeti i u ovom stanju, ali Komisija će ocjenjivati isključivo dostavljene podatke i dokumentaciju. Nepopunjena polja mogu uticati na broj ostvarenih bodova.</p>
