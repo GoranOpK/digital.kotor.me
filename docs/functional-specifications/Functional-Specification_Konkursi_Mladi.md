@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.28
-**Datum:** 2026-11-05
+**Verzija:** 1.0.29
+**Datum:** 2026-11-06
 
 Povezani dokumenti:
 
@@ -68,6 +68,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.26 | 2026-11-05 | Usaglašavanje §8.4, §8.5, §8.6.7, §8.6.9, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.22. Popunjavanje tačke 22 nije obavezno. Prazna tabela nabavki ne blokira konačno podnošenje. UKUPNO se i dalje računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Indeks ostaje 142/142. Upozorenje za nedostajuće priloge, tačka 7, M1 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.27 | 2026-11-05 | Usaglašavanje §8.2, §8.3, §8.5, §8.6.3, §8.6.4, §10.1, §10.4, §10.5.1 i indeksa sa KN-BM-002 v1.0.23. Oblast je jedno slobodno tekstualno polje, obavezno za konačno podnošenje. Nacrt se može sačuvati bez oblasti. Zasebna djelatnost, šifra i šifrarnik se ne uvode. Raniji zahtjev za odvojenim obaveznim poljem djelatnosti zamijenjen je ovom odlukom. Indeks ostaje 142/142. Druga polja M1, kategorije podnosilaca, tačka 7, tačka 22 i Komisija nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.28 | 2026-11-05 | Usaglašavanje §3.3, §3.11, §11.2, §11.5.2, §20.5, §20.6 i sljedivosti, PM-ALIGN-02A-1. Preliminarna rang-lista ostaje interna. Konačna rang-lista Komisije dostupna je učesniku sa podnesenom prijavom na tom omladinskom konkursu, samo za čitanje, kada je lista konačna, Word predlog generisan i konkurs completed. Prikaz ima naziv „Konačna rang-lista Komisije“ i šest podataka. Nedovršena apsolutna zabrana sopstvenog broja bodova, sopstvenog ranga i kompletne liste nije usvojeno pravilo. Ranija vidljivost ostaje istorijski zapis: „evidentirani konačan rezultat, rang-lista i raspodjela, samo u obimu V1 evidencije; to nije kompletna prijava drugog podnosioca“. Pristup tuđoj prijavi ostaje zabranjen. Javna objava, §25.4, tok Word odluke, razlog odbijanja i postupak Sekretarijata nijesu dirani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.29 | 2026-11-06 | Usaglašavanje §3.3 i §25.4, PM-ALIGN-02D. Platforma omogućava predsjedniku Komisije generisanje internog Word predloga odluke, nakon čega se konkurs zatvara u skladu sa usvojenim postupkom. Službenu odluku donosi Sekretarijat. Izrada i dostavljanje pojedinačnih rješenja nijesu dio aplikacije. Javna objava nije dio PM komisijskog toka. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -488,7 +489,7 @@ Na prikazu konačne rang-liste podnosiocu nijesu dostupni:
 
 Pregled konačne rang-liste nije pristup tuđoj prijavi. Ovlašćeni članovi Komisije zadržavaju postojeći interni pristup ocjenama i rang-listi. Dostavljanje pojedinačnih rješenja ostaje u nadležnosti Sekretarijata, van aplikacije.
 
-Platforma u V1 **evidentira** konačan rezultat, rang-listu i raspodjelu. Detaljno javno objavljivanje službenog rezultata ostaje odloženo kroz pitanje 10. V1 **ne** generiše i **ne** objavljuje Odluku o raspodjeli, Rješenje o dodjeli ni Rješenje o odbijanju. Ne uvodi se javni PDF lifecycle ženskog profila. Privatnost prijava ostaje prema `BM-ML-054`. Ovo poglavlje **ne** uvodi novo pravilo o javnim podacima ni javni sadržaj prijave. Javno objavljivanje službene odluke je zaseban proces.
+Platforma u V1 **evidentira** konačan rezultat, rang-listu i raspodjelu. Detaljno javno objavljivanje službenog rezultata ostaje odloženo kroz pitanje 10. Platforma omogućava predsjedniku Komisije generisanje internog Word predloga odluke, nakon čega se konkurs zatvara u skladu sa usvojenim postupkom. Službenu odluku donosi Sekretarijat. Izrada i dostavljanje pojedinačnih rješenja nijesu dio aplikacije. Interni Word predlog Komisije generiše aplikacija. Službena odluka i pojedinačna rješenja nijesu taj predlog. Ne uvodi se javni PDF lifecycle ženskog profila. Privatnost prijava ostaje prema `BM-ML-054`. Ovo poglavlje **ne** uvodi novo pravilo o javnim podacima ni javni sadržaj prijave. Javno objavljivanje službene odluke i dostavljanje pojedinačnih rješenja nijesu dio PM komisijskog toka.
 
 Ranija vidljivost „evidentirani konačan rezultat, rang-lista i raspodjela, samo u obimu V1 evidencije; to nije kompletna prijava drugog podnosioca“ zamijenjena je ovom odredbom i ostaje istorijski zapis.
 
@@ -4949,15 +4950,21 @@ U V1:
 * evidentira se konačna rang-lista i raspodjela;
 * podaci se zaključavaju i arhiviraju.
 
+Platforma omogućava predsjedniku Komisije generisanje internog Word predloga odluke, nakon čega se konkurs zatvara u skladu sa usvojenim postupkom. Službenu odluku donosi Sekretarijat. Izrada i dostavljanje pojedinačnih rješenja nijesu dio aplikacije.
+
+Time se razdvaja:
+
+1. interni Word predlog Komisije, koji generiše aplikacija;
+2. službena odluka, koju donosi Sekretarijat;
+3. pojedinačna rješenja, koja se izrađuju i dostavljaju van aplikacije.
+
 U V1 se **ne** uvodi:
 
-* automatsko generisanje Odluke o raspodjeli;
 * objavljivanje službene Odluke;
 * javni PDF;
-* pojedinačna rješenja;
 * javni prikaz koji nije odobren poslovnim modelom.
 
-Pitanje 10 ostaje **odloženo**. Detalj: Poglavlje 28.
+Javna objava i dostavljanje pojedinačnih rješenja nijesu dio PM komisijskog toka. Pitanje 10 ostaje **odloženo**. Detalj: Poglavlje 28.
 
 ## 25.5. Kontrolna tabela granice V1
 
@@ -5586,4 +5593,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.28**
+**Kraj dokumenta KN-FS-002 v1.0.29**
