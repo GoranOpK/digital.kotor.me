@@ -452,6 +452,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
     Route::get('/competitions/{competition}/apply', [ApplicationController::class, 'create'])->name('applications.create'); // Prikaz forme za prijavu
     Route::post('/competitions/{competition}/apply', [ApplicationController::class, 'store'])->name('applications.store'); // Snimi prijavu
     Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show'); // Prikaz detalja prijave
+    Route::get('/competitions/{competition}/youth-final-ranking', [EvaluationController::class, 'youthFinalRankingForApplicant'])->name('applications.youth-final-ranking');
     Route::post('/applications/{application}/prigovor', [ApplicationPrigovorController::class, 'store'])->name('applications.prigovor.store');
     Route::post('/applications/{application}/complaint', [ApplicationProcessController::class, 'submitComplaint'])->name('applications.complaint');
     // Kanonski MMSP — status provjere potpunosti i prigovor podnosioca (KN-SYNC-014)

@@ -956,12 +956,16 @@ class ApplicationController extends Controller
 
         // Samo vlasnik može da mijenja dok Prijava nije zaključana (podnesena ili draft nakon isteka roka)
         $canManage = $isOwner && ! $application->isApplicantContentWriteLocked();
+        $canReadYouthFinalRanking = $isOwner
+            && $application->status !== 'draft'
+            && $application->competition !== null
+            && app(EvaluationController::class)->applicantMayReadYouthFinalRanking($application->competition, $user);
         $canSubmitPrigovor = $isOwner
             && app(\App\Services\ApplicationPrigovorService::class)->applicantCanSubmit($application, $user);
         // Isti rezultat koji submit() već vraća. Ekran ga ne može izračunati bez ponavljanja pravila adrese.
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'pmM1SubmitBlocked', 'pmM2DrugoSubmitBlocked', 'pmM2RealizationInvalidSubmitBlocked', 'kotorAddressError'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'pmM1SubmitBlocked', 'pmM2DrugoSubmitBlocked', 'pmM2RealizationInvalidSubmitBlocked', 'kotorAddressError', 'canReadYouthFinalRanking'));
     }
 
     /**

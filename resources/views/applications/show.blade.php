@@ -506,6 +506,11 @@
                             @endif
                         </span>
                     </div>
+                    @if(!empty($canReadYouthFinalRanking))
+                        <div class="info-item" style="margin-bottom: 16px;">
+                            <a href="{{ route('applications.youth-final-ranking', $application->competition) }}" data-testid="youth-final-ranking-link" style="color: #0B3D91; font-weight: 600;">Konačna rang-lista Komisije</a>
+                        </div>
+                    @endif
                     @if($application->status === 'rejected' && $application->rejection_reason)
                         <div class="info-item" style="margin-bottom: 16px; padding: 12px; background: #fee2e2; border-radius: 8px; border-left: 4px solid #dc2626;">
                             <span class="info-label" style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">Razlog odbijanja</span>

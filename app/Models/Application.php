@@ -447,6 +447,8 @@ class Application extends Model
         'commission_justification',
         'commission_notes',
         'commission_decision_date',
+        'commission_decision_author_member_id',
+        'commission_decision_author_name',
         'signed_by_chairman',
         'commission_decision_locked_at',
         'signed_by_members',

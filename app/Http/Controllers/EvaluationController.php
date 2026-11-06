@@ -1075,7 +1075,58 @@ class EvaluationController extends Controller
             'youthEqualScoreVotingBoard' => $this->youthEqualScoreVoting->board($competition, $user),
             'youthEqualScoreCompetition' => $competition,
             'canGenerateYouthDecision' => $canGenerateYouthDecision,
+            'youthRankingApplicantReadOnly' => false,
         ]);
+    }
+
+    /**
+     * Čitanje konačne PM rang-liste za učesnika zatvorenog konkursa.
+     * Ne upisuje rang i ne otvara komisijske radnje.
+     */
+    public function youthFinalRankingForApplicant(Competition $competition): View
+    {
+        $user = Auth::user();
+        if (! $user instanceof User || ! $this->applicantMayReadYouthFinalRanking($competition, $user)) {
+            abort(403, 'Konačna rang-lista Komisije nije dostupna.');
+        }
+
+        $application = $competition->applications()
+            ->where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
+            ->orderBy('id')
+            ->first();
+
+        return view('evaluation.youth-ranking', [
+            'youthRankingView' => $this->canonicalScoring->youthPreliminaryRankingView($competition),
+            'youthRankingTitle' => $competition->title,
+            'canEditYouthAllocationDraft' => false,
+            'youthEqualScoreVotingBoard' => null,
+            'youthEqualScoreCompetition' => $competition,
+            'canGenerateYouthDecision' => false,
+            'youthRankingApplicantReadOnly' => true,
+            'youthRankingReturnApplication' => $application,
+        ]);
+    }
+
+    public function applicantMayReadYouthFinalRanking(Competition $competition, User $user): bool
+    {
+        if (! $competition->isOmladinskoProfile() || $competition->status !== 'completed') {
+            return false;
+        }
+
+        $participates = $competition->applications()
+            ->where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
+            ->exists();
+        if (! $participates || ! $competition->hasChairmanCompletedDecisions()) {
+            return false;
+        }
+
+        try {
+            return app(YouthDecisionDocumentStore::class)->latestValidDocument($competition) !== null;
+        } catch (YouthDecisionDocumentStoreException) {
+            return false;
+        }
     }
 
     /**
@@ -1695,6 +1746,8 @@ class EvaluationController extends Controller
             ->with('success', 'Zaključak komisije je uspješno sačuvan.');
     }
 
+    public const YOUTH_SIGN_LOCKED_MESSAGE = 'Poziv je zaključen. Potpisivanje zaključka više nije dozvoljeno.';
+
     /**
      * Potpisivanje odluke od strane člana komisije
      */
@@ -1717,6 +1770,9 @@ class EvaluationController extends Controller
         $this->abortIfCommissionProcessingBlocked($application->competition);
 
         $competition = $application->competition;
+        if ($this->youthSigningIsClosed($competition)) {
+            abort(403, self::YOUTH_SIGN_LOCKED_MESSAGE);
+        }
         if ($competition && ! $competition->isIndividualScoringCycleComplete()) {
             abort(403, CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
         }
@@ -1732,14 +1788,39 @@ class EvaluationController extends Controller
             return back()->with('error', 'Predsjednik komisije mora prvo donijeti zaključak.');
         }
 
-        // Dodaj člana u listu potpisanih
-        $signedMembers = $application->signed_by_members ?? [];
-        if (!in_array($commissionMember->id, $signedMembers)) {
-            $signedMembers[] = $commissionMember->id;
-            $application->update(['signed_by_members' => $signedMembers]);
-        }
+        DB::transaction(function () use ($application, $commissionMember) {
+            $lockedCompetition = Competition::query()
+                ->whereKey($application->competition_id)
+                ->lockForUpdate()
+                ->first();
+            $lockedApplication = Application::query()
+                ->whereKey($application->id)
+                ->lockForUpdate()
+                ->first();
+            if ($lockedApplication === null) {
+                abort(404);
+            }
+            if ($this->youthSigningIsClosed($lockedCompetition)) {
+                abort(403, self::YOUTH_SIGN_LOCKED_MESSAGE);
+            }
+            if (! $lockedApplication->signed_by_chairman) {
+                abort(403, 'Predsjednik komisije mora prvo donijeti zaključak.');
+            }
+
+            $signedMembers = $lockedApplication->signed_by_members ?? [];
+            if (! in_array($commissionMember->id, $signedMembers)) {
+                $signedMembers[] = $commissionMember->id;
+                $lockedApplication->update(['signed_by_members' => $signedMembers]);
+            }
+        });
 
         return back()->with('success', 'Odluka je uspješno potpisana.');
+    }
+
+    private function youthSigningIsClosed(?Competition $competition): bool
+    {
+        return $competition?->isOmladinskoProfile() === true
+            && $competition->status === 'completed';
     }
 
     public function storeEliminatory(Request $request, Application $application): RedirectResponse

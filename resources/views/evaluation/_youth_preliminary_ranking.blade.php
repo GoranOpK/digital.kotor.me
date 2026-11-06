@@ -2,6 +2,7 @@
     $youthRankingView = $youthRankingView ?? null;
     $youthRankingTitle = $youthRankingTitle ?? null;
     $canEditYouthAllocationDraft = $canEditYouthAllocationDraft ?? false;
+    $youthRankingApplicantReadOnly = (bool) ($youthRankingApplicantReadOnly ?? false);
     $youthAboveFirst = is_array($youthRankingView) ? ($youthRankingView['above'][0] ?? null) : null;
     $youthBelowFirst = is_array($youthRankingView) ? ($youthRankingView['below'][0] ?? null) : null;
     $youthRankingCompetition = $youthEqualScoreCompetition
@@ -11,7 +12,7 @@
     $youthRankingIsFinal = (bool) ($youthRankingCompetition?->isOmladinskoProfile()
         && $youthRankingCompetition->hasChairmanCompletedDecisions());
     $youthRankingSignatories = collect();
-    if ($youthRankingIsFinal) {
+    if ($youthRankingIsFinal && ! $youthRankingApplicantReadOnly) {
         $youthRankingCompetition->loadMissing('commission');
         $youthRankingSignatories = $youthRankingCompetition->commission
             ? $youthRankingCompetition->commission->members()
@@ -47,6 +48,49 @@
             'ostalo' => $commercialForm ?? 'Ostalo',
             default => 'Ostalo',
         };
+    };
+    $youthParticipantName = static function ($application): string {
+        $clean = static function ($value): ?string {
+            if (! is_string($value)) {
+                return null;
+            }
+            $name = trim($value);
+
+            return $name === '' ? null : $name;
+        };
+        $type = (string) ($application->applicant_type ?? '');
+        if ($type === 'fizicko_lice') {
+            return $clean($application->physical_person_name) ?? ($application->user->name ?? 'N/A');
+        }
+        if (in_array($type, ['preduzetnik', 'preduzetnica'], true)) {
+            return $clean($application->preduzetnik_name) ?? ($application->user->name ?? 'N/A');
+        }
+        if (in_array($type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
+            if ($application->is_registered) {
+                $application->loadMissing('user.identity.legalEntity');
+
+                return $clean($application->user?->identity?->legalEntity?->legal_name)
+                    ?? $clean($application->doo_name)
+                    ?? ($application->user->name ?? 'N/A');
+            }
+
+            return $clean($application->doo_name) ?? ($application->user->name ?? 'N/A');
+        }
+
+        return $application->user->name ?? 'N/A';
+    };
+    $youthDecisionAuthorLine = static function ($application): ?string {
+        $name = trim((string) ($application->commission_decision_author_name ?? ''));
+        $date = $application->commission_decision_date;
+        $dateText = $date ? $date->format('d.m.Y') : '';
+        if ($name === '' && $dateText === '') {
+            return null;
+        }
+        if ($name !== '' && $dateText !== '') {
+            return $name.' | '.$dateText;
+        }
+
+        return $name !== '' ? $name : $dateText;
     };
 @endphp
 @if($youthRankingView)
@@ -152,6 +196,36 @@
         border-radius: 8px;
         font-weight: 600;
         cursor: pointer;
+    }
+    .youth-ranking-print-root .commission-decision-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    .youth-ranking-print-root .commission-decision-table th,
+    .youth-ranking-print-root .commission-decision-table td {
+        padding: 10px 12px;
+        border: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: top;
+    }
+    .youth-ranking-print-root .commission-decision-table th {
+        width: 28%;
+        font-weight: 600;
+        background: #f9fafb;
+        color: #374151;
+        font-size: 13px;
+    }
+    .youth-ranking-print-root .commission-decision-table td {
+        color: #374151;
+        font-size: 14px;
+    }
+    .youth-ranking-print-root .commission-decision-table .commission-decision-name th {
+        width: auto;
+        background: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0B3D91;
     }
     .youth-ranking-print-root .error-message {
         color: #ef4444;
@@ -437,7 +511,7 @@
             || $showYouthRankingBlockReason;
     @endphp
     @if($showYouthRankingShell)
-    <div class="youth-ranking-print-root{{ $youthRankingView['ranking_ready'] ? '' : ' is-blocked' }}">
+    <div class="youth-ranking-print-root{{ $youthRankingView['ranking_ready'] ? '' : ' is-blocked' }}" @if($youthRankingApplicantReadOnly) data-testid="youth-final-ranking-readonly" @endif>
         @if(! $youthRankingView['ranking_ready'])
             @if($youthRankingTitle)
                 <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #111827;">{{ $youthRankingTitle }}</h3>
@@ -481,7 +555,7 @@
             </div>
 
             <div class="youth-ranking-list-card">
-            <h2>{{ $youthRankingIsFinal ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }}</h2>
+            <h2>{{ $youthRankingApplicantReadOnly ? 'Konačna rang-lista Komisije' : ($youthRankingIsFinal ? 'Konačna rang-lista' : 'Preliminarna rang-lista') }}</h2>
             @if(count($youthRankingView['above'] ?? []) === 0 && count($youthRankingView['below'] ?? []) === 0)
                 <div style="text-align: center; padding: 40px; color: #6b7280;">
                     <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema ocijenjenih prijava za ovaj konkurs.</p>
@@ -516,7 +590,7 @@
                                 <span class="ranking-badge">{{ $ranked->ranking_position }}</span>
                             </td>
                             <td>{{ $ranked->business_plan_name }}</td>
-                            <td>{{ $ranked->user->name ?? 'N/A' }}</td>
+                            <td>{{ $youthRankingApplicantReadOnly ? $youthParticipantName($ranked) : ($ranked->user->name ?? 'N/A') }}</td>
                             <td>
                                 {{ $youthType }}@if($youthStage) - {{ $youthStage }}@endif
                             </td>
@@ -567,6 +641,9 @@
                             <th>Tip</th>
                             <th style="text-align: center;">Ocjena</th>
                             <th style="text-align: right;">Traženi iznos</th>
+                            @if($youthRankingApplicantReadOnly)
+                            <th style="text-align: right;">Odobreni iznos</th>
+                            @endif
                             <th style="text-align: center;">Status</th>
                         </tr>
                     </thead>
@@ -581,7 +658,7 @@
                                     <span class="ranking-badge">{{ $below->ranking_position }}</span>
                                 </td>
                                 <td>{{ $below->business_plan_name }}</td>
-                                <td>{{ $below->user->name ?? 'N/A' }}</td>
+                                <td>{{ $youthRankingApplicantReadOnly ? $youthParticipantName($below) : ($below->user->name ?? 'N/A') }}</td>
                                 <td>
                                     {{ $belowType }}@if($belowStage) - {{ $belowStage }}@endif
                                 </td>
@@ -593,6 +670,11 @@
                                 <td style="text-align: right;">
                                     {{ $below->requested_amount !== null ? number_format((float) $below->requested_amount, 2, ',', '.').' €' : '—' }}
                                 </td>
+                                @if($youthRankingApplicantReadOnly)
+                                <td style="text-align: right;">
+                                    <span style="color: #6b7280;">{{ $below->approved_amount ? number_format((float) $below->approved_amount, 2, ',', '.').' €' : '-' }}</span>
+                                </td>
+                                @endif
                                 <td style="text-align: center;">
                                     <span class="score-badge score-low">Ispod bodovnog praga</span>
                                 </td>
@@ -609,8 +691,62 @@
             @endif
             @php
                 $youthHasSavedDecision = collect($youthRankingView['above'])->contains(fn ($row) => filled($row->commission_decision));
+                $youthRecordedDecisions = collect($youthRankingView['above'] ?? [])
+                    ->filter(fn ($row) => filled($row->commission_decision));
             @endphp
-            @if(count($youthRankingView['above'] ?? []) > 0 && ($canEditYouthAllocationDraft || $youthHasSavedDecision))
+            @if($youthRankingApplicantReadOnly && $youthRecordedDecisions->isNotEmpty())
+            <div class="info-card commission-decision-section" style="background: transparent; box-shadow: none; padding: 24px 0 0; margin-bottom: 0;">
+                <h2>Zaključak komisije i obrazloženje</h2>
+                @foreach($youthRecordedDecisions as $ranked)
+                    <div class="commission-decision-block commission-decision-block-saved" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                        <table class="commission-decision-table">
+                            <tbody>
+                                <tr class="commission-decision-name">
+                                    <th colspan="2">{{ $ranked->business_plan_name }}</th>
+                                </tr>
+                                <tr>
+                                    <th>Podnosilac</th>
+                                    <td>{{ $youthParticipantName($ranked) }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Pozicija</th>
+                                    <td>#{{ $ranked->ranking_position }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Ocjena</th>
+                                    <td>{{ number_format((float) $ranked->final_score, 2) }} / 56</td>
+                                </tr>
+                                <tr>
+                                    <th>Zaključak</th>
+                                    <td>{{ $ranked->commission_decision === 'podrzava_potpuno' ? 'Podržava u potpunosti' : ($ranked->commission_decision === 'odbija' ? 'Odbija' : '') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Iznos odobrenih sredstava</th>
+                                    <td>{{ $ranked->status === 'approved' && $ranked->approved_amount ? number_format((float) $ranked->approved_amount, 2, ',', '.').' €' : '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Traženi iznos</th>
+                                    <td>{{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2, ',', '.') : '—' }} €</td>
+                                </tr>
+                                @if($youthDecisionAuthorLine($ranked))
+                                    <tr>
+                                        <th>Unio / Datum</th>
+                                        <td>{{ $youthDecisionAuthorLine($ranked) }}</td>
+                                    </tr>
+                                @endif
+                                @if(filled($ranked->commission_justification))
+                                    <tr>
+                                        <th>Obrazloženje</th>
+                                        <td style="white-space: pre-wrap;">{{ $ranked->commission_justification }}</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                @endforeach
+            </div>
+            @endif
+            @if(! $youthRankingApplicantReadOnly && count($youthRankingView['above'] ?? []) > 0 && ($canEditYouthAllocationDraft || $youthHasSavedDecision))
             <div class="info-card commission-decision-section" style="background: transparent; box-shadow: none; padding: 24px 0 0; margin-bottom: 0;">
                 <h2>Zaključak komisije i obrazloženje</h2>
                 @if($canEditYouthAllocationDraft)
@@ -722,6 +858,12 @@
                                         <th style="text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Traženi iznos</th>
                                         <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $ranked->requested_amount !== null ? number_format((float) $ranked->requested_amount, 2, ',', '.') : '—' }} €</td>
                                     </tr>
+                                    @if($youthDecisionAuthorLine($ranked))
+                                        <tr>
+                                            <th style="text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Unio / Datum</th>
+                                            <td style="padding: 10px 12px; border: 1px solid #e5e7eb;">{{ $youthDecisionAuthorLine($ranked) }}</td>
+                                        </tr>
+                                    @endif
                                     @if(filled($ranked->commission_justification))
                                         <tr>
                                             <th style="text-align: left; padding: 10px 12px; border: 1px solid #e5e7eb; background: #f9fafb;">Obrazloženje</th>
@@ -736,7 +878,7 @@
             </div>
             @endif
             </div>
-            @if($youthRankingIsFinal)
+            @if($youthRankingIsFinal && ! $youthRankingApplicantReadOnly)
                 <div class="info-card" id="signature-block" data-testid="youth-ranking-signatures" style="padding: 16px 24px;">
                     <h2 style="margin-bottom: 12px; font-size: 18px;">Potpis komisije</h2>
                     <div style="margin-top: 16px; font-size: 13px; line-height: 1.5;">
@@ -757,12 +899,14 @@
                     Štampaj rang-listu
                 </button>
             </div>
+            @unless($youthRankingApplicantReadOnly)
             <div class="youth-ranking-no-print no-print">
             @include('evaluation._youth_equal_score_voting', [
                 'youthEqualScoreVotingBoard' => $youthEqualScoreVotingBoard ?? null,
                 'youthEqualScoreCompetition' => $youthEqualScoreCompetition ?? $youthAboveFirst?->competition,
             ])
             </div>
+            @endunless
         @endif
     </div>
     @endif
