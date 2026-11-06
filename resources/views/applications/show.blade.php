@@ -467,7 +467,9 @@
                             @endif
                         </span>
                     </div>
-                    @if($application->approved_amount)
+                    @if($application->isOmladinskoProfile()
+                        ? ($application->status === 'approved' && (float) $application->approved_amount > 0)
+                        : $application->approved_amount)
                     <div class="info-item">
                         <span class="info-label">Odobreni iznos</span>
                         <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
