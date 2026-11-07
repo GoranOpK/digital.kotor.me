@@ -7,6 +7,18 @@
     $profile = \App\Support\EliminatoryProfileConfig::for($application->competition?->type);
     $activatedReasons = $profile->activatedReasonDetails($check);
     $submittedExplanations = \App\Support\YouthPrigovorObrazlozenje::parse($prigovor?->obrazlozenje);
+    $activatedCommissionExplanations = [];
+    foreach ($activatedReasons as $reason) {
+        $explanation = trim((string) ($reason['explanation'] ?? ''));
+        if ($explanation !== '' && ! in_array($explanation, $activatedCommissionExplanations, true)) {
+            $activatedCommissionExplanations[] = $explanation;
+        }
+    }
+    // Jedno zajedničko obrazloženje (isti tekst na aktiviranim kriterijumima).
+    // Različita obrazloženja ostaju uz svoj kriterijum i ne spajaju se.
+    $sharedCommissionExplanation = count($activatedCommissionExplanations) === 1
+        ? $activatedCommissionExplanations[0]
+        : null;
 @endphp
 
 @if($notice || $prigovor)
@@ -73,12 +85,16 @@
                 @foreach($activatedReasons as $reason)
                     <li>
                         {{ $reason['statement'] }}
-                        @if($reason['explanation'] !== '')
+                        @if($sharedCommissionExplanation === null && $reason['explanation'] !== '')
                             <br>Obrazloženje Komisije: {{ $reason['explanation'] }}
                         @endif
                     </li>
                 @endforeach
             </ul>
+            @if($sharedCommissionExplanation !== null)
+                <p><strong>Zajedničko obrazloženje Komisije</strong></p>
+                <p style="white-space: pre-wrap;">{{ $sharedCommissionExplanation }}</p>
+            @endif
         @endif
         <p>
             Imate pravo na jedan Prigovor putem Platforme u roku od 3 dana od slanja obavještenja.

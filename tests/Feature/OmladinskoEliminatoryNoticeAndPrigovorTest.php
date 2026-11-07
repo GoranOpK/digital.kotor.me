@@ -1099,6 +1099,164 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame('submitted', $application->fresh()->status);
     }
 
+    public function test_pm_applicant_shows_shared_commission_explanation_once_for_three_criteria(): void
+    {
+        $explanation = "Zajednička napomena komisije.\nIsta za sva tri kriterijuma.";
+        $ctx = $this->confirmYouthFail([
+            'criterion_1' => '0',
+            'criterion_2' => '0',
+            'criterion_3' => '0',
+            'note' => $explanation,
+            'confirmation_acknowledged' => '1',
+        ]);
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+
+        $this->assertSame($explanation, $parsed[1]);
+        $this->assertSame($explanation, $parsed[2]);
+        $this->assertSame($explanation, $parsed[3]);
+        $this->assertApplicantSharedExplanationShownOnce($application, $explanation, [
+            'Dostavljena je potpuna dokumentacija?',
+            'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?',
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?',
+        ]);
+    }
+
+    public function test_pm_applicant_shows_shared_commission_explanation_once_for_one_criterion(): void
+    {
+        $explanation = 'Zajednička napomena samo za dokumentaciju.';
+        $ctx = $this->confirmYouthFail([
+            'criterion_1' => '0',
+            'criterion_2' => '1',
+            'criterion_3' => '1',
+            'note' => $explanation,
+            'confirmation_acknowledged' => '1',
+        ]);
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+
+        $this->assertSame($explanation, $parsed[1]);
+        $this->assertSame('', $parsed[2]);
+        $this->assertSame('', $parsed[3]);
+        $this->assertApplicantSharedExplanationShownOnce($application, $explanation, [
+            'Dostavljena je potpuna dokumentacija?',
+        ]);
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+    }
+
+    public function test_pm_applicant_omits_empty_commission_explanation_block(): void
+    {
+        $ctx = $this->makeYouthReadyContext();
+        $application = $ctx['application'];
+        $check = $application->eliminatoryCheck()->create([
+            'criterion_1' => false,
+            'criterion_2' => false,
+            'criterion_3' => false,
+            'note' => EliminatoryProfileConfig::composeYouthNotes([1 => '', 2 => '', 3 => '']),
+            'confirmed_at' => now(),
+            'confirmed_by_commission_member_id' => $ctx['chairman']->id,
+            'confirmed_by_user_id' => $ctx['chairman']->user_id,
+            'confirmed_by_name' => $ctx['chairman']->name,
+        ]);
+        $notice = ApplicationEliminatoryNotice::create([
+            'application_id' => $application->id,
+            'eliminatory_check_id' => $check->id,
+            'sent_at' => now(),
+            'portal_recorded_at' => now(),
+            'reasons_snapshot' => $check->failedCriterionLabels(),
+            'note_snapshot' => '',
+        ]);
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Zajedničko obrazloženje Komisije', $html);
+        $this->assertStringNotContainsString('Obrazloženje Komisije:', $html);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringContainsString('Rok ističe '.$notice->prigovorDeadlineAt()->format('d.m.Y. H:i'), $html);
+        $this->assertStringContainsString('name="criterion_obrazlozenja[1]"', $html);
+        $this->assertStringContainsString('Podnesi Prigovor', $html);
+        $this->assertSame('submitted', $application->fresh()->status);
+        $this->assertNull($application->fresh()->prigovor);
+    }
+
+    public function test_pm_applicant_keeps_distinct_commission_explanations_on_their_criteria(): void
+    {
+        $ctx = $this->confirmYouthFail();
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+        $deadline = $application->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i');
+        $statusBefore = $application->status;
+
+        $this->assertSame('Nedostaje izvod', $parsed[1]);
+        $this->assertSame('Nema M4', $parsed[2]);
+        $this->assertNotSame($parsed[1], $parsed[2]);
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Zajedničko obrazloženje Komisije', $html);
+        $this->assertSame(1, substr_count($html, 'Obrazloženje Komisije: Nedostaje izvod'));
+        $this->assertSame(1, substr_count($html, 'Obrazloženje Komisije: Nema M4'));
+        $this->assertStringContainsString('Rok ističe '.$deadline, $html);
+        $this->assertSame($statusBefore, $application->fresh()->status);
+        $this->assertNull($application->fresh()->prigovor);
+        $this->assertSame($deadline, $application->fresh()->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i'));
+    }
+
+    /**
+     * @param  list<string>  $statementsInOrder
+     */
+    private function assertApplicantSharedExplanationShownOnce(Application $application, string $explanation, array $statementsInOrder): void
+    {
+        $notice = $application->eliminatoryNotice;
+        $this->assertNotNull($notice);
+        $deadline = $notice->prigovorDeadlineAt()->format('d.m.Y. H:i');
+        $sentAt = $notice->sent_at?->timestamp;
+        $statusBefore = $application->status;
+        $this->assertNull($application->prigovor);
+        $this->assertSame('submitted', $statusBefore);
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($html, 'Zajedničko obrazloženje Komisije'));
+        $this->assertSame(1, substr_count($html, $explanation));
+        $this->assertStringNotContainsString('Obrazloženje Komisije:', $html);
+
+        $previous = 0;
+        foreach ($statementsInOrder as $statement) {
+            $position = strpos($html, $statement);
+            $this->assertNotFalse($position);
+            $this->assertGreaterThan($previous, $position);
+            $previous = $position;
+        }
+        $heading = strpos($html, 'Zajedničko obrazloženje Komisije');
+        $this->assertNotFalse($heading);
+        $this->assertGreaterThan($previous, $heading);
+
+        $this->assertStringContainsString('Rok ističe '.$deadline, $html);
+        $this->assertStringContainsString('Podnesi Prigovor', $html);
+        $fresh = $application->fresh(['eliminatoryNotice', 'prigovor']);
+        $this->assertSame($statusBefore, $fresh->status);
+        $this->assertNull($fresh->prigovor);
+        $this->assertSame($sentAt, $fresh->eliminatoryNotice->sent_at?->timestamp);
+        $this->assertSame($deadline, $fresh->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i'));
+    }
+
     /**
      * @param  array<string, mixed>|null  $payload
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
