@@ -85,8 +85,7 @@ class YouthIndividualScoringTest extends TestCase
             ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
             ->assertRedirect();
         $this->actingAs($failed->user)->post(route('applications.prigovor.store', $failed), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+            'obrazlozenje' => 'Obrazloženje 1. Obrazloženje 2.',
         ])->assertRedirect();
         $failed->fresh()->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());

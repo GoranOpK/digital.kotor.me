@@ -10,6 +10,8 @@ final class YouthPrigovorObrazlozenje
 {
     public const PREFIX = "OM-PRIGOVOR-v1\n";
 
+    public const SHARED_PREFIX = "OM-PRIGOVOR-SHARED-v1\n";
+
     /**
      * @param  array<int|string, string|null>  $explanationsByNumber
      */
@@ -22,6 +24,14 @@ final class YouthPrigovorObrazlozenje
 
         return self::PREFIX.json_encode(
             $payload,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+    }
+
+    public static function composeShared(string $text): string
+    {
+        return self::SHARED_PREFIX.json_encode(
+            ['text' => trim($text)],
             JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
         );
     }
@@ -52,6 +62,25 @@ final class YouthPrigovorObrazlozenje
     public static function isStructured(?string $obrazlozenje): bool
     {
         return is_string($obrazlozenje) && str_starts_with($obrazlozenje, self::PREFIX);
+    }
+
+    public static function isShared(?string $obrazlozenje): bool
+    {
+        return is_string($obrazlozenje) && str_starts_with($obrazlozenje, self::SHARED_PREFIX);
+    }
+
+    public static function sharedText(?string $obrazlozenje): ?string
+    {
+        if (! self::isShared($obrazlozenje)) {
+            return null;
+        }
+
+        $decoded = json_decode(substr($obrazlozenje, strlen(self::SHARED_PREFIX)), true);
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        return trim((string) ($decoded['text'] ?? ''));
     }
 
     public static function explanation(?string $obrazlozenje, int $number): string

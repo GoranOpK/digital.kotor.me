@@ -27,20 +27,16 @@ class ApplicationPrigovorController extends Controller
 
         if ($application->competition?->isOmladinskoProfile()) {
             $validated = $request->validate([
+                'obrazlozenje' => 'required|string|max:5000',
                 'contested' => 'sometimes|array',
                 'contested.*' => 'integer|in:1,2,3',
-                'criterion_obrazlozenja' => 'required|array',
-                'criterion_obrazlozenja.1' => 'nullable|string|max:5000',
-                'criterion_obrazlozenja.2' => 'nullable|string|max:5000',
-                'criterion_obrazlozenja.3' => 'nullable|string|max:5000',
             ]);
 
             $this->prigovors->submit(
                 $application,
                 $user,
-                '',
+                $validated['obrazlozenje'],
                 $validated['contested'] ?? [],
-                $validated['criterion_obrazlozenja'] ?? [],
             );
         } else {
             $validated = $request->validate([

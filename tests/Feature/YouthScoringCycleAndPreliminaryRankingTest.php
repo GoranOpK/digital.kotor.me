@@ -119,10 +119,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
 
         $this->actingAs($failed->user)
             ->post(route('applications.prigovor.store', $failed), [
-                'criterion_obrazlozenja' => [
-                    1 => 'Izvod je već bio u prijavi.',
-                    2 => 'M4 je dostavljen.',
-                ],
+                'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen.',
             ])
             ->assertRedirect();
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
@@ -154,11 +151,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->confirmYouthBonuses($ctx);
         $this->actingAs($failed->user)
             ->post(route('applications.prigovor.store', $failed), [
-                'contested' => [1, 2],
-                'criterion_obrazlozenja' => [
-                    1 => 'Izvod je već bio u prijavi.',
-                    2 => 'M4 je dostavljen.',
-                ],
+                'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen.',
             ])
             ->assertRedirect();
         $decisionTime = now();

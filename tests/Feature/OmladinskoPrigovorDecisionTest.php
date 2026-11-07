@@ -284,7 +284,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
     public function test_only_documentation_activated_shows_and_decides_only_that_criterion(): void
     {
         $ctx = $this->submittedYouthPrigovor($this->youthFailPayload([1]), [
-            'criterion_obrazlozenja' => [1 => 'Dokumentacija je kompletna.'],
+            'obrazlozenje' => 'Dokumentacija je kompletna.',
         ]);
         $application = $ctx['application'];
         $m3Before = $this->m3Snapshot($application);
@@ -625,10 +625,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $ctx = $this->confirmYouthFail($failPayload);
         $this->actingAs($ctx['application']->user)
             ->post(route('applications.prigovor.store', $ctx['application']), $prigovorPayload ?? [
-                'criterion_obrazlozenja' => [
-                    1 => 'Obrazloženje za kriterijum 1.',
-                    2 => 'Obrazloženje za kriterijum 2.',
-                ],
+                'obrazlozenje' => 'Obrazloženje za kriterijum 1. Obrazloženje za kriterijum 2.',
             ])
             ->assertRedirect();
 

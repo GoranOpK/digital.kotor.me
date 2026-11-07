@@ -7,6 +7,7 @@
     $profile = \App\Support\EliminatoryProfileConfig::for($application->competition?->type);
     $activatedReasons = $profile->activatedReasonDetails($eliminatoryCheck);
     $submittedExplanations = \App\Support\YouthPrigovorObrazlozenje::parse($prigovor?->obrazlozenje);
+    $sharedApplicantExplanation = \App\Support\YouthPrigovorObrazlozenje::sharedText($prigovor?->obrazlozenje);
     $activatedCommissionExplanations = [];
     foreach ($activatedReasons as $reason) {
         $explanation = trim((string) ($reason['explanation'] ?? ''));
@@ -120,12 +121,16 @@
             @foreach($activatedReasons as $reason)
                 <li>
                     {{ $reason['statement'] }}
-                    @if(($submittedExplanations[$reason['number']] ?? '') !== '')
+                    @if($sharedApplicantExplanation === null && ($submittedExplanations[$reason['number']] ?? '') !== '')
                         <br>Obrazloženje podnosioca: {{ $submittedExplanations[$reason['number']] }}
                     @endif
                 </li>
             @endforeach
         </ul>
+        @if($sharedApplicantExplanation !== null && $sharedApplicantExplanation !== '')
+            <p><strong>Obrazloženje prigovora</strong></p>
+            <p style="white-space: pre-wrap;">{{ $sharedApplicantExplanation }}</p>
+        @endif
 
         @if($youth107MappingCorrection ?? null)
             <p>

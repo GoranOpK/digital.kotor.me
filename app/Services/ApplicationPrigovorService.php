@@ -45,6 +45,8 @@ class ApplicationPrigovorService
 
     public const CONTESTED_EXPLANATION_REQUIRED_MESSAGE = 'Obrazloženje je obavezno za svaki aktivirani kriterijum.';
 
+    public const SHARED_EXPLANATION_REQUIRED_MESSAGE = 'Obrazloženje prigovora je obavezno.';
+
     public const YOUTH_COMMISSION_INCOMPLETE_MESSAGE = 'Odluku po prigovoru može evidentirati samo predsjednik kompletne Komisije Poziva sa tačno tri aktivna mjesta.';
 
     public const YOUTH_CONTESTED_OUTCOME_REQUIRED_MESSAGE = 'Za svaki aktivirani kriterijum mora se označiti Otklonjen ili Ostaje.';
@@ -126,7 +128,6 @@ class ApplicationPrigovorService
                 $applicant,
                 $obrazlozenje,
                 $contestedNumbers,
-                $explanationsByCriterion,
                 &$windowClosed,
             ) {
                 /** @var Application $locked */
@@ -183,10 +184,10 @@ class ApplicationPrigovorService
 
                 if ($isYouth) {
                     $locked->setRelation('eliminatoryCheck', $check);
-                    [$composedObrazlozenje, $contestedByCriterion] = $this->validatedYouthSubmission(
+                    [$composedObrazlozenje, $contestedByCriterion] = $this->validatedYouthSharedSubmission(
                         $locked,
+                        $obrazlozenje,
                         $contestedNumbers,
-                        $explanationsByCriterion,
                     );
                 } elseif ($composedObrazlozenje === '') {
                     throw ValidationException::withMessages([
@@ -586,75 +587,52 @@ class ApplicationPrigovorService
     }
 
     /**
+     * Jedno obrazloženje za sve aktivirane kriterijume. Ne kopira se u tri polja.
+     *
      * @param  list<int|string>  $contestedNumbers
-     * @param  array<int|string, string|null>  $explanationsByCriterion
      * @return array{0: string, 1: array{1: ?bool, 2: ?bool, 3: ?bool}}
      */
-    private function validatedYouthSubmission(
+    private function validatedYouthSharedSubmission(
         Application $application,
+        string $obrazlozenje,
         array $contestedNumbers,
-        array $explanationsByCriterion,
     ): array {
         $check = $application->eliminatoryCheck;
         if ($check === null || $check->isConfirmedFail() !== true) {
             abort(403, 'Prigovor je moguć samo nakon odbijanja po eliminatornoj provjeri.');
         }
 
-        $postedNumbers = [];
-        foreach ($contestedNumbers as $value) {
-            $number = (int) $value;
-            if ($number >= 1 && $number <= 3) {
-                $postedNumbers[$number] = $number;
-            }
-        }
-        foreach ($explanationsByCriterion as $key => $value) {
-            $number = (int) $key;
-            if ($number >= 1 && $number <= 3 && trim((string) $value) !== '') {
-                $postedNumbers[$number] = $number;
-            }
+        $text = trim($obrazlozenje);
+        if ($text === '') {
+            throw ValidationException::withMessages([
+                'obrazlozenje' => self::SHARED_EXPLANATION_REQUIRED_MESSAGE,
+            ]);
         }
 
-        $errors = [];
-        $explanations = [1 => '', 2 => '', 3 => ''];
-        $contestedByCriterion = [1 => null, 2 => null, 3 => null];
         $activated = array_fill_keys($check->activatedCriterionNumbers(), true);
-        $activatedCount = count($activated);
-
-        foreach ($postedNumbers as $number) {
-            if (! isset($activated[$number])) {
-                $errors['contested'] = self::INACTIVE_CONTESTED_MESSAGE;
-            }
-        }
-
-        foreach ([1, 2, 3] as $number) {
-            if (! isset($activated[$number])) {
-                $contestedByCriterion[$number] = null;
-
-                continue;
-            }
-
-            $contestedByCriterion[$number] = true;
-            $text = trim((string) ($explanationsByCriterion[$number] ?? $explanationsByCriterion[(string) $number] ?? ''));
-            if ($text === '') {
-                $errors["criterion_obrazlozenja.{$number}"] = self::CONTESTED_EXPLANATION_REQUIRED_MESSAGE;
-
-                continue;
-            }
-
-            $explanations[$number] = $text;
-        }
-
-        if ($activatedCount === 0 && $errors === []) {
+        if ($activated === []) {
             throw ValidationException::withMessages([
                 'contested' => self::CONTESTED_REQUIRED_MESSAGE,
             ]);
         }
 
+        $errors = [];
+        foreach ($contestedNumbers as $value) {
+            $number = (int) $value;
+            if ($number >= 1 && $number <= 3 && ! isset($activated[$number])) {
+                $errors['contested'] = self::INACTIVE_CONTESTED_MESSAGE;
+            }
+        }
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
-        return [YouthPrigovorObrazlozenje::compose($explanations), $contestedByCriterion];
+        $contestedByCriterion = [1 => null, 2 => null, 3 => null];
+        foreach ([1, 2, 3] as $number) {
+            $contestedByCriterion[$number] = isset($activated[$number]) ? true : null;
+        }
+
+        return [YouthPrigovorObrazlozenje::composeShared($text), $contestedByCriterion];
     }
 
     /**

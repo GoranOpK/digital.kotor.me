@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.25
-**Datum:** 2026-11-05
+**Verzija:** 1.0.26
+**Datum:** 2026-11-07
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.24** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.25** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.28** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.30** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -63,6 +63,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.23 | 2026-11-05 | Usaglašavanje §6.5, §6.10, §6.11.7 i §7.4 sa KN-BM-002 v1.0.22 i KN-FS-002 v1.0.26. Tačka 22 nije obavezna. Prazna tabela nabavki ne blokira podnošenje. UKUPNO se računa kada postoje unesene stavke. Nema automatskog oduzimanja bodova. Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom. Upozorenje za nedostajuće priloge ostaje. Nema nove tabele ni migracije. Tačka 7, M1, ŽP i MMSP nijesu dirani. |
 | 1.0.24 | 2026-11-05 | Usaglašavanje §6.2, §6.3, §6.10 i §7.4 sa KN-BM-002 v1.0.23 i KN-FS-002 v1.0.27. M1a i M1b imaju polje „Oblast u kojoj planirate realizaciju biznis plana“. Oblast je obavezna za konačno podnošenje, a nacrt se može sačuvati bez nje. Zasebno polje djelatnosti, šifra i šifrarnik se ne uvode. Nema nove kolone, request parametra ni validacije djelatnosti. Raniji zahtjev za odvojenim poljem djelatnosti zamijenjen je ovom odlukom. Tačka 7, tačka 22, ŽP i MMSP nijesu dirani. |
 | 1.0.25 | 2026-11-05 | Usaglašavanje §3.3, §3.8, §3.11 i §11.2 sa KN-BM-002 v1.0.24 i KN-FS-002 v1.0.28. Podnosilac nema preliminarnu listu, pojedinačne ocjene, tuđe prijave ni Word predlog. Konačnu rang-listu čita nakon statusa completed, kada je lista konačna i Word predlog evidentiran. Nova ruta, tabela i migracija se ne propisuju. ŽP i MMSP nijesu dirani. |
+| 1.0.26 | 2026-11-07 | Usaglašavanje Poglavlja 9, §13.8 i §14.8 sa KN-BM-002 v1.0.25 i KN-FS-002 v1.0.30, PM-PRIG-01. `OM-PRIGOVOR-SHARED-v1` sa ključem `text` čuva se u postojećoj koloni `obrazlozenje`. Istorijski `OM-PRIGOVOR-v1` ostaje čitljiv i ne određuje odluku. Jedna odluka na jednom zapisu izvodi `criterion_N_remaining` kao `false`, `true` ili `null`. Nema nove tabele ni migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1985,7 +1986,7 @@ Ponovo se koriste postojeći:
 * servisi i kontroleri tog toka;
 * objedinjeno obavještenje, jedinstveno po prijavi;
 * **jedan zapis prigovora** po prijavi;
-* predsjednikovo evidentiranje **objedinjene odluke Komisije** na tom zapisu, uključujući ishode po kriterijumima na istom redu.
+* predsjednikovo evidentiranje **jedne odluke Komisije** na tom zapisu; zastavice `criterion_N_remaining` na istom redu izvode se iz te odluke.
 
 Ženski tok ostaje nepromijenjen. Profil mladih **parametrizuje** isti tok vrijednostima već usvojenim u `KN-BM-002` v1.0.12 i `KN-FS-002` v1.0.10:
 
@@ -2032,7 +2033,15 @@ Izvor: `BM-ML-036`; `KN-FS-002` §14.
 
 Koristi se postojeći **jedan** zapis prigovora po prijavi.
 
-Podnosilac podnosi najviše jedan prigovor u ciklusu, samo preko digitalnog servisa, uz obavezno obrazloženje.
+Podnosilac podnosi najviše jedan prigovor po obavještenju, samo preko digitalnog servisa. Prigovor obuhvata sve aktivirane eliminatorne kriterijume i traži jedno zajedničko obavezno obrazloženje.
+
+To obrazloženje čuva se u postojećoj koloni `application_prigovors.obrazlozenje`. Nova kolona, tabela i migracija se ne uvode.
+
+Važeći zapis počinje prefiksom `OM-PRIGOVOR-SHARED-v1`, zatim novim redom, pa JSON objektom sa jednim ključem `text`.
+
+Istorijski zapis počinje prefiksom `OM-PRIGOVOR-v1`, zatim novim redom, pa JSON objektom sa ključevima `1`, `2` i `3`. Ostaje čitljiv, ne prepisuje se i ne određuje odluku. Odluka koristi aktivirane kriterijume zaključanog M3 i jednu vrijednost `odluka`.
+
+Ženski zapis bez ova dva prefiksa ostaje običan tekst i ne dira se.
 
 Prigovor **ne** otključava prijavu i **ne** mijenja priloge (`BM-ML-023`; `KN-FS-002` §10.5.6).
 
@@ -2046,18 +2055,19 @@ Izvor: `BM-ML-036`; `KN-FS-002` §14; commit `8974e68a`.
 
 ## 9.5. Aktivirani razlozi
 
-Pravilo profila mladih: jedan prigovor može osporiti **jedan, više ili sve aktivirane** kriterijume. Neaktivirani se ne mogu osporavati (`KN-FS-002` §14).
+Pravilo profila mladih: jedan prigovor obuhvata **sve aktivirane** kriterijume. Neaktivirani se ne mogu obuhvatiti (`KN-FS-002` §14).
 
 Minimalna parametrizacija postojećeg jednog zapisa:
 
-* na podnošenju se čuva skup osporavanih aktiviranih kriterijuma, na istom `application_prigovors` redu;
-* postojeći naming stil je `criterion_1_remaining` / `criterion_2_remaining` / `criterion_3_remaining` za ishod **nakon** odluke;
-* izbor osporenog pri podnošenju čuva se na istom redu kolonama `criterion_1_contested`, `criterion_2_contested`, `criterion_3_contested`, koje **postoje** na `application_prigovors`;
-* te kolone su nullable boolean: `true` = aktiviran i osporen; `false` = aktiviran, nije osporen; `NULL` = nije aktiviran ili profil koji ih ne koristi;
+* na podnošenju se na istom `application_prigovors` redu označe svi aktivirani kriterijumi;
+* postojeći naming stil je `criterion_1_remaining` / `criterion_2_remaining` / `criterion_3_remaining` za izvedeni ishod **nakon** odluke;
+* obuhvat pri podnošenju čuva se na istom redu kolonama `criterion_1_contested`, `criterion_2_contested`, `criterion_3_contested`, koje **postoje** na `application_prigovors`;
+* novo podnošenje postavlja `true` za svaki aktivirani kriterijum i `NULL` za neaktivirani;
 * ženski postojeći tok ostavlja contested kolone `NULL`;
-* `criterion_*_remaining` **nije** zamjena za evidenciju onoga što je podnosilac osporio;
-* zabranjuje se osporavanje neaktiviranog kriterijuma;
-* nakon odluke se na istom zapisu čuvaju ishodi Otklonjen / Ostaje za originalno aktivirane razloge, kao u postojećem toku.
+* istorijski omladinski zapis može imati drugačije contested vrijednosti; odluka ih ne čita kao izbor podskupa;
+* `criterion_*_remaining` **nije** zamjena za obrazloženje podnosioca;
+* zabranjuje se obuhvatanje neaktiviranog kriterijuma;
+* nakon odluke se na istom zapisu izvode zastavice za aktivirane razloge: `false` znači Otklonjen, `true` znači Ostaje, `NULL` znači da kriterijum nije bio aktiviran.
 
 Ne uvodi se nova tabela osporavanja, tabela glasova ni treći prigovor.
 
@@ -2067,12 +2077,15 @@ Izvor: `BM-ML-036`; KN-PATCH-FS-009.
 
 Koristi se postojeće predsjednikovo evidentiranje odluke **u ime Komisije**.
 
-Na jednom zapisu predsjednik evidentira:
+Na jednom zapisu predsjednik evidentira jednu odluku `prihvacen` ili `odbijen` i obrazloženje odluke Komisije.
 
-* objedinjenu odluku Prihvaćen ili Odbijen;
-* obavezno obrazloženje odluke Komisije;
-* za svaki originalno aktiviran razlog, kada je odluka Prihvaćen: Otklonjen ili Ostaje;
-* djelimično prihvatanje ostaje na istom zapisu.
+Iz te odluke izvode se `criterion_1_remaining`, `criterion_2_remaining` i `criterion_3_remaining`:
+
+* `false` — aktivirani razlog je otklonjen, jer je odluka `prihvacen`;
+* `true` — aktivirani razlog ostaje, jer je odluka `odbijen`;
+* `null` — kriterijum nije bio aktiviran.
+
+Sve aktivirane zastavice dobijaju istu vrijednost. Djelimično prihvatanje se ne upisuje. `eliminatory_reason_remaining` je netačno samo uz `prihvacen`. `prihvacen` ostavlja prijavu `submitted`. `odbijen` postavlja `rejected`.
 
 Ne uvodi se tabela glasova. Član **ne** upisuje poseban stored glas. Ne uvodi se posebna kolona snapshot-a sastava Komisije na prigovoru.
 
@@ -2103,9 +2116,9 @@ STORED status prijave ostaje `submitted` dok traje rok za prigovor ili dok posto
 Konačnost na postojećem toku:
 
 * istek 3 dana **bez** prigovora: svi prethodno aktivirani razlozi postaju konačni; prijava `rejected`;
-* prigovor Odbijen: aktivirani razlozi ostaju; prijava `rejected` ako ostaje makar jedan;
-* prigovor Prihvaćen uz djelimično otklanjanje: `rejected` ako makar jedan razlog ostaje konačno aktivan;
-* svi osporeni aktivirani razlozi otklonjeni i nijedan konačno aktivan ne ostaje: prijava ostaje `submitted` i može ući u ocjenjivanje.
+* prigovor `odbijen`: svi aktivirani razlozi ostaju; prijava `rejected`;
+* prigovor `prihvacen`: svi aktivirani razlozi su otklonjeni; prijava ostaje `submitted` i može nastaviti postupak prema ostalim uslovima;
+* djelimično prihvatanje nije predviđeno i ne može ostaviti jedan aktivirani razlog na snazi uz status `prihvacen`.
 
 Finalizacija se ne radi novim poslom ni posebnim workflow-om profila mladih. Koriste se postojeći trenuci: zatvaranje prozora na obavještenju, podnošenje prigovora, predsjednikova evidencija odluke, i postojeća kapija prije ocjenjivanja.
 
@@ -2137,9 +2150,9 @@ Izvor: ovaj dokument §2.2–§2.5; `KN-FS-002` Poglavlja 13–14 i 25.
 |---------|--------|-------|----------|-------|
 | M3 | predsjednik evidentira tri stavke | Komisija profila mladih; rok istekao | zapis provjere; status ostaje `submitted` | `BM-ML-035` |
 | Obavještenje | slanje | ≥1 aktiviran kriterijum | jedan portal+mail zapis; snapshot razloga; rok 3 dana | `BM-ML-036` |
-| Prigovor | podnošenje | prozor otvoren; ≥1 aktiviran; izbor samo aktiviranih; tačno jedan aktivni predsjednik `competition.commission_id` sa `users.email` | jedan zapis statusa `podnesen`; prijava `submitted`; zatim `deliverSubmissionNotice()` van transakcije šalje `ApplicationPrigovorSubmittedMail`; link samo na dozvoljenu postojeću rutu, inače bez linka; pad slanja ne dira zapis i nema ponavljanja; `pendingDecisionRowsForChairman()` broji samo `podnesen` za `omladinsko` i `zensko` | `BM-ML-036`; commit `8974e68a` |
+| Prigovor | podnošenje | prozor otvoren; ≥1 aktiviran; prigovor obuhvata sve aktivirane; jedno obavezno `text`; tačno jedan aktivni predsjednik `competition.commission_id` sa `users.email` | jedan zapis statusa `podnesen`; `OM-PRIGOVOR-SHARED-v1` u `obrazlozenje`; prijava `submitted`; zatim `deliverSubmissionNotice()` van transakcije šalje `ApplicationPrigovorSubmittedMail`; link samo na dozvoljenu postojeću rutu, inače bez linka; pad slanja ne dira zapis i nema ponavljanja; `pendingDecisionRowsForChairman()` broji samo `podnesen` za `omladinsko` i `zensko` | `BM-ML-036`; commit `8974e68a` |
 | Prigovor | pokušaj na neaktiviran | bilo koji | zabranjeno | `KN-FS-002` §14 |
-| Odluka | predsjednik evidentira | preduslov tri člana; jedan zapis | Prihvaćen/Odbijen + ishodi po aktiviranim | `BM-ML-003`; `BM-ML-037` |
+| Odluka | predsjednik evidentira | preduslov tri člana; jedan zapis; jedna `odluka` | `prihvacen` ili `odbijen`; izvedene `criterion_N_remaining`; nema djelimičnog ishoda | `BM-ML-003`; `BM-ML-037` |
 | Konačnost | istek 3 dana bez prigovora | postojeći prozor zatvoren | `rejected`; svi aktivirani razlozi | `BM-ML-036` |
 | Konačnost | odluka sa makar jednim ostalim razlogom | postojeća evidencija predsjednika | `rejected`; svi konačni razlozi | `BM-ML-037` |
 | Ocjenjivanje | pokušaj dok traje prigovor | prozor otvoren ili prigovor neriješen | zabranjeno; `submitted` | `BM-ML-035` |
@@ -2170,9 +2183,9 @@ Izvor: `BM-ML-036`.
 
 **Ako:** podnosilac bira razloge.
 
-**Kada:** pokuša osporiti neaktiviran kriterijum.
+**Kada:** pokuša obuhvatiti neaktiviran kriterijum ili ostaviti obrazloženje prazno.
 
-**Onda:** podnošenje je zabranjeno. Dozvoljen je izbor jednog, više ili svih aktiviranih.
+**Onda:** podnošenje je zabranjeno. Dozvoljen je jedan prigovor koji obuhvata sve aktivirane kriterijume i jedno zajedničko obrazloženje.
 
 Izvor: `KN-FS-002` §14.
 
@@ -2182,7 +2195,7 @@ Izvor: `KN-FS-002` §14.
 
 **Kada:** se odluka upisuje.
 
-**Onda:** predsjednik evidentira objedinjenu odluku na postojećem zapisu. Ne kreira se tabela glasova. Sastav i prisustvo dokazuju se zajedničkom evidencijom sjednice.
+**Onda:** predsjednik evidentira jednu odluku `prihvacen` ili `odbijen` na postojećem zapisu. Aktivirani `criterion_N_remaining` dobijaju istu izvedenu vrijednost. Ne kreira se tabela glasova. Sastav i prisustvo dokazuju se zajedničkom evidencijom sjednice.
 
 Izvor: postojeći obrazac; `BM-ML-003` kao preduslov.
 
@@ -3175,13 +3188,14 @@ Ponovo se koriste `application_eliminatory_checks`, `application_eliminatory_not
 | Tri kriterijuma, zasebna aktivacija | `criterion_1\|2\|3` na M3 | da | profilne labele mladih, ne nove kolone | ženske labele se ne prenose |
 | Snapshot razloga | `reasons_snapshot` | da | nema | jedno obavještenje |
 | Jedan prigovor | UNIQUE `application_id` | da | nema | nema tri prigovora |
-| Otklonjen/Ostaje | `criterion_*_remaining` | da | nema | djelimično prihvatanje na istom redu |
-| Izbor osporenih pri podnošenju | `application_prigovors.criterion_1\|2\|3_contested` | da — kolone postoje | nema nove tabele | `true` = aktiviran i osporen; `false` = aktiviran, nije osporen; `NULL` = nije aktiviran ili `zensko`; prigovor i M3 ostaju odvojeni zapisi |
+| Otklonjen/Ostaje | `criterion_*_remaining` | da | nema | izvedeno iz jedne odluke: `false` otklonjen, `true` ostaje, `null` nije aktiviran; nema djelimičnog prihvatanja |
+| Obuhvat pri podnošenju | `application_prigovors.criterion_1\|2\|3_contested` | da — kolone postoje | nema nove tabele | novo podnošenje: `true` za svaki aktivirani, `NULL` za neaktivirani; `zensko` ostavlja `NULL`; prigovor i M3 ostaju odvojeni zapisi |
+| Zajedničko obrazloženje | `application_prigovors.obrazlozenje` | da — postojeća kolona | nema nove kolone | `OM-PRIGOVOR-SHARED-v1` i ključ `text`; istorijski `OM-PRIGOVOR-v1` ostaje čitljiv |
 | Sastav i prisustvo Komisije pri odluci | **ne postoji** kao kolona na prigovoru | ne kao dokaz tri člana na prigovoru | **nema** posebne kolone snapshot-a na prigovoru; dokaz preko postojeće Komisije i obavezne zajedničke evidencije sjednice i prisustva | preduslov `BM-ML-003`; ne tabela glasova |
 | `rejected` nakon konačnosti | `applications.status` | da | parametrizacija trenutka | ne odmah pri M3 |
 | Rokovi 3 i 7 dana | konstante na postojećim modelima | da kao parametrizacija | nema novog scheduler-a | postojeći trenuci ženskog toka |
 
-Kolone `criterion_1_contested`, `criterion_2_contested` i `criterion_3_contested` **postoje** na `application_prigovors`. Nullable su. `true` = aktiviran i osporen; `false` = aktiviran, nije osporen; `NULL` = nije aktiviran ili profil koji ih ne koristi. Ženski postojeći tok ostavlja ih `NULL`. Prigovor i M3 ostaju odvojeni zapisi. Nova tabela se **ne** uvodi.
+Kolone `criterion_1_contested`, `criterion_2_contested` i `criterion_3_contested` **postoje** na `application_prigovors`. Nullable su. Novo omladinsko podnošenje postavlja `true` za svaki aktivirani kriterijum i `NULL` za neaktivirani. Ženski postojeći tok ostavlja ih `NULL`. Prigovor i M3 ostaju odvojeni zapisi. Zajedničko obrazloženje ostaje u postojećoj koloni `obrazlozenje`. Nova tabela se **ne** uvodi.
 
 Izvor: `BM-ML-035`–`BM-ML-037`; `KN-FS-002` Poglavlja 13–14; ovaj dokument Poglavlje 9.
 
@@ -3585,12 +3599,13 @@ Izvor: `BM-ML-001`–`007`; ovaj dokument Poglavlje 8.
 
 * tri kriterijuma pojedinačno i zajedno;
 * objedinjeno obavještenje;
-* jedan prigovor na jedan, više ili sve aktivne razloge;
-* zabrana neaktivnog;
-* objedinjena odluka predsjednika;
+* jedan prigovor na sve aktivirane razloge i jedno zajedničko obrazloženje;
+* zabrana neaktivnog i praznog obrazloženja;
+* jedna odluka predsjednika na jednom zapisu;
 * preduslov tri člana preko evidencije sjednice i prisustva;
 * nema tabele glasova ni posebne kolone snapshot-a sastava na prigovoru;
-* djelimično prihvatanje;
+* nema djelimičnog prihvatanja;
+* `OM-PRIGOVOR-SHARED-v1` ne mijenja odluku istorijskog `OM-PRIGOVOR-v1`;
 * istek bez prigovora;
 * `rejected` tek nakon konačnosti;
 * nema novog scheduler-a.
@@ -3837,4 +3852,4 @@ Ne uvodi se novo tehničko pravilo niti nova interna oznaka.
 
 ---
 
-**Kraj dokumenta KN-TS-002 v1.0.25**
+**Kraj dokumenta KN-TS-002 v1.0.26**
