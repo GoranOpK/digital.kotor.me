@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.24
+**Verzija:** 1.0.25
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
@@ -54,6 +54,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.22 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Poslovna pravila KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.23 | 2026-10-29 | KN-PATCH-BM-027 — Buduća odluka Komisije zaključava se prvim uspješnim čuvanjem. Odluka sačuvana prije toga ostaje bez vremena zaključavanja i može se ispraviti. Prije upisa iznos mora ostaviti zakonit završetak: budžet, postojeći limit od 20% kada je potvrđen zeleni ili inovativni bonus, traženi iznos i prednost otpočinjanja. Limiti 10% i 5% se ne uvode u ovaj upis. Istovremeni upisi dijele jednu transakciju. |
 | 1.0.24 | 2026-11-08 | ŽP-PM-RANK-01. Jednak broj bodova i dalje dijeli rang-poziciju, a naredna pozicija preskače zauzeta mjesta. Unutar te grupe otpočinjanje se prikazuje ispred razvoja. Taj redoslijed ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava. Komisija i dalje ručno bira Podržava ili Odbija i ručno unosi iznos. Aplikacija ne određuje koje prijave moraju biti podržane. |
+| 1.0.25 | 2026-11-08 | ŽP-REZ-01. Rezime Obrasca 2 obavezan je za status „Popunjen“ i za konačno podnošenje prijave. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Obaveznost Rezimea ne čini ostale djelove Obrasca 2 obaveznim za predaju. PM i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -531,6 +532,8 @@ Ako je odgovor **NE**, podaci o registrovanoj djelatnosti nijesu obavezni. Nereg
 **Napomena za neregistrovanu podnositeljku:** Ukoliko podnositeljka prijave u trenutku podnošenja prijave nema registrovanu djelatnost, a sredstva joj budu odobrena, dužna je da prije zaključenja ugovora o dodjeli sredstava izvrši registraciju preduzetnice, odnosno osnuje i registruje privredno društvo, u skladu sa oblikom obavljanja djelatnosti navedenim u prijavi, i dostavi dokaz o registraciji kod nadležnog organa, dokaz o poreskoj registraciji i dokaz o otvorenom poslovnom računu.
 
 **Q4 — trgovački / naziv subjekta:** „Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:“
+
+**Rezime** je obavezan za kompletnost Obrasca 2 i za konačno podnošenje prijave. Tekst koji sadrži samo razmake smatra se praznim. Nacrt se smije sačuvati bez Rezimea. Obrazac 2 bez Rezimea nema status „Popunjen“. Potvrda nedostajućih priloga ne zamjenjuje Rezime. Ostali djelovi Obrasca 2 time ne postaju obavezni za konačno podnošenje.
 
 Ako je odgovor **DA**, primjenjuju se odgovarajući podaci i dokumentacija za registrovani biznis.
 

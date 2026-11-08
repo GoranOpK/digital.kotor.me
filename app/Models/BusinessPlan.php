@@ -238,7 +238,7 @@ class BusinessPlan extends Model
     /**
      * Provjerava da li je biznis plan kompletan (ima sva obavezna polja popunjena).
      * Zajednička obavezna polja su: business_idea_name, applicant_name, applicant_jmbg, applicant_address, applicant_phone, applicant_email.
-     * Za PM, tačka 5 (summary) je obavezna. Za ŽP i MMSP nije.
+     * Za PM i ŽP, tačka 5 (summary) je obavezna. Za MMSP nije.
      * Pitanja 7, 10 i 16 (realization_type, has_business_space, has_seasonal_workers) nijesu obavezna.
      */
     public function isComplete(): bool
@@ -271,7 +271,8 @@ class BusinessPlan extends Model
         }
 
         $this->loadMissing('application.competition');
-        if ($this->application?->isOmladinskoProfile() && ! $this->summaryHasText()) {
+        $type = $this->application?->competition?->type;
+        if (in_array($type, ['omladinsko', 'zensko'], true) && ! $this->summaryHasText()) {
             return false;
         }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\ApplicationController;
 use App\Models\Application;
 use App\Models\BusinessPlan;
 use App\Models\Competition;
@@ -184,7 +185,7 @@ class BusinessPlanM2CompletenessTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/id="seasonal_no"[^>]*\schecked/', $yes);
     }
 
-    public function test_pm_summary_blocks_submit_while_points_7_10_16_and_zp_summary_stay_optional(): void
+    public function test_pm_and_zp_summary_block_submit_while_points_7_10_16_and_22_stay_optional(): void
     {
         foreach (['omladinsko', 'zensko'] as $type) {
             [$owner, $application] = $this->application($type);
@@ -205,13 +206,12 @@ class BusinessPlanM2CompletenessTest extends TestCase
                 ->assertSessionHasNoErrors();
 
             $saved = $application->fresh()->businessPlan;
-            $summaryRequired = $type === 'omladinsko';
             $this->assertNull($saved->summary);
             $this->assertNull($saved->realization_type);
             $this->assertNull($saved->has_business_space);
             $this->assertNull($saved->has_seasonal_workers);
-            $this->assertSame(! $summaryRequired, BusinessPlanM2Completeness::hasRequiredAsterisks($saved));
-            $this->assertSame(! $summaryRequired, $saved->isComplete());
+            $this->assertSame($type !== 'omladinsko', BusinessPlanM2Completeness::hasRequiredAsterisks($saved));
+            $this->assertFalse($saved->isComplete());
 
             $this->actingAs($owner)
                 ->post(route('applications.business-plan.store', $application), [
@@ -277,20 +277,31 @@ class BusinessPlanM2CompletenessTest extends TestCase
                     ->assertSessionHasNoErrors();
                 $this->assertSame('submitted', $application->fresh()->status);
             } else {
+                $this->assertFalse($filled->fresh()->isComplete());
+                $this->assertNull($filled->fresh()->expense_projection);
+                $this->actingAs($owner)
+                    ->post(route('applications.final-submit', $application), [
+                        'confirm_missing_documents' => '1',
+                    ])
+                    ->assertSessionHasErrors([
+                        'error' => ApplicationController::ZP_SUMMARY_REQUIRED_MESSAGE,
+                    ]);
+                $this->assertSame('draft', $application->fresh()->status);
+
+                $filled->update(['summary' => 'Sažetak']);
+                $this->assertTrue($filled->fresh()->isComplete());
+                $this->assertNull($filled->fresh()->realization_type);
+                $this->assertNull($filled->fresh()->expense_projection);
                 $this->actingAs($owner)
                     ->post(route('applications.final-submit', $application))
                     ->assertSessionHasNoErrors();
                 $this->assertSame('submitted', $application->fresh()->status);
-                $this->assertNull($filled->fresh()->summary);
-                $this->assertNull($filled->fresh()->realization_type);
-                $this->assertNull($filled->fresh()->has_business_space);
-                $this->assertNull($filled->fresh()->has_seasonal_workers);
             }
 
             [$blockedOwner, $blocked] = $this->application($type);
             $blockedPlan = $this->fullPlan($blocked, $blockedOwner);
             $blockedPlan->update([
-                'summary' => null,
+                'summary' => $type === 'zensko' ? 'Sažetak' : null,
                 'realization_type' => null,
                 'has_business_space' => null,
                 'has_seasonal_workers' => null,
@@ -377,20 +388,53 @@ class BusinessPlanM2CompletenessTest extends TestCase
         $zpIdentity['applicant_email'] = $zpOwner->email;
         $this->actingAs($zpOwner)
             ->post(route('applications.business-plan.store', $zp), $zpIdentity + [
-                'summary' => '   ',
+                'save_as_draft' => '1',
+                'summary' => '',
             ])
             ->assertSessionHasNoErrors();
         $this->assertNull($zp->fresh()->businessPlan->summary);
+        $this->assertFalse($zp->fresh()->businessPlan->isComplete());
+
+        $this->actingAs($zpOwner)
+            ->post(route('applications.business-plan.store', $zp), $zpIdentity + [
+                'save_as_draft' => '1',
+                'summary' => 'ŽP rezime',
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('ŽP rezime', $zp->fresh()->businessPlan->summary);
         $this->assertTrue($zp->fresh()->businessPlan->isComplete());
 
-        $zpForm = $this->actingAs($zpOwner)
+        $this->actingAs($zpOwner)
+            ->from(route('applications.business-plan.create', $zp))
+            ->post(route('applications.business-plan.store', $zp), array_merge($zpIdentity, [
+                'business_idea_name' => 'Nova ideja koja ne smije biti sačuvana',
+                'summary' => '   ',
+            ]))
+            ->assertRedirect(route('applications.business-plan.create', $zp))
+            ->assertSessionHasErrors(['summary' => 'Rezime je obavezan.']);
+        $this->assertSame('ŽP rezime', $zp->fresh()->businessPlan->summary);
+        $this->assertSame('Puna ideja', $zp->fresh()->businessPlan->business_idea_name);
+        $zpRejected = $this->actingAs($zpOwner)
             ->get(route('applications.business-plan.create', $zp))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString(
-            '5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno): <span class="required">*</span>',
-            $zpForm
+        $this->assertStringContainsString('Rezime je obavezan.', $zpRejected);
+        $this->assertStringContainsString('Nova ideja koja ne smije biti sačuvana', $zpRejected);
+        $this->assertMatchesRegularExpression(
+            '/5\. Rezime \(ukratko opišite ideju, proširite tabelu koliko je potrebno\):\s*<span class="required">\*<\/span>/',
+            $zpRejected
         );
+
+        $zp->update([
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+        $zp->businessPlan->update(['summary' => null]);
+        $this->actingAs($zpOwner)
+            ->get(route('applications.show', $zp))
+            ->assertOk();
+        $this->assertSame('submitted', $zp->fresh()->status);
+        $this->assertNull($zp->fresh()->businessPlan->summary);
     }
 
     /**

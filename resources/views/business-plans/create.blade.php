@@ -385,6 +385,7 @@
         @php
             $readOnly = $readOnly ?? false;
             $isOmladinsko = $application->competition?->type === 'omladinsko';
+            $isZensko = $application->competition?->type === 'zensko';
             $businessPlanTableFields = [
                 'products_services_table',
                 'target_customers',
@@ -579,7 +580,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):@if($isOmladinsko) <span class="required">*</span>@endif
+                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):@if($isOmladinsko || $isZensko) <span class="required">*</span>@endif
                         </label>
                         <textarea 
                             name="summary" 
@@ -2033,6 +2034,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const bpSubmitBtn = document.getElementById('bpSubmitBtn');
     const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
     const isOmladinsko = @json((bool) $isOmladinsko);
+    const isZensko = @json((bool) ($isZensko ?? false));
 
     // Obavezna polja koja treba provjeriti
     const requiredFields = [
@@ -2043,6 +2045,9 @@ document.addEventListener('DOMContentLoaded', function() {
         'applicant_phone',
         'applicant_email'
     ];
+    if (isZensko) {
+        requiredFields.push('summary');
+    }
 
     function isValidPib(value) {
         return /^[0-9]{8}$/.test((value || '').trim());

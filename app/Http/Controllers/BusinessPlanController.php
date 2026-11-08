@@ -93,14 +93,14 @@ class BusinessPlanController extends Controller
     }
 
     /**
-     * PM Rezime je obavezan kada se obrazac čuva kao popunjen.
-     * Nacrt i ženski konkurs zadržavaju prazno polje.
+     * PM i ŽP Rezime je obavezan kada se obrazac čuva kao popunjen.
+     * Nacrt i MMSP zadržavaju prazno polje.
      *
      * @return array<int, mixed>|string
      */
     private function summaryRules(Application $application, bool $isDraft): array|string
     {
-        if ($isDraft || ! $application->isOmladinskoProfile()) {
+        if ($isDraft || ! $this->profileRequiresSummary($application)) {
             return 'nullable|string';
         }
 
@@ -109,6 +109,14 @@ class BusinessPlanController extends Controller
                 $fail('Rezime je obavezan.');
             }
         }];
+    }
+
+    private function profileRequiresSummary(Application $application): bool
+    {
+        $application->loadMissing('competition');
+
+        return $application->isOmladinskoProfile()
+            || $application->competition?->type === 'zensko';
     }
 
     /**

@@ -52,6 +52,8 @@ class ApplicationController extends Controller
 
     public const PM_M2_DRUGO_MESSAGE = 'U tački 7 biznis plana izabrali ste „Drugo“. Prije konačnog podnošenja prijave morate unijeti obrazloženje.';
 
+    public const ZP_SUMMARY_REQUIRED_MESSAGE = 'Konačno podnošenje nije dozvoljeno dok nije popunjena tačka 5 — Rezime biznis plana.';
+
     /**
      * Autoritativni start-context za novu prijavu. Query parametar nije authority.
      */
@@ -1075,6 +1077,13 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => 'Morate potvrditi napomenu o finansijama u biznis planu prije konačne predaje.']);
         }
 
+        if ($application->competition?->type === CompetitionProfileResolver::TYPE_WOMEN
+            && ! $this->savedSummaryHasText($application->businessPlan->summary)) {
+            return back()->withErrors([
+                'error' => self::ZP_SUMMARY_REQUIRED_MESSAGE,
+            ]);
+        }
+
         if (! BusinessPlanM2Completeness::hasRequiredAsterisks($application->businessPlan)) {
             return back()->withErrors([
                 'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
@@ -1151,6 +1160,11 @@ class ApplicationController extends Controller
         }
 
         return $redirect;
+    }
+
+    private function savedSummaryHasText(mixed $summary): bool
+    {
+        return is_string($summary) && trim($summary) !== '';
     }
 
     /**

@@ -619,7 +619,11 @@
                                 @if($application->competition?->type !== 'omladinsko' && $application->businessPlan && $application->businessPlan->isComplete())
                                     {{-- UX napomena: objašnjenje šta znači status "Biznis plan - popunjen" (lako uklonjivo ako ne odgovara) --}}
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 4px; max-width: 460px;">
-                                        Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
+                                        @if($application->competition?->type === 'zensko')
+                                            Status „Biznis plan - popunjen“ znači da je ispunjena tehnička kompletnost Obrasca 2, uključujući Rezime. Konačno podnošenje prijave ima zasebne poslovne uslove, među kojima je obavezan i Rezime.
+                                        @else
+                                            Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
+                                        @endif
                                     </div>
                                 @endif
                                 @if($application->businessPlan?->isComplete() && in_array($application->competition?->type, ['omladinsko', 'zensko'], true))

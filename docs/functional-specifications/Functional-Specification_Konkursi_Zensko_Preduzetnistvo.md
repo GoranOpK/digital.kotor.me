@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.21
+**Verzija:** 1.0.22
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.24; jednak broj bodova dijeli rang, otpočinjanje se prikazuje ispred razvoja i to nije prednost finansiranja)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.25; jednak broj bodova dijeli rang, otpočinjanje se prikazuje ispred razvoja i to nije prednost finansiranja; Rezime je obavezan za kompletnost Obrasca 2 i konačno podnošenje)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
 
@@ -76,6 +76,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.19 | 2026-11-04 | Usaglašavanje §10.4 sa commitom `8974e68a`. Poslije uspješnog podnošenja Prigovora aktivni predsjednik nadležne Komisije dobija e-mail, a na kontrolnoj tabli vidi Prigovore u stanju Podnesen. Riješeni Prigovor izlazi iz brojača. Neuspješan e-mail ne poništava Prigovor i ne šalje se ponovo. Član 17, rokovi, stanja Prigovora i postupak odlučivanja nijesu mijenjani. Posebna tehnička specifikacija ŽP nije otvorena. |
 | 1.0.20 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-003 v1.0.24. §14.6 razdvaja rang-poziciju od redoslijeda prikaza. §14.9 više ne tretira otpočinjanje kao obaveznog primaoca sredstava i ne blokira Predlog ni zatvaranje zbog te prednosti. Ručni zaključak, iznos i finansijske kontrole ostaju. |
 | 1.0.21 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §18.6.4, §14.7, §14.10.3, §14.11, §15.1 i §16.5 više ne daju otpočinjanju prednost pri finansiranju niti zabranjuju podršku razvoju zbog neriješenog otpočinjanja istog ranga. Jednak rang, prikaz otpočinjanja prije razvoja, preskakanje pozicija, ručne odluke i postojeći limiti ostaju. Primjeri ostaju u §14.6. Istorijski red 1.0.20 ostaje. |
+| 1.0.22 | 2026-11-08 | ŽP-REZ-01, usklađeno sa KN-BM-003 v1.0.25. §7.10, §7.11, §7.14 i §10.2: Rezime je obavezan za status „Popunjen“ i za konačno podnošenje. Nacrt se može sačuvati bez njega. Tekst od samih razmaka je prazan. Potvrda nedostajućih priloga ne zaobilazi Rezime. Ostali djelovi Obrasca 2 i dalje nijesu uslov predaje. PM i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1466,9 +1467,12 @@ Elektronski Obrazac 2 **ne** zahtijeva polje Potpis niti papirni footer kao plat
 
 **Q5 — Rezime**
 
-* obavezno;
+* obavezno za status „Popunjen“ i za konačno podnošenje;
 * unosi ga Podnositeljka;
-* izmjenjivo do konačnog podnošenja.
+* izmjenjivo do konačnog podnošenja;
+* prazan tekst i tekst od samih razmaka nisu popunjen Rezime;
+* nacrt se može sačuvati bez Rezimea;
+* obaveznost Rezimea ne čini ostale djelove Obrasca 2 obaveznim za konačno podnošenje.
 
 **Napomena o finansijama**
 
@@ -1497,11 +1501,11 @@ Tačno:
 
 ## 7.11. Čuvanje i uređivanje Obrasca 2
 
-Nepotpun Obrazac 2 može se sačuvati kao **Nacrt**.
+Nepotpun Obrazac 2 može se sačuvati kao **Nacrt**, uključujući nacrt bez Rezimea.
 
-Čuvanje Obrasca 2 **nije** podnošenje Prijave.
+Čuvanje Obrasca 2 **nije** podnošenje Prijave. Čuvanje koje nije nacrt zahtijeva Rezime.
 
-Kada je tehnička kompletnost ispunjena, Obrazac 2 je **Popunjen**.
+Kada je tehnička kompletnost ispunjena, uključujući Rezime, Obrazac 2 je **Popunjen**. Bez Rezimea Obrazac 2 ostaje **Nacrt**.
 
 **Popunjen** Obrazac 2 ostaje izmjenjiv dok:
 
@@ -1684,11 +1688,14 @@ Konačno podnošenje je dozvoljeno samo kada su ispunjeni svi sljedeći uslovi:
 
 1. odgovarajući Obrazac 1a / 1b je **Popunjen**;
 2. Biznis plan (Obrazac 2) **postoji**;
-3. potvrda napomene o finansijama je data (`finances_notice_confirmed`; §7.10);
-4. Konkurs je **Objavljen** i rok za prijavu još traje;
-5. Podnositeljka izričito potvrđuje konačno podnošenje.
+3. Rezime, tačka 5, sadrži tekst nakon uklanjanja početnih i završnih razmaka;
+4. potvrda napomene o finansijama je data (`finances_notice_confirmed`; §7.10);
+5. Konkurs je **Objavljen** i rok za prijavu još traje;
+6. Podnositeljka izričito potvrđuje konačno podnošenje.
 
-Puna sadržajna / tehnička kompletnost Obrasca 2 (**Popunjen** u smislu §7.10, osim potvrde napomene o finansijama) **nije** uslov konačne predaje. Nepotpun suštinski sadržaj biznis plana sam po sebi **ne** blokira podnošenje.
+Prazan Rezime blokira konačno podnošenje i Prijava ostaje **U pripremi**. Potvrda nedostajućih priloga to ne zaobilazi.
+
+Puna sadržajna / tehnička kompletnost ostalih djelova Obrasca 2 (**Popunjen** u smislu §7.10, osim Rezimea i potvrde napomene o finansijama) **nije** uslov konačne predaje. Nepotpun suštinski sadržaj biznis plana, osim praznog Rezimea, sam po sebi **ne** blokira podnošenje.
 
 Nedostajuća prateća dokumentacija **ne** blokira podnošenje.
 
@@ -2085,7 +2092,7 @@ Provjera utvrđuje da li Prijava sadrži **cjelokupan obavezni paket** koji važ
 * Obrazac 2 / Biznis plan;
 * obaveznu prateću dokumentaciju koja važi za tu Podnositeljku i fazu biznisa.
 
-Ovo poglavlje **ne** mijenja pravila podnošenja iz Poglavlja 7. Uspješno konačno podnošenje već zahtijeva primjenjivi Obrazac 1a / 1b i popunjen Obrazac 2 / Biznis plan. Nedostatak prateće dokumentacije **ne** sprečava konačno podnošenje.
+Ovo poglavlje **ne** mijenja pravila podnošenja iz Poglavlja 7. Uspješno konačno podnošenje već zahtijeva primjenjivi Obrazac 1a / 1b, postojeći Obrazac 2 sa popunjenim Rezimeom i potvrdu napomene o finansijama. Ostali djelovi Obrasca 2 nijesu uslov predaje. Nedostatak prateće dokumentacije **ne** sprečava konačno podnošenje.
 
 Administrativna provjera je:
 
