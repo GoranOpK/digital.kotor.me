@@ -79,12 +79,12 @@ class YouthAggregateAndBonusTest extends TestCase
         foreach (ScoringProfileConfig::youthCriteria() as $criterionName) {
             $this->assertStringContainsString($criterionName, $list);
         }
-        $this->assertStringContainsString('Info dan i obuka (+1)', $list);
-        $this->assertSame(1, substr_count($list, 'Info dan i obuka (+1)'));
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $list);
+        $this->assertSame(1, substr_count($list, 'Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)'));
         $this->assertStringNotContainsString('>Info dan</td>', $list);
         $this->assertStringNotContainsString('>Obuka</td>', $list);
-        $this->assertStringContainsString('Planirana registracija (+2)', $list);
-        $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $list);
+        $this->assertStringContainsString('Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda)', $list);
+        $this->assertStringContainsString('Biznis ideja je startup (inovativni tehnološki biznis) (3 boda)', $list);
         $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $list);
         $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $list);
         $this->assertStringNotContainsString('KONAČNA OCJENA', $list);
@@ -113,7 +113,7 @@ class YouthAggregateAndBonusTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $memberHtml);
-        $this->assertStringContainsString('Info dan i obuka (+1)', $memberHtml);
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $memberHtml);
         $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $memberHtml);
         $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $memberHtml);
         $this->assertStringNotContainsString('name="bonus_info_and_training"', $memberHtml);
@@ -228,7 +228,7 @@ class YouthAggregateAndBonusTest extends TestCase
             ->get(route('evaluation.create', $both['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Info dan i obuka (+1)', $bothHtml);
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $bothHtml);
         $this->assertStringContainsString('✓', $bothHtml);
 
         $unchecked = $this->youthReadyToLock();
@@ -378,7 +378,7 @@ class YouthAggregateAndBonusTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertSame(1, substr_count($html, '>Sačuvaj ocjene<'));
-        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $html);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $html);
 
         $this->actingAs($ctx['chairman']->user)

@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.33
+**Verzija:** 1.0.34
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.27** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.28** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.29** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.30** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -73,6 +73,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.31 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-002 v1.0.26. Jednak pun rezultat dijeli rang. Prikaz stavlja otpočinjanje ispred razvoja i ne stvara prednost finansiranja. Ručni zaključak, iznos, budžet i završni tok mladih ostaju. Indeks ostaje 142/142. MMSP nije diran. |
 | 1.0.32 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §4.10, §20.4, §20.5, §20.6, §20.7.5, §20.7.6, §21.6 i §23.2 više ne vezuju otpočinjanje za dodjelu sredstava niti traže posebno razrješenje jednakih bodova prije konačnosti. Prikaz unutar grupe ostaje otpočinjanje pa razvoj. Primjeri ostaju `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`. Isti rang ne rezerviše sredstva. Rezervacija strogo višeg ranga, budžet, traženi iznos, tri ekrana i završni tok ostaju. Indeks ostaje 142/142. Istorijski red 1.0.31 ostaje. MMSP nije diran. |
 | 1.0.33 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27. §8.4, §8.5, §10.4 i §10.5.1: Rezime je obavezan za status „Popunjen“ i za konačno podnošenje. Nacrt se može sačuvati bez njega. Tekst od samih razmaka je prazan. Potvrde nepotpunih obrazaca i nedostajućih priloga ne zaobilaze obavezu. Tačke 7 i 22 ostaju neobavezne. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.34 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28. §17.1–§17.4 i §17.7.2–§17.7.4 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Komisija i dalje dodjeljuje bodove. Tok, vrijednosti, maksimum 6 i prihvatni uslovi ostaju. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -3422,15 +3423,19 @@ Dodatni bodovi ulaze u konačni rezultat tek nakon osnovnog zbira prosječnih oc
 
 Vrste dodatnih bodova:
 
-1. **+1** — potvrđeno prisustvo Info danu **i** obuci za pisanje biznis plana;
-2. **+2** — fizičko lice koje tek planira registraciju biznisa;
-3. **+3** — inovativna i/ili zelena biznis ideja.
+1. **+1** — Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod);
+2. **+2** — Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda);
+3. **+3** — Biznis ideja je startup (inovativni tehnološki biznis) (3 boda).
+
+To su nazivi u tabeli Obrasca M3. Uslovi dodjele u nastavku ovog poglavlja ostaju.
 
 Ukupan maksimum je **6**. Bodovi su kumulativni unutar tog limita.
 
 Dodatni bodovi **nijesu** individualno ocjenjivanje člana Komisije.
 
 ## 17.2. Prisustvo Info danu i obuci
+
+Naziv u Obrascu M3: Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod).
 
 Jedno prisustvo **nije** dovoljno. Oba prisustva moraju biti potvrđena (`BM-ML-042`).
 
@@ -3445,11 +3450,15 @@ Info dan bez obuke ili obuka bez Info dana **ne** daje taj bod.
 
 ## 17.3. Fizičko lice koje planira registraciju
 
+Naziv u Obrascu M3: Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda).
+
 Platforma koristi **već utvrđenu i potvrđenu kategoriju** prijave (F-06; `BM-ML-009`). Bod **ne** zavisi od ručnog proizvoljnog izbora. **Ne** uvodi se nova provjera CRPS-a.
 
 Ako kategorija **nije** pouzdano utvrđena, bod se **ne** dodjeljuje automatski.
 
 ## 17.4. Inovativna i/ili zelena ideja
+
+Naziv u Obrascu M3: Biznis ideja je startup (inovativni tehnološki biznis) (3 boda).
 
 To je **jedna** kategorija od najviše **tri** boda. Inovativna i zelena zajedno **ne** daju šest bodova (`BM-ML-042`).
 
@@ -3508,6 +3517,8 @@ Izvor: `BM-ML-042`.
 
 ### 17.7.2 — Info dan i obuka
 
+Naziv u Obrascu M3: Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod).
+
 **Ako:** postoji samo jedna od dvije potvrde.
 
 **Kada:** se pokuša dodijeliti +1.
@@ -3518,6 +3529,8 @@ Izvor: `BM-ML-042`.
 
 ### 17.7.3 — Kategorija za +2
 
+Naziv u Obrascu M3: Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda).
+
 **Ako:** kategorija prijave nije pouzdano utvrđena.
 
 **Kada:** se pokuša automatski dodijeliti +2.
@@ -3527,6 +3540,8 @@ Izvor: `BM-ML-042`.
 Izvor: `BM-ML-042`; F-06.
 
 ### 17.7.4 — Jedna kategorija +3
+
+Naziv u Obrascu M3: Biznis ideja je startup (inovativni tehnološki biznis) (3 boda).
 
 **Ako:** je ideja i inovativna i zelena.
 

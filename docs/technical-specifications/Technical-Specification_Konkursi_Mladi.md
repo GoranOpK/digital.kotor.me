@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.29
+**Verzija:** 1.0.30
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.27** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.28** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.33** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.34** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -67,6 +67,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.27 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-002 v1.0.26 i KN-FS-002 v1.0.31. Važeći opis je u §11.1, §11.2, §11.4, §11.5, §11.6, §11.7, §11.11, §11.12.1, §11.12.3, §13.9, §13.17.6 i §14.3. Puna ocjena i dalje dijeli `ranking_position` i preskače zauzeta mjesta, uključujući `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`. Unutar grupe prikaz je `započinjanje`, pa `razvoj`, pa stabilan ID. Taj redoslijed ne mijenja bodove ni rang i nije prednost finansiranja. Isti rang ne rezerviše traženi iznos. Odbijanje otpočinjanja nakon podrške razvoju istog ranga nije 403 zbog faze. 403 zaključane odluke, budžet, traženi iznos, rezervacija strogo višeg ranga, tri ekrana i završni tok ostaju. Istorijski red KN-PATCH-TS-014 ostaje. Nema nove tabele ni migracije. |
 | 1.0.28 | 2026-11-08 | ŽP-PM-RANK-01, završno usklađivanje reference. Važeći pokazivač u zaglavlju sada je KN-FS-002 v1.0.32. KN-BM-002 v1.0.26 ostaje. Istorijski red v1.0.27 ostaje neizmijenjen i i dalje bilježi tadašnji pokazivač KN-FS-002 v1.0.31. Opis rangiranja i odlučivanja nije mijenjan. |
 | 1.0.29 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27 i KN-FS-002 v1.0.33. §6.5 i §6.8: `business_plans.summary` je obavezan za PM pri čuvanju popunjenog M2 i pri konačnom podnošenju. Provjera je prije `confirm_incomplete_forms` i `confirm_missing_documents`. Kolona ostaje nullable zbog nacrta. §6.8 više ne tretira praznu tabelu nabavki tačke 22 kao blokadu; tačka 22 ostaje neobavezna (`BM-ML-028`). Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.30 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28 i KN-FS-002 v1.0.34. §10.11 i §13.9 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Identifikatori, zajednički uslov +1, profilni uslov +2 i ograničenje +3 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2408,9 +2409,9 @@ Izvor: `BM-ML-041`.
 
 Dodatni bodovi profila mladih, prema `BM-ML-042` i `KN-FS-002` Poglavlju 17:
 
-* **+1** — potvrđeno prisustvo Info danu **i** obuci za pisanje biznis plana; jedno prisustvo nije dovoljno; predsjednik evidentira bod tek uz obje potvrde organizatora;
-* **+2** — fizičko lice koje tek planira registraciju biznisa;
-* **+3** — jedna potvrđena inovativna i/ili zelena kategorija iz člana 20; ne dodjeljuje se 3+3 za istu ideju.
+* **+1** — Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod); jedno prisustvo nije dovoljno; predsjednik evidentira bod tek uz obje potvrde organizatora;
+* **+2** — Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda); bod i dalje pripada fizičkom licu koje tek planira registraciju biznisa;
+* **+3** — Biznis ideja je startup (inovativni tehnološki biznis) (3 boda); i dalje jedna potvrđena inovativna i/ili zelena kategorija iz člana 20; ne dodjeljuje se 3+3 za istu ideju.
 
 Maksimum dodatnih bodova je **6**. Ne preuzima se ženski bod Zavoda ni ženski maksimum 8.
 
@@ -3219,9 +3220,9 @@ Ponovo se koristi `evaluation_scores`. Živi katalog je deset `criterion_*` kolo
 | Zaključavanje | svih deset kriterijuma popunjeno | da uz profilni servis | `evaluation_scores.completed_at` **nije** obavezna kolona | zaključano se ne mijenja |
 | Usmeno — termin | `interview_scheduled_at` | kolona može ostati istorijski | Digital **ne** zakazuje usmeno | Platforma ne izmišlja termin |
 | Usmeno — završetak, nedolazak, prisustvo tri člana | istorijski `application_oral_presentations` | ne kao kapija | **nema** nove tabele ni migracije; stari redovi se ne brišu | nema automatske eliminacije; sva tri aktivna člana poslovno; ocjenjivanje nije zatvoreno zbog odsustva zapisa |
-| Dodatni +1 Info dan i obuka | `bonus_info_day`, `bonus_training` | da, **zajedno** | profilni servis dodaje +1 samo ako su **oba** true | ne ženski info-dan sam |
-| Dodatni +2 planirana registracija | `bonus_new_business` | da | profilno značenje BM-ML-042 | ne ženski „novi biznis“ izvan pravila mladih |
-| Dodatni +3 inovativno/zeleno | `bonus_green_innovative` | da za bodovanje čl. 20 | maksimum jednom, ne 3+3 | **nije** izvor limita 30% iz čl. 19 |
+| Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod) | `bonus_info_day`, `bonus_training` | da, **zajedno** | profilni servis dodaje +1 samo ako su **oba** true | ne ženski info-dan sam |
+| Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda) | `bonus_new_business` | da | profilno značenje BM-ML-042 | ne ženski „novi biznis“ izvan pravila mladih |
+| Biznis ideja je startup (inovativni tehnološki biznis) (3 boda) | `bonus_green_innovative` | da za bodovanje čl. 20 | maksimum jednom, ne 3+3 | **nije** izvor limita 30% iz čl. 19 |
 | Bod Zavoda | `bonus_zavod_nezaposleni` | kolona ostaje za `zensko` | profil mladih **ne čita** ovu kolonu | maksimum dodatnih 6, ne 8 |
 | Konačni bodovi | `final_score` `decimal(5,2)` | da kao prikaz/sačuvani rezultat | **ne** širiti kolonu u ovom nacrtu; prag i rang iz izvornih ocjena | puna vrijednost za prag i rang; prikaz 2 decimale |
 | Rang `1, 2, 2, 4` | `ranking_position` | da, integer može čuvati isti broj na dvije prijave | **nema** nove kolone; mijenja se algoritam | nema ID/vrijeme/abeceda tie-breaka |
