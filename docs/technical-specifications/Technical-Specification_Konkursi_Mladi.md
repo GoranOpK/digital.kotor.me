@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.28
+**Verzija:** 1.0.29
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.26** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.27** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.32** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.33** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -66,6 +66,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.26 | 2026-11-07 | Usaglašavanje Poglavlja 9, §13.8 i §14.8 sa KN-BM-002 v1.0.25 i KN-FS-002 v1.0.30, PM-PRIG-01. `OM-PRIGOVOR-SHARED-v1` sa ključem `text` čuva se u postojećoj koloni `obrazlozenje`. Istorijski `OM-PRIGOVOR-v1` ostaje čitljiv i ne određuje odluku. Jedna odluka na jednom zapisu izvodi `criterion_N_remaining` kao `false`, `true` ili `null`. Nema nove tabele ni migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.27 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-002 v1.0.26 i KN-FS-002 v1.0.31. Važeći opis je u §11.1, §11.2, §11.4, §11.5, §11.6, §11.7, §11.11, §11.12.1, §11.12.3, §13.9, §13.17.6 i §14.3. Puna ocjena i dalje dijeli `ranking_position` i preskače zauzeta mjesta, uključujući `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`. Unutar grupe prikaz je `započinjanje`, pa `razvoj`, pa stabilan ID. Taj redoslijed ne mijenja bodove ni rang i nije prednost finansiranja. Isti rang ne rezerviše traženi iznos. Odbijanje otpočinjanja nakon podrške razvoju istog ranga nije 403 zbog faze. 403 zaključane odluke, budžet, traženi iznos, rezervacija strogo višeg ranga, tri ekrana i završni tok ostaju. Istorijski red KN-PATCH-TS-014 ostaje. Nema nove tabele ni migracije. |
 | 1.0.28 | 2026-11-08 | ŽP-PM-RANK-01, završno usklađivanje reference. Važeći pokazivač u zaglavlju sada je KN-FS-002 v1.0.32. KN-BM-002 v1.0.26 ostaje. Istorijski red v1.0.27 ostaje neizmijenjen i i dalje bilježi tadašnji pokazivač KN-FS-002 v1.0.31. Opis rangiranja i odlučivanja nije mijenjan. |
+| 1.0.29 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27 i KN-FS-002 v1.0.33. §6.5 i §6.8: `business_plans.summary` je obavezan za PM pri čuvanju popunjenog M2 i pri konačnom podnošenju. Provjera je prije `confirm_incomplete_forms` i `confirm_missing_documents`. Kolona ostaje nullable zbog nacrta. §6.8 više ne tretira praznu tabelu nabavki tačke 22 kao blokadu; tačka 22 ostaje neobavezna (`BM-ML-028`). Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1185,6 +1186,7 @@ Svaka prijava ima **jedan** poslovni plan (`BM-ML-014`).
 M2:
 
 * ima obavezna polja prema FS;
+* tačka 5, Rezime, čuva se u `business_plans.summary` (`text`, nullable); za PM vrijednost je obavezna kada se obrazac čuva kao popunjen i pri konačnom podnošenju; `null` i tekst od samih razmaka nisu popunjen Rezime; nacrt se čuva i sa praznim poljem, zato kolona ostaje nullable i nema migracije; ženski konkurs ovu obavezu ne dobija;
 * tačka 7 nije obavezna; prazan odgovor ne blokira podnošenje; ako je popunjena, vrijednost mora biti jedan od dozvoljenih odgovora; ako je „Drugo“, obavezan je tekst prije konačnog podnošenja (`BM-ML-027`; §8.6.5–8.6.6);
 * tabela nabavki nije obavezna i nije nova tačka; prazna tabela ne blokira podnošenje (`BM-ML-028`; §8.6.7; §8.6.9);
 * kada postoje unesene stavke, Platforma računa `UKUPNO` njihova zbira (§8.6.8);
@@ -1233,7 +1235,9 @@ Izvor: `BM-ML-030`–`BM-ML-032`; `BM-ML-055`.
 
 Prije podnošenja Platforma:
 
-* blokira ako nedostaju obavezna polja M1 i M2, uključujući praznu tabelu nabavki (`BM-ML-022`; §10.5.1; §8.6.9);
+* blokira ako nedostaju obavezna polja M1 i M2 (`BM-ML-022`; §10.5.1);
+* prazna tabela nabavki u tački 22 ne blokira konačno podnošenje (`BM-ML-028`; §8.6.7; §8.6.9);
+* za PM blokira prazan `business_plans.summary` prije `confirm_incomplete_forms` i `confirm_missing_documents`; obje potvrde zajedno ne zaobilaze Rezime; neuspjeh ostavlja prijavu `draft`; kolona ostaje nullable zbog nacrta;
 * **ne** blokira planirano društvo zbog odsustva PIB/CRPS/company-block (§10.5.1);
 * blokira registrovano društvo ako company-block nije popunjen;
 * za nedostajuće obavezne priloge **upozorava**, ali ne donosi konačnu odluku Komisije, kada FS tako propisuje (`BM-ML-022`; §10.5.2);

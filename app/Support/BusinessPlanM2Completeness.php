@@ -57,6 +57,11 @@ class BusinessPlanM2Completeness
             $missing[] = 'finances_notice_confirmed';
         }
 
+        $plan->loadMissing('application.competition');
+        if ($plan->application?->isOmladinskoProfile() && ! self::present($plan->summary)) {
+            $missing[] = 'summary';
+        }
+
         return $missing;
     }
 

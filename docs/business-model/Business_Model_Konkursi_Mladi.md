@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.26
+**Verzija:** 1.0.27
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
@@ -15,9 +15,9 @@ Povezani dokumenti:
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.31** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.33** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.26** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.29** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -80,6 +80,7 @@ Povezani dokumenti:
 | 1.0.24 | 2026-11-05 | Usaglašavanje BM-ML-045 i BM-ML-054, PM-ALIGN-02A-1. Preliminarna rang-lista ostaje interna. Konačna rang-lista Komisije dostupna je učesniku sa podnesenom prijavom na tom omladinskom konkursu, samo za čitanje, kada je lista konačna, Word predlog generisan i konkurs zatvoren statusom completed. Prikaz nosi naziv „Konačna rang-lista Komisije“ i šest podataka. Pristup tuđoj prijavi, pojedinačnim ocjenama i Word predlogu ostaje zabranjen. Postupak Komisije, Word predlog i postupak Sekretarijata nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.25 | 2026-11-07 | Usaglašavanje BM-ML-036 i povezanih rečenica BM-ML-003, BM-ML-020, BM-ML-037 i BM-ML-043, PM-PRIG-01. Jedan prigovor obuhvata sve aktivirane eliminatorne kriterijume i ima jedno zajedničko obavezno obrazloženje. Komisija razmatra sve aktivirane razloge i donosi jednu odluku: prihvaćen ostavlja prijavu `submitted`, odbijen je vodi u `rejected`. Djelimično prihvatanje nije predviđeno. Rokovi od tri i sedam dana i jedan prigovor po obavještenju ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.26 | 2026-11-08 | ŽP-PM-RANK-01, BM-ML-046 i BM-ML-048. Jednak pun rezultat i dalje dijeli rang-poziciju. U prikazu grupe otpočinjanje je ispred razvoja. Taj redoslijed nije prednost pri dodjeli sredstava. Predsjednik i dalje ručno unosi zaključak i iznos. Poseban završni tok mladih, limiti 30/20/15 kao obaveza predsjednika i automatska konačnost liste ostaju. MMSP nije diran. |
+| 1.0.27 | 2026-11-08 | PM-M2-05. Tačka 5 obrasca M2, Rezime, obavezna je za status „Popunjen“ i za konačno podnošenje omladinske prijave. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Potvrda nepotpunih obrazaca i potvrda nedostajućih priloga ne mogu zaobići ovu obavezu. Tačke 7 i 22 ostaju neobavezne. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -978,7 +979,7 @@ Namjera neregistrovanog fizičkog lica, tip prijave, poslovna faza i M1 obrazac 
 
 ### BM-ML-022 — Kontrola prije podnošenja
 
-Prije konačnog podnošenja odgovarajući obrazac M1a ili M1b i obrazac M2 moraju imati popunjena obavezna polja.
+Prije konačnog podnošenja odgovarajući obrazac M1a ili M1b i obrazac M2 moraju imati popunjena obavezna polja. Tačka 5 obrasca M2, Rezime, spada u ta obavezna polja za omladinsku prijavu. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Potvrda nepotpunih obrazaca i potvrda nedostajućih priloga ne mogu zaobići prazan Rezime. Tačke 7 i 22 ostaju neobavezne.
 
 Za neregistrovano fizičko lice koje planira osnivanje privrednog društva, nedostatak PIB-a, CRPS broja, registrovanog sjedišta i formalnih podataka o osnivaču i izvršnom direktoru ne blokira konačno podnošenje i ne čini obrazac nepopunjenim. Za registrovano privredno društvo ti podaci ostaju obavezni prema `BM-ML-012`.
 
@@ -1113,6 +1114,16 @@ Raniji zahtjev da se na M1a i M1b vode oblast i djelatnost kao dva odvojena obav
 **Izvor:** obrasci M1a i M1b; odobreno rješenje pitanja 15 iz Poglavlja 4; odluka od 2026-11-05.
 
 ## 9.4. Posebna pravila obrasca M2
+
+### Tačka 5 — Rezime
+
+Rezime je obavezan za kompletiranje obrasca M2 i za konačno podnošenje omladinske prijave. Obrazac M2 bez Rezimea nema status „Popunjen“. Tekst koji sadrži samo razmake smatra se praznim.
+
+Nacrt se smije sačuvati i kada Rezime nije unesen. Neuspješno konačno podnošenje ostavlja prijavu u pripremi.
+
+Potvrda da obrasci nijesu potpuni i potvrda da nedostaju prilozi ne mogu zamijeniti Rezime. Tačke 7 i 22 ostaju neobavezne.
+
+**Izvor:** obrazac M2, tačka 5; odluka PM-M2-05 od 2026-11-08.
 
 ### BM-ML-027 — Jednostruki izbor u tački 7 obrasca M2
 

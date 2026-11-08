@@ -8,6 +8,7 @@ use App\Models\Competition;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\BusinessPlanM2Completeness;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -137,7 +138,7 @@ class BusinessPlanSaveRedirectAndNoticeTest extends TestCase
             ->assertDontSee(self::NOTICE, false);
     }
 
-    public function test_pm_incomplete_form_confirmation_and_zp_submit_stay_unchanged(): void
+    public function test_pm_empty_summary_blocks_submit_and_zp_submit_stays_unchanged(): void
     {
         [$pmOwner, $pm] = $this->application('omladinsko');
         BusinessPlan::create([
@@ -151,15 +152,85 @@ class BusinessPlanSaveRedirectAndNoticeTest extends TestCase
             'finances_notice_confirmed' => true,
         ]);
         $this->assertTrue($pm->fresh()->isObrazacComplete());
+        $this->assertNull($pm->fresh()->businessPlan->summary);
         $this->assertFalse($pm->fresh()->businessPlan->isComplete());
+        $this->assertFalse(BusinessPlanM2Completeness::hasRequiredAsterisks($pm->fresh()->businessPlan));
 
+        $draftPage = $this->actingAs($pmOwner)
+            ->get(route('applications.show', $pm))
+            ->assertOk()
+            ->getContent();
+        $this->assertMatchesRegularExpression('/>\s*Nacrt\s*</', $draftPage);
+        $this->assertDoesNotMatchRegularExpression('/>\s*Popunjen\s*</', $draftPage);
+        $this->assertStringNotContainsString(self::NOTICE, $draftPage);
+
+        foreach ([
+            ['confirm_missing_documents' => '1'],
+            ['confirm_incomplete_forms' => '1'],
+            [
+                'confirm_incomplete_forms' => '1',
+                'confirm_missing_documents' => '1',
+            ],
+        ] as $payload) {
+            $this->actingAs($pmOwner)
+                ->post(route('applications.final-submit', $pm), $payload)
+                ->assertSessionHasErrors([
+                    'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
+                ]);
+            $this->assertSame('draft', $pm->fresh()->status);
+        }
+
+        $pm->businessPlan->update(['summary' => '   ']);
+        $this->assertFalse($pm->fresh()->businessPlan->isComplete());
         $this->actingAs($pmOwner)
             ->post(route('applications.final-submit', $pm), [
                 'confirm_incomplete_forms' => '1',
                 'confirm_missing_documents' => '1',
             ])
-            ->assertSessionHasErrors('error');
+            ->assertSessionHasErrors([
+                'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
+            ]);
         $this->assertSame('draft', $pm->fresh()->status);
+
+        $pm->businessPlan->update(['summary' => 'Rezime ideje']);
+        $this->assertTrue($pm->fresh()->businessPlan->isComplete());
+        $this->assertTrue(BusinessPlanM2Completeness::hasRequiredAsterisks($pm->fresh()->businessPlan));
+        $filledPage = $this->actingAs($pmOwner)
+            ->get(route('applications.show', $pm))
+            ->assertOk()
+            ->getContent();
+        $this->assertMatchesRegularExpression('/>\s*Popunjen\s*</', $filledPage);
+        $this->actingAs($pmOwner)
+            ->post(route('applications.final-submit', $pm), [
+                'confirm_missing_documents' => '1',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('omladinsko_confirm_incomplete_forms');
+        $this->assertSame('submitted', $pm->fresh()->status);
+
+        [$blockedOwner, $blocked] = $this->application('omladinsko');
+        BusinessPlan::create([
+            'application_id' => $blocked->id,
+            'business_idea_name' => null,
+            'applicant_name' => $blockedOwner->name,
+            'applicant_jmbg' => '0101990123456',
+            'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+            'applicant_phone' => '067000000',
+            'applicant_email' => $blockedOwner->email,
+            'summary' => 'Sažetak ne zamjenjuje obavezni naziv.',
+            'finances_notice_confirmed' => true,
+        ]);
+        $this->assertFalse($blocked->fresh()->businessPlan->isComplete());
+        $this->assertFalse(BusinessPlanM2Completeness::hasRequiredAsterisks($blocked->fresh()->businessPlan));
+        $this->actingAs($blockedOwner)
+            ->post(route('applications.final-submit', $blocked), [
+                'confirm_incomplete_forms' => '1',
+                'confirm_missing_documents' => '1',
+            ])
+            ->assertSessionHasErrors([
+                'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
+            ]);
+        $this->assertSame('draft', $blocked->fresh()->status);
 
         [$zpOwner, $zp] = $this->application('zensko');
         BusinessPlan::create([
@@ -177,6 +248,10 @@ class BusinessPlanSaveRedirectAndNoticeTest extends TestCase
             'finances_notice_confirmed' => true,
         ]);
         $this->assertTrue($zp->fresh()->isObrazacComplete());
+        $zp->businessPlan->update(['summary' => null]);
+        $this->assertNull($zp->fresh()->businessPlan->summary);
+        $this->assertTrue($zp->fresh()->businessPlan->isComplete());
+        $this->assertTrue(BusinessPlanM2Completeness::hasRequiredAsterisks($zp->fresh()->businessPlan));
 
         $this->actingAs($zpOwner)
             ->post(route('applications.final-submit', $zp))

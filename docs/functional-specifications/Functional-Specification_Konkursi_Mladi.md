@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.32
+**Verzija:** 1.0.33
 **Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.26** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.27** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.27** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.29** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -72,6 +72,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.30 | 2026-11-07 | Usaglašavanje §4.10, §10.4, §13.5.6, §14.2, §14.3, §14.4, §14.5, §14.6.3, §14.6.5, §14.6.6, §14.6.12–§14.6.14 i sljedivosti sa KN-BM-002 v1.0.25, PM-PRIG-01. Jedno zajedničko obrazloženje i jedna odluka. Prihvaćen ostavlja prijavu `submitted`. Odbijen je vodi u `rejected`. Djelimično prihvatanje nije predviđeno. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.31 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-002 v1.0.26. Jednak pun rezultat dijeli rang. Prikaz stavlja otpočinjanje ispred razvoja i ne stvara prednost finansiranja. Ručni zaključak, iznos, budžet i završni tok mladih ostaju. Indeks ostaje 142/142. MMSP nije diran. |
 | 1.0.32 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §4.10, §20.4, §20.5, §20.6, §20.7.5, §20.7.6, §21.6 i §23.2 više ne vezuju otpočinjanje za dodjelu sredstava niti traže posebno razrješenje jednakih bodova prije konačnosti. Prikaz unutar grupe ostaje otpočinjanje pa razvoj. Primjeri ostaju `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`. Isti rang ne rezerviše sredstva. Rezervacija strogo višeg ranga, budžet, traženi iznos, tri ekrana i završni tok ostaju. Indeks ostaje 142/142. Istorijski red 1.0.31 ostaje. MMSP nije diran. |
+| 1.0.33 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27. §8.4, §8.5, §10.4 i §10.5.1: Rezime je obavezan za status „Popunjen“ i za konačno podnošenje. Nacrt se može sačuvati bez njega. Tekst od samih razmaka je prazan. Potvrde nepotpunih obrazaca i nedostajućih priloga ne zaobilaze obavezu. Tačke 7 i 22 ostaju neobavezne. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1841,7 +1842,19 @@ Sekcija dodatnih podataka (broj računa, PDV broj, website) prikazuje se prema a
 
 `M2` je zvanična oznaka forme za biznis plan.
 
-Ostala polja M2, osim tačaka 7 i 22 razrađenih ovdje, zadržavaju strukturu izvornog obrasca. Potpuni katalog tih polja prenosi se iz potvrđenog priloga, bez izmišljanja.
+Tačka 5, Rezime, obavezna je za status „Popunjen“ i za konačno podnošenje. Tačke 7 i 22 nijesu obavezne. Ostala polja M2 zadržavaju strukturu izvornog obrasca. Potpuni katalog tih polja prenosi se iz potvrđenog priloga, bez izmišljanja.
+
+### Tačka 5 — Rezime
+
+Rezime je obavezno polje omladinskog obrasca M2.
+
+* obrazac bez Rezimea nema status „Popunjen“;
+* tekst koji sadrži samo razmake smatra se praznim;
+* nacrt se može sačuvati bez Rezimea;
+* prazan Rezime blokira konačno podnošenje i prijava ostaje `draft`;
+* potvrda nepotpunih obrazaca ne može zaobići ovu obavezu;
+* potvrda nedostajućih priloga takođe ne može zaobići ovu obavezu;
+* prazne tačke 7 i 22 i dalje ne blokiraju podnošenje.
 
 ### Tačka 7
 
@@ -1890,6 +1903,7 @@ Raniji zahtjev za najmanje jednom nabavkom zamijenjen je ovom odlukom.
 | Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira preduzetnika, ili registrovani preduzetnik | prikazuje se M1a; nema ručnog izbora M1b | sistem | `BM-ML-025`; F-06 |
 | Prijava | — | prikaz M1a/M1b | neregistrovano fizičko lice koje planira društvo, ili registrovano privredno društvo (DOO, AD, OD ili KD) | prikazuje se M1b; nema ručnog izbora M1a | sistem | `BM-ML-025`; F-06 |
 | M1 | U pripremi | unos oblasti | polje „Oblast u kojoj planirate realizaciju biznis plana“ | slobodan tekst se čuva; prazna oblast dozvoljena u nacrtu; prazna oblast blokira konačno podnošenje; zasebna djelatnost se ne traži | podnosilac | `BM-ML-026` |
+| M2 tačka 5 | U pripremi | unos Rezimea | tekst nakon uklanjanja početnih i završnih razmaka | status „Popunjen“ moguć uz ostala obavezna polja; prazan ili samo razmaci nisu „Popunjen“; nacrt se čuva i bez Rezimea; konačno podnošenje bez Rezimea ostaje `draft`; potvrde nepotpunih obrazaca i nedostajućih priloga ne zaobilaze obavezu | podnosilac | `BM-ML-022` |
 | M2 tačka 7 | U pripremi | izbor odgovora | nema odgovora, ili tačno jedan dozvoljeni odgovor | prazna tačka ili izbor mogu se sačuvati; prazna tačka ne blokira podnošenje | podnosilac | `BM-ML-027` |
 | M2 tačka 7 | U pripremi | izbor `Drugo` ili nedozvoljena vrijednost | `Drugo` bez teksta, ili vrijednost van ponuđenih odgovora | konačno podnošenje blokirano; nacrt se i dalje može sačuvati | podnosilac | `BM-ML-027` |
 | M2 tačka 22 | U pripremi | dodavanje ili uklanjanje stavke | rok traje | tabela ažurirana; zbir preračunat kada postoje stavke; prazna tabela ne blokira podnošenje | podnosilac | `BM-ML-028` |
@@ -2198,7 +2212,7 @@ Prije podnošenja Platforma razdvaja (`BM-ML-022`):
 ### A. Blokiraju
 
 * prazna obavezna polja M1a/M1b, uključujući oblast;
-* prazna obavezna polja M2;
+* prazna obavezna polja M2, uključujući prazan Rezime; potvrda nepotpunih obrazaca i potvrda nedostajućih priloga ne zaobilaze prazan Rezime;
 * nije utvrđen pravni oblik;
 * nije utvrđena namjera neregistrovanog fizičkog lica, kada je potrebna;
 * nije utvrđena poslovna faza započinjanje/razvoj;
@@ -2281,7 +2295,7 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 | Objekat | Početna činjenica | Akcija/događaj | Uslov | Rezultat | Uloga | BM/F izvor |
 |---------|-------------------|----------------|-------|----------|-------|------------|
-| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, ili tačka 7 ima nedozvoljenu vrijednost ili `Drugo` bez objašnjenja, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prikazuje šta nedostaje; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora; prazna tačka 7 i prazna tačka 22 ne blokiraju; prazna oblast blokira; zasebno polje djelatnosti se ne zahtijeva | sistem | `BM-ML-022`; `BM-ML-026`; `BM-ML-027`; `BM-ML-028`; F-06 |
+| Prijava | `draft` | provjera prije podnošenja | obavezna polja prazna, uključujući prazan Rezime, ili tačka 7 ima nedozvoljenu vrijednost ili `Drugo` bez objašnjenja, ili nije utvrđen pravni oblik, namjera ili faza, ili M1 ili paket ne odgovaraju utvrđenim podacima, ili registrovano društvo nema blok podataka društva | blokirano; prijava ostaje `draft`; prikazuje šta nedostaje; potvrde nepotpunih obrazaca i nedostajućih priloga ne zaobilaze prazan Rezime; faza se ne popunjava pretpostavkom; planirano društvo se ne blokira zbog PIB-a, CRPS-a, sjedišta, osnivača ili direktora; prazna tačka 7 i prazna tačka 22 ne blokiraju; prazna oblast blokira; zasebno polje djelatnosti se ne zahtijeva | sistem | `BM-ML-022`; `BM-ML-026`; `BM-ML-027`; `BM-ML-028`; F-06 |
 | Prijava | `draft` | provjera prije podnošenja | nedostaju prateći dokumenti paketa, osim žiro računa | upozorenje i lista; podnošenje ostaje moguće | sistem | `BM-ML-022`; `BM-ML-032` |
 | Prijava | `draft` | konačna potvrda | blokirajući uslovi nijesu ispunjeni; rok traje; nema Podnesene na istom Pozivu | `draft` → `submitted`; zaključano | podnosilac | `BM-ML-023`; `BM-KN-015` |
 | Prijava | `submitted` | pokušaj izmjene, dopune, brisanja, povlačenja ili ponovnog podnošenja | — | zabranjeno | svi | `BM-ML-023` |
@@ -2292,11 +2306,11 @@ Ako prijava ostane `U pripremi` nakon isteka roka (`BM-ML-024`):
 
 ### 10.5.1 — Obavezna polja koja blokiraju
 
-**Ako:** nije utvrđen pravni oblik, namjera ili poslovna faza, prikazani M1 ne odgovara namjeri ili registrovanom obliku, prikazani paket ne odgovara utvrđenim podacima, prazna su obavezna polja M1 ili M2, tačka 7 ima nedozvoljenu vrijednost ili `Drugo` nema tekst.
+**Ako:** nije utvrđen pravni oblik, namjera ili poslovna faza, prikazani M1 ne odgovara namjeri ili registrovanom obliku, prikazani paket ne odgovara utvrđenim podacima, prazna su obavezna polja M1 ili M2, uključujući prazan Rezime, tačka 7 ima nedozvoljenu vrijednost ili `Drugo` nema tekst.
 
 **Kada:** podnosilac pokuša konačno podnošenje.
 
-**Onda:** Platforma blokira podnošenje i prikazuje šta treba popuniti odnosno utvrditi. Faza se **ne** popunjava pretpostavkom. Teritorijalni podatak **ne** blokira podnošenje sam po sebi. Nedostatak PIB-a i CRPS-a **ne** blokira planirano društvo. Registrovano društvo **mora** popuniti blok podataka društva. Prazna oblast **blokira** podnošenje. Zasebno polje djelatnosti se **ne** zahtijeva. Prazna tabela tačke 22 **ne** blokira podnošenje.
+**Onda:** Platforma blokira podnošenje i prikazuje šta treba popuniti odnosno utvrditi. Prijava ostaje `draft`. Prazan Rezime **blokira** podnošenje i potvrde nepotpunih obrazaca i nedostajućih priloga to **ne** zaobilaze. Faza se **ne** popunjava pretpostavkom. Teritorijalni podatak **ne** blokira podnošenje sam po sebi. Nedostatak PIB-a i CRPS-a **ne** blokira planirano društvo. Registrovano društvo **mora** popuniti blok podataka društva. Prazna oblast **blokira** podnošenje. Zasebno polje djelatnosti se **ne** zahtijeva. Prazna tačka 7 i prazna tabela tačke 22 **ne** blokiraju podnošenje.
 
 Izvor: `BM-ML-022`; `BM-ML-025`; `BM-ML-026`; `BM-ML-027`; `BM-ML-028`; `BM-ML-009`; `BM-ML-010`; odluka F-06.
 

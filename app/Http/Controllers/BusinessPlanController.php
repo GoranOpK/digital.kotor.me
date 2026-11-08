@@ -93,6 +93,25 @@ class BusinessPlanController extends Controller
     }
 
     /**
+     * PM Rezime je obavezan kada se obrazac čuva kao popunjen.
+     * Nacrt i ženski konkurs zadržavaju prazno polje.
+     *
+     * @return array<int, mixed>|string
+     */
+    private function summaryRules(Application $application, bool $isDraft): array|string
+    {
+        if ($isDraft || ! $application->isOmladinskoProfile()) {
+            return 'nullable|string';
+        }
+
+        return ['required', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+            if (! is_string($value) || trim($value) === '') {
+                $fail('Rezime je obavezan.');
+            }
+        }];
+    }
+
+    /**
      * Prikaz forme za popunjavanje biznis plana (Obrazac 2)
      */
     public function create(Application $application): View|RedirectResponse
@@ -470,7 +489,7 @@ class BusinessPlanController extends Controller
             'company_email' => 'nullable|email|max:255',
             'company_website' => 'nullable|string|max:255',
             'bank_account' => 'nullable|string|max:255',
-            'summary' => 'nullable|string',
+            'summary' => $this->summaryRules($application, $isDraft),
             
             // II. MARKETING
             'products_services_table' => 'nullable|array',
@@ -523,6 +542,7 @@ class BusinessPlanController extends Controller
             'applicant_email.required' => 'E-mail je obavezan.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
             'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da je napomena u dijelu IV. Finansije pročitana.',
+            'summary.required' => 'Rezime je obavezan.',
         ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->bpLog('BP_STORE: validation failed', [

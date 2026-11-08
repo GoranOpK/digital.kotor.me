@@ -184,7 +184,7 @@ class BusinessPlanM2CompletenessTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/id="seasonal_no"[^>]*\schecked/', $yes);
     }
 
-    public function test_questions_5_7_10_and_16_may_be_empty_on_submit_and_other_asterisks_still_block(): void
+    public function test_pm_summary_blocks_submit_while_points_7_10_16_and_zp_summary_stay_optional(): void
     {
         foreach (['omladinsko', 'zensko'] as $type) {
             [$owner, $application] = $this->application($type);
@@ -205,12 +205,13 @@ class BusinessPlanM2CompletenessTest extends TestCase
                 ->assertSessionHasNoErrors();
 
             $saved = $application->fresh()->businessPlan;
+            $summaryRequired = $type === 'omladinsko';
             $this->assertNull($saved->summary);
             $this->assertNull($saved->realization_type);
             $this->assertNull($saved->has_business_space);
             $this->assertNull($saved->has_seasonal_workers);
-            $this->assertTrue(BusinessPlanM2Completeness::hasRequiredAsterisks($saved));
-            $this->assertTrue($saved->isComplete());
+            $this->assertSame(! $summaryRequired, BusinessPlanM2Completeness::hasRequiredAsterisks($saved));
+            $this->assertSame(! $summaryRequired, $saved->isComplete());
 
             $this->actingAs($owner)
                 ->post(route('applications.business-plan.store', $application), [
@@ -249,17 +250,42 @@ class BusinessPlanM2CompletenessTest extends TestCase
                 'realization_type' => null,
                 'has_business_space' => null,
                 'has_seasonal_workers' => null,
+                'expense_projection' => null,
             ]);
 
-            $payload = $type === 'omladinsko' ? ['confirm_missing_documents' => '1'] : [];
-            $this->actingAs($owner)
-                ->post(route('applications.final-submit', $application), $payload)
-                ->assertSessionHasNoErrors();
-            $this->assertSame('submitted', $application->fresh()->status);
-            $this->assertNull($filled->fresh()->summary);
-            $this->assertNull($filled->fresh()->realization_type);
-            $this->assertNull($filled->fresh()->has_business_space);
-            $this->assertNull($filled->fresh()->has_seasonal_workers);
+            if ($type === 'omladinsko') {
+                $this->assertFalse($filled->fresh()->isComplete());
+                $this->assertNull($filled->fresh()->expense_projection);
+                $this->actingAs($owner)
+                    ->post(route('applications.final-submit', $application), [
+                        'confirm_incomplete_forms' => '1',
+                        'confirm_missing_documents' => '1',
+                    ])
+                    ->assertSessionHasErrors([
+                        'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
+                    ]);
+                $this->assertSame('draft', $application->fresh()->status);
+
+                $filled->update(['summary' => 'Sažetak']);
+                $this->assertTrue($filled->fresh()->isComplete());
+                $this->assertNull($filled->fresh()->realization_type);
+                $this->assertNull($filled->fresh()->expense_projection);
+                $this->actingAs($owner)
+                    ->post(route('applications.final-submit', $application), [
+                        'confirm_missing_documents' => '1',
+                    ])
+                    ->assertSessionHasNoErrors();
+                $this->assertSame('submitted', $application->fresh()->status);
+            } else {
+                $this->actingAs($owner)
+                    ->post(route('applications.final-submit', $application))
+                    ->assertSessionHasNoErrors();
+                $this->assertSame('submitted', $application->fresh()->status);
+                $this->assertNull($filled->fresh()->summary);
+                $this->assertNull($filled->fresh()->realization_type);
+                $this->assertNull($filled->fresh()->has_business_space);
+                $this->assertNull($filled->fresh()->has_seasonal_workers);
+            }
 
             [$blockedOwner, $blocked] = $this->application($type);
             $blockedPlan = $this->fullPlan($blocked, $blockedOwner);
@@ -282,6 +308,89 @@ class BusinessPlanM2CompletenessTest extends TestCase
                 session('errors')->first('error')
             );
         }
+    }
+
+    public function test_pm_completed_save_requires_summary_and_draft_may_omit_it(): void
+    {
+        [$owner, $application] = $this->application('omladinsko');
+        $identity = [
+            'has_registered_business' => '0',
+            'business_idea_name' => 'Puna ideja',
+            'applicant_name' => $owner->name,
+            'applicant_jmbg' => '0101990123456',
+            'applicant_address' => 'Njegoševa 1, 85330 Kotor',
+            'applicant_phone' => '067000000',
+            'applicant_email' => $owner->email,
+            'finances_notice_confirmed' => '1',
+        ];
+
+        $this->actingAs($owner)
+            ->post(route('applications.business-plan.store', $application), $identity + [
+                'save_as_draft' => '1',
+                'summary' => '',
+            ])
+            ->assertRedirect(route('applications.show', $application))
+            ->assertSessionHasNoErrors();
+        $this->assertNull($application->fresh()->businessPlan->summary);
+
+        $this->actingAs($owner)
+            ->post(route('applications.business-plan.store', $application), $identity + [
+                'save_as_draft' => '1',
+                'summary' => 'Sačuvan rezime',
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Sačuvan rezime', $application->fresh()->businessPlan->summary);
+
+        $this->actingAs($owner)
+            ->from(route('applications.business-plan.create', $application))
+            ->post(route('applications.business-plan.store', $application), array_merge($identity, [
+                'business_idea_name' => 'Nova ideja koja ne smije biti sačuvana',
+                'summary' => '   ',
+            ]))
+            ->assertRedirect(route('applications.business-plan.create', $application))
+            ->assertSessionHasErrors(['summary' => 'Rezime je obavezan.']);
+        $this->assertSame('Sačuvan rezime', $application->fresh()->businessPlan->summary);
+        $this->assertSame('Puna ideja', $application->fresh()->businessPlan->business_idea_name);
+        $rejected = $this->actingAs($owner)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Rezime je obavezan.', $rejected);
+        $this->assertStringContainsString('Nova ideja koja ne smije biti sačuvana', $rejected);
+        $this->assertMatchesRegularExpression(
+            '/5\. Rezime \(ukratko opišite ideju, proširite tabelu koliko je potrebno\):\s*<span class="required">\*<\/span>/',
+            $rejected
+        );
+
+        $this->actingAs($owner)
+            ->post(route('applications.business-plan.store', $application), $identity + [
+                'save_as_draft' => '1',
+                'summary' => '   ',
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($application->fresh()->businessPlan->summary);
+        $this->assertFalse($application->fresh()->businessPlan->isComplete());
+
+        [$zpOwner, $zp] = $this->application('zensko');
+        $zpIdentity = $identity;
+        $zpIdentity['applicant_name'] = $zpOwner->name;
+        $zpIdentity['applicant_email'] = $zpOwner->email;
+        $this->actingAs($zpOwner)
+            ->post(route('applications.business-plan.store', $zp), $zpIdentity + [
+                'summary' => '   ',
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertNull($zp->fresh()->businessPlan->summary);
+        $this->assertTrue($zp->fresh()->businessPlan->isComplete());
+
+        $zpForm = $this->actingAs($zpOwner)
+            ->get(route('applications.business-plan.create', $zp))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString(
+            '5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno): <span class="required">*</span>',
+            $zpForm
+        );
     }
 
     /**

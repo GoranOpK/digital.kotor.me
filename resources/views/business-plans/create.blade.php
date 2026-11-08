@@ -579,7 +579,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):
+                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):@if($isOmladinsko) <span class="required">*</span>@endif
                         </label>
                         <textarea 
                             name="summary" 

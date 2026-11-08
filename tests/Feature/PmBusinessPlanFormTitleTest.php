@@ -311,7 +311,11 @@ class PmBusinessPlanFormTitleTest extends TestCase
         $this->assertStringContainsString('1. Naziv biznis ideje:', $html);
         $this->assertStringContainsString('class="form-card no-print"', $html);
         $this->assertMatchesRegularExpression(
-            '/@media print\s*\{.*?\.no-print,\s*\n\s*button,/s',
+            '/@media print\s*\{.*?\.obrazac-form-page \.no-print\s*\{[^}]*display:\s*none !important;/s',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media print\s*\{.*?\.obrazac-form-page button\s*,/s',
             $html
         );
         $this->assertMatchesRegularExpression(
