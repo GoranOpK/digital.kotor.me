@@ -33,27 +33,18 @@ class ZpEqualScoreAllocationGateTest extends TestCase
     {
         [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 50000, requested: 30000);
 
-        // Razvoj se može unijeti prije otpočinjanja samo u iznosu koji otpočinjanju ostavlja pun zahtjev.
+        // Isti rang ne rezerviše zahtjev otpočinjanja. Već sačuvani iznos umanjuje ostatak.
         $this->actingAs($president->user)
             ->from(route('admin.competitions.ranking', $competition))
             ->post(route('evaluation.store-decision', $dev), [
                 'commission_decision' => 'podrzava_potpuno',
                 'approved_amount' => 30000,
             ])
-            ->assertRedirect(route('admin.competitions.ranking', $competition))
-            ->assertSessionHasErrors('approved_amount');
-        $this->assertNull($dev->fresh()->commission_decision);
-
-        $this->actingAs($president->user)
-            ->post(route('evaluation.store-decision', $dev), [
-                'commission_decision' => 'podrzava_potpuno',
-                'approved_amount' => 20000,
-            ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
         $this->assertSame('podrzava_potpuno', $dev->fresh()->commission_decision);
-        $this->assertSame('20000.00', $dev->fresh()->approved_amount);
+        $this->assertSame('30000.00', $dev->fresh()->approved_amount);
         $this->assertNotNull($dev->fresh()->commission_decision_locked_at);
         $this->assertNull($start->fresh()->commission_decision);
         $this->assertSame(40.0, (float) $start->fresh()->final_score);
@@ -63,17 +54,17 @@ class ZpEqualScoreAllocationGateTest extends TestCase
         $this->actingAs($president->user)
             ->from(route('admin.competitions.ranking', $competition))
             ->post(route('evaluation.store-decision', $start), [
-                'commission_decision' => 'odbija',
-                'commission_justification' => 'Odbijanje bi ostavilo samo razvoj.',
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 30000,
             ])
             ->assertRedirect(route('admin.competitions.ranking', $competition))
-            ->assertSessionHasErrors('commission_decision');
+            ->assertSessionHasErrors('approved_amount');
         $this->assertNull($start->fresh()->commission_decision);
 
         $this->actingAs($president->user)
             ->post(route('evaluation.store-decision', $start), [
-                'commission_decision' => 'podrzava_potpuno',
-                'approved_amount' => 30000,
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Komisija odbija otpočinjanje iako je razvoj već podržan.',
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();
@@ -85,25 +76,22 @@ class ZpEqualScoreAllocationGateTest extends TestCase
                 'approved_amount' => 30000,
             ])
             ->assertForbidden();
-        $this->assertSame('30000.00', $start->fresh()->approved_amount);
+        $this->assertSame('odbija', $start->fresh()->commission_decision);
+        $this->assertNull($start->fresh()->approved_amount);
     }
 
-    public function test_generate_decision_blocked_when_razvoj_funded_and_zapocinjanje_rejected(): void
+    public function test_generate_decision_allowed_when_razvoj_funded_and_zapocinjanje_rejected(): void
     {
         [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 50000, requested: 30000);
 
         $this->storeLegacyDecision($dev, 'podrzava_potpuno', '30000.00');
-        $this->storeLegacyDecision($start, 'odbija', null, 'Odbijeno uprkos prednosti započinjanja.');
+        $this->storeLegacyDecision($start, 'odbija', null, 'Odbijeno uz obrazloženje.');
 
         $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
 
         $this->actingAs($president->user)
-            ->from(route('admin.competitions.ranking', $competition))
             ->get(route('admin.competitions.decision', $competition))
-            ->assertRedirect(route('admin.competitions.ranking', $competition))
-            ->assertSessionHasErrors([
-                'error' => ZpEqualScoreAllocationGuard::STAGE_PRIORITY_VIOLATION_MESSAGE,
-            ]);
+            ->assertOk();
 
         $this->assertSame(40.0, (float) $start->fresh()->final_score);
         $this->assertSame(1, (int) $start->fresh()->ranking_position);
@@ -154,6 +142,177 @@ class ZpEqualScoreAllocationGateTest extends TestCase
         $this->actingAs($president->user)
             ->get(route('admin.competitions.decision', $competition))
             ->assertOk();
+    }
+
+    public function test_sufficient_budget_supports_both_equal_score_applications_with_manual_amounts(): void
+    {
+        [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 100000, requested: 30000);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $start), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 12500,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $dev), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 8700,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('podrzava_potpuno', $start->fresh()->commission_decision);
+        $this->assertSame('12500.00', $start->fresh()->approved_amount);
+        $this->assertSame('podrzava_potpuno', $dev->fresh()->commission_decision);
+        $this->assertSame('8700.00', $dev->fresh()->approved_amount);
+    }
+
+    public function test_sufficient_budget_allows_rejecting_startup_then_supporting_development(): void
+    {
+        [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 100000, requested: 30000);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $start), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Komisija odbija otpočinjanje iz drugog razloga.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $dev), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 15000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('odbija', $start->fresh()->commission_decision);
+        $this->assertSame('podrzava_potpuno', $dev->fresh()->commission_decision);
+        $this->assertSame('15000.00', $dev->fresh()->approved_amount);
+    }
+
+    public function test_sufficient_budget_allows_supporting_development_then_rejecting_startup(): void
+    {
+        [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 100000, requested: 30000);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $dev), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 18000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $start), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Komisija odbija otpočinjanje iako razvoj već ima iznos.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('18000.00', $dev->fresh()->approved_amount);
+        $this->assertSame('odbija', $start->fresh()->commission_decision);
+    }
+
+    public function test_rejected_startup_does_not_block_a_manual_development_amount(): void
+    {
+        [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 50000, requested: 30000);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $start), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Odbijeno otpočinjanje pri nedovoljnom budžetu.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $dev), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 20000,
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('podrzava_potpuno', $dev->fresh()->commission_decision);
+        $this->assertSame('20000.00', $dev->fresh()->approved_amount);
+        $this->assertSame('odbija', $start->fresh()->commission_decision);
+    }
+
+    public function test_insufficient_budget_still_allows_rejecting_both_applications(): void
+    {
+        [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 50000, requested: 30000);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $start), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Odbijeno otpočinjanje.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $dev), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Odbijen i razvoj.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('odbija', $start->fresh()->commission_decision);
+        $this->assertSame('odbija', $dev->fresh()->commission_decision);
+    }
+
+    public function test_different_ranks_do_not_apply_equal_score_startup_priority_and_keep_the_twenty_percent_cap(): void
+    {
+        [$competition, $members, $president, $apps] = $this->completeCycleWithUniformCriteria([
+            [5, 5, 5, 5, 5, 5, 5, 5, 5, 5], // 50
+            [4, 4, 4, 4, 4, 4, 4, 4, 4, 4], // 40
+        ]);
+        $competition->update(['budget' => 100000]);
+        $higher = $apps[0]->fresh();
+        $lower = $apps[1]->fresh();
+        $higher->update([
+            'business_stage' => 'razvoj',
+            'requested_amount' => 30000,
+            'bonus_green_innovative' => true,
+        ]);
+        $lower->update([
+            'business_stage' => 'započinjanje',
+            'requested_amount' => 30000,
+        ]);
+        $this->assertNotSame((int) $higher->fresh()->ranking_position, (int) $lower->fresh()->ranking_position);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $lower), [
+                'commission_decision' => 'odbija',
+                'commission_justification' => 'Niži rang se odbija posebno.',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($president->user)
+            ->from(route('admin.competitions.ranking', $competition))
+            ->post(route('evaluation.store-decision', $higher), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 25000,
+            ])
+            ->assertRedirect(route('admin.competitions.ranking', $competition))
+            ->assertSessionHasErrors('approved_amount');
+        $this->assertNull($higher->fresh()->commission_decision);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $higher), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 6400,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('podrzava_potpuno', $higher->fresh()->commission_decision);
+        $this->assertSame('6400.00', $higher->fresh()->approved_amount);
+        $this->assertSame('odbija', $lower->fresh()->commission_decision);
     }
 
     public function test_new_decision_blocks_when_winner_identity_is_missing_and_archive_view_stays_open(): void
@@ -269,7 +428,57 @@ class ZpEqualScoreAllocationGateTest extends TestCase
         $this->assertNull($guard->blockReason($competition->fresh()));
     }
 
-    public function test_close_competition_blocked_on_stage_priority_violation(): void
+    public function test_ranking_page_and_decision_list_show_startup_before_development_at_the_same_rank(): void
+    {
+        [$competition, $president, $lowerIdStartup, $higherIdDevelopment] = $this->equalScoreMixedStagePair(budget: 100000, requested: 1000);
+        $lowerIdStartup->update([
+            'business_stage' => 'razvoj',
+            'business_plan_name' => 'Razvoj prije po identifikatoru',
+        ]);
+        $higherIdDevelopment->update([
+            'business_stage' => 'započinjanje',
+            'business_plan_name' => 'Otpočinjanje poslije po identifikatoru',
+        ]);
+        $this->assertGreaterThan($lowerIdStartup->id, $higherIdDevelopment->id);
+        $this->assertSame(1, (int) $lowerIdStartup->fresh()->ranking_position);
+        $this->assertSame(1, (int) $higherIdDevelopment->fresh()->ranking_position);
+
+        $ranking = $this->actingAs($president->user)
+            ->get(route('admin.competitions.ranking', $competition))
+            ->assertOk();
+        $rankingBody = $ranking->getContent();
+        $startupAt = strpos($rankingBody, 'Otpočinjanje poslije po identifikatoru');
+        $developmentAt = strpos($rankingBody, 'Razvoj prije po identifikatoru');
+        $this->assertNotFalse($startupAt);
+        $this->assertNotFalse($developmentAt);
+        $this->assertLessThan($developmentAt, $startupAt);
+
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $higherIdDevelopment), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 700,
+            ])
+            ->assertSessionHasNoErrors();
+        $this->actingAs($president->user)
+            ->post(route('evaluation.store-decision', $lowerIdStartup), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 400,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $listed = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)
+            ->articleOneApplications($competition)
+            ->pluck('business_plan_name')
+            ->all();
+        $this->assertSame([
+            'Otpočinjanje poslije po identifikatoru',
+            'Razvoj prije po identifikatoru',
+        ], $listed);
+        $this->assertSame('700.00', $higherIdDevelopment->fresh()->approved_amount);
+        $this->assertSame('400.00', $lowerIdStartup->fresh()->approved_amount);
+    }
+
+    public function test_close_competition_is_not_blocked_by_startup_display_order(): void
     {
         [$competition, $president, $start, $dev] = $this->equalScoreMixedStagePair(budget: 50000, requested: 30000);
 
@@ -280,9 +489,9 @@ class ZpEqualScoreAllocationGateTest extends TestCase
             ->from(route('admin.competitions.show', $competition))
             ->post(route('admin.competitions.close', $competition))
             ->assertRedirect()
-            ->assertSessionHasErrors([
-                'error' => ZpEqualScoreAllocationGuard::STAGE_PRIORITY_VIOLATION_MESSAGE,
-            ]);
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('completed', $competition->fresh()->status);
     }
 
     private function storeLegacyDecision(

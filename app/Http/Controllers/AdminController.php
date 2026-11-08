@@ -1493,7 +1493,7 @@ class AdminController extends Controller
             return $this->closeOmladinskoCompetition($competition);
         }
 
-        // §13.6: ne finalizovati konkurs sa raspodjelom koja krši prednost započinjanja (ŽP).
+        // Jednak broj bodova ne nameće primaoca sredstava. Ostaje kontrola obrazloženja iste faze.
         $equalScoreBlock = app(\App\Services\Competitions\ZpEqualScoreAllocationGuard::class)
             ->blockReason($competition);
         if ($equalScoreBlock !== null) {
@@ -3127,62 +3127,39 @@ class AdminController extends Controller
         if ($isArchivedCompetition) {
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())
-                ->sort(function ($a, $b) {
-                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
-
-                    if ($aPos !== $bPos) {
-                        return $aPos <=> $bPos;
-                    }
-
-                    // Fallback za stare zapise bez ranking_position.
-                    $aScore = (float) ($a->final_score ?? 0);
-                    $bScore = (float) ($b->final_score ?? 0);
-                    if ($aScore !== $bScore) {
-                        return $bScore <=> $aScore;
-                    }
-
-                    return $a->id <=> $b->id;
-                })
+                ->sort(fn ($a, $b) => \App\Support\EqualScoreDisplayOrder::compareRanked($a, $b))
                 ->values();
 
             $belowLineApplications = $visibleApplications
                 ->filter(fn ($app) => ! $app->meetsMinimumScore())
                 ->sort(function ($a, $b) {
-                    $aScore = (float) ($a->final_score ?? 0);
-                    $bScore = (float) ($b->final_score ?? 0);
-                    if ($aScore !== $bScore) {
-                        return $bScore <=> $aScore;
-                    }
-
-                    return $a->id <=> $b->id;
+                    return \App\Support\EqualScoreDisplayOrder::compareByScore(
+                        $a,
+                        $b,
+                        (string) ($a->final_score ?? '0'),
+                        (string) ($b->final_score ?? '0'),
+                        2,
+                    );
                 })
                 ->values();
         } else {
             // Iznad crte: 30+ bodova, poredak iz ciklusa finalizacije (bez upisa na GET)
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())
-                ->sort(function ($a, $b) {
-                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
-
-                    if ($aPos !== $bPos) {
-                        return $aPos <=> $bPos;
-                    }
-
-                    $aScore = (float) ($a->final_score ?? 0);
-                    $bScore = (float) ($b->final_score ?? 0);
-                    if ($aScore !== $bScore) {
-                        return $bScore <=> $aScore;
-                    }
-
-                    return $a->id <=> $b->id;
-                })
+                ->sort(fn ($a, $b) => \App\Support\EqualScoreDisplayOrder::compareRanked($a, $b))
                 ->values();
 
             $belowLineApplications = $visibleApplications
                 ->filter(fn ($app) => ! $app->meetsMinimumScore())
-                ->sortByDesc('final_score')
+                ->sort(function ($a, $b) {
+                    return \App\Support\EqualScoreDisplayOrder::compareByScore(
+                        $a,
+                        $b,
+                        (string) ($a->final_score ?? '0'),
+                        (string) ($b->final_score ?? '0'),
+                        2,
+                    );
+                })
                 ->values();
         }
 
@@ -3433,7 +3410,9 @@ class AdminController extends Controller
                 ->with(['user.identity.legalEntity'])
                 ->orderBy('ranking_position')
                 ->orderBy('id')
-                ->get();
+                ->get()
+                ->sort(fn ($left, $right) => \App\Support\EqualScoreDisplayOrder::compareRanked($left, $right))
+                ->values();
 
         $lines = [];
         foreach ($winners as $winner) {

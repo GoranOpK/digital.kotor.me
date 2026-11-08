@@ -7,15 +7,15 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.25
-**Datum:** 2026-11-07
+**Verzija:** 1.0.26
+**Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.30** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.31** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.26** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
@@ -79,6 +79,7 @@ Povezani dokumenti:
 | 1.0.23 | 2026-11-05 | Usaglašavanje BM-ML-026 i pitanja 15. Obrasci M1a i M1b sadrže polje „Oblast u kojoj planirate realizaciju biznis plana“. Oblast je slobodan tekst, obavezna prije konačnog podnošenja, a nacrt se može sačuvati bez nje. Ne uvodi se dodatno polje djelatnosti, šifra ni šifrarnik. Raniji zahtjev za zasebnom djelatnošću zamijenjen je ovom odlukom i ostaje istorijski zapis: „U obrascima M1a i M1b vode se oblast i djelatnost kao dva odvojena obavezna polja sa slobodnim tekstualnim unosom. Oblast predstavlja pretežnu oblast realizacije biznis plana, a djelatnost konkretniju planiranu djelatnost. Polje djelatnost dodaje se u M1. Šifra djelatnosti se ne uvodi i ne koristi se šifrarnik.“ Tačka 7, tačka 22, ŽP i MMSP nijesu dirani. |
 | 1.0.24 | 2026-11-05 | Usaglašavanje BM-ML-045 i BM-ML-054, PM-ALIGN-02A-1. Preliminarna rang-lista ostaje interna. Konačna rang-lista Komisije dostupna je učesniku sa podnesenom prijavom na tom omladinskom konkursu, samo za čitanje, kada je lista konačna, Word predlog generisan i konkurs zatvoren statusom completed. Prikaz nosi naziv „Konačna rang-lista Komisije“ i šest podataka. Pristup tuđoj prijavi, pojedinačnim ocjenama i Word predlogu ostaje zabranjen. Postupak Komisije, Word predlog i postupak Sekretarijata nijesu dirani. ŽP i MMSP nijesu dirani. |
 | 1.0.25 | 2026-11-07 | Usaglašavanje BM-ML-036 i povezanih rečenica BM-ML-003, BM-ML-020, BM-ML-037 i BM-ML-043, PM-PRIG-01. Jedan prigovor obuhvata sve aktivirane eliminatorne kriterijume i ima jedno zajedničko obavezno obrazloženje. Komisija razmatra sve aktivirane razloge i donosi jednu odluku: prihvaćen ostavlja prijavu `submitted`, odbijen je vodi u `rejected`. Djelimično prihvatanje nije predviđeno. Rokovi od tri i sedam dana i jedan prigovor po obavještenju ostaju. ŽP i MMSP nijesu dirani. |
+| 1.0.26 | 2026-11-08 | ŽP-PM-RANK-01, BM-ML-046 i BM-ML-048. Jednak pun rezultat i dalje dijeli rang-poziciju. U prikazu grupe otpočinjanje je ispred razvoja. Taj redoslijed nije prednost pri dodjeli sredstava. Predsjednik i dalje ručno unosi zaključak i iznos. Poseban završni tok mladih, limiti 30/20/15 kao obaveza predsjednika i automatska konačnost liste ostaju. MMSP nije diran. |
 
 Napomena:
 
@@ -1906,30 +1907,21 @@ Ovo pravilo ne određuje trenutak javnog objavljivanja rang-liste ili službenih
 
 Prijave sa istim tačnim, nezaokruženim brojem bodova dijele istu rang-poziciju.
 
-Numeracija koristi obrazac:
+Numeracija preskače zauzeta mjesta. Primjeri:
 
-`1, 2, 2, 4`
+`1, 2, 3, 4, 4, 6`
 
-Isti obrazac važi za cijelu sortiranu rang-listu, uključujući prijave ispod 30 bodova. Dijeljeno mjesto ispod praga zadržava rang i automatski `rejected`. Za te prijave se ne pokreće zaključivanje ni glasanje i to mjesto ne predstavlja neriješenu grupu za raspodjelu sredstava niti blokira konačnost liste. Izjednačenje za raspodjelu ostaje samo za prijave sa najmanje 30 bodova.
+`1, 2, 3, 4, 4, 4, 7`
 
-Redosljed tehničkog prikaza unutar iste rang-pozicije ne daje prednost pri dodjeli sredstava.
+Isti obrazac važi za cijelu sortiranu rang-listu, uključujući prijave ispod 30 bodova. Dijeljeno mjesto ispod praga zadržava rang i automatski `rejected`. Za te prijave se ne pokreće zaključivanje i to mjesto ne blokira konačnost liste.
 
-Izjednačenje za raspodjelu sredstava postoji kada su istovremeno ispunjena sva tri uslova, i samo za prijave sa najmanje 30 bodova:
+Unutar grupe sa istim punim rezultatom prikaz je: prvo otpočinjanje (`business_stage` = započinjanje, `BM-ML-010`), zatim razvoj (`business_stage` = razvoj), zatim stabilan tehnički redoslijed prijava iste faze. Bodovi i dijeljena rang-pozicija se ne mijenjaju. Isti redoslijed koriste preliminarna lista, konačna lista, ekran Komisije, štampa i dokument koji prikazuje rang.
 
-1. najmanje dvije prijave sa najmanje 30 bodova imaju isti puni, nezaokruženi rezultat i dijele rang-poziciju;
-2. raspoloživi budžet nije dovoljan za sve prijave iz relevantne izjednačene grupe;
-3. pravilo prednosti otpočinjanja samo po sebi ne određuje kompletnu raspodjelu.
+Redoslijed prikaza ne daje prednost pri dodjeli sredstava i ne određuje koje prijave moraju biti podržane.
 
-Budžetska provjera koristi zaključane iznose, traženi iznos i raspoloživi budžet konkretnog Poziva. Neriješena viša prijava rezerviše iznos do traženog, u granicama budžeta Poziva. Procenti 30/20/15 se pri tome ne računaju i ne rezerviše se 30%. Zaokruženi prikaz rezultata ne stvara izjednačenost niti prednost.
+Budžetska provjera koristi zaključane iznose, traženi iznos i raspoloživi budžet konkretnog Poziva. Neriješena prijava strogo višeg ranga rezerviše iznos do traženog, u granicama budžeta Poziva. Prijava istog ranga, uključujući otpočinjanje, ne rezerviše sredstva drugoj prijavi. Procenti 30/20/15 se pri tome ne računaju i ne rezerviše se 30%. Zaokruženi prikaz rezultata ne stvara izjednačenost.
 
-Prednost otpočinjanja primjenjuje se **prije** raspodjele:
-
-1. Prijave za otpočinjanje biznisa imaju prednost nad prijavama za razvoj. Prednost se utvrđuje prema poslovnoj fazi iz `BM-ML-010` (`započinjanje` nad `razvoj`).
-2. Ako raspoloživi budžet pokriva sve prijave prioritetne kategorije, prednost se primjenjuje bez posebne radnje.
-3. Ako budžet ne pokriva sve prijave prioritetne kategorije — uključujući slučaj da su sve izjednačene prijave iste kategorije, ili da ima više prijava otpočinjanja nego što budžet može pokriti — predsjednik za svaku prijavu unosi pojedinačni zaključak: podršku u preostalom iznosu ili odbijanje, prema `BM-ML-048`.
-4. Razvoj se **ne** bira automatski umjesto prioritetne prijave čiji iznos ne staje u ostatak. Iznos koji ne staje odbija se prije upisa. Dozvoljeni iznos unosi se prvim čuvanjem, uz obavezno obrazloženje za smanjeni iznos iz `BM-ML-048`. Zaključana odluka se poslije toga ne umanjuje.
-
-Sistem ne određuje iznos podrške i ne bira dobitnike. Predsjednik u ime Komisije evidentira pojedinačni zaključak. Ne unosi kolektivne glasove i ne potvrđuje cijelu listu posebnom radnjom.
+Sistem ne određuje iznos podrške i ne bira dobitnike. Predsjednik u ime Komisije evidentira pojedinačni zaključak Podržava ili Odbija, bilo kojim redoslijedom. Iznos koji ne staje u traženi iznos ili u preostali budžet odbija se prije upisa. Odbijanje zahtijeva obrazloženje. Ne unosi kolektivne glasove i ne potvrđuje cijelu listu posebnom radnjom.
 
 Kolektivno glasanje, predmet glasa za cijelu grupu, većina 2 od 3, ponovljeni krugovi i uslov usvojenog predloga grupe iz `KN-PATCH-BM-020` i `KN-PATCH-BM-021` zamijenjeni su ovim pravilom. Istorijski redovi tih verzija ostaju i više nijesu važeći tok.
 
@@ -2031,7 +2023,7 @@ Prvo uspješno čuvanje:
 - bodovi i rang ostaju;
 - ishod, iznos i obrazloženje se zaključavaju.
 
-Predsjednik može sačuvati zaključak bilo kojim redoslijedom. Iznos koji prelazi traženi iznos ili iznos koji poslije upisa ne ostavlja zakonit završetak ne upisuje se i ne zaključava odluku. Zakonit završetak ostaje moguć kada svaka neriješena prijava višeg ranga i svaka neriješena prijava za otpočinjanje sa istim bodovima i dalje može dobiti iznos do traženog iznosa, u granicama budžeta Poziva. Procenat 30/20/15 se pri tome ne računa i ne rezerviše se 30%. Prijave istog ranga i iste faze ne rezervišu jedna drugoj pun iznos. Razvoj ne može ostati podržan ako je otpočinjanje sa istim bodovima odbijeno. Dva istovremena čuvanja dijele jednu transakciju i ne mogu zajedno preći budžet. Zaključana odluka se ne otvara ponovo.
+Predsjednik može sačuvati zaključak bilo kojim redoslijedom. Iznos koji prelazi traženi iznos ili preostali budžet ne upisuje se i ne zaključava odluku. Neriješena prijava strogo višeg ranga i dalje može dobiti iznos do traženog, u granicama budžeta Poziva. Procenat 30/20/15 se pri tome ne računa i ne rezerviše se 30%. Prijave istog ranga ne rezervišu jedna drugoj pun iznos i faza biznisa ne zabranjuje Podržava ni Odbija. Dva istovremena čuvanja dijele jednu transakciju i ne mogu zajedno preći budžet. Zaključana odluka se ne otvara ponovo. Sačuvane dozvoljene odluke ne blokiraju završetak zbog redoslijeda prikaza otpočinjanja.
 
 `remaining_after_first` računa zbir `approved_amount` prijava u statusu `approved` tek kada svaka prijava na pragu ili iznad njega ima takvu zaključanu odluku. Djelimičan skup odluka ne umanjuje ostatak. Prijave ispod praga ne traže ovu odluku.
 
@@ -2706,4 +2698,4 @@ Poglavlje evidentira konkretna poslovna pravila profila mladih. Matični normati
 
 ---
 
-**Kraj dokumenta KN-BM-002 v1.0.25**
+**Kraj dokumenta KN-BM-002 v1.0.26**

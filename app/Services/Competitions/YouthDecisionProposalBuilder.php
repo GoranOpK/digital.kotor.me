@@ -47,7 +47,9 @@ class YouthDecisionProposalBuilder
             ->with(['businessPlan', 'user.identity.legalEntity'])
             ->orderBy('ranking_position')
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->sort(fn (Application $left, Application $right): int => \App\Support\EqualScoreDisplayOrder::compareRanked($left, $right))
+            ->values();
 
         $rows = [];
         $awarded = '0.00';

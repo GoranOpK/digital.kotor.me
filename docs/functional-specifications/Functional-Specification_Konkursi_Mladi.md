@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.30
-**Datum:** 2026-11-07
+**Verzija:** 1.0.32
+**Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.25** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.26** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.18** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
+* Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.26** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.27** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -70,6 +70,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.28 | 2026-11-05 | Usaglašavanje §3.3, §3.11, §11.2, §11.5.2, §20.5, §20.6 i sljedivosti, PM-ALIGN-02A-1. Preliminarna rang-lista ostaje interna. Konačna rang-lista Komisije dostupna je učesniku sa podnesenom prijavom na tom omladinskom konkursu, samo za čitanje, kada je lista konačna, Word predlog generisan i konkurs completed. Prikaz ima naziv „Konačna rang-lista Komisije“ i šest podataka. Nedovršena apsolutna zabrana sopstvenog broja bodova, sopstvenog ranga i kompletne liste nije usvojeno pravilo. Ranija vidljivost ostaje istorijski zapis: „evidentirani konačan rezultat, rang-lista i raspodjela, samo u obimu V1 evidencije; to nije kompletna prijava drugog podnosioca“. Pristup tuđoj prijavi ostaje zabranjen. Javna objava, §25.4, tok Word odluke, razlog odbijanja i postupak Sekretarijata nijesu dirani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.29 | 2026-11-06 | Usaglašavanje §3.3 i §25.4, PM-ALIGN-02D. Platforma omogućava predsjedniku Komisije generisanje internog Word predloga odluke, nakon čega se konkurs zatvara u skladu sa usvojenim postupkom. Službenu odluku donosi Sekretarijat. Izrada i dostavljanje pojedinačnih rješenja nijesu dio aplikacije. Javna objava nije dio PM komisijskog toka. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.30 | 2026-11-07 | Usaglašavanje §4.10, §10.4, §13.5.6, §14.2, §14.3, §14.4, §14.5, §14.6.3, §14.6.5, §14.6.6, §14.6.12–§14.6.14 i sljedivosti sa KN-BM-002 v1.0.25, PM-PRIG-01. Jedno zajedničko obrazloženje i jedna odluka. Prihvaćen ostavlja prijavu `submitted`. Odbijen je vodi u `rejected`. Djelimično prihvatanje nije predviđeno. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.31 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-002 v1.0.26. Jednak pun rezultat dijeli rang. Prikaz stavlja otpočinjanje ispred razvoja i ne stvara prednost finansiranja. Ručni zaključak, iznos, budžet i završni tok mladih ostaju. Indeks ostaje 142/142. MMSP nije diran. |
+| 1.0.32 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §4.10, §20.4, §20.5, §20.6, §20.7.5, §20.7.6, §21.6 i §23.2 više ne vezuju otpočinjanje za dodjelu sredstava niti traže posebno razrješenje jednakih bodova prije konačnosti. Prikaz unutar grupe ostaje otpočinjanje pa razvoj. Primjeri ostaju `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`. Isti rang ne rezerviše sredstva. Rezervacija strogo višeg ranga, budžet, traženi iznos, tri ekrana i završni tok ostaju. Indeks ostaje 142/142. Istorijski red 1.0.31 ostaje. MMSP nije diran. |
 
 Napomena:
 
@@ -965,10 +967,10 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Prijava | `submitted` | završene tri kompletne ocjene i obračun | prijava u ocjenjivanju | `evaluated` | sistem | `BM-ML-039`; `BM-ML-044` |
 | Ciklus ocjenjivanja | nije završen | treći član zaključi sve potrebne ocjene | tri zaključane ocjene po prijavi u ciklusu | ciklus završen; otvara se međusobni uvid | sistem | `BM-ML-003`; `BM-ML-040` |
 | Rang-lista | — | nastanak preliminarne | ciklus završen; dodatni bodovi potvrđeni čuvanjem ocjene predsjednika | preliminarna; svaka bodovana prijava poslije eliminatorne provjere dobija rang; ispod 30 odmah `rejected` | sistem | `BM-ML-045` |
-| Rang-lista | preliminarna | posljednji potrebni pojedinačni zaključak | zaključci samo za prijave sa najmanje 30; budžet i izjednačenje iznad praga ispunjeni; nema glasanja ni potvrde cijele liste | automatski konačna; ne mijenja se | sistem | `BM-ML-045`; `BM-ML-048`; `KN-PATCH-FS-026` |
+| Rang-lista | preliminarna | posljednji potrebni pojedinačni zaključak | zaključci samo za prijave sa najmanje 30; budžet ispunjen; jednaki bodovi ne traže posebno razrješenje; nema glasanja ni potvrde cijele liste | automatski konačna; ne mijenja se | sistem | `BM-ML-045`; `BM-ML-048`; `KN-PATCH-FS-026` |
 | Prijava | `evaluated` | potvrda podrške i iznosa | pojedinačni zaključak; iznos evidentiran | `approved` | predsjednik | `BM-ML-044`; `BM-ML-048` |
 | Prijava | `submitted` ili `evaluated` | formiranje preliminarne rang-liste | puna ocjena < 30 | `rejected` i rang ispod crte; bodovi sačuvani; nema zaključka predsjednika | sistem | `BM-ML-044` |
-| Prijava | `evaluated` | prag ispunjen, nema dovoljno sredstava | konačna raspodjela | `rejected` uz razlog nedovoljnih sredstava; bodovi i rang sačuvani | predsjednik | `BM-ML-044`; `BM-ML-048` |
+| Prijava | `evaluated` | prag ispunjen | Komisija odbije | `rejected` uz obrazloženje; sistem ne bira prijavu; bodovi i rang sačuvani | predsjednik | `BM-ML-044`; `BM-ML-048` |
 | Raspodjela | (nema evidentiranog iznosa) | unos iznosa | konačna faza | iznos evidentiran; prijava ostaje zaključana | predsjednik | `BM-ML-048` |
 | Poziv | konačni rezultat; iznosi evidentirani | ručno zaključi i arhiviraj | svi preduslovi iz §23.2 ispunjeni | Poziv arhiviran; status prijave nepromijenjen; nije obrisan; drugi Poziv se ne kreira automatski; zatvaranje je kapija poslije koje se drugi Poziv može ručno kreirati | predsjednik / sistem blokira ako uslovi nisu ispunjeni | F-05; `BM-ML-058`; `BM-ML-051` |
 
@@ -3850,56 +3852,45 @@ Prag i rang koriste punu nezaokruženu vrijednost prema `BM-ML-041`.
 
 ## 20.4. Jednaki bodovi
 
-Prijave sa jednakom **punom nezaokruženom** konačnom ocjenom imaju **istu** rang-poziciju, bilo da su iznad ili ispod praga. Dijeljeno mjesto ispod 30 bodova ostaje automatski `rejected`, ne otvara zaključivanje ni glasanje i ne blokira konačnost liste. Pravila raspodjele u ovom odjeljku važe za prijave sa najmanje 30 bodova.
+Prijave sa jednakom **punom nezaokruženom** konačnom ocjenom imaju **istu** rang-poziciju, bilo da su iznad ili ispod praga. Naredna pozicija preskače zauzeta mjesta: `1, 2, 3, 4, 4, 6` i, kada tri prijave dijele četvrto mjesto, `1, 2, 3, 4, 4, 4, 7`. U prikazu grupe otpočinjanje je ispred razvoja, a ista faza zadržava stabilan tehnički redoslijed. Taj prikaz ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava. Dijeljeno mjesto ispod 30 bodova ostaje automatski `rejected`, ne otvara zaključivanje i ne blokira konačnost liste. Pravila raspodjele u ovom odjeljku važe za prijave sa najmanje 30 bodova.
 
-Numeracija koristi obrazac:
+Numeracija koristi i kraći obrazac istog preskakanja:
 
 `1, 2, 2, 4`
 
-Tehnički redosljed prikaza unutar iste pozicije **ne** predstavlja prednost.
+To **nije** numeracija `1, 2, 2, 3`.
 
-Ako sredstva **nijesu** dovoljna za sve prijave sa istom punom ocjenom i sa najmanje 30 bodova, pravilo se **aktivira samo** tada, prema `BM-ML-046`, i to istovremeno:
+Jednaki bodovi su dozvoljeno i konačno stanje rangiranja. Ne traže posebno razrješenje prije konačnosti liste.
 
-1. najmanje dvije prijave sa najmanje 30 bodova imaju isti puni, nezaokruženi rezultat i dijele rang-poziciju;
-2. raspoloživi budžet nije dovoljan za sve prijave iz relevantne izjednačene grupe;
-3. pravilo prednosti otpočinjanja samo po sebi ne određuje kompletnu raspodjelu.
+Otpočinjanje se prikazuje prvo samo unutar grupe sa jednakom punom ocjenom. Isti redoslijed koriste preliminarna lista, konačna lista, štampa i Word odluka. Taj redoslijed nije prednost pri dodjeli sredstava i ne mijenja bodove ni rang. Isti rang ne rezerviše sredstva zbog faze biznisa. Neriješena prijava strogo višeg ranga rezerviše iznos do traženog, u granicama budžeta Poziva. Procenti 30/20/15 se ne računaju i ne rezerviše se 30%.
 
-Budžetska provjera koristi zaključane iznose, traženi iznos i raspoloživi budžet konkretnog Poziva. Neriješena viša prijava rezerviše iznos do traženog, u granicama budžeta Poziva. Procenti 30/20/15 se ne računaju i ne rezerviše se 30%.
-
-Prednost otpočinjanja primjenjuje se **prije** raspodjele:
-
-1. prijave za otpočinjanje imaju prednost nad prijavama za razvoj;
-2. ako raspoloživi budžet pokriva sve prijave prioritetne kategorije, prednost se primjenjuje bez posebne radnje;
-3. ako budžet ne pokriva sve prijave prioritetne kategorije, predsjednik za svaku prijavu unosi pojedinačni zaključak: podršku u preostalom iznosu ili odbijanje, prema `BM-ML-048`;
-4. razvoj se **ne** bira automatski umjesto prioritetne prijave čiji iznos ne staje u ostatak. Iznos koji ne staje odbija se prije upisa. Dozvoljeni iznos unosi se prvim čuvanjem, uz obavezno obrazloženje za smanjeni iznos.
-
-Sistem ne određuje iznos podrške i ne bira dobitnike. Predsjednik u ime Komisije unosi pojedinačni zaključak. Ne unosi kolektivne glasove i ne potvrđuje cijelu listu posebnom radnjom.
+Kada sredstva nijesu dovoljna, predsjednik i dalje za svaku prijavu sa najmanje 30 bodova unosi pojedinačni zaključak Podržava ili Odbija, ručni iznos i obrazloženje kada ga postojeće pravilo traži. Redoslijed čuvanja ne čini jedan zaključak nedozvoljenim zbog faze. Iznos koji ne staje u traženi iznos ili preostali budžet odbija se prije upisa. Sistem ne određuje iznos i ne bira dobitnike. Ne unosi kolektivne glasove i ne potvrđuje cijelu listu posebnom radnjom.
 
 Kolektivno glasanje, predmet glasa za cijelu grupu, većina 2 od 3, ponovljeni krugovi i uslov usvojenog predloga grupe iz `KN-PATCH-FS-014` i `KN-PATCH-FS-015` zamijenjeni su `KN-PATCH-FS-026`. Istorijski redovi ostaju i više nijesu važeći tok.
 
 Bodovi i zajednička pozicija se **ne** mijenjaju.
 
-**Ne** koristi se kao kriterijum:
+**Ne** koristi se kao kriterijum ranga:
 
 * vrijeme podnošenja;
 * broj prijave;
-* tehnički ID;
 * abecedni red;
-* proizvoljna odluka predsjednika;
 * zaokružena vrijednost na dvije decimale;
 * automatska optimizacija budžeta.
 
-Odluka o izjednačenju:
+ID nije poslovni rang. Samo drži stabilan prikaz prijava iste faze.
+
+Odluka Komisije:
 
 * **ne** mijenja bodove;
 * ne mijenja dijeljenu rang-poziciju;
 * evidentira pojedinačni zaključak, ne kolektivni glas;
-* evidentira primijenjeno pravilo prednosti otpočinjanja;
+* ne primjenjuje prednost otpočinjanja pri finansiranju;
 * čuva revizijski trag predsjednika koji je zaključak sačuvao.
 
 ## 20.5. Konačna rang-lista
 
-Konačna faza nastaje automatski nakon čuvanja posljednjeg potrebnog pojedinačnog zaključka za prijave sa najmanje 30 bodova, uz ispunjene postojeće uslove budžeta i razrješenja izjednačenja.
+Konačna faza nastaje automatski nakon čuvanja posljednjeg potrebnog pojedinačnog zaključka za prijave sa najmanje 30 bodova, uz ispunjene postojeće uslove budžeta. Jednaki bodovi ne traže posebno razrješenje. Redoslijed prikaza otpočinjanja nije uslov konačnosti.
 
 Nema kolektivnog glasanja, posebnog potvrđivanja ni dodatnog zaključavanja cijele liste. `KN-PATCH-FS-014` i `KN-PATCH-FS-015` u tom dijelu zamijenjeni su `KN-PATCH-FS-026`. Ženski rok od 45 dana **ne** primjenjuje se.
 
@@ -3935,9 +3926,9 @@ Javno objavljivanje službene Odluke **nije** sadržaj ovog poglavlja.
 | Rang-lista | ciklus nije završen | formiranje preliminarne | — | nije formirana | sistem | `BM-ML-045` |
 | Rang-lista | — | formiranje preliminarne | tri kompletne ocjene po prijavi; dodatni bodovi potvrđeni čuvanjem ocjene predsjednika; ocjene izračunate; nema blokade | jedna lista; iznad crte najmanje 30; ispod 30 rang i automatski `rejected`; dijeljeno mjesto ispod praga ne blokira konačnost; eliminatorno odbijene ne ulaze; obrazac `1, 2, 2, 4` | sistem | `BM-ML-045`; `BM-ML-041`; `BM-ML-044` |
 | Rang-pozicija | jednaka puna ocjena | dodjela pozicije | `1, 2, 2, 4` | ista pozicija; prikaz ne daje prednost | sistem | `BM-ML-046` |
-| Izjednačenje | ista puna ocjena; sredstva nijesu dovoljna | prednost otpočinjanja | ima prijava otpočinjanja i razvoja; budžet dovoljan za prioritetnu kategoriju | prednost svim prijavama otpočinjanja nad razvojem; bez glasanja; bodovi i pozicija nepromijenjeni | Komisija / sistem | `BM-ML-046` |
-| Izjednačenje | ista puna ocjena; sredstva nijesu dovoljna; prednost kategorije nije dovoljna | pojedinačni zaključak | predsjednik unosi Podržava/Odbija, iznos i obrazloženje u preostalom budžetu | sistem ne bira iznos ni dobitnika; prvo čuvanje zaključava | predsjednik | `BM-ML-046`; `BM-ML-048` |
-| Rang-lista | pojedinačni zaključci | posljednji potrebni zaključak | budžet i izjednačenje ispunjeni | automatski konačna; nema potvrde cijele liste | sistem | `BM-ML-045`; `BM-ML-044`; `BM-ML-048` |
+| Izjednačenje | ista puna ocjena | redoslijed prikaza | otpočinjanje i razvoj u istoj grupi | otpočinjanje se prikazuje ispred razvoja; bodovi i pozicija nepromijenjeni; nema obavezne dodjele | sistem | `BM-ML-046` |
+| Izjednačenje | ista puna ocjena | pojedinačni zaključak | predsjednik unosi Podržava/Odbija i ručni iznos; faza ne bira ishod | sistem ne bira iznos ni dobitnika; prvo čuvanje zaključava | predsjednik | `BM-ML-046`; `BM-ML-048` |
+| Rang-lista | pojedinačni zaključci | posljednji potrebni zaključak | budžet ispunjen; jednaki bodovi su konačno stanje ranga | automatski konačna; nema potvrde cijele liste | sistem | `BM-ML-045`; `BM-ML-044`; `BM-ML-048` |
 | Konačna rang-lista | konačna | izmjena bodova ili proizvoljan redosljed | — | zabranjeno | svi | `BM-ML-045` |
 | Konačna rang-lista | konkurs `completed`; lista konačna; Word predlog evidentiran | čitanje | podnesena prijava tog omladinskog konkursa | prikaz „Konačna rang-lista Komisije“, samo čitanje, šest podataka; tuđa prijava ostaje zatvorena | podnosilac | `BM-ML-045` |
 
@@ -3987,19 +3978,19 @@ Izvor: `BM-ML-046`; `BM-ML-041`.
 
 **Ako:** sredstva nijesu dovoljna za sve izjednačene prijave.
 
-**Kada:** Komisija rješava izjednačenje.
+**Kada:** Komisija odlučuje o prijavama sa jednakim bodovima.
 
-**Onda:** pravilo se aktivira samo za prijave sa najmanje 30 bodova, kada ista puna ocjena dijeli poziciju, budžet nije dovoljan za sve i prednost otpočinjanja sama ne određuje kompletnu raspodjelu. Predsjednik za svaku takvu prijavu unosi pojedinačni zaključak u preostalom budžetu ili odbijanje. Prijave ispod praga nijesu ta grupa. Sistem ne određuje iznos i ne bira dobitnike. Nema kolektivnog glasanja ni ponovljenih krugova. Bodovi i zajednička pozicija se ne mijenjaju. ID, vrijeme prijave i abeceda nijesu kriterijumi prednosti. `KN-PATCH-FS-015` u dijelu tri glasa zamijenjen je `KN-PATCH-FS-026`.
+**Onda:** prijave sa najmanje 30 bodova i istom punom ocjenom dijele poziciju. Prikaz stavlja otpočinjanje ispred razvoja. Predsjednik za svaku takvu prijavu unosi pojedinačni zaključak i ručni iznos, ili odbijanje uz obrazloženje. Prikaz ne bira dobitnika i ne blokira dozvoljenu odluku. Prijave ispod praga nijesu ta grupa raspodjele. Sistem ne određuje iznos. Nema kolektivnog glasanja. Bodovi i zajednička pozicija se ne mijenjaju. ID je samo stabilan redoslijed iste faze. `KN-PATCH-FS-015` u dijelu tri glasa zamijenjen je `KN-PATCH-FS-026`, a obavezna prednost finansiranja otpočinjanja više nije važeća.
 
 Izvor: `BM-ML-046`; `KN-PATCH-FS-026`.
 
 ### 20.7.6 — Automatska konačnost
 
-**Ako:** je sačuvan posljednji potrebni pojedinačni zaključak za prijave sa najmanje 30 bodova, a budžet i razrješenje izjednačenja su ispunjeni.
+**Ako:** je sačuvan posljednji potrebni pojedinačni zaključak za prijave sa najmanje 30 bodova i ispunjeni su postojeći uslovi budžeta.
 
 **Kada:** se to čuvanje završi.
 
-**Onda:** rang-lista automatski postaje konačna. Prijave ispod praga ne traže zaključak. Nema posebnog glasanja, potvrđivanja ni dodatnog zaključavanja cijele liste. Bodovi, rang-mjesta i sačuvani zaključci se ne mijenjaju. `remaining_after_first` računa odobrenu raspodjelu. Word odluka i `ranking_sha256` ostaju usklađeni sa tom listom. Ženski rok od 45 dana **ne** primjenjuje se. Javna objava Odluke se **ne** pokreće.
+**Onda:** rang-lista automatski postaje konačna. Jednaki bodovi ostaju dijeljena pozicija i ne traže posebno razrješenje. Prijave ispod praga ne traže zaključak. Nema posebnog glasanja, potvrđivanja ni dodatnog zaključavanja cijele liste. Bodovi, rang-mjesta i sačuvani zaključci se ne mijenjaju. `remaining_after_first` računa odobrenu raspodjelu. Word odluka i `ranking_sha256` ostaju usklađeni sa tom listom. Ženski rok od 45 dana **ne** primjenjuje se. Javna objava Odluke se **ne** pokreće.
 
 Izvor: `BM-ML-045`; `BM-ML-048`; `KN-PATCH-FS-026`.
 
@@ -4083,7 +4074,7 @@ Obrazac ne sadrži polja „Inovativni tehnološki start-up“ i „Ranije dodij
 
 Kolektivno glasanje i posebna potvrda cijele liste ne primjenjuju se. Zatvaranje konkursa ostaje izričita ručna radnja predsjednika i zabranjeno je prije uspješno generisane i trajno evidentirane odluke, prema §23.9.
 
-Prije upisa iznos ne smije preći traženi iznos ni iznos koji ostavlja zakonit završetak u raspoloživom budžetu. Neuspješan pokušaj ne zaključava zaključak. Zaključak se može sačuvati bilo kojim redoslijedom i bez činjenica o start-upu i ranijem finansiranju. Neriješena viša prijava i neriješeno otpočinjanje sa istim bodovima zadržavaju prostor do traženog iznosa, u granicama budžeta Poziva. Procenat 30/20/15 se ne računa i ne rezerviše se 30%. Zaključana odluka se ne otvara da bi se oslobodio budžet.
+Prije upisa iznos ne smije preći traženi iznos ni iznos koji ostavlja zakonit završetak u raspoloživom budžetu. Neuspješan pokušaj ne zaključava zaključak. Zaključak se može sačuvati bilo kojim redoslijedom i bez činjenica o start-upu i ranijem finansiranju. Neriješena prijava strogo višeg ranga rezerviše iznos do traženog, u granicama budžeta Poziva. Jednak rang, uključujući neriješeno otpočinjanje, ne rezerviše sredstva i ne daje prednost pri finansiranju zbog faze biznisa. Procenat 30/20/15 se ne računa i ne rezerviše se 30%. Zaključana odluka se ne otvara da bi se oslobodio budžet.
 
 Nakon prvog uspješnog čuvanja:
 
@@ -4479,7 +4470,7 @@ Predsjednik može zaključiti i arhivirati Poziv **tek kada su ispunjeni svi** s
 * dodatni bodovi su potvrđeni;
 * eliminatorni razlozi su konačno evidentirani;
 * obračun je završen;
-* sva relevantna izjednačenja su riješena;
+* jednaki bodovi ne traže posebno razrješenje;
 * rang-lista je automatski postala konačna;
 * konačni rezultati su evidentirani;
 * iznosi raspodjele su evidentirani;
@@ -5354,7 +5345,7 @@ Izvor: 18.7.1; `BM-ML-043`.
 
 **Kada:** se formira rang.
 
-**Onda:** ručna izmjena je zabranjena. Tie-break nije vrijeme, broj prijave, tehnički ID ni abeceda. Pravilo se aktivira samo kada ista puna ocjena dijeli poziciju, budžet nije dovoljan i prednost otpočinjanja sama ne određuje kompletnu raspodjelu. Predsjednik unosi pojedinačni zaključak. Nema kolektivnog glasanja. Primjenjuje se `BM-ML-046`.
+**Onda:** ručna izmjena ranga je zabranjena. Isti puni rezultat dijeli poziciju. Prikaz stavlja otpočinjanje ispred razvoja i ne dodjeljuje sredstva. Predsjednik unosi pojedinačni zaključak. Nema kolektivnog glasanja. Primjenjuje se `BM-ML-046`.
 
 Izvor: 20.7.2; 20.7.4; 20.7.5.
 
@@ -5598,4 +5589,4 @@ Buduća izmjena ovog usvojenog dokumenta zahtijeva novu verziju i odgovarajući 
 
 ---
 
-**Kraj dokumenta KN-FS-002 v1.0.30**
+**Kraj dokumenta KN-FS-002 v1.0.32**

@@ -290,10 +290,6 @@ final class YouthAllocationDraftService
                     ]);
                 }
 
-                if ($this->completion->developmentSupportBlocked($pool, $locked)) {
-                    abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
-                }
-
                 $budget = $this->money((string) ($lockedCompetition->budget ?? 0));
                 $remaining = $this->completion->supportRoom(
                     $budget,
@@ -323,10 +319,6 @@ final class YouthAllocationDraftService
                     throw ValidationException::withMessages([
                         'commission_justification' => self::REJECT_JUSTIFICATION_REQUIRED_MESSAGE,
                     ]);
-                }
-
-                if ($this->completion->startupRejectionBlocked($pool, $locked)) {
-                    abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
                 }
 
                 $locked->forceFill([

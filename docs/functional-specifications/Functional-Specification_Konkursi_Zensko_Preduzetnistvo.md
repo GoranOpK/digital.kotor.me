@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.19
-**Datum:** 2026-11-04
+**Verzija:** 1.0.21
+**Datum:** 2026-11-08
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.23; **PO USVOJENO** za PO-IB-01…05, zaključavanje dodatnih bodova prije otključavanja rezultata i prioritet finansiranja kod jednakih bodova §13.6 / §14.9 — runtime implementiran commitom `35a0da8`; V1 **COMPLETE / PRODUCTION ACCEPTED** 2026-09-18; V1 platformski closeout; ŽP V1 documentation corrective; Patch 9 Article 3 wording; §13.6/§14.9 documentation reconciliation; §13.6 runtime closeout; V1 production closeout; KN-PATCH-BM-027 zaključavanje budućih odluka)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.24; jednak broj bodova dijeli rang, otpočinjanje se prikazuje ispred razvoja i to nije prednost finansiranja)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
 
@@ -74,6 +74,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.17 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED prema `KN-BM-003` v1.0.22: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Funkcionalna pravila §14.9 / §18.6.4 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.18 | 2026-10-29 | KN-PATCH-FS-025 — Prvo čuvanje buduće odluke zaključava ishod, iznos i obrazloženje. Ranija odluka bez vremena zaključavanja ostaje ispravljiva i ne prepisuje se. Iznos se odbija ako bi onemogućio zakonit završetak, uključujući prednost otpočinjanja i postojeći limit od 20% za potvrđeni zeleni ili inovativni bonus. Limiti 10% i 5% se ne uvode. Istovremeni upisi ne mogu zajedno preći budžet. |
 | 1.0.19 | 2026-11-04 | Usaglašavanje §10.4 sa commitom `8974e68a`. Poslije uspješnog podnošenja Prigovora aktivni predsjednik nadležne Komisije dobija e-mail, a na kontrolnoj tabli vidi Prigovore u stanju Podnesen. Riješeni Prigovor izlazi iz brojača. Neuspješan e-mail ne poništava Prigovor i ne šalje se ponovo. Član 17, rokovi, stanja Prigovora i postupak odlučivanja nijesu mijenjani. Posebna tehnička specifikacija ŽP nije otvorena. |
+| 1.0.20 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-003 v1.0.24. §14.6 razdvaja rang-poziciju od redoslijeda prikaza. §14.9 više ne tretira otpočinjanje kao obaveznog primaoca sredstava i ne blokira Predlog ni zatvaranje zbog te prednosti. Ručni zaključak, iznos i finansijske kontrole ostaju. |
+| 1.0.21 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §18.6.4, §14.7, §14.10.3, §14.11, §15.1 i §16.5 više ne daju otpočinjanju prednost pri finansiranju niti zabranjuju podršku razvoju zbog neriješenog otpočinjanja istog ranga. Jednak rang, prikaz otpočinjanja prije razvoja, preskakanje pozicija, ručne odluke i postojeći limiti ostaju. Primjeri ostaju u §14.6. Istorijski red 1.0.20 ostaje. |
 
 Napomena:
 
@@ -96,6 +98,8 @@ Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene o
 **§14.9 / §18.6.4 runtime closeout (v1.0.16):** §14.9 i AC §18.6.4 ostaju **USVOJENI / funkcionalno specifikovani** prema `KN-BM-003` §13.6 (**PO USVOJENO**, v1.0.21). Runtime implementacija je u kodu (commit `35a0da8` — IMPLEMENTED IN CODE; TESTED LOCALLY; PUSHED TO `origin/main`). Produkcijski runtime acceptance **nije** još izvršen/potvrđen. V1 closeout v1.0.12 i reconciliation v1.0.15 **ne** tumače se kao produkcijski runtime acceptance. Status dokumenta ostaje `USVOJEN`.
 
 **V1 COMPLETE / PRODUCTION ACCEPTED (v1.0.17):** Tok „Podrška ženskom preduzetništvu“ V1 je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. §14.9 / §18.6.4 ostaju **USVOJENI / specifikovani** (`KN-BM-003` v1.0.22). Status dokumenta ostaje `USVOJEN`.
+
+**Važeći opis od v1.0.21:** §14.9 i §18.6.4 više ne propisuju prednost otpočinjanja pri dodjeli sredstava. Napomene v1.0.12–v1.0.17 ostaju istorijski zapisi tadašnjeg stanja.
 
 ---
 
@@ -691,12 +695,12 @@ Ako **Podržava**, odobreni iznos je obavezan. Odobreni iznos ne može preći:
 
 Ako za sljedeći plan na rang-listi nema dovoljno za puni traženi iznos, Komisija mu može dodijeliti **preostali** raspoloživi iznos. Raspodjela tada ide do utroška sredstava.
 
-Jednaki bodovi — tačno prema čl. 21 i Poglavlju 14.9:
+Jednaki bodovi — prema §14.6 i §14.9:
 
-* §14.9 se aktivira samo kada raspoloživa sredstva **nisu** dovoljna da se finansiraju sve Prijave sa tom konačnom ocjenom;
-* prednost plana za **otpočinjanje biznisa** (`business_stage` = započinjanje) primjenjuje se **prije** odluke Komisije, uključujući mješovite grupe sa planovima za razvoj;
-* ako nakon toga ostane više međusobno nerazriješenih Prijava za raspoloživa sredstva, Komisija odlučuje **većinom glasova od ukupnog broja članova** (najmanje **3 od 5**) uz **obavezno obrazloženje**;
-* prioritet se razrješava **samo u obimu potrebnom** za jednoznačnu raspodjelu; **ne** mijenja konačnu ocjenu niti dijeljeni rang (§14.6).
+* prijave sa istom konačnom ocjenom dijele rang-poziciju, a naredna pozicija preskače zauzeta mjesta;
+* u prikazu te grupe otpočinjanje je ispred razvoja;
+* taj redoslijed ne mijenja ocjenu ni rang i ne određuje ko mora dobiti sredstva;
+* Komisija za svaku prijavu ručno utvrđuje Podržava ili Odbija.
 
 Glasanje se sprovodi na sjednici. Ne uvodi se zaseban elektronski tok glasanja. Predsjednik evidentira ishod Komisije na Platformi.
 
@@ -2749,11 +2753,13 @@ Postoji **jedna** poslovna rang-lista. Prag od 30 bodova može se vizuelno ozna�
 
 Sve Prijave koje su ušle u pozitivno ocjenjivanje ostaju na listi, uključujući one ispod 30 bodova.
 
-Prijave sa istom konačnom ocjenom imaju **isti rang**. Koriste se **dijeljene** pozicije. Primjer: 1, 2, 2, 4.
+Prijave sa istom konačnom ocjenom imaju **isti rang**. Koriste se **dijeljene** pozicije. Primjer: `1, 2, 3, 4, 4, 6`. Ako tri prijave dijele četvrto mjesto: `1, 2, 3, 4, 4, 4, 7`.
 
-Tehnički identifikator Prijave, `redni_broj`, vrijeme podnošenja, identifikator u bazi niti druga skrivena tehnička vrijednost **nije** poslovni tie-break za rang.
+Unutar grupe sa istom ocjenom prikaz je: prvo otpočinjanje (`business_stage` = započinjanje), zatim razvoj (`business_stage` = razvoj), zatim stabilan tehnički redoslijed prijava iste faze. Taj prikaz ne mijenja bodove ni dijeljenu rang-poziciju i nije prednost pri dodjeli sredstava.
 
-Pravilo čl. 21 o prioritetu finansiranja pri jednakim bodovima pripada §14.9. **Ne** mijenja dijeljene pozicije na rang-listi.
+Isti redoslijed koriste preliminarna rang-lista, konačna rang-lista, ekran Komisije, štampa i dokument koji prikazuje rang.
+
+Tehnički identifikator Prijave, `redni_broj`, vrijeme podnošenja i abeceda **nisu** poslovni rang. Identifikator služi samo kao stabilan redoslijed prijava iste faze i istih bodova.
 
 Vidljivost preliminarne rang-liste:
 
@@ -2783,7 +2789,7 @@ Na trećoj sjednici Komisija razmatra preliminarnu rang-listu.
 
 Za Prijave sa konačnom ocjenom **≥ 30** utvrđuje **Podržava** ili **Odbija**. Gdje utvrdi Podržava, utvrđuje predloženi iznos podrške.
 
-Gdje je potrebno, primjenjuje se prioritet finansiranja pri jednakim bodovima prema §14.9.
+Jednaki bodovi prikazuju se prema §14.6. Taj prikaz ne određuje zaključak Komisije.
 
 Prijave ispod 30 bodova **ne** odbijaju se dodatno samo zbog ocjene.
 
@@ -2803,7 +2809,7 @@ Platforma **ne** upravlja:
 
 Predsjednik Komisije na Platformi, u ime Komisije, evidentira zaključke Komisije.
 
-Ne uvodi se opšti tok elektronskog glasanja. Ako je potrebno glasanje za prioritet finansiranja, glasa se na poslovnoj sjednici. Platforma evidentira **samo ishod**, prema §14.9.
+Ne uvodi se opšti tok elektronskog glasanja. Jednaki bodovi ne otvaraju glasanje o prednosti finansiranja. Predsjednik evidentira pojedinačne zaključke prema §14.9.
 
 ## 14.8. Podržava / Odbija, iznosi i raspodjela
 
@@ -2931,89 +2937,55 @@ Završenost jedne Prijave **sama po sebi ne** formira konačnu rang-listu. Globa
 
 ## 14.9. Jednaki bodovi
 
-**Status (ACTIVE):** Funkcionalni zahtjev je **USVOJEN / specifikovan** (`KN-BM-003` §13.6 — **PO USVOJENO**). Runtime implementacija **postoji** u kodu (commit `35a0da8`). V1 tok „Podrška ženskom preduzetništvu“ je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. V1 platformski closeout (v1.0.12) i documentation reconciliation (v1.0.15) ostaju historijski zapisi tadašnjeg stanja.
+**Status (ACTIVE):** Funkcionalni zahtjev je usklađen sa `KN-BM-003` §13.6 v1.0.24. Ranije pravilo obavezne prednosti otpočinjanja pri finansiranju više nije važeće. Istorijski zapisi ostaju.
 
-Ovo je pravilo **prioriteta finansiranja** prema čl. 21 i `KN-BM-003` §13.6. **Ne** mijenja dijeljene pozicije na rang-listi iz §14.6. **Ne** mijenja konačnu ocjenu (`final_score`).
+Ovo poglavlje razdvaja pet stvari:
 
-### 14.9.0. Aktivacija
+1. bodovanje ostaje neizmijenjeno;
+2. rang-pozicija se dijeli kada je konačna ocjena ista;
+3. redoslijed prikaza unutar te grupe stavlja otpočinjanje ispred razvoja;
+4. Komisija ručno odlučuje Podržava ili Odbija za svaku prijavu;
+5. finansijske kontrole ostaju traženi iznos, limit od 20% za potvrđeni zeleni ili inovativni bonus, već sačuvane dodjele i budžet.
 
-§14.9 se aktivira **samo** kada istovremeno važi:
+### 14.9.0. Rang i prikaz
 
-1. postoji više Prijava sa **jednakom** konačnom ocjenom; i
-2. raspoloživa sredstva **nijesu** dovoljna da se sve relevantne Prijave iz te grupe finansiraju.
+Prijave sa jednakom konačnom ocjenom imaju istu rang-poziciju. Naredna različita ocjena preskače zauzeta mjesta. Primjeri su u §14.6.
 
-Ako budžet može finansirati **sve** Prijave sa tom ocjenom, §14.9 se **ne** aktivira. Ne uvodi se obavezni tie-break za svaku grupu jednakih bodova.
+Prikaz unutar grupe: otpočinjanje, pa razvoj, pa stabilan tehnički redoslijed iste faze. Preliminarna lista, konačna lista, ekran Komisije, štampa i generisani dokument koriste taj isti redoslijed. Prikaz ne mijenja `final_score` ni `ranking_position`.
 
-### 14.9.1. Prednost — otpočinjanje biznisa
+### 14.9.1. Odluka Komisije
 
-Kada je §14.9 aktivan, prvo se primjenjuje pravilo čl. 21:
+Redoslijed prikaza ne stvara obaveznog primaoca sredstava. Aplikacija ne upisuje Podržava niti Odbija zbog faze biznisa.
 
-prednost ima biznis plan koji se odnosi na **otpočinjanje biznisa**.
+Predsjednik unosi zaključak bilo kojim redoslijedom. Iznos unosi ručno. Odbijanje zahtijeva obrazloženje iz §14.8.8. Komisija može odbiti obje prijave, podržati obje u okviru budžeta, ili kombinovati ta dva zaključka.
 
-Kanonski podatak Prijave: `business_stage` = **započinjanje** (otpočinjanje) naspram **razvoj**.
+Kada više prijava iste faze dijeli ocjenu, a raspoloživa sredstva ne pokrivaju zbir njihovih traženih iznosa, obrazloženje je obavezno i za Podržava i za Odbija. To ne bira dobitnika.
 
-To određuje samo prioritet finansiranja. **Ne** mijenja konačne ocjene niti dijeljene pozicije.
+Isti rang ne rezerviše sredstva jedne prijave na teret druge. Neriješena prijava strogo višeg ranga i dalje rezerviše iznos do svog zahtjeva, u granicama budžeta i limita od 20% kada je bonus potvrđen. Već sačuvana dodjela umanjuje ostatak.
 
-**Mješovita grupa.** Ako među Prijavama sa istom konačnom ocjenom postoje i planovi za otpočinjanje i planovi za razvoj, prednost otpočinjanja primjenjuje se **obavezno prije** odluke Komisije. Prijava za razvoj **ne** može odlukom Komisije dobiti prioritet ispred Prijave za otpočinjanje dok među Prijavama za otpočinjanje još treba razriješiti prioritet za raspoloživa sredstva.
+### 14.9.2. Evidentiranje
 
-Primjer: A i B = započinjanje, C = razvoj, isti `final_score` i isti dijeljeni `ranking_position`. A i B imaju prioritet finansiranja u odnosu na C. Ako sredstva zahtijevaju izbor između A i B, Komisija odlučuje između A i B prema §14.9.2. Komisija **ne** smije izabrati C ispred A/B i time poništiti prvi kriterijum.
+Predsjednik na Platformi evidentira zaključak i, kada je obavezan, tekst obrazloženja. Ne evidentira se poseban osnov „otpočinjanje biznisa“ kao razlog automatske dodjele. Ne uvodi se elektronsko glasanje ni odnos glasova.
 
-Ako je samo jedan od izjednačenih planova plan za otpočinjanje, taj plan ima prioritet finansiranja. Ako to pravilo jednoznačno odredi potrebni prioritet, taj ishod se evidentira prema §14.9.3.
+Zaključak:
 
-### 14.9.2. Odluka Komisije ako prednost nije dovoljna
+* ne mijenja konačnu ocjenu;
+* ne mijenja dijeljenu poziciju;
+* ne nastaje automatski iz redoslijeda prikaza.
 
-Ako se potrebni prioritet finansiranja **ne** može jednoznačno riješiti pravilom o otpočinjanju biznisa, Komisija odlučuje među Prijavama koje ostanu **međusobno nerazriješene** nakon primjene §14.9.1.
-
-Odluka se donosi **većinom od ukupnog broja članova Komisije**.
-
-Komisija ima pet članova. Potrebna većina = **najmanje 3 od 5**.
-
-Odluka Komisije mora biti **obrazložena**.
-
-Odluka se donosi na trećoj poslovnoj sjednici. Ne uvodi se tok elektronskog individualnog glasanja.
-
-### 14.9.2a. Obim razrješavanja
-
-Prioritet finansiranja razrješava se **onoliko koliko je potrebno** da se jednoznačno utvrdi koje Prijave dobijaju raspoloživa sredstva.
-
-Primjer: A, B i C imaju isti broj bodova i isti dijeljeni rang. Ako budžet može pokriti **dvije od tri**, nije dovoljno utvrditi samo jednu prioritetnu Prijavu ako nakon toga ostaje nerazriješen izbor za preostala sredstva. Pravila §14.9.1 i §14.9.2 primjenjuju se dalje dok raspodjela ne bude jednoznačna.
-
-**Ne** uvodi se novi poslovni rang. Sve Prijave zadržavaju postojeći zajednički `ranking_position`. Radi se isključivo o prioritetu **finansiranja** unutar grupe sa jednakom konačnom ocjenom.
-
-### 14.9.3. Evidentiranje ishoda
-
-Predsjednik Komisije na Platformi evidentira:
-
-* Prijavu kojoj je utvrđen prioritet finansiranja;
-* da li je osnov **otpočinjanje biznisa** ili **odluka Komisije**;
-* kada je osnov **odluka Komisije**, **obavezno obrazloženje** te odluke.
-
-Ako je za raspodjelu potrebno razriješiti više od jednog mjesta prioriteta unutar iste grupe, evidentira se **onoliko ishoda** koliko je potrebno da raspodjela bude jednoznačna.
-
-Platforma **ne** evidentira pojedinačne elektronske glasove članova.
-
-Ne zahtijeva se evidencija odnosa glasova 3:2, 4:1 ili 5:0, osim ako kasniji autoritativni izvor to izričito zatraži.
-
-Ishod:
-
-* **ne** mijenja konačnu ocjenu;
-* **ne** mijenja dijeljenu poziciju na rang-listi;
-* koristi se **samo** za raspodjelu sredstava.
-
-### 14.9.4. Redoslijed u toku i hard gate
+### 14.9.4. Redoslijed u toku
 
 Redoslijed:
 
 1. završen ciklus individualnog bodovanja;
 2. utvrđen `final_score`;
-3. utvrđen dijeljeni `ranking_position` (§14.6);
-4. Predsjednik **smije** prethodno evidentirati Podržava / Odbija i predložene / odobrene iznose prema §14.8;
-5. kada je §14.9 aktivan, potrebni prioritet finansiranja mora biti razriješen i evidentiran **prije** formiranja / zaključavanja konačne rang-liste (§14.10);
-6. Predlog Odluke **ne** smije biti formiran iz nerazriješenog rezultata (§15.1).
+3. utvrđen dijeljeni `ranking_position` i redoslijed prikaza (§14.6);
+4. Predsjednik evidentira Podržava ili Odbija i ručni iznos prema §14.8;
+5. konačna rang-lista i Predlog nastaju kada su zaključci za prijave sa ocjenom od najmanje 30 bodova potpuni.
 
-**Ne** uvodi se zabrana samog prethodnog unosa Podržava / Odbija ili iznosa samo zato što §14.9 još nije razriješen. Unos je i dalje moguć bilo kojim redoslijedom. Iznos se odbija kada poslije njega ne ostaje zakonit završetak: budžet, traženi iznos, limit od 20% za potvrđeni zeleni ili inovativni bonus i prednost otpočinjanja. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno je zaključava. Odluka sačuvana ranije, bez vremena zaključavanja, ostaje ispravljiva. Limiti 10% i 5% se ovim pravilom ne mijenjaju.
+Unos je moguć bilo kojim redoslijedom. Iznos se odbija kada prelazi budžet, traženi iznos ili limit od 20% za potvrđeni zeleni ili inovativni bonus. Prednost prikaza otpočinjanja nije razlog odbijanja upisa niti razlog blokade Predloga i zatvaranja. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno je zaključava. Odluka sačuvana ranije, bez vremena zaključavanja, ostaje ispravljiva. Limiti 10% i 5% se ovim pravilom ne mijenjaju.
 
-**Ali:** konačna rang-lista i Predlog Odluke moraju biti **blokirani** dok postoji relevantna grupa jednakih bodova koju raspoloživa sredstva ne mogu u cjelosti pokriti, a potrebni prioritet finansiranja nije razriješen. Ako je prioritet razriješen odlukom Komisije, mora postojati i obavezno obrazloženje.
+Ako ista faza dijeli ocjenu, a sredstva ne pokrivaju grupu, nedostajuće obrazloženje i dalje sprečava završetak. To je kontrola teksta, ne izbora dobitnika.
 
 ## 14.10. Konačna rang-lista
 
@@ -3023,9 +2995,7 @@ Platforma **automatski** formira konačnu rang-listu kada su završeni svi potre
 
 Za Prijave sa ocjenom **≥ 30** mora biti završena Podržava prema §14.8 ili Odbija prema §14.8.
 
-Gdje je §14.9 bio potreban, mora biti evidentiran i ishod prioriteta finansiranja, u obimu potrebnom za jednoznačnu raspodjelu, uključujući obavezno obrazloženje kada je osnov odluka Komisije (§14.9.3, §14.9.4).
-
-Dok je §14.9 aktivan a potrebni ishod nije razriješen, konačna rang-lista se **ne** formira / **ne** zaključava. Predlog Odluke iz Poglavlja 15 **ne** smije nastati iz tog nerazriješenog stanja. Prethodni unos Podržava / Odbija i iznosa prema §14.8 **nije** zabranjen samo zbog nerazriješenog §14.9 (§14.9.4).
+Konačna rang-lista zadržava dijeljene pozicije i redoslijed prikaza iz §14.6. Ne blokira se zato što Komisija nije podržala prijavu za otpočinjanje. Nedostajući zaključak za prijavu sa ocjenom od najmanje 30 bodova, ili nedostajuće obavezno obrazloženje, i dalje sprečava završetak.
 
 Prijave sa ocjenom **< 30** **ne** zahtijevaju dodatni zaključak Komisije samo radi formiranja konačne rang-liste.
 
@@ -3070,7 +3040,7 @@ Nakon toga, u redovnom toku Konkursa, niko **ne** smije mijenjati podatke koji o
 * pozicije na rang-listi;
 * zaključak Podržava / Odbija;
 * predloženi iznos podrške;
-* ishod prioriteta finansiranja;
+* redoslijed prikaza jednakih bodova;
 * evidentirano obrazloženje / napomenu Komisije.
 
 Ne uvodi se ovlašćenje Administratora konkursa, poslovno ovlašćenje Super administratora, „otključaj rang-listu“, ponovno otvaranje niti tok uređivanja nakon konačne rang-liste.
@@ -3103,7 +3073,6 @@ Poglavlje 14 završava se kada su:
 * održana treća sjednica;
 * evidentirani potrebni zaključci Komisije;
 * raspodijeljeni predloženi iznosi podrške prema usvojenim ograničenjima;
-* riješen potrebni prioritet finansiranja pri jednakim bodovima;
 * Platforma automatski formirala konačnu rang-listu;
 * konačna rang-lista zaključana i nepromjenjiva.
 
@@ -3167,7 +3136,7 @@ U Poglavlju 15 **nema**:
 * izmjene pozicija;
 * izmjene zaključka Podržava / Odbija;
 * izmjene predloženih iznosa podrške;
-* izmjene ishoda prioriteta finansiranja pri jednakim bodovima;
+* izmjene redoslijeda prikaza jednakih bodova;
 * izmjene obrazloženja / napomena Komisije;
 * izmjene drugih zaključanih podataka konačne rang-liste.
 
@@ -3571,7 +3540,7 @@ Nakon zaključavanja **ne** mogu se mijenjati podaci koji čine ili određuju ko
 * poredak;
 * zaključak Podržava / Odbija;
 * predloženi iznos podrške;
-* rezultat primjene pravila za jednake bodove.
+* dijeljene rang-pozicije i redoslijed prikaza jednakih bodova.
 
 Pravila o pragu od 30 bodova, maksimalnim iznosima podrške, raspoloživim sredstvima, redoslijedu raspodjele, djelimičnom preostalom iznosu i jednakim bodovima moraju se poštovati prema Poglavlju 14. **Ne** mogu se zaobići alternativnom radnjom ili privilegovanom ulogom.
 
@@ -4160,27 +4129,25 @@ Za **Odbija** kod Prijave sa najmanje **30** bodova mora biti evidentirano detal
 
 ### 18.6.4 — Jednaki bodovi i zaključavanje konačne rang-liste
 
-**Status (ACTIVE):** Prihvatni kriterijum je **USVOJEN / specifikovan**. Runtime implementacija §14.9 **postoji** u kodu (commit `35a0da8`). V1 tok „Podrška ženskom preduzetništvu“ je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. V1 platformski closeout (v1.0.12) i documentation reconciliation (v1.0.15) ostaju historijski zapisi tadašnjeg stanja.
+**Status (ACTIVE):** Prihvatni kriterijum je usklađen sa `KN-BM-003` §13.6 v1.0.24. Ranija obavezna prednost otpočinjanja pri finansiranju više nije važeća. Istorijski zapisi v1.0.15–v1.0.17 ostaju.
 
 **Ako:** dvije ili više Prijava imaju jednaku konačnu ocjenu.
 
-**Kada:** raspoloživa sredstva **nisu** dovoljna da se sve one finansiraju (aktivacija §14.9).
+**Kada:** se utvrđuje rang, prikaz i zaključak Komisije.
 
 **Onda:**
 
-* prednost otpočinjanja biznisa (`business_stage` = započinjanje) primjenjuje se **prije** odluke Komisije, uključujući mješovite grupe sa planovima za razvoj;
-* Prijava za razvoj **ne** može dobiti prioritet ispred Prijave za otpočinjanje dok među otpočinjanjima još treba razriješiti prioritet za raspoloživa sredstva;
-* prioritet se razrješava **samo u obimu potrebnom** za jednoznačnu raspodjelu raspoloživih sredstava;
-* ako nakon §14.9.1 ostanu međusobno nerazriješene Prijave, odluka Komisije donosi se većinom ukupnog sastava (**najmanje 3 od 5**) uz **obavezno obrazloženje**;
-* Platforma ne uvodi elektronsko individualno glasanje niti evidenciju pojedinačnih glasova.
+* dijele rang-poziciju, a naredna pozicija preskače zauzeta mjesta, prema §14.6, uključujući `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`;
+* u prikazu grupe otpočinjanje je ispred razvoja; taj prikaz ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava;
+* Komisija za svaku prijavu ručno utvrđuje Podržava ili Odbija; aplikacija ne podržava otpočinjanje samo zbog jednakih bodova i ne zabranjuje podršku razvoju zbog neriješenog otpočinjanja istog ranga;
+* predsjednik unosi odluku, ručni iznos i obrazloženje; postojeći finansijski limiti ostaju;
+* Platforma ne uvodi elektronsko individualno glasanje niti obavezu većine 3 od 5 kao uslov zbog faze biznisa.
 
-Takvo razrješenje **ne** mijenja konačne ocjene niti zajedničke rang-pozicije Prijava sa jednakim brojem bodova (§14.6).
+Jednaki bodovi su dozvoljeno stanje rangiranja. Ne traže posebno razrješenje prije konačne rang-liste.
 
-Predsjednik **smije** prethodno evidentirati Podržava / Odbija i iznose. Konačna rang-lista i Predlog Odluke **ne** smiju nastati dok je §14.9 aktivan a potrebni ishod nije razriješen i evidentiran.
+Konačna rang-lista nastaje kada su evidentirani potrebni pojedinačni zaključci za prijave sa ocjenom od najmanje 30 bodova. Ne čeka se poseban ishod prednosti otpočinjanja.
 
-Kada su evidentirani svi potrebni ishodi treće sjednice, uključujući potrebni §14.9, Platforma formira konačnu rang-listu kao zaključani rezultat.
-
-Nakon toga se **ne** smiju mijenjati konačne ocjene, rang-pozicije, **Podržava** / **Odbija**, predloženi iznosi niti rezultat razrješenja jednakih bodova.
+Nakon toga se **ne** smiju mijenjati konačne ocjene, rang-pozicije, **Podržava** / **Odbija**, predloženi iznosi ni redoslijed prikaza.
 
 Ovaj kriterijum **ne** prepisuje detaljne formule i pojedinačne vrijednosti iz Poglavlja 14.
 
@@ -4628,7 +4595,7 @@ Matrica sljedivosti:
 | `KN-BM-003` §12.5, §12.6, §13.1 | §14.1–§14.4, §14.6 | §18.6.1, §18.6.2 | USVOJENO. Zbirni rezultati i preliminarna rang-lista tek po završetku ciklusa. |
 | `KN-BM-003` §13.3 | §14.5 | §18.6.2 | USVOJENO. Prag od 30 bodova. |
 | `KN-BM-003` §13.2, §13.4, §13.5 | §14.7, §14.8 | §18.6.3 | USVOJENO. Podržava / Odbija, predloženi iznos, limiti i raspodjela. Treća sjednica van Platforme. |
-| `KN-BM-003` §13.6 | §14.9 | §18.6.4 | USVOJENO (poslovno/funkcionalno). Jednaki bodovi; dijeljene rang-pozicije se ne mijenjaju. Runtime implementacija u kodu (`35a0da8`). V1 **COMPLETE / PRODUCTION ACCEPTED** 2026-09-18; finalni closeout audit: 0 blockera (v1.0.17 production closeout). |
+| `KN-BM-003` §13.6 | §14.9 | §18.6.4 | USVOJENO. Jednaki bodovi dijele rang. Prikaz stavlja otpočinjanje ispred razvoja i nije prednost finansiranja. Komisija ručno odlučuje. Istorijski zapisi v1.0.15–v1.0.17 ostaju. |
 | `KN-BM-003` §13.7 | §14.10, §16.5 | §18.6.4 | USVOJENO. Konačna rang-lista je zaključani rezultat. |
 | `KN-BM-003` §13.8 | §15.8, §17.2 | — | USVOJENO. Evidentirana je samo poslovna mogućnost drugog Konkursa. Detaljan tok **nije** predmet ovog FS-a. |
 | `KN-BM-003` §14 | §15.2 | §18.7.1 | USVOJENO. Generiši Odluku proizvodi Predlog i ne mijenja zaključani rezultat. |
@@ -4654,4 +4621,4 @@ Trenutno **nema** otvorenih veza.
 
 ---
 
-**Kraj dokumenta KN-FS-003 v1.0.18**
+**Kraj dokumenta KN-FS-003 v1.0.21**

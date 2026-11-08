@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.23
-**Datum:** 2026-10-29
+**Verzija:** 1.0.24
+**Datum:** 2026-11-08
 
 Povezani dokumenti:
 
@@ -53,6 +53,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.21 | 2026-09-18 | §13.6 runtime closeout (dokumentacija): runtime implementacija evidentirana commitom `35a0da8` (`feat(competitions): enforce equal-score allocation rules`) — IMPLEMENTED IN CODE; TESTED LOCALLY (`ZpEqualScoreAllocationGateTest` i regresija); PUSHED TO `origin/main`. Produkcijski runtime acceptance **nije** još izvršen/potvrđen. Poslovno pravilo §13.6 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.22 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Poslovna pravila KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.23 | 2026-10-29 | KN-PATCH-BM-027 — Buduća odluka Komisije zaključava se prvim uspješnim čuvanjem. Odluka sačuvana prije toga ostaje bez vremena zaključavanja i može se ispraviti. Prije upisa iznos mora ostaviti zakonit završetak: budžet, postojeći limit od 20% kada je potvrđen zeleni ili inovativni bonus, traženi iznos i prednost otpočinjanja. Limiti 10% i 5% se ne uvode u ovaj upis. Istovremeni upisi dijele jednu transakciju. |
+| 1.0.24 | 2026-11-08 | ŽP-PM-RANK-01. Jednak broj bodova i dalje dijeli rang-poziciju, a naredna pozicija preskače zauzeta mjesta. Unutar te grupe otpočinjanje se prikazuje ispred razvoja. Taj redoslijed ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava. Komisija i dalje ručno bira Podržava ili Odbija i ručno unosi iznos. Aplikacija ne određuje koje prijave moraju biti podržane. |
 
 Napomena:
 
@@ -927,23 +928,29 @@ Odobreni iznos:
 
 U slučaju preklapanja 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%, prema §13.4.
 
-## 13.6. Tie-break
+## 13.6. Jednaki bodovi i odluka Komisije
 
-**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Runtime implementacija **postoji** u kodu (commit `35a0da8`). V1 tok „Podrška ženskom preduzetništvu“ je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. V1 platformski closeout (v1.0.17) i documentation reconciliation (v1.0.20) ostaju historijski zapisi tadašnjeg stanja.
+**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Ranije tumačenje da otpočinjanje ima obaveznu prednost pri dodjeli sredstava više nije važeće. Istorijski zapisi v1.0.16–v1.0.23 ostaju.
 
-Ako dva ili više biznis planova dobije isti broj bodova, a raspoloživa sredstva nisu dovoljna za njihovo finansiranje (čl. 21), utvrđuje se **prioritet finansiranja**. To **ne** mijenja konačni broj bodova niti dijeljene rang-pozicije.
+Prijave se rangiraju prema konačnom broju bodova, opadajuće.
 
-Prvo se primjenjuje prednost plana za **otpočinjanje biznisa** (faza Započinjanje) u odnosu na plan za **razvoj** postojeće djelatnosti. Prednost otpočinjanja važi i u mješovitoj grupi: plan za razvoj **ne** može dobiti prioritet ispred plana za otpočinjanje dok među planovima za otpočinjanje još treba razriješiti prioritet za raspoloživa sredstva.
+Kada dvije ili više prijava imaju isti broj bodova:
 
-Ako je samo jedan od izjednačenih planova plan za otpočinjanje biznisa, sredstva se dodjeljuju tom planu.
+* dijele istu rang-poziciju;
+* plan za otpočinjanje biznisa (`business_stage` = započinjanje) prikazuje se ispred plana za razvoj (`business_stage` = razvoj);
+* taj redoslijed važi samo za prikaz unutar grupe;
+* bodovi i rang-pozicija se ne mijenjaju;
+* naredna pozicija preskače zauzeta mjesta.
 
-Ako nakon primjene prednosti otpočinjanja ostanu međusobno nerazriješene Prijave za raspoloživa sredstva (npr. nijedan nije otpočinjanje; svi su otpočinjanje; ili više otpočinjanja među kojima treba izabrati), sredstva se dodjeljuju na osnovu odluke Komisije donijete **većinom glasova od ukupnog broja članova** (najmanje **3 od 5**). Ta odluka mora biti **obrazložena**.
+Primjeri: `1, 2, 3, 4, 4, 6`. Ako tri prijave dijele četvrto mjesto: `1, 2, 3, 4, 4, 4, 7`.
 
-Prioritet se razrješava **samo u obimu potrebnom** da se jednoznačno utvrdi koje Prijave dobijaju raspoloživa sredstva. Ako budžet može finansirati sve Prijave sa tom ocjenom, ovo pravilo se **ne** aktivira.
+Prijave iste faze i istih bodova zadržavaju stabilan tehnički redoslijed. Taj redoslijed nije poslovni rang i nije prednost pri finansiranju.
 
-Tehnički identifikator Prijave **nije** poslovni tie-break. Detalj funkcionalnog toka, evidentiranja i gate-ova: `KN-FS-003` §14.9.
+Komisija za svaku prijavu sa ocjenom od najmanje 30 bodova odlučuje **Podržava** ili **Odbija**. Predsjednik unosi odluku, ručno unosi dodijeljeni iznos i evidentira obrazloženje prema §14.8. Aplikacija ne bira koje prijave moraju biti podržane. Redoslijed prikaza otpočinjanja ne stvara obaveznog primaoca sredstava.
 
-Predsjednik može evidentirati odluku bilo kojim redoslijedom. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno zaključava ishod, iznos i obrazloženje. Odluka koja je već bila sačuvana, a nema vrijeme zaključavanja, ostaje ispravljiva i ovim pravilom se ne prepisuje. Upis se odbija ako poslije njega ne ostaje zakonit završetak: zbir u budžetu, traženi iznos, limit od 20% kada je zeleni ili inovativni bonus potvrđen, i prednost otpočinjanja nad razvojem pri istim bodovima. Limiti 10% i 5% ostaju poslovne granice iz §13.4 i ovim upisom se ne mijenjaju. Dva istovremena čuvanja ne mogu zajedno preći budžet.
+Predsjednik može evidentirati odluku bilo kojim redoslijedom. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno zaključava ishod, iznos i obrazloženje. Odluka koja je već bila sačuvana, a nema vrijeme zaključavanja, ostaje ispravljiva. Upis iznosa se odbija kada prelazi traženi iznos, limit od 20% kada je zeleni ili inovativni bonus potvrđen, ili preostala sredstva nakon već sačuvanih dodjela. Neriješena prijava strogo višeg ranga i dalje rezerviše svoj zahtjev. Isti rang ne rezerviše sredstva. Limiti 10% i 5% ostaju poslovne granice iz §13.4 i ovim upisom se ne mijenjaju. Dva istovremena čuvanja ne mogu zajedno preći budžet.
+
+Kada više prijava iste faze dijeli bodove, a sredstva ne pokrivaju cijelu tu grupu, obrazloženje odluke Komisije je obavezno. To ne određuje koja prijava mora biti podržana.
 
 ## 13.7. Konačna rang-lista
 
@@ -1142,4 +1149,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.23**
+**Kraj dokumenta KN-BM-003 v1.0.24**

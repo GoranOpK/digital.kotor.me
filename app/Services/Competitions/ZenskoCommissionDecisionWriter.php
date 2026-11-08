@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
  * Upis zaključka ženskog preduzetništva.
  * Prvo čuvanje odluke koja još nije postojala trajno je zaključava.
  * Ranije sačuvana odluka bez vremena zaključavanja ostaje izmjena, ali ne smije
- * da potroši budžet ni prioritet koji zakonit završetak još treba.
+ * da pređe traženi iznos, limit od 20% ni preostali budžet.
  */
 final class ZenskoCommissionDecisionWriter
 {
@@ -104,12 +104,6 @@ final class ZenskoCommissionDecisionWriter
                     ]);
                 }
 
-                if ($this->completion->startupRejectionBlocked($pool, $locked)) {
-                    throw ValidationException::withMessages([
-                        'commission_decision' => AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE,
-                    ]);
-                }
-
                 $locked->forceFill([
                     'commission_decision' => 'odbija',
                     'commission_justification' => $justification,
@@ -177,12 +171,6 @@ final class ZenskoCommissionDecisionWriter
                     'approved_amount' => 'Odobreni iznos ne može biti veći od 20% ukupnog budžeta konkursa.',
                 ]);
             }
-        }
-
-        if ($this->completion->developmentSupportBlocked($pool, $locked)) {
-            throw ValidationException::withMessages([
-                'commission_decision' => AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE,
-            ]);
         }
 
         $room = $this->completion->supportRoom(

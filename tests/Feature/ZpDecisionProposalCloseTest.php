@@ -225,7 +225,7 @@ class ZpDecisionProposalCloseTest extends TestCase
         $this->assertSame([], Storage::disk('local')->allFiles());
     }
 
-    public function test_unresolved_equal_scores_block_close(): void
+    public function test_mixed_stage_equal_scores_do_not_block_close(): void
     {
         Storage::fake('local');
         [$competition, $president] = $this->readyCompetition();
@@ -253,12 +253,10 @@ class ZpDecisionProposalCloseTest extends TestCase
             ->from(route('admin.competitions.show', $competition))
             ->post(route('admin.competitions.close', $competition))
             ->assertRedirect()
-            ->assertSessionHasErrors([
-                'error' => ZpEqualScoreAllocationGuard::STAGE_PRIORITY_VIOLATION_MESSAGE,
-            ]);
+            ->assertSessionHasNoErrors();
 
-        $this->assertSame('published', $competition->fresh()->status);
-        $this->assertSame(0, ZenskoDecisionProposalSnapshot::query()->count());
+        $this->assertSame('completed', $competition->fresh()->status);
+        $this->assertSame(1, ZenskoDecisionProposalSnapshot::query()->count());
     }
 
     public function test_non_chairman_cannot_close(): void

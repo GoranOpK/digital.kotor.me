@@ -14,6 +14,7 @@ use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\CompetitionRanking;
+use App\Support\EqualScoreDisplayOrder;
 use App\Support\NamedMysqlUniqueViolation;
 use App\Support\ScoringProfileConfig;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -496,27 +497,18 @@ class CanonicalIndividualScoringService
                 ->values();
             $above = $scored
                 ->filter(fn (Application $application) => $this->youthMeetsMinimumScore($application))
-                ->sort(function (Application $a, Application $b) {
-                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
-                    if ($aPos !== $bPos) {
-                        return $aPos <=> $bPos;
-                    }
-
-                    return $a->id <=> $b->id;
-                })
+                ->sort(fn (Application $a, Application $b) => EqualScoreDisplayOrder::compareRanked($a, $b))
                 ->values();
             $below = $scored
                 ->filter(fn (Application $application) => ! $this->youthMeetsMinimumScore($application))
                 ->sort(function (Application $a, Application $b) {
-                    $aScore = $this->youthFullPrecisionFinalScore($a) ?? '0';
-                    $bScore = $this->youthFullPrecisionFinalScore($b) ?? '0';
-                    $compared = bccomp($bScore, $aScore, self::YOUTH_BONUS_SCALE);
-                    if ($compared !== 0) {
-                        return $compared;
-                    }
-
-                    return $a->id <=> $b->id;
+                    return EqualScoreDisplayOrder::compareByScore(
+                        $a,
+                        $b,
+                        $this->youthFullPrecisionFinalScore($a) ?? '0',
+                        $this->youthFullPrecisionFinalScore($b) ?? '0',
+                        self::YOUTH_BONUS_SCALE,
+                    );
                 })
                 ->values();
         }
@@ -594,25 +586,19 @@ class CanonicalIndividualScoringService
             ];
         }
 
-        usort($rows, function (array $a, array $b) {
-            $cmp = bccomp($b['full'], $a['full'], self::YOUTH_BONUS_SCALE);
-            if ($cmp !== 0) {
-                return $cmp;
-            }
+        $fullById = [];
+        foreach ($rows as $row) {
+            $fullById[(int) $row['application']->id] = $row['full'];
+        }
+        $ranked = EqualScoreDisplayOrder::ranked(
+            array_map(fn (array $row) => $row['application'], $rows),
+            fn (Application $application) => $fullById[(int) $application->id] ?? '0',
+            self::YOUTH_BONUS_SCALE,
+        );
 
-            return $a['application']->id <=> $b['application']->id;
-        });
-
-        $previousFull = null;
-        $previousRank = 0;
         $expected = [];
-        foreach ($rows as $index => $row) {
-            $rank = ($previousFull !== null && bccomp($row['full'], $previousFull, self::YOUTH_BONUS_SCALE) === 0)
-                ? $previousRank
-                : $index + 1;
-            $previousRank = $rank;
-            $previousFull = $row['full'];
-            $expected[$row['application']->id] = $rank;
+        foreach ($ranked as $row) {
+            $expected[$row['application']->id] = $row['rank'];
         }
 
         return $expected;
@@ -1656,10 +1642,9 @@ class CanonicalIndividualScoringService
     }
 
     /**
-     * Competition ranking (KN-FS-003 §14.6): equal final_score → shared rank,
-     * next distinct score skips places (e.g. 1, 2, 2, 4).
-     * Sort by id is only for deterministic order within a tied score group;
-     * it must not produce distinct ranking_position values.
+     * Equal final_score shares a rank and the next score skips places (1, 2, 2, 4).
+     * Within a tie, startup is ordered before development, then by id.
+     * That order does not create a distinct ranking_position.
      *
      * @param  Collection<int, Application>  $eligible
      */
@@ -1670,34 +1655,18 @@ class CanonicalIndividualScoringService
                 return ! $application->isEliminatedFromScoring()
                     && $application->meetsMinimumScore();
             })
-            ->sort(function (Application $a, Application $b) {
-                $aScore = (float) ($a->final_score ?? 0);
-                $bScore = (float) ($b->final_score ?? 0);
-                if ($aScore !== $bScore) {
-                    return $bScore <=> $aScore;
-                }
-
-                return $a->id <=> $b->id;
-            })
             ->values();
 
-        $previousScore = null;
-        $rank = 1;
-
-        foreach ($aboveLine as $index => $application) {
-            $score = (float) ($application->final_score ?? 0);
-
-            if ($previousScore === null) {
-                $rank = 1;
-            } elseif ($score !== $previousScore) {
-                $rank = $index + 1;
-            }
-
+        foreach (EqualScoreDisplayOrder::ranked(
+            $aboveLine,
+            fn (Application $application) => (string) ($application->final_score ?? '0'),
+            2,
+        ) as $row) {
+            $application = $row['application'];
+            $rank = $row['rank'];
             if ((int) $application->ranking_position !== $rank) {
                 $application->forceFill(['ranking_position' => $rank])->save();
             }
-
-            $previousScore = $score;
         }
     }
 

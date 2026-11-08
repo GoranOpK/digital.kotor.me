@@ -3,18 +3,15 @@
 namespace App\Services\Competitions;
 
 use App\Models\Application;
-use App\Support\KnApplicationClassification;
 use Illuminate\Support\Collection;
 
 /**
- * Prostor za novu podršku tako da već zaključane odluke i obavezni prioritet
- * i dalje ostavljaju bar jedan zakonit završetak. Ne bira dobitnika i ne mijenja iznos.
+ * Prostor za novu podršku: budžet umanjen za već sačuvane iznose i za
+ * neriješene prijave strogo višeg ranga. Isti rang ne rezerviše sredstva.
+ * Ne bira dobitnika i ne mijenja iznos.
  */
 final class AllocationCompletionGuard
 {
-    public const DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE =
-        'Razvoj se ne bira umjesto prioritetne prijave otpočinjanja.';
-
     /**
      * @param  Collection<int, Application>  $pool
      * @param  callable(Application): string  $maxClaim
@@ -51,44 +48,6 @@ final class AllocationCompletionGuard
         return $room;
     }
 
-    /**
-     * @param  Collection<int, Application>  $pool
-     */
-    public function startupRejectionBlocked(Collection $pool, Application $candidate): bool
-    {
-        if (! $this->isStartup($candidate) || $candidate->ranking_position === null) {
-            return false;
-        }
-
-        $rank = (int) $candidate->ranking_position;
-
-        return $pool->contains(function (Application $other) use ($candidate, $rank) {
-            return (int) $other->id !== (int) $candidate->id
-                && (int) $other->ranking_position === $rank
-                && ! $this->isStartup($other)
-                && $this->isSupported($other);
-        });
-    }
-
-    /**
-     * @param  Collection<int, Application>  $pool
-     */
-    public function developmentSupportBlocked(Collection $pool, Application $candidate): bool
-    {
-        if ($this->isStartup($candidate) || $candidate->ranking_position === null) {
-            return false;
-        }
-
-        $rank = (int) $candidate->ranking_position;
-
-        return $pool->contains(function (Application $other) use ($candidate, $rank) {
-            return (int) $other->id !== (int) $candidate->id
-                && (int) $other->ranking_position === $rank
-                && $this->isStartup($other)
-                && $other->commission_decision === 'odbija';
-        });
-    }
-
     public function youthMaxClaim(Application $application, string $budget): string
     {
         return $this->capClaim($application, $budget, null);
@@ -103,11 +62,6 @@ final class AllocationCompletionGuard
         }
 
         return $this->capClaim($application, $budget, $percentCap);
-    }
-
-    public function isStartup(Application $application): bool
-    {
-        return (string) $application->business_stage === KnApplicationClassification::STAGE_ZAPOCINJANJE;
     }
 
     private function capClaim(Application $application, string $budget, ?string $percentCap): string
@@ -150,15 +104,7 @@ final class AllocationCompletionGuard
 
         $otherRank = (int) $other->ranking_position;
         $candidateRank = (int) $candidate->ranking_position;
-        if ($otherRank < $candidateRank) {
-            return true;
-        }
-
-        if ($otherRank > $candidateRank) {
-            return false;
-        }
-
-        return $this->isStartup($other) && ! $this->isStartup($candidate);
+        return $otherRank < $candidateRank;
     }
 
     private function minMoney(string $left, string $right): string
