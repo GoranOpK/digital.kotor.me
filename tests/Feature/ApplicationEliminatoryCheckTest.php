@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\ApplicationEliminatoryNotice;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -338,7 +339,10 @@ class ApplicationEliminatoryCheckTest extends TestCase
         }
 
         $this->assertTrue($failApplication->fresh()->isEliminatoryConfirmedFail());
-        $this->assertTrue($competition->fresh()->isRankingFormed());
+        $this->assertTrue($competition->fresh()->isIndividualScoringCycleComplete());
+        $this->assertFalse($competition->fresh()->isRankingFormed());
+
+        $this->travelTo(now()->addDays(ApplicationEliminatoryNotice::APPEAL_WINDOW_DAYS)->addSecond());
 
         EvaluationScore::query()->where('application_id', $passApplication->id)->update(['documents_complete' => false]);
         $this->assertFalse($passApplication->fresh()->isRejectedForMissingDocuments());
@@ -349,6 +353,7 @@ class ApplicationEliminatoryCheckTest extends TestCase
             'approved_amount' => 100,
         ]);
         $this->assertTrue($competition->fresh()->hasChairmanCompletedDecisions());
+        $this->travelBack();
     }
 
     public function test_documents_complete_is_not_canonical_and_notes_stay_on_evaluation_scores(): void

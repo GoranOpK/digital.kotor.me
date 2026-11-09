@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.22
-**Datum:** 2026-11-08
+**Verzija:** 1.0.23
+**Datum:** 2026-11-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.25; jednak broj bodova dijeli rang, otpočinjanje se prikazuje ispred razvoja i to nije prednost finansiranja; Rezime je obavezan za kompletnost Obrasca 2 i konačno podnošenje)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.26; međusobni uvid i preliminarna rang-lista čekaju završen prigovorni postupak i pet zaključanih ocjena svih prijava sa pravom na bodovanje; jednak broj bodova dijeli rang; Rezime je obavezan za kompletnost Obrasca 2 i konačno podnošenje)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
 
@@ -77,6 +77,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.20 | 2026-11-08 | ŽP-PM-RANK-01, usklađeno sa KN-BM-003 v1.0.24. §14.6 razdvaja rang-poziciju od redoslijeda prikaza. §14.9 više ne tretira otpočinjanje kao obaveznog primaoca sredstava i ne blokira Predlog ni zatvaranje zbog te prednosti. Ručni zaključak, iznos i finansijske kontrole ostaju. |
 | 1.0.21 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §18.6.4, §14.7, §14.10.3, §14.11, §15.1 i §16.5 više ne daju otpočinjanju prednost pri finansiranju niti zabranjuju podršku razvoju zbog neriješenog otpočinjanja istog ranga. Jednak rang, prikaz otpočinjanja prije razvoja, preskakanje pozicija, ručne odluke i postojeći limiti ostaju. Primjeri ostaju u §14.6. Istorijski red 1.0.20 ostaje. |
 | 1.0.22 | 2026-11-08 | ŽP-REZ-01, usklađeno sa KN-BM-003 v1.0.25. §7.10, §7.11, §7.14 i §10.2: Rezime je obavezan za status „Popunjen“ i za konačno podnošenje. Nacrt se može sačuvati bez njega. Tekst od samih razmaka je prazan. Potvrda nedostajućih priloga ne zaobilazi Rezime. Ostali djelovi Obrasca 2 i dalje nijesu uslov predaje. PM i MMSP nijesu dirani. |
+| 1.0.23 | 2026-11-09 | ŽP-KOM-11, usklađeno sa KN-BM-003 v1.0.26. §3.4, §3.5, §4.9, §4.10, §13.5, §13.6, §14.1 i §14.6: tuđe ocjene, napomene, zajednički zbir i preliminarna rang-lista čekaju završen prigovorni postupak i pet zaključanih ocjena svih prijava koje tada imaju pravo na bodovanje. Otvoren rok ili neriješen prigovor ne zaustavlja ocjenjivanje ostalih podobnih prijava. Sopstvene ocjene ostaju dostupne. Posebna tehnička specifikacija ŽP nije otvorena. PM i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -374,7 +375,7 @@ Komisija je kolektivni poslovni akter. Na Platformi pojedinačno djeluju njeni �
 * pristupa Prijavama tek kada usvojeni tok to dozvoli, nakon isteka roka;
 * učestvuje u pregledu i ocjenjivanju prema `KN-BM-003`;
 * unosi sopstvene individualne ocjene, uključujući izmjenjiv **nacrt**;
-* vidi samo sopstvene individualne ocjene dok svih pet članova ne završi individualno ocjenjivanje svih biznis planova koji su ušli u pozitivno ocjenjivanje;
+* vidi samo sopstvene individualne ocjene dok svih pet članova ne završi individualno ocjenjivanje svih biznis planova koji su ušli u pozitivno ocjenjivanje i dok prigovorni postupak konkursa nije završen;
 * nakon **završavanja** individualnog ocjenjivanja ne mijenja, ne briše, ne poništava i ne zamjenjuje te ocjene;
 * **nema** ovlašćenje za operativne radnje koje BM dodjeljuje predsjedniku Komisije.
 
@@ -393,7 +394,7 @@ Pri individualnom ocjenjivanju predsjednik ima:
 * ista pravila ocjenjivanja;
 * istu težinu;
 * ista ograničenja tajnosti;
-* **nema** privilegovan uvid u ocjene drugih članova dok svih pet ne završi individualno ocjenjivanje svih biznis planova koji su ušli u pozitivno ocjenjivanje;
+* **nema** privilegovan uvid u ocjene drugih članova dok svih pet ne završi individualno ocjenjivanje svih biznis planova koji su ušli u pozitivno ocjenjivanje i dok prigovorni postupak konkursa nije završen;
 * **nema** ovlašćenje da mijenja ocjenu drugog člana;
 * **nema** posebnu ocjenjivačku moć.
 
@@ -640,6 +641,8 @@ Dok ukupno ocjenjivanje traje:
 
 Ukupno ocjenjivanje je završeno kada **svih pet kanonskih mjesta Komisije** završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje. Potpunost **nije** broj trenutno aktivnih članova.
 
+Međusobni uvid, tuđe napomene, zajednički zbir i preliminarna rang-lista ipak ostaju zatvoreni dok na konkursu postoji otvoren rok za prigovor ili podnesen prigovor o kojem Komisija još nije odlučila. Završetak trenutno podobnih prijava nije dovoljan. Ocjenjivanje tih prijava se ne zaustavlja. Sopstvene sačuvane ocjene i napomene ostaju dostupne. Predsjednik nema raniji uvid. Kada prihvaćen prigovor uvede prijavu u bodovanje, uvid i rang-lista čekaju i njenih pet zaključanih ocjena. Odbijen prigovor tu prijavu ne uvodi u bodovanje.
+
 Tada istovremeno:
 
 * članovima Komisije postaju dostupni kompletni Obrasci 3 za sve ocijenjene biznis planove;
@@ -655,7 +658,7 @@ Konačna ocjena je zbir prosječnih ocjena pozitivnih kriterijuma i dodatnih bod
 
 ## 4.10. Preliminarna rang-lista
 
-Preliminarna rang-lista automatski nastaje završetkom ukupnog ocjenjivanja.
+Preliminarna rang-lista automatski nastaje završetkom ukupnog ocjenjivanja i završetkom prigovornog postupka iz §4.9. Dok rok ili neriješen prigovor traje, lista se ne formira i direktan zahtjev je ne otkriva.
 
 Svi bodovani biznis planovi ulaze na preliminarnu rang-listu. Nema odobrenih iznosa.
 
@@ -2576,7 +2579,7 @@ Administrator konkursa, Administrator platforme i Super administrator **ne** dob
 
 Podnositeljka **ne** dobija pristup individualnim ocjenama članova Komisije u ovom poglavlju.
 
-Individualne ocjene drugih članova postaju dostupne Komisiji **tek** kada svih **pet kanonskih mjesta** završi individualno ocjenjivanje **svih** Prijava koje su ušle u ciklus individualnog ocjenjivanja.
+Individualne ocjene drugih članova postaju dostupne Komisiji **tek** kada svih **pet kanonskih mjesta** završi individualno ocjenjivanje **svih** Prijava koje su ušle u ciklus individualnog ocjenjivanja i kada je prigovorni postupak završen: nema otvorenog roka za podnošenje prigovora i nema podnesenog prigovora o kojem Komisija još nije odlučila. Serverski uslov je `zenskoCommissionDisclosureIsAllowed()`. On ne mijenja `isIndividualScoringCycleComplete()`. Dok je uslov netačan, odgovor članu sadrži samo njegove ocjene i napomene. Direktan `evaluation.create` i `evaluation.show` ne zaobilaze tu kapiju.
 
 Ovo poglavlje **ne** određuje kasniju javnu objavu ni pristup Podnositeljke rezultatima.
 
@@ -2594,7 +2597,7 @@ Ista tajnost kao za individualne ocjene:
 
 * dok je ciklus individualnog ocjenjivanja otvoren, član vidi sopstvene Ostale napomene;
 * napomene drugih članova **ne** otkrivaju se ranije samo zato što su svi članovi ocjenili jednu konkretnu Prijavu;
-* napomene drugih članova mogu se otkriti zajedno sa njihovim individualnim ocjenama nakon završetka **cjelokupnog** ciklusa individualnog ocjenjivanja.
+* napomene drugih članova mogu se otkriti zajedno sa njihovim individualnim ocjenama nakon završetka **cjelokupnog** ciklusa individualnog ocjenjivanja i završetka prigovornog postupka iz §13.5.
 
 Ostale napomene **nijesu** Napomena predsjednika Komisije iz Poglavlja 11 o eliminatornim kriterijumima. Napomena iz Poglavlja 11 je jedinstveno polje Obrasca 3 koje pripada eliminatornoj provjeri. Ostale napomene člana Komisije ostaju opcione napomene uz individualno ocjenjivanje.
 
@@ -2644,7 +2647,7 @@ Osnov: `KN-BM-003` §4.3, §12.5, §12.6, §13; Poglavlja 3.5, 4.9–4.12, 12 i 
 
 ## 14.1. Završetak individualnog ocjenjivanja i formiranje zbirnih rezultata
 
-Poglavlje 14 počinje kada svih **pet** članova Komisije završi individualno ocjenjivanje **svih** Prijava koje su do tog trenutka ispunile sve prethodno propisane uslove za nastavak postupka i ušle u ocjenjivanje.
+Poglavlje 14 počinje kada svih **pet** članova Komisije završi individualno ocjenjivanje **svih** Prijava koje su do tog trenutka ispunile sve prethodno propisane uslove za nastavak postupka i ušle u ocjenjivanje, i kada je prigovorni postupak završen prema §13.5.
 
 Završetak je **globalan** za cjelokupan ciklus individualnog ocjenjivanja, **ne** po pojedinačnoj Prijavi.
 
@@ -2750,7 +2753,7 @@ Platforma automatski utvrđuje da li je ocjena ispod ili iznad praga. To je mate
 
 ## 14.6. Preliminarna rang-lista
 
-Preliminarna rang-lista formira se **automatski** tek kada je završen **cjelokupan globalni** ciklus individualnog ocjenjivanja.
+Preliminarna rang-lista formira se **automatski** tek kada je završen **cjelokupan globalni** ciklus individualnog ocjenjivanja i kada nema otvorenog roka ni neriješenog prigovora. Prije toga se ne upisuje kao dostupna lista i direktan zahtjev ne prikazuje rangirane prijave. Postupci koji zavise od te liste, uključujući zaključak predsjednika koji se oslanja na formiran rang, čekaju isti uslov.
 
 Redoslijed je po konačnoj ocjeni, od najviše ka nižoj.
 

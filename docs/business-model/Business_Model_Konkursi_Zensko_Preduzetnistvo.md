@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.25
-**Datum:** 2026-11-08
+**Verzija:** 1.0.26
+**Datum:** 2026-11-09
 
 Povezani dokumenti:
 
@@ -17,7 +17,7 @@ Povezani dokumenti:
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
-* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md`
+* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.23)
 
 Ovaj dokument **ne** mijenja `KN-BM-001`. Zajednička pravila se ne ponavljaju osim koliko je potrebno da profil bude samodovoljan (`BM-KN-008`).
 
@@ -55,6 +55,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.23 | 2026-10-29 | KN-PATCH-BM-027 — Buduća odluka Komisije zaključava se prvim uspješnim čuvanjem. Odluka sačuvana prije toga ostaje bez vremena zaključavanja i može se ispraviti. Prije upisa iznos mora ostaviti zakonit završetak: budžet, postojeći limit od 20% kada je potvrđen zeleni ili inovativni bonus, traženi iznos i prednost otpočinjanja. Limiti 10% i 5% se ne uvode u ovaj upis. Istovremeni upisi dijele jednu transakciju. |
 | 1.0.24 | 2026-11-08 | ŽP-PM-RANK-01. Jednak broj bodova i dalje dijeli rang-poziciju, a naredna pozicija preskače zauzeta mjesta. Unutar te grupe otpočinjanje se prikazuje ispred razvoja. Taj redoslijed ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava. Komisija i dalje ručno bira Podržava ili Odbija i ručno unosi iznos. Aplikacija ne određuje koje prijave moraju biti podržane. |
 | 1.0.25 | 2026-11-08 | ŽP-REZ-01. Rezime Obrasca 2 obavezan je za status „Popunjen“ i za konačno podnošenje prijave. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Obaveznost Rezimea ne čini ostale djelove Obrasca 2 obaveznim za predaju. PM i MMSP nijesu dirani. |
+| 1.0.26 | 2026-11-09 | ŽP-KOM-11. Međusobni uvid u tuđe ocjene, napomene i zajednički zbir, kao i preliminarna rang-lista, čekaju završen prigovorni postupak i zaključane ocjene svih pet kanonskih mjesta za prijave koje tada imaju pravo na pozitivno bodovanje. Završetak trenutno podobnih prijava nije dovoljan dok postoji otvoren rok ili neriješen prigovor. Sopstvene ocjene ostaju dostupne. Ocjenjivanje ostalih podobnih prijava se ne zaustavlja. PM i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -619,6 +620,8 @@ Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za 
 
 Podnositeljka prima **email obavještenje** da je odluka po Prigovoru donesena. Autoritativni zapis odluke, obrazloženje i posljedica za bodovanje ostaju na Platformi. Email nije kanal za podnošenje ni izmjenu Prigovora.
 
+Dok na konkursu postoji otvoren rok za podnošenje prigovora ili podnesen prigovor o kojem Komisija još nije odlučila, članovi ne vide tuđe ocjene, tuđe napomene ni zajednički zbir i preliminarna rang-lista se ne formira. Ocjenjivanje drugih prijava koje su već stekle pravo na pozitivno bodovanje time nije zaustavljeno. Sopstvene sačuvane ocjene i napomene ostaju dostupne.
+
 ---
 
 # 10. Eliminatorni kriterijumi
@@ -667,7 +670,7 @@ Nakon potvrđenog **Da / Da / Da** Prijava prolazi eliminatornu provjeru i član
 
 Ako je potvrđeno najmanje jedno **Ne\***, Prijava se odbija i bodovanje se ne aktivira.
 
-**Pravo na Prigovor odnosi se na sva tri eliminatorna kriterijuma.** Postupovni rokovi i kanal Prigovora ostaju u Poglavlju 9.2. Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja postupak i omogućava se individualno bodovanje. Ako i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava.
+**Pravo na Prigovor odnosi se na sva tri eliminatorna kriterijuma.** Postupovni rokovi i kanal Prigovora ostaju u Poglavlju 9.2. Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja postupak i omogućava se individualno bodovanje. Ako i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava. Odbijen prigovor sam po sebi ne uvodi prijavu u bodovanje. Dok rok te prijave ili neriješen prigovor traje, međusobni uvid i preliminarna rang-lista ostaju zatvoreni iako su ostale podobne prijave već ocijenjene (Poglavlja 12.3 i 13.1).
 
 Nakon potvrđenog odbijanja Obrazac 3 ostaje trajno dostupan u režimu pregleda. Mora biti evidentirano najmanje: rezultat sva tri eliminatorna kriterijuma; postojeća Napomena; činjenica da je Prijava odbijena po eliminatornoj provjeri; datum i vrijeme potvrde; predsjednik Komisije koji je izvršio potvrdu.
 
@@ -754,6 +757,8 @@ Dok ocjenjivanje traje, članovi Komisije imaju uvid samo u svoje ocjene (čl. 2
 
 Dok svih **pet kanonskih mjesta** ne završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje, **niko** preko Platforme ne vidi tuđe individualne ocjene, prosjeke, zbirne rezultate ni rang-listu. Isto važi za predsjednika Komisije, Administratora konkursa, Administratora platforme i Super administratora.
 
+Završetak ocjenjivanja prijava koje su u tom trenutku podobne nije sam po sebi dovoljan. Međusobni uvid i preliminarna rang-lista ostaju zatvoreni dok istovremeno nijesu ispunjeni svi ovi uslovi: nema otvorenog roka za podnošenje prigovora, nema podnesenog prigovora o kojem Komisija još nije odlučila, sve prijave koje nakon eliminatornog i prigovornog postupka imaju pravo na pozitivno bodovanje uključene su u ocjenjivanje i svih pet kanonskih mjesta zaključalo je njihove individualne ocjene. Predsjednik nema raniji uvid. Kada prijava prihvatanjem prigovora uđe u bodovanje, uvid i rang-lista ostaju zatvoreni dok svih pet mjesta ne zaključa i njene ocjene. Ranije zaključane ocjene drugih prijava se ne brišu i ne otključavaju.
+
 Činjenica da je pet mjesta završilo jednu konkretnu Prijavu **ne** otkriva rezultate i **ne** prestaje tajnost ciklusa.
 
 Naknadni uvid u ocjene drugih članova **ne** otključava sopstvene ocjene.
@@ -791,7 +796,7 @@ Konačna ocjena = osnovna ocjena + primjenjivi dodatni bodovi.
 
 Maksimum ostaje **50 + 8 = 58**.
 
-Zbirni rezultat Prijave **ne** formira se dok svih pet kanonskih mjesta nema konačnu ocjenu za tu Prijavu. **Ne** formira se rang-lista niti se primjenjuje prag od 30 bodova samo zato što je peta ocjena stigla za jednu Prijavu. Prag i rang-lista pripadaju fazi rezultata **nakon** završetka cjelokupnog ciklusa (`PO-IB-03`, `PO-IB-05`).
+Zbirni rezultat Prijave **ne** formira se dok svih pet kanonskih mjesta nema konačnu ocjenu za tu Prijavu. **Ne** formira se rang-lista niti se primjenjuje prag od 30 bodova samo zato što je peta ocjena stigla za jednu Prijavu. Prag i rang-lista pripadaju fazi rezultata **nakon** završetka cjelokupnog ciklusa (`PO-IB-03`, `PO-IB-05`) i **nakon** završetka prigovornog postupka iz Poglavlja 12.3. Otvoren rok ili neriješen prigovor zadržava tuđe ocjene, zajednički zbir i preliminarnu rang-listu zatvorenim iako je ciklus trenutno podobnih prijava završen.
 
 ## 12.6. Dodatni bodovi
 
@@ -849,7 +854,7 @@ Preliminarna i konačna rang-lista **nijesu** dva fizički odvojena poslovna obj
 
 ## 13.1. Preliminarna rang-lista
 
-Kada svih pet kanonskih mjesta ocjeni sve biznis planove koji su ušli u pozitivno ocjenjivanje, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20).
+Kada svih pet kanonskih mjesta ocjeni sve biznis planove koji su ušli u pozitivno ocjenjivanje i kada je prigovorni postupak završen prema Poglavlju 12.3, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20). Otvoren rok ili neriješen prigovor sprečava i formiranje i prikaz te liste. Direktan zahtjev ne otkriva rangirane prijave prije tih uslova.
 
 Preliminarna rang-lista **ne** smije nastajati samo otvaranjem stranice. Nastaje završetkom ocjenjivanja.
 

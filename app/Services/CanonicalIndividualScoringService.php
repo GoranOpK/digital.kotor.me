@@ -36,6 +36,10 @@ class CanonicalIndividualScoringService
 
     public const RANKING_LOCKED_MESSAGE = 'Rang lista i zbirni rezultati dostupni su tek kada svih pet kanonskih mjesta Komisije završi individualno bodovanje svih prijava koje su ušle u bodovanje.';
 
+    public const ZENSKO_APPEAL_WINDOW_MESSAGE = 'Rok za prigovor je otvoren.';
+
+    public const ZENSKO_PRIGOVOR_PODNESEN_MESSAGE = 'Postoji neriješen prigovor.';
+
     public const YOUTH_ADMIN_RANKING_ROUTE_MESSAGE = 'Preliminarna rang-lista mladih dostupna je Komisiji na ekranu ocjenjivanja, ne na administratorskoj ruti.';
 
     public const YOUTH_CYCLE_INCOMPLETE_MESSAGE = 'Nijesu završene sve individualne ocjene prijava u ciklusu.';
@@ -363,6 +367,65 @@ class CanonicalIndividualScoringService
         }
 
         return $this->youthAppealProcessBlockReason($competition) === null;
+    }
+
+    /**
+     * Ženski međusobni uvid i preliminarna rang-lista.
+     * Završetak ciklusa podobnih prijava ostaje poseban uslov i ne čeka prigovor.
+     * Ova kapija traži i taj završetak i završen prigovorni postupak.
+     */
+    public function zenskoCommissionDisclosureIsAllowed(Competition $competition): bool
+    {
+        return $this->commissionPreliminaryResultsLockMessage($competition) === null
+            && $competition->type === 'zensko';
+    }
+
+    /**
+     * null znači da se tuđe ocjene, napomene, zbir i preliminarna lista smiju otvoriti.
+     * Za profile koji nijesu ženski ostaje postojeći uslov završetka ciklusa.
+     */
+    public function commissionPreliminaryResultsLockMessage(Competition $competition): ?string
+    {
+        if (! $this->isIndividualScoringCycleComplete($competition)) {
+            return self::RANKING_LOCKED_MESSAGE;
+        }
+
+        if ($competition->type !== 'zensko') {
+            return null;
+        }
+
+        return $this->zenskoAppealProcessBlockReason($competition);
+    }
+
+    public function zenskoAppealProcessBlockReason(Competition $competition): ?string
+    {
+        if ($competition->type !== 'zensko') {
+            return null;
+        }
+
+        if ($this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition)) {
+            return self::ZENSKO_PRIGOVOR_PODNESEN_MESSAGE;
+        }
+
+        $applications = $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated', 'approved', 'rejected'])
+            ->with(['eliminatoryNotice', 'prigovor'])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($applications as $application) {
+            if (! $this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+                continue;
+            }
+
+            if ($application->prigovor?->isFinished() === true) {
+                continue;
+            }
+
+            return self::ZENSKO_APPEAL_WINDOW_MESSAGE;
+        }
+
+        return null;
     }
 
     public function isYouthPreliminaryRankingReady(Competition $competition): bool
@@ -1607,6 +1670,10 @@ class CanonicalIndividualScoringService
     {
         $competition = $competition->fresh(['commission']);
         if (! $this->isIndividualScoringCycleComplete($competition)) {
+            return;
+        }
+
+        if ($competition->type === 'zensko' && $this->zenskoAppealProcessBlockReason($competition) !== null) {
             return;
         }
 

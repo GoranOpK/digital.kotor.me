@@ -3090,8 +3090,10 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if (! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        $resultsLock = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->commissionPreliminaryResultsLockMessage($competition);
+        if ($resultsLock !== null) {
+            abort(403, $resultsLock);
         }
 
         // Učitaj sve prijave za ovaj konkurs. GET je isključivo čitanje:
@@ -3215,8 +3217,10 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if (! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        $resultsLock = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->commissionPreliminaryResultsLockMessage($competition);
+        if ($resultsLock !== null) {
+            abort(403, $resultsLock);
         }
 
         // Prikupi odabrane dobitnike iz forme
@@ -3316,8 +3320,10 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if (! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        $resultsLock = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->commissionPreliminaryResultsLockMessage($competition);
+        if ($resultsLock !== null) {
+            abort(403, $resultsLock);
         }
 
         // Aktivni tok: Predlog tek nakon završenih predsjedničkih odluka (KN-FS-003 §15.1 / §14.11).

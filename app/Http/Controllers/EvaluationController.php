@@ -71,6 +71,51 @@ class EvaluationController extends Controller
         return CommissionMember::activeForCommission($userId, $commissionId);
     }
 
+    /**
+     * Tuđe ocjene ženskog konkursa čekaju završetak prigovornog postupka.
+     * Ostali profili zadržavaju postojeći uslov završetka ciklusa.
+     */
+    protected function nonYouthCommissionDisclosureIsAllowed(?Competition $competition): bool
+    {
+        if (! $competition) {
+            return false;
+        }
+
+        if ($competition->type === 'zensko') {
+            return $this->canonicalScoring->zenskoCommissionDisclosureIsAllowed($competition);
+        }
+
+        return $competition->isIndividualScoringCycleComplete();
+    }
+
+    /**
+     * Dok uvid nije otvoren, u odgovor ulazi samo ocjena trenutnog člana.
+     *
+     * @param  \Illuminate\Support\Collection<int, CommissionMember>  $members
+     * @return \Illuminate\Support\Collection<int, EvaluationScore>
+     */
+    protected function commissionScoresForDisclosure(
+        Application $application,
+        $members,
+        ?CommissionMember $viewer,
+        bool $canViewOtherMembersScores
+    ) {
+        $memberIds = $canViewOtherMembersScores
+            ? $members->pluck('id')
+            : ($viewer ? collect([(int) $viewer->id]) : collect());
+
+        if ($memberIds->isEmpty()) {
+            return collect();
+        }
+
+        return EvaluationScore::query()
+            ->where('application_id', $application->id)
+            ->whereIn('commission_member_id', $memberIds)
+            ->with('commissionMember')
+            ->get()
+            ->keyBy(fn (EvaluationScore $score) => (int) $score->commission_member_id);
+    }
+
     protected function abortIfCommissionProcessingBlocked(?\App\Models\Competition $competition): void
     {
         if ($competition && $competition->isCommissionProcessingBlocked()) {
@@ -153,6 +198,14 @@ class EvaluationController extends Controller
                 continue;
             }
 
+            if ($assignedCompetition->type === 'zensko') {
+                if ($competitionIds->contains($assignedCompetition->id)) {
+                    $this->canonicalScoring->persistApplicationAggregatesIfCycleComplete($assignedCompetition);
+                }
+
+                continue;
+            }
+
             if (! $assignedCompetition->isOmladinskoProfile()) {
                 continue;
             }
@@ -216,14 +269,16 @@ class EvaluationController extends Controller
         $competitionsWithAllEvaluated = $competitions
             ->filter(fn ($c) => ! $c->isOmladinskoProfile()
                 && ! $this->canonicalScoring->isCanonicalCompetition($c)
-                && $c->isIndividualScoringCycleComplete()
+                && $c->isRankingFormed()
                 && !in_array($c->status, ['closed', 'completed']))
             ->values();
 
         $canViewFinalScoresByCompetition = $competitions
             ->mapWithKeys(fn ($c) => [$c->id => $this->canonicalScoring->isCanonicalCompetition($c)
                 ? $this->canonicalScoring->canonicalRankingIsFormed($c)
-                : $c->isIndividualScoringCycleComplete()])
+                : ($c->type === 'zensko'
+                    ? $this->canonicalScoring->zenskoCommissionDisclosureIsAllowed($c)
+                    : $c->isIndividualScoringCycleComplete())])
             ->toArray();
 
         $youthPreliminaryByCompetition = $competitions
@@ -376,11 +431,8 @@ class EvaluationController extends Controller
                 ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
                 ->orderBy('id')
                 ->get();
-            $allScores = EvaluationScore::where('application_id', $application->id)
-                ->whereIn('commission_member_id', $allMembers->pluck('id'))
-                ->with('commissionMember')
-                ->get()
-                ->keyBy('commission_member_id');
+            $canViewOtherMembersScores = $this->nonYouthCommissionDisclosureIsAllowed($competition);
+            $allScores = $this->commissionScoresForDisclosure($application, $allMembers, $commissionMember, $canViewOtherMembersScores);
         } else {
             $commission = $application->competition->commission;
             $allMembers = $commission->members()
@@ -388,11 +440,8 @@ class EvaluationController extends Controller
                 ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
                 ->orderBy('id')
                 ->get();
-            $allScores = EvaluationScore::where('application_id', $application->id)
-                ->whereIn('commission_member_id', $allMembers->pluck('id'))
-                ->with('commissionMember')
-                ->get()
-                ->keyBy('commission_member_id');
+            $canViewOtherMembersScores = $this->nonYouthCommissionDisclosureIsAllowed($competition);
+            $allScores = $this->commissionScoresForDisclosure($application, $allMembers, null, $canViewOtherMembersScores);
         }
 
         // Proveri da li je trenutni član već ocjenio
@@ -429,10 +478,7 @@ class EvaluationController extends Controller
         }
 
         if (! $isOmladinskoScoring) {
-            $canViewOtherMembersScores = $competition ? $competition->isIndividualScoringCycleComplete() : false;
-            if (! $canViewOtherMembersScores && $commissionMember) {
-                $allScores = $allScores->only([$commissionMember->id]);
-            }
+            $canViewOtherMembersScores = $this->nonYouthCommissionDisclosureIsAllowed($competition);
         }
 
         $aggregate = null;
@@ -978,17 +1024,8 @@ class EvaluationController extends Controller
                 ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
                 ->orderBy('id')
                 ->get();
-            $allScores = EvaluationScore::where('application_id', $application->id)
-                ->whereIn('commission_member_id', $allMembers->pluck('id'))
-                ->with('commissionMember')
-                ->get()
-                ->keyBy('commission_member_id');
-            $canViewOtherMembersScores = $competition
-                ? $competition->isIndividualScoringCycleComplete()
-                : false;
-            if (! $canViewOtherMembersScores && $commissionMember) {
-                $allScores = $allScores->only([$commissionMember->id]);
-            }
+            $canViewOtherMembersScores = $this->nonYouthCommissionDisclosureIsAllowed($competition);
+            $allScores = $this->commissionScoresForDisclosure($application, $allMembers, $commissionMember, $canViewOtherMembersScores);
         }
 
         $aggregate = null;
@@ -1576,8 +1613,11 @@ class EvaluationController extends Controller
         }
 
         $competition = $application->competition;
-        if ($competition && ! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        if ($competition) {
+            $resultsLock = $this->canonicalScoring->commissionPreliminaryResultsLockMessage($competition);
+            if ($resultsLock !== null) {
+                abort(403, $resultsLock);
+            }
         }
 
         if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
@@ -1773,8 +1813,11 @@ class EvaluationController extends Controller
         if ($this->youthSigningIsClosed($competition)) {
             abort(403, self::YOUTH_SIGN_LOCKED_MESSAGE);
         }
-        if ($competition && ! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        if ($competition) {
+            $resultsLock = $this->canonicalScoring->commissionPreliminaryResultsLockMessage($competition);
+            if ($resultsLock !== null) {
+                abort(403, $resultsLock);
+            }
         }
 
         if (! $this->eliminatoryChecks->scoringIsAllowed($application)) {
