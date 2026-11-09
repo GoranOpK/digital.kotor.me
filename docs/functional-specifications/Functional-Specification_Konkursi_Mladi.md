@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.34
-**Datum:** 2026-11-08
+**Verzija:** 1.0.35
+**Datum:** 2026-11-09
 
 Povezani dokumenti:
 
@@ -19,7 +19,7 @@ Povezani dokumenti:
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.30** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.31** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -74,6 +74,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.32 | 2026-11-08 | ŽP-PM-RANK-01, završna korekcija važećeg teksta. §4.10, §20.4, §20.5, §20.6, §20.7.5, §20.7.6, §21.6 i §23.2 više ne vezuju otpočinjanje za dodjelu sredstava niti traže posebno razrješenje jednakih bodova prije konačnosti. Prikaz unutar grupe ostaje otpočinjanje pa razvoj. Primjeri ostaju `1, 2, 3, 4, 4, 6` i `1, 2, 3, 4, 4, 4, 7`. Isti rang ne rezerviše sredstva. Rezervacija strogo višeg ranga, budžet, traženi iznos, tri ekrana i završni tok ostaju. Indeks ostaje 142/142. Istorijski red 1.0.31 ostaje. MMSP nije diran. |
 | 1.0.33 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27. §8.4, §8.5, §10.4 i §10.5.1: Rezime je obavezan za status „Popunjen“ i za konačno podnošenje. Nacrt se može sačuvati bez njega. Tekst od samih razmaka je prazan. Potvrde nepotpunih obrazaca i nedostajućih priloga ne zaobilaze obavezu. Tačke 7 i 22 ostaju neobavezne. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.34 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28. §17.1–§17.4 i §17.7.2–§17.7.4 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Komisija i dalje dodjeljuje bodove. Tok, vrijednosti, maksimum 6 i prihvatni uslovi ostaju. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.35 | 2026-11-09 | PM-TEXT-01. U uvodu Poglavlja 13 naziv akta glasi „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke za mlade“ nije važeći naziv tog akta. Eliminatorni kriterijumi, prigovor i indeks nijesu mijenjani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2605,7 +2606,7 @@ Status poglavlja: USVOJENO
 
 Ovo poglavlje određuje prvu sjednicu, elektronski M3 i tri eliminatorna kriterijuma (`BM-ML-001`; `BM-ML-002`; `BM-ML-003`; `BM-ML-035`).
 
-Načelo da Komisija utvrđuje rezultat, da je sistemska provjera pomoćna, da Administrator ne sprovodi provjeru i da rezultati M3 nijesu osnovna stanja prijave usklađeno je sa `KN-FS-003` Poglavljem 10.2. Sastav, kvorum, kriterijumi i M3 slijede pravila mladih: **tačno tri člana** i **tačno tri eliminatorna kriterijuma** Odluke za mlade. Ne preuzimaju se ženski kriterijumi, Komisija od pet članova ni ženski model kvoruma.
+Načelo da Komisija utvrđuje rezultat, da je sistemska provjera pomoćna, da Administrator ne sprovodi provjeru i da rezultati M3 nijesu osnovna stanja prijave usklađeno je sa `KN-FS-003` Poglavljem 10.2. Sastav, kvorum, kriterijumi i M3 slijede pravila mladih: **tačno tri člana** i **tačno tri eliminatorna kriterijuma** Odluke o podršci preduzetništvu mladih. Ne preuzimaju se ženski kriterijumi, Komisija od pet članova ni ženski model kvoruma.
 
 Ne uvodi se javni tok službenih akata. Tehnički mehanizam evidencije prisustva **nije** određen ovim poglavljem.
 

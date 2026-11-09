@@ -359,7 +359,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->assertStringNotContainsString('name="criterion_outcomes', $html);
         $activated = $this->activatedPrigovorSection($html);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $activated);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $activated);
         $this->assertSame(
             [1, 2],
             $application->fresh('eliminatoryCheck')->eliminatoryCheck->activatedCriterionNumbers()

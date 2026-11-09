@@ -1111,7 +1111,7 @@
                     @endphp
                     @if($isOmladinsko)
                     <div class="finances-notice-box" id="financesNoticeBox">
-                        <h3>Napomena — član 19 Odluke</h3>
+                        <h3>Napomena — član 19 Odluke o podršci preduzetništvu mladih</h3>
                         <p style="margin: 0 0 12px;">
                             Fizičko lice, preduzetnik ili privredno društvo može konkurisati za cjelokupan iznos ili dio sredstava potrebnih za realizaciju biznis plana.
                         </p>

@@ -62,7 +62,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $snapshot);
         $this->assertStringContainsString('Nedostaje izvod', $snapshot);
         $this->assertStringContainsString('Nema M4', $snapshot);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $snapshot);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $snapshot);
         $this->assertStringNotContainsString(trim(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX), $snapshot);
         $this->assertStringNotContainsString('{', (string) $notice->note_snapshot);
         $this->assertStringNotContainsString('član 10', $snapshot);
@@ -175,7 +175,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
         $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
         $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
         $this->assertStringNotContainsString('enctype="multipart/form-data"', $html);
         $this->assertStringNotContainsString('name="document"', $html);
@@ -257,7 +257,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
         $this->assertStringNotContainsString('name="contested[]"', $html);
         $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
         $this->actingAs($application->user)
@@ -295,7 +295,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $submitted);
         $this->assertStringContainsString('Samo prvi kriterijum.', $submitted);
         $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $submitted);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $submitted);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $submitted);
         $this->assertSame(1, substr_count($submitted, 'Samo prvi kriterijum.'));
         $this->assertStringNotContainsString('name="criterion_obrazlozenja', $submitted);
         $this->assertStringNotContainsString('Ospori', $submitted);
@@ -383,7 +383,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
         $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
         $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
         $this->actingAs($application->user)
@@ -413,7 +413,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $submitted);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $submitted);
         $this->assertSame(1, substr_count($submitted, 'Zajedničko obrazloženje za dva kriterijuma.'));
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $submitted);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $submitted);
         $this->assertSame(
             [1, 2],
             $application->fresh('eliminatoryCheck')->eliminatoryCheck->activatedCriterionNumbers()
@@ -432,7 +432,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
         $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
         $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
-        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertStringNotContainsString('name="contested[]"', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
@@ -462,7 +462,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame(1, substr_count($card, 'Zajedničko obrazloženje za tri kriterijuma.'));
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $card);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $card);
-        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $card);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $card);
         $this->assertStringContainsString('Rok za Prigovor:', $card);
         $this->assertStringNotContainsString('name="criterion_outcomes', $card);
     }
@@ -1155,7 +1155,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertApplicantSharedExplanationShownOnce($application, $explanation, [
             'Dostavljena je potpuna dokumentacija?',
             'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?',
-            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?',
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?',
         ]);
     }
 
@@ -1183,7 +1183,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
     }
 
     public function test_pm_applicant_omits_empty_commission_explanation_block(): void
@@ -1218,7 +1218,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringNotContainsString('Obrazloženje Komisije:', $html);
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertStringContainsString('Rok ističe '.$notice->prigovorDeadlineAt()->format('d.m.Y. H:i'), $html);
         $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
         $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
@@ -1272,7 +1272,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertM3PrigovorShowsSharedExplanationOnce($ctx['chairman']->user, $application, $explanation, [
             'Dostavljena je potpuna dokumentacija?',
             'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?',
-            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?',
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?',
         ]);
     }
 
@@ -1297,7 +1297,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             'Dostavljena je potpuna dokumentacija?',
         ]);
         $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $card);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $card);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $card);
     }
 
     public function test_m3_prigovor_keeps_distinct_historical_explanations_on_their_criteria(): void
@@ -1362,7 +1362,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringNotContainsString('Obrazloženje Komisije:', $card);
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $card);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $card);
-        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $card);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $card);
         $this->assertStringContainsString('Rok za Prigovor: '.$notice->prigovorDeadlineAt()->format('d.m.Y. H:i'), $card);
         $this->assertStringContainsString('Prigovor još nije podnesen. Rok je otvoren.', $card);
         $this->assertStringNotContainsString('name="odluka"', $card);

@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.30
-**Datum:** 2026-11-08
+**Verzija:** 1.0.31
+**Datum:** 2026-11-09
 
 Povezani dokumenti:
 
@@ -17,7 +17,7 @@ Povezani dokumenti:
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Poslovni profil mladih: **KN-BM-002 v1.0.28** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.34** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.35** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -68,6 +68,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.28 | 2026-11-08 | ŽP-PM-RANK-01, završno usklađivanje reference. Važeći pokazivač u zaglavlju sada je KN-FS-002 v1.0.32. KN-BM-002 v1.0.26 ostaje. Istorijski red v1.0.27 ostaje neizmijenjen i i dalje bilježi tadašnji pokazivač KN-FS-002 v1.0.31. Opis rangiranja i odlučivanja nije mijenjan. |
 | 1.0.29 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27 i KN-FS-002 v1.0.33. §6.5 i §6.8: `business_plans.summary` je obavezan za PM pri čuvanju popunjenog M2 i pri konačnom podnošenju. Provjera je prije `confirm_incomplete_forms` i `confirm_missing_documents`. Kolona ostaje nullable zbog nacrta. §6.8 više ne tretira praznu tabelu nabavki tačke 22 kao blokadu; tačka 22 ostaje neobavezna (`BM-ML-028`). Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.30 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28 i KN-FS-002 v1.0.34. §10.11 i §13.9 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Identifikatori, zajednički uslov +1, profilni uslov +2 i ograničenje +3 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.31 | 2026-11-09 | PM-TEXT-01, usklađeno sa KN-FS-002 v1.0.35. §9.2 imenuje akt kao „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke o mladima“ nije važeći naziv. Naziv ženskog akta, član 12 i član 10 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2018,7 +2019,7 @@ Parametrizacija profila mladih postojećih tri stavke:
 
 1. nepotpuna dokumentacija;
 2. raniji korisnik nije dostavio M4/M4a za ranije finansirani plan — **samo kao eliminatorna činjenica**, bez operativnog toka M4/M4a;
-3. biznis plan nije vezan za prioritetne oblasti iz **člana 12** Odluke o mladima, ne člana 10 ženske Odluke (`BM-ML-015`).
+3. biznis plan nije vezan za prioritetne oblasti iz **člana 12** Odluke o podršci preduzetništvu mladih, ne člana 10 ženske Odluke (`BM-ML-015`).
 
 Sistemska provjera dokumenata **nije** konačna odluka Komisije (`KN-FS-002` §13.5.4). Administrator ne mijenja M3 (`BM-ML-004`).
 

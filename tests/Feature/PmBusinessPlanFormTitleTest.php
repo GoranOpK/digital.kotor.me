@@ -148,7 +148,7 @@ class PmBusinessPlanFormTitleTest extends TestCase
     {
         $notice = $this->financesNoticeHtml($html);
         foreach ([
-            'Napomena — član 19 Odluke',
+            'Napomena — član 19 Odluke o podršci preduzetništvu mladih',
             'Fizičko lice, preduzetnik ili privredno društvo može konkurisati za cjelokupan iznos ili dio sredstava potrebnih za realizaciju biznis plana.',
             'Maksimalan iznos dodijeljenih sredstava za jedan biznis plan ne može biti veći od:',
             '<strong>30%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za start-up (inovativni tehnološki biznis).',
