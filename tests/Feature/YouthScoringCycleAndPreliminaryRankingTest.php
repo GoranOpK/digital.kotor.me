@@ -233,6 +233,251 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->travelBack();
     }
 
+    public function test_accepted_prigovor_forms_ranking_on_the_third_score_without_waiting_for_the_notice_clock(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $accepted = $this->addFailedApplication($ctx);
+        $accepted->forceFill(['business_plan_name' => 'Prihvaceni plan'])->save();
+        $this->lockThreeSeats($ctx, [
+            1 => $this->allCriteria(3),
+            2 => $this->allCriteria(3),
+            3 => $this->allCriteria(3),
+        ]);
+
+        $this->actingAs($accepted->user)
+            ->post(route('applications.prigovor.store', $accepted), [
+                'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen.',
+            ])
+            ->assertRedirect();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.prigovor.decide', $accepted), [
+                'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
+                'odluka' => 'prihvacen',
+            ])
+            ->assertRedirect();
+
+        $accepted = $accepted->fresh(['prigovor', 'eliminatoryNotice']);
+        $this->assertTrue($accepted->prigovor->isFinished());
+        $this->assertTrue($accepted->eliminatoryNotice->prigovorWindowIsOpen());
+
+        foreach ([2, 3] as $seat) {
+            $this->actingAs($ctx['members'][$seat - 1]->fresh('user')->user)
+                ->post(route('evaluation.store', $accepted), $this->finalPayload([
+                    'notes' => 'Napomena mjesta '.$seat,
+                ]))
+                ->assertSessionHasNoErrors();
+        }
+
+        $service = app(CanonicalIndividualScoringService::class);
+        $competition = $ctx['competition']->fresh();
+        $this->assertFalse($service->isYouthIndividualScoringCycleComplete($competition));
+        $this->assertFalse($service->isYouthPreliminaryRankingReady($competition));
+        $this->assertFalse($service->youthMutualScoreViewIsAllowed($competition));
+        $this->assertNull($ctx['application']->fresh()->ranking_position);
+        $this->assertNull($accepted->fresh()->ranking_position);
+
+        $hidden = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 2', $hidden);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $hidden);
+        $this->assertStringNotContainsString('Napomena mjesta 3', $hidden);
+        $this->assertStringNotContainsString(' / 56', $hidden);
+
+        $blockedRanking = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(
+            CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE,
+            $blockedRanking
+        );
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $blockedRanking);
+        $this->assertNull($ctx['application']->fresh()->ranking_position);
+
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.store', $accepted), $this->finalPayload(array_merge(
+                $this->allCriteria(5),
+                ['notes' => 'Napomena mjesta 1'],
+            )))
+            ->assertSessionHasNoErrors();
+
+        $passed = $ctx['application']->fresh();
+        $accepted = $accepted->fresh();
+        $this->assertTrue($accepted->eliminatoryNotice()->first()->prigovorWindowIsOpen());
+        $this->assertNotNull($passed->bonuses_confirmed_at);
+        $this->assertNotNull($accepted->bonuses_confirmed_at);
+        $this->assertNotNull($passed->final_score);
+        $this->assertNotNull($accepted->final_score);
+        $this->assertSame(1, (int) $accepted->ranking_position);
+        $this->assertSame(2, (int) $passed->ranking_position);
+        $this->assertTrue($service->isYouthPreliminaryRankingReady($competition->fresh()));
+        $this->assertNull($service->youthPreliminaryRankingBlockReason($competition->fresh()));
+
+        $shown = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Preliminarna rang-lista', $shown);
+        $this->assertMatchesRegularExpression(
+            '/<span class="ranking-badge">\s*1\s*<\/span>[\s\S]{0,900}Prihvaceni plan/',
+            $shown
+        );
+        $this->assertMatchesRegularExpression(
+            '/<span class="ranking-badge">\s*2\s*<\/span>[\s\S]{0,900}'.preg_quote($passed->business_plan_name, '/').'/',
+            $shown
+        );
+        $this->assertSame(1, (int) $accepted->fresh()->ranking_position);
+        $this->assertSame(2, (int) $passed->fresh()->ranking_position);
+
+        $opened = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 1', $opened);
+        $this->assertStringContainsString(' / 56', $opened);
+    }
+
+    public function test_unused_appeal_window_and_unresolved_prigovor_still_block_after_an_accepted_score_cycle(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $accepted = $this->addFailedApplication($ctx);
+        $unused = $this->addFailedApplication($ctx);
+        $this->lockThreeSeats($ctx);
+        $this->actingAs($accepted->user)
+            ->post(route('applications.prigovor.store', $accepted), [
+                'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen.',
+            ])
+            ->assertRedirect();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.prigovor.decide', $accepted), [
+                'decision_note' => 'Svi osporeni razlozi su otklonjeni.',
+                'odluka' => 'prihvacen',
+            ])
+            ->assertRedirect();
+        $this->lockThreeSeats($ctx, [], $accepted);
+
+        $service = app(CanonicalIndividualScoringService::class);
+        $competition = $ctx['competition']->fresh();
+        $this->assertTrue($accepted->fresh('prigovor')->prigovor->isFinished());
+        $this->assertTrue($accepted->fresh('eliminatoryNotice')->eliminatoryNotice->prigovorWindowIsOpen());
+        $this->assertNull($unused->fresh('prigovor')->prigovor);
+        $this->assertTrue($unused->fresh('eliminatoryNotice')->eliminatoryNotice->prigovorWindowIsOpen());
+        $this->assertTrue($service->isYouthIndividualScoringCycleComplete($competition));
+        $this->assertSame(
+            CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE,
+            $service->youthPreliminaryRankingBlockReason($competition)
+        );
+        $this->assertNull($ctx['application']->fresh()->ranking_position);
+        $this->assertNull($accepted->fresh()->ranking_position);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(
+            CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE,
+            $html
+        );
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $html);
+
+        $filed = $this->addFailedApplication($ctx);
+        $this->actingAs($filed->user)
+            ->post(route('applications.prigovor.store', $filed), [
+                'obrazlozenje' => 'Prigovor ostaje neriješen i poslije kalendara.',
+            ])
+            ->assertRedirect();
+        $this->travelTo(now()->addDays(ApplicationEliminatoryNotice::APPEAL_WINDOW_DAYS)->addSecond());
+
+        $during = $ctx['competition']->fresh();
+        $this->assertFalse($filed->fresh('eliminatoryNotice')->eliminatoryNotice->prigovorWindowIsOpen());
+        $this->assertTrue($filed->fresh('prigovor')->prigovor->isPodnesen());
+        $this->assertSame(
+            CanonicalIndividualScoringService::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE,
+            $service->youthPreliminaryRankingBlockReason($during)
+        );
+        $this->assertNull($ctx['application']->fresh()->ranking_position);
+        $this->travelBack();
+    }
+
+    public function test_rejected_prigovor_forms_ranking_while_its_notice_clock_remains_open(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        $rejected = $this->addFailedApplication($ctx);
+        $this->lockThreeSeats($ctx);
+        $this->actingAs($rejected->user)
+            ->post(route('applications.prigovor.store', $rejected), [
+                'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen.',
+            ])
+            ->assertRedirect();
+        $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.prigovor.decide', $rejected), [
+                'decision_note' => 'Razlog ostaje.',
+                'odluka' => 'odbijen',
+            ])
+            ->assertRedirect();
+
+        $rejected = $rejected->fresh(['prigovor', 'eliminatoryNotice']);
+        $service = app(CanonicalIndividualScoringService::class);
+        $this->assertTrue($rejected->prigovor->isFinished());
+        $this->assertSame('rejected', $rejected->status);
+        $this->assertTrue($rejected->eliminatoryNotice->prigovorWindowIsOpen());
+        $this->assertNull($service->youthPreliminaryRankingBlockReason($ctx['competition']->fresh()));
+        $this->assertSame('30.00', (string) $ctx['application']->fresh()->final_score);
+        $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
+
+        $html = $this->actingAs($ctx['members'][2]->fresh('user')->user)
+            ->get(route('evaluation.youth-ranking', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Preliminarna rang-lista', $html);
+        $this->assertMatchesRegularExpression(
+            '/<span class="ranking-badge">\s*1\s*<\/span>/',
+            $html
+        );
+        $this->assertStringNotContainsString($rejected->business_plan_name, $html);
+    }
+
+    public function test_three_locked_scores_without_confirmed_bonuses_do_not_form_ranking(): void
+    {
+        $ctx = $this->youthReadyToLock();
+        foreach ($ctx['members'] as $index => $member) {
+            EvaluationScore::query()->create(array_merge($this->allCriteria(4), [
+                'application_id' => $ctx['application']->id,
+                'commission_member_id' => $member->id,
+                'canonical_seat_no' => $index + 1,
+                'completed_at' => now(),
+                'notes' => 'Direktna ocjena '.($index + 1),
+            ]));
+        }
+
+        $service = app(CanonicalIndividualScoringService::class);
+        $competition = $ctx['competition']->fresh();
+        $application = $ctx['application']->fresh();
+        $this->assertTrue($service->isYouthIndividualScoringCycleComplete($competition));
+        $this->assertNull($application->bonuses_confirmed_at);
+        $this->assertNull($application->final_score);
+        $this->assertSame(
+            CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE,
+            $service->youthPreliminaryRankingBlockReason($competition)
+        );
+        $service->persistYouthPreliminaryRankingIfReady($competition);
+        $this->assertNull($application->fresh()->ranking_position);
+
+        $html = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-ranking', $competition))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(
+            CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE,
+            $html
+        );
+        $this->assertStringNotContainsString('Preliminarna rang-lista', $html);
+        $this->assertStringNotContainsString('Direktna ocjena 1', $html);
+        $this->assertNull($application->fresh()->ranking_position);
+    }
+
     public function test_mutual_scores_open_after_cycle_without_waiting_for_bonuses_and_unauthorized_actors_are_blocked(): void
     {
         $ctx = $this->youthReadyToLock();

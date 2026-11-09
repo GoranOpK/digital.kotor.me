@@ -2022,6 +2022,10 @@ class CanonicalIndividualScoringService
         }
 
         foreach ($appealRelevant as $application) {
+            if ($application->prigovor?->isFinished() === true) {
+                continue;
+            }
+
             if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
                 return self::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE;
             }
@@ -2052,7 +2056,8 @@ class CanonicalIndividualScoringService
             return false;
         }
 
-        if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+        if ($application->prigovor?->isFinished() !== true
+            && $this->youthSecondSessionGate->appealWindowIsOpen($application)) {
             return false;
         }
 

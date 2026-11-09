@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.36
+**Verzija:** 1.0.37
 **Datum:** 2026-11-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.29** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.30** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.32** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.33** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -76,6 +76,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.34 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28. §17.1–§17.4 i §17.7.2–§17.7.4 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Komisija i dalje dodjeljuje bodove. Tok, vrijednosti, maksimum 6 i prihvatni uslovi ostaju. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.35 | 2026-11-09 | PM-TEXT-01. U uvodu Poglavlja 13 naziv akta glasi „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke za mlade“ nije važeći naziv tog akta. Eliminatorni kriterijumi, prigovor i indeks nijesu mijenjani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.36 | 2026-11-09 | PM-KOM-11, usklađeno sa KN-BM-002 v1.0.29. §3.5, §3.6, §4.5, §16.1, §16.5, §16.7 i §16.8.6–§16.8.7: međusobni uvid čeka završen prigovorni postupak i zaključane ocjene svih prijava koje tada imaju pravo na bodovanje. Ocjenjivanje drugih podobnih prijava i preliminarna lista ostaju na svojim uslovima. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.37 | 2026-11-09 | PM-RANK-01. §20.2: konačno završen prigovor nije otvoren rok i preostali kalendar obavještenja te prijave ne odlaže preliminarnu listu. Prijava bez podnesenog prigovora i dalje blokira dok rok traje. Prigovor `podnesen` blokira i poslije isteka roka. Prihvaćena prijava ulazi u ciklus i čeka tri zaključane ocjene. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -3857,7 +3858,7 @@ Platforma je priprema **automatski** tek kada su ispunjeni svi sljedeći uslovi:
 * postoje tačno tri kompletne ocjene po prijavi u ciklusu;
 * dodatni bodovi su potvrđeni čuvanjem individualne ocjene predsjednika, bez zasebnog naknadnog koraka;
 * konačne ocjene su izračunate;
-* nema neriješenih uslova koji blokiraju rangiranje, uključujući otvoren rok za prigovor ili bilo koji neriješen blagovremen prigovor na prijavama `submitted`/`evaluated`.
+* nema neriješenih uslova koji blokiraju rangiranje, uključujući otvoren rok za prigovor ili bilo koji neriješen blagovremen prigovor na prijavama `submitted`/`evaluated`. Konačno završen prigovor nije otvoren rok: preostali kalendar obavještenja te prijave ne odlaže listu. Prijava koja prigovor nije podnijela i dalje blokira dok njen rok traje. Prigovor u stanju `podnesen` blokira i kada je taj kalendar istekao. Prihvaćen prigovor uvodi prijavu u ciklus; lista se ne formira dok ta prijava nema tri zaključane ocjene.
 
 Prijave odbijene u eliminatornoj fazi ne ulaze na rang-listu. One ne sprečavaju formiranje liste za prijave koje su prošle eliminatornu provjeru i završile bodovanje.
 

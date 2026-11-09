@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.32
+**Verzija:** 1.0.33
 **Datum:** 2026-11-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.29** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.30** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.36** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.37** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -70,6 +70,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.30 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28 i KN-FS-002 v1.0.34. §10.11 i §13.9 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Identifikatori, zajednički uslov +1, profilni uslov +2 i ograničenje +3 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.31 | 2026-11-09 | PM-TEXT-01, usklađeno sa KN-FS-002 v1.0.35. §9.2 imenuje akt kao „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke o mladima“ nije važeći naziv. Naziv ženskog akta, član 12 i član 10 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.32 | 2026-11-09 | PM-KOM-11, usklađeno sa KN-BM-002 v1.0.29 i KN-FS-002 v1.0.36. §10.6, §10.9 i §11.1: `youthMutualScoreViewIsAllowed()` je serverska kapija međusobnog uvida, odvojena od `isYouthIndividualScoringCycleComplete()` i od `youthPreliminaryRankingBlockReason()`. Uvid traži završen prigovorni postupak i kompletne ocjene svih trenutno podobnih prijava. HTML ne šalje tuđe ocjene, napomene ni zajednički zbir prije te kapije. Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.33 | 2026-11-09 | PM-RANK-01, usklađeno sa KN-FS-002 v1.0.37. §11.1: `youthAppealProcessBlockReason()` ne tretira `isFinished()` prigovor kao otvoren rok. `applicationBelongsToYouthScoringCycle()` prihvaćenu prijavu ubraja u ciklus i prije isteka kalendara obavještenja, čim ima tri zaključane ocjene. Neiskorišćen rok i status `podnesen` ostaju blokada. Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2537,7 +2538,7 @@ Izvori: `KN-BM-002` `BM-ML-044`–`BM-ML-052`; `KN-FS-002` Poglavlja 20–22; ov
 
 Koristi se postojeći tok rang-liste kao jedan objekat sa dvije faze. Ekran individualnog ocjenjivanja ostaje zaseban.
 
-Preliminarna lista nastaje automatski tek kada sva tri člana završe ocjenjivanje **svih** prijava u ciklusu i kada su ispunjeni ostali postojeći preduslovi, uključujući završen omladinski prigovorni postupak (nema otvorenog roka ni neriješenog blagovremenog prigovora na prijavama `submitted`/`evaluated`). Završetak jedne prijave je ne stvara. Ciklus bodovanja **ne** čeka rok na drugoj prijavi. Međusobni uvid čeka taj rok i neriješen prigovor kroz zasebnu kapiju `youthMutualScoreViewIsAllowed()`. Ta kapija ne mijenja `isYouthIndividualScoringCycleComplete()` ni `youthPreliminaryRankingBlockReason()`.
+Preliminarna lista nastaje automatski tek kada sva tri člana završe ocjenjivanje **svih** prijava u ciklusu i kada su ispunjeni ostali postojeći preduslovi, uključujući završen omladinski prigovorni postupak (nema otvorenog roka ni neriješenog blagovremenog prigovora na prijavama `submitted`/`evaluated`). Konačno završen prigovor nije otvoren rok: `youthAppealProcessBlockReason()` takvu prijavu ne blokira zbog preostalog kalendara obavještenja. Prijava bez prigovora i dalje blokira dok `appealWindowIsOpen()` traje. Status `podnesen` blokira i poslije tog kalendara. Prihvaćena prijava ulazi u `applicationBelongsToYouthScoringCycle()` čim ima tri zaključane ocjene, pa lista čeka i nju. Završetak jedne prijave je ne stvara. Ciklus bodovanja **ne** čeka rok na drugoj prijavi. Međusobni uvid čeka taj rok i neriješen prigovor kroz zasebnu kapiju `youthMutualScoreViewIsAllowed()`. Ta kapija ne mijenja `isYouthIndividualScoringCycleComplete()` ni `youthPreliminaryRankingBlockReason()`.
 
 Prijave odbijene u eliminatornoj fazi ne ulaze u bodovanje i ne dobijaju rang-mjesto. Prijave koje su prošle eliminatornu provjeru i završile bodovanje čine jedan skup. `expectedYouthRankingPositions` numeriše cijeli taj skup, opadajuće prema punoj ocjeni, sa preskakanjem poslije dijeljenog mjesta. Pozicije prijava sa najmanje 30 bodova ostaju iste kao kada se isti algoritam primijeni samo na njih, jer su svi rezultati ispod 30 iza njih.
 
