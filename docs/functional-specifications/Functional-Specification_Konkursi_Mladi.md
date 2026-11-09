@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.35
+**Verzija:** 1.0.36
 **Datum:** 2026-11-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.28** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.29** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.31** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.32** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -75,6 +75,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.33 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27. §8.4, §8.5, §10.4 i §10.5.1: Rezime je obavezan za status „Popunjen“ i za konačno podnošenje. Nacrt se može sačuvati bez njega. Tekst od samih razmaka je prazan. Potvrde nepotpunih obrazaca i nedostajućih priloga ne zaobilaze obavezu. Tačke 7 i 22 ostaju neobavezne. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.34 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28. §17.1–§17.4 i §17.7.2–§17.7.4 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Komisija i dalje dodjeljuje bodove. Tok, vrijednosti, maksimum 6 i prihvatni uslovi ostaju. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.35 | 2026-11-09 | PM-TEXT-01. U uvodu Poglavlja 13 naziv akta glasi „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke za mlade“ nije važeći naziv tog akta. Eliminatorni kriterijumi, prigovor i indeks nijesu mijenjani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.36 | 2026-11-09 | PM-KOM-11, usklađeno sa KN-BM-002 v1.0.29. §3.5, §3.6, §4.5, §16.1, §16.5, §16.7 i §16.8.6–§16.8.7: međusobni uvid čeka završen prigovorni postupak i zaključane ocjene svih prijava koje tada imaju pravo na bodovanje. Ocjenjivanje drugih podobnih prijava i preliminarna lista ostaju na svojim uslovima. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -566,7 +567,7 @@ Funkcionalni akter: **DA**. Osnov: `BM-ML-001`–`BM-ML-003`, `BM-ML-005`, `BM-M
 * **nema** pristup prijavama `U pripremi`;
 * pregleda dokumente unutar Platforme, **bez** redovnog korisničkog preuzimanja (`BM-ML-055`);
 * unosi sopstvene individualne ocjene, uključujući izmjenjiv **nacrt**;
-* vidi samo sopstvene individualne ocjene dok sva tri člana ne završe individualno ocjenjivanje svih prijava uključenih u ciklus (`BM-ML-040`);
+* vidi samo sopstvene individualne ocjene dok nema otvorenog roka i neriješenog prigovora i dok sva tri člana ne završe individualno ocjenjivanje svih prijava koje imaju pravo na bodovanje (`BM-ML-040`);
 * nakon zaključavanja sopstvenih ocjena ne mijenja ih;
 * **nema** ovlašćenje za operativne radnje koje BM dodjeljuje predsjedniku Komisije.
 
@@ -583,7 +584,7 @@ Pri individualnom ocjenjivanju predsjednik ima:
 * ista pravila ocjenjivanja;
 * istu težinu;
 * ista ograničenja tajnosti;
-* **nema** privilegovan uvid u ocjene drugih članova dok sva tri člana ne završe ciklus;
+* **nema** privilegovan uvid u ocjene drugih članova; uvid se otvara tek kada su ispunjeni uslovi iz §16.5;
 * **nema** ovlašćenje da mijenja ocjenu drugog člana.
 
 Sva ograničenja iz §3.5 važe i za predsjednika.
@@ -872,7 +873,7 @@ Ciklus ocjenjivanja konkretnog Poziva:
 * **nije završen**;
 * **završen** kada sva tri člana zaključaju sve potrebne individualne ocjene prijava uključenih u ciklus (`BM-ML-003`; `BM-ML-039`; `BM-ML-040`).
 
-Tuđe ocjene postaju dostupne Komisiji tek kada je ciklus završen.
+Tuđe ocjene postaju dostupne Komisiji tek kada je završen prigovorni postupak i kada je ciklus ocjenjivanja svih prijava koje tada imaju pravo na bodovanje završen (`BM-ML-040`).
 
 ## 4.6. Rangiranje i raspodjela
 
@@ -968,7 +969,7 @@ Rok za prijave ističe **dvadesetog narednog kalendarskog dana u 23:59:59** po l
 | Individualna ocjena | — | Sačuvaj ocjene | prijava ide u ocjenjivanje; važeći član; svih 10 kriterijuma; izričita potvrda | zaključana | član ili zamjenski član | `BM-ML-039`; Poglavlje 16 |
 | Individualna ocjena | — | nepotpun unos ili `save_as_draft` | prijava ide u ocjenjivanje | odbijeno; nema upisa | član | `BM-ML-039`; Poglavlje 16 |
 | Prijava | `submitted` | završene tri kompletne ocjene i obračun | prijava u ocjenjivanju | `evaluated` | sistem | `BM-ML-039`; `BM-ML-044` |
-| Ciklus ocjenjivanja | nije završen | treći član zaključi sve potrebne ocjene | tri zaključane ocjene po prijavi u ciklusu | ciklus završen; otvara se međusobni uvid | sistem | `BM-ML-003`; `BM-ML-040` |
+| Ciklus ocjenjivanja | nije završen | treći član zaključi sve potrebne ocjene | tri zaključane ocjene po prijavi u ciklusu; nema otvorenog roka ni neriješenog prigovora | ciklus završen; otvara se međusobni uvid | sistem | `BM-ML-003`; `BM-ML-040` |
 | Rang-lista | — | nastanak preliminarne | ciklus završen; dodatni bodovi potvrđeni čuvanjem ocjene predsjednika | preliminarna; svaka bodovana prijava poslije eliminatorne provjere dobija rang; ispod 30 odmah `rejected` | sistem | `BM-ML-045` |
 | Rang-lista | preliminarna | posljednji potrebni pojedinačni zaključak | zaključci samo za prijave sa najmanje 30; budžet ispunjen; jednaki bodovi ne traže posebno razrješenje; nema glasanja ni potvrde cijele liste | automatski konačna; ne mijenja se | sistem | `BM-ML-045`; `BM-ML-048`; `KN-PATCH-FS-026` |
 | Prijava | `evaluated` | potvrda podrške i iznosa | pojedinačni zaključak; iznos evidentiran | `approved` | predsjednik | `BM-ML-044`; `BM-ML-048` |
@@ -3220,7 +3221,7 @@ Kriterijum 1 ostaje jedan kriterijum. Numeracija se **ne** mijenja. Kriterijum 6
 
 **Ne** uvode se ponderi. Opciona napomena **ne** donosi bodove.
 
-Bodovanje se otvara **po prijavi**, po istom principu kao ženski tok, uz omladinska pravila. U ocjenjivanje ulazi prijava za koju je M3 potvrđen i za koju nijedan eliminatorni razlog nije konačno aktivan. To uključuje prijave kod kojih M3 nije aktivirao nijedan razlog, i prijave kod kojih je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Ako je M3 aktivirao razlog, ta prijava ostaje blokirana dok konačna odluka po prigovoru ne ukloni sve aktivne razloge. Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira bodovanje prijave koja je prošla M3. Prijava sa konačno aktivnim eliminatornim razlogom ostaje blokirana. Nepotpuna ili nevažeća Komisija ostaje blokada. Istorijski M3 se ne mijenja. Kapija ocjenjivanja **nije** sirova istorijska vrijednost `Potpuna`. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana **ne** prenose se.
+Bodovanje se otvara **po prijavi**, po istom principu kao ženski tok, uz omladinska pravila. U ocjenjivanje ulazi prijava za koju je M3 potvrđen i za koju nijedan eliminatorni razlog nije konačno aktivan. To uključuje prijave kod kojih M3 nije aktivirao nijedan razlog, i prijave kod kojih je M3 aktivirao razlog, ali je konačnom odlukom po prigovoru svaki preostali razlog otklonjen. Ako je M3 aktivirao razlog, ta prijava ostaje blokirana dok konačna odluka po prigovoru ne ukloni sve aktivne razloge. Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira bodovanje prijave koja je prošla M3. Taj rok ili prigovor **blokira međusobni uvid** u tuđe ocjene, napomene i zajednički zbir, sve dok uslovi iz §16.5 nijesu istovremeno ispunjeni. Prijava sa konačno aktivnim eliminatornim razlogom ostaje blokirana. Nepotpuna ili nevažeća Komisija ostaje blokada. Istorijski M3 se ne mijenja. Kapija ocjenjivanja **nije** sirova istorijska vrijednost `Potpuna`. Ženski kriterijumi, broj članova, bonusi i rok od 45 dana **ne** prenose se.
 
 ## 16.2. Unos i obaveznost
 
@@ -3286,9 +3287,9 @@ Identiteti, zamjena, nacrti i izvršene radnje ostaju u revizijskom tragu (`BM-M
 
 ## 16.5. Tajnost i međusobni uvid
 
-Dok ciklus traje, svaki član vidi **samo** svoje ocjene i napomene. Predsjednik **ne** vidi tuđe ocjene. Administrator i podnosilac ih **ne** vide (`BM-ML-040`).
+Dok makar jedan uslov međusobnog uvida nije ispunjen, svaki član vidi **samo** svoje ocjene i napomene. Predsjednik **nema** raniji uvid. Administrator i podnosilac ih **ne** vide (`BM-ML-040`).
 
-Međusobni uvid otvara se tek kada **sva tri člana** završe ocjenjivanje **svih** prijava u ciklusu. Završetak jedne prijave ili rada samo jednog člana **ne** otvara uvid.
+Međusobni uvid otvara se tek kada su istovremeno ispunjeni svi uslovi: nema otvorenog roka za prigovor, nema podnesenog neriješenog prigovora, sve prijave sa pravom na bodovanje uključene su u ciklus i **sva tri člana** su zaključala ocjene **svih** tih prijava. Završetak ocjenjivanja samo trenutno podobnih prijava **ne** otvara uvid dok prigovorni postupak traje. Prihvaćen prigovor uvodi prijavu u ciklus i uvid ostaje zatvoren dok i ona ne dobije tri zaključane ocjene. Odbijen prigovor tu prijavu ne uvodi u bodovanje. Završetak jedne prijave ili rada samo jednog člana **ne** otvara uvid.
 
 Uvid je **samo za čitanje**. **Ne** omogućava izmjenu zaključenih ocjena ni napomena.
 
@@ -3321,7 +3322,7 @@ Detalj praga i rangiranja: Poglavlja 19 i 20.
 | Individualna ocjena | zaključana | izmjena ili povratak u nacrt | — | zabranjeno | svi | `BM-ML-039` |
 | Mjesto Komisije | zamjena; prethodni nacrt nije zaključen | ocjenjivanje zamjenskog člana | O-01 | nacrt prethodnog van obračuna; zamjena ocjenjuje svih 10 | zamjenski član | `BM-ML-007`; `BM-ML-039` |
 | Mjesto Komisije | zamjena; prethodna ocjena zaključana | ocjenjivanje zamjenskog člana | O-01 | prethodna ocjena ostaje; ne ponavlja se | zamjenski član | `BM-ML-039` |
-| Ciklus | nije završen | treći član zaključi sve potrebne ocjene | tri kompletne ocjene po prijavi u ciklusu | ciklus završen; međusobni uvid samo za čitanje | sistem | `BM-ML-003`; `BM-ML-040` |
+| Ciklus | nije završen | treći član zaključi sve potrebne ocjene | tri kompletne ocjene po prijavi u ciklusu; nema otvorenog roka ni neriješenog prigovora | ciklus završen; međusobni uvid samo za čitanje | sistem | `BM-ML-003`; `BM-ML-040` |
 | Prosjek | tri zaključane ocjene | obračun | — | puna vrijednost za dalji račun; prikaz na 2 decimale | sistem | `BM-ML-041` |
 | Prijava | `submitted` | treća kompletna ocjena i obračun | tačno tri kompletne zaključane ocjene konkretne prijave | `evaluated`; individualni nacrti ostaju odvojeni | sistem | `BM-ML-039`; `BM-ML-044` |
 | Prosjek | nedostaje kompletna ocjena | obračun konačnog rezultata | — | nije izračunat; status ostaje `submitted` | sistem | `BM-ML-003`; `BM-ML-041` |
@@ -3380,17 +3381,17 @@ Izvor: `BM-ML-007`; `BM-ML-039`; O-01.
 
 ### 16.8.6 — Tajnost tokom ciklusa
 
-**Ako:** ciklus nije završen.
+**Ako:** postoji otvoren rok, neriješen prigovor ili ciklus nije završen za sve prijave koje imaju pravo na bodovanje.
 
 **Kada:** predsjednik, drugi član, Administrator ili podnosilac pokuša vidjeti tuđe ocjene.
 
-**Onda:** Platforma **ne** prikazuje tuđe ocjene ni napomene.
+**Onda:** Platforma **ne** prikazuje tuđe ocjene, napomene ni zajednički zbir. Sopstvene sačuvane ocjene ostaju dostupne članu.
 
 Izvor: `BM-ML-040`.
 
 ### 16.8.7 — Međusobni uvid samo za čitanje
 
-**Ako:** sva tri člana završe ocjenjivanje svih prijava u ciklusu.
+**Ako:** nema otvorenog roka ni neriješenog prigovora i sva tri člana završe ocjenjivanje svih prijava koje imaju pravo na bodovanje.
 
 **Kada:** se otvori međusobni uvid.
 

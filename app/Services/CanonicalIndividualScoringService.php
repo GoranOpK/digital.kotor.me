@@ -347,6 +347,24 @@ class CanonicalIndividualScoringService
         return true;
     }
 
+    /**
+     * Međusobni uvid je odvojen od završetka ciklusa i od preliminarne liste.
+     * Ciklus i dalje može biti završen dok traje rok ili neriješen prigovor.
+     * Uvid traži i završen prigovorni postupak i kompletne ocjene svih trenutno podobnih prijava.
+     */
+    public function youthMutualScoreViewIsAllowed(Competition $competition): bool
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return false;
+        }
+
+        if (! $this->isYouthIndividualScoringCycleComplete($competition)) {
+            return false;
+        }
+
+        return $this->youthAppealProcessBlockReason($competition) === null;
+    }
+
     public function isYouthPreliminaryRankingReady(Competition $competition): bool
     {
         return $this->youthPreliminaryRankingBlockReason($competition) === null;
@@ -367,23 +385,9 @@ class CanonicalIndividualScoringService
             return self::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
         }
 
-        $appealRelevant = $competition->applications()
-            ->whereIn('status', ['submitted', 'evaluated'])
-            ->with(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'competition'])
-            ->orderBy('id')
-            ->get();
-
-        $hasUnresolvedPrigovor = $appealRelevant->contains(
-            fn (Application $application) => $application->prigovor?->isPodnesen() === true
-        ) || $this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition);
-        if ($hasUnresolvedPrigovor) {
-            return self::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE;
-        }
-
-        foreach ($appealRelevant as $application) {
-            if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
-                return self::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE;
-            }
+        $appealBlock = $this->youthAppealProcessBlockReason($competition);
+        if ($appealBlock !== null) {
+            return $appealBlock;
         }
 
         foreach ($historical as $application) {
@@ -1929,6 +1933,34 @@ class CanonicalIndividualScoringService
             'status' => 'evaluated',
             'evaluated_at' => now(),
         ])->save();
+    }
+
+    /**
+     * Isti konkursni uslov koriste međusobni uvid i preliminarna lista.
+     * Završetak ciklusa bodovanja ovaj uslov ne uključuje.
+     */
+    private function youthAppealProcessBlockReason(Competition $competition): ?string
+    {
+        $appealRelevant = $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated'])
+            ->with(['eliminatoryNotice', 'prigovor'])
+            ->orderBy('id')
+            ->get();
+
+        $hasUnresolvedPrigovor = $appealRelevant->contains(
+            fn (Application $application) => $application->prigovor?->isPodnesen() === true
+        ) || $this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition);
+        if ($hasUnresolvedPrigovor) {
+            return self::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE;
+        }
+
+        foreach ($appealRelevant as $application) {
+            if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+                return self::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE;
+            }
+        }
+
+        return null;
     }
 
     private function applicationBelongsToYouthScoringCycle(Application $application): bool

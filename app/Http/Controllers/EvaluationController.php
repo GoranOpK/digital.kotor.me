@@ -351,9 +351,9 @@ class EvaluationController extends Controller
                     ->orderBy('id')
                     ->get()
                 : collect();
-            $youthCycleComplete = $commissionMember && $competition
-                && $this->canonicalScoring->isYouthIndividualScoringCycleComplete($competition);
-            $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
+            $youthMutualViewAllowed = $commissionMember && $competition
+                && $this->canonicalScoring->youthMutualScoreViewIsAllowed($competition);
+            $canViewOtherMembersScores = $commissionMember !== null && $youthMutualViewAllowed;
             $application->unsetRelation('evaluationScores');
             $allScores = $canViewOtherMembersScores
                 ? $application->evaluationScores()
@@ -951,9 +951,9 @@ class EvaluationController extends Controller
                     ->orderBy('id')
                     ->get()
                 : collect();
-            $youthCycleComplete = $commissionMember && $competition
-                && $this->canonicalScoring->isYouthIndividualScoringCycleComplete($competition);
-            $canViewOtherMembersScores = $commissionMember !== null && $youthCycleComplete;
+            $youthMutualViewAllowed = $commissionMember && $competition
+                && $this->canonicalScoring->youthMutualScoreViewIsAllowed($competition);
+            $canViewOtherMembersScores = $commissionMember !== null && $youthMutualViewAllowed;
             $application->unsetRelation('evaluationScores');
             $allScores = $canViewOtherMembersScores
                 ? $application->evaluationScores()

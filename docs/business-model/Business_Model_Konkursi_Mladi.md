@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.28
-**Datum:** 2026-11-08
+**Verzija:** 1.0.29
+**Datum:** 2026-11-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.34** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.36** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.30** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.32** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -82,6 +82,7 @@ Povezani dokumenti:
 | 1.0.26 | 2026-11-08 | ŽP-PM-RANK-01, BM-ML-046 i BM-ML-048. Jednak pun rezultat i dalje dijeli rang-poziciju. U prikazu grupe otpočinjanje je ispred razvoja. Taj redoslijed nije prednost pri dodjeli sredstava. Predsjednik i dalje ručno unosi zaključak i iznos. Poseban završni tok mladih, limiti 30/20/15 kao obaveza predsjednika i automatska konačnost liste ostaju. MMSP nije diran. |
 | 1.0.27 | 2026-11-08 | PM-M2-05. Tačka 5 obrasca M2, Rezime, obavezna je za status „Popunjen“ i za konačno podnošenje omladinske prijave. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Potvrda nepotpunih obrazaca i potvrda nedostajućih priloga ne mogu zaobići ovu obavezu. Tačke 7 i 22 ostaju neobavezne. ŽP i MMSP nijesu dirani. |
 | 1.0.28 | 2026-11-08 | PM-M3-01. `BM-ML-042` preuzima doslovne nazive tri kriterijuma iz tabele Obrasca M3, uključujući „Obrazac M2“. Bodovi ostaju 1, 2 i 3. Maksimum 6, uslovi dodjele, evidentiranje Komisije i razdvajanje trećeg boda od limita 30% ostaju. ŽP i MMSP nijesu dirani. |
+| 1.0.29 | 2026-11-09 | PM-KOM-11. `BM-ML-040`: završetak ocjenjivanja trenutno podobnih prijava nije sam po sebi dovoljan za međusobni uvid dok postoji otvoren rok za prigovor ili podnesen prigovor o kojem Komisija još nije odlučila. Sopstvene sačuvane ocjene ostaju dostupne. Ocjenjivanje drugih podobnih prijava, preliminarna lista i njeni zasebni uslovi ostaju. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1676,7 +1677,9 @@ Predsjednik nema privilegovan pristup ocjenama ili individualnim napomenama drug
 
 Administrator Konkursa i podnosilac nemaju pristup individualnim ocjenama članova.
 
-Ocjene i individualne napomene drugih članova postaju dostupne Komisiji tek kada sva tri člana završe individualno ocjenjivanje svih prijava uključenih u ciklus.
+Ocjene i individualne napomene drugih članova postaju dostupne Komisiji tek kada su istovremeno ispunjeni svi ovi uslovi: nema otvorenog roka za podnošenje prigovora, nema podnesenog prigovora o kojem Komisija još nije odlučila, sve prijave koje imaju pravo na bodovanje uključene su u ciklus i sva tri člana su zaključala individualne ocjene svih tih prijava.
+
+Završetak ocjenjivanja prijava koje su u tom trenutku podobne nije sam po sebi dovoljan za međusobni uvid ako na konkursu i dalje postoji otvoren rok ili neriješen prigovor. Kada prijava prihvatanjem prigovora stekne pravo na bodovanje, ta prijava ulazi u ciklus i uvid ostaje zatvoren dok sva tri člana ne zaključaju i njene ocjene. Odbijen prigovor tu prijavu ne uvodi u bodovanje. Sopstvene sačuvane ocjene ostaju dostupne članu i predsjedniku. Ocjenjivanje drugih podobnih prijava nije ovim uslovom blokirano. Preliminarna rang-lista zadržava sopstvene uslove.
 
 Završetak jedne prijave ili završetak rada samo jednog člana ne otvara međusobni uvid.
 

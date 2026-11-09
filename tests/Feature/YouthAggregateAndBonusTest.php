@@ -484,7 +484,7 @@ class YouthAggregateAndBonusTest extends TestCase
             ->getContent();
         $this->assertStringNotContainsString('56.00', $memberHtml);
         $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
-        $this->assertStringNotContainsString('Napomena mjesta 2', $memberHtml);
+        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
         $this->assertStringNotContainsString('name="notes"', $memberHtml);
         $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
         $this->assertStringNotContainsString('name="youth_bonus_action"', $memberHtml);

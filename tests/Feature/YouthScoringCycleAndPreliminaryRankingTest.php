@@ -64,8 +64,8 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_CYCLE_INCOMPLETE_MESSAGE, $html);
+        $this->assertStringContainsString('Napomena mjesta 2', $html);
         $this->assertStringNotContainsString('Napomena mjesta 1', $html);
-        $this->assertStringNotContainsString('Napomena mjesta 2', $html);
         $this->assertStringNotContainsString('Ostale napomene', $html);
 
         $this->lockThreeSeats($ctx, [], $extra);
@@ -95,18 +95,34 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         );
         $this->assertNull($ctx['application']->fresh()->ranking_position);
 
+        $this->assertFalse($service->youthMutualScoreViewIsAllowed($competition));
         $memberHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 2', $memberHtml);
         $this->assertStringNotContainsString('Napomena mjesta 1', $memberHtml);
-        $this->assertStringNotContainsString('Napomena mjesta 2', $memberHtml);
         $this->assertStringNotContainsString('Napomena mjesta 3', $memberHtml);
+        $this->assertStringNotContainsString(' / 56', $memberHtml);
         $this->assertStringNotContainsString('Ostale napomene', $memberHtml);
-        $this->assertStringContainsString('Predsjednik', $memberHtml);
-        $this->assertStringContainsString('Član 1', $memberHtml);
-        $this->assertStringContainsString('Član 2', $memberHtml);
-        $this->assertGreaterThan(10, substr_count($memberHtml, 'class="score-display"'));
+        $this->assertSame(['3', '3', '3', '3', '3', '3', '3', '3', '3', '3'], $this->visibleYouthScoreValues($memberHtml));
+        $chairmanHtml = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 1', $chairmanHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 2', $chairmanHtml);
+        $this->assertStringNotContainsString(' / 56', $chairmanHtml);
+        $this->assertSame(['3', '3', '3', '3', '3', '3', '3', '3', '3', '3'], $this->visibleYouthScoreValues($chairmanHtml));
+        $showHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.show', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 2', $showHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $showHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 3', $showHtml);
+        $this->assertStringNotContainsString(' / 56', $showHtml);
+        $this->assertSame(['3', '3', '3', '3', '3', '3', '3', '3', '3', '3'], $this->visibleYouthScoreValues($showHtml));
         $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE, $memberHtml);
         $this->assertStringNotContainsString('Preliminarna rang-lista', $memberHtml);
 
@@ -124,11 +140,19 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->assertRedirect();
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
         $this->assertTrue(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($ctx['application']->fresh()));
+        $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
+        $this->assertFalse($service->youthMutualScoreViewIsAllowed($ctx['competition']->fresh()));
         $this->assertSame(
             CanonicalIndividualScoringService::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE,
             $service->youthPreliminaryRankingBlockReason($ctx['competition']->fresh())
         );
         $this->assertNull($ctx['application']->fresh()->ranking_position);
+        $whileSubmitted = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Napomena mjesta 1', $whileSubmitted);
+        $this->assertStringNotContainsString(' / 56', $whileSubmitted);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.prigovor.decide', $failed), [
@@ -138,6 +162,15 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->assertRedirect();
         $this->assertSame('rejected', $failed->fresh()->status);
         $this->assertTrue($service->isYouthPreliminaryRankingReady($ctx['competition']->fresh()));
+        $this->assertTrue($service->youthMutualScoreViewIsAllowed($ctx['competition']->fresh()));
+        $this->assertSame(3, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
+        $openedHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 1', $openedHtml);
+        $this->assertStringContainsString('Napomena mjesta 3', $openedHtml);
+        $this->assertStringContainsString(' / 56', $openedHtml);
         $this->assertSame(1, (int) $ctx['application']->fresh()->ranking_position);
         $this->assertSame('evaluated', $ctx['application']->fresh()->status);
         $this->assertNull($failed->fresh()->ranking_position);
@@ -176,10 +209,26 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         );
         $this->assertNull($failed->fresh('oralPresentation')->oralPresentation?->completed_at);
         $this->assertFalse($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
+        $this->assertFalse($service->youthMutualScoreViewIsAllowed($ctx['competition']->fresh()));
+        $closedHtml = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 2', $closedHtml);
+        $this->assertStringNotContainsString('Napomena mjesta 1', $closedHtml);
+        $this->assertStringNotContainsString(' / 56', $closedHtml);
 
         $this->lockThreeSeats($ctx, [], $failed);
         $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $failed]);
         $this->assertTrue($service->isYouthIndividualScoringCycleComplete($ctx['competition']->fresh()));
+        $this->assertTrue($service->youthMutualScoreViewIsAllowed($ctx['competition']->fresh()));
+        $openedAfterNewScores = $this->actingAs($ctx['members'][1]->fresh('user')->user)
+            ->get(route('evaluation.create', $ctx['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Napomena mjesta 1', $openedAfterNewScores);
+        $this->assertStringContainsString(' / 56', $openedAfterNewScores);
+        $this->assertSame(3, EvaluationScore::query()->where('application_id', $ctx['application']->id)->whereNotNull('completed_at')->count());
         $this->assertNotNull($failed->fresh()->ranking_position);
         $this->travelBack();
     }
@@ -202,9 +251,9 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
                 ->get(route('evaluation.create', $ctx['application']))
                 ->assertOk()
                 ->getContent();
-            $this->assertStringNotContainsString('Napomena mjesta 1', $html);
-            $this->assertStringNotContainsString('Napomena mjesta 2', $html);
-            $this->assertStringNotContainsString('Napomena mjesta 3', $html);
+            $this->assertStringContainsString('Napomena mjesta 1', $html);
+            $this->assertStringContainsString('Napomena mjesta 2', $html);
+            $this->assertStringContainsString('Napomena mjesta 3', $html);
             $this->assertStringNotContainsString('Ostale napomene', $html);
             $this->assertStringNotContainsString(CanonicalIndividualScoringService::YOUTH_RANKING_BONUSES_UNCONFIRMED_MESSAGE, $html);
             $this->assertStringNotContainsString('Preliminarna rang-lista', $html);
@@ -249,7 +298,7 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             ->get(route('evaluation.create', $ctx['application']))
             ->assertOk()
             ->getContent();
-        $this->assertStringNotContainsString('Napomena mjesta 1', $html);
+        $this->assertStringContainsString('Napomena mjesta 1', $html);
         $this->assertStringNotContainsString('Ostale napomene', $html);
         $otherHtml = $this->actingAs($sharedUser)
             ->get(route('evaluation.create', $other['application']))
@@ -627,6 +676,12 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
         $this->assertTrue($zensko['competition']->fresh()->isIndividualScoringCycleComplete());
         $this->assertTrue($zensko['competition']->fresh()->isRankingFormed());
         $this->assertNotNull($zensko['application']->fresh()->ranking_position);
+        $this->assertFalse(app(CanonicalIndividualScoringService::class)->youthMutualScoreViewIsAllowed($zensko['competition']->fresh()));
+        $zenskoOpened = $this->actingAs($zensko['members'][0]->fresh('user')->user)
+            ->get(route('evaluation.create', $zensko['application']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Ženska napomena 1', $zenskoOpened);
     }
 
     public function test_formed_youth_ranking_survives_approved_and_rejected_status_changes(): void
@@ -1311,5 +1366,15 @@ class YouthScoringCycleAndPreliminaryRankingTest extends TestCase
             'address' => 'Njegoševa 1',
             'city' => 'Kotor',
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function visibleYouthScoreValues(string $html): array
+    {
+        preg_match_all('/<span class="score-display"[^>]*>\s*([1-5])\s*<\/span>/', $html, $matches);
+
+        return array_map(static fn (string $value): string => trim($value), $matches[1]);
     }
 }

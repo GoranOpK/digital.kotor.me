@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.31
+**Verzija:** 1.0.32
 **Datum:** 2026-11-09
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.28** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.29** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.35** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.36** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -69,6 +69,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.29 | 2026-11-08 | PM-M2-05, usklađeno sa KN-BM-002 v1.0.27 i KN-FS-002 v1.0.33. §6.5 i §6.8: `business_plans.summary` je obavezan za PM pri čuvanju popunjenog M2 i pri konačnom podnošenju. Provjera je prije `confirm_incomplete_forms` i `confirm_missing_documents`. Kolona ostaje nullable zbog nacrta. §6.8 više ne tretira praznu tabelu nabavki tačke 22 kao blokadu; tačka 22 ostaje neobavezna (`BM-ML-028`). Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.30 | 2026-11-08 | PM-M3-01, usklađeno sa KN-BM-002 v1.0.28 i KN-FS-002 v1.0.34. §10.11 i §13.9 preuzimaju doslovne nazive tri kriterijuma Obrasca M3. Identifikatori, zajednički uslov +1, profilni uslov +2 i ograničenje +3 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.31 | 2026-11-09 | PM-TEXT-01, usklađeno sa KN-FS-002 v1.0.35. §9.2 imenuje akt kao „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke o mladima“ nije važeći naziv. Naziv ženskog akta, član 12 i član 10 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.32 | 2026-11-09 | PM-KOM-11, usklađeno sa KN-BM-002 v1.0.29 i KN-FS-002 v1.0.36. §10.6, §10.9 i §11.1: `youthMutualScoreViewIsAllowed()` je serverska kapija međusobnog uvida, odvojena od `isYouthIndividualScoringCycleComplete()` i od `youthPreliminaryRankingBlockReason()`. Uvid traži završen prigovorni postupak i kompletne ocjene svih trenutno podobnih prijava. HTML ne šalje tuđe ocjene, napomene ni zajednički zbir prije te kapije. Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2339,7 +2340,7 @@ Forma i serverski unos otvaraju se **po prijavi** kada su ispunjeni:
 * M3 nije aktivirao nijedan razlog, ili je konačnom odlukom po prigovoru svaki preostali razlog otklonjen;
 * Komisija je kompletna i važeća.
 
-Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira unos ni `Sačuvaj ocjene`. Prijava sa konačno aktivnim razlogom ostaje blokirana dok lift ne ukloni sve razloge. Ženski `scoringIsAllowed` ostaje nepromijenjen.
+Otvoren rok ili neriješen prigovor na **drugu prijavu** ne blokira unos ni `Sačuvaj ocjene`. Prijava sa konačno aktivnim razlogom ostaje blokirana dok lift ne ukloni sve razloge. Ženski `scoringIsAllowed` ostaje nepromijenjen. Taj rok ili prigovor ne otvara međusobni uvid; uvid ima zasebnu kapiju iz §10.9.
 
 Nema HTTP nacrta individualne ocjene. `storeYouthScore` odbija `save_as_draft` i nepotpunih deset kriterijuma **prije** upisa. Platforma **ne** uvodi posebno otključavanje kriterijuma 10.
 
@@ -2383,9 +2384,13 @@ Izvor: `BM-ML-039`; ovaj dokument §8.9.
 
 ## 10.9. Tajnost i međusobni uvid
 
-Dok traje ciklus, član vidi samo svoje ocjene i napomene. Predsjednik nema privilegovan uvid u tuđe ocjene. Administrator i podnosilac ih ne vide.
+Dok međusobni uvid nije dozvoljen, član vidi samo svoje ocjene i napomene. Predsjednik nema privilegovan uvid u tuđe ocjene. Administrator i podnosilac ih ne vide.
 
-Međusobni uvid otvara se tek kada su završene **sve tri ocjene svih prijava** u ciklusu. Završetak jedne prijave ili jednog člana **ne** otvara uvid.
+`youthMutualScoreViewIsAllowed()` dozvoljava uvid tek kada su istovremeno ispunjena oba uslova: `youthAppealProcessBlockReason()` nema otvoren rok ni podnesen neriješen prigovor, i `isYouthIndividualScoringCycleComplete()` potvrđuje tri zaključane ocjene za svaku prijavu koja tada ima pravo na bodovanje. Završetak ciklusa sam po sebi nije dovoljan dok prigovorni postupak traje. Prihvaćen prigovor vraća prijavu u skup za bodovanje i uvid ponovo zatvara dok ta prijava nema tri zaključane ocjene. Odbijen prigovor tu prijavu ne uvodi u bodovanje. Ranije sačuvane ocjene se ne brišu i ne otključavaju.
+
+`EvaluationController::create()` i `show()` učitavaju tuđe zaključane ocjene samo kada je ova kapija ispunjena. U suprotnom odgovor sadrži samo ocjenu prijavljenog člana. Direktan URL koristi istu kapiju. Zajednički zbir se ne računa za prikaz prije kapije. Ženski tok i dalje koristi `isIndividualScoringCycleComplete()` i ovu omladinsku kapiju ne poziva.
+
+Završetak jedne prijave ili jednog člana **ne** otvara uvid.
 
 Nakon otvaranja uvid je **samo za čitanje**. Zaključane ocjene se ne mijenjaju.
 
@@ -2451,7 +2456,7 @@ Izvor: `BM-ML-044`; ovaj dokument §7.9.
 | Ocjena | `Sačuvaj ocjene` | 10 vrijednosti; potvrda člana | zaključano | `BM-ML-039` |
 | Ocjena | `Sačuvaj ocjene` | nema svih 10 vrijednosti, nema potvrde ili `save_as_draft` | blokirano; nema upisa | `BM-ML-039` |
 | Zamjena | nezavršena ocjena | važeće ovlašćenje | nacrt isključen; zamjena unosi 10 | `BM-ML-039` |
-| Uvid | otvaranje | sve tri ocjene svih prijava ciklusa | čitanje; bez izmjene | `BM-ML-040` |
+| Uvid | otvaranje | završen prigovorni postupak i sve tri ocjene svih trenutno podobnih prijava | čitanje; bez izmjene; tuđi podaci nijesu u odgovoru prije kapije | `BM-ML-040` |
 | Dodatni bodovi | potvrda | dozvoljene vrijednosti; zbir ≤ 6 | evidentirano; nije odluka Platforme | `BM-ML-042` |
 | Prijava | obračun | tri kompletne ocjene | `evaluated` | `BM-ML-044` |
 | Prijava | konačan eliminator | Poglavlje 9 | ne ulazi u ocjenjivanje | `BM-ML-043` |
@@ -2532,7 +2537,7 @@ Izvori: `KN-BM-002` `BM-ML-044`–`BM-ML-052`; `KN-FS-002` Poglavlja 20–22; ov
 
 Koristi se postojeći tok rang-liste kao jedan objekat sa dvije faze. Ekran individualnog ocjenjivanja ostaje zaseban.
 
-Preliminarna lista nastaje automatski tek kada sva tri člana završe ocjenjivanje **svih** prijava u ciklusu i kada su ispunjeni ostali postojeći preduslovi, uključujući završen omladinski prigovorni postupak (nema otvorenog roka ni neriješenog blagovremenog prigovora na prijavama `submitted`/`evaluated`). Završetak jedne prijave je ne stvara. Ciklus bodovanja **ne** čeka rok na drugoj prijavi.
+Preliminarna lista nastaje automatski tek kada sva tri člana završe ocjenjivanje **svih** prijava u ciklusu i kada su ispunjeni ostali postojeći preduslovi, uključujući završen omladinski prigovorni postupak (nema otvorenog roka ni neriješenog blagovremenog prigovora na prijavama `submitted`/`evaluated`). Završetak jedne prijave je ne stvara. Ciklus bodovanja **ne** čeka rok na drugoj prijavi. Međusobni uvid čeka taj rok i neriješen prigovor kroz zasebnu kapiju `youthMutualScoreViewIsAllowed()`. Ta kapija ne mijenja `isYouthIndividualScoringCycleComplete()` ni `youthPreliminaryRankingBlockReason()`.
 
 Prijave odbijene u eliminatornoj fazi ne ulaze u bodovanje i ne dobijaju rang-mjesto. Prijave koje su prošle eliminatornu provjeru i završile bodovanje čine jedan skup. `expectedYouthRankingPositions` numeriše cijeli taj skup, opadajuće prema punoj ocjeni, sa preskakanjem poslije dijeljenog mjesta. Pozicije prijava sa najmanje 30 bodova ostaju iste kao kada se isti algoritam primijeni samo na njih, jer su svi rezultati ispod 30 iza njih.
 
