@@ -3096,8 +3096,15 @@ class AdminController extends Controller
             abort(403, $resultsLock);
         }
 
-        // Učitaj sve prijave za ovaj konkurs. GET je isključivo čitanje:
-        // ne upisuje final_score niti ranking_position.
+        if ($competition->type === 'zensko'
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            app(\App\Services\CanonicalIndividualScoringService::class)
+                ->persistApplicationAggregatesIfCycleComplete($competition);
+        }
+
+        // Učitaj sve prijave za ovaj konkurs. ŽP upis, kada je već dospio,
+        // izvršen je iznad i ponovljen poziv ga ne mijenja. Zatvoren konkurs
+        // ostaje netaknut. Upit ispod samo čita sačuvane vrijednosti.
         $allApplications = Application::where('competition_id', $competition->id)
             ->with(['user', 'businessPlan', 'evaluationScores', 'eliminatoryCheck', 'prigovor'])
             ->get()
@@ -3124,8 +3131,8 @@ class AdminController extends Controller
 
         $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
 
-        // GET samo čita već finalizovane vrijednosti. Upis ranking_position
-        // i applications.final_score nije dio ovog requesta.
+        // Prikaz koristi već upisane ranking_position i final_score.
+        // Ovaj dio ne računa rezervni redni broj.
         if ($isArchivedCompetition) {
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())

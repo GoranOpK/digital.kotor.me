@@ -593,7 +593,7 @@
                             @foreach($applications as $application)
                                 <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
                                     <td>
-                                        <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                        <span class="ranking-badge">{{ $application->ranking_position }}</span>
                                     </td>
                                     <td>{{ $application->business_plan_name }}</td>
                                     <td>{{ $application->user->name ?? 'N/A' }}</td>
@@ -652,7 +652,7 @@
                             @foreach($applications as $application)
                                 <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
                                     <td>
-                                        <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                        <span class="ranking-badge">{{ $application->ranking_position }}</span>
                                     </td>
                                     <td>{{ $application->business_plan_name }}</td>
                                     <td>{{ $application->user->name ?? 'N/A' }}</td>
@@ -712,7 +712,7 @@
                         @foreach($applications as $application)
                             <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
                                 <td>
-                                    <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                    <span class="ranking-badge">{{ $application->ranking_position }}</span>
                                 </td>
                                 <td>{{ $application->business_plan_name }}</td>
                                 <td>{{ $application->user->name ?? 'N/A' }}</td>
@@ -836,7 +836,7 @@
                                         </h3>
                                         <p style="font-size: 14px; color: #6b7280; margin: 0;">
                                             Podnosilac: {{ $application->user->name ?? 'N/A' }} |
-                                            Pozicija: <strong>#{{ $application->ranking_position ?? $loop->iteration }}</strong> |
+                                            Pozicija: <strong>#{{ $application->ranking_position }}</strong> |
                                             Ocjena: <strong>{{ number_format($application->getDisplayScore(), 2) }} / 58</strong>
                                         </p>
                                     </div>
@@ -933,7 +933,7 @@
                                         </tr>
                                         <tr>
                                             <th>Pozicija</th>
-                                            <td>#{{ $application->ranking_position ?? $loop->iteration }}</td>
+                                            <td>#{{ $application->ranking_position }}</td>
                                         </tr>
                                         <tr>
                                             <th>Ocjena</th>

@@ -308,6 +308,12 @@ class ApplicationPrigovorService
 
         $this->deliverDecisionEmail($application, $prigovor);
 
+        $application->load('competition');
+        if ($application->competition?->type === 'zensko') {
+            app(CanonicalIndividualScoringService::class)
+                ->persistApplicationAggregatesIfCycleComplete($application->competition);
+        }
+
         return $prigovor;
     }
 

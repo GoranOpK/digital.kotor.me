@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.26
+**Verzija:** 1.0.27
 **Datum:** 2026-11-09
 
 Povezani dokumenti:
@@ -17,7 +17,7 @@ Povezani dokumenti:
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
-* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.23)
+* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.24)
 
 Ovaj dokument **ne** mijenja `KN-BM-001`. Zajednička pravila se ne ponavljaju osim koliko je potrebno da profil bude samodovoljan (`BM-KN-008`).
 
@@ -56,6 +56,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.24 | 2026-11-08 | ŽP-PM-RANK-01. Jednak broj bodova i dalje dijeli rang-poziciju, a naredna pozicija preskače zauzeta mjesta. Unutar te grupe otpočinjanje se prikazuje ispred razvoja. Taj redoslijed ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava. Komisija i dalje ručno bira Podržava ili Odbija i ručno unosi iznos. Aplikacija ne određuje koje prijave moraju biti podržane. |
 | 1.0.25 | 2026-11-08 | ŽP-REZ-01. Rezime Obrasca 2 obavezan je za status „Popunjen“ i za konačno podnošenje prijave. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Obaveznost Rezimea ne čini ostale djelove Obrasca 2 obaveznim za predaju. PM i MMSP nijesu dirani. |
 | 1.0.26 | 2026-11-09 | ŽP-KOM-11. Međusobni uvid u tuđe ocjene, napomene i zajednički zbir, kao i preliminarna rang-lista, čekaju završen prigovorni postupak i zaključane ocjene svih pet kanonskih mjesta za prijave koje tada imaju pravo na pozitivno bodovanje. Završetak trenutno podobnih prijava nije dovoljan dok postoji otvoren rok ili neriješen prigovor. Sopstvene ocjene ostaju dostupne. Ocjenjivanje ostalih podobnih prijava se ne zaustavlja. PM i MMSP nijesu dirani. |
+| 1.0.27 | 2026-11-09 | ŽP-RANK-01. Pravila Poglavlja 12.3 i 13.1 nijesu mijenjana. Lista i dalje nastaje tek kada je ocjenjivanje završeno i prigovorni postupak završen, ne samim otvaranjem stranice. Ako je taj završetak već nastupio, a upis preskočen, naredni zahtjev samo bilježi već dospjeli rezultat. KN-FS-003 v1.0.24 opisuje taj upis. PM i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -856,7 +857,7 @@ Preliminarna i konačna rang-lista **nijesu** dva fizički odvojena poslovna obj
 
 Kada svih pet kanonskih mjesta ocjeni sve biznis planove koji su ušli u pozitivno ocjenjivanje i kada je prigovorni postupak završen prema Poglavlju 12.3, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20). Otvoren rok ili neriješen prigovor sprečava i formiranje i prikaz te liste. Direktan zahtjev ne otkriva rangirane prijave prije tih uslova.
 
-Preliminarna rang-lista **ne** smije nastajati samo otvaranjem stranice. Nastaje završetkom ocjenjivanja.
+Preliminarna rang-lista **ne** smije nastajati samo otvaranjem stranice. Nastaje završetkom ocjenjivanja. Otvaranje stranice ne zamjenjuje taj završetak. Ako je završetak već nastupio, a upis nije bio izvršen, naredni zahtjev samo bilježi već dospjeli rezultat.
 
 ## 13.2. Treća sjednica
 
