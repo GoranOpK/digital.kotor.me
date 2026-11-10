@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\EvaluationController;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\BusinessPlan;
@@ -207,6 +208,13 @@ class YouthDecisionCloseGuardTest extends TestCase
     {
         $ctx = $this->closeableYouthCompetition();
         $this->storeBytes($ctx, "PK\x03\x04clan");
+
+        $memberHtml = $this->actingAs($ctx['member'])
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('data-testid="youth-close-competition"', $memberHtml);
+        $this->assertStringNotContainsString('data-testid="youth-decision-download"', $memberHtml);
 
         $this->actingAs($ctx['member'])
             ->post(route('admin.competitions.close', $ctx['competition']))
@@ -419,11 +427,23 @@ class YouthDecisionCloseGuardTest extends TestCase
                 'oral_presentation_date' => '2026-05-05',
             ]);
 
-        $generated->assertOk();
-        $bytes = file_get_contents($generated->baseResponse->getFile()->getPathname());
-        $this->assertNotSame('', $bytes);
+        $generated->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $generated->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $this->assertNull($generated->headers->get('content-disposition'));
         $this->assertSame('published', $ctx['competition']->fresh()->status);
         $this->assertSame(1, YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->count());
+
+        $screen = $this->actingAs($ctx['chairman'])
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString(EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE, $screen);
+        $this->assertStringContainsString('data-testid="youth-decision-download"', $screen);
+        $this->assertStringContainsString('data-testid="youth-close-competition"', $screen);
+
+        $stored = YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->firstOrFail();
+        $bytes = Storage::disk('local')->get($stored->storage_path);
+        $this->assertNotSame('', $bytes);
 
         $downloaded = $this->actingAs($ctx['chairman'])
             ->get(route('evaluation.youth-decision.download', $ctx['competition']));

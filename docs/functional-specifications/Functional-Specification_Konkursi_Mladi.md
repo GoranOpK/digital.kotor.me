@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.39
+**Verzija:** 1.0.40
 **Datum:** 2026-11-10
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.32** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.33** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.35** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.36** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -79,6 +79,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.37 | 2026-11-09 | PM-RANK-01. §20.2: konačno završen prigovor nije otvoren rok i preostali kalendar obavještenja te prijave ne odlaže preliminarnu listu. Prijava bez podnesenog prigovora i dalje blokira dok rok traje. Prigovor `podnesen` blokira i poslije isteka roka. Prihvaćena prijava ulazi u ciklus i čeka tri zaključane ocjene. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.38 | 2026-11-10 | PM-ODL-01, usklađeno sa KN-BM-002 v1.0.31. §23.9: nepotpuni identifikacioni podaci ne blokiraju generisanje radnog Word predloga. Postojeći identitet se uključuje. Ako red nije moguće sastaviti, oznaka prijave su naziv projekta i identifikator prijave. Naziv projekta se tada ne predstavlja kao pravni identitet. Nedostajući podaci se ne dopisuju. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.39 | 2026-11-10 | PM-ODL-IDENT-03, usklađeno sa KN-BM-002 v1.0.32. §23.9: sačuvano ime iz M1 ili kanonskog identiteta ulazi u Word odluku. Za planirano društvo izvor je „Ime i prezime podnosioca prijave“. Oznaka prijave ostaje rezervni prikaz. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.40 | 2026-11-10 | PM-CLOSE-01, usklađeno sa KN-BM-002 v1.0.33. §23.9: uspješno generisanje vraća predsjednika na ekran odluke. Poruka o uspjehu, „Preuzmi odluku“ i „Zatvori konkurs“ prikazuju se na osvježenom ekranu. Automatsko slanje DOCX odgovora prestaje. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -4726,9 +4727,11 @@ Prije preuzimanja unosi broj Odluke. Datumi prve, druge i treće sjednice predla
 
 Uspješno generisanje mora biti trajno evidentirano u sistemu. Obavezni redoslijed završetka je: konačna rang-lista, uspješno generisanje odluke, trajno evidentiranje generisanja, zatvaranje konkursa. Dugme „Zatvori konkurs“ nije funkcionalno dok generisanje nije uspješno i trajno evidentirano. Ista zabrana važi na serverskoj strani, uključujući direktan POST zahtjev. Ostali preduslovi iz §23.2 ostaju.
 
+Nakon potvrđenog čuvanja, sistem vraća predsjednika na isti ekran odluke i prikazuje poruku „Odluka je uspješno generisana i sačuvana.“. Dokument se preuzima dugmetom „Preuzmi odluku“, bez novog generisanja. Dugme „Zatvori konkurs“ pojavljuje se kada su postojeći uslovi ispunjeni. Generisanje više ne šalje DOCX kao neposredan odgovor. Ako čuvanje ne uspije, poruka o uspjehu se ne prikazuje i zatvaranje ostaje nedostupno.
+
 Rečenica `KN-PATCH-FS-025` u ovom dokumentu da generisanje nije preduslov zatvaranja zamijenjena je ovim pravilom. Istorijski red ostaje. Ova odredba ne uvodi pravila o objavljivanju, dostavi, pravnom lijeku ni izvršnosti.
 
-Izvor: `BM-ML-045`; `KN-PATCH-FS-026`; odobrena odluka PM-ODL-01 od 2026-11-10.
+Izvor: `BM-ML-045`; `KN-PATCH-FS-026`; odobrena odluka PM-ODL-01 od 2026-11-10; PM-CLOSE-01 od 2026-11-10.
 
 ---
 

@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.32
+**Verzija:** 1.0.33
 **Datum:** 2026-11-10
 
 Povezani dokumenti:
@@ -15,9 +15,9 @@ Povezani dokumenti:
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.39** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.40** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.35** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.36** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -86,6 +86,7 @@ Povezani dokumenti:
 | 1.0.30 | 2026-11-09 | PM-RANK-01. Pokazivači prema KN-FS-002 v1.0.37 i KN-TS-002 v1.0.33. `BM-ML-036`, `BM-ML-037`, `BM-ML-040` i `BM-ML-045` se ne mijenjaju: konačan prigovor nije otvoreno pravo na prigovor, a prihvaćena prijava čeka tri zaključane ocjene. ŽP i MMSP nijesu dirani. |
 | 1.0.31 | 2026-11-10 | PM-ODL-01. `BM-ML-045`: nepotpuni identifikacioni podaci ne blokiraju radni Word predlog. Postojeći identitet ulazi u dokument. Ako red nije moguće sastaviti, oznaka prijave su naziv projekta i identifikator prijave, bez predstavljanja naziva projekta kao pravnog identiteta. Nedostajući podaci se ne dopisuju. Rang, iznosi, ocjene i završni tok ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.32 | 2026-11-10 | PM-ODL-IDENT-03. `BM-ML-045`: sačuvano ime i prezime iz M1 obrasca ili kanonskog identiteta ulazi u Word odluku. Za planirano neregistrovano društvo izvor je polje „Ime i prezime podnosioca prijave“. Naziv projekta i naziv planiranog društva nijesu to ime. Oznaka prijave ostaje samo kada ime nije dostupno. ŽP i MMSP nijesu dirani. |
+| 1.0.33 | 2026-11-10 | PM-CLOSE-01. `BM-ML-045`: nakon uspješnog čuvanja Word odluke predsjednik se vraća na ekran odluke. Potvrda, preuzimanje sačuvanog dokumenta i zatvaranje prikazuju se na tom ekranu. Generisanje ne šalje dokument automatski. Uslovi čuvanja i zatvaranja ostaju. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1889,6 +1890,8 @@ Obavezni redoslijed završetka:
 4. zatvaranje konkursa.
 
 Zatvaranje je zabranjeno prije uspješno generisane i trajno evidentirane odluke. Zabrana važi i kada se zatvaranje zatraži mimo prikaza na stranici. Zatvaranje ostaje izričita ručna radnja. Ne nastaje čuvanjem zaključka niti samim generisanjem.
+
+Nakon uspješnog generisanja i trajnog čuvanja, predsjednik se vraća na osvježen ekran odluke. Prikazuje se potvrda da je odluka generisana i sačuvana, dugme za preuzimanje već sačuvanog dokumenta i, kada su postojeći uslovi ispunjeni, dugme za zatvaranje. Generisanje ne šalje dokument automatski. Neuspješno čuvanje ne prikazuje tu potvrdu i ne otvara zatvaranje.
 
 Treća sjednica nije obavezni elektronski `TYPE_THIRD`. Poslovni događaj može biti van Platforme, prema `BM-ML-034`. Platforma evidentira pojedinačne zaključke. Ne evidentira kolektivne glasove ni posebnu potvrdu liste.
 

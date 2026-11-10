@@ -44,6 +44,8 @@ use Throwable;
 
 class EvaluationController extends Controller
 {
+    public const YOUTH_DECISION_GENERATED_MESSAGE = 'Odluka je uspješno generisana i sačuvana.';
+
     public function __construct(
         protected ApplicationEliminatoryCheckService $eliminatoryChecks,
         protected ApplicationPrigovorService $prigovors,
@@ -1279,8 +1281,9 @@ class EvaluationController extends Controller
     }
 
     /**
-     * Generiše PM Word odluku i preuzima samo trajno sačuvani dokument.
+     * Generiše PM Word odluku, trajno je čuva i vraća predsjednika na ekran odluke.
      * Ne upisuje datume, iznose ni zaključke i ne zatvara konkurs.
+     * Preuzimanje je posebna radnja nad već sačuvanim dokumentom.
      */
     public function generateYouthDecision(
         Request $request,
@@ -1290,7 +1293,7 @@ class EvaluationController extends Controller
         YouthDecisionDocxWriter $writer,
         YouthDecisionDocumentStore $store,
         YouthDecisionRankingIdentity $ranking,
-    ): Response {
+    ): RedirectResponse {
         $user = Auth::user();
         $reason = $gate->denyReason($competition, $user);
         if ($reason !== null || ! $user instanceof User) {
@@ -1314,7 +1317,7 @@ class EvaluationController extends Controller
         $storedPath = null;
 
         try {
-            [$document, $proposal] = DB::transaction(function () use (
+            $document = DB::transaction(function () use (
                 $competition,
                 $user,
                 $gate,
@@ -1354,7 +1357,7 @@ class EvaluationController extends Controller
                     ]);
                 }
 
-                return [$document, $proposal];
+                return $document;
             });
         } catch (HttpException|ValidationException $exception) {
             $this->discardFailedYouthDecisionFiles($temporaryPath, $storedPath);
@@ -1384,9 +1387,9 @@ class EvaluationController extends Controller
             ])->withInput();
         }
 
-        return response()->download($absolute, $proposal->downloadName(), [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ]);
+        return redirect()
+            ->route('evaluation.youth-decision', $competition)
+            ->with('success', self::YOUTH_DECISION_GENERATED_MESSAGE);
     }
 
     private function discardFailedYouthDecisionFiles(?string $temporaryPath, ?string $storedPath): void

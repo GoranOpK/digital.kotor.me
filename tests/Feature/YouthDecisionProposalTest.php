@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\EvaluationController;
 use App\Models\Application;
+use App\Models\YouthDecisionDocument;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\ApplicationOralPresentation;
 use App\Models\BusinessPlan;
@@ -290,9 +292,28 @@ class YouthDecisionProposalTest extends TestCase
         } finally {
             \Illuminate\Support\Carbon::setTestNow();
         }
-        $response->assertOk();
-        $file = $response->baseResponse->getFile()->getPathname();
+        $response->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $response->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $this->assertSame(1, YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->count());
+        $stored = YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->firstOrFail();
+        $storedBefore = $stored->only(['id', 'storage_path', 'content_sha256', 'ranking_sha256', 'generated_by']);
+
+        $screen = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk();
+        $screen->assertSee(EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE, false);
+        $screen->assertSee('data-testid="youth-decision-download"', false);
+        $screen->assertSee('Preuzmi odluku', false);
+        $screen->assertSee('data-testid="youth-close-competition"', false);
+        $screen->assertDontSee('Zatvaranje konkursa nije dozvoljeno dok Word odluka nije uspješno generisana i trajno sačuvana.', false);
+
+        $download = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision.download', $ctx['competition']));
+        $download->assertOk();
+        $file = $download->baseResponse->getFile()->getPathname();
         $this->rememberStoredDecision($file);
+        $this->assertSame($storedBefore, $stored->fresh()->only(array_keys($storedBefore)));
+        $this->assertSame(1, YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->count());
         $text = $this->docxText($file);
         $this->assertEmptyRegistrySlot($file, $generatedAt->format('d.m.Y.'));
         $this->assertStringContainsString('02.02.2026', $text);
@@ -311,7 +332,16 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertSame($decisionDate, $application->fresh()->commission_decision_date->toDateString());
         $this->assertSame($approved, (string) $application->fresh()->approved_amount);
 
-        $this->actingAs($ctx['members'][1]->fresh('user')->user)
+        $member = $ctx['members'][1]->fresh('user')->user;
+        $memberScreen = $this->actingAs($member)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk();
+        $memberScreen->assertDontSee('data-testid="youth-close-competition"', false);
+        $memberScreen->assertDontSee('data-testid="youth-decision-download"', false);
+        $this->actingAs($member)
+            ->post(route('admin.competitions.close', $ctx['competition']))
+            ->assertForbidden();
+        $this->actingAs($member)
             ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())
             ->assertForbidden();
 
@@ -349,8 +379,12 @@ class YouthDecisionProposalTest extends TestCase
 
         $response = $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates());
-        $response->assertOk();
-        $file = $response->baseResponse->getFile()->getPathname();
+        $response->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $response->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $download = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision.download', $ctx['competition']));
+        $download->assertOk();
+        $file = $download->baseResponse->getFile()->getPathname();
         $this->rememberStoredDecision($file);
         $text = $this->docxText($file);
         $marker = 'Oznaka prijave: prijava '.$application->id.', naziv projekta „'.$application->business_plan_name.'“';

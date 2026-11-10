@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\EvaluationController;
 use App\Models\Application;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\Commission;
@@ -341,7 +342,7 @@ class YouthDecisionRedownloadTest extends TestCase
         $this->assertSame(1, YouthDecisionDocument::query()->count());
     }
 
-    public function test_generation_still_downloads_and_redownload_returns_the_same_bytes(): void
+    public function test_generation_redirects_and_redownload_returns_the_same_bytes(): void
     {
         $ctx = $this->historicallyFinalYouthCompetition();
 
@@ -353,11 +354,13 @@ class YouthDecisionRedownloadTest extends TestCase
                 'oral_presentation_date' => '2026-05-05',
             ]);
 
-        $generated->assertOk();
-        $firstBytes = file_get_contents($generated->baseResponse->getFile()->getPathname());
+        $generated->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $generated->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $this->assertNull($generated->headers->get('content-disposition'));
+        $document = YouthDecisionDocument::query()->firstOrFail();
+        $firstBytes = Storage::disk('local')->get($document->storage_path);
         $this->assertIsString($firstBytes);
         $this->assertStringStartsWith("PK\x03\x04", $firstBytes);
-        $document = YouthDecisionDocument::query()->firstOrFail();
 
         $this->app->bind(YouthDecisionDocxWriter::class, function (): void {
             throw new \RuntimeException('writer-resolved');

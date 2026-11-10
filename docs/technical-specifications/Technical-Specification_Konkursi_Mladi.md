@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.35
+**Verzija:** 1.0.36
 **Datum:** 2026-11-10
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.32** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.33** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.39** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.40** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -73,6 +73,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.33 | 2026-11-09 | PM-RANK-01, usklađeno sa KN-FS-002 v1.0.37. §11.1: `youthAppealProcessBlockReason()` ne tretira `isFinished()` prigovor kao otvoren rok. `applicationBelongsToYouthScoringCycle()` prihvaćenu prijavu ubraja u ciklus i prije isteka kalendara obavještenja, čim ima tri zaključane ocjene. Neiskorišćen rok i status `podnesen` ostaju blokada. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.34 | 2026-11-10 | PM-ODL-01, usklađeno sa KN-BM-002 v1.0.31 i KN-FS-002 v1.0.38. §12.14: `winnerRow()` ne odbija generisanje zbog praznog `YouthDecisionApplicantIdentity::line()` ni zbog poklapanja naziva društva i osnivača ili direktora. Nedostajući red dobija oznaku prijave. `ranking_sha256` i dalje čuva `line()` ili prazan string. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.35 | 2026-11-10 | PM-ODL-IDENT-03, usklađeno sa KN-BM-002 v1.0.32 i KN-FS-002 v1.0.39. §12.14: `line()` za planirano društvo čita `applications.doo_name`, a prazno polje dopunjava imenom iz kanonskog identiteta. Naziv projekta i naziv društva se ne koriste kao ime lica. Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.36 | 2026-11-10 | PM-CLOSE-01, usklađeno sa KN-BM-002 v1.0.33 i KN-FS-002 v1.0.40. §12.14: `generateYouthDecision()` nakon uspješnog `store()` vraća redirect na `evaluation.youth-decision` sa porukom o uspjehu. DOCX se preuzima postojećim `downloadYouthDecision()`. Uslovi `latestValidDocument()` i `closeOmladinskoCompetition()` ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2969,6 +2970,8 @@ Izvor: ovaj dokument §2.3.
 ## 12.14. Radni Word predlog Odluke
 
 Poslije automatski konačne rang-liste (`hasChairmanCompletedDecisions()` za `omladinsko`) aktivni predsjednik Komisije tog Poziva na ekranu `evaluation.youth-decision` generiše `.docx`, preuzima sačuvani dokument i zatvara konkurs. Član Komisije zadržava pregled rang-liste i ekrana odluke i ne pokreće generisanje, preuzimanje ni zatvaranje. Na ova tri ekrana nema posebnih mjesta za potpise članova Komisije.
+
+`POST evaluation.youth-decision.generate` i dalje prolazi kroz `YouthDecisionProposalGate`, `YouthDecisionProposalBuilder`, `YouthDecisionDocxWriter` i `YouthDecisionDocumentStore::store()`. Tek kada je red i fajl sačuvan, odgovor je redirect na `GET evaluation.youth-decision` sa jednokratnom porukom „Odluka je uspješno generisana i sačuvana.“. Taj POST ne šalje DOCX. Preuzimanje ostaje `GET evaluation.youth-decision.download`: šalje već sačuvane bajtove, ne zove writer i ne pravi novi red. Dugme „Zatvori konkurs“ i dalje zavisi od postojećeg `latestValidDocument()`. `closeOmladinskoCompetition()` se ne mijenja. Neuspjeh čuvanja vraća grešku bez poruke o uspjehu.
 
 Izvor teksta i izgleda je `resources/templates/pm/odluka-o-raspodjeli-sredstava.docx`. Popunjavanje mijenja tekstualne čvorove i umnožava postojeći blok člana 1 kada postoji podržana prijava. Zaglavlje, stilovi i slika ostaju iz template-a. Novi šablon se ne pravi. Ženski HTML predlog se ne koristi. `GET admin.competitions.decision` za `omladinsko` i dalje vraća 403.
 
