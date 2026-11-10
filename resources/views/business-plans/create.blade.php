@@ -83,29 +83,12 @@
     .obrazac-form-page .bp-back-to-application a:hover {
         text-decoration: underline;
     }
-    .obrazac-broj-prijave {
-        font-size: 14px;
-        font-weight: 600;
-        color: #111;
-    }
+    /* PM/M2 print chrome only — Broj left alignment comes from shared obrazac-form styles. */
     .obrazac-zaglavlje-pm .obrazac-zaglavlje-top {
         margin-bottom: 16px;
     }
     .obrazac-zaglavlje-pm .obrazac-broj-i-naslov {
-        justify-content: space-between;
-    }
-    .obrazac-naslov-prijava {
-        width: 100%;
-        text-align: center;
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        color: #111;
-        margin: 8px 0 0 0;
-    }
-    /* Broj prijave left, form label right — same as M1b (do not flex-end the row). */
-    .obrazac-form-page .obrazac-broj-i-naslov {
-        justify-content: space-between;
+        justify-content: space-between; /* never flex-end — packs Broj to the right */
     }
 
     @media print {
@@ -319,35 +302,13 @@
             $redniBroj = $application->redni_broj ?? '—';
             $brojPrijave = $upBroj.'/'.$redniBroj;
         @endphp
-        <div class="obrazac-zaglavlje{{ $isPmBusinessPlan ? ' obrazac-zaglavlje-pm' : '' }}">
-            <div class="obrazac-zaglavlje-top">
-                <div class="obrazac-grb">
-                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" class="obrazac-grb-img" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';" style="height: 2cm; width: auto; display: block;">
-                </div>
-                <div class="obrazac-org">
-                    <p><strong>Crna Gora</strong></p>
-                    <p>Opština Kotor</p>
-                    <p>Sekretarijat za razvoj preduzetništva</p>
-                    <p>komunalne poslove i saobraćaj</p>
-                </div>
-                <div class="obrazac-contact">
-                    <p>Stari grad 317</p>
-                    <p>85330 Kotor, Crna Gora</p>
-                    <p>tel. +382(0)32 325 865</p>
-                    <p>privreda@kotor.me</p>
-                    <p>www.kotor.me</p>
-                </div>
-            </div>
-            <div class="obrazac-broj-i-naslov">
-                @if($isPmBusinessPlan)
-                    <div class="obrazac-broj-prijave">
-                        Broj prijave: {{ $brojPrijave }}
-                    </div>
-                @endif
-                <div class="obrazac-1a-1b">{{ $businessPlanFormTitle }}</div>
-            </div>
-            <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
-        </div>
+        {{-- Shared zaglavlje for both programmes; Broj prijave only on omladinsko (M2). Do not assume zensko ↔ omladinsko stay in sync without checking both. --}}
+        @include('partials.obrazac-zaglavlje', [
+            'obrazacLabel' => $businessPlanFormTitle,
+            'obrazacTitle' => 'FORMA ZA BIZNIS PLAN',
+            'brojPrijave' => $isPmBusinessPlan ? $brojPrijave : null,
+            'zaglavljeClass' => $isPmBusinessPlan ? 'obrazac-zaglavlje-pm' : null,
+        ])
 
         @php
             $applicationReviewUrl = $applicationReviewUrl ?? (

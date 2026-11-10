@@ -6,6 +6,12 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 
 ---
 
+## 2026-11-10 — Obrazac 2 shared zaglavlje for both programmes
+
+- Obrazac 2 koristi `@include('partials.obrazac-zaglavlje')` za **zensko** i **omladinsko**; Broj prijave samo na M2 (omladinsko), lijevo
+- Shared CSS: Broj/left meta `margin-right: auto` + label `margin-left: auto`; bez `flex-end`
+- Pravila/konvencije: eksplicitna provjera oba programa (žensko + mladih)
+
 ## 2026-11-10 — Broj prijave left + Rang lista shared standard
 
 - Obrazac 2/M2: Broj prijave lijevo (uklonjen `flex-end` na `.obrazac-broj-i-naslov`)

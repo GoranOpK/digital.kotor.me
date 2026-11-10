@@ -98,7 +98,7 @@ class ObrazacFormVisualStandardTest extends TestCase
 
     public function test_reports_4_and_4a_use_shared_zaglavlje_not_local_page_header(): void
     {
-        $this->assertStringContainsString('class="obrazac-zaglavlje"', $this->zaglavljePartial);
+        $this->assertStringContainsString('class="obrazac-zaglavlje', $this->zaglavljePartial);
         $this->assertStringContainsString('obrazac-naslov-prijava', $this->zaglavljePartial);
 
         foreach ([$this->report4Blade, $this->report4aBlade] as $blade) {
@@ -119,8 +119,26 @@ class ObrazacFormVisualStandardTest extends TestCase
     {
         $this->assertStringContainsString('justify-content: space-between;', $this->sharedCss);
         $this->assertStringContainsString('margin-left: auto;', $this->sharedCss);
+        $this->assertStringContainsString('margin-right: auto;', $this->sharedCss);
+        $this->assertStringContainsString('margin-right: auto;', $this->sharedPartial);
+        $this->assertStringContainsString('.obrazac-form-page .obrazac-zaglavlje-pm .obrazac-broj-i-naslov', $this->sharedCss);
+        $this->assertStringContainsString('.obrazac-form-page .obrazac-zaglavlje-pm .obrazac-broj-i-naslov', $this->sharedPartial);
         $this->assertStringNotContainsString('justify-content: flex-end;', $this->m2Blade);
         $this->assertStringContainsString('justify-content: space-between;', $this->m2Blade);
+    }
+
+    public function test_obrazac_2_uses_shared_zaglavlje_for_both_programmes(): void
+    {
+        $this->assertStringContainsString("@include('partials.obrazac-zaglavlje'", $this->m2Blade);
+        $this->assertStringContainsString("'obrazacTitle' => 'FORMA ZA BIZNIS PLAN'", $this->m2Blade);
+        $this->assertStringContainsString("\$isPmBusinessPlan ? \$brojPrijave : null", $this->m2Blade);
+        $this->assertStringContainsString("'zaglavljeClass' => \$isPmBusinessPlan ? 'obrazac-zaglavlje-pm' : null", $this->m2Blade);
+        $this->assertStringContainsString('zaglavljeClass', $this->zaglavljePartial);
+        // Left meta before form label in shared markup (applies to omladinsko Broj and zensko label-only).
+        $this->assertMatchesRegularExpression(
+            '/obrazac-broj-i-naslov[\s\S]*?brojPrijave[\s\S]*?obrazac-1a-1b/',
+            $this->zaglavljePartial
+        );
     }
 
     public function test_ranking_list_uses_shared_obrazac_standard(): void

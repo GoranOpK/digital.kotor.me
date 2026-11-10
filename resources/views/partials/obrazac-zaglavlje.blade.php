@@ -10,6 +10,7 @@
   @param string|null $brojPrijave  Optional application number value → renders "Broj prijave: …" on the left
   @param string|\Illuminate\Support\HtmlString|null $leftMeta  Optional full left meta line (e.g. "Konkurs: UP-…"); overrides brojPrijave when set
   @param string|\Illuminate\Support\HtmlString|null $podnaslov  Optional subtitle under the title
+  @param string|null $zaglavljeClass  Optional extra class on the root (e.g. "obrazac-zaglavlje-pm" for youth M2 print chrome)
 --}}
 @php
     $obrazacLabel = $obrazacLabel ?? '';
@@ -17,8 +18,9 @@
     $brojPrijave = $brojPrijave ?? null;
     $leftMeta = $leftMeta ?? null;
     $podnaslov = $podnaslov ?? null;
+    $zaglavljeClass = trim((string) ($zaglavljeClass ?? ''));
 @endphp
-<div class="obrazac-zaglavlje">
+<div class="obrazac-zaglavlje{{ $zaglavljeClass !== '' ? ' '.$zaglavljeClass : '' }}">
     <div class="obrazac-zaglavlje-top">
         <div class="obrazac-grb">
             <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" class="obrazac-grb-img" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';" style="height: 2cm; width: auto; display: block;">
