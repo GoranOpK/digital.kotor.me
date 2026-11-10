@@ -1,17 +1,21 @@
 {{--
   Shared official obrazac/report header (M1b / Obrazac 2 standard).
-  Required for Obrazac 4, 4a, and all future reports/forms that show an official header.
+  Required for Obrazac 4, 4a, Rang lista, and all future reports/forms with an official header.
   Styles: .obrazac-form-page .obrazac-zaglavlje* in partials.obrazac-form-styles / obrazac-form.css
+
+  Layout of .obrazac-broj-i-naslov: left meta first (Broj prijave / Konkurs), form label on the right.
 
   @param string $obrazacLabel  Short form code, e.g. "Obrazac 4"
   @param string $obrazacTitle  Main centered title (h1.obrazac-naslov-prijava)
-  @param string|null $brojPrijave  Optional left meta (Broj prijave: …)
+  @param string|null $brojPrijave  Optional application number value → renders "Broj prijave: …" on the left
+  @param string|\Illuminate\Support\HtmlString|null $leftMeta  Optional full left meta line (e.g. "Konkurs: UP-…"); overrides brojPrijave when set
   @param string|\Illuminate\Support\HtmlString|null $podnaslov  Optional subtitle under the title
 --}}
 @php
     $obrazacLabel = $obrazacLabel ?? '';
     $obrazacTitle = $obrazacTitle ?? '';
     $brojPrijave = $brojPrijave ?? null;
+    $leftMeta = $leftMeta ?? null;
     $podnaslov = $podnaslov ?? null;
 @endphp
 <div class="obrazac-zaglavlje">
@@ -34,7 +38,9 @@
         </div>
     </div>
     <div class="obrazac-broj-i-naslov">
-        @if(filled($brojPrijave))
+        @if(filled($leftMeta))
+            <div class="obrazac-broj-prijave">{!! $leftMeta !!}</div>
+        @elseif(filled($brojPrijave))
             <div class="obrazac-broj-prijave">
                 Broj prijave: {{ $brojPrijave }}
             </div>

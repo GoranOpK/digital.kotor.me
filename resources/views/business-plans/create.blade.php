@@ -103,8 +103,9 @@
         color: #111;
         margin: 8px 0 0 0;
     }
+    /* Broj prijave left, form label right — same as M1b (do not flex-end the row). */
     .obrazac-form-page .obrazac-broj-i-naslov {
-        justify-content: flex-end;
+        justify-content: space-between;
     }
 
     @media print {

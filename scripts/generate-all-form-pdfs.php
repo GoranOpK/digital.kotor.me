@@ -303,6 +303,88 @@ try {
     $html = view('reports.create-financial', ['application' => $approved, 'report' => $finReport])->render();
     saveHtml($htmlDir, 'obrazac-4a-finansijski', $html, $manifest, 'Obrazac 4a — Finansijski izvještaj');
 
+    // —— Rang lista (žensko) ——
+    $rankingCompetition = $makeCompetition('zensko', 'RangLista');
+    $rankingCompetition->update([
+        'status' => 'closed',
+        'budget' => 20000,
+        'title' => 'PDF Pack Rang lista žensko preduzetništvo '.uniqid(),
+        'end_date' => now()->subDays(10)->toDateString(),
+    ]);
+    $rankingCompetition->load('upNumber');
+
+    $rankRows = [
+        ['name' => 'Ana Printović', 'plan' => 'Atelje Vez Kotor', 'type' => 'preduzetnica', 'stage' => 'započinjanje', 'score' => 48.5, 'pos' => 1, 'req' => 1500, 'apr' => 1500, 'status' => 'approved'],
+        ['name' => 'Jelena Boka', 'plan' => 'Boka Design Studio', 'type' => 'doo', 'stage' => 'razvoj', 'score' => 42.0, 'pos' => 2, 'req' => 2500, 'apr' => 2000, 'status' => 'approved'],
+        ['name' => 'Marija Kotor', 'plan' => 'Suvenirnica Perast', 'type' => 'preduzetnica', 'stage' => 'započinjanje', 'score' => 35.5, 'pos' => 3, 'req' => 1800, 'apr' => null, 'status' => 'evaluated'],
+    ];
+    $belowRows = [
+        ['name' => 'Ivana Skala', 'plan' => 'Craft & Coffee', 'type' => 'fizicko_lice', 'stage' => 'započinjanje', 'score' => 22.0, 'pos' => null, 'req' => 1200, 'apr' => null, 'status' => 'evaluated'],
+    ];
+
+    $rankedApps = collect();
+    $belowApps = collect();
+    foreach (array_merge(
+        array_map(fn ($r) => [$r, false], $rankRows),
+        array_map(fn ($r) => [$r, true], $belowRows),
+    ) as [$row, $isBelow]) {
+        $applicant = User::create([
+            'name' => $row['name'],
+            'email' => 'pdf.pack.rank.'.uniqid().'@example.test',
+            'password' => Hash::make('password'),
+            'role_id' => $roleId,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $app = Application::create([
+            'competition_id' => $rankingCompetition->id,
+            'user_id' => $applicant->id,
+            'status' => $row['status'],
+            'business_plan_name' => $row['plan'],
+            'applicant_type' => $row['type'],
+            'business_stage' => $row['stage'],
+            'business_area' => 'Usluge',
+            'is_registered' => $row['type'] !== 'fizicko_lice',
+            'accuracy_declaration' => true,
+            'applicant_jmbg' => '1505990123456',
+            'preduzetnik_name' => $row['name'],
+            'redni_broj' => ($row['pos'] ?? 90),
+            'final_score' => $row['score'],
+            'ranking_position' => $row['pos'],
+            'requested_amount' => $row['req'],
+            'approved_amount' => $row['apr'],
+        ]);
+        $app->setRelation('user', $applicant);
+        $createdApplicationIds[] = $app->id;
+        if ($isBelow) {
+            $belowApps->push($app);
+        } else {
+            $rankedApps->push($app);
+        }
+    }
+
+    $totalBudget = (float) ($rankingCompetition->budget ?? 0);
+    $usedBudget = (float) $rankedApps->sum('approved_amount');
+    $html = view('admin.competitions.ranking', [
+        'competition' => $rankingCompetition,
+        'applications' => $rankedApps,
+        'belowLineApplications' => $belowApps,
+        'totalBudget' => $totalBudget,
+        'usedBudget' => $usedBudget,
+        'remainingBudget' => $totalBudget - $usedBudget,
+        'isSuperAdmin' => true,
+        'isCompetitionAdmin' => false,
+        'isChairman' => true,
+        'isCommissionMember' => true,
+        'commissionMembers' => collect([
+            (object) ['position' => 'predsjednik', 'name' => 'Petar Predsjednik'],
+            (object) ['position' => 'clan', 'name' => 'Milena Član'],
+            (object) ['position' => 'clan', 'name' => 'Ivan Član'],
+        ]),
+        'decisionEnteredBy' => 'Petar Predsjednik',
+    ])->render();
+    saveHtml($htmlDir, 'rang-lista-zensko', $html, $manifest, 'Rang lista — RANG LISTA BIZNIS PLANOVA (žensko)');
+
     // —— Canonical P1 / P2 if possible ——
     try {
         $canonicalType = \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
@@ -379,7 +461,7 @@ try {
         UpNumber::whereIn('competition_id', $createdCompetitionIds)->delete();
         Competition::whereIn('id', $createdCompetitionIds)->delete();
     }
-    $user->delete();
+    User::where('email', 'like', 'pdf.pack.%@example.test')->delete();
     echo "seed cleanup done\n";
 }
 

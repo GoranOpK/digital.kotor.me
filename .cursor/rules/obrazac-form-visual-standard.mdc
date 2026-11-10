@@ -23,12 +23,13 @@ Do **not** invent a new design language. Match M1b for equivalent elements.
 
 1. Wrap the page root with `obrazac-form-page` (or reuse canonical-ui after aligning its tokens to M1b).
 2. Reuse shared classes: `.form-card`, `.form-section`, `.form-label`, `.form-control`, `.form-text`, `.btn-primary`, `.obrazac-zaglavlje`, `.dynamic-table`, etc.
-3. **Official header (zaglavlje):** Every obrazac/report with an official document header **must** use `@include('partials.obrazac-zaglavlje', …)` (or the identical markup already present on M1b / Obrazac 2). Pass `obrazacLabel` + `obrazacTitle` (and optional `brojPrijave` / `podnaslov`). Do **not** invent a separate blue `page-header`, gradient banner, or independently styled report title block. **Obrazac 4** and **Obrazac 4a** are in scope and must keep this shared header.
-4. Do **not** hardcode independent copies of brand colors, label colors, input padding/radius, or card chrome when the shared file already defines them.
-5. Change common visual rules in `obrazac-form.css`, not by duplicating overrides in one blade.
-6. Keep intentional functional and print-layout differences (field sets, chapter page-breaks, handwriting boxes) in the page blade as **page-specific** CSS only.
-7. Mark removable table action columns with `col-actions` so print hides them without leaving surplus trailing cells; keep intentional empty data cells.
-8. Verify both screen and print appearance when changing forms or print CSS.
+3. **Official header (zaglavlje):** Every obrazac/report with an official document header **must** use `@include('partials.obrazac-zaglavlje', …)` (or the identical markup already present on M1b / Obrazac 2). Pass `obrazacLabel` + `obrazacTitle` (and optional `brojPrijave` / `leftMeta` / `podnaslov`). Do **not** invent a separate blue `page-header`, gradient banner, or independently styled report title block. **Obrazac 4**, **Obrazac 4a**, and **Rang lista biznis planova** are in scope and must keep this shared header.
+4. **Broj prijave / left meta placement:** When the header shows “Broj prijave” (or equivalent left meta such as “Konkurs: …”), it must sit on the **left** of `.obrazac-broj-i-naslov`; the form/report label (`.obrazac-1a-1b`) stays on the **right**. Use `justify-content: space-between` — never `flex-end` on that row (that packs Broj prijave to the right).
+5. Do **not** hardcode independent copies of brand colors, label colors, input padding/radius, or card chrome when the shared file already defines them.
+6. Change common visual rules in `obrazac-form.css`, not by duplicating overrides in one blade.
+7. Keep intentional functional and print-layout differences (field sets, chapter page-breaks, handwriting boxes, ranking badges) in the page blade as **page-specific** CSS only.
+8. Mark removable table action columns with `col-actions` so print hides them without leaving surplus trailing cells; keep intentional empty data cells.
+9. Verify both screen and print appearance when changing forms or print CSS.
 
 ## M1b token summary (do not diverge)
 
@@ -49,3 +50,4 @@ Do **not** invent a new design language. Match M1b for equivalent elements.
 - Local redefinitions of `.form-control` padding/radius that fight the shared file
 - Trailing empty action cells without `col-actions` (prints as surplus columns)
 - Blanket global selectors or new UI libraries for these forms
+- `justify-content: flex-end` on `.obrazac-broj-i-naslov` (moves Broj prijave off the left)

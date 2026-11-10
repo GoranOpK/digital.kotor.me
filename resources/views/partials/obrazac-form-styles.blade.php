@@ -327,6 +327,7 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--obrazac-label);
+    margin-left: auto; /* form label stays on the right; Broj prijave / left meta stays on the left */
 }
 
 .obrazac-form-page .obrazac-naslov-prijava {

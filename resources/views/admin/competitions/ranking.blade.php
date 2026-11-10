@@ -1,176 +1,87 @@
 @extends('layouts.app')
 
 @section('content')
+@include('partials.obrazac-form-styles')
 <style>
-    :root {
-        --primary: #0B3D91;
-        --primary-dark: #0A347B;
-    }
-    .admin-page {
-        background: #f9fafb;
-        min-height: 100vh;
-        padding: 24px 0;
-    }
-    /* Memorandum (zaglavlje) – potpuno usklađen sa Obrascima 1a/1b */
-    .obrazac-zaglavlje {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    }
-    .obrazac-zaglavlje-top {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-    }
-    .obrazac-grb {
-        flex-shrink: 0;
-        line-height: 0;
-    }
-    .obrazac-grb img {
-        height: 2cm;
-        width: auto;
-        display: block;
-    }
-    .obrazac-org {
-        flex: 1;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #111;
-    }
-    .obrazac-org p { margin: 0 0 2px 0; }
-    .obrazac-contact {
-        text-align: right;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #111;
-    }
-    .obrazac-contact p { margin: 0 0 2px 0; }
-    .obrazac-broj-i-naslov {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 12px;
-        padding-top: 12px;
-        border-top: 1px solid #e5e7eb;
-    }
-    .obrazac-broj-prijave {
-        font-size: 13px;
-        color: #374151;
-        font-weight: 500;
-    }
-    .obrazac-1a-1b {
-        font-size: 14px;
-        font-weight: 700;
-        color: #374151;
-        text-transform: uppercase;
-    }
-    .obrazac-naslov-prijava {
+    /*
+     * Rang lista — page-specific chrome on top of shared M1b / obrazac-form-page styles.
+     * Ranking data structure stays; visual tokens match Obrazac M1b.
+     */
+    .ranking-page.obrazac-form-page > .container {
         width: 100%;
-        text-align: center;
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        color: #111;
-        margin: 8px 0 0 0;
-        text-transform: uppercase;
+        max-width: 80rem;
     }
-    .obrazac-podnaslov {
-        text-align: center;
-        font-size: 13px;
-        line-height: 1.5;
-        color: #374151;
-        margin: 4px 0 0 0;
+    @media (max-width: 767px) {
+        .ranking-page.obrazac-form-page > .container {
+            max-width: 100%;
+        }
     }
-    .page-header {
-        background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-        color: #fff;
-        padding: 24px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .page-header h1 {
-        color: #fff;
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0;
-    }
-    .btn {
-        padding: 10px 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        margin-left: 8px;
-    }
-    .btn-primary {
-        background: #fff;
-        color: var(--primary);
-    }
-    .btn-success {
-        background: #10b981;
-        color: #fff;
-    }
-    .info-card {
-        background: #fff;
-        border-radius: 16px;
+    .ranking-page .info-card {
+        background: var(--obrazac-surface, #fff);
+        border-radius: var(--obrazac-radius-card, 16px);
         padding: 24px;
         margin-bottom: 24px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: var(--obrazac-shadow-card, 0 1px 3px rgba(0,0,0,0.1));
     }
-    .info-card h2 {
+    .ranking-page .info-card h2 {
         font-size: 20px;
         font-weight: 700;
         color: var(--primary);
         margin: 0 0 20px;
         padding-bottom: 12px;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid var(--obrazac-border, #e5e7eb);
     }
-    .budget-info {
+    .ranking-page .budget-info {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 16px;
         margin-bottom: 24px;
     }
-    .budget-item {
+    .ranking-page .budget-item {
         padding: 16px;
-        background: #f9fafb;
-        border-radius: 8px;
+        background: var(--obrazac-page-bg, #f9fafb);
+        border-radius: var(--obrazac-radius-control, 8px);
         text-align: center;
     }
-    .budget-label {
+    .ranking-page .budget-label {
         font-size: 12px;
-        color: #6b7280;
+        color: var(--obrazac-muted, #6b7280);
         margin-bottom: 8px;
     }
-    .budget-value {
+    .ranking-page .budget-value {
         font-size: 24px;
         font-weight: 700;
         color: var(--primary);
     }
-    table {
+    .ranking-page .ranking-table,
+    .ranking-page .info-card > table,
+    .ranking-page .below-minimum-section table {
         width: 100%;
         border-collapse: collapse;
+        margin: 16px 0;
     }
-    th, td {
+    .ranking-page .ranking-table th,
+    .ranking-page .ranking-table td,
+    .ranking-page .info-card > table th,
+    .ranking-page .info-card > table td,
+    .ranking-page .below-minimum-section table th,
+    .ranking-page .below-minimum-section table td {
         padding: 12px;
         text-align: left;
-        border-bottom: 1px solid #e5e7eb;
+        border: 1px solid var(--obrazac-border, #e5e7eb);
+        vertical-align: top;
+        color: var(--obrazac-text, #111);
     }
-    th {
+    .ranking-page .ranking-table th,
+    .ranking-page .info-card > table th,
+    .ranking-page .below-minimum-section table th {
         font-weight: 600;
-        color: #374151;
+        color: var(--obrazac-label, #374151);
         font-size: 12px;
         text-transform: uppercase;
-        background: #f9fafb;
+        background: var(--obrazac-page-bg, #f9fafb);
     }
-    .ranking-badge {
+    .ranking-page .ranking-badge {
         display: inline-block;
         width: 32px;
         height: 32px;
@@ -182,268 +93,208 @@
         font-weight: 700;
         font-size: 14px;
     }
-    .score-badge {
+    .ranking-page .score-badge {
         display: inline-block;
         padding: 4px 12px;
-        border-radius: 9999px;
+        border-radius: 8px;
         font-size: 14px;
         font-weight: 600;
     }
-    .score-high {
-        background: #d1fae5;
-        color: #065f46;
+    .ranking-page .score-high { background: #d1fae5; color: #065f46; }
+    .ranking-page .score-medium { background: #fef3c7; color: #92400e; }
+    .ranking-page .score-low { background: #fee2e2; color: #991b1b; }
+    .ranking-page .checkbox-cell { text-align: center; }
+    .ranking-page .btn {
+        padding: 10px 20px;
+        border-radius: var(--obrazac-radius-control, 8px);
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 8px;
+        border: none;
+        cursor: pointer;
+        display: inline-block;
     }
-    .score-medium {
-        background: #fef3c7;
-        color: #92400e;
+    .ranking-page .btn-success {
+        background: #10b981;
+        color: #fff;
     }
-    .score-low {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-    .checkbox-cell {
-        text-align: center;
-    }
-    .form-control {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        font-size: 14px;
-    }
-    .alert {
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border: 1px solid;
-    }
-    .alert-success {
-        background: #d1fae5;
-        border-color: #10b981;
-        color: #065f46;
-    }
-    .status-badge {
+    .ranking-page .status-badge {
         display: inline-block;
         padding: 4px 12px;
-        border-radius: 9999px;
+        border-radius: 8px;
         font-size: 12px;
         font-weight: 600;
         text-transform: uppercase;
     }
-    .status-submitted {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-    .status-evaluated {
-        background: #e0e7ff;
-        color: #3730a3;
-    }
-    .status-approved {
-        background: #d1fae5;
-        color: #065f46;
-    }
-    .status-rejected {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-    .commission-decision-table {
+    .ranking-page .status-submitted { background: #dbeafe; color: #1e40af; }
+    .ranking-page .status-evaluated { background: #e0e7ff; color: #3730a3; }
+    .ranking-page .status-approved { background: #d1fae5; color: #065f46; }
+    .ranking-page .status-rejected { background: #fee2e2; color: #991b1b; }
+    .ranking-page .commission-decision-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 20px;
     }
-    .commission-decision-table th,
-    .commission-decision-table td {
+    .ranking-page .commission-decision-table th,
+    .ranking-page .commission-decision-table td {
         padding: 10px 12px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid var(--obrazac-border, #e5e7eb);
         text-align: left;
         vertical-align: top;
     }
-    .commission-decision-table th {
+    .ranking-page .commission-decision-table th {
         width: 28%;
         font-weight: 600;
-        background: #f9fafb;
-        color: #374151;
+        background: var(--obrazac-page-bg, #f9fafb);
+        color: var(--obrazac-label, #374151);
         font-size: 13px;
     }
-    .commission-decision-table td {
-        color: #374151;
+    .ranking-page .commission-decision-table td {
+        color: var(--obrazac-label, #374151);
         font-size: 14px;
     }
-    .commission-decision-table .commission-decision-name th {
+    .ranking-page .commission-decision-table .commission-decision-name th {
         width: auto;
         background: #fff;
         font-size: 16px;
         font-weight: 700;
         color: var(--primary);
     }
-    .commission-decision-block-saved {
+    .ranking-page .commission-decision-block-saved {
         background: transparent !important;
         border: none !important;
         border-radius: 0 !important;
         padding: 0 !important;
     }
-    .print-only {
-        display: none;
+    .ranking-page .print-only { display: none; }
+    .ranking-page .below-minimum-section {
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 2px solid var(--obrazac-border, #e5e7eb);
+    }
+    .ranking-page .below-minimum-heading {
+        margin: 0 0 12px;
+        padding: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+        text-align: left;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .ranking-page .below-minimum-section > h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--obrazac-muted, #6b7280);
+        margin: 0 0 16px;
     }
     @media print {
         @page {
             size: A4;
-            margin: 10mm 8mm;
+            margin: 12mm 10mm;
         }
-
         nav,
         header,
-        .page-header,
-        button,
-        a[href],
-        .no-print {
+        .ranking-page button,
+        .ranking-page a[href],
+        .ranking-page .no-print {
             display: none !important;
         }
-
-        .admin-page {
+        .ranking-page.obrazac-form-page {
             background: #fff;
             padding: 0;
-            min-height: auto;
+            min-height: 0;
         }
-        .admin-page .container {
-            padding: 0 !important;
+        .ranking-page.obrazac-form-page > .container {
             max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
         }
-
-        .obrazac-zaglavlje {
-            box-shadow: none;
-            border: none !important;
-            border-radius: 0;
-            padding: 0 0 8px 0;
-            margin-bottom: 8px;
-        }
-        .obrazac-grb img { height: 2cm; }
-        .obrazac-broj-i-naslov {
-            border-top: none !important;
-            padding-top: 6px;
-        }
-        .obrazac-org,
-        .obrazac-contact {
-            font-size: 9pt;
-        }
-        .obrazac-naslov-prijava {
-            font-size: 14pt;
-            margin-top: 4px;
-        }
-        .obrazac-podnaslov {
-            font-size: 9pt;
-        }
-
-        .info-card {
+        .ranking-page .info-card {
             box-shadow: none;
             border: none;
             border-radius: 0;
             padding: 0;
             margin-bottom: 10px;
         }
-        .info-card h2 {
+        .ranking-page .info-card h2 {
             font-size: 11pt;
-            border-bottom: 1px solid #000;
+            border-bottom: 1px solid var(--obrazac-border, #e5e7eb);
             padding-bottom: 4px;
             margin-bottom: 8px;
-            color: #000;
+            color: var(--primary);
         }
-
-        table {
+        .ranking-page .ranking-table,
+        .ranking-page .info-card > table,
+        .ranking-page .below-minimum-section table,
+        .ranking-page .commission-decision-table {
             width: 100%;
             border-collapse: collapse;
             page-break-inside: auto;
             break-inside: auto;
-            font-size: 8pt;
+            font-size: 8.5pt;
             margin: 4px 0;
         }
-        table thead {
-            display: table-header-group;
-        }
-        table tbody {
-            display: table-row-group;
-        }
-        table tr {
+        .ranking-page table thead { display: table-header-group; }
+        .ranking-page table tr {
             page-break-inside: avoid;
             break-inside: avoid;
         }
-        th, td {
-            border: 1px solid #000 !important;
-            border-bottom: 1px solid #000 !important;
-            padding: 3px 4px !important;
-            font-size: 8pt !important;
+        .ranking-page th,
+        .ranking-page td {
+            border: 1px solid var(--obrazac-border, #e5e7eb) !important;
+            padding: 3px 5px !important;
+            font-size: 8.5pt !important;
             background: transparent !important;
-            color: #000 !important;
+            color: var(--obrazac-text, #111) !important;
         }
-        th {
-            font-weight: bold !important;
-            font-size: 7pt !important;
-            text-transform: uppercase;
+        .ranking-page th {
+            font-weight: 600 !important;
+            color: var(--obrazac-label, #374151) !important;
+            background: var(--obrazac-page-bg, #f9fafb) !important;
         }
-        tbody tr {
-            background: transparent !important;
-        }
-        [style*="color: #10b981"],
-        [style*="color: #10b981"] strong {
-            color: #000 !important;
-        }
-
-        .print-only {
-            display: table !important;
-        }
-
-        .commission-decision-table {
-            width: 100%;
-            border-collapse: collapse;
+        .ranking-page tbody tr { background: transparent !important; }
+        .ranking-page .print-only { display: table !important; }
+        .ranking-page .commission-decision-table {
             page-break-inside: avoid;
             break-inside: avoid;
             margin-bottom: 10px !important;
         }
-        .commission-decision-table th,
-        .commission-decision-table td {
-            border: 1px solid #000 !important;
-            padding: 3px 4px !important;
-            font-size: 8pt !important;
-            background: transparent !important;
-            color: #000 !important;
-        }
-        .commission-decision-table th {
-            font-weight: bold !important;
-            font-size: 7pt !important;
-            width: 28%;
-        }
-        .commission-decision-table .commission-decision-name th {
+        .ranking-page .commission-decision-table th { width: 28%; }
+        .ranking-page .commission-decision-table .commission-decision-name th {
             font-size: 9pt !important;
-            color: #000 !important;
+            color: var(--primary) !important;
         }
-
-        .ranking-badge {
+        .ranking-page .ranking-badge {
             background: transparent !important;
-            color: #000 !important;
-            border: 1px solid #000;
-            width: 22px;
-            height: 22px;
-            line-height: 22px;
-            font-size: 8pt;
+            color: var(--primary) !important;
+            border: 1px solid var(--primary);
+            border-radius: 0;
+            width: auto;
+            height: auto;
+            line-height: 1.2;
+            padding: 0 5px;
+            font-size: 8.5pt;
         }
-        .score-badge {
+        .ranking-page .score-badge {
             background: transparent !important;
-            color: #000 !important;
+            color: var(--obrazac-text, #111) !important;
             border: none;
             padding: 0;
-            font-size: 8pt;
+            font-size: 8.5pt;
         }
-
-        .below-minimum-section {
+        .ranking-page .below-minimum-section {
             margin-top: 12px !important;
             padding-top: 0 !important;
             border-top: none !important;
             box-shadow: none !important;
         }
-        .below-minimum-section > div:first-child,
-        .below-minimum-heading {
+        .ranking-page .below-minimum-section > div:first-child,
+        .ranking-page .below-minimum-heading {
             background: transparent !important;
-            color: #000 !important;
+            color: var(--obrazac-text, #111) !important;
             border: none !important;
             padding: 0 0 6px 0 !important;
             margin: 0 0 6px 0 !important;
@@ -451,72 +302,67 @@
             border-radius: 0 !important;
             box-shadow: none !important;
         }
-        .below-minimum-section h3 {
+        .ranking-page .below-minimum-section h3 {
             font-size: 9pt !important;
-            color: #000 !important;
+            color: var(--obrazac-label, #374151) !important;
             margin-bottom: 6px !important;
         }
-
-        .commission-decision-section > p {
-            display: none !important;
-        }
-        .commission-decision-block,
-        .commission-decision-block-saved {
+        .ranking-page .commission-decision-section > p { display: none !important; }
+        .ranking-page .commission-decision-block,
+        .ranking-page .commission-decision-block-saved {
             background: transparent !important;
             border: none !important;
             padding: 0 !important;
             margin-bottom: 10px !important;
         }
-        .commission-decision-block h3 {
+        .ranking-page .commission-decision-block h3 {
             font-size: 10pt !important;
-            color: #000 !important;
+            color: var(--primary) !important;
         }
-        .commission-decision-block p,
-        .commission-decision-block div {
+        .ranking-page .commission-decision-block p,
+        .ranking-page .commission-decision-block div {
             font-size: 9pt !important;
-            color: #000 !important;
+            color: var(--obrazac-text, #111) !important;
         }
-        .commission-decision-block > .commission-decision-header,
-        .commission-decision-block > div:first-child {
+        .ranking-page .commission-decision-block > .commission-decision-header,
+        .ranking-page .commission-decision-block > div:first-child {
             border-bottom: none !important;
             padding-bottom: 4px !important;
             margin-bottom: 6px !important;
         }
-        .commission-decision-block span[style*="background"],
-        .commission-decision-content,
-        .commission-justification-box {
+        .ranking-page .commission-decision-block span[style*="background"],
+        .ranking-page .commission-decision-content,
+        .ranking-page .commission-justification-box {
             background: transparent !important;
-            color: #000 !important;
+            color: var(--obrazac-text, #111) !important;
             border: none !important;
             border-radius: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
         }
-        .commission-decision-block strong {
-            color: #000 !important;
-        }
-
-        .ranking-main-content {
+        .ranking-page .ranking-main-content {
             page-break-after: always;
             break-after: page;
         }
-        #signature-block {
+        .ranking-page #signature-block {
             page-break-before: always;
             break-before: page;
             padding: 0 !important;
         }
-        #signature-block h2 {
+        .ranking-page #signature-block h2 {
             font-size: 11pt;
             margin-bottom: 8px;
+            color: var(--primary);
         }
-        #signature-block p,
-        #signature-block div {
+        .ranking-page #signature-block p,
+        .ranking-page #signature-block div {
             font-size: 9pt;
+            color: var(--obrazac-text, #111);
         }
     }
 </style>
 
-<div class="admin-page">
+<div class="admin-page ranking-page obrazac-form-page">
     <div class="container mx-auto px-4">
 
         @php
@@ -537,36 +383,12 @@
             </div>
         @endif
 
-        {{-- Memorandum (zaglavlje) kao u Obrazcima 1a/1b --}}
-        <div class="obrazac-zaglavlje">
-            <div class="obrazac-zaglavlje-top">
-                <div class="obrazac-grb">
-                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';">
-                </div>
-                <div class="obrazac-org">
-                    <p><strong>Crna Gora</strong></p>
-                    <p>Opština Kotor</p>
-                    <p>Sekretarijat za razvoj preduzetništva</p>
-                    <p>komunalne poslove i saobraćaj</p>
-                </div>
-                <div class="obrazac-contact">
-                    <p>Stari grad 317</p>
-                    <p>85330 Kotor, Crna Gora</p>
-                    <p>tel. +382(0)32 325 865</p>
-                    <p>privreda@kotor.me</p>
-                    <p>www.kotor.me</p>
-                </div>
-            </div>
-            <div class="obrazac-broj-i-naslov">
-                <div class="obrazac-broj-prijave">
-                    Konkurs: {{ $competition->upNumber?->number ?? '—' }} / {{ $competition->year ?? '' }}
-                </div>
-            </div>
-            <h1 class="obrazac-naslov-prijava">RANG LISTA BIZNIS PLANOVA</h1>
-            <p class="obrazac-podnaslov">
-                {{ $competition->title }}
-            </p>
-        </div>
+        @include('partials.obrazac-zaglavlje', [
+            'leftMeta' => 'Konkurs: '.($competition->upNumber?->number ?? '—').' / '.($competition->year ?? ''),
+            'obrazacLabel' => '',
+            'obrazacTitle' => 'RANG LISTA BIZNIS PLANOVA',
+            'podnaslov' => e($competition->title),
+        ])
 
         <div class="ranking-main-content">
         <!-- Rang lista -->
@@ -755,11 +577,11 @@
             @endif
             @endif
             @if(isset($belowLineApplications) && $belowLineApplications->count() > 0)
-                <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
-                    <div class="below-minimum-heading" style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
-                        ——— Prijave ispod minimuma (30 bodova) ———
+                <div class="below-minimum-section">
+                    <div class="below-minimum-heading">
+                        Prijave ispod minimuma (30 bodova)
                     </div>
-                    <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
+                    <h3>Prijave sa manje od 30 bodova</h3>
                     <table>
                         <thead>
                             <tr>

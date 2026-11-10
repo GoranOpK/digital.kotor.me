@@ -97,11 +97,13 @@ Detalji: [project-operations.md](project-operations.md#jezik-i-terminologija).
 
 **Dijeljeni stilovi:** `@include('partials.obrazac-form-styles')` + klasa omotača `obrazac-form-page`. Izvor tokena: `resources/css/obrazac-form.css` (držati usklađen sa partialom). Cursor pravilo: `.cursor/rules/obrazac-form-visual-standard.mdc`.
 
-**Dijeljeno službeno zaglavlje:** `@include('partials.obrazac-zaglavlje', ['obrazacLabel' => …, 'obrazacTitle' => …])` (+ opciono `brojPrijave`, `podnaslov`). Obavezno za **Obrazac 4**, **Obrazac 4a** i sve buduće izvještaje/obrasce sa službenim headerom. Ne uvoditi zaseban plavi `page-header` / gradient banner.
+**Dijeljeno službeno zaglavlje:** `@include('partials.obrazac-zaglavlje', ['obrazacLabel' => …, 'obrazacTitle' => …])` (+ opciono `brojPrijave`, `leftMeta`, `podnaslov`). Obavezno za **Obrazac 4**, **Obrazac 4a**, **Rang lista biznis planova** i sve buduće izvještaje/obrasce sa službenim headerom. Ne uvoditi zaseban plavi `page-header` / gradient banner.
 
-Nova forma / izvještaj / print pregled: koristiti dijeljene stilove; ne duplicirati brand boje, padding/radius kontrola ni tipografiju labela. Page-specific print (npr. page-break, handwriting box) ostaje u bladeu. Akcione kolone tabela označiti sa `col-actions`.
+**Broj prijave / lijevi meta:** u `.obrazac-broj-i-naslov` lijevo (Broj prijave ili Konkurs), oznaka obrasca desno. Ne koristiti `justify-content: flex-end` na tom redu.
 
-**Izuzeci u migraciji (još lokalni CSS):** MMSP `canonical-ui`, evaluation Obrazac 3, ranking/odluka, većina admin/landing stranica — pri izmjeni ih uskladiti sa M1b tokenima i dijeljenim zaglavljem gdje postoji službeni header.
+Nova forma / izvještaj / print pregled: koristiti dijeljene stilove; ne duplicirati brand boje, padding/radius kontrola ni tipografiju labela. Page-specific print (npr. page-break, handwriting box, ranking badge) ostaje u bladeu. Akcione kolone tabela označiti sa `col-actions`.
+
+**Izuzeci u migraciji (još lokalni CSS):** MMSP `canonical-ui`, evaluation Obrazac 3, odluka, većina admin/landing stranica — pri izmjeni ih uskladiti sa M1b tokenima i dijeljenim zaglavljem gdje postoji službeni header.
 
 ---
 

@@ -114,4 +114,23 @@ class ObrazacFormVisualStandardTest extends TestCase
         $this->assertStringContainsString("'obrazacLabel' => 'Obrazac 4a'", $this->report4aBlade);
         $this->assertStringContainsString("'obrazacTitle' => 'FINANSIJSKI IZVJEŠTAJ'", $this->report4aBlade);
     }
+
+    public function test_broj_prijave_row_stays_space_between_not_flex_end(): void
+    {
+        $this->assertStringContainsString('justify-content: space-between;', $this->sharedCss);
+        $this->assertStringContainsString('margin-left: auto;', $this->sharedCss);
+        $this->assertStringNotContainsString('justify-content: flex-end;', $this->m2Blade);
+        $this->assertStringContainsString('justify-content: space-between;', $this->m2Blade);
+    }
+
+    public function test_ranking_list_uses_shared_obrazac_standard(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $ranking = file_get_contents($root.'/resources/views/admin/competitions/ranking.blade.php');
+        $this->assertStringContainsString("@include('partials.obrazac-form-styles')", $ranking);
+        $this->assertStringContainsString("@include('partials.obrazac-zaglavlje'", $ranking);
+        $this->assertStringContainsString('ranking-page obrazac-form-page', $ranking);
+        $this->assertStringContainsString('RANG LISTA BIZNIS PLANOVA', $ranking);
+        $this->assertStringContainsString("'leftMeta'", $ranking);
+    }
 }
