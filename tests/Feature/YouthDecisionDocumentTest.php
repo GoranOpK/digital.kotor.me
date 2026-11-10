@@ -280,6 +280,26 @@ class YouthDecisionDocumentTest extends TestCase
         $this->assertStringNotContainsString('Sekretarijatu 16', $text);
         $this->assertStringNotContainsString('Komisija je dana na trećoj', $text);
         $this->assertStringNotContainsString('22.06. 2026', $text);
+        $this->assertSame(2, substr_count($text, 'oglasnoj tabli Opštine Kotor'));
+        $this->assertStringContainsString(
+            'Odluka se dostavlja učesnicima Javnog konkursa, objavljuje na vebsajtu Opštine Kotor, digitalnoj platformi digital.kotor.me, oglasnoj tabli Opštine Kotor i lokalnom javnom emiteru',
+            $text
+        );
+        $this->assertStringContainsString(
+            'te je bio objavljen na vebsajtu Opštine Kotor, digitalnoj platformi digital.kotor.me, oglasnoj tabli Opštine Kotor i lokalnom javnom emiteru',
+            $text
+        );
+        $this->assertStringContainsString(
+            'Podnošenje prijava odvijalo se isključivo elektronski, putem digitalnog servisa Opštine Kotor (digital.kotor.me).',
+            $text
+        );
+        $this->assertStringNotContainsString('oglasnoj table', $text);
+        $this->assertStringNotContainsString(
+            'Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor (digital.kotor.me).',
+            $text
+        );
+        $this->assertStringNotContainsString('Kotor Kotor', $text);
+        $this->assertStringContainsString('elektronski putem digitalnog servisa Opštine Kotor je dodijelio', $text);
     }
 
     private function company(string $legalName, ?string $founder, ?string $director): Application

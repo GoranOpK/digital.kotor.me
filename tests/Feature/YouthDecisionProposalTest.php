@@ -326,6 +326,17 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertStringContainsString($application->business_plan_name, $text);
         $this->assertStringNotContainsString('05.01.2026', $text);
         $this->assertStringNotContainsString('ženskom preduzetništvu', $text);
+        $this->assertSame(2, substr_count($text, 'oglasnoj tabli Opštine Kotor'));
+        $this->assertStringContainsString(
+            'Podnošenje prijava odvijalo se isključivo elektronski, putem digitalnog servisa Opštine Kotor (digital.kotor.me).',
+            $text
+        );
+        $this->assertStringNotContainsString('oglasnoj table', $text);
+        $this->assertStringNotContainsString('Kotor Kotor', $text);
+        $this->assertStringNotContainsString(
+            'Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor (digital.kotor.me).',
+            $text
+        );
 
         $this->assertSame($confirmedAt, $check->fresh()->confirmed_at->toIso8601String());
         $this->assertSame($completedAt, $score->fresh()->completed_at->toIso8601String());

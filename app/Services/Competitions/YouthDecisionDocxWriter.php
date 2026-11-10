@@ -35,6 +35,7 @@ class YouthDecisionDocxWriter
 
         $this->correctHeader($header);
         $this->correctStaticText($document);
+        $this->correctAdoptedPhrases($document);
         $this->fillHeaderLine($document, $proposal);
         $this->fillWinners($document, $proposal);
         $this->fillNarrative($document, $proposal);
@@ -100,6 +101,49 @@ class YouthDecisionDocxWriter
             if (str_contains($text, 'sekretarijatu za razvoj')) {
                 $this->replaceContaining($paragraph, 'sekretarijatu za razvoj', 'Sekretarijatu za razvoj');
             }
+        }
+    }
+
+    /**
+     * Tri usvojene tekstualne korekcije. Ostali pasusi ostaju netaknuti.
+     * Prva formulacija je u šablonu rasječena na više čvorova i ne dobija drugi „Kotor“.
+     */
+    private function correctAdoptedPhrases(DOMDocument $document): void
+    {
+        foreach ($this->paragraphs($document) as $paragraph) {
+            $text = $this->paragraphText($paragraph);
+            if (str_contains($text, 'oglasnoj table Opštine Kotor')) {
+                $this->replaceContaining(
+                    $paragraph,
+                    'oglasnoj table Opštine Kotor',
+                    'oglasnoj tabli Opštine Kotor'
+                );
+            }
+            if (str_contains($text, 'Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor')) {
+                $this->replaceContaining($paragraph, 'elektronski putem', 'elektronski, putem');
+            }
+            $this->correctSplitNoticeBoard($paragraph);
+        }
+    }
+
+    private function correctSplitNoticeBoard(DOMElement $paragraph): void
+    {
+        $nodes = $this->textNodes($paragraph);
+        $count = count($nodes);
+        for ($index = 0; $index < $count - 3; $index++) {
+            if (
+                $nodes[$index]->textContent !== 'oglasnoj'
+                || $nodes[$index + 1]->textContent !== ' table '
+                || $nodes[$index + 2]->textContent !== 'Opštine'
+                || $nodes[$index + 3]->textContent !== ' '
+            ) {
+                continue;
+            }
+
+            $nodes[$index + 1]->textContent = ' tabli ';
+            $nodes[$index + 3]->textContent = ' Kotor ';
+
+            return;
         }
     }
 
