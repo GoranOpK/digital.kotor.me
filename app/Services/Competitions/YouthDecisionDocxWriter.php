@@ -154,7 +154,10 @@ class YouthDecisionDocxWriter
 
         foreach ($proposal->winners as $index => $winner) {
             $group = $groups[$index];
-            $this->setParagraphText($group[0], 'Podnosilac/podnositeljka prijave: '.$winner['identity']);
+            $heading = ($winner['identity_source'] ?? 'applicant') === 'application'
+                ? $winner['identity']
+                : 'Podnosilac/podnositeljka prijave: '.$winner['identity'];
+            $this->setParagraphText($group[0], $heading);
             $this->replaceExact($group[1], 'xx', $winner['plan']);
             $this->setParagraphText($group[2], 'Ukupno bodova: '.$winner['score']);
             $this->replaceExact($group[3], 'xx', $winner['approved']);

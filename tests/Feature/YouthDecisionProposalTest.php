@@ -23,6 +23,7 @@ use App\Services\Competitions\YouthDecisionProposal;
 use App\Services\Competitions\YouthDecisionProposalBuilder;
 use App\Services\Competitions\YouthDecisionSessionDates;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -106,17 +107,18 @@ class YouthDecisionProposalTest extends TestCase
         );
 
         $missingDirector = $this->company('Firma Gama', 'Ana Anić', null);
-        $this->assertNull($identity->line($missingDirector));
+        $this->assertSame('Ana Anić', $identity->line($missingDirector));
 
         $unregistered = new Application([
             'applicant_type' => 'privredno_drustvo',
             'is_registered' => false,
+            'business_plan_name' => 'Bidon',
             'doo_name' => 'Milica Milić',
         ]);
         $user = new User(['name' => 'Profil Nalog']);
         $user->setRelation('identity', null);
         $unregistered->setRelation('user', $user);
-        $this->assertNull($identity->line($unregistered));
+        $this->assertSame('Milica Milić', $identity->line($unregistered));
 
         $person = new Application([
             'applicant_type' => 'fizicko_lice',
@@ -319,7 +321,7 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertSame(YouthAllocationDraftService::WOMEN_PREDLOG_CLOSED_MESSAGE, $closed->exception?->getMessage());
     }
 
-    public function test_generation_is_refused_before_the_final_ranking_and_when_identity_is_missing(): void
+    public function test_generation_is_refused_before_the_final_ranking_and_missing_identity_does_not_block_it(): void
     {
         $ctx = $this->rankingReady();
 
@@ -340,15 +342,173 @@ class YouthDecisionProposalTest extends TestCase
             ->assertForbidden();
 
         $this->support($ctx);
-        $ctx['application']->forceFill(['physical_person_name' => null])->save();
+        $application = $ctx['application']->fresh();
+        $approved = (string) $application->approved_amount;
+        $score = (string) $application->final_score;
+        $application->forceFill(['physical_person_name' => null])->save();
 
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.youth-ranking', $ctx['competition']))
-            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())
-            ->assertRedirect()
-            ->assertSessionHasErrors('decision');
+        $response = $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates());
+        $response->assertOk();
+        $file = $response->baseResponse->getFile()->getPathname();
+        $this->rememberStoredDecision($file);
+        $text = $this->docxText($file);
+        $marker = 'Oznaka prijave: prijava '.$application->id.', naziv projekta „'.$application->business_plan_name.'“';
 
-        $this->assertNull($ctx['application']->fresh()->physical_person_name);
+        $this->assertStringContainsString($marker, $text);
+        $this->assertStringContainsString($application->business_plan_name, $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave:', $text);
+        $this->assertStringNotContainsString('Petar Petrović', $text);
+        $this->assertStringNotContainsString('identifikacioni podaci', $text);
+        $this->assertNull($application->fresh()->physical_person_name);
+        $this->assertSame($approved, (string) $application->fresh()->approved_amount);
+        $this->assertSame($score, (string) $application->fresh()->final_score);
+    }
+
+    public function test_bidon_without_an_identity_line_does_not_stop_the_other_supported_applications(): void
+    {
+        $ctx = $this->datedCompetition();
+        $competition = $ctx['competition'];
+        $bidon = $ctx['application'];
+        $bidon->forceFill([
+            'business_plan_name' => 'Bidon',
+            'applicant_type' => 'privredno_drustvo',
+            'is_registered' => false,
+            'doo_name' => 'Nosilac Koji Se Ne Dopisuje',
+            'physical_person_name' => null,
+            'founder_name' => null,
+            'director_name' => null,
+            'status' => 'approved',
+            'commission_decision' => 'podrzava_potpuno',
+            'commission_justification' => 'Komisija podržava Bidon.',
+            'approved_amount' => '15000.00',
+            'final_score' => '48.50',
+            'ranking_position' => 1,
+        ])->save();
+        $bidon->businessPlan->forceFill(['required_amount' => '20000.00'])->save();
+
+        $mimikrija = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Mimikrija',
+            'applicant_type' => 'fizicko_lice',
+            'physical_person_name' => 'Mila Milić',
+            'commission_justification' => 'Komisija podržava Mimikriju.',
+            'approved_amount' => '5000.00',
+            'final_score' => '42.00',
+            'ranking_position' => 2,
+        ], '8000.00');
+        $entrepreneur = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Radnja Jovo',
+            'applicant_type' => 'preduzetnik',
+            'preduzetnik_name' => 'Jovo Jović',
+            'approved_amount' => '1000.00',
+            'final_score' => '40.00',
+            'ranking_position' => 3,
+        ], '3000.00');
+        $company = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Plan Društvo',
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'founder_name' => 'Ana Anić',
+            'director_name' => 'Marko Marković',
+            'approved_amount' => '800.00',
+            'final_score' => '39.00',
+            'ranking_position' => 4,
+        ], '4000.00');
+        $this->attachLegalEntity($company->user, 'Firma Alfa');
+        $plannedOfficer = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Plan Bez Direktora',
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'founder_name' => 'Osnivac Koji Se Ne Ispisuje',
+            'director_name' => null,
+            'approved_amount' => '700.00',
+            'final_score' => '38.00',
+            'ranking_position' => 5,
+        ], '2500.00');
+        $this->attachLegalEntity($plannedOfficer->user, 'Firma Bez Direktora');
+        $officerConflict = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Plan Osnivac',
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'founder_name' => 'Stefan Oznaka doo',
+            'director_name' => 'Direktor Koji Se Ne Ispisuje',
+            'approved_amount' => '600.00',
+            'final_score' => '37.00',
+            'ranking_position' => 6,
+        ], '2200.00');
+        $this->attachLegalEntity($officerConflict->user, 'Stefan Oznaka doo');
+
+        $amounts = [
+            $bidon->id => '15000.00',
+            $mimikrija->id => '5000.00',
+            $entrepreneur->id => '1000.00',
+            $company->id => '800.00',
+            $plannedOfficer->id => '700.00',
+            $officerConflict->id => '600.00',
+        ];
+
+        $proposal = app(YouthDecisionProposalBuilder::class)->build($competition->fresh(), $this->manualDates(), now());
+        $this->assertSame(
+            ['Bidon', 'Mimikrija', 'Radnja Jovo', 'Plan Društvo', 'Plan Bez Direktora', 'Plan Osnivac'],
+            array_column($proposal->winners, 'plan')
+        );
+        $this->assertSame('applicant', $proposal->winners[0]['identity_source']);
+        $this->assertSame('Nosilac Koji Se Ne Dopisuje', $proposal->winners[0]['identity']);
+        $this->assertSame('applicant', $proposal->winners[1]['identity_source']);
+        $this->assertSame('Mila Milić', $proposal->winners[1]['identity']);
+        $this->assertSame('Jovo Jović', $proposal->winners[2]['identity']);
+        $this->assertSame(
+            'Firma Alfa, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković',
+            $proposal->winners[3]['identity']
+        );
+        $this->assertSame('applicant', $proposal->winners[4]['identity_source']);
+        $this->assertSame('Osnivac Koji Se Ne Ispisuje', $proposal->winners[4]['identity']);
+        $this->assertSame('applicant', $proposal->winners[5]['identity_source']);
+        $this->assertSame('Direktor Koji Se Ne Ispisuje', $proposal->winners[5]['identity']);
+        $this->assertSame(['15.000,00', '5.000,00', '1.000,00', '800,00', '700,00', '600,00'], array_column($proposal->winners, 'approved'));
+        $this->assertSame('23.100,00', $proposal->awardedTotal);
+
+        $path = app(YouthDecisionDocxWriter::class)->write($proposal);
+        try {
+            $text = $this->docxText($path);
+        } finally {
+            @unlink($path);
+        }
+
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Nosilac Koji Se Ne Dopisuje', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Osnivac Koji Se Ne Ispisuje', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Direktor Koji Se Ne Ispisuje', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Mila Milić', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Jovo Jović', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Firma Alfa, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković', $text);
+        $this->assertSame(1, substr_count($text, 'Ana Anić'));
+        $this->assertStringContainsString('15.000,00', $text);
+        $this->assertStringContainsString('5.000,00', $text);
+        $this->assertStringContainsString('23.100,00', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Bidon', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Plan Bez Direktora', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Plan Osnivac', $text);
+        $this->assertStringNotContainsString('Oznaka prijave: prijava '.$bidon->id, $text);
+        $this->assertStringNotContainsString('Firma Bez Direktora', $text);
+        $this->assertStringNotContainsString('Stefan Oznaka doo', $text);
+        $this->assertStringNotContainsString('Ulica probe 1', $text);
+        $this->assertStringNotContainsString('Testgrad', $text);
+        $this->assertStringNotContainsString('identifikacioni podaci', $text);
+
+        foreach ($amounts as $id => $amount) {
+            $this->assertSame($amount, (string) Application::query()->findOrFail($id)->approved_amount);
+        }
+
+        $mimikrija->forceFill(['final_score' => null])->save();
+        try {
+            app(YouthDecisionProposalBuilder::class)->build($competition->fresh(), $this->manualDates(), now());
+            $this->fail('Nedostajući konačni bodovi i dalje zaustavljaju generisanje.');
+        } catch (ValidationException $exception) {
+            $message = $exception->validator->errors()->first('decision');
+            $this->assertStringContainsString('Mimikrija', $message);
+            $this->assertStringContainsString('konačan broj bodova', $message);
+            $this->assertStringNotContainsString('identifikacioni', $message);
+        }
     }
 
     /**
@@ -597,6 +757,47 @@ class YouthDecisionProposalTest extends TestCase
     private function datedCompetition(): array
     {
         return $this->makeYouthContext();
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function supportedApplication(Competition $competition, array $attributes, string $requiredAmount): Application
+    {
+        $user = User::factory()->create([
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'status' => 'approved',
+            'commission_decision' => 'podrzava_potpuno',
+            'submitted_at' => now()->subDays(20),
+            'business_stage' => 'započinjanje',
+        ] + $attributes);
+        BusinessPlan::create([
+            'application_id' => $application->id,
+            'required_amount' => $requiredAmount,
+        ]);
+
+        return $application->fresh('user');
+    }
+
+    private function attachLegalEntity(User $user, string $legalName): void
+    {
+        $platform = PlatformIdentity::query()->create([
+            'user_id' => $user->id,
+            'subject_type' => PlatformIdentity::SUBJECT_LEGAL_ENTITY,
+        ]);
+        LegalEntityIdentity::query()->create([
+            'platform_identity_id' => $platform->id,
+            'legal_form' => LegalEntityIdentity::FORM_DOO,
+            'legal_name' => $legalName,
+            'street_and_number' => 'Ulica probe 1',
+            'city' => 'Testgrad',
+        ]);
     }
 
     private function addApplication(Competition $competition): Application

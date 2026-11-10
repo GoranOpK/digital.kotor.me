@@ -8,18 +8,18 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.37
-**Datum:** 2026-11-09
+**Verzija:** 1.0.39
+**Datum:** 2026-11-10
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.30** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.32** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.21** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo strukturni obrazac i uporedni izvor**; nije poslovni izvor pravila mladih
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.33** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.35** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 Ovaj dokument **ne** mijenja `KN-BM-001` niti `KN-BM-002`.
 
@@ -77,6 +77,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.35 | 2026-11-09 | PM-TEXT-01. U uvodu Poglavlja 13 naziv akta glasi „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke za mlade“ nije važeći naziv tog akta. Eliminatorni kriterijumi, prigovor i indeks nijesu mijenjani. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.36 | 2026-11-09 | PM-KOM-11, usklađeno sa KN-BM-002 v1.0.29. §3.5, §3.6, §4.5, §16.1, §16.5, §16.7 i §16.8.6–§16.8.7: međusobni uvid čeka završen prigovorni postupak i zaključane ocjene svih prijava koje tada imaju pravo na bodovanje. Ocjenjivanje drugih podobnih prijava i preliminarna lista ostaju na svojim uslovima. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 | 1.0.37 | 2026-11-09 | PM-RANK-01. §20.2: konačno završen prigovor nije otvoren rok i preostali kalendar obavještenja te prijave ne odlaže preliminarnu listu. Prijava bez podnesenog prigovora i dalje blokira dok rok traje. Prigovor `podnesen` blokira i poslije isteka roka. Prihvaćena prijava ulazi u ciklus i čeka tri zaključane ocjene. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.38 | 2026-11-10 | PM-ODL-01, usklađeno sa KN-BM-002 v1.0.31. §23.9: nepotpuni identifikacioni podaci ne blokiraju generisanje radnog Word predloga. Postojeći identitet se uključuje. Ako red nije moguće sastaviti, oznaka prijave su naziv projekta i identifikator prijave. Naziv projekta se tada ne predstavlja kao pravni identitet. Nedostajući podaci se ne dopisuju. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
+| 1.0.39 | 2026-11-10 | PM-ODL-IDENT-03, usklađeno sa KN-BM-002 v1.0.32. §23.9: sačuvano ime iz M1 ili kanonskog identiteta ulazi u Word odluku. Za planirano društvo izvor je „Ime i prezime podnosioca prijave“. Oznaka prijave ostaje rezervni prikaz. Indeks ostaje 142/142. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -4718,13 +4720,15 @@ Izvor: F-05; `BM-ML-051`; `BM-ML-056`; `BM-ML-057`; `KN-PATCH-BM-010`.
 
 Kada je rang-lista konačna, predsjednik Komisije na posebnom ekranu odluke generiše radni Word predlog Odluke o raspodjeli sredstava, preuzima već generisanu Word odluku i zatvara konkurs. Ekran rang-liste ostaje za pregled, zaključke i štampu. Na ova tri ekrana nema posebnih mjesta za potpise članova Komisije.
 
+Nepotpuni identifikacioni podaci podnosioca ne blokiraju generisanje. Ime i prezime sačuvano u M1 obrascu ili u odgovarajućem kanonskom identitetu ulazi u odluku. Za planirano neregistrovano društvo to je polje „Ime i prezime podnosioca prijave“. Naziv projekta i naziv planiranog društva se ne prikazuju kao ime fizičkog lica. Oznaka prijave, sa nazivom projekta i identifikatorom prijave, ostaje samo kada ime nije dostupno ni iz jednog dozvoljenog izvora. Nedostajući podaci se ne dopisuju. Završenost rada Komisije i ispravnost konačne raspodjele i dalje su uslov.
+
 Prije preuzimanja unosi broj Odluke. Datumi prve, druge i treće sjednice predlažu se iz posljednjeg odgovarajućeg traga tog Poziva, a predsjednik ih može izmijeniti. Datum usmenog obrazloženja predlaže se samo kada je u sistemu jedan pouzdan dan; inače ga predsjednik unosi. Ručna izmjena ne mijenja izvorne tragove.
 
 Uspješno generisanje mora biti trajno evidentirano u sistemu. Obavezni redoslijed završetka je: konačna rang-lista, uspješno generisanje odluke, trajno evidentiranje generisanja, zatvaranje konkursa. Dugme „Zatvori konkurs“ nije funkcionalno dok generisanje nije uspješno i trajno evidentirano. Ista zabrana važi na serverskoj strani, uključujući direktan POST zahtjev. Ostali preduslovi iz §23.2 ostaju.
 
 Rečenica `KN-PATCH-FS-025` u ovom dokumentu da generisanje nije preduslov zatvaranja zamijenjena je ovim pravilom. Istorijski red ostaje. Ova odredba ne uvodi pravila o objavljivanju, dostavi, pravnom lijeku ni izvršnosti.
 
-Izvor: `BM-ML-045`; `KN-PATCH-FS-026`.
+Izvor: `BM-ML-045`; `KN-PATCH-FS-026`; odobrena odluka PM-ODL-01 od 2026-11-10.
 
 ---
 

@@ -85,24 +85,11 @@ class YouthDecisionProposalBuilder
     }
 
     /**
-     * @return array{identity: string, plan: string, score: string, approved: string, total_value: string}
+     * @return array{identity: string, identity_source: string, plan: string, score: string, approved: string, total_value: string}
      */
     private function winnerRow(Application $application): array
     {
         $plan = trim((string) $application->business_plan_name);
-        $label = $plan !== '' ? $plan : 'prijava '.$application->id;
-        $officerConflict = $this->identity->companyOfficerConflictMessage($application);
-        if ($officerConflict !== null) {
-            throw ValidationException::withMessages([
-                'decision' => 'Odluka se ne može generisati jer prijavi „'.$label.'“ nedostaje ime fizičkog lica. '.$officerConflict,
-            ]);
-        }
-        $identity = $this->identity->line($application);
-        if ($identity === null) {
-            throw ValidationException::withMessages([
-                'decision' => 'Odluka se ne može generisati jer prijavi „'.$label.'“ nedostaju identifikacioni podaci. Nedostajući podaci se ne dopisuju.',
-            ]);
-        }
         if ($plan === '') {
             throw ValidationException::withMessages([
                 'decision' => 'Odluka se ne može generisati jer prijavi nedostaje naziv biznis plana.',
@@ -121,13 +108,21 @@ class YouthDecisionProposalBuilder
             ]);
         }
 
+        $identity = $this->identity->line($application);
+
         return [
-            'identity' => $identity,
+            'identity' => $identity ?? $this->applicationMarker($application, $plan),
+            'identity_source' => $identity === null ? 'application' : 'applicant',
             'plan' => $plan,
             'score' => $this->formatMoney((string) $application->final_score),
             'approved' => $this->formatMoney((string) $application->approved_amount),
             'total_value' => $this->formatMoney((string) $required),
         ];
+    }
+
+    private function applicationMarker(Application $application, string $plan): string
+    {
+        return 'Oznaka prijave: prijava '.$application->id.', naziv projekta „'.$plan.'“';
     }
 
     /**

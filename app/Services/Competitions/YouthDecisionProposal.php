@@ -5,7 +5,7 @@ namespace App\Services\Competitions;
 final class YouthDecisionProposal
 {
     /**
-     * @param  list<array{identity: string, plan: string, score: string, approved: string, total_value: string}>  $winners
+     * @param  list<array{identity: string, identity_source?: string, plan: string, score: string, approved: string, total_value: string}>  $winners
      */
     public function __construct(
         public readonly int $competitionId,

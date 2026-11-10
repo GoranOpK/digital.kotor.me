@@ -7,17 +7,17 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.30
-**Datum:** 2026-11-09
+**Verzija:** 1.0.32
+**Datum:** 2026-11-10
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.37** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002 v1.0.39** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
-* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.33** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Tehnička specifikacija profila mladih: **KN-TS-002 v1.0.35** — `docs/technical-specifications/Technical-Specification_Konkursi_Mladi.md` (USVOJEN)
 
 ---
 
@@ -84,6 +84,8 @@ Povezani dokumenti:
 | 1.0.28 | 2026-11-08 | PM-M3-01. `BM-ML-042` preuzima doslovne nazive tri kriterijuma iz tabele Obrasca M3, uključujući „Obrazac M2“. Bodovi ostaju 1, 2 i 3. Maksimum 6, uslovi dodjele, evidentiranje Komisije i razdvajanje trećeg boda od limita 30% ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.29 | 2026-11-09 | PM-KOM-11. `BM-ML-040`: završetak ocjenjivanja trenutno podobnih prijava nije sam po sebi dovoljan za međusobni uvid dok postoji otvoren rok za prigovor ili podnesen prigovor o kojem Komisija još nije odlučila. Sopstvene sačuvane ocjene ostaju dostupne. Ocjenjivanje drugih podobnih prijava, preliminarna lista i njeni zasebni uslovi ostaju. ŽP i MMSP nijesu dirani. |
 | 1.0.30 | 2026-11-09 | PM-RANK-01. Pokazivači prema KN-FS-002 v1.0.37 i KN-TS-002 v1.0.33. `BM-ML-036`, `BM-ML-037`, `BM-ML-040` i `BM-ML-045` se ne mijenjaju: konačan prigovor nije otvoreno pravo na prigovor, a prihvaćena prijava čeka tri zaključane ocjene. ŽP i MMSP nijesu dirani. |
+| 1.0.31 | 2026-11-10 | PM-ODL-01. `BM-ML-045`: nepotpuni identifikacioni podaci ne blokiraju radni Word predlog. Postojeći identitet ulazi u dokument. Ako red nije moguće sastaviti, oznaka prijave su naziv projekta i identifikator prijave, bez predstavljanja naziva projekta kao pravnog identiteta. Nedostajući podaci se ne dopisuju. Rang, iznosi, ocjene i završni tok ostaju. ŽP i MMSP nijesu dirani. |
+| 1.0.32 | 2026-11-10 | PM-ODL-IDENT-03. `BM-ML-045`: sačuvano ime i prezime iz M1 obrasca ili kanonskog identiteta ulazi u Word odluku. Za planirano neregistrovano društvo izvor je polje „Ime i prezime podnosioca prijave“. Naziv projekta i naziv planiranog društva nijesu to ime. Oznaka prijave ostaje samo kada ime nije dostupno. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -1867,6 +1869,8 @@ Nakon čuvanja posljednjeg potrebnog zaključka za prijave sa najmanje 30 bodova
 
 Generisana Word odluka o raspodjeli sadrži među dobitnicima samo prijave sa sačuvanim pozitivnim zaključkom i odobrenim iznosom. Prijave ispod 30 bodova ne ulaze u te redove. Sačuvani dokument i `ranking_sha256` moraju odgovarati istoj listi, uključujući status i rang-mjesto. Zatvaranje ne prihvata neusklađena rang-mjesta.
 
+Nepotpuni identifikacioni podaci ne sprečavaju generisanje radnog Word predloga. Kada je ime i prezime podnosioca sačuvano u M1 obrascu ili u odgovarajućem kanonskom identitetu, taj podatak ulazi u dokument. Za planirano, još neregistrovano društvo formalni podnosilac ostaje fizičko lice, a izvor imena je polje M1b „Ime i prezime podnosioca prijave“. Naziv projekta i naziv planiranog društva nijesu ime tog lica. Kada ime nije dostupno ni iz jednog dozvoljenog izvora, prijava se označava nazivom projekta i identifikatorom prijave. Imena, PIB, CRPS i drugi nedostajući podaci se ne dopisuju. Provjere završenog rada Komisije i ispravnosti konačne raspodjele ostaju.
+
 Dok sve prijave sa najmanje 30 bodova nemaju zaključanu odluku, `remaining_after_first` se ne umanjuje.
 
 Komisija radi na tri ekrana:
@@ -1919,7 +1923,7 @@ Ovaj prikaz nije pristup tuđoj prijavi. Postojeći interni ekrani Komisije i po
 
 Ovo pravilo ne određuje trenutak javnog objavljivanja rang-liste ili službenih akata. Javno objavljivanje službene odluke je zaseban proces.
 
-**Izvor:** Odluka, članovi 21 i 22; odobrena projektna odluka o jednoj rang-listi sa dvije faze; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`; `KN-PATCH-BM-028`; odobrena odluka PM-ALIGN-02A-1 od 2026-11-05.
+**Izvor:** Odluka, članovi 21 i 22; odobrena projektna odluka o jednoj rang-listi sa dvije faze; `KN-PATCH-BM-020`; `KN-PATCH-BM-021`; `KN-PATCH-BM-028`; odobrena odluka PM-ALIGN-02A-1 od 2026-11-05; odobrena odluka PM-ODL-01 od 2026-11-10.
 
 ## 11.9. Jednaki bodovi
 

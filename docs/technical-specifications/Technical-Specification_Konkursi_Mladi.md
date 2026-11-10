@@ -8,16 +8,16 @@
 **Namespace:** KN
 **Tip konkursa:** Konkurs za podršku preduzetništvu mladih
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.33
-**Datum:** 2026-11-09
+**Verzija:** 1.0.35
+**Datum:** 2026-11-10
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001 v1.0.48** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` (USVOJENO)
 * Zajednički poslovni model modula Konkursi: **KN-BM-001 v0.2.11** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO)
-* Poslovni profil mladih: **KN-BM-002 v1.0.30** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
+* Poslovni profil mladih: **KN-BM-002 v1.0.32** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička funkcionalna specifikacija modula Konkursi: **KN-FS-001 v0.2.13** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO)
-* Funkcionalni profil mladih: **KN-FS-002 v1.0.37** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
+* Funkcionalni profil mladih: **KN-FS-002 v1.0.39** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (USVOJEN)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001 v0.1.0** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT)
 * Funkcionalna specifikacija ženskog preduzetništva: **KN-FS-003 v1.0.17** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN) — **samo tehnički i strukturni obrazac**; nije SSOT profila mladih
 
@@ -71,6 +71,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.31 | 2026-11-09 | PM-TEXT-01, usklađeno sa KN-FS-002 v1.0.35. §9.2 imenuje akt kao „Odluke o podršci preduzetništvu mladih“. Skraćenica „Odluke o mladima“ nije važeći naziv. Naziv ženskog akta, član 12 i član 10 ostaju. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.32 | 2026-11-09 | PM-KOM-11, usklađeno sa KN-BM-002 v1.0.29 i KN-FS-002 v1.0.36. §10.6, §10.9 i §11.1: `youthMutualScoreViewIsAllowed()` je serverska kapija međusobnog uvida, odvojena od `isYouthIndividualScoringCycleComplete()` i od `youthPreliminaryRankingBlockReason()`. Uvid traži završen prigovorni postupak i kompletne ocjene svih trenutno podobnih prijava. HTML ne šalje tuđe ocjene, napomene ni zajednički zbir prije te kapije. Nema migracije. ŽP i MMSP nijesu dirani. |
 | 1.0.33 | 2026-11-09 | PM-RANK-01, usklađeno sa KN-FS-002 v1.0.37. §11.1: `youthAppealProcessBlockReason()` ne tretira `isFinished()` prigovor kao otvoren rok. `applicationBelongsToYouthScoringCycle()` prihvaćenu prijavu ubraja u ciklus i prije isteka kalendara obavještenja, čim ima tri zaključane ocjene. Neiskorišćen rok i status `podnesen` ostaju blokada. Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.34 | 2026-11-10 | PM-ODL-01, usklađeno sa KN-BM-002 v1.0.31 i KN-FS-002 v1.0.38. §12.14: `winnerRow()` ne odbija generisanje zbog praznog `YouthDecisionApplicantIdentity::line()` ni zbog poklapanja naziva društva i osnivača ili direktora. Nedostajući red dobija oznaku prijave. `ranking_sha256` i dalje čuva `line()` ili prazan string. Nema migracije. ŽP i MMSP nijesu dirani. |
+| 1.0.35 | 2026-11-10 | PM-ODL-IDENT-03, usklađeno sa KN-BM-002 v1.0.32 i KN-FS-002 v1.0.39. §12.14: `line()` za planirano društvo čita `applications.doo_name`, a prazno polje dopunjava imenom iz kanonskog identiteta. Naziv projekta i naziv društva se ne koriste kao ime lica. Nema migracije. ŽP i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -2981,7 +2983,7 @@ Automatski predlošci datuma, samo za taj `competition_id`:
 
 Predsjednik može izmijeniti ta četiri datuma prije generisanja. U dokument ulaze potvrđene vrijednosti. Upis u navedene kolone se ne radi. Ako automatskog datuma nema, generisanje čeka ručni unos.
 
-Datum Odluke je datum generisanja. Mjesto je Kotor. Godina konkursa, bodovi, odobreni iznosi i `business_plans.required_amount` dolaze iz baze. Identitet se ne dopisuje kada podatak nedostaje. Potpisnik u dokumentu je VD SEKRETARA Vladan Barović. Dostava: broj podržanih podnosilaca, broj aktivnih članova Komisije, Sekretarijat u 2 primjerka i arhiva.
+Datum Odluke je datum generisanja. Mjesto je Kotor. Godina konkursa, bodovi, odobreni iznosi i `business_plans.required_amount` dolaze iz baze. `YouthDecisionApplicantIdentity::line()` ulazi u red podnosioca kada vrati tekst. Za fizičko lice izvor je `applications.physical_person_name`, za preduzetnika `applications.preduzetnik_name`, a za planirano neregistrovano društvo polje M1b `applications.doo_name` sa oznakom „Ime i prezime podnosioca prijave“. Ako je to polje prazno, koristi se ime i prezime iz kanonskog identiteta fizičkog lica ili ovlašćenog lica. Naziv projekta, naziv planiranog ili registrovanog društva i ime korisničkog naloga nijesu ime fizičkog lica. Registrovano društvo i dalje dobija postojeći red sa pravnim nazivom, osnivačem i direktorom kada su ta tri podatka validna. Kada red nije moguće sastaviti, generisanje se ne prekida. Taj red nosi oznaku `Oznaka prijave: prijava {id}, naziv projekta „{naziv}“` i ne počinje sa `Podnosilac/podnositeljka prijave:`. Imena, PIB, CRPS i druga prazna polja se ne dopisuju. Provjere naziva plana, konačnih bodova i ukupne vrijednosti plana ostaju. Potpisnik u dokumentu je VD SEKRETARA Vladan Barović. Dostava: broj podržanih podnosilaca, broj aktivnih članova Komisije, Sekretarijat u 2 primjerka i arhiva.
 
 Ako nijedna prijava nije podržana, generisanje i dalje mora biti moguće. Dokument konstatuje da sredstva nijesu dodijeljena. Ne izmišljaju se podnosioci, iznosi ni zaključci. Memorandum i `Broj:` ostaju. Blok podržanog plana se ne puni izmišljenim redom. I ta odluka se trajno čuva po §12.15 i ulazi u tačku 13. Pravilo konačnosti liste se ne mijenja.
 
@@ -3013,7 +3015,7 @@ Fajl ide na disk `local`, korijen `storage/app/private`, putanja `youth-decision
 
 Paralelni zahtjevi zaključavaju red Poziva. Svaki uspjeh dobija sopstveni ULID i novi red. Neuspjeh ne poništava prethodnu verziju.
 
-`ranking_sha256` je SHA-256 kanonskog UTF-8 JSON niza. Prijave su iz `CanonicalIndividualScoringService::youthScoringCycleApplications`, rastući `id`. Puna ocjena je postojeći `aggregateYouthApplication()['final_score_full']`. Rang je postojeći `expectedYouthRankingPositions`. Nova formula se ne uvodi. Za svaku prijavu, fiksnim redoslijedom: `application_id`, puna ocjena, `ranking_position` ili prazno, `status`, `commission_decision` ili prazno, `approved_amount` na dvije decimale ili prazno, `commission_justification` bez ivičnih razmaka ili prazno. Ako prijava ulazi u dokument kao podržana sa iznosom većim od nule, dodaju se identitet iz `YouthDecisionApplicantIdentity::line`, naziv plana i `required_amount` na dvije decimale. Inače su ta tri polja prazna. Prazno je prazan string. Novac i puna ocjena su stringovi, ne brojevi s pokretnim zarezom. Isti podaci daju isti hash. Vrijeme generisanja nije dokaz usklađenosti.
+`ranking_sha256` je SHA-256 kanonskog UTF-8 JSON niza. Prijave su iz `CanonicalIndividualScoringService::youthScoringCycleApplications`, rastući `id`. Puna ocjena je postojeći `aggregateYouthApplication()['final_score_full']`. Rang je postojeći `expectedYouthRankingPositions`. Nova formula se ne uvodi. Za svaku prijavu, fiksnim redoslijedom: `application_id`, puna ocjena, `ranking_position` ili prazno, `status`, `commission_decision` ili prazno, `approved_amount` na dvije decimale ili prazno, `commission_justification` bez ivičnih razmaka ili prazno. Ako prijava ulazi u dokument kao podržana sa iznosom većim od nule, dodaju se identitet iz `YouthDecisionApplicantIdentity::line`, naziv plana i `required_amount` na dvije decimale. Oznaka prijave iz Word reda nije dio ovog niza: kada `line()` vrati `null`, `applicant_identity` ostaje prazan string. Inače su ta tri polja prazna. Prazno je prazan string. Novac i puna ocjena su stringovi, ne brojevi s pokretnim zarezom. Isti podaci daju isti hash. Vrijeme generisanja nije dokaz usklađenosti.
 
 Za zatvaranje važi posljednji red tog Poziva čiji `ranking_sha256` jednak je ponovo izračunatom identitetu i čiji fajl prolazi provjeru `content_sha256`. Stariji redovi ostaju sačuvani.
 

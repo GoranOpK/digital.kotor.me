@@ -4,13 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Application;
 use App\Models\LegalEntityIdentity;
+use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
 use App\Models\User;
 use App\Services\Competitions\YouthDecisionApplicantIdentity;
 use App\Services\Competitions\YouthDecisionDocxWriter;
 use App\Services\Competitions\YouthDecisionProposal;
 use App\Services\Competitions\YouthDecisionProposalBuilder;
-use Illuminate\Validation\ValidationException;
 use PhpZip\ZipFile;
 use Tests\TestCase;
 
@@ -28,17 +28,20 @@ class YouthDecisionDocumentTest extends TestCase
             'Firma Beta, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković',
             $identity->line($this->company('Firma Beta', 'Ana Anić', 'Marko Marković'))
         );
-        $this->assertNull($identity->line($this->company('Firma Gama', 'Ana Anić', null)));
+        $this->assertSame('Ana Anić', $identity->line($this->company('Firma Gama', 'Ana Anić', null)));
 
         $unregistered = new Application([
             'applicant_type' => 'privredno_drustvo',
             'is_registered' => false,
+            'business_plan_name' => 'Bidon',
             'doo_name' => 'Milica Milić',
         ]);
         $user = new User(['name' => 'Profil Nalog']);
         $user->setRelation('identity', null);
         $unregistered->setRelation('user', $user);
-        $this->assertNull($identity->line($unregistered));
+        $this->assertSame('Milica Milić', $identity->line($unregistered));
+        $this->assertStringNotContainsString('Bidon', (string) $identity->line($unregistered));
+        $this->assertStringNotContainsString('Profil Nalog', (string) $identity->line($unregistered));
 
         $person = new Application([
             'applicant_type' => 'fizicko_lice',
@@ -54,8 +57,8 @@ class YouthDecisionDocumentTest extends TestCase
         $entrepreneur->setRelation('user', new User(['name' => 'Nalog Preduzetnika']));
         $this->assertSame('Jovo Jović', $identity->line($entrepreneur));
 
-        $this->assertNull($identity->line($this->company('Stefan doo', '  stefan   DOO ', 'Ana Anić')));
-        $this->assertNull($identity->line($this->company('Stefan doo', 'Ana Anić', 'STEFAN DOO')));
+        $this->assertSame('Ana Anić', $identity->line($this->company('Stefan doo', '  stefan   DOO ', 'Ana Anić')));
+        $this->assertSame('Ana Anić', $identity->line($this->company('Stefan doo', 'Ana Anić', 'STEFAN DOO')));
         $this->assertSame(
             'Stefan doo, koga zastupa osnivač/ica i izvršni direktor/ica Ana Anić',
             $identity->line($this->company('Stefan doo', 'Ana Anić', 'ana anić'))
@@ -69,18 +72,127 @@ class YouthDecisionDocumentTest extends TestCase
             $identity->line($this->company('Stefan doo', 'Ana Anić', 'Marko Marković'))
         );
 
-        $rejected = $this->company('Stefan doo', 'Stefan doo', 'Ana Anić');
+        $rejected = $this->company('Stefan doo', 'Stefan doo', 'STEFAN DOO');
+        $rejected->id = 38;
         $rejected->business_plan_name = 'Plan Stefan';
+        $rejected->final_score = '40.00';
+        $rejected->approved_amount = '15000.00';
+        $rejected->setRelation('businessPlan', new \App\Models\BusinessPlan([
+            'required_amount' => '20000.00',
+        ]));
+        $this->assertNull($identity->line($rejected));
         $method = new \ReflectionMethod(YouthDecisionProposalBuilder::class, 'winnerRow');
+        $row = $method->invoke(app(YouthDecisionProposalBuilder::class), $rejected);
+        $this->assertSame('application', $row['identity_source']);
+        $this->assertSame('Oznaka prijave: prijava 38, naziv projekta „Plan Stefan“', $row['identity']);
+        $this->assertSame('Plan Stefan', $row['plan']);
+        $this->assertSame('15.000,00', $row['approved']);
+        $this->assertStringNotContainsString('Stefan doo', $row['identity']);
+        $this->assertStringNotContainsString('Ana Anić', $row['identity']);
+    }
+
+    public function test_planned_company_uses_the_saved_natural_person_name_in_the_word_decision(): void
+    {
+        $identity = app(YouthDecisionApplicantIdentity::class);
+        $application = new Application([
+            'applicant_type' => 'privredno_drustvo',
+            'is_registered' => false,
+            'business_plan_name' => 'Bidon',
+            'doo_name' => 'Milica Milić',
+            'final_score' => '48.50',
+            'approved_amount' => '15000.00',
+        ]);
+        $application->id = 38;
+        $user = new User(['name' => 'Nalog Koji Se Ne Koristi']);
+        $user->setRelation('identity', null);
+        $application->setRelation('user', $user);
+        $application->setRelation('businessPlan', new \App\Models\BusinessPlan([
+            'required_amount' => '20000.00',
+        ]));
+
+        $this->assertSame('Milica Milić', $identity->line($application));
+
+        $method = new \ReflectionMethod(YouthDecisionProposalBuilder::class, 'winnerRow');
+        $row = $method->invoke(app(YouthDecisionProposalBuilder::class), $application);
+        $this->assertSame('applicant', $row['identity_source']);
+        $this->assertSame('Milica Milić', $row['identity']);
+        $this->assertSame('Bidon', $row['plan']);
+
+        $proposal = new YouthDecisionProposal(
+            competitionId: 38,
+            decisionNumber: '',
+            decisionDate: '10.11.2026.',
+            competitionYear: '2140',
+            publishedOn: '01.09.2026.',
+            endedOn: '21.09.2026.',
+            firstSessionDate: '02.02.2026',
+            secondSessionDate: '03.03.2026',
+            thirdSessionDate: '04.04.2026',
+            oralDate: '05.05.2026',
+            winners: [$row],
+            receivedCount: 1,
+            incompleteCount: 0,
+            appealsAccepted: 0,
+            appealsRejected: 0,
+            proceedCount: 1,
+            awardedTotal: '15.000,00',
+            commissionMemberCount: 3,
+        );
+        $path = app(YouthDecisionDocxWriter::class)->write($proposal);
         try {
-            $method->invoke(app(YouthDecisionProposalBuilder::class), $rejected);
-            $this->fail('Odluka sa nazivom društva umjesto imena osnivača ne smije biti sastavljena.');
-        } catch (ValidationException $exception) {
-            $this->assertStringContainsString(
-                YouthDecisionApplicantIdentity::COMPANY_NAME_AS_FOUNDER,
-                $exception->validator->errors()->first('decision')
-            );
+            $text = $this->docxText($path);
+        } finally {
+            @unlink($path);
         }
+
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Milica Milić', $text);
+        $this->assertStringContainsString('Bidon', $text);
+        $this->assertStringNotContainsString('Oznaka prijave:', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Bidon', $text);
+        $this->assertStringNotContainsString('Nalog Koji Se Ne Koristi', $text);
+
+        $sameAsPlan = new Application([
+            'applicant_type' => 'privredno_drustvo',
+            'is_registered' => false,
+            'business_plan_name' => 'Bidon',
+            'doo_name' => 'Bidon',
+        ]);
+        $sameAsPlan->setRelation('user', $user);
+        $this->assertNull($identity->line($sameAsPlan));
+
+        $canonicalUser = new User(['name' => 'Nalog Koji Se Ne Koristi']);
+        $person = new PhysicalPersonIdentity([
+            'first_name' => 'Petar',
+            'last_name' => 'Petrović',
+        ]);
+        $platform = new PlatformIdentity(['subject_type' => PlatformIdentity::SUBJECT_PHYSICAL_PERSON]);
+        $platform->setRelation('physicalPerson', $person);
+        $platform->setRelation('legalEntity', null);
+        $canonicalUser->setRelation('identity', $platform);
+        $fromCanonical = new Application([
+            'applicant_type' => 'privredno_drustvo',
+            'is_registered' => false,
+            'business_plan_name' => 'Bidon',
+            'doo_name' => null,
+        ]);
+        $fromCanonical->setRelation('user', $canonicalUser);
+        $this->assertSame('Petar Petrović', $identity->line($fromCanonical));
+
+        $naturalPerson = new Application([
+            'applicant_type' => 'fizicko_lice',
+            'business_plan_name' => 'Plan lica',
+            'physical_person_name' => null,
+        ]);
+        $naturalPerson->setRelation('user', $canonicalUser);
+        $this->assertSame('Petar Petrović', $identity->line($naturalPerson));
+
+        $entrepreneur = new Application([
+            'applicant_type' => 'preduzetnik',
+            'business_plan_name' => 'Plan radnje',
+            'preduzetnik_name' => null,
+        ]);
+        $entrepreneur->setRelation('user', $canonicalUser);
+        $this->assertSame('Petar Petrović', $identity->line($entrepreneur));
     }
 
     public function test_word_document_keeps_the_template_and_manual_dates(): void

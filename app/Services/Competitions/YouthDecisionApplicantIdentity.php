@@ -21,11 +21,11 @@ class YouthDecisionApplicantIdentity
         $this->loadLegalIdentity($application);
 
         if ($application->applicant_type === 'fizicko_lice') {
-            return $this->clean($application->physical_person_name);
+            return $this->savedNaturalPersonName($application, $application->physical_person_name);
         }
 
         if (in_array($application->applicant_type, ['preduzetnik', 'preduzetnica'], true)) {
-            return $this->clean($application->preduzetnik_name);
+            return $this->savedNaturalPersonName($application, $application->preduzetnik_name);
         }
 
         if (! in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
@@ -33,25 +33,24 @@ class YouthDecisionApplicantIdentity
         }
 
         if (! $application->is_registered) {
-            return null;
+            return $this->savedNaturalPersonName($application, $application->doo_name);
         }
 
         $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
-        $founder = $this->clean($application->founder_name);
-        $director = $this->clean($application->director_name);
-        if ($legalName === null || $founder === null || $director === null) {
-            return null;
-        }
-        if ($this->companyNameUsedAsOfficer($founder, $legalName) || $this->companyNameUsedAsOfficer($director, $legalName)) {
-            return null;
+        $founder = $this->acceptablePersonName($application->founder_name, $application);
+        $director = $this->acceptablePersonName($application->director_name, $application);
+        if ($legalName !== null && $founder !== null && $director !== null) {
+            $samePerson = mb_strtolower($founder) === mb_strtolower($director);
+            if ($samePerson) {
+                return $legalName.', koga zastupa osnivač/ica i izvršni direktor/ica '.$founder;
+            }
+
+            return $legalName.', koga zastupa osnivač/ica '.$founder.' i izvršni direktor/ica '.$director;
         }
 
-        $samePerson = mb_strtolower($founder) === mb_strtolower($director);
-        if ($samePerson) {
-            return $legalName.', koga zastupa osnivač/ica i izvršni direktor/ica '.$founder;
-        }
-
-        return $legalName.', koga zastupa osnivač/ica '.$founder.' i izvršni direktor/ica '.$director;
+        return $founder
+            ?? $director
+            ?? $this->savedNaturalPersonName($application, $application->doo_name);
     }
 
     public function companyNameUsedAsOfficer(?string $officer, ?string $companyName): bool
@@ -102,13 +101,75 @@ class YouthDecisionApplicantIdentity
         return $name;
     }
 
+    private function savedNaturalPersonName(Application $application, mixed $formValue): ?string
+    {
+        return $this->acceptablePersonName($formValue, $application)
+            ?? $this->acceptablePersonName($this->canonicalNaturalPersonName($application), $application);
+    }
+
+    private function acceptablePersonName(mixed $value, Application $application): ?string
+    {
+        $name = $this->clean($value);
+        if ($name === null) {
+            return null;
+        }
+
+        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        $plan = $this->clean($application->business_plan_name);
+        if ($this->companyNameUsedAsOfficer($name, $legalName) || $this->companyNameUsedAsOfficer($name, $plan)) {
+            return null;
+        }
+
+        return $name;
+    }
+
+    private function canonicalNaturalPersonName(Application $application): ?string
+    {
+        $user = $application->user;
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        if ($user->exists) {
+            $user->loadMissing(['identity.physicalPerson', 'identity.legalEntity.authorizedPerson']);
+        } elseif (! $user->relationLoaded('identity')) {
+            return null;
+        }
+
+        $identity = $user->identity;
+        if ($identity === null) {
+            return null;
+        }
+
+        if ($identity->exists && ! $identity->relationLoaded('physicalPerson')) {
+            $identity->loadMissing('physicalPerson');
+        }
+
+        if ($identity->relationLoaded('physicalPerson') || $identity->exists) {
+            $person = $identity->physicalPerson;
+            if ($person !== null) {
+                $name = $this->clean(trim((string) ($person->first_name ?? '').' '.(string) ($person->last_name ?? '')));
+                if ($name !== null) {
+                    return $name;
+                }
+            }
+        }
+
+        $legalEntity = $identity->relationLoaded('legalEntity') ? $identity->legalEntity : null;
+        if (! $user->exists && ($legalEntity === null || ! $legalEntity->relationLoaded('authorizedPerson'))) {
+            return null;
+        }
+
+        return $this->registeredNaturalPersonName($user);
+    }
+
     private function loadLegalIdentity(Application $application): void
     {
         if (! $application->exists) {
             return;
         }
 
-        $application->loadMissing(['user.identity.legalEntity']);
+        $application->loadMissing(['user.identity.legalEntity.authorizedPerson', 'user.identity.physicalPerson']);
     }
 
     private function clean(mixed $value): ?string
