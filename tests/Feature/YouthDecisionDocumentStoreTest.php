@@ -24,6 +24,7 @@ use Tests\TestCase;
 class YouthDecisionDocumentStoreTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\MakesIdentitySnapshots;
 
     /** @var list<string> */
     private array $tempFiles = [];
@@ -65,6 +66,26 @@ class YouthDecisionDocumentStoreTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_profile_rename_preserves_stored_pm_document_bytes_and_hashes(): void
+    {
+        $ctx = $this->youthCompetition();
+        $application = $this->scoredApplication($ctx, 5, 'Istorijski plan');
+        $application->forceFill(['commission_decision' => 'podrzava_potpuno', 'approved_amount' => 1000])->save();
+        $document = $this->storeOwned(app(YouthDecisionDocumentStore::class), $ctx['competition'], $ctx['chairman'], $this->sourceFile("PK\x03\x04historic-document"));
+        $beforeDocument = $document->fresh()->getRawOriginal();
+        $beforeApplication = $application->fresh()->getRawOriginal();
+        $beforeBytes = Storage::disk('local')->get($document->storage_path);
+        $user = $application->user;
+        (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user));
+        config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
+        $this->actingAs($user)->put(route('profile.name.update'), ['first_name' => 'Marko', 'last_name' => 'Markovic'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($beforeDocument, $document->fresh()->getRawOriginal());
+        $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
+        $this->assertSame($beforeBytes, Storage::disk('local')->get($document->storage_path));
+        $this->assertSame($document->content_sha256, hash('sha256', $beforeBytes));
+        $this->assertSame($document->ranking_sha256, app(YouthDecisionRankingIdentity::class)->rankingSha256($ctx['competition']->fresh()));
+    }
     public function test_successful_store_keeps_original_bytes_hash_and_ranking_identity(): void
     {
         $parameters = array_map(

@@ -36,6 +36,33 @@ class ZpDecisionProposalCloseTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
+    public function test_profile_rename_does_not_change_closed_zp_snapshot_or_document(): void
+    {
+        Storage::fake('local');
+        $this->withoutVite();
+        [$competition, $president, $application] = $this->readyCompetition();
+        $this->actingAs($president->user)->post(route('admin.competitions.close', $competition))
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $snapshot = ZenskoDecisionProposalSnapshot::query()->firstOrFail();
+        $beforeSnapshot = $snapshot->getRawOriginal();
+        $beforeApplication = $application->fresh()->getRawOriginal();
+        $beforeCompetition = $competition->fresh()->getRawOriginal();
+        $beforeBytes = Storage::disk('local')->get($snapshot->storage_path);
+        $user = $application->user;
+        $fixture = new class {
+            use \Tests\Support\MakesIdentitySnapshots;
+            public function snapshot(User $user): \App\Identity\IdentitySnapshot { return $this->entrepreneurSnapshot($user); }
+        };
+        (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $fixture->snapshot($user));
+        config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
+        $this->actingAs($user)->put(route('profile.name.update'), ['first_name' => 'Marko', 'last_name' => 'Markovic'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
+        $this->assertSame($beforeCompetition, $competition->fresh()->getRawOriginal());
+        $this->assertSame($beforeSnapshot, $snapshot->fresh()->getRawOriginal());
+        $this->assertSame($beforeBytes, Storage::disk('local')->get($snapshot->storage_path));
+        $this->assertSame($snapshot->content_sha256, hash('sha256', $beforeBytes));
+    }
     public function test_close_stores_one_snapshot_and_completes_the_competition(): void
     {
         $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));

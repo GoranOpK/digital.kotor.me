@@ -17,9 +17,10 @@ use App\Models\Tender;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Identity\CanonicalIdentityWriteException;
-use App\Identity\Runtime\CanonicalHttpIdentityService;
-use App\Identity\Runtime\CurrentIdentityResolver;
-use App\Identity\Runtime\IdentityMutationGuard;
+use App\Identity\CanonicalIdentityReadException;
+use App\Identity\Runtime\IdentityMutationDeniedException;
+use App\Identity\Runtime\UserNameService;
+use App\Security\JmbEncryptedReadException;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
 use App\Services\MmspTestAccessService;
@@ -465,38 +466,16 @@ class AdminController extends Controller
             }
         }
 
-        $identityService = app(CanonicalHttpIdentityService::class);
-        $guard = app(IdentityMutationGuard::class);
 
         try {
-            DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant, $guard, $identityService) {
+            DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant) {
                 $locked = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
                 $locked->load('role');
+                $this->assertUsersAdministrationMayMutate($locked);
                 $previousRole = $locked->role?->name;
-                $syncedFromCanonical = false;
-
-                if ($guard->canonicalHttpWriteAllowed()) {
-                    try {
-                        $identityService->updateAdminIdentityContact(
-                            $locked,
-                            $validated['first_name'],
-                            $validated['last_name'],
-                            $validated['phone'] ?? null
-                        );
-                        $this->syncAccountNameFromSavedCanonicalIdentity($locked);
-                        $syncedFromCanonical = true;
-                    } catch (IdentityUseGateException) {
-                        // NON_SUBJECT / no graph: account-layer only
-                    }
-                }
-
-                if (! $syncedFromCanonical && ! $guard->canonicalHttpWriteAllowed() && $guard->legacyIdentityMutationAllowed()) {
-                    $locked->first_name = $validated['first_name'];
-                    $locked->last_name = $validated['last_name'];
-                    $locked->name = $validated['first_name'].' '.$validated['last_name'];
-                    $locked->phone = $validated['phone'] ?? null;
-                }
-
+                $locked = app(UserNameService::class)->update(
+                    $locked, $validated['first_name'], $validated['last_name'], true, $validated['phone'] ?? null
+                );
                 $locked->email = $validated['email'];
                 $locked->role_id = $validated['role_id'];
                 $locked->activation_status = $validated['activation_status'];
@@ -505,7 +484,9 @@ class AdminController extends Controller
                     $locked->password = Hash::make($validated['password']);
                 }
 
-                $locked->save();
+                if (! $locked->save()) {
+                    throw new CanonicalIdentityWriteException('Account changes were not saved.');
+                }
 
                 app(MmspTestAccessService::class)->reconcile(
                     $locked,
@@ -514,6 +495,8 @@ class AdminController extends Controller
                     $requestedGrant,
                 );
             });
+        } catch (IdentityMutationDeniedException|IdentityUseGateException|CanonicalIdentityReadException|JmbEncryptedReadException $e) {
+            return back()->withErrors(['first_name' => 'Ime nije sačuvano. Identitet nije dostupan ili izmjena nije dozvoljena.'])->withInput();
         } catch (CanonicalIdentityWriteException) {
             return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
         }
@@ -527,21 +510,6 @@ class AdminController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Korisnik je uspješno ažuriran.');
-    }
-
-    /**
-     * Account name follows the canonical identity that was just saved.
-     * Company name and submitted application snapshots are left unchanged.
-     */
-    private function syncAccountNameFromSavedCanonicalIdentity(User $user): void
-    {
-        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
-        $firstName = $identity->firstName;
-        $lastName = $identity->lastName;
-
-        $user->first_name = $firstName;
-        $user->last_name = $lastName;
-        $user->name = trim((string) $firstName.' '.(string) $lastName);
     }
 
     /**

@@ -74,5 +74,6 @@
             </div>
         </div>
     </div>
+<p style="text-align:center"><a href="{{ route('profile.name.edit') }}">Izmijeni ime i prezime</a></p>
 </body>
 </html>

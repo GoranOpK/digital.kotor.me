@@ -82,6 +82,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [HomeController::class, 'register'])->middleware('throttle:registration'); // Slanje podataka za registraciju
 });
 
+// Name-only self service keeps the remaining profile behind its existing verification gate.
+Route::middleware(['auth', 'module_access_restrict', 'mmsp_test_access'])->group(function () {
+    Route::get('/profile/name', [\App\Http\Controllers\ProfileController::class, 'editName'])->name('profile.name.edit');
+    Route::put('/profile/name', [\App\Http\Controllers\ProfileController::class, 'updateName'])->name('profile.name.update');
+});
 // Grupe ruta dostupne samo prijavljenim korisnicima
 Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_access'])->group(function () {
     // Dashboard - profil korisnika nakon prijave

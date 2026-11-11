@@ -3,6 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\UserNameUpdateRequest;
+use App\Identity\Runtime\UserNameService;
+use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Identity\CanonicalIdentityReadException;
+use App\Security\JmbEncryptedReadException;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use App\Identity\CanonicalIdentityWriteException;
 use App\Identity\Runtime\CanonicalHttpIdentityService;
 use App\Identity\Runtime\IdentityMutationDeniedException;
@@ -12,7 +19,6 @@ use App\Security\JmbDualWrite;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
@@ -31,41 +37,63 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function editName(Request $request): View
     {
         $user = $request->user();
-        $service = app(CanonicalHttpIdentityService::class);
+        return view('profile.name', [
+            'user' => $user,
+            'subjectIdentity' => app(CurrentIdentityResolver::class)->viewFor($user),
+        ]);
+    }
 
+    public function updateName(UserNameUpdateRequest $request): RedirectResponse
+    {
         try {
-            $service->updateProfileIdentity($user, $request);
-        } catch (IdentityMutationDeniedException $e) {
-            abort(403, $e->getMessage());
-        } catch (IdentityUseGateException $e) {
-            return back()->withErrors(['user_type' => $e->getMessage()])->withInput();
-        } catch (CanonicalIdentityWriteException $e) {
-            if (str_contains($e->getMessage(), 'PIB')) {
-                return back()->withErrors([
-                    'pib' => $e->getMessage() === 'PIB je već registrovan.' ? $e->getMessage() : 'PIB nije ispravan.',
-                ])->withInput();
-            }
-
-            return back()->withErrors(['user_type' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
+            app(UserNameService::class)->update($request->user(), $request->validated('first_name'), $request->validated('last_name'));
+        } catch (IdentityMutationDeniedException|IdentityUseGateException|CanonicalIdentityReadException|CanonicalIdentityWriteException|JmbEncryptedReadException $e) {
+            return back()->withErrors(['first_name' => 'Ime nije sačuvano. Identitet nije dostupan ili izmjena nije dozvoljena.'])->withInput();
         }
 
+        return redirect()->route('profile.name.edit')->with('success', 'Ime i prezime su uspješno sačuvani.');
+    }
+
+    public function update(ProfileUpdateRequest $request): RedirectResponse
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $user = User::query()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+                return $this->updateAccount($request, $user);
+            });
+        } catch (IdentityMutationDeniedException $e) {
+            abort(403, $e->getMessage());
+        } catch (IdentityUseGateException|CanonicalIdentityReadException|JmbEncryptedReadException $e) {
+            return back()->withErrors(['user_type' => 'Identitet nije dostupan za izmjenu.'])->withInput();
+        } catch (CanonicalIdentityWriteException $e) {
+            if (str_contains($e->getMessage(), 'PIB')) {
+                return back()->withErrors(['pib' => $e->getMessage() === 'PIB je već registrovan.' ? $e->getMessage() : 'PIB nije ispravan.'])->withInput();
+            }
+            return back()->withErrors(['user_type' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
+        }
+    }
+
+    private function updateAccount(ProfileUpdateRequest $request, User $user): RedirectResponse
+    {
+        $service = app(CanonicalHttpIdentityService::class);
+        $user = app(UserNameService::class)->update($user, $request->first_name, $request->last_name);
+        $service->updateProfileIdentity($user, $request);
         if ($service->usesCanonicalWrites()) {
             if ($user->email !== $request->email) {
                 $user->email = strtolower($request->email);
                 $user->email_verified_at = null;
-                $user->save();
+                if (! $user->save()) {
+                    throw new CanonicalIdentityWriteException('Account changes were not saved.');
+                }
             }
 
             return redirect()->route('dashboard')->with('success', 'Profil je uspješno ažuriran.');
         }
 
         // Ažuriraj osnovne podatke
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name;
-        $user->name = $request->first_name . ' ' . $request->last_name;
         $user->phone = PhoneNumber::normalize($request->phone);
         $user->address = $request->address;
         $user->city = $request->city;
@@ -103,7 +131,9 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
         }
 
-        $user->save();
+        if (! $user->save()) {
+            throw new CanonicalIdentityWriteException('Account changes were not saved.');
+        }
 
         return redirect()->route('dashboard')->with('success', 'Profil je uspješno ažuriran.');
     }

@@ -34,6 +34,8 @@ class RestrictRoleModuleAccess
             'home',
             'dashboard',
             'logout',
+            'profile.name.edit',
+            'profile.name.update',
             'profile.edit',
             'profile.update',
             'profile.password.update',

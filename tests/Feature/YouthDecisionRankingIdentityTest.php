@@ -23,6 +23,7 @@ use Tests\TestCase;
 class YouthDecisionRankingIdentityTest extends TestCase
 {
     use RefreshDatabase;
+    use \Tests\Support\MakesIdentitySnapshots;
 
     protected function setUp(): void
     {
@@ -30,6 +31,47 @@ class YouthDecisionRankingIdentityTest extends TestCase
         $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));
     }
 
+    public function test_profile_rename_preserves_saved_pm_identity_and_ranking_hash(): void
+    {
+        config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
+        $ctx = $this->youthCompetition();
+        $application = $this->scoredApplication($ctx, 5, 'Istorijski plan');
+        $this->support($application, '1000.00', 'Podrška', 'Didije Drogba', '2500.00');
+        $user = $application->user;
+        (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user));
+        $service = app(YouthDecisionRankingIdentity::class);
+        $beforeHash = $service->rankingSha256($ctx['competition']->fresh());
+        $beforeApplication = $application->fresh()->getRawOriginal();
+        $beforePlan = $application->businessPlan->getRawOriginal();
+        $this->actingAs($user)->put(route('profile.name.update'), ['first_name' => 'Marko', 'last_name' => 'Marković'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
+        $this->assertSame($beforePlan, $application->businessPlan->fresh()->getRawOriginal());
+        $this->assertSame('Didije Drogba', app(YouthDecisionApplicantIdentity::class)->line($application->fresh()));
+        $this->assertSame($beforeHash, $service->rankingSha256($ctx['competition']->fresh()));
+    }
+
+    /** Known GAP: a missing historical name reads LIVE canonical identity. Do not fix PM here. */
+    public function test_gap_missing_pm_snapshot_changes_ranking_hash_after_profile_rename(): void
+    {
+        config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
+        $ctx = $this->youthCompetition();
+        $application = $this->scoredApplication($ctx, 5, 'Plan bez imena');
+        $this->support($application, '1000.00', 'Podrška', 'Didije Drogba', '2500.00');
+        $application->forceFill(['physical_person_name' => null])->save();
+        $user = $application->user;
+        (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['firstName' => 'Didije', 'lastName' => 'Drogba'],
+        ]));
+        $service = app(YouthDecisionRankingIdentity::class);
+        $beforeHash = $service->rankingSha256($ctx['competition']->fresh());
+        $beforeApplication = $application->fresh()->getRawOriginal();
+        $this->actingAs($user)->put(route('profile.name.update'), ['first_name' => 'Marko', 'last_name' => 'Marković'])
+            ->assertSessionHasNoErrors();
+        $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
+        $this->assertSame('Marko Marković', app(YouthDecisionApplicantIdentity::class)->line($application->fresh()));
+        $this->assertNotSame($beforeHash, $service->rankingSha256($ctx['competition']->fresh()), 'Known GAP: missing snapshot uses live identity.');
+    }
     public function test_same_data_always_returns_the_same_hash(): void
     {
         $ctx = $this->youthCompetition();

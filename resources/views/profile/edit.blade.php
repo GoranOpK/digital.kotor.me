@@ -135,6 +135,8 @@
             </div>
         @endif
 
+        @include('profile.partials.update-name-form')
+
         <!-- Osnovni podaci -->
         <div class="profile-card">
             <h2>Osnovni podaci</h2>
@@ -143,18 +145,18 @@
                 @method('PUT')
 
                 <div class="form-group">
-                    <label for="first_name" class="form-label">Ime <span class="required">*</span></label>
+                    <label for="first_name" class="form-label">{{ \App\Support\UserType::isLegalEntity($subjectIdentity->userType) ? 'Ime ovlašćenog lica' : 'Ime' }} <span class="required">*</span></label>
                     <input type="text" name="first_name" id="first_name" class="form-control" 
-                           value="{{ old('first_name', $subjectIdentity->firstName) }}" required>
+                           value="{{ old('first_name', app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user) ? $user->first_name : $subjectIdentity->firstName) }}" required>
                     @error('first_name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="last_name" class="form-label">Prezime <span class="required">*</span></label>
+                    <label for="last_name" class="form-label">{{ \App\Support\UserType::isLegalEntity($subjectIdentity->userType) ? 'Prezime ovlašćenog lica' : 'Prezime' }} <span class="required">*</span></label>
                     <input type="text" name="last_name" id="last_name" class="form-control" 
-                           value="{{ old('last_name', $subjectIdentity->lastName) }}" required>
+                           value="{{ old('last_name', app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user) ? $user->last_name : $subjectIdentity->lastName) }}" required>
                     @error('last_name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
