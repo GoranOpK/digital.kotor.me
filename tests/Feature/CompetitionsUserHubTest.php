@@ -134,7 +134,7 @@ class CompetitionsUserHubTest extends TestCase
             ->assertDontSee($draft->title)
             ->assertDontSee($canonical->title);
         $womenHtml = $womenList->getContent();
-        $this->assertWomenGuideBelowHeader($womenHtml);
+        $this->assertProgramGuideBelowHeader($womenHtml);
         $this->assertStringContainsString(
             'href="'.route('competitions.index').'"',
             $womenHtml
@@ -147,11 +147,12 @@ class CompetitionsUserHubTest extends TestCase
             ->assertOk()
             ->assertSee($youth->title)
             ->assertSee('Nazad na konkurse')
-            ->assertDontSee('Preuzmi uputstvo (PDF)')
+            ->assertSee('Preuzmi uputstvo (PDF)')
             ->assertDontSee($women->title)
             ->assertDontSee($upcoming->title)
             ->assertDontSee($canonical->title)
             ->getContent();
+        $this->assertProgramGuideBelowHeader($youthHtml, 'competitions.youth-guide.pdf');
         $this->assertStringNotContainsString('program-stat', $youthHtml);
         $this->assertStringNotContainsString('page-header is-hub', $youthHtml);
 
@@ -178,7 +179,7 @@ class CompetitionsUserHubTest extends TestCase
             ->assertSee('Trenutno nema objavljenih konkursa')
             ->assertSee('Podrška ženskom preduzetništvu')
             ->assertSee('Preuzmi uputstvo (PDF)');
-        $this->assertWomenGuideBelowHeader($response->getContent());
+        $this->assertProgramGuideBelowHeader($response->getContent());
     }
 
     public function test_canonical_test_preview_stays_off_the_hub_and_direct_url_is_hidden_without_a_grant(): void
@@ -295,9 +296,12 @@ class CompetitionsUserHubTest extends TestCase
     {
         $this->actingAs($this->userWithRole('korisnik'));
         foreach ([null, 'omladinsko', CompetitionProfileResolver::TYPE_CANONICAL] as $type) {
-            $this->get(route('competitions.index', $type === null ? [] : ['type' => $type]))
-                ->assertOk()->assertDontSee(route('competitions.guide.pdf'), false)
-                ->assertDontSee('Preuzmi uputstvo (PDF)');
+            $response = $this->get(route('competitions.index', $type === null ? [] : ['type' => $type]))
+                ->assertOk()->assertDontSee(route('competitions.guide.pdf'), false);
+            if ($type !== 'omladinsko') {
+                $response->assertDontSee('Preuzmi uputstvo (PDF)')
+                    ->assertDontSee(route('competitions.youth-guide.pdf'), false);
+            }
         }
     }
 
@@ -311,12 +315,41 @@ class CompetitionsUserHubTest extends TestCase
             $response->baseResponse->getFile()->getRealPath());
     }
 
-    private function assertWomenGuideBelowHeader(string $html): void
+    public function test_empty_youth_module_keeps_its_own_guide_below_the_header(): void
+    {
+        $draft = $this->competition('omladinsko', 'Unpublished youth call', 'draft');
+        $response = $this->actingAs($this->userWithRole('korisnik'))
+            ->get(route('competitions.index', ['type' => 'omladinsko']))->assertOk()
+            ->assertSee('Trenutno nema objavljenih konkursa')->assertDontSee($draft->title);
+        $this->assertProgramGuideBelowHeader($response->getContent(), 'competitions.youth-guide.pdf');
+    }
+
+    public function test_final_youth_pdf_is_served_unchanged_with_existing_access_restrictions(): void
+    {
+        $route = route('competitions.youth-guide.pdf');
+        $this->get($route)->assertRedirect(route('login'));
+        $unverified = $this->userWithRole('korisnik');
+        $unverified->forceFill(['email_verified_at' => null])->save();
+        $this->actingAs($unverified)->get($route)->assertRedirect(route('verification.notice'));
+        $response = $this->actingAs($this->userWithRole('korisnik'))->get($route)->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'inline; filename="uputstvo-omladinsko-preduzetnistvo.pdf"');
+        $file = $response->baseResponse->getFile();
+        $this->assertSame(realpath(public_path('pdf/uputstvo-omladinsko-preduzetnistvo.pdf')), $file->getRealPath());
+        $this->assertSame('37e38a52e39f3233e5fdb3a7cca5d3cd759537e607433669bcbea24e4a5006b1', hash_file('sha256', $file->getRealPath()));
+        $routes = \Illuminate\Support\Facades\Route::getRoutes();
+        $this->assertSame($routes->getByName('competitions.guide.pdf')->gatherMiddleware(),
+            $routes->getByName('competitions.youth-guide.pdf')->gatherMiddleware());
+    }
+
+    private function assertProgramGuideBelowHeader(string $html, string $routeName = 'competitions.guide.pdf'): void
     {
         $dom = new \DOMDocument;
         @$dom->loadHTML('<?xml encoding="UTF-8">'.$html);
         $xpath = new \DOMXPath($dom);
-        $href = '[@href="'.route('competitions.guide.pdf').'"]';
+        $href = '[@href="'.route($routeName).'"]';
+        $otherRoute = $routeName === 'competitions.guide.pdf' ? 'competitions.youth-guide.pdf' : 'competitions.guide.pdf';
+        $this->assertStringNotContainsString(route($otherRoute), $html);
         $this->assertSame(1, $xpath->query('//a'.$href)->length, 'Render exactly one existing guide link.');
         $header = '//div[contains(concat(" ",normalize-space(@class)," ")," page-header ")]';
         $this->assertSame(0, $xpath->query($header.'//a'.$href)->length);

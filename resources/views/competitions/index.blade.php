@@ -205,9 +205,9 @@
 
         </div>
 
-        @if($showZenskoGuidePdf)
+        @if($showZenskoGuidePdf || $showOmladinskoGuidePdf)
             <div class="program-guide-actions">
-                <a href="{{ route('competitions.guide.pdf') }}" class="page-header-guide-btn"
+                <a href="{{ route($showZenskoGuidePdf ? 'competitions.guide.pdf' : 'competitions.youth-guide.pdf') }}" class="page-header-guide-btn"
                    target="_blank" rel="noopener noreferrer">
                     Preuzmi uputstvo (PDF)
                 </a>

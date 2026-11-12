@@ -32,6 +32,7 @@ class CompetitionsController extends Controller
                 'programs' => $this->programsWithPublicStats(),
                 'competitions' => collect(),
                 'showZenskoGuidePdf' => false,
+                'showOmladinskoGuidePdf' => false,
                 'selectedProgramTitle' => null,
             ]);
         }
@@ -45,6 +46,7 @@ class CompetitionsController extends Controller
             'programs' => [],
             'competitions' => $competitions,
             'showZenskoGuidePdf' => $showZenskoGuidePdf,
+            'showOmladinskoGuidePdf' => $requestedType === 'omladinsko',
             'selectedProgramTitle' => $selectedProgramTitle,
         ]);
     }
