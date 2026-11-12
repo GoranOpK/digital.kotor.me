@@ -741,7 +741,9 @@ class ApplicationController extends Controller
                     : $existingApplication->doo_address,
                 'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : $existingApplication->requested_amount,
                 'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : $existingApplication->total_budget_needed,
-                'business_area' => $request->filled('business_area') ? $request->business_area : $existingApplication->business_area,
+                'business_area' => $competition->isOmladinskoProfile()
+                    ? $this->pmBusinessAreaForStore($request, $existingApplication)
+                    : ($request->filled('business_area') ? $request->business_area : $existingApplication->business_area),
                 'website' => $request->filled('website') ? $request->website : $existingApplication->website,
                 'bank_account' => $request->filled('bank_account') ? $request->bank_account : $existingApplication->bank_account,
                 'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
@@ -803,7 +805,9 @@ class ApplicationController extends Controller
                     'doo_address' => $request->filled('doo_address') ? $request->doo_address : null,
                     'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : null,
                     'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : null,
-                    'business_area' => $request->filled('business_area') ? $request->business_area : null,
+                    'business_area' => $competition->isOmladinskoProfile()
+                        ? $this->pmBusinessAreaForStore($request)
+                        : ($request->filled('business_area') ? $request->business_area : null),
                     'website' => $request->filled('website') ? $request->website : null,
                     'bank_account' => $request->filled('bank_account') ? $request->bank_account : null,
                     'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
@@ -1197,6 +1201,17 @@ class ApplicationController extends Controller
         }
 
         return $redirect;
+    }
+
+    /** PM drafts distinguish an omitted field from an explicit clear. Validation runs first. */
+    private function pmBusinessAreaForStore(Request $request, ?Application $existingApplication = null): ?string
+    {
+        if (! $request->has('business_area')) {
+            return $existingApplication?->business_area;
+        }
+
+        $area = $request->input('business_area');
+        return is_string($area) && trim($area) !== '' ? trim($area) : null;
     }
 
     private function savedSummaryHasText(mixed $summary): bool

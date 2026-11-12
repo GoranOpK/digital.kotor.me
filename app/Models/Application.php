@@ -1151,11 +1151,15 @@ class Application extends Model
      */
     public function isObrazacComplete(): bool
     {
+        $businessAreaMissing = $this->isOmladinskoProfile()
+            ? (! is_string($this->business_area) || trim($this->business_area) === '')
+            : ! $this->business_area;
+
         // Proveri osnovna obavezna polja (bez finansijskih iznosa – oni se više ne unose u Obrazac 1a/1b)
         if (!$this->business_plan_name || 
             !$this->applicant_type || 
             !$this->business_stage || 
-            !$this->business_area) {
+            $businessAreaMissing) {
             return false;
         }
 
