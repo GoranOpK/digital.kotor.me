@@ -82,6 +82,20 @@
             justify-content: center;
         }
     }
+    .program-guide-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 24px;
+    }
+    .program-guide-actions .page-header-guide-btn {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .program-guide-actions .page-header-guide-btn:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+    }
     .competitions-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -188,18 +202,17 @@
                 </p>
                 @endif
             </div>
-            @if($showZenskoGuidePdf)
-            <a
-                href="{{ route('competitions.guide.pdf') }}"
-                class="page-header-guide-btn"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                <span aria-hidden="true">📄</span>
-                Uputstvo za podnosioce (PDF)
-            </a>
-            @endif
+
         </div>
+
+        @if($showZenskoGuidePdf)
+            <div class="program-guide-actions">
+                <a href="{{ route('competitions.guide.pdf') }}" class="page-header-guide-btn"
+                   target="_blank" rel="noopener noreferrer">
+                    Preuzmi uputstvo (PDF)
+                </a>
+            </div>
+        @endif
 
         @if(!empty($showHub))
             @include('competitions.partials.program-hub', ['programs' => $programs])

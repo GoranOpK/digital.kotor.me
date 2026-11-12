@@ -37,8 +37,7 @@ class CompetitionsController extends Controller
         }
 
         $competitions = $this->publicCompetitions($requestedType);
-        $showZenskoGuidePdf = $competitions->isNotEmpty()
-            && $competitions->every(fn (Competition $competition) => $competition->type === 'zensko');
+        $showZenskoGuidePdf = $requestedType === 'zensko';
         $selectedProgramTitle = CompetitionProgramCatalog::definitions()[$requestedType]['title'] ?? null;
 
         return view('competitions.index', [

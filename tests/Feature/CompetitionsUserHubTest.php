@@ -129,11 +129,12 @@ class CompetitionsUserHubTest extends TestCase
             ->assertOk()
             ->assertSee($women->title)
             ->assertSee('Nazad na konkurse')
-            ->assertSee('Uputstvo za podnosioce (PDF)')
+            ->assertSee('Preuzmi uputstvo (PDF)')
             ->assertDontSee($youth->title)
             ->assertDontSee($draft->title)
             ->assertDontSee($canonical->title);
         $womenHtml = $womenList->getContent();
+        $this->assertWomenGuideBelowHeader($womenHtml);
         $this->assertStringContainsString(
             'href="'.route('competitions.index').'"',
             $womenHtml
@@ -146,7 +147,7 @@ class CompetitionsUserHubTest extends TestCase
             ->assertOk()
             ->assertSee($youth->title)
             ->assertSee('Nazad na konkurse')
-            ->assertDontSee('Uputstvo za podnosioce (PDF)')
+            ->assertDontSee('Preuzmi uputstvo (PDF)')
             ->assertDontSee($women->title)
             ->assertDontSee($upcoming->title)
             ->assertDontSee($canonical->title)
@@ -166,17 +167,18 @@ class CompetitionsUserHubTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_empty_filtered_list_names_the_category_and_hides_the_guide(): void
+    public function test_empty_women_list_names_the_category_and_keeps_the_guide(): void
     {
         $user = $this->userWithRole('korisnik');
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->get(route('competitions.index', ['type' => 'zensko']))
             ->assertOk()
             ->assertSee('Nazad na konkurse')
             ->assertSee('Trenutno nema objavljenih konkursa')
             ->assertSee('Podrška ženskom preduzetništvu')
-            ->assertDontSee('Uputstvo za podnosioce (PDF)');
+            ->assertSee('Preuzmi uputstvo (PDF)');
+        $this->assertWomenGuideBelowHeader($response->getContent());
     }
 
     public function test_canonical_test_preview_stays_off_the_hub_and_direct_url_is_hidden_without_a_grant(): void
@@ -287,6 +289,43 @@ class CompetitionsUserHubTest extends TestCase
                 $adminHtml
             );
         }
+    }
+
+    public function test_women_guide_is_absent_from_hub_youth_and_mmsp_even_when_no_calls_exist(): void
+    {
+        $this->actingAs($this->userWithRole('korisnik'));
+        foreach ([null, 'omladinsko', CompetitionProfileResolver::TYPE_CANONICAL] as $type) {
+            $this->get(route('competitions.index', $type === null ? [] : ['type' => $type]))
+                ->assertOk()->assertDontSee(route('competitions.guide.pdf'), false)
+                ->assertDontSee('Preuzmi uputstvo (PDF)');
+        }
+    }
+
+    public function test_existing_women_pdf_route_serves_the_existing_file_and_preserves_authentication(): void
+    {
+        $this->get(route('competitions.guide.pdf'))->assertRedirect(route('login'));
+        $response = $this->actingAs($this->userWithRole('korisnik'))->get(route('competitions.guide.pdf'))
+            ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertSame('uputstvo-zensko-preduzetnistvo.pdf', $response->baseResponse->getFile()->getFilename());
+        $this->assertSame(realpath(public_path('pdf/uputstvo-zensko-preduzetnistvo.pdf')),
+            $response->baseResponse->getFile()->getRealPath());
+    }
+
+    private function assertWomenGuideBelowHeader(string $html): void
+    {
+        $dom = new \DOMDocument;
+        @$dom->loadHTML('<?xml encoding="UTF-8">'.$html);
+        $xpath = new \DOMXPath($dom);
+        $href = '[@href="'.route('competitions.guide.pdf').'"]';
+        $this->assertSame(1, $xpath->query('//a'.$href)->length, 'Render exactly one existing guide link.');
+        $header = '//div[contains(concat(" ",normalize-space(@class)," ")," page-header ")]';
+        $this->assertSame(0, $xpath->query($header.'//a'.$href)->length);
+        $button = $xpath->query($header.'/following-sibling::*[1][@class="program-guide-actions"]/a'.$href);
+        $this->assertSame(1, $button->length, 'Guide must be immediately below the blue header.');
+        $this->assertSame('Preuzmi uputstvo (PDF)', trim($button->item(0)->textContent));
+        $this->assertSame('_blank', $button->item(0)->getAttribute('target'));
+        $this->assertStringContainsString('noopener', $button->item(0)->getAttribute('rel'));
+        $this->assertStringContainsString('noreferrer', $button->item(0)->getAttribute('rel'));
     }
 
     private function userWithRole(string $role): User
