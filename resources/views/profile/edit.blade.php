@@ -135,7 +135,7 @@
             </div>
         @endif
 
-        @include('profile.partials.update-name-form')
+        @include('profile.partials.update-name-form', ['nameFormContext' => 'profile'])
 
         <!-- Osnovni podaci -->
         <div class="profile-card">

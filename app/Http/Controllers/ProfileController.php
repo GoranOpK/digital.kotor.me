@@ -50,8 +50,15 @@ class ProfileController extends Controller
     {
         try {
             app(UserNameService::class)->update($request->user(), $request->validated('first_name'), $request->validated('last_name'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->route($request->returnRoute())->withErrors($e->errors())->withInput();
         } catch (IdentityMutationDeniedException|IdentityUseGateException|CanonicalIdentityReadException|CanonicalIdentityWriteException|JmbEncryptedReadException $e) {
-            return back()->withErrors(['first_name' => 'Ime nije sačuvano. Identitet nije dostupan ili izmjena nije dozvoljena.'])->withInput();
+            return redirect()->route($request->returnRoute())
+                ->withErrors(['first_name' => 'Ime nije sačuvano. Identitet nije dostupan ili izmjena nije dozvoljena.'])->withInput();
+        }
+
+        if ($request->returnsToProfile()) {
+            return redirect()->route('profile.edit')->with('name_updated', 'Ime i prezime su uspješno izmijenjeni.');
         }
 
         return redirect()->route('profile.name.edit')->with('success', 'Ime i prezime su uspješno sačuvani.');

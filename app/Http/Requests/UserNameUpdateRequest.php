@@ -11,6 +11,22 @@ final class UserNameUpdateRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    /** A fixed UI context, never a user-supplied redirect URL. */
+    public function returnsToProfile(): bool
+    {
+        return $this->input('name_context') === 'profile';
+    }
+
+    public function returnRoute(): string
+    {
+        return $this->returnsToProfile() ? 'profile.edit' : 'profile.name.edit';
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return route($this->returnRoute());
+    }
+
     public function rules(): array
     {
         return [
