@@ -18,7 +18,6 @@ class YouthDecisionApplicantIdentity
 
     public function line(Application $application): ?string
     {
-        $this->loadLegalIdentity($application);
 
         if ($application->applicant_type === 'fizicko_lice') {
             return $this->savedNaturalPersonName($application, $application->physical_person_name);
@@ -36,7 +35,15 @@ class YouthDecisionApplicantIdentity
             return $this->savedNaturalPersonName($application, $application->doo_name);
         }
 
-        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        if (app(PmRegisteredDooName::class)->isRegisteredDoo($application)) {
+            $legalName = app(PmRegisteredDooName::class)->historicalName($application);
+            if ($legalName === null) {
+                return null;
+            }
+        } else {
+            $this->loadLegalIdentity($application);
+            $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        }
         $founder = $this->acceptablePersonName($application->founder_name, $application);
         $director = $this->acceptablePersonName($application->director_name, $application);
         if ($legalName !== null && $founder !== null && $director !== null) {
@@ -53,6 +60,35 @@ class YouthDecisionApplicantIdentity
             ?? $this->savedNaturalPersonName($application, $application->doo_name);
     }
 
+    public function display(Application $application): string
+    {
+        return $this->line($application) ?? $this->marker($application);
+    }
+
+    public function marker(Application $application): string
+    {
+        return 'Oznaka prijave: prijava '.$application->id.', naziv projekta "'.trim((string) $application->business_plan_name).'"';
+    }
+
+    public function validateForSubmission(Application $application): void
+    {
+        $fields = match ((string) $application->applicant_type) {
+            'fizicko_lice' => ['physical_person_name'],
+            'preduzetnik', 'preduzetnica' => ['preduzetnik_name'],
+            'doo', 'privredno_drustvo', 'ostalo' => $application->is_registered
+                ? ['doo_name', 'founder_name', 'director_name'] : ['doo_name'],
+            default => [],
+        };
+        $errors = [];
+        foreach ($fields as $field) {
+            if ($this->acceptablePersonName($application->{$field}, $application) === null) {
+                $errors[$field] = 'Unesite ime fizickog lica u istorijske podatke prijave.';
+            }
+        }
+        if ($errors !== []) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+    }
     public function companyNameUsedAsOfficer(?string $officer, ?string $companyName): bool
     {
         $officerName = $this->normalizeComparableName($officer);
@@ -63,12 +99,15 @@ class YouthDecisionApplicantIdentity
 
     public function companyOfficerConflictMessage(Application $application): ?string
     {
-        $this->loadLegalIdentity($application);
         if (! $application->is_registered || ! in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
             return null;
         }
-
-        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        if (app(PmRegisteredDooName::class)->isRegisteredDoo($application)) {
+            $legalName = app(PmRegisteredDooName::class)->historicalName($application);
+        } else {
+            $this->loadLegalIdentity($application);
+            $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        }
         $messages = [];
         if ($this->companyNameUsedAsOfficer($application->founder_name, $legalName)) {
             $messages[] = self::COMPANY_NAME_AS_FOUNDER;
@@ -103,8 +142,7 @@ class YouthDecisionApplicantIdentity
 
     private function savedNaturalPersonName(Application $application, mixed $formValue): ?string
     {
-        return $this->acceptablePersonName($formValue, $application)
-            ?? $this->acceptablePersonName($this->canonicalNaturalPersonName($application), $application);
+        return $this->acceptablePersonName($formValue, $application);
     }
 
     private function acceptablePersonName(mixed $value, Application $application): ?string
@@ -114,53 +152,16 @@ class YouthDecisionApplicantIdentity
             return null;
         }
 
-        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        $legalName = app(PmRegisteredDooName::class)->isRegisteredDoo($application)
+            ? app(PmRegisteredDooName::class)->historicalName($application)
+            : ($application->is_registered && in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)
+                ? $this->clean($application->user?->identity?->legalEntity?->legal_name) : null);
         $plan = $this->clean($application->business_plan_name);
         if ($this->companyNameUsedAsOfficer($name, $legalName) || $this->companyNameUsedAsOfficer($name, $plan)) {
             return null;
         }
 
         return $name;
-    }
-
-    private function canonicalNaturalPersonName(Application $application): ?string
-    {
-        $user = $application->user;
-        if (! $user instanceof User) {
-            return null;
-        }
-
-        if ($user->exists) {
-            $user->loadMissing(['identity.physicalPerson', 'identity.legalEntity.authorizedPerson']);
-        } elseif (! $user->relationLoaded('identity')) {
-            return null;
-        }
-
-        $identity = $user->identity;
-        if ($identity === null) {
-            return null;
-        }
-
-        if ($identity->exists && ! $identity->relationLoaded('physicalPerson')) {
-            $identity->loadMissing('physicalPerson');
-        }
-
-        if ($identity->relationLoaded('physicalPerson') || $identity->exists) {
-            $person = $identity->physicalPerson;
-            if ($person !== null) {
-                $name = $this->clean(trim((string) ($person->first_name ?? '').' '.(string) ($person->last_name ?? '')));
-                if ($name !== null) {
-                    return $name;
-                }
-            }
-        }
-
-        $legalEntity = $identity->relationLoaded('legalEntity') ? $identity->legalEntity : null;
-        if (! $user->exists && ($legalEntity === null || ! $legalEntity->relationLoaded('authorizedPerson'))) {
-            return null;
-        }
-
-        return $this->registeredNaturalPersonName($user);
     }
 
     private function loadLegalIdentity(Application $application): void

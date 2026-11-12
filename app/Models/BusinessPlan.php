@@ -14,6 +14,18 @@ class BusinessPlan extends Model
     use HasFactory;
     use SynchronizesJmbEncryption;
 
+    protected function performInsert(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return app(\App\Services\Competitions\PmIdentityWriteGuard::class)->planInsert(
+            $this, fn () => parent::performInsert($query)
+        );
+    }
+    protected function performUpdate(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return app(\App\Services\Competitions\PmIdentityWriteGuard::class)->planUpdate(
+            $this, fn () => parent::performUpdate($query)
+        );
+    }
     protected $fillable = [
         'application_id',
         // I. OSNOVNI PODACI

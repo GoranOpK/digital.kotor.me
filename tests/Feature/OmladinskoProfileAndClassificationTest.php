@@ -29,9 +29,12 @@ class OmladinskoProfileAndClassificationTest extends TestCase
     use MakesIdentitySnapshots;
     use RefreshDatabase;
 
+    private int $initialApplicationCount;
+
     protected function setUp(): void
     {
         parent::setUp();
+        $this->initialApplicationCount = Application::query()->count();
         CompetitionProgramCatalog::clearTestOverrides();
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
@@ -159,12 +162,12 @@ class OmladinskoProfileAndClassificationTest extends TestCase
                 'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
             ])
             ->assertNotFound();
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
 
         $this->actingAs($user)
             ->get(route('applications.create', $draft))
             ->assertNotFound();
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
 
         $this->actingAs($user)
             ->from(route('competitions.index'))
@@ -173,7 +176,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
             ]))
             ->assertRedirect(route('competitions.index'))
             ->assertSessionHasErrors('error');
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
     }
 
     public function test_active_omladinsko_catalog_enables_public_flow_without_controller_change(): void
@@ -230,7 +233,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $query = [];
         parse_str((string) parse_url((string) $start->headers->get('Location'), PHP_URL_QUERY), $query);
         $this->assertArrayHasKey('start_token', $query);
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
     }
 
     public function test_unpublished_upcoming_closed_and_completed_omladinsko_calls_do_not_accept_applications(): void
@@ -274,25 +277,27 @@ class OmladinskoProfileAndClassificationTest extends TestCase
             'Konkurs još nije počeo. Prijave će biti moguće od datuma početka konkursa.',
             session('errors')->first('error')
         );
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
 
         $this->actingAs($user)
             ->post(route('applications.start', $closed), [
                 'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
             ])
             ->assertNotFound();
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
 
         $this->actingAs($user)
             ->post(route('applications.start', $completed), [
                 'planned_intent' => KnApplicationStartContext::INTENT_FUTURE_ENTREPRENEUR,
             ])
             ->assertNotFound();
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
     }
 
     public function test_activation_does_not_create_second_call_or_mutate_existing_call_fields(): void
     {
+        $initialCalls = Competition::query()->where('type', 'omladinsko')->count();
+        $initialSecondCalls = Competition::query()->where('type', 'omladinsko')->where('call_number', 2)->count();
         $first = $this->openCompetition('omladinsko', 'Prvi poziv za fingerprint', 'draft');
         $first->forceFill([
             'call_number' => 1,
@@ -302,9 +307,9 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $snapshot = $first->fresh()->only(['budget', 'annual_budget', 'call_number', 'status']);
 
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
-        $this->assertSame(1, Competition::query()->where('type', 'omladinsko')->count());
-        $this->assertSame(0, Competition::query()->where('type', 'omladinsko')->where('call_number', 2)->count());
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($initialCalls + 1, Competition::query()->where('type', 'omladinsko')->count());
+        $this->assertSame($initialSecondCalls, Competition::query()->where('type', 'omladinsko')->where('call_number', 2)->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
         $this->assertSame($snapshot, $first->fresh()->only(['budget', 'annual_budget', 'call_number', 'status']));
         $this->assertSame('draft', $first->fresh()->status);
         $this->assertNotSame('published', $first->fresh()->status);
@@ -848,7 +853,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasErrors('planned_intent');
 
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame($this->initialApplicationCount, Application::query()->count());
 
         $show = $this->actingAs($user)
             ->get(route('competitions.show', $competition))

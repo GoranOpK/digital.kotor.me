@@ -360,6 +360,10 @@ class BusinessPlanController extends Controller
 
         // Član komisije i administrator konkursa (arhiva) mogu samo da pregledaju (read-only), bez izmjena.
         // Vlasnik takođe samo pregleda kad je Prijava zaključana (podnesena ili draft nakon isteka roka).
+        if ($application->isOmladinskoProfile() && $application->status !== 'draft') {
+            $defaultData['applicant_name'] = $businessPlan?->applicant_name
+                ?? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application);
+        }
         $readOnly = !$isOwner || $application->isApplicantContentWriteLocked();
         
         // Ako je član komisije, osiguraj da je readOnly = true
@@ -385,6 +389,18 @@ class BusinessPlanController extends Controller
      * Snimi biznis plan
      */
     public function store(Request $request, Application $application): RedirectResponse
+    {
+        if (! $application->isOmladinskoProfile()) {
+            return $this->storeCurrent($request, $application);
+        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $application) {
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            BusinessPlan::query()->where('application_id', $locked->id)->lockForUpdate()->first();
+            return $this->storeCurrent($request, $locked);
+        });
+    }
+
+    private function storeCurrent(Request $request, Application $application): RedirectResponse
     {
         if ($redirect = $this->redirectCanonicalToInvestmentPlan($application)) {
             return $redirect;

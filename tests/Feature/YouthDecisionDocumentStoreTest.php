@@ -48,7 +48,7 @@ class YouthDecisionDocumentStoreTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));
+        $this->assertSame($this->expectedTestDatabase(), (string) config('database.connections.mysql.database'));
         $this->documentsBeforeTest = $this->privateDecisionInventory();
         $this->capturedExistingDocuments = true;
     }

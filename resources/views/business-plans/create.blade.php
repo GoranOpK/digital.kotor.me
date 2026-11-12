@@ -532,6 +532,19 @@
                             <div class="form-group">
                                 <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
+                                @if($isPmBusinessPlan && app(\App\Services\Competitions\PmRegisteredDooName::class)->isRegisteredDoo($application))
+                                    @if($application->status === 'draft')
+                                        @php
+$pmCanonicalCompanyName = app(\App\Services\Competitions\PmRegisteredDooName::class)->comparisonName($application);
+@endphp
+                                        <p data-testid="pm-canonical-company-name">Naziv firme iz profila za poredjenje: <strong>{{ $pmCanonicalCompanyName ?? 'Naziv nije dostupan; provjerite profil.' }}</strong></p>
+                                        <p>Naziv iz M2 mora odgovarati nazivu iz profila prije konacne predaje. Nijedan naziv se ne mijenja automatski.</p>
+                                        <a href="{{ route('profile.edit') }}">Provjerite ili ispravite naziv u profilu</a>
+                                    @else
+                                        <p>Sacuvani naziv drustva: {{ $businessPlan?->company_name ?? 'Istorijski naziv nije evidentiran.' }}</p>
+                                    @endif
+                                    @error('company_name')<div class="form-error">{{ $message }}</div>@enderror
+                                @endif
                             </div>
                             <div class="form-row">
                                 <div class="form-group">

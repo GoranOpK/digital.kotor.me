@@ -65,7 +65,7 @@ class ZpDecisionProposalCloseTest extends TestCase
     }
     public function test_close_stores_one_snapshot_and_completes_the_competition(): void
     {
-        $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));
+        $this->assertSame($this->expectedTestDatabase(), (string) config('database.connections.mysql.database'));
         Storage::fake('local');
         [$competition, $president, $application] = $this->readyCompetition();
 

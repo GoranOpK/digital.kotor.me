@@ -28,7 +28,7 @@ class YouthDecisionRankingIdentityTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));
+        $this->assertSame($this->expectedTestDatabase(), (string) config('database.connections.mysql.database'));
     }
 
     public function test_profile_rename_preserves_saved_pm_identity_and_ranking_hash(): void
@@ -51,14 +51,15 @@ class YouthDecisionRankingIdentityTest extends TestCase
         $this->assertSame($beforeHash, $service->rankingSha256($ctx['competition']->fresh()));
     }
 
-    /** Known GAP: a missing historical name reads LIVE canonical identity. Do not fix PM here. */
-    public function test_gap_missing_pm_snapshot_changes_ranking_hash_after_profile_rename(): void
+    /** Missing history must never borrow a later profile identity. */
+    public function test_missing_pm_snapshot_uses_marker_and_keeps_ranking_hash_after_profile_rename(): void
     {
         config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
         $ctx = $this->youthCompetition();
         $application = $this->scoredApplication($ctx, 5, 'Plan bez imena');
         $this->support($application, '1000.00', 'Podrška', 'Didije Drogba', '2500.00');
-        $application->forceFill(['physical_person_name' => null])->save();
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['physical_person_name' => null]);
+        $application->refresh();
         $user = $application->user;
         (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
             'person' => ['firstName' => 'Didije', 'lastName' => 'Drogba'],
@@ -69,8 +70,8 @@ class YouthDecisionRankingIdentityTest extends TestCase
         $this->actingAs($user)->put(route('profile.name.update'), ['first_name' => 'Marko', 'last_name' => 'Marković'])
             ->assertSessionHasNoErrors();
         $this->assertSame($beforeApplication, $application->fresh()->getRawOriginal());
-        $this->assertSame('Marko Marković', app(YouthDecisionApplicantIdentity::class)->line($application->fresh()));
-        $this->assertNotSame($beforeHash, $service->rankingSha256($ctx['competition']->fresh()), 'Known GAP: missing snapshot uses live identity.');
+        $this->assertNull(app(YouthDecisionApplicantIdentity::class)->line($application->fresh()));
+        $this->assertSame($beforeHash, $service->rankingSha256($ctx['competition']->fresh()));
     }
     public function test_same_data_always_returns_the_same_hash(): void
     {
@@ -149,10 +150,12 @@ class YouthDecisionRankingIdentityTest extends TestCase
     {
         $ctx = $this->youthCompetition();
         $application = $this->scoredApplication($ctx, 5, 'Plan A');
-        $application->forceFill([
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update([
             'physical_person_name' => 'Ana Anić',
             'applicant_type' => 'fizicko_lice',
-        ])->save();
+        ]);
+        $application->refresh();
         BusinessPlan::query()->create([
             'application_id' => $application->id,
             'required_amount' => '2500.00',
@@ -166,19 +169,25 @@ class YouthDecisionRankingIdentityTest extends TestCase
         $this->assertSame('', $plain['plan_name']);
         $this->assertSame('', $plain['required_amount']);
 
-        $application->forceFill(['business_plan_name' => 'Drugi naziv'])->save();
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['business_plan_name' => 'Drugi naziv']);
+        $application->refresh();
         $this->assertSame($withoutDecision, $service->rankingSha256($competition->fresh()));
 
-        $application->forceFill(['commission_decision' => 'odbija'])->save();
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['commission_decision' => 'odbija']);
+        $application->refresh();
         $rejected = $service->rankingSha256($competition->fresh());
         $this->assertNotSame($withoutDecision, $rejected);
         $this->assertSame('', $this->rows($competition->fresh())[0]['plan_name']);
 
-        $application->forceFill([
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update([
             'commission_decision' => 'podrzava_potpuno',
             'approved_amount' => '1000.00',
             'commission_justification' => '  Podrška.  ',
-        ])->save();
+        ]);
+        $application->refresh();
         $supported = $service->rankingSha256($competition->fresh());
         $row = $this->rows($competition->fresh())[0];
         $this->assertNotSame($rejected, $supported);
@@ -188,18 +197,26 @@ class YouthDecisionRankingIdentityTest extends TestCase
         $this->assertSame('Podrška.', $row['commission_justification']);
         $this->assertSame('2500.00', $row['required_amount']);
 
-        $application->forceFill(['commission_justification' => 'Podrška.'])->save();
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['commission_justification' => 'Podrška.']);
+        $application->refresh();
         $this->assertSame($supported, $service->rankingSha256($competition->fresh()));
 
-        $application->forceFill(['approved_amount' => '1500.00'])->save();
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['approved_amount' => '1500.00']);
+        $application->refresh();
         $amountChanged = $service->rankingSha256($competition->fresh());
         $this->assertNotSame($supported, $amountChanged);
 
-        $application->forceFill(['commission_justification' => 'Drugo obrazloženje.'])->save();
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['commission_justification' => 'Drugo obrazloženje.']);
+        $application->refresh();
         $justificationChanged = $service->rankingSha256($competition->fresh());
         $this->assertNotSame($amountChanged, $justificationChanged);
 
-        $application->forceFill(['business_plan_name' => 'Novi plan'])->save();
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['business_plan_name' => 'Novi plan']);
+        $application->refresh();
         $planChanged = $service->rankingSha256($competition->fresh());
         $this->assertNotSame($justificationChanged, $planChanged);
 
@@ -256,12 +273,14 @@ class YouthDecisionRankingIdentityTest extends TestCase
 
         $unsupported = $this->youthCompetition();
         $application = $this->scoredApplication($unsupported, 5, 'Nepodržani plan');
-        $application->forceFill([
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update([
             'commission_decision' => 'odbija',
             'approved_amount' => '0.00',
             'commission_justification' => 'Nije podržano.',
             'physical_person_name' => 'Marko Marković',
-        ])->save();
+        ]);
+        $application->refresh();
         BusinessPlan::query()->create([
             'application_id' => $application->id,
             'required_amount' => '8000.00',
@@ -361,13 +380,15 @@ class YouthDecisionRankingIdentityTest extends TestCase
 
     private function support(Application $application, string $amount, string $justification, string $person, string $required): void
     {
-        $application->forceFill([
+        // Fixture/corruption setup only; regular historical writes are tested separately.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update([
             'commission_decision' => 'podrzava_potpuno',
             'approved_amount' => $amount,
             'commission_justification' => $justification,
             'physical_person_name' => $person,
             'applicant_type' => 'fizicko_lice',
-        ])->save();
+        ]);
+        $application->refresh();
         BusinessPlan::query()->create([
             'application_id' => $application->id,
             'required_amount' => $required,

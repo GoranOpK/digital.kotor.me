@@ -352,6 +352,17 @@ class ApplicationController extends Controller
      */
     public function store(Request $request, Competition $competition): RedirectResponse
     {
+        if (! $competition->isOmladinskoProfile()) {
+            return $this->storeCurrent($request, $competition);
+        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $competition) {
+            Application::query()->where('competition_id', $competition->id)->where('user_id', Auth::id())->lockForUpdate()->first();
+            return $this->storeCurrent($request, $competition);
+        });
+    }
+
+    private function storeCurrent(Request $request, Competition $competition): RedirectResponse
+    {
         if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
             return back()->withErrors(['error' => self::CANONICAL_OBRAZAC_1_MESSAGE])->withInput();
         }
@@ -1031,6 +1042,25 @@ class ApplicationController extends Controller
      */
     public function submit(Request $request, Application $application): RedirectResponse
     {
+        if (! $application->isOmladinskoProfile()) {
+            return $this->submitCurrent($request, $application);
+        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $application) {
+            // Same lock order as PM closing: competition, application, plan.
+            $competition = Competition::query()->whereKey($application->competition_id)->lockForUpdate()->firstOrFail();
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            if ($locked->competition_id !== $competition->id) {
+                throw ValidationException::withMessages(['identity' => 'Kontekst prijave je promijenjen. Ponovite predaju.']);
+            }
+            $plan = \App\Models\BusinessPlan::query()->where('application_id', $locked->id)->lockForUpdate()->first();
+            $locked->setRelation('businessPlan', $plan);
+            $locked->setRelation('competition', $competition);
+            return $this->submitCurrent($request, $locked);
+        });
+    }
+
+    private function submitCurrent(Request $request, Application $application): RedirectResponse
+    {
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
             abort(403, 'Nemate pristup ovoj prijavi.');
@@ -1144,6 +1174,10 @@ class ApplicationController extends Controller
             }
         }
 
+        if ($application->isOmladinskoProfile()) {
+            app(\App\Services\Competitions\PmRegisteredDooName::class)->assertMatchesForSubmission($application);
+            app(YouthDecisionApplicantIdentity::class)->validateForSubmission($application);
+        }
         // Dodeli redni broj prijave (1, 2, 3, ...) po konkursu
         $maxRedni = Application::where('competition_id', $application->competition_id)->max('redni_broj');
         $application->update([
@@ -1152,6 +1186,9 @@ class ApplicationController extends Controller
             'redni_broj' => ($maxRedni ?? 0) + 1,
         ]);
 
+        if ($application->isOmladinskoProfile() && $application->fresh()->status !== 'submitted') {
+            throw ValidationException::withMessages(['identity' => 'Konacna predaja nije sacuvana.']);
+        }
         $redirect = redirect()->route('applications.show', $application)
             ->with('success', 'Poštovani, vaša prijava će biti proslijeđena komisiji na razmatranje, nakon isteka roka za prijavljivanje!');
 

@@ -200,7 +200,7 @@ class PmSubmitBlockMessageTest extends TestCase
         $application = Application::create([
             'competition_id' => $competition->id,
             'user_id' => $owner->id,
-            'status' => $status,
+            'status' => 'draft',
             'business_plan_name' => 'Plan '.$type,
             'applicant_type' => $applicantType,
             'business_stage' => 'započinjanje',
@@ -218,7 +218,7 @@ class PmSubmitBlockMessageTest extends TestCase
             'doo_address' => $applicantType === 'privredno_drustvo' ? 'Njegoševa 1, 85330 Kotor' : null,
             'company_seat' => $seat,
             'applicant_jmbg' => $applicantType === 'privredno_drustvo' ? '0101990123456' : null,
-            'submitted_at' => $status === 'submitted' ? now() : null,
+            'submitted_at' => null,
         ]);
         if ($withPlan) {
             BusinessPlan::create([
@@ -234,6 +234,9 @@ class PmSubmitBlockMessageTest extends TestCase
             ]);
         }
 
+        if ($status !== 'draft') {
+            $application->update(['status' => $status, 'submitted_at' => $status === 'submitted' ? now() : null]);
+        }
         return [$owner, $application];
     }
 }

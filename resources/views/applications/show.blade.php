@@ -343,6 +343,13 @@
             </div>
         @endif
 
+        @if($application->isOmladinskoProfile() && $errors->has('company_name'))
+            <div class="alert" role="alert">
+                <p>{{ $errors->first('company_name') }}</p>
+                <a href="{{ route('applications.business-plan.create', $application) }}">Ispravite naziv u Obrascu M2</a>
+                <a href="{{ route('profile.edit') }}">Provjerite naziv u profilu</a>
+            </div>
+        @endif
         @if(session('info'))
             <div class="alert alert-info">
                 {{ session('info') }}

@@ -289,7 +289,7 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Podnosilac</span>
-                            <span class="info-value">{{ $application->user->name ?? 'N/A' }}</span>
+                            <span class="info-value">{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Email</span>

@@ -392,6 +392,12 @@ class Application extends Model
         });
     }
 
+    protected function performUpdate(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return app(\App\Services\Competitions\PmIdentityWriteGuard::class)->applicationUpdate(
+            $this, fn () => parent::performUpdate($query)
+        );
+    }
     protected $fillable = [
         'competition_id',
         'user_id',

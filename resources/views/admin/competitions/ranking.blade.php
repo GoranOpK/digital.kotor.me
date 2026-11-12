@@ -418,7 +418,7 @@
                                         <span class="ranking-badge">{{ $application->ranking_position }}</span>
                                     </td>
                                     <td>{{ $application->business_plan_name }}</td>
-                                    <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                    <td>{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</td>
                                     <td>
                                         {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
                                         {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
@@ -477,7 +477,7 @@
                                         <span class="ranking-badge">{{ $application->ranking_position }}</span>
                                     </td>
                                     <td>{{ $application->business_plan_name }}</td>
-                                    <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                    <td>{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</td>
                                     <td>
                                         {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
                                         {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
@@ -537,7 +537,7 @@
                                     <span class="ranking-badge">{{ $application->ranking_position }}</span>
                                 </td>
                                 <td>{{ $application->business_plan_name }}</td>
-                                <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                <td>{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</td>
                                 <td>
                                     {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
                                     {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
@@ -596,7 +596,7 @@
                             @foreach($belowLineApplications as $application)
                                 <tr style="background: #f9fafb;">
                                     <td>{{ $application->business_plan_name }}</td>
-                                    <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                    <td>{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</td>
                                     <td>
                                         {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} -
                                         {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
@@ -657,7 +657,7 @@
                                             {{ $application->business_plan_name }}
                                         </h3>
                                         <p style="font-size: 14px; color: #6b7280; margin: 0;">
-                                            Podnosilac: {{ $application->user->name ?? 'N/A' }} |
+                                            Podnosilac: {{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }} |
                                             Pozicija: <strong>#{{ $application->ranking_position }}</strong> |
                                             Ocjena: <strong>{{ number_format($application->getDisplayScore(), 2) }} / 58</strong>
                                         </p>
@@ -751,7 +751,7 @@
                                         </tr>
                                         <tr>
                                             <th>Podnosilac</th>
-                                            <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                            <td>{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</td>
                                         </tr>
                                         <tr>
                                             <th>Pozicija</th>

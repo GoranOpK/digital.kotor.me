@@ -895,7 +895,7 @@
                                 @endphp
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->business_plan_name }}</td>
-                                    <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
+                                    <td style="padding: 12px; vertical-align: top;">{{ ($app->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($app) : ($app->user->name ?? 'N/A')) }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($app->status === 'rejected')
                                             <a href="{{ route('admin.applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">

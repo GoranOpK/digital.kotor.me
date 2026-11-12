@@ -49,36 +49,7 @@
             default => 'Ostalo',
         };
     };
-    $youthParticipantName = static function ($application): string {
-        $clean = static function ($value): ?string {
-            if (! is_string($value)) {
-                return null;
-            }
-            $name = trim($value);
-
-            return $name === '' ? null : $name;
-        };
-        $type = (string) ($application->applicant_type ?? '');
-        if ($type === 'fizicko_lice') {
-            return $clean($application->physical_person_name) ?? ($application->user->name ?? 'N/A');
-        }
-        if (in_array($type, ['preduzetnik', 'preduzetnica'], true)) {
-            return $clean($application->preduzetnik_name) ?? ($application->user->name ?? 'N/A');
-        }
-        if (in_array($type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
-            if ($application->is_registered) {
-                $application->loadMissing('user.identity.legalEntity');
-
-                return $clean($application->user?->identity?->legalEntity?->legal_name)
-                    ?? $clean($application->doo_name)
-                    ?? ($application->user->name ?? 'N/A');
-            }
-
-            return $clean($application->doo_name) ?? ($application->user->name ?? 'N/A');
-        }
-
-        return $application->user->name ?? 'N/A';
-    };
+    $youthParticipantName = static fn ($application): string => app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application);
     $youthDecisionAuthorLine = static function ($application): ?string {
         $name = trim((string) ($application->commission_decision_author_name ?? ''));
         $date = $application->commission_decision_date;
@@ -590,7 +561,7 @@
                                 <span class="ranking-badge">{{ $ranked->ranking_position }}</span>
                             </td>
                             <td>{{ $ranked->business_plan_name }}</td>
-                            <td>{{ $youthRankingApplicantReadOnly ? $youthParticipantName($ranked) : ($ranked->user->name ?? 'N/A') }}</td>
+                            <td>{{ $youthParticipantName($ranked) }}</td>
                             <td>
                                 {{ $youthType }}@if($youthStage) - {{ $youthStage }}@endif
                             </td>
@@ -658,7 +629,7 @@
                                     <span class="ranking-badge">{{ $below->ranking_position }}</span>
                                 </td>
                                 <td>{{ $below->business_plan_name }}</td>
-                                <td>{{ $youthRankingApplicantReadOnly ? $youthParticipantName($below) : ($below->user->name ?? 'N/A') }}</td>
+                                <td>{{ $youthParticipantName($below) }}</td>
                                 <td>
                                     {{ $belowType }}@if($belowStage) - {{ $belowStage }}@endif
                                 </td>
@@ -772,7 +743,7 @@
                                         {{ $ranked->business_plan_name }}
                                     </h3>
                                     <p style="font-size: 14px; color: #6b7280; margin: 0;">
-                                        Podnosilac: {{ $ranked->user->name ?? 'N/A' }} |
+                                        Podnosilac: {{ $youthParticipantName($ranked) }} |
                                         Pozicija: <strong>#{{ $ranked->ranking_position }}</strong> |
                                         Ocjena: <strong>{{ number_format($score, 2) }} / 56</strong>
                                     </p>

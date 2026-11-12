@@ -41,7 +41,7 @@ class ZpDecisionProposalArchiveTest extends TestCase
 
     public function test_open_competition_uses_the_live_decision(): void
     {
-        $this->assertSame('opstinakotor_digital_testing', (string) config('database.connections.mysql.database'));
+        $this->assertSame($this->expectedTestDatabase(), (string) config('database.connections.mysql.database'));
         [$competition, $president, $application] = $this->readyCompetition();
         $application->update(['preduzetnik_name' => 'Mira Mirić']);
 
