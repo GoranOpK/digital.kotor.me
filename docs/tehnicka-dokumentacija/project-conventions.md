@@ -1,6 +1,6 @@
 # Konvencije projekta (digital.kotor.me)
 
-**Poslednje ažuriranje:** 2026-11-03
+**Poslednje ažuriranje:** 2026-11-10
 
 **Za AI i ljude:** držati se ovoga pri novim izmenama da ostane konzistentno.
 
@@ -99,7 +99,9 @@ Detalji: [project-operations.md](project-operations.md#jezik-i-terminologija).
 
 **Dijeljeno službeno zaglavlje:** `@include('partials.obrazac-zaglavlje', ['obrazacLabel' => …, 'obrazacTitle' => …])` (+ opciono `brojPrijave`, `leftMeta`, `podnaslov`). Obavezno za **Obrazac 4**, **Obrazac 4a**, **Rang lista biznis planova** i sve buduće izvještaje/obrasce sa službenim headerom. Ne uvoditi zaseban plavi `page-header` / gradient banner.
 
-**Broj prijave / lijevi meta:** u `.obrazac-broj-i-naslov` lijevo (Broj prijave ili Konkurs), oznaka obrasca desno. Ne koristiti `justify-content: flex-end` na tom redu.
+**Broj prijave / lijevi meta:** u `.obrazac-broj-i-naslov` lijevo (Broj prijave ili Konkurs), oznaka obrasca desno. Ne koristiti `justify-content: flex-end` na tom redu. Preferirati dijeljeni `partials.obrazac-zaglavlje`.
+
+**Oba programa:** vizuelne i print provjere **moraju** eksplicitno pokriti **žensko preduzetništvo** (`zensko`) i **preduzetništvo mladih** (`omladinsko`). Dijeljeni bladeovi često granaju po `competition.type` — ispravka jednog programa ne garantuje ispravku drugog. Na Obrazac 2 / M2 „Broj prijave“ važi za omladinsko; žensko Obrazac 2 i dalje bez Broj prijave, ali layout/label ostaju usklađeni.
 
 Nova forma / izvještaj / print pregled: koristiti dijeljene stilove; ne duplicirati brand boje, padding/radius kontrola ni tipografiju labela. Page-specific print (npr. page-break, handwriting box, ranking badge) ostaje u bladeu. Akcione kolone tabela označiti sa `col-actions`.
 

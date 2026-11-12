@@ -307,7 +307,7 @@
 .obrazac-form-page .obrazac-broj-i-naslov {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between; /* never flex-end — that packs Broj to the right */
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 12px;
@@ -315,10 +315,17 @@
     border-top: 1px solid var(--obrazac-border);
 }
 
+/* Youth M2 uses .obrazac-zaglavlje-pm; keep same left Broj / right label as zensko / M1b. */
+.obrazac-form-page .obrazac-zaglavlje-pm .obrazac-broj-i-naslov {
+    justify-content: space-between;
+}
+
 .obrazac-form-page .obrazac-broj-prijave {
     font-size: 14px;
     font-weight: 600;
     color: var(--obrazac-text);
+    margin-right: auto; /* keep Broj / left meta on the left for both zensko and omladinsko */
+    order: 1;
 }
 
 .obrazac-form-page .obrazac-1a-1b {
@@ -326,6 +333,7 @@
     font-weight: 700;
     color: var(--obrazac-label);
     margin-left: auto; /* form label stays on the right; Broj prijave / left meta stays on the left */
+    order: 2;
 }
 
 .obrazac-form-page .obrazac-naslov-prijava {
