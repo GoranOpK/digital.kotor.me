@@ -7,6 +7,7 @@ use App\Models\CompetitionOfficialDecisionCopy;
 use App\Models\Notice;
 use App\Services\Competitions\CompetitionDecisionDocumentBuilder;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Services\Notices\StandalonePdfNoticePublisher;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -27,6 +28,7 @@ class PublicNoticeContentController extends Controller
         return match ($notice->content_delivery) {
             'competition_decision_html' => $this->renderCompetitionDecision($notice),
             'competition_decision_signed_copy' => $this->serveCompetitionDecisionSignedCopy($notice),
+            StandalonePdfNoticePublisher::CONTENT_DELIVERY => $this->serveStandalonePdf($notice),
             default => $this->unsupportedDelivery($notice),
         };
     }
@@ -70,6 +72,22 @@ class PublicNoticeContentController extends Controller
 
         $path = Storage::disk('local')->path($storagePath);
         $mimeType = mime_content_type($path) ?: 'application/octet-stream';
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+        ]);
+    }
+
+    private function serveStandalonePdf(Notice $notice): BinaryFileResponse
+    {
+        $storagePath = StandalonePdfNoticePublisher::storagePath($notice);
+
+        if (! Storage::disk('local')->exists($storagePath)) {
+            abort(404);
+        }
+
+        $path = Storage::disk('local')->path($storagePath);
+        $mimeType = mime_content_type($path) ?: 'application/pdf';
 
         return response()->file($path, [
             'Content-Type' => $mimeType,

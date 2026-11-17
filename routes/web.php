@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Admin\ArchivedTestCompetitionMarkingController;
 use App\Http\Controllers\Admin\ArchivedTestCompetitionRemovalController;
 use App\Http\Controllers\Admin\CompetitionOfficialDecisionController;
+use App\Http\Controllers\Admin\StandaloneNoticeController;
 use App\Http\Controllers\CulturalActivityAdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationProcessController;
@@ -668,6 +669,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
             Route::get('/competitions/{competition}/second-call/create', [AdminController::class, 'createSecondCall'])->name('competitions.second-call.create');
             Route::post('/competitions/{competition}/second-call', [AdminController::class, 'storeSecondCall'])->name('competitions.second-call.store');
+            Route::get('/notices/create', [StandaloneNoticeController::class, 'create'])->name('notices.create');
+            Route::post('/notices', [StandaloneNoticeController::class, 'store'])->name('notices.store');
             Route::post('/competitions/{competition}/official-decision', [CompetitionOfficialDecisionController::class, 'store'])
                 ->name('competitions.official-decision.store');
             Route::post('/competitions/{competition}/official-decision/{copy}/publish', [CompetitionOfficialDecisionController::class, 'publish'])

@@ -362,6 +362,9 @@
                 <a href="{{ route('admin.competitions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     📋 Konkursi
                 </a>
+                <a href="{{ route('admin.notices.create') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    📢 Obavještenja
+                </a>
                 <a href="{{ route('admin.commissions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     👥 Komisija
                 </a>

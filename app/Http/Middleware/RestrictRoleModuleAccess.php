@@ -123,6 +123,8 @@ class RestrictRoleModuleAccess
                 'admin.competitions.ranking',
                 'admin.competitions.select-winners',
                 'admin.competitions.decision',
+                'admin.notices.create',
+                'admin.notices.store',
                 'admin.competitions.official-decision.store',
                 'admin.competitions.official-decision.publish',
                 'admin.competitions.official-decision.correct',
@@ -148,7 +150,7 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
-            if ($request->is('admin/competitions*') || $request->is('admin/commissions*') || $request->is('competitions*') || $request->is('profile*') || $request->is('newsletter*')) {
+            if ($request->is('admin/competitions*') || $request->is('admin/commissions*') || $request->is('admin/notices*') || $request->is('competitions*') || $request->is('profile*') || $request->is('newsletter*')) {
                 return $next($request);
             }
 

@@ -102,6 +102,10 @@
             @foreach($activeNotices as $notice)
                 @php
                     $publicContentUrl = route('notices.public-content', $notice);
+                    $opensPdf = in_array($notice->content_delivery, [
+                        'competition_decision_signed_copy',
+                        \App\Services\Notices\StandalonePdfNoticePublisher::CONTENT_DELIVERY,
+                    ], true);
                     $opensSignedOfficialDecision = $notice->content_delivery === 'competition_decision_signed_copy';
                     $competitionTitle = $opensSignedOfficialDecision
                         ? $notice->sourceObject?->competition?->title
@@ -114,7 +118,7 @@
                         </p>
                     @endif
                     <h3>
-                        <a href="{{ $publicContentUrl }}" @if($opensSignedOfficialDecision) target="_blank" rel="noopener noreferrer" @endif>
+                        <a href="{{ $publicContentUrl }}" @if($opensPdf) target="_blank" rel="noopener noreferrer" @endif>
                             {{ $notice->title }}
                         </a>
                     </h3>
