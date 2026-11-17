@@ -81,11 +81,11 @@ class OmladinskoCommissionFoundationTest extends TestCase
             'end_date' => now()->addYear()->toDateString(),
             'competition_type' => 'omladinsko',
             'competition_ids' => [$this->makeOmladinskoDraft('Drugi poziv '.uniqid())->id],
-            'members' => [
+            'members' => $this->attachYouthFunctions([
                 0 => $this->youthMember(1, 'A', 'predsjednik', 'a.'.uniqid().'@kotor.me'),
                 1 => $this->youthMember(1, 'B', 'clan', 'b.'.uniqid().'@kotor.me'),
                 2 => $this->youthMember(3, 'C', 'clan', 'c.'.uniqid().'@kotor.me'),
-            ],
+            ]),
         ]);
         $duplicateSeat->assertRedirect();
         $duplicateSeat->assertSessionHasErrors('members.1.canonical_seat_no');
@@ -123,8 +123,9 @@ class OmladinskoCommissionFoundationTest extends TestCase
         $this->assertTrue($completeCompetition->hasCompleteValidCommission());
         $this->assertSame(3, $completeCompetition->commission->activeMembers()->count());
         $this->assertSame(1, $completeCompetition->commission->activeMembers()->where('position', 'predsjednik')->count());
-        $this->assertTrue(
-            $completeCompetition->commission->activeMembers()->whereNull('member_type')->count() === 3
+        $this->assertEqualsCanonicalizing(
+            ['opstina', 'opstina', 'udruzenje'],
+            $completeCompetition->commission->activeMembers()->orderBy('canonical_seat_no')->pluck('member_type')->all()
         );
         $this->assertEqualsCanonicalizing(
             [1, 2, 3],
@@ -141,10 +142,12 @@ class OmladinskoCommissionFoundationTest extends TestCase
         ]));
         $form->assertOk();
         $formHtml = $form->getContent();
-        $this->assertStringContainsString('name="members[0][position]"', $formHtml);
-        $this->assertStringContainsString('name="members[1][position]"', $formHtml);
-        $this->assertStringContainsString('name="members[2][position]"', $formHtml);
+        $this->assertStringContainsString('name="members[0][pm_function]"', $formHtml);
+        $this->assertStringContainsString('name="members[1][pm_function]"', $formHtml);
+        $this->assertStringContainsString('name="members[2][pm_function]"', $formHtml);
+        $this->assertStringNotContainsString('name="members[0][position]"', $formHtml);
         $this->assertEquals(3, substr_count($formHtml, 'value="predsjednik"'));
+        $this->assertEquals(3, substr_count($formHtml, 'value="sekretar"'));
         $this->assertStringNotContainsString('name="members[3]', $formHtml);
 
         foreach ([1, 2, 3] as $presidentSeat) {
@@ -301,7 +304,8 @@ class OmladinskoCommissionFoundationTest extends TestCase
         $this->assertNotNull($substitute);
         $this->assertSame(2, (int) $substitute->replaces_member_number);
         $this->assertSame(2, (int) $substitute->canonical_seat_no);
-        $this->assertNull($substitute->member_type);
+        $this->assertSame('clan', $substitute->position);
+        $this->assertSame('opstina', $substitute->member_type);
         $this->assertSame('active', $substitute->status);
         $this->assertNotNull(CommissionMember::query()->find($replaced->id));
 
@@ -397,7 +401,7 @@ class OmladinskoCommissionFoundationTest extends TestCase
         $this->assertNotNull($president);
         $this->assertSame($presidentSeat, (int) $president->canonical_seat_no);
         $this->assertSame($presidentSeat, (int) $president->canonicalSeatNumber());
-        $this->assertNull($president->member_type);
+        $this->assertSame('opstina', $president->member_type);
     }
 
     private function makeOmladinskoDraft(?string $title = null): Competition
@@ -444,9 +448,11 @@ class OmladinskoCommissionFoundationTest extends TestCase
                 $seat,
                 $row['name'],
                 $row['position'],
-                $row['email']
+                $row['email'],
+                $row['pm_function'] ?? null
             );
         }
+        $members = $this->attachYouthFunctions($members);
 
         return [
             'name' => 'Komisija mladih '.uniqid(),
@@ -462,15 +468,57 @@ class OmladinskoCommissionFoundationTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function youthMember(int $seat, string $name, string $position, string $email): array
+    /**
+     * @param  array<int|string, array<string, mixed>>  $members
+     * @return array<int|string, array<string, mixed>>
+     */
+    private function attachYouthFunctions(array $members): array
     {
-        return [
+        $presidentIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? '';
+            if ($function === 'predsjednik' || ($function === '' && ($member['position'] ?? '') === 'predsjednik')) {
+                $presidentIndexes[] = $index;
+            }
+        }
+        if (count($presidentIndexes) !== 1) {
+            return $members;
+        }
+        $presidentIndex = $presidentIndexes[0];
+        if (($members[$presidentIndex]['pm_function'] ?? '') === '') {
+            $members[$presidentIndex]['pm_function'] = 'predsjednik';
+        }
+        $open = [];
+        foreach ($members as $index => $member) {
+            if ($index === $presidentIndex || ! is_array($member) || ($member['pm_function'] ?? '') !== '') {
+                continue;
+            }
+            $open[] = $index;
+        }
+        foreach ($open as $offset => $index) {
+            $members[$index]['pm_function'] = $offset === 0 ? 'sekretar' : 'clan';
+        }
+
+        return $members;
+    }
+
+    private function youthMember(int $seat, string $name, string $position, string $email, ?string $pmFunction = null): array
+    {
+        $member = [
             'name' => $name,
             'email' => $email,
             'password' => 'password12',
             'position' => $position,
             'canonical_seat_no' => $seat,
         ];
+        if ($pmFunction !== null && $pmFunction !== '') {
+            $member['pm_function'] = $pmFunction;
+        }
+
+        return $member;
     }
 
     private function userWithRole(string $role): User

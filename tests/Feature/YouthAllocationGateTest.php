@@ -108,19 +108,17 @@ class YouthAllocationGateTest extends TestCase
 
     public function test_only_active_chairman_of_that_call_can_save_and_see_draft_form(): void
     {
-        $ctx = $this->rankingReady();
-        $other = $this->rankingReady();
-        $below = $this->addPassedApplication($ctx, 'Ispod praga');
-        $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
-        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $below]);
-        $ctx['application']->forceFill([
+        $ctx = $this->rankingReady(1, null, [
             'applicant_type' => KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO,
             'company_legal_form' => KnCommercialCompanyForm::AD,
-        ])->save();
-        $below->forceFill([
+        ]);
+        $other = $this->rankingReady();
+        $below = $this->addPassedApplication($ctx, 'Ispod praga', [
             'applicant_type' => KnApplicationClassification::FORM_PRIVREDNO_DRUSTVO,
             'company_legal_form' => KnCommercialCompanyForm::KD,
-        ])->save();
+        ]);
+        $this->lockThreeSeats($ctx, [1 => ['criterion_1' => 2]], $below);
+        $this->confirmYouthBonuses(['chairman' => $ctx['chairman'], 'application' => $below]);
 
         $scoringHtml = $this->actingAs($ctx['chairman']->user)
             ->get(route('evaluation.create', $ctx['application']))
@@ -1062,9 +1060,9 @@ class YouthAllocationGateTest extends TestCase
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
      */
-    private function rankingReady(int $callNumber = 1, ?int $year = null): array
+    private function rankingReady(int $callNumber = 1, ?int $year = null, array $applicationAttributes = []): array
     {
-        $ctx = $this->youthReadyToLock($callNumber, $year);
+        $ctx = $this->youthReadyToLock($callNumber, $year, $applicationAttributes);
         $ctx['application']->update(['requested_amount' => 5000]);
         $this->lockThreeSeats($ctx);
         $this->confirmYouthBonuses($ctx);
@@ -1258,9 +1256,9 @@ class YouthAllocationGateTest extends TestCase
     /**
      * @param  array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>}  $ctx
      */
-    private function addPassedApplication(array $ctx, string $name = 'Dodatni plan'): Application
+    private function addPassedApplication(array $ctx, string $name = 'Dodatni plan', array $applicationAttributes = []): Application
     {
-        $application = Application::create([
+        $application = Application::create(array_merge([
             'competition_id' => $ctx['competition']->id,
             'user_id' => $this->userWithRole('korisnik')->id,
             'business_plan_name' => $name.' '.self::$yearSerial,
@@ -1269,7 +1267,7 @@ class YouthAllocationGateTest extends TestCase
             'status' => 'submitted',
             'submitted_at' => now()->subDays(24),
             'requested_amount' => 5000,
-        ]);
+        ], $applicationAttributes));
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.confirm', $application), [
                 'criterion_1' => '1',
@@ -1285,17 +1283,17 @@ class YouthAllocationGateTest extends TestCase
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
      */
-    private function youthReadyToLock(int $callNumber = 1, ?int $year = null): array
+    private function youthReadyToLock(int $callNumber = 1, ?int $year = null, array $applicationAttributes = []): array
     {
-        return $this->youthWithPassedM3($callNumber, $year);
+        return $this->youthWithPassedM3($callNumber, $year, $applicationAttributes);
     }
 
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
      */
-    private function youthWithPassedM3(int $callNumber = 1, ?int $year = null): array
+    private function youthWithPassedM3(int $callNumber = 1, ?int $year = null, array $applicationAttributes = []): array
     {
-        $ctx = $this->makeYouthReadyContext($callNumber, $year);
+        $ctx = $this->makeYouthReadyContext($callNumber, $year, $applicationAttributes);
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.confirm', $ctx['application']), [
                 'criterion_1' => '1',
@@ -1311,15 +1309,15 @@ class YouthAllocationGateTest extends TestCase
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
      */
-    private function makeYouthReadyContext(int $callNumber = 1, ?int $year = null): array
+    private function makeYouthReadyContext(int $callNumber = 1, ?int $year = null, array $applicationAttributes = []): array
     {
-        return $this->makeYouthContext($callNumber, $year);
+        return $this->makeYouthContext($callNumber, $year, $applicationAttributes);
     }
 
     /**
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
      */
-    private function makeYouthContext(int $callNumber = 1, ?int $year = null): array
+    private function makeYouthContext(int $callNumber = 1, ?int $year = null, array $applicationAttributes = []): array
     {
         $year ??= self::$yearSerial++;
         if ($callNumber === 1) {
@@ -1370,7 +1368,7 @@ class YouthAllocationGateTest extends TestCase
         ]);
         UpNumber::create(['competition_id' => $competition->id, 'number' => $competition->competition_number]);
 
-        $application = Application::create([
+        $application = Application::create(array_merge([
             'competition_id' => $competition->id,
             'user_id' => $this->userWithRole('korisnik')->id,
             'business_plan_name' => 'Plan raspodjela '.$year.'-'.$callNumber,
@@ -1379,7 +1377,7 @@ class YouthAllocationGateTest extends TestCase
             'status' => 'submitted',
             'submitted_at' => now()->subDays(25),
             'requested_amount' => 5000,
-        ]);
+        ], $applicationAttributes));
 
         return [
             'competition' => $competition->fresh(['commission.activeMembers.user']),

@@ -12,6 +12,8 @@ use App\Models\UpNumber;
 use App\Models\User;
 use App\Services\ApplicationEliminatoryCheckService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\YouthAllocationDraftService;
+use App\Services\Competitions\YouthDecisionProposalGate;
 use App\Services\YouthSecondSessionGate;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\ScoringProfileConfig;
@@ -110,6 +112,72 @@ class YouthIndividualScoringTest extends TestCase
             ])
             ->assertRedirect(route('admin.competitions.show', $ctx['competition']));
         $this->assertSame(0, \App\Models\ApplicationOralPresentation::query()->where('application_id', $ctx['application']->id)->count());
+    }
+
+    public function test_secretary_and_member_score_without_chairman_powers(): void
+    {
+        $ctx = $this->youthWithPassedM3();
+        $president = $ctx['members'][0];
+        $member = $ctx['members'][1];
+        $secretary = $ctx['members'][2];
+        $president->update(['member_type' => 'opstina']);
+        $member->update(['member_type' => 'udruzenje', 'organization' => 'Udruženje primjer']);
+        $secretary->update(['member_type' => 'opstina']);
+
+        foreach ([$president, $member, $secretary] as $scorer) {
+            $this->actingAs($scorer->fresh('user')->user)
+                ->from(route('evaluation.create', $ctx['application']))
+                ->post(route('evaluation.store', $ctx['application']), $this->finalPayload())
+                ->assertSessionHasNoErrors();
+            $this->assertNotNull(
+                EvaluationScore::query()
+                    ->where('application_id', $ctx['application']->id)
+                    ->where('commission_member_id', $scorer->id)
+                    ->whereNotNull('completed_at')
+                    ->first()
+            );
+        }
+
+        $competition = $ctx['competition']->fresh();
+        $gate = app(YouthDecisionProposalGate::class);
+        $this->assertSame(
+            YouthDecisionProposalGate::CHAIRMAN_ONLY_MESSAGE,
+            $gate->denyReason($competition, $secretary->user)
+        );
+        $this->assertSame(
+            YouthDecisionProposalGate::CHAIRMAN_ONLY_MESSAGE,
+            $gate->denyReason($competition, $member->user)
+        );
+        $this->assertSame(
+            YouthDecisionProposalGate::RANKING_NOT_FINAL_MESSAGE,
+            $gate->denyReason($competition, $president->user)
+        );
+
+        $secretaryDraft = $this->actingAs($secretary->user)
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 1000,
+            ]);
+        $secretaryDraft->assertForbidden();
+        $this->assertSame(YouthAllocationDraftService::CHAIRMAN_ONLY_MESSAGE, $secretaryDraft->exception?->getMessage());
+
+        $presidentDraft = $this->actingAs($president->user)
+            ->post(route('evaluation.youth-allocation-draft', $ctx['application']), [
+                'commission_decision' => 'podrzava_potpuno',
+                'approved_amount' => 1000,
+            ]);
+        $presidentDraft->assertRedirect();
+        $this->assertNotSame(
+            YouthAllocationDraftService::CHAIRMAN_ONLY_MESSAGE,
+            $presidentDraft->exception?->getMessage()
+        );
+
+        $this->actingAs($secretary->user)
+            ->post(route('admin.competitions.close', $competition))
+            ->assertForbidden();
+        $this->actingAs($president->user)
+            ->post(route('admin.competitions.close', $competition))
+            ->assertRedirect();
     }
 
     public function test_final_score_is_allowed_without_oral_record(): void

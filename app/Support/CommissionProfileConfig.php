@@ -58,6 +58,16 @@ final class CommissionProfileConfig
 
     public const YOUTH_MEMBER_TYPE_REJECTED_MESSAGE = 'Komisija mladih ne koristi kategorije članova ženskog profila.';
 
+    public const PM_FUNCTION_INCOMPLETE_MESSAGE = 'Komisija mladih mora imati tačno jednog predsjednika, jednog sekretara i jednog člana.';
+
+    public const PM_FUNCTION_INVALID_MESSAGE = 'Funkcija člana Komisije mladih nije ispravna.';
+
+    public const PM_DUPLICATE_FUNCTION_MESSAGE = 'Ta funkcija je već dodijeljena u ovoj Komisiji.';
+
+    public const PM_MUNICIPAL_AFFILIATION = 'Opština Kotor';
+
+    public const PM_ASSOCIATION_AFFILIATION = 'Udruženje mladih preduzetnika Crne Gore, strukovna udruženja, biznis ili akademska zajednica';
+
     public const CANONICAL_MEMBER_TYPE_REJECTED_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima ne koristi kategorije članova ženskog profila.';
 
     public const OMLADINSKO_INCOMPLETE_PUBLISH_WARNING = 'Komisija još nije formalno kompletirana. Administrativna provjera (M3) ne može početi dok sva tri mjesta nijesu popunjena.';
@@ -171,6 +181,48 @@ final class CommissionProfileConfig
         return $type === self::PROFILE_CANONICAL
             ? self::INVALID_CANONICAL_SEAT_MESSAGE
             : self::INVALID_YOUTH_SEAT_MESSAGE;
+    }
+
+    /**
+     * PM natpis slijedi sačuvani position i member_type, ne redni broj mjesta.
+     * position = predsjednik ostaje jedini izvor predsjedničkih ovlašćenja.
+     * Sekretar je position = clan i member_type = opstina. Treći član je position = clan i member_type = udruzenje.
+     * clan bez member_type ostaje „Član Komisije“ i ne dobija funkciju sekretara.
+     */
+    public static function pmFunctionLabel(?string $position, ?string $memberType): string
+    {
+        if ($position === null || $position === '') {
+            return 'Nepopunjeno';
+        }
+
+        if ($position === 'predsjednik') {
+            return 'Predsjednik Komisije';
+        }
+
+        if ($memberType === 'opstina') {
+            return 'Sekretar Komisije';
+        }
+
+        return 'Član Komisije';
+    }
+
+    public static function pmFunctionDetail(?string $position, ?string $memberType, ?string $organization = null): ?string
+    {
+        if ($position === null || $position === '') {
+            return null;
+        }
+
+        if ($position === 'predsjednik' || $memberType === 'opstina') {
+            return self::PM_MUNICIPAL_AFFILIATION;
+        }
+
+        if ($memberType === 'udruzenje') {
+            $organization = trim((string) $organization);
+
+            return $organization !== '' ? $organization : self::PM_ASSOCIATION_AFFILIATION;
+        }
+
+        return null;
     }
 
     public static function memberTypeRejectedMessage(string $type): string

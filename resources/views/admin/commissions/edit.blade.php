@@ -279,12 +279,22 @@
                                 <option value="">-- Izaberite --</option>
                                 @php
                                     $isOmladinskoCommission = $isOmladinskoCommission ?? false;
+                                    $isPmYouthCommission = $isPmYouthCommission ?? false;
                                     $regularMembers = $commission->members
                                         ->reject(fn($m) => !empty($m->is_substitute))
                                         ->filter(fn($m) => $m->status === 'active')
                                         ->values();
                                 @endphp
-                                @if(!empty($isOmladinskoCommission))
+                                @if(!empty($isPmYouthCommission))
+                                    @foreach($regularMembers as $regular)
+                                        @php $seat = $regular->canonicalSeatNumber(); @endphp
+                                        @if($seat)
+                                            <option value="{{ $seat }}" {{ old('replaces_member_number') == $seat ? 'selected' : '' }}>
+                                                {{ \App\Support\CommissionProfileConfig::pmFunctionLabel($regular->position, $regular->member_type) }} - {{ $regular->name }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                @elseif(!empty($isOmladinskoCommission))
                                     @foreach($regularMembers as $regular)
                                         @php $seat = $regular->canonicalSeatNumber(); @endphp
                                         @if($seat)

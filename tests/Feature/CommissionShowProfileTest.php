@@ -184,6 +184,7 @@ class CommissionShowProfileTest extends TestCase
         $this->assertSame(5, substr_count($html, 'composition-slot-title">'));
         $this->assertStringContainsString('1. Predsjednik — Predstavnik Opštine Kotor', $html);
         $this->assertStringContainsString('Predstavnica Ženske političke mreže', $html);
+        $this->assertStringNotContainsString('Predsjednik Komisije', $html);
         $this->assertStringContainsString('/ 5', $html);
         $this->assertStringNotContainsString('1. Mjesto Komisije', $html);
         $this->assertStringNotContainsString(
@@ -208,11 +209,30 @@ class CommissionShowProfileTest extends TestCase
             ->getContent();
 
         $this->assertSame(3, substr_count($html, 'composition-slot-title">'));
-        $this->assertStringContainsString('1. Mjesto Komisije', $html);
-        $this->assertStringContainsString('2. Mjesto Komisije', $html);
-        $this->assertStringContainsString('3. Mjesto Komisije', $html);
+        $this->assertStringNotContainsString('1. Mjesto Komisije', $html);
+        $this->assertStringNotContainsString('2. Mjesto Komisije', $html);
+        $this->assertStringNotContainsString('3. Mjesto Komisije', $html);
+        $this->assertStringNotContainsString('Mjesto 1', $html);
+        $this->assertStringNotContainsString('Mjesto 2', $html);
+        $this->assertStringNotContainsString('Mjesto 3', $html);
+        $bySeat = $commission->members->keyBy(fn ($member) => (int) $member->canonical_seat_no);
+        $this->assertSame('opstina', $bySeat[1]->member_type);
+        $this->assertSame('opstina', $bySeat[2]->member_type);
+        $this->assertSame('udruzenje', $bySeat[3]->member_type);
+        $this->assertSame(1, substr_count($html, 'Predsjednik Komisije'));
+        $this->assertSame(1, substr_count($html, 'Sekretar Komisije'));
+        $this->assertSame(1, substr_count($html, 'Član Komisije'));
+        $this->assertSame(2, substr_count($html, 'Opština Kotor'));
+        $this->assertMatchesRegularExpression(
+            '/Predsjednik Komisije[\s\S]*Predsjednik Show[\s\S]*Opština Kotor[\s\S]*Sekretar Komisije[\s\S]*Clan Show 2[\s\S]*Opština Kotor[\s\S]*Član Komisije[\s\S]*Clan Show 3/',
+            $html
+        );
+        $editHtml = $this->actingAs($admin)
+            ->get(route('admin.commissions.edit', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Sekretar Komisije - Clan Show 2', $editHtml);
         $this->assertStringContainsString('/ 3', $html);
-        $this->assertStringNotContainsString('Predstavnik Opštine Kotor', $html);
         $this->assertStringNotContainsString('Ženske političke mreže', $html);
         $this->assertStringNotContainsString('zene_mreza', $html);
         $this->assertStringNotContainsString(
@@ -220,6 +240,130 @@ class CommissionShowProfileTest extends TestCase
             $html
         );
         $this->assertStringContainsString(route('admin.commissions.edit', $commission), $html);
+    }
+
+    public function test_youth_president_label_follows_stored_position_not_seat_order(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeDraftCompetition('omladinsko', 'Omladinski predsjednik na mjestu 2 '.uniqid());
+        $commission = Commission::create([
+            'name' => 'Postojeca bez funkcije '.uniqid(),
+            'year' => 2026,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+            'profile_type' => 'omladinsko',
+        ]);
+        foreach ([
+            1 => ['Clan Na Mjestu Jedan', 'clan'],
+            2 => ['Predsjednik Na Mjestu Dva', 'predsjednik'],
+            3 => ['Clan Na Mjestu Tri', 'clan'],
+        ] as $seat => [$name, $position]) {
+            CommissionMember::create([
+                'commission_id' => $commission->id,
+                'user_id' => $this->userWithRole('komisija')->id,
+                'name' => $name,
+                'position' => $position,
+                'member_type' => null,
+                'canonical_seat_no' => $seat,
+                'status' => 'active',
+            ]);
+        }
+        $competition->update(['commission_id' => $commission->id]);
+        $commission = $commission->fresh(['members']);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/Član Komisije[\s\S]*Clan Na Mjestu Jedan[\s\S]*Predsjednik Komisije[\s\S]*Predsjednik Na Mjestu Dva[\s\S]*Opština Kotor[\s\S]*Član Komisije[\s\S]*Clan Na Mjestu Tri/',
+            $html
+        );
+        $this->assertSame(1, substr_count($html, 'Predsjednik Komisije'));
+        $this->assertSame(1, substr_count($html, 'Opština Kotor'));
+        $this->assertStringNotContainsString('Sekretar', $html);
+        $this->assertStringNotContainsString('Mjesto 1', $html);
+        $this->assertStringNotContainsString('1. Mjesto Komisije', $html);
+    }
+
+    public function test_youth_functions_follow_explicit_choice_not_seat_order(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeDraftCompetition('omladinsko', 'Funkcije mladih '.uniqid());
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->youthCommissionPayload($competition, [
+                1 => ['name' => 'Sekretar Na Mjestu Jedan', 'position' => 'predsjednik', 'pm_function' => 'sekretar'],
+                2 => ['name' => 'Clan Na Mjestu Dva', 'position' => 'predsjednik', 'pm_function' => 'clan', 'organization' => 'Udruženje primjer'],
+                3 => ['name' => 'Predsjednik Na Mjestu Tri', 'position' => 'clan', 'pm_function' => 'predsjednik'],
+            ]))
+            ->assertSessionHasNoErrors();
+        $commission = $competition->fresh()->commission;
+        $bySeat = $commission->members->keyBy(fn ($member) => (int) $member->canonical_seat_no);
+
+        $this->assertSame('clan', $bySeat[1]->position);
+        $this->assertSame('opstina', $bySeat[1]->member_type);
+        $this->assertSame('clan', $bySeat[2]->position);
+        $this->assertSame('udruzenje', $bySeat[2]->member_type);
+        $this->assertSame('Udruženje primjer', $bySeat[2]->organization);
+        $this->assertSame('predsjednik', $bySeat[3]->position);
+        $this->assertSame('opstina', $bySeat[3]->member_type);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertMatchesRegularExpression(
+            '/Sekretar Komisije[\s\S]*Sekretar Na Mjestu Jedan[\s\S]*Opština Kotor[\s\S]*Član Komisije[\s\S]*Clan Na Mjestu Dva[\s\S]*Udruženje primjer[\s\S]*Predsjednik Komisije[\s\S]*Predsjednik Na Mjestu Tri[\s\S]*Opština Kotor/',
+            $html
+        );
+        $this->assertStringNotContainsString('Mjesto 1', $html);
+        $this->assertStringNotContainsString('1. Mjesto Komisije', $html);
+        $this->assertSame(2, substr_count($html, 'Opština Kotor'));
+
+        $editHtml = $this->actingAs($admin)
+            ->get(route('admin.commissions.edit', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Sekretar Komisije - Sekretar Na Mjestu Jedan', $editHtml);
+        $this->assertStringContainsString('Član Komisije - Clan Na Mjestu Dva', $editHtml);
+        $this->assertStringContainsString('Predsjednik Komisije - Predsjednik Na Mjestu Tri', $editHtml);
+
+        $replaced = $bySeat[1];
+        $this->actingAs($admin)->post(route('admin.commissions.members.add', $commission), [
+            'name' => 'Zamjena Sekretara',
+            'email' => 'zamjena.sekretar.'.uniqid().'@kotor.me',
+            'password' => 'password12',
+            'position' => 'predsjednik',
+            'member_type' => 'zamjenski',
+            'replaces_member_number' => 1,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $substitute = CommissionMember::query()
+            ->where('commission_id', $commission->id)
+            ->where('is_substitute', true)
+            ->first();
+        $this->assertNotNull($substitute);
+        $this->assertSame('inactive', $replaced->fresh()->status);
+        $this->assertSame('clan', $substitute->position);
+        $this->assertSame('opstina', $substitute->member_type);
+        $this->assertNotSame('predsjednik', $substitute->position);
+    }
+
+    public function test_youth_function_set_must_contain_each_function_once(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeDraftCompetition('omladinsko', 'Nepotpune funkcije '.uniqid());
+        $this->actingAs($admin)
+            ->from(route('admin.commissions.create'))
+            ->post(route('admin.commissions.store'), $this->youthCommissionPayload($competition, [
+                1 => ['pm_function' => 'sekretar'],
+                2 => ['pm_function' => 'sekretar'],
+                3 => ['pm_function' => 'predsjednik'],
+            ]))
+            ->assertSessionHasErrors('members');
+        $this->assertNull($competition->fresh()->commission_id);
     }
 
     /**
@@ -252,16 +396,57 @@ class CommissionShowProfileTest extends TestCase
     }
 
     /**
+     * @param  array<int|string, array<string, mixed>>  $members
+     * @return array<int|string, array<string, mixed>>
+     */
+    private function attachYouthFunctions(array $members): array
+    {
+        $presidentIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? '';
+            if ($function === 'predsjednik' || ($function === '' && ($member['position'] ?? '') === 'predsjednik')) {
+                $presidentIndexes[] = $index;
+            }
+        }
+        if (count($presidentIndexes) !== 1) {
+            return $members;
+        }
+        $presidentIndex = $presidentIndexes[0];
+        if (($members[$presidentIndex]['pm_function'] ?? '') === '') {
+            $members[$presidentIndex]['pm_function'] = 'predsjednik';
+        }
+        $open = [];
+        foreach ($members as $index => $member) {
+            if ($index === $presidentIndex || ! is_array($member) || ($member['pm_function'] ?? '') !== '') {
+                continue;
+            }
+            $open[] = $index;
+        }
+        foreach ($open as $offset => $index) {
+            $members[$index]['pm_function'] = $offset === 0 ? 'sekretar' : 'clan';
+        }
+
+        return $members;
+    }
+
+    /**
      * @return array<string, mixed>
      */
-    private function youthCommissionPayload(Competition $competition): array
+    private function youthCommissionPayload(Competition $competition, array $overridesBySeat = []): array
     {
         $members = [];
-        foreach ([
+        $rows = [
             1 => ['name' => 'Predsjednik Show', 'position' => 'predsjednik'],
             2 => ['name' => 'Clan Show 2', 'position' => 'clan'],
             3 => ['name' => 'Clan Show 3', 'position' => 'clan'],
-        ] as $seat => $row) {
+        ];
+        foreach ($overridesBySeat as $seat => $override) {
+            $rows[$seat] = array_merge($rows[$seat], $override);
+        }
+        foreach ($rows as $seat => $row) {
             $members[$seat - 1] = [
                 'name' => $row['name'],
                 'email' => 'show.y.'.$seat.'.'.uniqid().'@kotor.me',
@@ -269,7 +454,14 @@ class CommissionShowProfileTest extends TestCase
                 'position' => $row['position'],
                 'canonical_seat_no' => $seat,
             ];
+            if (isset($row['pm_function'])) {
+                $members[$seat - 1]['pm_function'] = $row['pm_function'];
+            }
+            if (array_key_exists('organization', $row)) {
+                $members[$seat - 1]['organization'] = $row['organization'];
+            }
         }
+        $members = $this->attachYouthFunctions($members);
 
         return [
             'name' => 'Komisija mladih show '.uniqid(),

@@ -1998,6 +1998,7 @@ class AdminController extends Controller
         $invalidSeatMessage = CommissionProfileConfig::invalidSeatMessage($requestedProfile['type']);
         $memberTypeRejectedMessage = CommissionProfileConfig::memberTypeRejectedMessage($requestedProfile['type']);
         $presidentCountMessage = CommissionProfileConfig::presidentCountMessage($requestedProfile['type']);
+        $pmMemberTypes = [];
 
         if ($isThreeSeatForm) {
             foreach ($membersData as $index => $member) {
@@ -2024,6 +2025,17 @@ class AdminController extends Controller
             if (empty($membersData[$seat]['email'])) {
                 return back()->withErrors(['members' => $incompleteMessage])->withInput();
             }
+        }
+
+        $pmMemberTypes = [];
+        if ($requestedProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO) {
+            $appliedFunctions = $this->applyPmOrganizationalFunctions($membersData);
+            if ($appliedFunctions['error']) {
+                return back()->withErrors($appliedFunctions['error'])->withInput();
+            }
+            $membersData = $appliedFunctions['members'];
+            $pmMemberTypes = $appliedFunctions['types'];
+            $request->merge(['members' => $membersData]);
         }
 
         if (count($filledMembers) !== $maxMembers) {
@@ -2166,7 +2178,8 @@ class AdminController extends Controller
             $endDate,
             $isThreeSeatForm,
             $requestedProfile,
-            $komisijaRole
+            $komisijaRole,
+            $pmMemberTypes
         ) {
             $createdMembers = 0;
             $createdMemberModels = [];
@@ -2181,7 +2194,7 @@ class AdminController extends Controller
                 'profile_type' => $requestedProfile['type'],
             ]);
 
-            foreach ($validated['members'] as $memberData) {
+            foreach ($validated['members'] as $index => $memberData) {
                 if (empty($memberData['name']) || empty($memberData['email'])) {
                     continue;
                 }
@@ -2205,7 +2218,9 @@ class AdminController extends Controller
                     'user_id' => $user->id,
                     'name' => $memberData['name'],
                     'position' => $memberData['position'],
-                    'member_type' => $isThreeSeatForm ? null : ($memberData['member_type'] ?? null),
+                    'member_type' => $requestedProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO
+                        ? ($pmMemberTypes[$index] ?? null)
+                        : ($isThreeSeatForm ? null : ($memberData['member_type'] ?? null)),
                     'organization' => $memberData['organization'] ?? null,
                     'canonical_seat_no' => $isThreeSeatForm ? (int) $memberData['canonical_seat_no'] : null,
                     'status' => 'active',
@@ -2274,6 +2289,7 @@ class AdminController extends Controller
         $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
         $hasStoredProfile = $existingProfile['type'] !== null;
         $isOmladinskoCommission = CommissionProfileConfig::usesThreeSeatSharedForm($existingProfile['type']);
+        $isPmYouthCommission = $existingProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
         $allowsSharedMembershipMutation = $hasStoredProfile && ! $commission->isCanonicalProfile();
         $commissionSeatCount = $hasStoredProfile
             ? CommissionProfileConfig::for($existingProfile['type'])->seatCount
@@ -2287,6 +2303,7 @@ class AdminController extends Controller
             'users',
             'compositionSlots',
             'isOmladinskoCommission',
+            'isPmYouthCommission',
             'allowsSharedMembershipMutation',
             'commissionSeatCount',
             'hasStoredProfile'
@@ -2299,11 +2316,17 @@ class AdminController extends Controller
     protected function buildCommissionCompositionSlots(Commission $commission): array
     {
         $profile = $commission->assignedProfileType();
-        if (CommissionProfileConfig::usesThreeSeatSharedForm($profile)) {
+        if ($profile === CommissionProfileConfig::PROFILE_CANONICAL) {
             $slotLabels = [
                 1 => '1. Mjesto Komisije',
                 2 => '2. Mjesto Komisije',
                 3 => '3. Mjesto Komisije',
+            ];
+        } elseif ($profile === CommissionProfileConfig::PROFILE_OMLADINSKO) {
+            $slotLabels = [
+                1 => null,
+                2 => null,
+                3 => null,
             ];
         } elseif ($profile === CommissionProfileConfig::PROFILE_ZENSKO) {
             $slotLabels = [
@@ -2326,15 +2349,113 @@ class AdminController extends Controller
                 fn ($m) => (int) ($m->replaces_member_number ?? 0) === $slotNumber && $m->status === 'active'
             );
 
+            $functionMember = $activeSubstitute ?? $regularMember;
+            if ($profile === CommissionProfileConfig::PROFILE_OMLADINSKO) {
+                $label = $this->pmCommissionFunctionLabel($functionMember);
+            }
+
             $slots[] = [
                 'number' => $slotNumber,
                 'label' => $label,
+                'detail' => $profile === CommissionProfileConfig::PROFILE_OMLADINSKO
+                    ? $this->pmCommissionFunctionDetail($functionMember)
+                    : null,
                 'regular_member' => $regularMember,
                 'active_substitute' => $activeSubstitute,
             ];
         }
 
         return $slots;
+    }
+
+    /**
+     * PM funkcija slijedi sačuvani position i member_type, ne redni broj mjesta.
+     */
+    protected function pmCommissionFunctionLabel(?CommissionMember $member): string
+    {
+        return CommissionProfileConfig::pmFunctionLabel($member?->position, $member?->member_type);
+    }
+
+    protected function pmCommissionFunctionDetail(?CommissionMember $member): ?string
+    {
+        return CommissionProfileConfig::pmFunctionDetail(
+            $member?->position,
+            $member?->member_type,
+            $member?->organization
+        );
+    }
+
+    /**
+     * @return array{position: string, member_type: string}|null
+     */
+    protected function mapPmFunction(mixed $function): ?array
+    {
+        return match ($function) {
+            'predsjednik' => ['position' => 'predsjednik', 'member_type' => 'opstina'],
+            'sekretar' => ['position' => 'clan', 'member_type' => 'opstina'],
+            'clan' => ['position' => 'clan', 'member_type' => 'udruzenje'],
+            default => null,
+        };
+    }
+
+    /**
+     * Novo PM formiranje traži izričit pm_function za sva tri člana.
+     * member_type nastaje samo iz te funkcije. Klijentski pm_member_type se odbacuje.
+     *
+     * @param  array<int|string, mixed>  $members
+     * @return array{members: array<int|string, mixed>, types: array<int|string, string>, error: array<string, string>|null}
+     */
+    protected function applyPmOrganizationalFunctions(array $members): array
+    {
+        $mappedMembers = $members;
+        $present = [];
+        $filledIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member) || empty($member['email'])) {
+                continue;
+            }
+            $filledIndexes[] = $index;
+            unset($mappedMembers[$index]['pm_member_type']);
+            $function = $member['pm_function'] ?? null;
+            if (! is_string($function) || $function === '') {
+                continue;
+            }
+            $present[$index] = $function;
+        }
+
+        if (count($filledIndexes) !== 3 || count($present) !== 3) {
+            return [
+                'members' => $members,
+                'types' => [],
+                'error' => ['members' => CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE],
+            ];
+        }
+
+        $counts = ['predsjednik' => 0, 'sekretar' => 0, 'clan' => 0];
+        $types = [];
+        foreach ($present as $index => $function) {
+            $mapped = $this->mapPmFunction($function);
+            if ($mapped === null || ! array_key_exists($function, $counts)) {
+                return [
+                    'members' => $members,
+                    'types' => [],
+                    'error' => ['members.'.$index.'.pm_function' => CommissionProfileConfig::PM_FUNCTION_INVALID_MESSAGE],
+                ];
+            }
+            $counts[$function]++;
+            $mappedMembers[$index]['position'] = $mapped['position'];
+            $types[$index] = $mapped['member_type'];
+        }
+
+        if ($counts['predsjednik'] !== 1 || $counts['sekretar'] !== 1 || $counts['clan'] !== 1) {
+            return [
+                'members' => $members,
+                'types' => [],
+                'error' => ['members' => CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE],
+            ];
+        }
+
+        return ['members' => $mappedMembers, 'types' => $types, 'error' => null];
     }
 
     /**
@@ -2345,6 +2466,7 @@ class AdminController extends Controller
         $commission->load(['members', 'competitions']);
         $existingProfile = CommissionProfileConfig::storedCanonicalFormType($commission);
         $isOmladinskoCommission = CommissionProfileConfig::usesThreeSeatSharedForm($existingProfile['type']);
+        $isPmYouthCommission = $existingProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
         $hasStoredProfile = $existingProfile['type'] !== null;
         $allowsSharedMembershipMutation = $hasStoredProfile && ! $commission->isCanonicalProfile();
         $supportedTypes = in_array($existingProfile['type'], CommissionProfileConfig::SUPPORTED_STORED_PROFILES, true)
@@ -2368,6 +2490,7 @@ class AdminController extends Controller
             'commission',
             'competitions',
             'isOmladinskoCommission',
+            'isPmYouthCommission',
             'allowsSharedMembershipMutation',
             'hasStoredProfile'
         ));
@@ -2521,6 +2644,16 @@ class AdminController extends Controller
         $isOmladinskoCommission = $existingProfile['type'] === CommissionProfileConfig::PROFILE_OMLADINSKO;
         $allowedSubstituteSlots = $isOmladinskoCommission ? '1,2,3' : '1,2,3,4,5';
         $maxRegulars = $isOmladinskoCommission ? 3 : 5;
+        $mappedPmFunction = null;
+        if ($isOmladinskoCommission && ! $isSubstituteRequest) {
+            $mappedPmFunction = $this->mapPmFunction($request->input('pm_function'));
+            if ($mappedPmFunction === null) {
+                return back()->withErrors([
+                    'pm_function' => CommissionProfileConfig::PM_FUNCTION_INVALID_MESSAGE,
+                ])->withInput();
+            }
+            $request->merge(['position' => $mappedPmFunction['position']]);
+        }
 
         $rules = [
             'user_id' => 'nullable|exists:users,id',
@@ -2591,7 +2724,7 @@ class AdminController extends Controller
             $validated['position'] = $replacedMember->position;
             $canonicalSeat = $replacesNumber;
             if ($isOmladinskoCommission) {
-                $validated['member_type'] = null;
+                $validated['member_type'] = $replacedMember->member_type;
             } else {
                 $replacementRoleMap = [
                     1 => 'opstina',
@@ -2620,7 +2753,22 @@ class AdminController extends Controller
                     'canonical_seat_no' => CommissionProfileConfig::DUPLICATE_SEAT_MESSAGE,
                 ])->withInput();
             }
-            $validated['member_type'] = null;
+            $duplicateFunction = $commission->members->contains(function ($member) use ($mappedPmFunction) {
+                if (! empty($member->is_substitute) || $member->status !== 'active') {
+                    return false;
+                }
+                if ($mappedPmFunction['position'] === 'predsjednik') {
+                    return $member->position === 'predsjednik';
+                }
+
+                return $member->position === 'clan' && $member->member_type === $mappedPmFunction['member_type'];
+            });
+            if ($duplicateFunction) {
+                return back()->withErrors([
+                    'pm_function' => CommissionProfileConfig::PM_DUPLICATE_FUNCTION_MESSAGE,
+                ])->withInput();
+            }
+            $validated['member_type'] = $mappedPmFunction['member_type'];
         }
 
         // Ako je izabran postojeći korisnik, koristi njegov ID

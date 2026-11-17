@@ -464,6 +464,43 @@ class CommissionAppointmentMailProfileTest extends TestCase
      * @param  array<int, array<string, string>>  $overridesBySeat
      * @return array<string, mixed>
      */
+    /**
+     * @param  array<int|string, array<string, mixed>>  $members
+     * @return array<int|string, array<string, mixed>>
+     */
+    private function attachYouthFunctions(array $members): array
+    {
+        $presidentIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? '';
+            if ($function === 'predsjednik' || ($function === '' && ($member['position'] ?? '') === 'predsjednik')) {
+                $presidentIndexes[] = $index;
+            }
+        }
+        if (count($presidentIndexes) !== 1) {
+            return $members;
+        }
+        $presidentIndex = $presidentIndexes[0];
+        if (($members[$presidentIndex]['pm_function'] ?? '') === '') {
+            $members[$presidentIndex]['pm_function'] = 'predsjednik';
+        }
+        $open = [];
+        foreach ($members as $index => $member) {
+            if ($index === $presidentIndex || ! is_array($member) || ($member['pm_function'] ?? '') !== '') {
+                continue;
+            }
+            $open[] = $index;
+        }
+        foreach ($open as $offset => $index) {
+            $members[$index]['pm_function'] = $offset === 0 ? 'sekretar' : 'clan';
+        }
+
+        return $members;
+    }
+
     private function youthCommissionPayload(Competition $competition, array $overridesBySeat = []): array
     {
         $defaults = [
@@ -481,7 +518,11 @@ class CommissionAppointmentMailProfileTest extends TestCase
                 'position' => $row['position'],
                 'canonical_seat_no' => $seat,
             ];
+            if (! empty($row['pm_function'])) {
+                $members[$seat - 1]['pm_function'] = $row['pm_function'];
+            }
         }
+        $members = $this->attachYouthFunctions($members);
 
         return [
             'name' => 'Komisija mladih mail '.uniqid(),

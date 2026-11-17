@@ -181,7 +181,10 @@ class CommissionUpdateSharedFormTest extends TestCase
         $this->assertSame(3, $commission->activeMembers()->count());
         $this->assertEqualsCanonicalizing([1, 2, 3], $commission->activeMembers->pluck('canonical_seat_no')->all());
         $this->assertSame(1, $commission->activeMembers()->where('position', 'predsjednik')->count());
-        $this->assertTrue($commission->activeMembers->every(fn (CommissionMember $member) => $member->member_type === null));
+        $this->assertEqualsCanonicalizing(
+            ['opstina', 'opstina', 'udruzenje'],
+            $commission->activeMembers()->orderBy('canonical_seat_no')->pluck('member_type')->all()
+        );
         $this->assertSame('omladinsko', $commission->profile_type);
     }
 
@@ -616,6 +619,43 @@ class CommissionUpdateSharedFormTest extends TestCase
      * @param  array<int, array<string, string>>  $overridesBySeat
      * @return array<string, mixed>
      */
+    /**
+     * @param  array<int|string, array<string, mixed>>  $members
+     * @return array<int|string, array<string, mixed>>
+     */
+    private function attachYouthFunctions(array $members): array
+    {
+        $presidentIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? '';
+            if ($function === 'predsjednik' || ($function === '' && ($member['position'] ?? '') === 'predsjednik')) {
+                $presidentIndexes[] = $index;
+            }
+        }
+        if (count($presidentIndexes) !== 1) {
+            return $members;
+        }
+        $presidentIndex = $presidentIndexes[0];
+        if (($members[$presidentIndex]['pm_function'] ?? '') === '') {
+            $members[$presidentIndex]['pm_function'] = 'predsjednik';
+        }
+        $open = [];
+        foreach ($members as $index => $member) {
+            if ($index === $presidentIndex || ! is_array($member) || ($member['pm_function'] ?? '') !== '') {
+                continue;
+            }
+            $open[] = $index;
+        }
+        foreach ($open as $offset => $index) {
+            $members[$index]['pm_function'] = $offset === 0 ? 'sekretar' : 'clan';
+        }
+
+        return $members;
+    }
+
     private function youthCommissionPayload(Competition $competition, array $overridesBySeat = []): array
     {
         $defaults = [
@@ -633,7 +673,11 @@ class CommissionUpdateSharedFormTest extends TestCase
                 'position' => $row['position'],
                 'canonical_seat_no' => $seat,
             ];
+            if (! empty($row['pm_function'])) {
+                $members[$seat - 1]['pm_function'] = $row['pm_function'];
+            }
         }
+        $members = $this->attachYouthFunctions($members);
 
         return [
             'name' => 'Komisija mladih update '.uniqid(),

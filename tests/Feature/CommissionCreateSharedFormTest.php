@@ -97,7 +97,8 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringContainsString('omladinski Poziv', $html);
         $this->assertStringContainsString('Poziv nije obavezan pri kreiranju', $html);
         $this->assertStringContainsString('value="omladinsko"', $html);
-        $this->assertStringContainsString('name="members[0][position]"', $html);
+        $this->assertStringContainsString('name="members[0][pm_function]"', $html);
+        $this->assertStringNotContainsString('name="members[0][position]"', $html);
         $this->assertStringContainsString('name="members[2][canonical_seat_no]"', $html);
         $this->assertStringNotContainsString('name="members[3]', $html);
         $this->assertStringNotContainsString('name="members[4]', $html);
@@ -107,11 +108,18 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringNotContainsString('zene_mreza', $html);
         $this->assertStringNotContainsString('youth', strtolower($html));
         $this->assertEquals(3, substr_count($html, 'value="predsjednik"'));
+        $this->assertEquals(3, substr_count($html, 'value="sekretar"'));
         $this->assertStringContainsString('sva 3 redovna mjesta', $html);
+        $this->assertStringNotContainsString('>Mjesto 1<', $html);
+        $this->assertStringNotContainsString('>Mjesto 2<', $html);
+        $this->assertStringNotContainsString('>Mjesto 3<', $html);
+        $this->assertStringContainsString('Predsjednik Komisije', $html);
+        $this->assertStringContainsString('Sekretar Komisije', $html);
+        $this->assertStringContainsString('Član Komisije', $html);
         $this->assertStringNotContainsString('Ostala mjesta možete popuniti kasnije', $html);
         $this->assertMatchesRegularExpression('/name="members\[0\]\[name\]"[^>]*required/', $html);
         $this->assertMatchesRegularExpression('/name="members\[2\]\[email\]"[^>]*required/', $html);
-        $this->assertMatchesRegularExpression('/name="members\[2\]\[position\]"[^>]*required/', $html);
+        $this->assertMatchesRegularExpression('/name="members\[2\]\[pm_function\]"[^>]*required/', $html);
     }
 
     public function test_mmsp_profile_shows_three_seats_without_womens_categories(): void
@@ -127,6 +135,8 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringContainsString('value="'.CompetitionProfileResolver::TYPE_CANONICAL.'"', $html);
         $this->assertStringNotContainsString('value="canonical"', $html);
         $this->assertStringContainsString('name="members[0][position]"', $html);
+        $this->assertStringNotContainsString('pm_function', $html);
+        $this->assertStringNotContainsString('Sekretar Komisije', $html);
         $this->assertStringContainsString('name="members[2][canonical_seat_no]"', $html);
         $this->assertStringNotContainsString('name="members[3]', $html);
         $this->assertStringNotContainsString('name="members[4]', $html);
@@ -136,6 +146,10 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringNotContainsString('zene_mreza', $html);
         $this->assertEquals(3, substr_count($html, 'value="predsjednik"'));
         $this->assertStringContainsString('sva 3 redovna mjesta', $html);
+        $this->assertStringContainsString('>Mjesto 1<', $html);
+        $this->assertStringContainsString('>Mjesto 2<', $html);
+        $this->assertStringContainsString('>Mjesto 3<', $html);
+        $this->assertStringNotContainsString('Predsjednik Komisije', $html);
         $this->assertMatchesRegularExpression('/name="members\[0\]\[name\]"[^>]*required/', $html);
         $this->assertMatchesRegularExpression('/name="members\[2\]\[email\]"[^>]*required/', $html);
     }
@@ -202,7 +216,7 @@ class CommissionCreateSharedFormTest extends TestCase
             ]))
             ->assertRedirect()
             ->assertSessionHasErrors('members');
-        $this->assertSame(CommissionProfileConfig::YOUTH_PRESIDENT_COUNT_MESSAGE, session('errors')->first('members'));
+        $this->assertSame(CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE, session('errors')->first('members'));
         $this->assertNull($withoutPresident->fresh()->commission_id);
         $this->assertSame(0, Commission::query()->count());
 
@@ -215,6 +229,7 @@ class CommissionCreateSharedFormTest extends TestCase
             ]))
             ->assertRedirect()
             ->assertSessionHasErrors('members');
+        $this->assertSame(CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE, session('errors')->first('members'));
         $this->assertNull($twoPresidents->fresh()->commission_id);
         $this->assertSame(0, Commission::query()->count());
     }
@@ -267,6 +282,79 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertSame(0, CommissionMember::query()->count());
     }
 
+    public function test_youth_create_rejects_missing_partial_and_invalid_pm_function(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $missing = $this->makeOmladinskoDraft();
+        $missingPayload = $this->youthCommissionPayload($missing);
+        foreach ($missingPayload['members'] as $index => $member) {
+            unset($missingPayload['members'][$index]['pm_function']);
+        }
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $missingPayload)
+            ->assertRedirect()
+            ->assertSessionHasErrors('members');
+        $this->assertSame(CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE, session('errors')->first('members'));
+        $this->assertNull($missing->fresh()->commission_id);
+
+        $partial = $this->makeOmladinskoDraft();
+        $partialPayload = $this->youthCommissionPayload($partial);
+        unset($partialPayload['members'][2]['pm_function']);
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $partialPayload)
+            ->assertSessionHasErrors('members');
+        $this->assertNull($partial->fresh()->commission_id);
+
+        $invalid = $this->makeOmladinskoDraft();
+        $invalidPayload = $this->youthCommissionPayload($invalid);
+        $invalidPayload['members'][2]['pm_function'] = 'zene_mreza';
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $invalidPayload)
+            ->assertSessionHasErrors('members.2.pm_function');
+        $this->assertSame(CommissionProfileConfig::PM_FUNCTION_INVALID_MESSAGE, session('errors')->first('members.2.pm_function'));
+        $this->assertNull($invalid->fresh()->commission_id);
+
+        $duplicateSecretary = $this->makeOmladinskoDraft();
+        $duplicatePayload = $this->youthCommissionPayload($duplicateSecretary);
+        $duplicatePayload['members'][2]['pm_function'] = 'sekretar';
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $duplicatePayload)
+            ->assertSessionHasErrors('members');
+        $this->assertSame(CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE, session('errors')->first('members'));
+        $this->assertSame(0, Commission::query()->count());
+    }
+
+    public function test_youth_create_ignores_client_pm_member_type(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $alone = $this->makeOmladinskoDraft();
+        $alonePayload = $this->youthCommissionPayload($alone);
+        foreach ($alonePayload['members'] as $index => $member) {
+            unset($alonePayload['members'][$index]['pm_function']);
+            $alonePayload['members'][$index]['pm_member_type'] = 'opstina';
+        }
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $alonePayload)
+            ->assertSessionHasErrors('members');
+        $this->assertNull($alone->fresh()->commission_id);
+        $this->assertSame(0, CommissionMember::query()->count());
+
+        $override = $this->makeOmladinskoDraft();
+        $overridePayload = $this->youthCommissionPayload($override);
+        $overridePayload['members'][1]['pm_member_type'] = 'zene_mreza';
+        $overridePayload['members'][2]['pm_member_type'] = 'opstina';
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $overridePayload)
+            ->assertSessionHasNoErrors();
+        $bySeat = $override->fresh()->commission->members->keyBy(fn ($member) => (int) $member->canonical_seat_no);
+        $this->assertSame('predsjednik', $bySeat[1]->position);
+        $this->assertSame('opstina', $bySeat[1]->member_type);
+        $this->assertSame('clan', $bySeat[2]->position);
+        $this->assertSame('opstina', $bySeat[2]->member_type);
+        $this->assertSame('clan', $bySeat[3]->position);
+        $this->assertSame('udruzenje', $bySeat[3]->member_type);
+    }
+
     public function test_youth_rejects_duplicate_user_and_duplicate_seat(): void
     {
         $admin = $this->userWithRole('konkurs_admin');
@@ -291,11 +379,11 @@ class CommissionCreateSharedFormTest extends TestCase
                 'end_date' => now()->addYear()->toDateString(),
                 'competition_type' => 'omladinsko',
                 'competition_ids' => [$duplicateSeatCompetition->id],
-                'members' => [
+                'members' => $this->attachYouthFunctions([
                     0 => $this->youthMember(1, 'A', 'predsjednik', 'ds1.'.uniqid().'@kotor.me'),
                     1 => $this->youthMember(1, 'B', 'clan', 'ds2.'.uniqid().'@kotor.me'),
                     2 => $this->youthMember(3, 'C', 'clan', 'ds3.'.uniqid().'@kotor.me'),
-                ],
+                ]),
             ])
             ->assertRedirect()
             ->assertSessionHasErrors('members.1.canonical_seat_no');
@@ -353,6 +441,10 @@ class CommissionCreateSharedFormTest extends TestCase
             $this->assertStringContainsString($member->name, $html);
         }
         $this->assertStringNotContainsString('Nije dodijeljen', $html);
+        $this->assertStringContainsString('1. Mjesto Komisije', $html);
+        $this->assertStringContainsString('2. Mjesto Komisije', $html);
+        $this->assertStringContainsString('3. Mjesto Komisije', $html);
+        $this->assertStringNotContainsString('Predsjednik Komisije', $html);
         $this->assertStringNotContainsString('Možete dodati još <strong>1 zamjenskog člana</strong>', $html);
 
         Mail::assertSent(CommissionMemberAdded::class, 3);
@@ -804,7 +896,7 @@ class CommissionCreateSharedFormTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('Komisija sa greškom', $html);
         $this->assertStringContainsString($payload['members'][0]['name'], $html);
-        $this->assertStringContainsString(CommissionProfileConfig::YOUTH_PRESIDENT_COUNT_MESSAGE, $html);
+        $this->assertStringContainsString(CommissionProfileConfig::PM_FUNCTION_INCOMPLETE_MESSAGE, $html);
         $this->assertStringContainsString($competition->title, $html);
     }
 
@@ -848,8 +940,9 @@ class CommissionCreateSharedFormTest extends TestCase
         $seats = $overridesBySeat === [] ? $defaults : $overridesBySeat;
         $members = [];
         foreach ($seats as $seat => $row) {
-            $members[$seat - 1] = $this->youthMember($seat, $row['name'], $row['position'], $row['email']);
+            $members[$seat - 1] = $this->youthMember($seat, $row['name'], $row['position'], $row['email'], $row['pm_function'] ?? null);
         }
+        $members = $this->attachYouthFunctions($members);
 
         return [
             'name' => 'Komisija mladih forma '.uniqid(),
@@ -865,15 +958,57 @@ class CommissionCreateSharedFormTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function youthMember(int $seat, string $name, string $position, string $email): array
+    private function youthMember(int $seat, string $name, string $position, string $email, ?string $pmFunction = null): array
     {
-        return [
+        $member = [
             'name' => $name,
             'email' => $email,
             'password' => 'password12',
             'position' => $position,
             'canonical_seat_no' => $seat,
         ];
+        if ($pmFunction !== null && $pmFunction !== '') {
+            $member['pm_function'] = $pmFunction;
+        }
+
+        return $member;
+    }
+
+    /**
+     * @param  array<int|string, array<string, mixed>>  $members
+     * @return array<int|string, array<string, mixed>>
+     */
+    private function attachYouthFunctions(array $members): array
+    {
+        $presidentIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? '';
+            if ($function === 'predsjednik' || ($function === '' && ($member['position'] ?? '') === 'predsjednik')) {
+                $presidentIndexes[] = $index;
+            }
+        }
+        if (count($presidentIndexes) !== 1) {
+            return $members;
+        }
+        $presidentIndex = $presidentIndexes[0];
+        if (($members[$presidentIndex]['pm_function'] ?? '') === '') {
+            $members[$presidentIndex]['pm_function'] = 'predsjednik';
+        }
+        $open = [];
+        foreach ($members as $index => $member) {
+            if ($index === $presidentIndex || ! is_array($member) || ($member['pm_function'] ?? '') !== '') {
+                continue;
+            }
+            $open[] = $index;
+        }
+        foreach ($open as $offset => $index) {
+            $members[$index]['pm_function'] = $offset === 0 ? 'sekretar' : 'clan';
+        }
+
+        return $members;
     }
 
     /**

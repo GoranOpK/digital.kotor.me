@@ -368,6 +368,9 @@
                             {{ $activeSubstitute->name }}
                             <span style="color: #92400e; font-size: 12px; font-weight: 700;">(Zamjenski član)</span>
                         </div>
+                        @if(!empty($compositionSlot['detail']))
+                            <div class="composition-slot-meta">{{ $compositionSlot['detail'] }}</div>
+                        @endif
                         <div class="composition-slot-meta">
                             Aktivno mijenja:
                             @if($regularMember)
@@ -391,6 +394,9 @@
                         </div>
                     @elseif($regularMember)
                         <div class="composition-slot-name">{{ $regularMember->name }}</div>
+                        @if(!empty($compositionSlot['detail']))
+                            <div class="composition-slot-meta">{{ $compositionSlot['detail'] }}</div>
+                        @endif
                         <div class="composition-slot-meta">
                             Status:
                             <span style="color: {{ $regularMember->status === 'active' ? '#10b981' : '#ef4444' }}; font-weight: 600;">
@@ -475,6 +481,15 @@
 
                     <div class="form-row">
                         <div class="form-group">
+                            @if(!empty($isPmYouthCommission))
+                                <label class="form-label">Funkcija *</label>
+                                <select name="pm_function" class="form-control" required>
+                                    <option value="">Izaberite funkciju</option>
+                                    <option value="predsjednik">Predsjednik Komisije</option>
+                                    <option value="sekretar">Sekretar Komisije</option>
+                                    <option value="clan">Član Komisije</option>
+                                </select>
+                            @else
                             <label class="form-label">Pozicija *</label>
                             <select name="position" class="form-control" required>
                                 @php
@@ -485,6 +500,7 @@
                                 @endif
                                 <option value="clan">Član</option>
                             </select>
+                            @endif
                         </div>
 
                         <div class="form-group">
@@ -492,7 +508,7 @@
                                 <label class="form-label">Kanonsko mjesto *</label>
                                 <select name="canonical_seat_no" class="form-control" required>
                                     @foreach([1,2,3] as $seat)
-                                        <option value="{{ $seat }}">Mjesto {{ $seat }}</option>
+                                        <option value="{{ $seat }}">{{ !empty($isPmYouthCommission) ? $seat : 'Mjesto '.$seat }}</option>
                                     @endforeach
                                 </select>
                             @else
