@@ -18,14 +18,13 @@ class YouthDecisionApplicantIdentity
 
     public function line(Application $application): ?string
     {
-        $this->loadLegalIdentity($application);
 
         if ($application->applicant_type === 'fizicko_lice') {
-            return $this->clean($application->physical_person_name);
+            return $this->savedNaturalPersonName($application, $application->physical_person_name);
         }
 
         if (in_array($application->applicant_type, ['preduzetnik', 'preduzetnica'], true)) {
-            return $this->clean($application->preduzetnik_name);
+            return $this->savedNaturalPersonName($application, $application->preduzetnik_name);
         }
 
         if (! in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
@@ -33,27 +32,63 @@ class YouthDecisionApplicantIdentity
         }
 
         if (! $application->is_registered) {
-            return null;
+            return $this->savedNaturalPersonName($application, $application->doo_name);
         }
 
-        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
-        $founder = $this->clean($application->founder_name);
-        $director = $this->clean($application->director_name);
-        if ($legalName === null || $founder === null || $director === null) {
-            return null;
+        if (app(PmRegisteredDooName::class)->isRegisteredDoo($application)) {
+            $legalName = app(PmRegisteredDooName::class)->historicalName($application);
+            if ($legalName === null) {
+                return null;
+            }
+        } else {
+            $this->loadLegalIdentity($application);
+            $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
         }
-        if ($this->companyNameUsedAsOfficer($founder, $legalName) || $this->companyNameUsedAsOfficer($director, $legalName)) {
-            return null;
+        $founder = $this->acceptablePersonName($application->founder_name, $application);
+        $director = $this->acceptablePersonName($application->director_name, $application);
+        if ($legalName !== null && $founder !== null && $director !== null) {
+            $samePerson = mb_strtolower($founder) === mb_strtolower($director);
+            if ($samePerson) {
+                return $legalName.', koga zastupa osnivač/ica i izvršni direktor/ica '.$founder;
+            }
+
+            return $legalName.', koga zastupa osnivač/ica '.$founder.' i izvršni direktor/ica '.$director;
         }
 
-        $samePerson = mb_strtolower($founder) === mb_strtolower($director);
-        if ($samePerson) {
-            return $legalName.', koga zastupa osnivač/ica i izvršni direktor/ica '.$founder;
-        }
-
-        return $legalName.', koga zastupa osnivač/ica '.$founder.' i izvršni direktor/ica '.$director;
+        return $founder
+            ?? $director
+            ?? $this->savedNaturalPersonName($application, $application->doo_name);
     }
 
+    public function display(Application $application): string
+    {
+        return $this->line($application) ?? $this->marker($application);
+    }
+
+    public function marker(Application $application): string
+    {
+        return 'Oznaka prijave: prijava '.$application->id.', naziv projekta "'.trim((string) $application->business_plan_name).'"';
+    }
+
+    public function validateForSubmission(Application $application): void
+    {
+        $fields = match ((string) $application->applicant_type) {
+            'fizicko_lice' => ['physical_person_name'],
+            'preduzetnik', 'preduzetnica' => ['preduzetnik_name'],
+            'doo', 'privredno_drustvo', 'ostalo' => $application->is_registered
+                ? ['doo_name', 'founder_name', 'director_name'] : ['doo_name'],
+            default => [],
+        };
+        $errors = [];
+        foreach ($fields as $field) {
+            if ($this->acceptablePersonName($application->{$field}, $application) === null) {
+                $errors[$field] = 'Unesite ime fizickog lica u istorijske podatke prijave.';
+            }
+        }
+        if ($errors !== []) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
+    }
     public function companyNameUsedAsOfficer(?string $officer, ?string $companyName): bool
     {
         $officerName = $this->normalizeComparableName($officer);
@@ -64,12 +99,15 @@ class YouthDecisionApplicantIdentity
 
     public function companyOfficerConflictMessage(Application $application): ?string
     {
-        $this->loadLegalIdentity($application);
         if (! $application->is_registered || ! in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)) {
             return null;
         }
-
-        $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        if (app(PmRegisteredDooName::class)->isRegisteredDoo($application)) {
+            $legalName = app(PmRegisteredDooName::class)->historicalName($application);
+        } else {
+            $this->loadLegalIdentity($application);
+            $legalName = $this->clean($application->user?->identity?->legalEntity?->legal_name);
+        }
         $messages = [];
         if ($this->companyNameUsedAsOfficer($application->founder_name, $legalName)) {
             $messages[] = self::COMPANY_NAME_AS_FOUNDER;
@@ -102,13 +140,37 @@ class YouthDecisionApplicantIdentity
         return $name;
     }
 
+    private function savedNaturalPersonName(Application $application, mixed $formValue): ?string
+    {
+        return $this->acceptablePersonName($formValue, $application);
+    }
+
+    private function acceptablePersonName(mixed $value, Application $application): ?string
+    {
+        $name = $this->clean($value);
+        if ($name === null) {
+            return null;
+        }
+
+        $legalName = app(PmRegisteredDooName::class)->isRegisteredDoo($application)
+            ? app(PmRegisteredDooName::class)->historicalName($application)
+            : ($application->is_registered && in_array($application->applicant_type, ['doo', 'ostalo', 'privredno_drustvo'], true)
+                ? $this->clean($application->user?->identity?->legalEntity?->legal_name) : null);
+        $plan = $this->clean($application->business_plan_name);
+        if ($this->companyNameUsedAsOfficer($name, $legalName) || $this->companyNameUsedAsOfficer($name, $plan)) {
+            return null;
+        }
+
+        return $name;
+    }
+
     private function loadLegalIdentity(Application $application): void
     {
         if (! $application->exists) {
             return;
         }
 
-        $application->loadMissing(['user.identity.legalEntity']);
+        $application->loadMissing(['user.identity.legalEntity.authorizedPerson', 'user.identity.physicalPerson']);
     }
 
     private function clean(mixed $value): ?string

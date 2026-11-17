@@ -85,8 +85,7 @@ class YouthIndividualScoringTest extends TestCase
             ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
             ->assertRedirect();
         $this->actingAs($failed->user)->post(route('applications.prigovor.store', $failed), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+            'obrazlozenje' => 'Obrazloženje 1. Obrazloženje 2.',
         ])->assertRedirect();
         $failed->fresh()->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
@@ -187,7 +186,7 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('>Sačuvaj nacrt<', $html);
         $this->assertStringNotContainsString('Završi ocjenjivanje', $html);
         $this->assertStringNotContainsString('Svih 10 kriterijuma je obavezno. Nakon čuvanja ocjene se zaključavaju i izmjene nijesu moguće.', $html);
-        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $html);
         $this->assertStringNotContainsString('Sačuvaj nacrt bonusa', $html);
         $this->assertStringNotContainsString('Potvrdi i zaključaj bonuse', $html);
         $this->assertStringNotContainsString('name="youth_bonus_action"', $html);
@@ -328,14 +327,14 @@ class YouthIndividualScoringTest extends TestCase
         $this->assertStringNotContainsString('Zavoda za zapošljavanje', $html);
         $this->assertStringNotContainsString('bonus_zavod_nezaposleni', $html);
         $this->assertStringContainsString('id="youth-scoring-list"', $html);
-        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
-        $this->assertSame(1, substr_count($html, 'Info dan i obuka (+1)'));
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $html);
+        $this->assertSame(1, substr_count($html, 'Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)'));
         $this->assertStringContainsString('name="bonus_info_and_training"', $html);
         $this->assertSame(1, substr_count($html, 'type="checkbox" name="bonus_info_and_training"'));
         $this->assertStringNotContainsString('name="bonus_info_day"', $html);
         $this->assertStringNotContainsString('name="bonus_training"', $html);
-        $this->assertStringContainsString('Planirana registracija (+2)', $html);
-        $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $html);
+        $this->assertStringContainsString('Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda)', $html);
+        $this->assertStringContainsString('Biznis ideja je startup (inovativni tehnološki biznis) (3 boda)', $html);
         $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $html);
         $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $html);
         $this->assertStringNotContainsString('KONAČNA OCJENA', $html);
@@ -767,7 +766,7 @@ class YouthIndividualScoringTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('id="youth-scoring-list"', $afterShow);
-        $this->assertStringContainsString('Info dan i obuka (+1)', $afterShow);
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $afterShow);
         $this->assertStringContainsString('UKUPAN ZBIR (10 kriterijuma + bonusi)', $afterShow);
         $this->assertStringNotContainsString('UKUPAN ZBIR (maksimum 6)', $afterShow);
         $this->assertStringContainsString('30.00 / 56', $afterShow);

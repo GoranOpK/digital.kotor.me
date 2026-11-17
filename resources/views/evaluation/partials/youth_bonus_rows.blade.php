@@ -25,7 +25,7 @@
 @endphp
 
 <tr>
-    <td class="criterion-col">Info dan i obuka (+1)</td>
+    <td class="criterion-col">Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)</td>
     @foreach($allMembers as $member)
         @php
             $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
@@ -76,7 +76,7 @@
 
 <tr>
     <td class="criterion-col">
-        Planirana registracija (+2)
+        Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda)
         @if(! $youthPlannedRegistrationBonusEligible)
             <div style="margin-top: 4px; font-size: 11px; font-weight: 500; color: #6b7280;">
                 Nije dostupna za ovu prijavu.
@@ -111,7 +111,7 @@
 @enderror
 
 <tr>
-    <td class="criterion-col">Inovativno/zeleno poslovanje (+3)</td>
+    <td class="criterion-col">Biznis ideja je startup (inovativni tehnološki biznis) (3 boda)</td>
     @foreach($allMembers as $member)
         @php
             $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;

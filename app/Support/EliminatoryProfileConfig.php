@@ -73,7 +73,7 @@ final class EliminatoryProfileConfig
                         'fail_label' => 'Ne*',
                     ],
                     3 => [
-                        'statement' => 'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?',
+                        'statement' => 'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?',
                         'pass_label' => 'Da',
                         'fail_label' => 'Ne*',
                     ],

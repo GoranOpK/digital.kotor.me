@@ -62,7 +62,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $snapshot);
         $this->assertStringContainsString('Nedostaje izvod', $snapshot);
         $this->assertStringContainsString('Nema M4', $snapshot);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $snapshot);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $snapshot);
         $this->assertStringNotContainsString(trim(EliminatoryProfileConfig::YOUTH_NOTE_PREFIX), $snapshot);
         $this->assertStringNotContainsString('{', (string) $notice->note_snapshot);
         $this->assertStringNotContainsString('član 10', $snapshot);
@@ -172,11 +172,10 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
         $this->assertStringNotContainsString('name="contested[]"', $html);
         $this->assertStringNotContainsString('Ospori', $html);
-        $this->assertStringContainsString('name="criterion_obrazlozenja[1]"', $html);
-        $this->assertStringContainsString('name="criterion_obrazlozenja[2]"', $html);
-        $this->assertStringNotContainsString('name="criterion_obrazlozenja[3]"', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
-        $this->assertStringNotContainsString('name="obrazlozenje"', $html);
+        $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
+        $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
         $this->assertStringNotContainsString('enctype="multipart/form-data"', $html);
         $this->assertStringNotContainsString('name="document"', $html);
@@ -189,22 +188,21 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->actingAs($applicant)
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [
-                    1 => 'Izvod je već bio u prijavi.',
-                ],
+                'obrazlozenje' => '   ',
             ])
             ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('criterion_obrazlozenja.2');
+            ->assertSessionHasErrors('obrazlozenje');
         $this->assertNull($application->fresh()->prigovor);
 
+        $shared = 'Izvod je već bio u prijavi. M4 je dostavljen uz prijavu.';
         $this->actingAs($applicant)
             ->post(route('applications.prigovor.store', $application), [
                 'criterion_obrazlozenja' => [
-                    1 => 'Izvod je već bio u prijavi.',
-                    2 => 'M4 je dostavljen uz prijavu.',
+                    1 => 'Ovo se ne smije kopirati u tri polja.',
+                    2 => 'Ni ovo.',
                 ],
                 'document_type' => 'licna_karta',
-                'obrazlozenje' => 'ženski kanal se ignorira',
+                'obrazlozenje' => $shared,
             ])
             ->assertRedirect(route('applications.show', $application));
 
@@ -215,9 +213,11 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertTrue($prigovor->criterionIsContested(1));
         $this->assertTrue($prigovor->criterionIsContested(2));
         $this->assertNull($prigovor->criterion_3_contested);
-        $this->assertTrue(YouthPrigovorObrazlozenje::isStructured($prigovor->obrazlozenje));
-        $this->assertSame('Izvod je već bio u prijavi.', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 1));
-        $this->assertSame('M4 je dostavljen uz prijavu.', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 2));
+        $this->assertTrue(YouthPrigovorObrazlozenje::isShared($prigovor->obrazlozenje));
+        $this->assertFalse(YouthPrigovorObrazlozenje::isStructured($prigovor->obrazlozenje));
+        $this->assertSame($shared, YouthPrigovorObrazlozenje::sharedText($prigovor->obrazlozenje));
+        $this->assertSame('', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 1));
+        $this->assertSame('', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 2));
         $this->assertSame('', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 3));
         $this->assertSame('submitted', $application->fresh()->status);
         $this->assertSame($m3Before, $this->m3Snapshot($application));
@@ -228,15 +228,16 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->get(route('applications.show', $application))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('Izvod je već bio u prijavi.', $shown);
-        $this->assertStringContainsString('M4 je dostavljen uz prijavu.', $shown);
+        $this->assertSame(1, substr_count($shown, $shared));
+        $this->assertStringNotContainsString('Ovo se ne smije kopirati u tri polja.', $shown);
         $this->assertStringNotContainsString(trim(YouthPrigovorObrazlozenje::PREFIX), $shown);
+        $this->assertStringNotContainsString(trim(YouthPrigovorObrazlozenje::SHARED_PREFIX), $shown);
         $this->assertStringNotContainsString('7 dana', $shown);
         $this->assertStringNotContainsString('Ospori', $shown);
 
         $this->actingAs($applicant)
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [2 => 'Drugi pokušaj'],
+                'obrazlozenje' => 'Drugi pokušaj',
             ])
             ->assertForbidden();
         $this->assertSame(1, ApplicationPrigovor::query()->where('application_id', $application->id)->count());
@@ -251,25 +252,25 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->get(route('applications.show', $application))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('name="criterion_obrazlozenja[1]"', $html);
-        $this->assertStringNotContainsString('name="criterion_obrazlozenja[2]"', $html);
-        $this->assertStringNotContainsString('name="criterion_obrazlozenja[3]"', $html);
+        $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
+        $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
         $this->assertStringNotContainsString('name="contested[]"', $html);
         $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
         $this->actingAs($application->user)
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [1 => '   '],
+                'obrazlozenje' => '   ',
             ])
             ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('criterion_obrazlozenja.1');
+            ->assertSessionHasErrors('obrazlozenje');
 
         $this->actingAs($application->user)
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [1 => 'Samo prvi kriterijum.'],
+                'obrazlozenje' => 'Samo prvi kriterijum.',
             ])
             ->assertRedirect(route('applications.show', $application));
 
@@ -277,7 +278,8 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertTrue($prigovor->criterionIsContested(1));
         $this->assertNull($prigovor->criterion_2_contested);
         $this->assertNull($prigovor->criterion_3_contested);
-        $this->assertSame('Samo prvi kriterijum.', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 1));
+        $this->assertSame('Samo prvi kriterijum.', YouthPrigovorObrazlozenje::sharedText($prigovor->obrazlozenje));
+        $this->assertSame('', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 1));
 
         $notice = $application->fresh(['eliminatoryNotice', 'eliminatoryCheck']);
         $this->assertSame(
@@ -293,8 +295,9 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $submitted);
         $this->assertStringContainsString('Samo prvi kriterijum.', $submitted);
         $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $submitted);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $submitted);
-        $this->assertStringNotContainsString('name="criterion_obrazlozenja[2]"', $submitted);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $submitted);
+        $this->assertSame(1, substr_count($submitted, 'Samo prvi kriterijum.'));
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $submitted);
         $this->assertStringNotContainsString('Ospori', $submitted);
     }
 
@@ -308,9 +311,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
                 'contested' => [2],
-                'criterion_obrazlozenja' => [
-                    2 => 'Pokušaj osporavanja M4/M4a.',
-                ],
+                'obrazlozenje' => 'Pokušaj osporavanja M4/M4a.',
             ])
             ->assertRedirect(route('applications.show', $application))
             ->assertSessionHasErrors('contested');
@@ -319,12 +320,11 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
                 'criterion_obrazlozenja' => [
-                    1 => 'Dokumentacija je kompletna.',
                     2 => 'Pokušaj osporavanja M4/M4a uz stvarni razlog.',
                 ],
             ])
             ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('contested');
+            ->assertSessionHasErrors('obrazlozenje');
 
         $this->assertNull($application->fresh()->prigovor);
         $this->assertSame($before, $this->sideEffectsSnapshot($application->fresh()));
@@ -380,27 +380,24 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->get(route('applications.show', $application))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('name="criterion_obrazlozenja[1]"', $html);
-        $this->assertStringContainsString('name="criterion_obrazlozenja[2]"', $html);
-        $this->assertStringNotContainsString('name="criterion_obrazlozenja[3]"', $html);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
+        $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
         $this->actingAs($application->user)
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [1 => 'Samo prvi.'],
+                'obrazlozenje' => '',
             ])
             ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('criterion_obrazlozenja.2');
+            ->assertSessionHasErrors('obrazlozenje');
         $this->assertNull($application->fresh()->prigovor);
 
         $this->actingAs($application->user)
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [
-                    1 => 'Prvi razlog.',
-                    2 => 'Drugi razlog.',
-                ],
+                'obrazlozenje' => 'Zajedničko obrazloženje za dva kriterijuma.',
             ])
             ->assertRedirect(route('applications.show', $application));
 
@@ -415,9 +412,8 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->getContent();
         $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $submitted);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $submitted);
-        $this->assertStringContainsString('Prvi razlog.', $submitted);
-        $this->assertStringContainsString('Drugi razlog.', $submitted);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $submitted);
+        $this->assertSame(1, substr_count($submitted, 'Zajedničko obrazloženje za dva kriterijuma.'));
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $submitted);
         $this->assertSame(
             [1, 2],
             $application->fresh('eliminatoryCheck')->eliminatoryCheck->activatedCriterionNumbers()
@@ -433,32 +429,25 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->get(route('applications.show', $application))
             ->assertOk()
             ->getContent();
-        $this->assertStringContainsString('name="criterion_obrazlozenja[1]"', $html);
-        $this->assertStringContainsString('name="criterion_obrazlozenja[2]"', $html);
-        $this->assertStringContainsString('name="criterion_obrazlozenja[3]"', $html);
-        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $html);
+        $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
+        $this->assertStringContainsString('Vaše obrazloženje prigovora', $html);
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
         $this->assertStringNotContainsString('name="contested[]"', $html);
         $this->assertYouthCopyHasNoGenderedApplicantTerms($html);
 
         $this->actingAs($application->user)
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [
-                    1 => 'Prvi.',
-                    2 => 'Drugi.',
-                ],
+                'obrazlozenje' => '   ',
             ])
             ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('criterion_obrazlozenja.3');
+            ->assertSessionHasErrors('obrazlozenje');
         $this->assertNull($application->fresh()->prigovor);
 
         $this->actingAs($application->user)
             ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [
-                    1 => 'Prvi.',
-                    2 => 'Drugi.',
-                    3 => 'Treći.',
-                ],
+                'obrazlozenje' => 'Zajedničko obrazloženje za tri kriterijuma.',
             ])
             ->assertRedirect(route('applications.show', $application));
 
@@ -466,7 +455,53 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertTrue($prigovor->criterionIsContested(1));
         $this->assertTrue($prigovor->criterionIsContested(2));
         $this->assertTrue($prigovor->criterionIsContested(3));
-        $this->assertSame('Treći.', YouthPrigovorObrazlozenje::explanation($prigovor->obrazlozenje, 3));
+        $this->assertSame('Zajedničko obrazloženje za tri kriterijuma.', YouthPrigovorObrazlozenje::sharedText($prigovor->obrazlozenje));
+        $this->assertSame([1 => '', 2 => '', 3 => ''], YouthPrigovorObrazlozenje::parse($prigovor->obrazlozenje));
+
+        $card = $this->m3PrigovorCard($ctx['chairman']->user, $application->fresh());
+        $this->assertSame(1, substr_count($card, 'Zajedničko obrazloženje za tri kriterijuma.'));
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $card);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $card);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $card);
+        $this->assertStringContainsString('Rok za Prigovor:', $card);
+        $this->assertStringNotContainsString('name="criterion_outcomes', $card);
+    }
+
+    public function test_historical_per_criterion_prigovor_explanations_stay_separate(): void
+    {
+        $ctx = $this->confirmYouthFail($this->youthFailPayload([1, 2]));
+        $application = $ctx['application'];
+        $stored = YouthPrigovorObrazlozenje::compose([
+            1 => 'Istorijski izvod.',
+            2 => 'Istorijski M4.',
+            3 => '',
+        ]);
+        $prigovor = ApplicationPrigovor::create([
+            'application_id' => $application->id,
+            'obrazlozenje' => $stored,
+            'status' => ApplicationPrigovor::STATUS_PODNESEN,
+            'submitted_at' => now(),
+            'submitted_by_user_id' => $application->user_id,
+            'eliminatory_reason_remaining' => true,
+            'criterion_1_contested' => true,
+            'criterion_2_contested' => true,
+            'criterion_3_contested' => null,
+        ]);
+
+        $applicantHtml = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Istorijski izvod.', $applicantHtml);
+        $this->assertStringContainsString('Istorijski M4.', $applicantHtml);
+        $this->assertStringNotContainsString('Vaše obrazloženje prigovora', $applicantHtml);
+
+        $card = $this->m3PrigovorCard($ctx['chairman']->user, $application);
+        $this->assertStringContainsString('Obrazloženje podnosioca: Istorijski izvod.', $card);
+        $this->assertStringContainsString('Obrazloženje podnosioca: Istorijski M4.', $card);
+        $this->assertStringNotContainsString('Obrazloženje prigovora', $card);
+        $this->assertSame($stored, $prigovor->fresh()->obrazlozenje);
+        $this->assertSame('podnesen', $prigovor->fresh()->status);
     }
 
     public function test_youth_notice_form_mail_and_forbidden_copy_is_gender_neutral(): void
@@ -479,7 +514,8 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertYouthCopyHasNoGenderedApplicantTerms($formHtml);
-        $this->assertStringContainsString('Unesite obrazloženje za svaki prikazani aktivirani kriterijum.', $formHtml);
+        $this->assertStringContainsString('Vaše obrazloženje prigovora', $formHtml);
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $formHtml);
 
         Mail::assertSent(ApplicationEliminatoryAppealNoticeMail::class, function (ApplicationEliminatoryAppealNoticeMail $mail) {
             $this->assertYouthCopyHasNoGenderedApplicantTerms($mail->render());
@@ -503,7 +539,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $forbidden = $this->actingAs($stranger)
             ->post(route('applications.prigovor.store', $application), [
                 'contested' => [1],
-                'criterion_obrazlozenja' => [1 => 'Tuđi prigovor'],
+                'obrazlozenje' => 'Tuđi prigovor',
             ]);
         $forbidden->assertForbidden();
         $forbiddenMessage = $forbidden->exception?->getMessage() ?? $forbidden->getContent();
@@ -513,44 +549,50 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->actingAs($application->user)
             ->from(route('applications.show', $application))
             ->post(route('applications.prigovor.store', $application), [
+                'obrazlozenje' => 'Zajednički tekst',
                 'criterion_obrazlozenja' => [
-                    1 => 'Prvi.',
-                    2 => 'Drugi.',
                     3 => 'Neaktiviran',
                 ],
             ])
-            ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('contested');
+            ->assertRedirect(route('applications.show', $application));
 
-        $this->actingAs($application->user)
-            ->from(route('applications.show', $application))
-            ->post(route('applications.prigovor.store', $application), [
+        $this->assertNotNull($application->fresh()->prigovor);
+        $this->assertSame('Zajednički tekst', YouthPrigovorObrazlozenje::sharedText($application->fresh()->prigovor->obrazlozenje));
+        $this->assertNull($application->fresh()->prigovor->criterion_3_contested);
+
+        $ctxAgain = $this->confirmYouthFail();
+        $second = $ctxAgain['application'];
+        $this->actingAs($second->user)
+            ->from(route('applications.show', $second))
+            ->post(route('applications.prigovor.store', $second), [
                 'contested' => [3],
-                'criterion_obrazlozenja' => [
-                    1 => 'Prvi.',
-                    2 => 'Drugi.',
-                ],
+                'obrazlozenje' => 'Pokušaj neaktiviranog kriterijuma.',
             ])
-            ->assertRedirect(route('applications.show', $application))
+            ->assertRedirect(route('applications.show', $second))
             ->assertSessionHasErrors('contested');
 
-        $this->actingAs($application->user)
-            ->from(route('applications.show', $application))
-            ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [1 => 'Bez drugog'],
+        $kept = 'Tekst koji ostaje u polju';
+        $this->actingAs($second->user)
+            ->from(route('applications.show', $second))
+            ->post(route('applications.prigovor.store', $second), [
+                'obrazlozenje' => '   ',
             ])
-            ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('criterion_obrazlozenja.2');
-
-        $this->actingAs($application->user)
-            ->from(route('applications.show', $application))
-            ->post(route('applications.prigovor.store', $application), [
-                'criterion_obrazlozenja' => [1 => '   ', 2 => 'Drugi.'],
+            ->assertRedirect(route('applications.show', $second))
+            ->assertSessionHasErrors('obrazlozenje');
+        $this->actingAs($second->user)
+            ->from(route('applications.show', $second))
+            ->post(route('applications.prigovor.store', $second), [
+                'contested' => [3],
+                'obrazlozenje' => $kept,
             ])
-            ->assertRedirect(route('applications.show', $application))
-            ->assertSessionHasErrors('criterion_obrazlozenja.1');
-
-        $this->assertNull($application->fresh()->prigovor);
+            ->assertRedirect(route('applications.show', $second))
+            ->assertSessionHasErrors('contested');
+        $redisplayed = $this->actingAs($second->user)
+            ->get(route('applications.show', $second))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($kept, $redisplayed);
+        $this->assertNull($second->fresh()->prigovor);
     }
 
     public function test_failed_mail_does_not_move_sent_at_or_deadline(): void
@@ -669,11 +711,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $application = $ctx['application'];
         $this->actingAs($application->user)
             ->post(route('applications.prigovor.store', $application), [
-                'contested' => [1, 2],
-                'criterion_obrazlozenja' => [
-                    1 => 'Prvi razlog',
-                    2 => 'Drugi razlog',
-                ],
+                'obrazlozenje' => 'Prvi razlog. Drugi razlog.',
             ])
             ->assertRedirect();
 
@@ -924,8 +962,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
 
         $duplicate = $this->actingAs($application->user)
             ->post(route('applications.prigovor.store', $application), [
-                'contested' => [2],
-                'criterion_obrazlozenja' => [2 => 'Drugi paralelni pokušaj'],
+                'obrazlozenje' => 'Drugi paralelni pokušaj',
             ]);
 
         $duplicate->assertForbidden();
@@ -1099,6 +1136,338 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
         $this->assertSame('submitted', $application->fresh()->status);
     }
 
+    public function test_pm_applicant_shows_shared_commission_explanation_once_for_three_criteria(): void
+    {
+        $explanation = "Zajednička napomena komisije.\nIsta za sva tri kriterijuma.";
+        $ctx = $this->confirmYouthFail([
+            'criterion_1' => '0',
+            'criterion_2' => '0',
+            'criterion_3' => '0',
+            'note' => $explanation,
+            'confirmation_acknowledged' => '1',
+        ]);
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+
+        $this->assertSame($explanation, $parsed[1]);
+        $this->assertSame($explanation, $parsed[2]);
+        $this->assertSame($explanation, $parsed[3]);
+        $this->assertApplicantSharedExplanationShownOnce($application, $explanation, [
+            'Dostavljena je potpuna dokumentacija?',
+            'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?',
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?',
+        ]);
+    }
+
+    public function test_pm_applicant_shows_shared_commission_explanation_once_for_one_criterion(): void
+    {
+        $explanation = 'Zajednička napomena samo za dokumentaciju.';
+        $ctx = $this->confirmYouthFail([
+            'criterion_1' => '0',
+            'criterion_2' => '1',
+            'criterion_3' => '1',
+            'note' => $explanation,
+            'confirmation_acknowledged' => '1',
+        ]);
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+
+        $this->assertSame($explanation, $parsed[1]);
+        $this->assertSame('', $parsed[2]);
+        $this->assertSame('', $parsed[3]);
+        $this->assertApplicantSharedExplanationShownOnce($application, $explanation, [
+            'Dostavljena je potpuna dokumentacija?',
+        ]);
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
+    }
+
+    public function test_pm_applicant_omits_empty_commission_explanation_block(): void
+    {
+        $ctx = $this->makeYouthReadyContext();
+        $application = $ctx['application'];
+        $check = $application->eliminatoryCheck()->create([
+            'criterion_1' => false,
+            'criterion_2' => false,
+            'criterion_3' => false,
+            'note' => EliminatoryProfileConfig::composeYouthNotes([1 => '', 2 => '', 3 => '']),
+            'confirmed_at' => now(),
+            'confirmed_by_commission_member_id' => $ctx['chairman']->id,
+            'confirmed_by_user_id' => $ctx['chairman']->user_id,
+            'confirmed_by_name' => $ctx['chairman']->name,
+        ]);
+        $notice = ApplicationEliminatoryNotice::create([
+            'application_id' => $application->id,
+            'eliminatory_check_id' => $check->id,
+            'sent_at' => now(),
+            'portal_recorded_at' => now(),
+            'reasons_snapshot' => $check->failedCriterionLabels(),
+            'note_snapshot' => '',
+        ]);
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Zajedničko obrazloženje Komisije', $html);
+        $this->assertStringNotContainsString('Obrazloženje Komisije:', $html);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $html);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $html);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $html);
+        $this->assertStringContainsString('Rok ističe '.$notice->prigovorDeadlineAt()->format('d.m.Y. H:i'), $html);
+        $this->assertSame(1, substr_count($html, 'name="obrazlozenje"'));
+        $this->assertStringNotContainsString('name="criterion_obrazlozenja', $html);
+        $this->assertStringContainsString('Podnesi Prigovor', $html);
+        $this->assertSame('submitted', $application->fresh()->status);
+        $this->assertNull($application->fresh()->prigovor);
+    }
+
+    public function test_pm_applicant_keeps_distinct_commission_explanations_on_their_criteria(): void
+    {
+        $ctx = $this->confirmYouthFail();
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+        $deadline = $application->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i');
+        $statusBefore = $application->status;
+
+        $this->assertSame('Nedostaje izvod', $parsed[1]);
+        $this->assertSame('Nema M4', $parsed[2]);
+        $this->assertNotSame($parsed[1], $parsed[2]);
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Zajedničko obrazloženje Komisije', $html);
+        $this->assertSame(1, substr_count($html, 'Obrazloženje Komisije: Nedostaje izvod'));
+        $this->assertSame(1, substr_count($html, 'Obrazloženje Komisije: Nema M4'));
+        $this->assertStringContainsString('Rok ističe '.$deadline, $html);
+        $this->assertSame($statusBefore, $application->fresh()->status);
+        $this->assertNull($application->fresh()->prigovor);
+        $this->assertSame($deadline, $application->fresh()->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i'));
+    }
+
+    public function test_m3_prigovor_shows_shared_note_once_below_three_activated_criteria(): void
+    {
+        $explanation = "Zajednička napomena obrasca M3.\nIsta za sva tri kriterijuma.";
+        $ctx = $this->confirmYouthFail([
+            'criterion_1' => '0',
+            'criterion_2' => '0',
+            'criterion_3' => '0',
+            'note' => $explanation,
+            'confirmation_acknowledged' => '1',
+        ]);
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+
+        $this->assertSame($explanation, $parsed[1]);
+        $this->assertSame($explanation, $parsed[2]);
+        $this->assertSame($explanation, $parsed[3]);
+        $this->assertM3PrigovorShowsSharedExplanationOnce($ctx['chairman']->user, $application, $explanation, [
+            'Dostavljena je potpuna dokumentacija?',
+            'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?',
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?',
+        ]);
+    }
+
+    public function test_m3_prigovor_shows_shared_note_once_for_one_activated_criterion(): void
+    {
+        $explanation = 'Zajednička napomena samo za dokumentaciju na M3.';
+        $ctx = $this->confirmYouthFail([
+            'criterion_1' => '0',
+            'criterion_2' => '1',
+            'criterion_3' => '1',
+            'note' => $explanation,
+            'confirmation_acknowledged' => '1',
+        ]);
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+
+        $this->assertSame($explanation, $parsed[1]);
+        $this->assertSame('', $parsed[2]);
+        $this->assertSame('', $parsed[3]);
+
+        $card = $this->assertM3PrigovorShowsSharedExplanationOnce($ctx['chairman']->user, $application, $explanation, [
+            'Dostavljena je potpuna dokumentacija?',
+        ]);
+        $this->assertStringNotContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $card);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $card);
+    }
+
+    public function test_m3_prigovor_keeps_distinct_historical_explanations_on_their_criteria(): void
+    {
+        $ctx = $this->confirmYouthFail();
+        $application = $ctx['application']->fresh(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor']);
+        $parsed = EliminatoryProfileConfig::parseYouthNotes($application->eliminatoryCheck->note);
+        $deadline = $application->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i');
+        $sentAt = $application->eliminatoryNotice->sent_at?->timestamp;
+
+        $this->assertSame('Nedostaje izvod', $parsed[1]);
+        $this->assertSame('Nema M4', $parsed[2]);
+        $this->assertNotSame($parsed[1], $parsed[2]);
+
+        $card = $this->m3PrigovorCard($ctx['chairman']->user, $application);
+
+        $this->assertStringNotContainsString('Zajedničko obrazloženje Komisije', $card);
+        $this->assertSame(1, substr_count($card, 'Obrazloženje Komisije: Nedostaje izvod'));
+        $this->assertSame(1, substr_count($card, 'Obrazloženje Komisije: Nema M4'));
+        $documentation = strpos($card, 'Dostavljena je potpuna dokumentacija?');
+        $m4 = strpos($card, 'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?');
+        $firstExplanation = strpos($card, 'Obrazloženje Komisije: Nedostaje izvod');
+        $secondExplanation = strpos($card, 'Obrazloženje Komisije: Nema M4');
+        $this->assertNotFalse($documentation);
+        $this->assertNotFalse($m4);
+        $this->assertTrue($documentation < $firstExplanation && $firstExplanation < $m4 && $m4 < $secondExplanation);
+        $this->assertStringContainsString('Rok za Prigovor: '.$deadline, $card);
+        $this->assertStringContainsString('Prigovor još nije podnesen. Rok je otvoren.', $card);
+        $fresh = $application->fresh(['eliminatoryNotice', 'prigovor']);
+        $this->assertSame('submitted', $fresh->status);
+        $this->assertNull($fresh->prigovor);
+        $this->assertSame($sentAt, $fresh->eliminatoryNotice->sent_at?->timestamp);
+        $this->assertSame($deadline, $fresh->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i'));
+    }
+
+    public function test_m3_prigovor_omits_empty_shared_explanation_and_keeps_open_deadline(): void
+    {
+        $ctx = $this->makeYouthReadyContext();
+        $application = $ctx['application'];
+        $check = $application->eliminatoryCheck()->create([
+            'criterion_1' => false,
+            'criterion_2' => false,
+            'criterion_3' => false,
+            'note' => EliminatoryProfileConfig::composeYouthNotes([1 => '', 2 => '', 3 => '']),
+            'confirmed_at' => now(),
+            'confirmed_by_commission_member_id' => $ctx['chairman']->id,
+            'confirmed_by_user_id' => $ctx['chairman']->user_id,
+            'confirmed_by_name' => $ctx['chairman']->name,
+        ]);
+        $notice = ApplicationEliminatoryNotice::create([
+            'application_id' => $application->id,
+            'eliminatory_check_id' => $check->id,
+            'sent_at' => now(),
+            'portal_recorded_at' => now(),
+            'reasons_snapshot' => $check->failedCriterionLabels(),
+            'note_snapshot' => '',
+        ]);
+
+        $card = $this->m3PrigovorCard($ctx['chairman']->user, $application);
+
+        $this->assertStringNotContainsString('Zajedničko obrazloženje Komisije', $card);
+        $this->assertStringNotContainsString('Obrazloženje Komisije:', $card);
+        $this->assertStringContainsString('Dostavljena je potpuna dokumentacija?', $card);
+        $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $card);
+        $this->assertStringContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $card);
+        $this->assertStringContainsString('Rok za Prigovor: '.$notice->prigovorDeadlineAt()->format('d.m.Y. H:i'), $card);
+        $this->assertStringContainsString('Prigovor još nije podnesen. Rok je otvoren.', $card);
+        $this->assertStringNotContainsString('name="odluka"', $card);
+        $this->assertSame('submitted', $application->fresh()->status);
+        $this->assertNull($application->fresh()->prigovor);
+    }
+
+    /**
+     * @param  list<string>  $statementsInOrder
+     */
+    private function assertM3PrigovorShowsSharedExplanationOnce(User $chairman, Application $application, string $explanation, array $statementsInOrder): string
+    {
+        $notice = $application->eliminatoryNotice;
+        $this->assertNotNull($notice);
+        $deadline = $notice->prigovorDeadlineAt()->format('d.m.Y. H:i');
+        $sentAt = $notice->sent_at?->timestamp;
+        $this->assertSame('submitted', $application->status);
+        $this->assertNull($application->prigovor);
+
+        $card = $this->m3PrigovorCard($chairman, $application);
+
+        $this->assertSame(1, substr_count($card, 'Zajedničko obrazloženje Komisije'));
+        $this->assertSame(1, substr_count($card, $explanation));
+        $this->assertStringNotContainsString('Obrazloženje Komisije:', $card);
+        $this->assertStringContainsString('Komisija je aktivirala jedan ili više eliminatornih kriterijuma.', $card);
+        $this->assertStringContainsString('Rok za Prigovor: '.$deadline, $card);
+        $this->assertStringContainsString('Prigovor još nije podnesen. Rok je otvoren.', $card);
+
+        $previous = 0;
+        foreach ($statementsInOrder as $statement) {
+            $position = strpos($card, $statement);
+            $this->assertNotFalse($position);
+            $this->assertGreaterThan($previous, $position);
+            $previous = $position;
+        }
+        $heading = strpos($card, 'Zajedničko obrazloženje Komisije');
+        $deadlinePosition = strpos($card, 'Rok za Prigovor:');
+        $this->assertNotFalse($heading);
+        $this->assertNotFalse($deadlinePosition);
+        $this->assertGreaterThan($previous, $heading);
+        $this->assertGreaterThan($heading, $deadlinePosition);
+
+        $fresh = $application->fresh(['eliminatoryNotice', 'prigovor']);
+        $this->assertSame('submitted', $fresh->status);
+        $this->assertNull($fresh->prigovor);
+        $this->assertSame($sentAt, $fresh->eliminatoryNotice->sent_at?->timestamp);
+        $this->assertSame($deadline, $fresh->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i'));
+
+        return $card;
+    }
+
+    private function m3PrigovorCard(User $chairman, Application $application): string
+    {
+        $html = $this->actingAs($chairman)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->getContent();
+        $start = strpos($html, 'class="kn-prigovor-card');
+        $this->assertNotFalse($start, 'Sekcija Prigovor nije prikazana na Obrascu M3.');
+
+        return substr($html, $start);
+    }
+
+    /**
+     * @param  list<string>  $statementsInOrder
+     */
+    private function assertApplicantSharedExplanationShownOnce(Application $application, string $explanation, array $statementsInOrder): void
+    {
+        $notice = $application->eliminatoryNotice;
+        $this->assertNotNull($notice);
+        $deadline = $notice->prigovorDeadlineAt()->format('d.m.Y. H:i');
+        $sentAt = $notice->sent_at?->timestamp;
+        $statusBefore = $application->status;
+        $this->assertNull($application->prigovor);
+        $this->assertSame('submitted', $statusBefore);
+
+        $html = $this->actingAs($application->user)
+            ->get(route('applications.show', $application))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($html, 'Zajedničko obrazloženje Komisije'));
+        $this->assertSame(1, substr_count($html, $explanation));
+        $this->assertStringNotContainsString('Obrazloženje Komisije:', $html);
+
+        $previous = 0;
+        foreach ($statementsInOrder as $statement) {
+            $position = strpos($html, $statement);
+            $this->assertNotFalse($position);
+            $this->assertGreaterThan($previous, $position);
+            $previous = $position;
+        }
+        $heading = strpos($html, 'Zajedničko obrazloženje Komisije');
+        $this->assertNotFalse($heading);
+        $this->assertGreaterThan($previous, $heading);
+
+        $this->assertStringContainsString('Rok ističe '.$deadline, $html);
+        $this->assertStringContainsString('Podnesi Prigovor', $html);
+        $fresh = $application->fresh(['eliminatoryNotice', 'prigovor']);
+        $this->assertSame($statusBefore, $fresh->status);
+        $this->assertNull($fresh->prigovor);
+        $this->assertSame($sentAt, $fresh->eliminatoryNotice->sent_at?->timestamp);
+        $this->assertSame($deadline, $fresh->eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i'));
+    }
+
     /**
      * @param  array<string, mixed>|null  $payload
      * @return array{competition: Competition, chairman: CommissionMember, members: list<CommissionMember>, application: Application}
@@ -1247,10 +1616,7 @@ class OmladinskoEliminatoryNoticeAndPrigovorTest extends TestCase
     private function youthPrigovorPayload(): array
     {
         return [
-            'criterion_obrazlozenja' => [
-                1 => 'Izvod je već bio u prijavi.',
-                2 => 'M4 je dostavljen uz prijavu.',
-            ],
+            'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen uz prijavu.',
         ];
     }
 

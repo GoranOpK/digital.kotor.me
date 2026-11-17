@@ -202,7 +202,7 @@ class AdminUserNameCanonicalSyncTest extends TestCase
         $this->assertSame('+38268111000', $user->phone);
     }
 
-    public function test_missing_canonical_graph_keeps_account_only_behavior(): void
+    public function test_missing_subject_graph_rejects_the_entire_admin_update(): void
     {
         $this->enableCanonicalHttpWrite();
         $user = $this->staleNamedUser();
@@ -211,7 +211,7 @@ class AdminUserNameCanonicalSyncTest extends TestCase
             ->put(route('admin.users.update', $user), $this->payload($user, 'Didije', 'Drogba', [
                 'email' => 'nalog@example.com',
             ]))
-            ->assertRedirect(route('admin.users.show', $user));
+            ->assertSessionHasErrors('first_name')->assertSessionMissing('success');
 
         $user->refresh();
 
@@ -219,7 +219,7 @@ class AdminUserNameCanonicalSyncTest extends TestCase
         $this->assertSame('Sistem', $user->first_name);
         $this->assertSame('48', $user->last_name);
         $this->assertSame('Sistem 48', $user->name);
-        $this->assertSame('nalog@example.com', $user->email);
+        $this->assertNotSame('nalog@example.com', $user->email);
     }
 
     private function physicalPerson(User $user): PhysicalPersonIdentity

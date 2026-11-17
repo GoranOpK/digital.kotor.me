@@ -83,28 +83,12 @@
     .obrazac-form-page .bp-back-to-application a:hover {
         text-decoration: underline;
     }
-    .obrazac-broj-prijave {
-        font-size: 14px;
-        font-weight: 600;
-        color: #111;
-    }
+    /* PM/M2 print chrome only — Broj left alignment comes from shared obrazac-form styles. */
     .obrazac-zaglavlje-pm .obrazac-zaglavlje-top {
         margin-bottom: 16px;
     }
     .obrazac-zaglavlje-pm .obrazac-broj-i-naslov {
-        justify-content: space-between;
-    }
-    .obrazac-naslov-prijava {
-        width: 100%;
-        text-align: center;
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        color: #111;
-        margin: 8px 0 0 0;
-    }
-    .obrazac-form-page .obrazac-broj-i-naslov {
-        justify-content: flex-end;
+        justify-content: space-between; /* never flex-end — packs Broj to the right */
     }
 
     @media print {
@@ -318,35 +302,13 @@
             $redniBroj = $application->redni_broj ?? '—';
             $brojPrijave = $upBroj.'/'.$redniBroj;
         @endphp
-        <div class="obrazac-zaglavlje{{ $isPmBusinessPlan ? ' obrazac-zaglavlje-pm' : '' }}">
-            <div class="obrazac-zaglavlje-top">
-                <div class="obrazac-grb">
-                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" class="obrazac-grb-img" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';" style="height: 2cm; width: auto; display: block;">
-                </div>
-                <div class="obrazac-org">
-                    <p><strong>Crna Gora</strong></p>
-                    <p>Opština Kotor</p>
-                    <p>Sekretarijat za razvoj preduzetništva</p>
-                    <p>komunalne poslove i saobraćaj</p>
-                </div>
-                <div class="obrazac-contact">
-                    <p>Stari grad 317</p>
-                    <p>85330 Kotor, Crna Gora</p>
-                    <p>tel. +382(0)32 325 865</p>
-                    <p>privreda@kotor.me</p>
-                    <p>www.kotor.me</p>
-                </div>
-            </div>
-            <div class="obrazac-broj-i-naslov">
-                @if($isPmBusinessPlan)
-                    <div class="obrazac-broj-prijave">
-                        Broj prijave: {{ $brojPrijave }}
-                    </div>
-                @endif
-                <div class="obrazac-1a-1b">{{ $businessPlanFormTitle }}</div>
-            </div>
-            <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
-        </div>
+        {{-- Shared zaglavlje for both programmes; Broj prijave only on omladinsko (M2). Do not assume zensko ↔ omladinsko stay in sync without checking both. --}}
+        @include('partials.obrazac-zaglavlje', [
+            'obrazacLabel' => $businessPlanFormTitle,
+            'obrazacTitle' => 'FORMA ZA BIZNIS PLAN',
+            'brojPrijave' => $isPmBusinessPlan ? $brojPrijave : null,
+            'zaglavljeClass' => $isPmBusinessPlan ? 'obrazac-zaglavlje-pm' : null,
+        ])
 
         @php
             $applicationReviewUrl = $applicationReviewUrl ?? (
@@ -385,6 +347,7 @@
         @php
             $readOnly = $readOnly ?? false;
             $isOmladinsko = $application->competition?->type === 'omladinsko';
+            $isZensko = $application->competition?->type === 'zensko';
             $businessPlanTableFields = [
                 'products_services_table',
                 'target_customers',
@@ -530,6 +493,19 @@
                             <div class="form-group">
                                 <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
+                                @if($isPmBusinessPlan && app(\App\Services\Competitions\PmRegisteredDooName::class)->isRegisteredDoo($application))
+                                    @if($application->status === 'draft')
+                                        @php
+$pmCanonicalCompanyName = app(\App\Services\Competitions\PmRegisteredDooName::class)->comparisonName($application);
+@endphp
+                                        <p data-testid="pm-canonical-company-name">Naziv firme iz profila za poredjenje: <strong>{{ $pmCanonicalCompanyName ?? 'Naziv nije dostupan; provjerite profil.' }}</strong></p>
+                                        <p>Naziv iz M2 mora odgovarati nazivu iz profila prije konacne predaje. Nijedan naziv se ne mijenja automatski.</p>
+                                        <a href="{{ route('profile.edit') }}">Provjerite ili ispravite naziv u profilu</a>
+                                    @else
+                                        <p>Sacuvani naziv drustva: {{ $businessPlan?->company_name ?? 'Istorijski naziv nije evidentiran.' }}</p>
+                                    @endif
+                                    @error('company_name')<div class="form-error">{{ $message }}</div>@enderror
+                                @endif
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -579,7 +555,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):
+                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno):@if($isOmladinsko || $isZensko) <span class="required">*</span>@endif
                         </label>
                         <textarea 
                             name="summary" 
@@ -673,12 +649,31 @@
                         </div>
                         @if($isOmladinsko)
                             <div class="form-group" style="margin-top: 12px;">
-                                <label class="form-label" for="realization_other_text">Ako je izabrano „Drugo“, unesite objašnjenje:</label>
+                                <label class="form-label" for="realization_other_text">
+                                    Ako je izabrano „Drugo“, unesite objašnjenje:
+                                    <span id="realizationOtherRequiredMark" hidden> <span class="required">*</span> Obavezno za konačno podnošenje.</span>
+                                </label>
                                 <textarea name="realization_other_text" id="realization_other_text" class="form-control @error('realization_other_text') error @enderror" rows="3">{{ old('realization_other_text', $businessPlan->product_service ?? '') }}</textarea>
                                 @error('realization_other_text')
                                     <div class="error-message">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <script>
+                                (function () {
+                                    const mark = document.getElementById('realizationOtherRequiredMark');
+                                    if (!mark) {
+                                        return;
+                                    }
+                                    const sync = function () {
+                                        const selected = document.querySelector('input[name="realization_type"]:checked');
+                                        mark.hidden = !selected || selected.value !== 'nista_od_navedenog';
+                                    };
+                                    document.querySelectorAll('input[name="realization_type"]').forEach(function (input) {
+                                        input.addEventListener('change', sync);
+                                    });
+                                    sync();
+                                })();
+                            </script>
                         @endif
                         @error('realization_type')
                             <div class="error-message">{{ $message }}</div>
@@ -1091,7 +1086,7 @@
                     @endphp
                     @if($isOmladinsko)
                     <div class="finances-notice-box" id="financesNoticeBox">
-                        <h3>Napomena — član 19 Odluke</h3>
+                        <h3>Napomena — član 19 Odluke o podršci preduzetništvu mladih</h3>
                         <p style="margin: 0 0 12px;">
                             Fizičko lice, preduzetnik ili privredno društvo može konkurisati za cjelokupan iznos ili dio sredstava potrebnih za realizaciju biznis plana.
                         </p>
@@ -2014,6 +2009,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const bpSubmitBtn = document.getElementById('bpSubmitBtn');
     const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
     const isOmladinsko = @json((bool) $isOmladinsko);
+    const isZensko = @json((bool) ($isZensko ?? false));
 
     // Obavezna polja koja treba provjeriti
     const requiredFields = [
@@ -2024,6 +2020,9 @@ document.addEventListener('DOMContentLoaded', function() {
         'applicant_phone',
         'applicant_email'
     ];
+    if (isZensko) {
+        requiredFields.push('summary');
+    }
 
     function isValidPib(value) {
         return /^[0-9]{8}$/.test((value || '').trim());

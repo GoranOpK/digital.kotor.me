@@ -78,6 +78,41 @@ class PmBusinessPlanFormTitleTest extends TestCase
         $this->assertStringContainsString('1. Naziv biznis ideje:', $html);
     }
 
+    public function test_both_programmes_obrazac_2_headers_are_checked_explicitly(): void
+    {
+        [$zpOwner, $zp] = $this->application('zensko');
+        [$pmOwner, $pm] = $this->application('omladinsko');
+        UpNumber::create([
+            'competition_id' => $pm->competition_id,
+            'number' => 'UP-BOTH-01',
+        ]);
+        $pm->update(['redni_broj' => 7]);
+
+        $zpHtml = $this->actingAs($zpOwner)
+            ->get(route('applications.business-plan.create', $zp))
+            ->assertOk()
+            ->getContent();
+        $pmHtml = $this->actingAs($pmOwner)
+            ->get(route('applications.business-plan.create', $pm))
+            ->assertOk()
+            ->getContent();
+
+        // Žensko Obrazac 2: shared zaglavlje, label only (no Broj prijave) — must stay intact.
+        $this->assertStringContainsString('class="obrazac-1a-1b">Obrazac 2</div>', $zpHtml);
+        $this->assertStringNotContainsString('Broj prijave:', $zpHtml);
+        $this->assertStringNotContainsString('class="obrazac-zaglavlje obrazac-zaglavlje-pm"', $zpHtml);
+        $this->assertSame(1, substr_count($zpHtml, '<div class="obrazac-zaglavlje">'));
+
+        // Biznis mladih Obrazac M2: Broj prijave present and before form label (left → right).
+        $this->assertStringContainsString('class="obrazac-zaglavlje obrazac-zaglavlje-pm"', $pmHtml);
+        $this->assertStringContainsString('Broj prijave: UP-BOTH-01/7', $pmHtml);
+        $brojAt = strpos($pmHtml, 'Broj prijave: UP-BOTH-01/7');
+        $labelAt = strpos($pmHtml, 'class="obrazac-1a-1b">Obrazac M2</div>');
+        $this->assertNotFalse($brojAt);
+        $this->assertNotFalse($labelAt);
+        $this->assertLessThan($labelAt, $brojAt);
+    }
+
     public function test_pm_m2_shows_article_19_note_and_zp_keeps_its_finance_note(): void
     {
         [$pmOwner, $pm] = $this->application('omladinsko');
@@ -148,7 +183,7 @@ class PmBusinessPlanFormTitleTest extends TestCase
     {
         $notice = $this->financesNoticeHtml($html);
         foreach ([
-            'Napomena — član 19 Odluke',
+            'Napomena — član 19 Odluke o podršci preduzetništvu mladih',
             'Fizičko lice, preduzetnik ili privredno društvo može konkurisati za cjelokupan iznos ili dio sredstava potrebnih za realizaciju biznis plana.',
             'Maksimalan iznos dodijeljenih sredstava za jedan biznis plan ne može biti veći od:',
             '<strong>30%</strong> ukupnog iznosa definisanog u Javnom konkursu za tekuću godinu — za start-up (inovativni tehnološki biznis).',
@@ -307,11 +342,20 @@ class PmBusinessPlanFormTitleTest extends TestCase
         $this->assertStringContainsString('www.kotor.me', $html);
         $this->assertStringContainsString('Broj prijave: '.$brojPrijave, $html);
         $this->assertStringContainsString('class="obrazac-1a-1b">Obrazac M2</div>', $html);
+        // Broj prijave must precede the form label (left → right) for omladinsko M2.
+        $this->assertMatchesRegularExpression(
+            '/class="obrazac-broj-prijave">\s*Broj prijave:\s*'.preg_quote($brojPrijave, '/').'[\s\S]*?class="obrazac-1a-1b">Obrazac M2<\/div>/',
+            $html
+        );
         $this->assertStringContainsString('FORMA ZA BIZNIS PLAN', $html);
         $this->assertStringContainsString('1. Naziv biznis ideje:', $html);
         $this->assertStringContainsString('class="form-card no-print"', $html);
         $this->assertMatchesRegularExpression(
-            '/@media print\s*\{.*?\.no-print,\s*\n\s*button,/s',
+            '/@media print\s*\{.*?\.obrazac-form-page \.no-print\s*\{[^}]*display:\s*none !important;/s',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/@media print\s*\{.*?\.obrazac-form-page button\s*,/s',
             $html
         );
         $this->assertMatchesRegularExpression(

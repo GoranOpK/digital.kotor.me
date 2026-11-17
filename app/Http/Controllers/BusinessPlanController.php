@@ -93,6 +93,33 @@ class BusinessPlanController extends Controller
     }
 
     /**
+     * PM i ŽP Rezime je obavezan kada se obrazac čuva kao popunjen.
+     * Nacrt i MMSP zadržavaju prazno polje.
+     *
+     * @return array<int, mixed>|string
+     */
+    private function summaryRules(Application $application, bool $isDraft): array|string
+    {
+        if ($isDraft || ! $this->profileRequiresSummary($application)) {
+            return 'nullable|string';
+        }
+
+        return ['required', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+            if (! is_string($value) || trim($value) === '') {
+                $fail('Rezime je obavezan.');
+            }
+        }];
+    }
+
+    private function profileRequiresSummary(Application $application): bool
+    {
+        $application->loadMissing('competition');
+
+        return $application->isOmladinskoProfile()
+            || $application->competition?->type === 'zensko';
+    }
+
+    /**
      * Prikaz forme za popunjavanje biznis plana (Obrazac 2)
      */
     public function create(Application $application): View|RedirectResponse
@@ -333,6 +360,10 @@ class BusinessPlanController extends Controller
 
         // Član komisije i administrator konkursa (arhiva) mogu samo da pregledaju (read-only), bez izmjena.
         // Vlasnik takođe samo pregleda kad je Prijava zaključana (podnesena ili draft nakon isteka roka).
+        if ($application->isOmladinskoProfile() && $application->status !== 'draft') {
+            $defaultData['applicant_name'] = $businessPlan?->applicant_name
+                ?? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application);
+        }
         $readOnly = !$isOwner || $application->isApplicantContentWriteLocked();
         
         // Ako je član komisije, osiguraj da je readOnly = true
@@ -358,6 +389,18 @@ class BusinessPlanController extends Controller
      * Snimi biznis plan
      */
     public function store(Request $request, Application $application): RedirectResponse
+    {
+        if (! $application->isOmladinskoProfile()) {
+            return $this->storeCurrent($request, $application);
+        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $application) {
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            BusinessPlan::query()->where('application_id', $locked->id)->lockForUpdate()->first();
+            return $this->storeCurrent($request, $locked);
+        });
+    }
+
+    private function storeCurrent(Request $request, Application $application): RedirectResponse
     {
         if ($redirect = $this->redirectCanonicalToInvestmentPlan($application)) {
             return $redirect;
@@ -470,7 +513,7 @@ class BusinessPlanController extends Controller
             'company_email' => 'nullable|email|max:255',
             'company_website' => 'nullable|string|max:255',
             'bank_account' => 'nullable|string|max:255',
-            'summary' => 'nullable|string',
+            'summary' => $this->summaryRules($application, $isDraft),
             
             // II. MARKETING
             'products_services_table' => 'nullable|array',
@@ -523,6 +566,7 @@ class BusinessPlanController extends Controller
             'applicant_email.required' => 'E-mail je obavezan.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
             'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da je napomena u dijelu IV. Finansije pročitana.',
+            'summary.required' => 'Rezime je obavezan.',
         ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->bpLog('BP_STORE: validation failed', [

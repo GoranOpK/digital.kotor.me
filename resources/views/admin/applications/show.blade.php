@@ -126,7 +126,9 @@
                         $isCommissionMember = $userRole === 'komisija';
                         $competition = $application->competition;
                         // Članovi komisije vide zbirne ocjene (konačna ocjena, ocjene komisije) tek kada je za cijeli konkurs formirana rang lista
-                        $canSeeAggregatesForCommission = $competition && $competition->isIndividualScoringCycleComplete();
+                        $canSeeAggregatesForCommission = $competition && ($competition->type === 'zensko'
+    ? $competition->isRankingFormed()
+    : $competition->isIndividualScoringCycleComplete());
                     @endphp
                     @if($isCommissionMember || $userRole === 'superadmin')
                         {{-- Detaljni prikaz statusa za članove komisije --}}
@@ -287,7 +289,7 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Podnosilac</span>
-                            <span class="info-value">{{ $application->user->name ?? 'N/A' }}</span>
+                            <span class="info-value">{{ ($application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A')) }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Email</span>
@@ -471,7 +473,9 @@
             $isCommissionMember = $userRole === 'komisija';
             $competition = $application->competition;
             // Članovi komisije vide detaljne ocjene i napomene tek kada je rang lista formirana (sve prijave ocijenjene)
-            $canSeeAggregatesForCommission = $competition && $competition->isIndividualScoringCycleComplete();
+            $canSeeAggregatesForCommission = $competition && ($competition->type === 'zensko'
+    ? $competition->isRankingFormed()
+    : $competition->isIndividualScoringCycleComplete());
         @endphp
         @if($canSeeAggregatesForCommission && $application->evaluationScores->count() > 0)
         <div class="info-card">

@@ -7,6 +7,19 @@
     $profile = \App\Support\EliminatoryProfileConfig::for($application->competition?->type);
     $activatedReasons = $profile->activatedReasonDetails($check);
     $submittedExplanations = \App\Support\YouthPrigovorObrazlozenje::parse($prigovor?->obrazlozenje);
+    $sharedApplicantExplanation = \App\Support\YouthPrigovorObrazlozenje::sharedText($prigovor?->obrazlozenje);
+    $activatedCommissionExplanations = [];
+    foreach ($activatedReasons as $reason) {
+        $explanation = trim((string) ($reason['explanation'] ?? ''));
+        if ($explanation !== '' && ! in_array($explanation, $activatedCommissionExplanations, true)) {
+            $activatedCommissionExplanations[] = $explanation;
+        }
+    }
+    // Jedno zajedničko obrazloženje (isti tekst na aktiviranim kriterijumima).
+    // Različita obrazloženja ostaju uz svoj kriterijum i ne spajaju se.
+    $sharedCommissionExplanation = count($activatedCommissionExplanations) === 1
+        ? $activatedCommissionExplanations[0]
+        : null;
 @endphp
 
 @if($notice || $prigovor)
@@ -73,12 +86,16 @@
                 @foreach($activatedReasons as $reason)
                     <li>
                         {{ $reason['statement'] }}
-                        @if($reason['explanation'] !== '')
+                        @if($sharedCommissionExplanation === null && $reason['explanation'] !== '')
                             <br>Obrazloženje Komisije: {{ $reason['explanation'] }}
                         @endif
                     </li>
                 @endforeach
             </ul>
+            @if($sharedCommissionExplanation !== null)
+                <p><strong>Zajedničko obrazloženje Komisije</strong></p>
+                <p style="white-space: pre-wrap;">{{ $sharedCommissionExplanation }}</p>
+            @endif
         @endif
         <p>
             Imate pravo na jedan Prigovor putem Platforme u roku od 3 dana od slanja obavještenja.
@@ -92,12 +109,16 @@
         @if($prigovor->submitted_at)
             <p>Podnesen: {{ $prigovor->submitted_at->format('d.m.Y. H:i') }}</p>
         @endif
+        @if($sharedApplicantExplanation !== null)
+            <p><strong>Vaše obrazloženje prigovora</strong></p>
+            <p style="white-space: pre-wrap;">{{ $sharedApplicantExplanation }}</p>
+        @endif
         <p><strong>Aktivirani kriterijumi i obrazloženja:</strong></p>
         <ul>
             @foreach($activatedReasons as $reason)
                 <li>
                     {{ $reason['statement'] }}
-                    @if(($submittedExplanations[$reason['number']] ?? '') !== '')
+                    @if($sharedApplicantExplanation === null && ($submittedExplanations[$reason['number']] ?? '') !== '')
                         <br>{{ $submittedExplanations[$reason['number']] }}
                     @endif
                 </li>
@@ -143,24 +164,25 @@
     @elseif($canSubmitPrigovor)
         <form method="POST" action="{{ route('applications.prigovor.store', $application) }}">
             @csrf
-            <p><strong>Unesite obrazloženje za svaki prikazani aktivirani kriterijum.</strong> Prigovor obuhvata sve aktivirane kriterijume.</p>
+            <p>Prigovor obuhvata sve aktivirane kriterijume.</p>
+            @if(count($activatedReasons) > 0)
+                <ul>
+                    @foreach($activatedReasons as $reason)
+                        <li>{{ $reason['statement'] }}</li>
+                    @endforeach
+                </ul>
+            @endif
             @error('contested')
                 <p style="color: #ef4444;">{{ $message }}</p>
             @enderror
-            @foreach($activatedReasons as $reason)
-                @php $n = $reason['number']; @endphp
-                <div class="kn-prigovor-criterion">
-                    <p><strong>{{ $reason['statement'] }}</strong></p>
-                    <label for="kn-prigovor-obrazlozenje-{{ $n }}"><strong>Obrazloženje</strong></label>
-                    <textarea id="kn-prigovor-obrazlozenje-{{ $n }}"
-                        name="criterion_obrazlozenja[{{ $n }}]"
-                        class="kn-prigovor-textarea"
-                        required>{{ old('criterion_obrazlozenja.'.$n) }}</textarea>
-                    @error('criterion_obrazlozenja.'.$n)
-                        <p style="color: #ef4444;">{{ $message }}</p>
-                    @enderror
-                </div>
-            @endforeach
+            <label for="kn-prigovor-obrazlozenje"><strong>Vaše obrazloženje prigovora</strong></label>
+            <textarea id="kn-prigovor-obrazlozenje"
+                name="obrazlozenje"
+                class="kn-prigovor-textarea"
+                required>{{ old('obrazlozenje') }}</textarea>
+            @error('obrazlozenje')
+                <p style="color: #ef4444;">{{ $message }}</p>
+            @enderror
             <button type="submit" class="kn-prigovor-submit">Podnesi Prigovor</button>
         </form>
     @elseif($notice && ! $notice->prigovorWindowIsOpen())

@@ -17,9 +17,10 @@ use App\Models\Tender;
 use App\Models\UpNumber;
 use App\Models\User;
 use App\Identity\CanonicalIdentityWriteException;
-use App\Identity\Runtime\CanonicalHttpIdentityService;
-use App\Identity\Runtime\CurrentIdentityResolver;
-use App\Identity\Runtime\IdentityMutationGuard;
+use App\Identity\CanonicalIdentityReadException;
+use App\Identity\Runtime\IdentityMutationDeniedException;
+use App\Identity\Runtime\UserNameService;
+use App\Security\JmbEncryptedReadException;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
 use App\Services\MmspTestAccessService;
@@ -465,38 +466,16 @@ class AdminController extends Controller
             }
         }
 
-        $identityService = app(CanonicalHttpIdentityService::class);
-        $guard = app(IdentityMutationGuard::class);
 
         try {
-            DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant, $guard, $identityService) {
+            DB::transaction(function () use ($user, $currentUser, $validated, $requestedGrant) {
                 $locked = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
                 $locked->load('role');
+                $this->assertUsersAdministrationMayMutate($locked);
                 $previousRole = $locked->role?->name;
-                $syncedFromCanonical = false;
-
-                if ($guard->canonicalHttpWriteAllowed()) {
-                    try {
-                        $identityService->updateAdminIdentityContact(
-                            $locked,
-                            $validated['first_name'],
-                            $validated['last_name'],
-                            $validated['phone'] ?? null
-                        );
-                        $this->syncAccountNameFromSavedCanonicalIdentity($locked);
-                        $syncedFromCanonical = true;
-                    } catch (IdentityUseGateException) {
-                        // NON_SUBJECT / no graph: account-layer only
-                    }
-                }
-
-                if (! $syncedFromCanonical && ! $guard->canonicalHttpWriteAllowed() && $guard->legacyIdentityMutationAllowed()) {
-                    $locked->first_name = $validated['first_name'];
-                    $locked->last_name = $validated['last_name'];
-                    $locked->name = $validated['first_name'].' '.$validated['last_name'];
-                    $locked->phone = $validated['phone'] ?? null;
-                }
-
+                $locked = app(UserNameService::class)->update(
+                    $locked, $validated['first_name'], $validated['last_name'], true, $validated['phone'] ?? null
+                );
                 $locked->email = $validated['email'];
                 $locked->role_id = $validated['role_id'];
                 $locked->activation_status = $validated['activation_status'];
@@ -505,7 +484,9 @@ class AdminController extends Controller
                     $locked->password = Hash::make($validated['password']);
                 }
 
-                $locked->save();
+                if (! $locked->save()) {
+                    throw new CanonicalIdentityWriteException('Account changes were not saved.');
+                }
 
                 app(MmspTestAccessService::class)->reconcile(
                     $locked,
@@ -514,6 +495,8 @@ class AdminController extends Controller
                     $requestedGrant,
                 );
             });
+        } catch (IdentityMutationDeniedException|IdentityUseGateException|CanonicalIdentityReadException|JmbEncryptedReadException $e) {
+            return back()->withErrors(['first_name' => 'Ime nije sačuvano. Identitet nije dostupan ili izmjena nije dozvoljena.'])->withInput();
         } catch (CanonicalIdentityWriteException) {
             return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
         }
@@ -527,21 +510,6 @@ class AdminController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Korisnik je uspješno ažuriran.');
-    }
-
-    /**
-     * Account name follows the canonical identity that was just saved.
-     * Company name and submitted application snapshots are left unchanged.
-     */
-    private function syncAccountNameFromSavedCanonicalIdentity(User $user): void
-    {
-        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
-        $firstName = $identity->firstName;
-        $lastName = $identity->lastName;
-
-        $user->first_name = $firstName;
-        $user->last_name = $lastName;
-        $user->name = trim((string) $firstName.' '.(string) $lastName);
     }
 
     /**
@@ -1493,7 +1461,7 @@ class AdminController extends Controller
             return $this->closeOmladinskoCompetition($competition);
         }
 
-        // §13.6: ne finalizovati konkurs sa raspodjelom koja krši prednost započinjanja (ŽP).
+        // Jednak broj bodova ne nameće primaoca sredstava. Ostaje kontrola obrazloženja iste faze.
         $equalScoreBlock = app(\App\Services\Competitions\ZpEqualScoreAllocationGuard::class)
             ->blockReason($competition);
         if ($equalScoreBlock !== null) {
@@ -3090,12 +3058,21 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if (! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        $resultsLock = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->commissionPreliminaryResultsLockMessage($competition);
+        if ($resultsLock !== null) {
+            abort(403, $resultsLock);
         }
 
-        // Učitaj sve prijave za ovaj konkurs. GET je isključivo čitanje:
-        // ne upisuje final_score niti ranking_position.
+        if ($competition->type === 'zensko'
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            app(\App\Services\CanonicalIndividualScoringService::class)
+                ->persistApplicationAggregatesIfCycleComplete($competition);
+        }
+
+        // Učitaj sve prijave za ovaj konkurs. ŽP upis, kada je već dospio,
+        // izvršen je iznad i ponovljen poziv ga ne mijenja. Zatvoren konkurs
+        // ostaje netaknut. Upit ispod samo čita sačuvane vrijednosti.
         $allApplications = Application::where('competition_id', $competition->id)
             ->with(['user', 'businessPlan', 'evaluationScores', 'eliminatoryCheck', 'prigovor'])
             ->get()
@@ -3122,67 +3099,44 @@ class AdminController extends Controller
 
         $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
 
-        // GET samo čita već finalizovane vrijednosti. Upis ranking_position
-        // i applications.final_score nije dio ovog requesta.
+        // Prikaz koristi već upisane ranking_position i final_score.
+        // Ovaj dio ne računa rezervni redni broj.
         if ($isArchivedCompetition) {
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())
-                ->sort(function ($a, $b) {
-                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
-
-                    if ($aPos !== $bPos) {
-                        return $aPos <=> $bPos;
-                    }
-
-                    // Fallback za stare zapise bez ranking_position.
-                    $aScore = (float) ($a->final_score ?? 0);
-                    $bScore = (float) ($b->final_score ?? 0);
-                    if ($aScore !== $bScore) {
-                        return $bScore <=> $aScore;
-                    }
-
-                    return $a->id <=> $b->id;
-                })
+                ->sort(fn ($a, $b) => \App\Support\EqualScoreDisplayOrder::compareRanked($a, $b))
                 ->values();
 
             $belowLineApplications = $visibleApplications
                 ->filter(fn ($app) => ! $app->meetsMinimumScore())
                 ->sort(function ($a, $b) {
-                    $aScore = (float) ($a->final_score ?? 0);
-                    $bScore = (float) ($b->final_score ?? 0);
-                    if ($aScore !== $bScore) {
-                        return $bScore <=> $aScore;
-                    }
-
-                    return $a->id <=> $b->id;
+                    return \App\Support\EqualScoreDisplayOrder::compareByScore(
+                        $a,
+                        $b,
+                        (string) ($a->final_score ?? '0'),
+                        (string) ($b->final_score ?? '0'),
+                        2,
+                    );
                 })
                 ->values();
         } else {
             // Iznad crte: 30+ bodova, poredak iz ciklusa finalizacije (bez upisa na GET)
             $applications = $visibleApplications
                 ->filter(fn ($app) => $app->meetsMinimumScore())
-                ->sort(function ($a, $b) {
-                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
-
-                    if ($aPos !== $bPos) {
-                        return $aPos <=> $bPos;
-                    }
-
-                    $aScore = (float) ($a->final_score ?? 0);
-                    $bScore = (float) ($b->final_score ?? 0);
-                    if ($aScore !== $bScore) {
-                        return $bScore <=> $aScore;
-                    }
-
-                    return $a->id <=> $b->id;
-                })
+                ->sort(fn ($a, $b) => \App\Support\EqualScoreDisplayOrder::compareRanked($a, $b))
                 ->values();
 
             $belowLineApplications = $visibleApplications
                 ->filter(fn ($app) => ! $app->meetsMinimumScore())
-                ->sortByDesc('final_score')
+                ->sort(function ($a, $b) {
+                    return \App\Support\EqualScoreDisplayOrder::compareByScore(
+                        $a,
+                        $b,
+                        (string) ($a->final_score ?? '0'),
+                        (string) ($b->final_score ?? '0'),
+                        2,
+                    );
+                })
                 ->values();
         }
 
@@ -3238,8 +3192,10 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if (! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        $resultsLock = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->commissionPreliminaryResultsLockMessage($competition);
+        if ($resultsLock !== null) {
+            abort(403, $resultsLock);
         }
 
         // Prikupi odabrane dobitnike iz forme
@@ -3339,8 +3295,10 @@ class AdminController extends Controller
             abort(403, Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
         }
 
-        if (! $competition->isIndividualScoringCycleComplete()) {
-            abort(403, \App\Services\CanonicalIndividualScoringService::RANKING_LOCKED_MESSAGE);
+        $resultsLock = app(\App\Services\CanonicalIndividualScoringService::class)
+            ->commissionPreliminaryResultsLockMessage($competition);
+        if ($resultsLock !== null) {
+            abort(403, $resultsLock);
         }
 
         // Aktivni tok: Predlog tek nakon završenih predsjedničkih odluka (KN-FS-003 §15.1 / §14.11).
@@ -3433,7 +3391,9 @@ class AdminController extends Controller
                 ->with(['user.identity.legalEntity'])
                 ->orderBy('ranking_position')
                 ->orderBy('id')
-                ->get();
+                ->get()
+                ->sort(fn ($left, $right) => \App\Support\EqualScoreDisplayOrder::compareRanked($left, $right))
+                ->values();
 
         $lines = [];
         foreach ($winners as $winner) {

@@ -11,9 +11,14 @@ final class PmCommissionApplicantPresentation
 {
     public static function line(Application $application): string
     {
-        return self::subjectName($application) ?? '—';
+        if (app(\App\Services\Competitions\PmRegisteredDooName::class)->isRegisteredDoo($application)) {
+            return app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application);
+        }
+        if ($application->is_registered && in_array($application->applicant_type, ['privredno_drustvo', 'doo', 'ostalo'], true)) {
+            return self::subjectName($application) ?? '—';
+        }
+        return app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application);
     }
-
     public static function categoryLabel(Application $application): ?string
     {
         return match ((string) $application->applicant_type) {
@@ -62,6 +67,10 @@ final class PmCommissionApplicantPresentation
     {
         if (! $application->is_registered) {
             return null;
+        }
+
+        if (app(\App\Services\Competitions\PmRegisteredDooName::class)->isRegisteredDoo($application)) {
+            return app(\App\Services\Competitions\PmRegisteredDooName::class)->historicalName($application);
         }
 
         $application->loadMissing(['user.identity.legalEntity']);

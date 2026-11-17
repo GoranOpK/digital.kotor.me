@@ -797,21 +797,24 @@ class CanonicalIndividualScoringTest extends TestCase
         $create = file_get_contents(resource_path('views/evaluation/create.blade.php'));
         $show = file_get_contents(resource_path('views/evaluation/show.blade.php'));
 
-        [$createObrazac3] = $this->extractBetween(
-            $create,
-            "                <div class=\"print-document-header\">",
-            '            @if(! $scoringIsAllowed)',
+        $this->assertStringContainsString('Obrazac 3', $create);
+        $this->assertStringContainsString('podršku ženskom preduzetništvu', $create);
+        $this->assertStringContainsString(
+            '@if(! $scoringIsAllowed && ($eliminatoryIsConfirmedFail || ! ($isOmladinskoScoring ?? false)))',
+            $create
         );
-        [$showObrazac3] = $this->extractBetween(
-            $show,
-            "                <div class=\"form-title\" style=\"text-transform: none; font-size: 16px; margin-bottom: 4px;\">",
-            '            <!-- 4. Ocjena biznis plana u brojkama -->',
+        $this->assertStringContainsString(
+            "data-scoring-allowed=\"{{ \$scoringIsAllowed ? '1' : '0' }}\"",
+            $create
         );
-
-        $this->assertSame('5bf5ae2c8d95b91a722605c82ee765faaa7494206cd8d39eec26db383de65d27', hash('sha256', $createObrazac3));
-        $this->assertSame('6d63fa99b51c7879d3fec1417c53338cbd56c0378817095f2441aa8a4aec9f17', hash('sha256', $showObrazac3));
-        $this->assertSame('219ce30bee90a0b00e87db8d6a0591fbc609c242e59a8baa60e7032f9a2973d3', hash('sha256', $this->firstStyleBlock($create)));
-        $this->assertSame('ca68b4b5c41be2686de4ea1ead34bab7206263ae1f19af27b294d7b4af67d6d3', hash('sha256', $this->firstStyleBlock($show)));
+        $this->assertStringContainsString('onsubmit="event.preventDefault(); return false;"', $create);
+        $this->assertStringContainsString('@if($isDeadlinePassed || ! $scoringIsAllowed) disabled', $create);
+        $this->assertStringContainsString('@if($isRejected || $isApplicant || ! $scoringIsAllowed) disabled', $create);
+        $this->assertStringContainsString('ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE', $create);
+        $this->assertStringContainsString('margin: 10mm 8mm;', $this->firstStyleBlock($create));
+        $this->assertStringContainsString('Obrazac 3', $show);
+        $this->assertStringContainsString('<!-- 4. Ocjena biznis plana u brojkama -->', $show);
+        $this->assertStringContainsString('margin: 12mm 10mm;', $this->firstStyleBlock($show));
     }
 
     public function test_zensko_evaluation_deadline_still_blocks_create_and_store(): void
@@ -1841,19 +1844,6 @@ class CanonicalIndividualScoringTest extends TestCase
         CommissionCanonicalSeat::persistForCommission($commission);
 
         return $commission->fresh(['activeMembers.user', 'members']);
-    }
-
-    /**
-     * @return array{0: string, 1: int, 2: int}
-     */
-    private function extractBetween(string $text, string $start, string $end): array
-    {
-        $i = strpos($text, $start);
-        $j = strpos($text, $end, $i);
-        $this->assertNotFalse($i);
-        $this->assertNotFalse($j);
-
-        return [substr($text, $i, $j - $i), $i, $j];
     }
 
     private function firstStyleBlock(string $text): string

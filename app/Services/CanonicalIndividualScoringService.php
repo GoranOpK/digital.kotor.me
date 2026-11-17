@@ -14,6 +14,7 @@ use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\CompetitionRanking;
+use App\Support\EqualScoreDisplayOrder;
 use App\Support\NamedMysqlUniqueViolation;
 use App\Support\ScoringProfileConfig;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -34,6 +35,10 @@ class CanonicalIndividualScoringService
     public const INVALID_SEAT_MESSAGE = 'Ne može se utvrditi kanonsko mjesto Komisije za bodovanje.';
 
     public const RANKING_LOCKED_MESSAGE = 'Rang lista i zbirni rezultati dostupni su tek kada svih pet kanonskih mjesta Komisije završi individualno bodovanje svih prijava koje su ušle u bodovanje.';
+
+    public const ZENSKO_APPEAL_WINDOW_MESSAGE = 'Rok za prigovor je otvoren.';
+
+    public const ZENSKO_PRIGOVOR_PODNESEN_MESSAGE = 'Postoji neriješen prigovor.';
 
     public const YOUTH_ADMIN_RANKING_ROUTE_MESSAGE = 'Preliminarna rang-lista mladih dostupna je Komisiji na ekranu ocjenjivanja, ne na administratorskoj ruti.';
 
@@ -346,6 +351,83 @@ class CanonicalIndividualScoringService
         return true;
     }
 
+    /**
+     * Međusobni uvid je odvojen od završetka ciklusa i od preliminarne liste.
+     * Ciklus i dalje može biti završen dok traje rok ili neriješen prigovor.
+     * Uvid traži i završen prigovorni postupak i kompletne ocjene svih trenutno podobnih prijava.
+     */
+    public function youthMutualScoreViewIsAllowed(Competition $competition): bool
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return false;
+        }
+
+        if (! $this->isYouthIndividualScoringCycleComplete($competition)) {
+            return false;
+        }
+
+        return $this->youthAppealProcessBlockReason($competition) === null;
+    }
+
+    /**
+     * Ženski međusobni uvid i preliminarna rang-lista.
+     * Završetak ciklusa podobnih prijava ostaje poseban uslov i ne čeka prigovor.
+     * Ova kapija traži i taj završetak i završen prigovorni postupak.
+     */
+    public function zenskoCommissionDisclosureIsAllowed(Competition $competition): bool
+    {
+        return $this->commissionPreliminaryResultsLockMessage($competition) === null
+            && $competition->type === 'zensko';
+    }
+
+    /**
+     * null znači da se tuđe ocjene, napomene, zbir i preliminarna lista smiju otvoriti.
+     * Za profile koji nijesu ženski ostaje postojeći uslov završetka ciklusa.
+     */
+    public function commissionPreliminaryResultsLockMessage(Competition $competition): ?string
+    {
+        if (! $this->isIndividualScoringCycleComplete($competition)) {
+            return self::RANKING_LOCKED_MESSAGE;
+        }
+
+        if ($competition->type !== 'zensko') {
+            return null;
+        }
+
+        return $this->zenskoAppealProcessBlockReason($competition);
+    }
+
+    public function zenskoAppealProcessBlockReason(Competition $competition): ?string
+    {
+        if ($competition->type !== 'zensko') {
+            return null;
+        }
+
+        if ($this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition)) {
+            return self::ZENSKO_PRIGOVOR_PODNESEN_MESSAGE;
+        }
+
+        $applications = $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated', 'approved', 'rejected'])
+            ->with(['eliminatoryNotice', 'prigovor'])
+            ->orderBy('id')
+            ->get();
+
+        foreach ($applications as $application) {
+            if (! $this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+                continue;
+            }
+
+            if ($application->prigovor?->isFinished() === true) {
+                continue;
+            }
+
+            return self::ZENSKO_APPEAL_WINDOW_MESSAGE;
+        }
+
+        return null;
+    }
+
     public function isYouthPreliminaryRankingReady(Competition $competition): bool
     {
         return $this->youthPreliminaryRankingBlockReason($competition) === null;
@@ -366,23 +448,9 @@ class CanonicalIndividualScoringService
             return self::YOUTH_CYCLE_INCOMPLETE_MESSAGE;
         }
 
-        $appealRelevant = $competition->applications()
-            ->whereIn('status', ['submitted', 'evaluated'])
-            ->with(['eliminatoryCheck', 'eliminatoryNotice', 'prigovor', 'competition'])
-            ->orderBy('id')
-            ->get();
-
-        $hasUnresolvedPrigovor = $appealRelevant->contains(
-            fn (Application $application) => $application->prigovor?->isPodnesen() === true
-        ) || $this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition);
-        if ($hasUnresolvedPrigovor) {
-            return self::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE;
-        }
-
-        foreach ($appealRelevant as $application) {
-            if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
-                return self::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE;
-            }
+        $appealBlock = $this->youthAppealProcessBlockReason($competition);
+        if ($appealBlock !== null) {
+            return $appealBlock;
         }
 
         foreach ($historical as $application) {
@@ -496,27 +564,18 @@ class CanonicalIndividualScoringService
                 ->values();
             $above = $scored
                 ->filter(fn (Application $application) => $this->youthMeetsMinimumScore($application))
-                ->sort(function (Application $a, Application $b) {
-                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
-                    if ($aPos !== $bPos) {
-                        return $aPos <=> $bPos;
-                    }
-
-                    return $a->id <=> $b->id;
-                })
+                ->sort(fn (Application $a, Application $b) => EqualScoreDisplayOrder::compareRanked($a, $b))
                 ->values();
             $below = $scored
                 ->filter(fn (Application $application) => ! $this->youthMeetsMinimumScore($application))
                 ->sort(function (Application $a, Application $b) {
-                    $aScore = $this->youthFullPrecisionFinalScore($a) ?? '0';
-                    $bScore = $this->youthFullPrecisionFinalScore($b) ?? '0';
-                    $compared = bccomp($bScore, $aScore, self::YOUTH_BONUS_SCALE);
-                    if ($compared !== 0) {
-                        return $compared;
-                    }
-
-                    return $a->id <=> $b->id;
+                    return EqualScoreDisplayOrder::compareByScore(
+                        $a,
+                        $b,
+                        $this->youthFullPrecisionFinalScore($a) ?? '0',
+                        $this->youthFullPrecisionFinalScore($b) ?? '0',
+                        self::YOUTH_BONUS_SCALE,
+                    );
                 })
                 ->values();
         }
@@ -594,25 +653,19 @@ class CanonicalIndividualScoringService
             ];
         }
 
-        usort($rows, function (array $a, array $b) {
-            $cmp = bccomp($b['full'], $a['full'], self::YOUTH_BONUS_SCALE);
-            if ($cmp !== 0) {
-                return $cmp;
-            }
+        $fullById = [];
+        foreach ($rows as $row) {
+            $fullById[(int) $row['application']->id] = $row['full'];
+        }
+        $ranked = EqualScoreDisplayOrder::ranked(
+            array_map(fn (array $row) => $row['application'], $rows),
+            fn (Application $application) => $fullById[(int) $application->id] ?? '0',
+            self::YOUTH_BONUS_SCALE,
+        );
 
-            return $a['application']->id <=> $b['application']->id;
-        });
-
-        $previousFull = null;
-        $previousRank = 0;
         $expected = [];
-        foreach ($rows as $index => $row) {
-            $rank = ($previousFull !== null && bccomp($row['full'], $previousFull, self::YOUTH_BONUS_SCALE) === 0)
-                ? $previousRank
-                : $index + 1;
-            $previousRank = $rank;
-            $previousFull = $row['full'];
-            $expected[$row['application']->id] = $rank;
+        foreach ($ranked as $row) {
+            $expected[$row['application']->id] = $row['rank'];
         }
 
         return $expected;
@@ -1620,6 +1673,10 @@ class CanonicalIndividualScoringService
             return;
         }
 
+        if ($competition->type === 'zensko' && $this->zenskoAppealProcessBlockReason($competition) !== null) {
+            return;
+        }
+
         DB::transaction(function () use ($competition) {
             $eligible = $this->scoringEligibleApplications($competition);
             $aggregates = [];
@@ -1656,10 +1713,9 @@ class CanonicalIndividualScoringService
     }
 
     /**
-     * Competition ranking (KN-FS-003 §14.6): equal final_score → shared rank,
-     * next distinct score skips places (e.g. 1, 2, 2, 4).
-     * Sort by id is only for deterministic order within a tied score group;
-     * it must not produce distinct ranking_position values.
+     * Equal final_score shares a rank and the next score skips places (1, 2, 2, 4).
+     * Within a tie, startup is ordered before development, then by id.
+     * That order does not create a distinct ranking_position.
      *
      * @param  Collection<int, Application>  $eligible
      */
@@ -1670,34 +1726,18 @@ class CanonicalIndividualScoringService
                 return ! $application->isEliminatedFromScoring()
                     && $application->meetsMinimumScore();
             })
-            ->sort(function (Application $a, Application $b) {
-                $aScore = (float) ($a->final_score ?? 0);
-                $bScore = (float) ($b->final_score ?? 0);
-                if ($aScore !== $bScore) {
-                    return $bScore <=> $aScore;
-                }
-
-                return $a->id <=> $b->id;
-            })
             ->values();
 
-        $previousScore = null;
-        $rank = 1;
-
-        foreach ($aboveLine as $index => $application) {
-            $score = (float) ($application->final_score ?? 0);
-
-            if ($previousScore === null) {
-                $rank = 1;
-            } elseif ($score !== $previousScore) {
-                $rank = $index + 1;
-            }
-
+        foreach (EqualScoreDisplayOrder::ranked(
+            $aboveLine,
+            fn (Application $application) => (string) ($application->final_score ?? '0'),
+            2,
+        ) as $row) {
+            $application = $row['application'];
+            $rank = $row['rank'];
             if ((int) $application->ranking_position !== $rank) {
                 $application->forceFill(['ranking_position' => $rank])->save();
             }
-
-            $previousScore = $score;
         }
     }
 
@@ -1962,6 +2002,38 @@ class CanonicalIndividualScoringService
         ])->save();
     }
 
+    /**
+     * Isti konkursni uslov koriste međusobni uvid i preliminarna lista.
+     * Završetak ciklusa bodovanja ovaj uslov ne uključuje.
+     */
+    private function youthAppealProcessBlockReason(Competition $competition): ?string
+    {
+        $appealRelevant = $competition->applications()
+            ->whereIn('status', ['submitted', 'evaluated'])
+            ->with(['eliminatoryNotice', 'prigovor'])
+            ->orderBy('id')
+            ->get();
+
+        $hasUnresolvedPrigovor = $appealRelevant->contains(
+            fn (Application $application) => $application->prigovor?->isPodnesen() === true
+        ) || $this->youthSecondSessionGate->competitionHasUnresolvedPrigovor($competition);
+        if ($hasUnresolvedPrigovor) {
+            return self::YOUTH_RANKING_PRIGOVOR_PODNESEN_MESSAGE;
+        }
+
+        foreach ($appealRelevant as $application) {
+            if ($application->prigovor?->isFinished() === true) {
+                continue;
+            }
+
+            if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+                return self::YOUTH_RANKING_APPEAL_WINDOW_MESSAGE;
+            }
+        }
+
+        return null;
+    }
+
     private function applicationBelongsToYouthScoringCycle(Application $application): bool
     {
         $application->loadMissing([
@@ -1984,7 +2056,8 @@ class CanonicalIndividualScoringService
             return false;
         }
 
-        if ($this->youthSecondSessionGate->appealWindowIsOpen($application)) {
+        if ($application->prigovor?->isFinished() !== true
+            && $this->youthSecondSessionGate->appealWindowIsOpen($application)) {
             return false;
         }
 

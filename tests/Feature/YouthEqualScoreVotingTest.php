@@ -834,7 +834,7 @@ class YouthEqualScoreVotingTest extends TestCase
         $this->assertSame('30000.00', $ctx['tied'][0]->fresh()->approved_amount);
     }
 
-    public function test_second_tied_support_is_limited_by_live_amounts_and_startup_priority(): void
+    public function test_second_tied_support_is_limited_by_remaining_budget_not_business_stage(): void
     {
         $ctx = $this->youthReadyToLock();
         $ctx['application']->update(['requested_amount' => 30000]);
@@ -883,29 +883,39 @@ class YouthEqualScoreVotingTest extends TestCase
             ->from(route('evaluation.create', $development))
             ->post(route('evaluation.youth-allocation-draft', $development), $this->capDraft([
                 'approved_amount' => 20000,
-                'commission_justification' => 'Iznos koji otpočinjanju ne ostavlja pun zahtjev.',
+                'commission_justification' => 'Ručni iznos razvoja unutar preostalog budžeta.',
             ]));
         $earlyDevelopment->assertRedirect();
-        $earlyDevelopment->assertSessionHasErrors([
+        $earlyDevelopment->assertSessionHasNoErrors();
+        $this->assertSame('podrzava_potpuno', $development->fresh()->commission_decision);
+        $this->assertSame('20000.00', $development->fresh()->approved_amount);
+        $this->assertNull($startup->fresh()->commission_decision);
+
+        $startupOverflow = $this->actingAs($priority['chairman']->user)
+            ->from(route('evaluation.create', $startup))
+            ->post(route('evaluation.youth-allocation-draft', $startup), $this->capDraft());
+        $startupOverflow->assertRedirect();
+        $startupOverflow->assertSessionHasErrors([
             'approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE,
         ]);
-        $this->assertNull($development->fresh()->commission_decision);
+        $this->assertNull($startup->fresh()->commission_decision);
+        $this->assertSame('20000.00', $development->fresh()->approved_amount);
+
         $this->actingAs($priority['chairman']->user)
-            ->post(route('evaluation.youth-allocation-draft', $development), $this->capDraft([
-                'approved_amount' => 10000,
-                'commission_justification' => 'Ostatak poslije rezervisane podrške otpočinjanju.',
+            ->post(route('evaluation.youth-allocation-draft', $startup), $this->capDraft([
+                'approved_amount' => 20000,
+                'commission_justification' => 'Ručni iznos otpočinjanja u preostalih 20.000.',
             ]))
             ->assertRedirect()
             ->assertSessionHasNoErrors();
-        $this->saveCapSupport($priority, $startup);
         $this->actingAs($priority['chairman']->user)
             ->post(route('evaluation.youth-allocation-draft', $development), $this->capDraft([
                 'approved_amount' => 10000,
-                'commission_justification' => 'Ostatak poslije prioriteta otpočinjanja.',
+                'commission_justification' => 'Sačuvana odluka razvoja ostaje zaključana.',
             ]))
             ->assertForbidden();
-        $this->assertSame('10000.00', $development->fresh()->approved_amount);
-        $this->assertSame('30000.00', $startup->fresh()->approved_amount);
+        $this->assertSame('20000.00', $development->fresh()->approved_amount);
+        $this->assertSame('20000.00', $startup->fresh()->approved_amount);
         $this->assertSame((int) $startup->fresh()->ranking_position, (int) $development->fresh()->ranking_position);
     }
 
@@ -1328,18 +1338,15 @@ class YouthEqualScoreVotingTest extends TestCase
             ->from(route('evaluation.create', $development))
             ->post(route('evaluation.youth-allocation-draft', $development), $this->capDraft([
                 'approved_amount' => 20000,
-                'commission_justification' => 'Iznos koji otpočinjanju ne ostavlja pun zahtjev.',
+                'commission_justification' => 'Ručni iznos razvoja ne zavisi od prikaza otpočinjanja.',
             ]));
         $early->assertRedirect();
-        $early->assertSessionHasErrors([
-            'approved_amount' => YouthAllocationDraftService::AMOUNT_EXCEEDS_REMAINING_MESSAGE,
-        ]);
-        $this->assertFalse($priority['competition']->fresh()->hasChairmanCompletedDecisions());
-        $this->saveCapSupport($priority, $startup);
+        $early->assertSessionHasNoErrors();
+        $this->assertSame('20000.00', $development->fresh()->approved_amount);
         $this->actingAs($priority['chairman']->user)
-            ->post(route('evaluation.youth-allocation-draft', $development), [
+            ->post(route('evaluation.youth-allocation-draft', $startup), [
                 'commission_decision' => 'odbija',
-                'commission_justification' => 'Ostatak nije dodijeljen razvoju.',
+                'commission_justification' => 'Komisija odbija otpočinjanje iako je razvoj podržan.',
             ])
             ->assertRedirect()
             ->assertSessionHasNoErrors();

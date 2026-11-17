@@ -32,13 +32,13 @@ class CompetitionsController extends Controller
                 'programs' => $this->programsWithPublicStats(),
                 'competitions' => collect(),
                 'showZenskoGuidePdf' => false,
+                'showOmladinskoGuidePdf' => false,
                 'selectedProgramTitle' => null,
             ]);
         }
 
         $competitions = $this->publicCompetitions($requestedType);
-        $showZenskoGuidePdf = $competitions->isNotEmpty()
-            && $competitions->every(fn (Competition $competition) => $competition->type === 'zensko');
+        $showZenskoGuidePdf = $requestedType === 'zensko';
         $selectedProgramTitle = CompetitionProgramCatalog::definitions()[$requestedType]['title'] ?? null;
 
         return view('competitions.index', [
@@ -46,6 +46,7 @@ class CompetitionsController extends Controller
             'programs' => [],
             'competitions' => $competitions,
             'showZenskoGuidePdf' => $showZenskoGuidePdf,
+            'showOmladinskoGuidePdf' => $requestedType === 'omladinsko',
             'selectedProgramTitle' => $selectedProgramTitle,
         ]);
     }

@@ -284,7 +284,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
     public function test_only_documentation_activated_shows_and_decides_only_that_criterion(): void
     {
         $ctx = $this->submittedYouthPrigovor($this->youthFailPayload([1]), [
-            'criterion_obrazlozenja' => [1 => 'Dokumentacija je kompletna.'],
+            'obrazlozenje' => 'Dokumentacija je kompletna.',
         ]);
         $application = $ctx['application'];
         $m3Before = $this->m3Snapshot($application);
@@ -359,7 +359,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $this->assertStringNotContainsString('name="criterion_outcomes', $html);
         $activated = $this->activatedPrigovorSection($html);
         $this->assertStringContainsString('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', $activated);
-        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', $activated);
+        $this->assertStringNotContainsString('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', $activated);
         $this->assertSame(
             [1, 2],
             $application->fresh('eliminatoryCheck')->eliminatoryCheck->activatedCriterionNumbers()
@@ -625,10 +625,7 @@ class OmladinskoPrigovorDecisionTest extends TestCase
         $ctx = $this->confirmYouthFail($failPayload);
         $this->actingAs($ctx['application']->user)
             ->post(route('applications.prigovor.store', $ctx['application']), $prigovorPayload ?? [
-                'criterion_obrazlozenja' => [
-                    1 => 'Obrazloženje za kriterijum 1.',
-                    2 => 'Obrazloženje za kriterijum 2.',
-                ],
+                'obrazlozenje' => 'Obrazloženje za kriterijum 1. Obrazloženje za kriterijum 2.',
             ])
             ->assertRedirect();
 

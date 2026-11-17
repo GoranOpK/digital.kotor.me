@@ -236,7 +236,8 @@ class YouthDecisionGenerationStorageTest extends TestCase
             ->from(route('evaluation.youth-decision', $ctx['competition']))
             ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->dates())
             ->assertRedirect()
-            ->assertSessionHasErrors('decision');
+            ->assertSessionHasErrors('decision')
+            ->assertSessionMissing('success');
 
         $this->assertSame(1, YouthDecisionDocument::query()->count());
         $this->assertSame($bytes, Storage::disk('local')->get($existing->storage_path));
@@ -280,7 +281,15 @@ class YouthDecisionGenerationStorageTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasErrors([
                 'decision' => 'Odluka nije generisana i nije trajno sačuvana.',
-            ]);
+            ])
+            ->assertSessionMissing('success');
+
+        $failedScreen = $this->actingAs($ctx['chairman'])
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString(EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE, $failedScreen);
+        $this->assertStringNotContainsString('data-testid="youth-close-competition"', $failedScreen);
 
         $this->assertSame(0, YouthDecisionDocument::query()->count());
         $this->assertSame('published', $ctx['competition']->fresh()->status);
@@ -311,13 +320,19 @@ class YouthDecisionGenerationStorageTest extends TestCase
             Carbon::setTestNow();
         }
 
-        $response->assertOk();
+        $response->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $response->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $this->assertNull($response->headers->get('content-disposition'));
+
+        $download = $this->actingAs($ctx['chairman'])
+            ->get(route('evaluation.youth-decision.download', $ctx['competition']));
+        $download->assertOk();
         $this->assertStringContainsString(
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            (string) $response->headers->get('content-type')
+            (string) $download->headers->get('content-type')
         );
 
-        $downloadPath = $response->baseResponse->getFile()->getPathname();
+        $downloadPath = $download->baseResponse->getFile()->getPathname();
         $downloadBytes = file_get_contents($downloadPath);
         $this->assertIsString($downloadBytes);
         $this->assertStringStartsWith("PK\x03\x04", $downloadBytes);
@@ -384,7 +399,8 @@ class YouthDecisionGenerationStorageTest extends TestCase
         $again['second_session_date'] = '2026-06-06';
         $this->actingAs($ctx['chairman'])
             ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $again)
-            ->assertOk();
+            ->assertRedirect(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
         $this->assertSame($previousBytes, file_get_contents($previousPath));
         $this->assertSame(2, YouthDecisionDocument::query()->count());
 

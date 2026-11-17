@@ -287,7 +287,7 @@
                         @endphp
                         <tr>
                             <td>{{ $application->business_plan_name }}</td>
-                            <td>{{ $application->user->name ?? 'N/A' }}</td>
+                            <td>{{ $application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A') }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
                                 @if($application->status === 'rejected')

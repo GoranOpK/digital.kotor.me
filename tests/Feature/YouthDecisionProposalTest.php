@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\EvaluationController;
 use App\Models\Application;
+use App\Models\YouthDecisionDocument;
 use App\Models\ApplicationEliminatoryCheck;
 use App\Models\ApplicationOralPresentation;
 use App\Models\BusinessPlan;
@@ -23,6 +25,7 @@ use App\Services\Competitions\YouthDecisionProposal;
 use App\Services\Competitions\YouthDecisionProposalBuilder;
 use App\Services\Competitions\YouthDecisionSessionDates;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -44,6 +47,86 @@ class YouthDecisionProposalTest extends TestCase
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
         Mail::fake();
+    }
+
+    public function test_new_supported_word_remains_downloadable_after_profile_name_change(): void
+    {
+        $ctx = $this->rankingReady();
+        $this->support($ctx);
+        $application = $ctx['application']->fresh();
+        $user = $application->user;
+        $fixture = new class {
+            use \Tests\Support\MakesIdentitySnapshots;
+            public function snapshot(User $user): \App\Identity\IdentitySnapshot { return $this->flSnapshot($user); }
+        };
+        (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $fixture->snapshot($user));
+        config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
+        $beforeIdentity = app(YouthDecisionApplicantIdentity::class)->line($application);
+        $this->actingAs($ctx['chairman']->user)->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())
+            ->assertSessionHasNoErrors()->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $document = \App\Models\YouthDecisionDocument::where('competition_id', $ctx['competition']->id)->latest('id')->firstOrFail();
+        $this->rememberStoredDecision(Storage::disk('local')->path($document->storage_path));
+        $beforeDocument = $document->getRawOriginal();
+        $beforeBytes = Storage::disk('local')->get($document->storage_path);
+        $this->actingAs($user)->put(route('profile.name.update'), ['first_name' => 'Marko', 'last_name' => 'Markovic'])->assertSessionHasNoErrors();
+        $download = $this->actingAs($ctx['chairman']->user)->get(route('evaluation.youth-decision.download', $ctx['competition']))->assertOk();
+        $this->assertSame($beforeBytes, file_get_contents($download->baseResponse->getFile()->getPathname()));
+        $this->assertSame($beforeDocument, $document->fresh()->getRawOriginal());
+        $this->assertSame($beforeIdentity, app(YouthDecisionApplicantIdentity::class)->line($application->fresh()));
+        $this->assertSame($document->ranking_sha256, app(\App\Services\Competitions\YouthDecisionRankingIdentity::class)->rankingSha256($ctx['competition']->fresh()));
+    }
+    public function test_doo_company_history_hash_and_new_word_ignore_later_profile_rename(): void
+    {
+        $ctx = $this->rankingReady();
+        $application = $ctx['application']->fresh();
+        // Provision a synthetic already-submitted DOO fixture; regular application writes remain guarded.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update([
+            'applicant_type' => 'privredno_drustvo', 'is_registered' => true, 'company_legal_form' => 'doo',
+            'registration_form' => \App\Support\UserType::LIMITED_LIABILITY_COMPANY,
+            'doo_name' => 'Podnosilac Prezime', 'founder_name' => 'Osnivac Prezime', 'director_name' => 'Direktor Prezime',
+        ]);
+        \Illuminate\Support\Facades\DB::table('business_plans')->where('application_id', $application->id)->update(['company_name' => 'Istorijska Firma DOO']);
+        $application = $application->fresh();
+        $user = $application->user;
+        $fixture = new class {
+            use \Tests\Support\MakesIdentitySnapshots;
+            public function snapshot(User $user): \App\Identity\IdentitySnapshot { return $this->plSnapshot($user, [], ['legalName' => 'Istorijska Firma DOO', 'city' => 'Kotor']); }
+        };
+        (new \App\Identity\CanonicalIdentityWriter)->createForUser($user, $fixture->snapshot($user));
+        config(['identity.canonical_read' => true, 'identity.canonical_write' => true]);
+        $this->support($ctx);
+        $before = $application->fresh()->getRawOriginal();
+        $hash = app(\App\Services\Competitions\YouthDecisionRankingIdentity::class)->rankingSha256($ctx['competition']->fresh());
+        $generate = function () use ($ctx) {
+            $this->actingAs($ctx['chairman']->user)->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())->assertSessionHasNoErrors();
+            $document = YouthDecisionDocument::where('competition_id', $ctx['competition']->id)->latest('id')->firstOrFail();
+            $path = Storage::disk('local')->path($document->storage_path);
+            $this->rememberStoredDecision($path);
+            $text = $this->docxText($path);
+            $this->assertStringContainsString('Istorijska Firma DOO', $text);
+            $this->assertStringNotContainsString('Novi Naziv DOO', $text);
+            return $document;
+        };
+        $oldDocument = $generate();
+        $bytes = Storage::disk('local')->get($oldDocument->storage_path);
+        $this->actingAs($user)->put(route('profile.update'), [
+            'first_name' => 'Marko', 'last_name' => 'Markovic', 'email' => $user->email,
+            'phone' => '+38267000002', 'address' => 'Testna ulica 12', 'city' => 'Kotor',
+            'user_type' => \App\Support\UserType::LIMITED_LIABILITY_COMPANY,
+            'company_name' => 'Novi Naziv DOO', 'pib' => '12345672',
+        ])->assertSessionHasNoErrors();
+        $this->assertSame('Novi Naziv DOO', LegalEntityIdentity::whereIn('platform_identity_id', PlatformIdentity::where('user_id', $user->id)->select('id'))->value('legal_name'));
+        $this->assertSame($before, $application->fresh()->getRawOriginal());
+        $this->assertSame('Istorijska Firma DOO', $application->fresh()->businessPlan->company_name);
+        $this->actingAs($user)->get(route('applications.business-plan.create', $application))->assertOk()
+            ->assertSee('Istorijska Firma DOO')->assertDontSee('Novi Naziv DOO');
+        $this->actingAs($ctx['chairman']->user)->get(route('evaluation.youth-ranking', $ctx['competition']))->assertOk()
+            ->assertSee('Istorijska Firma DOO')->assertDontSee('Novi Naziv DOO');
+        $this->assertSame($hash, app(\App\Services\Competitions\YouthDecisionRankingIdentity::class)->rankingSha256($ctx['competition']->fresh()));
+        $download = $this->actingAs($ctx['chairman']->user)->get(route('evaluation.youth-decision.download', $ctx['competition']))->assertOk();
+        $this->assertSame($bytes, file_get_contents($download->baseResponse->getFile()->getPathname()));
+        $generate();
+        $this->assertSame($hash, app(\App\Services\Competitions\YouthDecisionRankingIdentity::class)->rankingSha256($ctx['competition']->fresh()));
     }
 
     public function test_session_dates_use_the_latest_trace_of_the_same_competition(): void
@@ -106,17 +189,18 @@ class YouthDecisionProposalTest extends TestCase
         );
 
         $missingDirector = $this->company('Firma Gama', 'Ana Anić', null);
-        $this->assertNull($identity->line($missingDirector));
+        $this->assertSame('Ana Anić', $identity->line($missingDirector));
 
         $unregistered = new Application([
             'applicant_type' => 'privredno_drustvo',
             'is_registered' => false,
+            'business_plan_name' => 'Bidon',
             'doo_name' => 'Milica Milić',
         ]);
         $user = new User(['name' => 'Profil Nalog']);
         $user->setRelation('identity', null);
         $unregistered->setRelation('user', $user);
-        $this->assertNull($identity->line($unregistered));
+        $this->assertSame('Milica Milić', $identity->line($unregistered));
 
         $person = new Application([
             'applicant_type' => 'fizicko_lice',
@@ -231,7 +315,9 @@ class YouthDecisionProposalTest extends TestCase
         $score = EvaluationScore::query()->where('application_id', $application->id)->firstOrFail();
 
         $check->forceFill(['confirmed_at' => '2026-01-05 12:00:00'])->save();
-        $application->forceFill(['commission_decision_date' => '2026-03-07'])->save();
+        // Initial historical fixture setup only; regular edits are guarded.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['commission_decision_date' => '2026-03-07']);
+        $application->refresh();
 
         $confirmedAt = $check->fresh()->confirmed_at->toIso8601String();
         $completedAt = $score->fresh()->completed_at->toIso8601String();
@@ -288,9 +374,28 @@ class YouthDecisionProposalTest extends TestCase
         } finally {
             \Illuminate\Support\Carbon::setTestNow();
         }
-        $response->assertOk();
-        $file = $response->baseResponse->getFile()->getPathname();
+        $response->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $response->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $this->assertSame(1, YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->count());
+        $stored = YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->firstOrFail();
+        $storedBefore = $stored->only(['id', 'storage_path', 'content_sha256', 'ranking_sha256', 'generated_by']);
+
+        $screen = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk();
+        $screen->assertSee(EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE, false);
+        $screen->assertSee('data-testid="youth-decision-download"', false);
+        $screen->assertSee('Preuzmi odluku', false);
+        $screen->assertSee('data-testid="youth-close-competition"', false);
+        $screen->assertDontSee('Zatvaranje konkursa nije dozvoljeno dok Word odluka nije uspješno generisana i trajno sačuvana.', false);
+
+        $download = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision.download', $ctx['competition']));
+        $download->assertOk();
+        $file = $download->baseResponse->getFile()->getPathname();
         $this->rememberStoredDecision($file);
+        $this->assertSame($storedBefore, $stored->fresh()->only(array_keys($storedBefore)));
+        $this->assertSame(1, YouthDecisionDocument::query()->where('competition_id', $ctx['competition']->id)->count());
         $text = $this->docxText($file);
         $this->assertEmptyRegistrySlot($file, $generatedAt->format('d.m.Y.'));
         $this->assertStringContainsString('02.02.2026', $text);
@@ -303,13 +408,33 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertStringContainsString($application->business_plan_name, $text);
         $this->assertStringNotContainsString('05.01.2026', $text);
         $this->assertStringNotContainsString('ženskom preduzetništvu', $text);
+        $this->assertSame(2, substr_count($text, 'oglasnoj tabli Opštine Kotor'));
+        $this->assertStringContainsString(
+            'Podnošenje prijava odvijalo se isključivo elektronski, putem digitalnog servisa Opštine Kotor (digital.kotor.me).',
+            $text
+        );
+        $this->assertStringNotContainsString('oglasnoj table', $text);
+        $this->assertStringNotContainsString('Kotor Kotor', $text);
+        $this->assertStringNotContainsString(
+            'Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor (digital.kotor.me).',
+            $text
+        );
 
         $this->assertSame($confirmedAt, $check->fresh()->confirmed_at->toIso8601String());
         $this->assertSame($completedAt, $score->fresh()->completed_at->toIso8601String());
         $this->assertSame($decisionDate, $application->fresh()->commission_decision_date->toDateString());
         $this->assertSame($approved, (string) $application->fresh()->approved_amount);
 
-        $this->actingAs($ctx['members'][1]->fresh('user')->user)
+        $member = $ctx['members'][1]->fresh('user')->user;
+        $memberScreen = $this->actingAs($member)
+            ->get(route('evaluation.youth-decision', $ctx['competition']))
+            ->assertOk();
+        $memberScreen->assertDontSee('data-testid="youth-close-competition"', false);
+        $memberScreen->assertDontSee('data-testid="youth-decision-download"', false);
+        $this->actingAs($member)
+            ->post(route('admin.competitions.close', $ctx['competition']))
+            ->assertForbidden();
+        $this->actingAs($member)
             ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())
             ->assertForbidden();
 
@@ -319,7 +444,7 @@ class YouthDecisionProposalTest extends TestCase
         $this->assertSame(YouthAllocationDraftService::WOMEN_PREDLOG_CLOSED_MESSAGE, $closed->exception?->getMessage());
     }
 
-    public function test_generation_is_refused_before_the_final_ranking_and_when_identity_is_missing(): void
+    public function test_generation_is_refused_before_the_final_ranking_and_missing_identity_does_not_block_it(): void
     {
         $ctx = $this->rankingReady();
 
@@ -340,15 +465,184 @@ class YouthDecisionProposalTest extends TestCase
             ->assertForbidden();
 
         $this->support($ctx);
-        $ctx['application']->forceFill(['physical_person_name' => null])->save();
+        $application = $ctx['application']->fresh();
+        $approved = (string) $application->approved_amount;
+        $score = (string) $application->final_score;
+        // Initial historical fixture setup only; regular edits are guarded.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $application->id)->update(['physical_person_name' => null]);
+        $application->refresh();
 
-        $this->actingAs($ctx['chairman']->user)
-            ->from(route('evaluation.youth-ranking', $ctx['competition']))
-            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates())
-            ->assertRedirect()
-            ->assertSessionHasErrors('decision');
+        $response = $this->actingAs($ctx['chairman']->user)
+            ->post(route('evaluation.youth-decision.generate', $ctx['competition']), $this->manualDates());
+        $response->assertRedirect(route('evaluation.youth-decision', $ctx['competition']));
+        $response->assertSessionHas('success', EvaluationController::YOUTH_DECISION_GENERATED_MESSAGE);
+        $download = $this->actingAs($ctx['chairman']->user)
+            ->get(route('evaluation.youth-decision.download', $ctx['competition']));
+        $download->assertOk();
+        $file = $download->baseResponse->getFile()->getPathname();
+        $this->rememberStoredDecision($file);
+        $text = $this->docxText($file);
+        $marker = 'Oznaka prijave: prijava '.$application->id.', naziv projekta „'.$application->business_plan_name.'“';
 
-        $this->assertNull($ctx['application']->fresh()->physical_person_name);
+        $this->assertStringContainsString($marker, $text);
+        $this->assertStringContainsString($application->business_plan_name, $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave:', $text);
+        $this->assertStringNotContainsString('Petar Petrović', $text);
+        $this->assertStringNotContainsString('identifikacioni podaci', $text);
+        $this->assertNull($application->fresh()->physical_person_name);
+        $this->assertSame($approved, (string) $application->fresh()->approved_amount);
+        $this->assertSame($score, (string) $application->fresh()->final_score);
+    }
+
+    public function test_bidon_without_an_identity_line_does_not_stop_the_other_supported_applications(): void
+    {
+        $ctx = $this->datedCompetition();
+        $competition = $ctx['competition'];
+        $bidon = $ctx['application'];
+        // Initial historical fixture setup, not an allowed application edit.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $bidon->id)->update([
+            'business_plan_name' => 'Bidon',
+            'applicant_type' => 'privredno_drustvo',
+            'is_registered' => false,
+            'doo_name' => 'Nosilac Koji Se Ne Dopisuje',
+            'physical_person_name' => null,
+            'founder_name' => null,
+            'director_name' => null,
+            'status' => 'approved',
+            'commission_decision' => 'podrzava_potpuno',
+            'commission_justification' => 'Komisija podržava Bidon.',
+            'approved_amount' => '15000.00',
+            'final_score' => '48.50',
+            'ranking_position' => 1,
+        ]);
+        $bidon->refresh();
+        $bidon->businessPlan->forceFill(['required_amount' => '20000.00'])->save();
+
+        $mimikrija = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Mimikrija',
+            'applicant_type' => 'fizicko_lice',
+            'physical_person_name' => 'Mila Milić',
+            'commission_justification' => 'Komisija podržava Mimikriju.',
+            'approved_amount' => '5000.00',
+            'final_score' => '42.00',
+            'ranking_position' => 2,
+        ], '8000.00');
+        $entrepreneur = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Radnja Jovo',
+            'applicant_type' => 'preduzetnik',
+            'preduzetnik_name' => 'Jovo Jović',
+            'approved_amount' => '1000.00',
+            'final_score' => '40.00',
+            'ranking_position' => 3,
+        ], '3000.00');
+        $company = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Plan Društvo',
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'founder_name' => 'Ana Anić',
+            'director_name' => 'Marko Marković',
+            'approved_amount' => '800.00',
+            'final_score' => '39.00',
+            'ranking_position' => 4,
+        ], '4000.00');
+        $this->attachLegalEntity($company->user, 'Firma Alfa');
+        \Illuminate\Support\Facades\DB::table('business_plans')->where('application_id', $company->id)->update(['company_name' => 'Firma Alfa']);
+        $plannedOfficer = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Plan Bez Direktora',
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'founder_name' => 'Osnivac Koji Se Ne Ispisuje',
+            'director_name' => null,
+            'approved_amount' => '700.00',
+            'final_score' => '38.00',
+            'ranking_position' => 5,
+        ], '2500.00');
+        $this->attachLegalEntity($plannedOfficer->user, 'Firma Bez Direktora');
+        \Illuminate\Support\Facades\DB::table('business_plans')->where('application_id', $plannedOfficer->id)->update(['company_name' => 'Firma Bez Direktora']);
+        $officerConflict = $this->supportedApplication($competition, [
+            'business_plan_name' => 'Plan Osnivac',
+            'applicant_type' => 'doo',
+            'is_registered' => true,
+            'founder_name' => 'Stefan Oznaka doo',
+            'director_name' => 'Direktor Koji Se Ne Ispisuje',
+            'approved_amount' => '600.00',
+            'final_score' => '37.00',
+            'ranking_position' => 6,
+        ], '2200.00');
+        $this->attachLegalEntity($officerConflict->user, 'Stefan Oznaka doo');
+        \Illuminate\Support\Facades\DB::table('business_plans')->where('application_id', $officerConflict->id)->update(['company_name' => 'Stefan Oznaka doo']);
+
+        $amounts = [
+            $bidon->id => '15000.00',
+            $mimikrija->id => '5000.00',
+            $entrepreneur->id => '1000.00',
+            $company->id => '800.00',
+            $plannedOfficer->id => '700.00',
+            $officerConflict->id => '600.00',
+        ];
+
+        $proposal = app(YouthDecisionProposalBuilder::class)->build($competition->fresh(), $this->manualDates(), now());
+        $this->assertSame(
+            ['Bidon', 'Mimikrija', 'Radnja Jovo', 'Plan Društvo', 'Plan Bez Direktora', 'Plan Osnivac'],
+            array_column($proposal->winners, 'plan')
+        );
+        $this->assertSame('applicant', $proposal->winners[0]['identity_source']);
+        $this->assertSame('Nosilac Koji Se Ne Dopisuje', $proposal->winners[0]['identity']);
+        $this->assertSame('applicant', $proposal->winners[1]['identity_source']);
+        $this->assertSame('Mila Milić', $proposal->winners[1]['identity']);
+        $this->assertSame('Jovo Jović', $proposal->winners[2]['identity']);
+        $this->assertSame(
+            'Firma Alfa, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković',
+            $proposal->winners[3]['identity']
+        );
+        $this->assertSame('applicant', $proposal->winners[4]['identity_source']);
+        $this->assertSame('Osnivac Koji Se Ne Ispisuje', $proposal->winners[4]['identity']);
+        $this->assertSame('applicant', $proposal->winners[5]['identity_source']);
+        $this->assertSame('Direktor Koji Se Ne Ispisuje', $proposal->winners[5]['identity']);
+        $this->assertSame(['15.000,00', '5.000,00', '1.000,00', '800,00', '700,00', '600,00'], array_column($proposal->winners, 'approved'));
+        $this->assertSame('23.100,00', $proposal->awardedTotal);
+
+        $path = app(YouthDecisionDocxWriter::class)->write($proposal);
+        try {
+            $text = $this->docxText($path);
+        } finally {
+            @unlink($path);
+        }
+
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Nosilac Koji Se Ne Dopisuje', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Osnivac Koji Se Ne Ispisuje', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Direktor Koji Se Ne Ispisuje', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Mila Milić', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Jovo Jović', $text);
+        $this->assertStringContainsString('Podnosilac/podnositeljka prijave: Firma Alfa, koga zastupa osnivač/ica Ana Anić i izvršni direktor/ica Marko Marković', $text);
+        $this->assertSame(1, substr_count($text, 'Ana Anić'));
+        $this->assertStringContainsString('15.000,00', $text);
+        $this->assertStringContainsString('5.000,00', $text);
+        $this->assertStringContainsString('23.100,00', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Bidon', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Plan Bez Direktora', $text);
+        $this->assertStringNotContainsString('Podnosilac/podnositeljka prijave: Plan Osnivac', $text);
+        $this->assertStringNotContainsString('Oznaka prijave: prijava '.$bidon->id, $text);
+        $this->assertStringNotContainsString('Firma Bez Direktora', $text);
+        $this->assertStringNotContainsString('Stefan Oznaka doo', $text);
+        $this->assertStringNotContainsString('Ulica probe 1', $text);
+        $this->assertStringNotContainsString('Testgrad', $text);
+        $this->assertStringNotContainsString('identifikacioni podaci', $text);
+
+        foreach ($amounts as $id => $amount) {
+            $this->assertSame($amount, (string) Application::query()->findOrFail($id)->approved_amount);
+        }
+
+        $mimikrija->forceFill(['final_score' => null])->save();
+        try {
+            app(YouthDecisionProposalBuilder::class)->build($competition->fresh(), $this->manualDates(), now());
+            $this->fail('Nedostajući konačni bodovi i dalje zaustavljaju generisanje.');
+        } catch (ValidationException $exception) {
+            $message = $exception->validator->errors()->first('decision');
+            $this->assertStringContainsString('Mimikrija', $message);
+            $this->assertStringContainsString('konačan broj bodova', $message);
+            $this->assertStringNotContainsString('identifikacioni', $message);
+        }
     }
 
     /**
@@ -382,6 +676,7 @@ class YouthDecisionProposalTest extends TestCase
         $user = new User(['name' => 'Profil Nalog']);
         $user->setRelation('identity', $platform);
         $application->setRelation('user', $user);
+        $application->setRelation('businessPlan', new BusinessPlan(['company_name' => $legalName]));
 
         return $application;
     }
@@ -404,11 +699,13 @@ class YouthDecisionProposalTest extends TestCase
             'commission_member_id' => $ctx['chairman']->id,
             'completed_at' => $completedAt,
         ]);
-        $ctx['application']->forceFill([
+        // Initial historical fixture setup only; regular edits are guarded.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $ctx['application']->id)->update([
             'commission_decision' => 'podrzava_potpuno',
             'commission_decision_date' => $decisionDate,
             'approved_amount' => '100.00',
-        ])->save();
+        ]);
+        $ctx['application']->refresh();
     }
 
     /**
@@ -433,7 +730,8 @@ class YouthDecisionProposalTest extends TestCase
     private function winnerCompetition(string $plan, string $person): Competition
     {
         $ctx = $this->datedCompetition();
-        $ctx['application']->forceFill([
+        // Initial historical fixture setup only; regular edits are guarded.
+        \Illuminate\Support\Facades\DB::table('applications')->where('id', $ctx['application']->id)->update([
             'business_plan_name' => $plan,
             'applicant_type' => 'fizicko_lice',
             'physical_person_name' => $person,
@@ -442,7 +740,8 @@ class YouthDecisionProposalTest extends TestCase
             'approved_amount' => '1000.00',
             'final_score' => '48.50',
             'ranking_position' => 1,
-        ])->save();
+        ]);
+        $ctx['application']->refresh();
         BusinessPlan::create([
             'application_id' => $ctx['application']->id,
             'required_amount' => '2500.50',
@@ -597,6 +896,47 @@ class YouthDecisionProposalTest extends TestCase
     private function datedCompetition(): array
     {
         return $this->makeYouthContext();
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function supportedApplication(Competition $competition, array $attributes, string $requiredAmount): Application
+    {
+        $user = User::factory()->create([
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'status' => 'approved',
+            'commission_decision' => 'podrzava_potpuno',
+            'submitted_at' => now()->subDays(20),
+            'business_stage' => 'započinjanje',
+        ] + $attributes);
+        BusinessPlan::create([
+            'application_id' => $application->id,
+            'required_amount' => $requiredAmount,
+        ]);
+
+        return $application->fresh('user');
+    }
+
+    private function attachLegalEntity(User $user, string $legalName): void
+    {
+        $platform = PlatformIdentity::query()->create([
+            'user_id' => $user->id,
+            'subject_type' => PlatformIdentity::SUBJECT_LEGAL_ENTITY,
+        ]);
+        LegalEntityIdentity::query()->create([
+            'platform_identity_id' => $platform->id,
+            'legal_form' => LegalEntityIdentity::FORM_DOO,
+            'legal_name' => $legalName,
+            'street_and_number' => 'Ulica probe 1',
+            'city' => 'Testgrad',
+        ]);
     }
 
     private function addApplication(Competition $competition): Application

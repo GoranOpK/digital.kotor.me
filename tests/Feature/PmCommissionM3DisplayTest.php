@@ -71,9 +71,9 @@ class PmCommissionM3DisplayTest extends TestCase
         $this->assertStringContainsString('border: 1px solid #ccc', $html);
         $this->assertSame(1, substr_count($html, 'class="obrazac-1a-1b"'));
         $this->assertStringNotContainsString('class="youth-ranking-print-root is-blocked"', $html);
-        $this->assertStringContainsString('Info dan i obuka (+1)', $html);
-        $this->assertStringContainsString('Planirana registracija (+2)', $html);
-        $this->assertStringContainsString('Inovativno/zeleno poslovanje (+3)', $html);
+        $this->assertStringContainsString('Prisustvovanje Info danu i radionici “Forma za biznis plan_Obrazac M2” u okviru Info dana (1 bod)', $html);
+        $this->assertStringContainsString('Novi biznis - podnosilac prijave nema već registrovanu djelatnost (2 boda)', $html);
+        $this->assertStringContainsString('Biznis ideja je startup (inovativni tehnološki biznis) (3 boda)', $html);
         $this->assertStringContainsString('Korak 1 — Eliminatorna provjera', $html);
         $this->assertStringContainsString('Predsjednik Komisije označava da li prijava ispunjava eliminatorne uslove.', $html);
         $this->assertStringContainsString('Potvrdi eliminatornu provjeru', $html);

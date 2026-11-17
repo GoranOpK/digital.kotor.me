@@ -288,7 +288,7 @@
                             @endphp
                             <li class="decision-applicant-item">
                                 <div class="decision-applicant-head">
-                                    Podnositeljka prijave: <strong>{{ $winner->getApplicantDisplayForDecision() }}</strong>
+                                    Podnositeljka prijave: <strong>{{ ($winner->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($winner) : $winner->getApplicantDisplayForDecision()) }}</strong>
                                 </div>
                                 <div class="decision-applicant-details">
                                     <div>Naziv biznis plana: "{{ $winner->business_plan_name }}"</div>

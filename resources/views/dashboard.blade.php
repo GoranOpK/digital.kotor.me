@@ -541,18 +541,29 @@
                                             </a>
                                         @endif
 
-                                        {{-- Badge za Biznis plan, ako postoji biznis plan (klikabilan) --}}
-                                        @if($bizPlanLabel && $bizPlanUrl)
-                                            <a href="{{ $bizPlanUrl }}" style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }} text-decoration: none; cursor: pointer;">
-                                                {{ $bizPlanLabel }}
-                                            </a>
-                                        @endif
-
-                                        {{-- Ako nema specifičnih bedžova, prikaži opšti status --}}
-                                        @if(!$obrazacLabel && !$bizPlanLabel)
+                                        @if($app->competition?->type === 'zensko')
                                             <span style="{{ $badgeBaseStyle }} {{ $statusColors[$app->status] ?? '' }}">
-                                                {{ $statusLabels[$app->status] ?? $app->status }}
+                                                Status prijave: {{ $statusLabels[$app->status] ?? $app->status }}
                                             </span>
+                                            @if($bizPlanLabel && $bizPlanUrl)
+                                                <a href="{{ $bizPlanUrl }}" style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }} text-decoration: none; cursor: pointer;">
+                                                    Status biznis plana: {{ $app->businessPlan->isComplete() ? 'Popunjen' : 'Nacrt' }}
+                                                </a>
+                                            @endif
+                                        @else
+                                            {{-- Badge za Biznis plan, ako postoji biznis plan (klikabilan) --}}
+                                            @if($bizPlanLabel && $bizPlanUrl)
+                                                <a href="{{ $bizPlanUrl }}" style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }} text-decoration: none; cursor: pointer;">
+                                                    {{ $bizPlanLabel }}
+                                                </a>
+                                            @endif
+
+                                            {{-- Ako nema specifičnih bedžova, prikaži opšti status --}}
+                                            @if(!$obrazacLabel && !$bizPlanLabel)
+                                                <span style="{{ $badgeBaseStyle }} {{ $statusColors[$app->status] ?? '' }}">
+                                                    {{ $statusLabels[$app->status] ?? $app->status }}
+                                                </span>
+                                            @endif
                                         @endif
                                     </div>
                                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
@@ -884,7 +895,7 @@
                                 @endphp
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->business_plan_name }}</td>
-                                    <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
+                                    <td style="padding: 12px; vertical-align: top;">{{ ($app->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($app) : ($app->user->name ?? 'N/A')) }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($app->status === 'rejected')
                                             <a href="{{ route('admin.applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">

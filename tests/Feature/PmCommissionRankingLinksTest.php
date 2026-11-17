@@ -94,7 +94,7 @@ class PmCommissionRankingLinksTest extends TestCase
     {
         $zensko = $this->openCompetition('zensko');
         $this->partialMock(CanonicalIndividualScoringService::class, function ($mock): void {
-            $mock->shouldReceive('isIndividualScoringCycleComplete')->andReturn(true);
+            $mock->shouldReceive('zenskoCommissionDisclosureIsAllowed')->andReturn(true);
         });
 
         $zenskoHtml = $this->actingAs($zensko['member'])

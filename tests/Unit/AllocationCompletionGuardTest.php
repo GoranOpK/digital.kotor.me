@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class AllocationCompletionGuardTest extends TestCase
 {
-    public function test_development_room_reserves_the_undecided_startup_claim(): void
+    public function test_same_rank_startup_does_not_reserve_a_claim_against_development(): void
     {
         $guard = new AllocationCompletionGuard;
         $startup = $this->application(1, 1, 'započinjanje', '30000.00');
@@ -21,11 +21,10 @@ class AllocationCompletionGuardTest extends TestCase
             fn (Application $application) => $guard->zenskoMaxClaim($application, '50000.00'),
         );
 
-        $this->assertSame('20000.00', $room);
-        $this->assertFalse($guard->startupRejectionBlocked(collect([$startup, $development]), $startup));
+        $this->assertSame('50000.00', $room);
     }
 
-    public function test_rejecting_startup_is_blocked_after_development_is_supported(): void
+    public function test_saved_support_reduces_the_room_left_for_the_same_rank(): void
     {
         $guard = new AllocationCompletionGuard;
         $startup = $this->application(1, 1, 'započinjanje', '30000.00');
@@ -33,7 +32,6 @@ class AllocationCompletionGuardTest extends TestCase
         $development->commission_decision = 'podrzava_potpuno';
         $development->approved_amount = '20000.00';
 
-        $this->assertTrue($guard->startupRejectionBlocked(collect([$startup, $development]), $startup));
         $this->assertSame(
             '30000.00',
             $guard->supportRoom(

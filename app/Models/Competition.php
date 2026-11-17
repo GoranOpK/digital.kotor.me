@@ -620,6 +620,11 @@ class Competition extends Model
                 ->isYouthPreliminaryRankingReady($this);
         }
 
+        if ($this->type === 'zensko') {
+            return app(CanonicalIndividualScoringService::class)
+                ->zenskoCommissionDisclosureIsAllowed($this);
+        }
+
         return $this->isIndividualScoringCycleComplete();
     }
 

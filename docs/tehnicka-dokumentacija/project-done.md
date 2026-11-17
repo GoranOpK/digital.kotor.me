@@ -1,10 +1,22 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-11-03
+**Poslednje ažuriranje:** 2026-11-10
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-11-10 — Obrazac 2 shared zaglavlje for both programmes
+
+- Obrazac 2 koristi `@include('partials.obrazac-zaglavlje')` za **zensko** i **omladinsko**; Broj prijave samo na M2 (omladinsko), lijevo
+- Shared CSS: Broj/left meta `margin-right: auto` + label `margin-left: auto`; bez `flex-end`
+- Pravila/konvencije: eksplicitna provjera oba programa (žensko + mladih)
+
+## 2026-11-10 — Broj prijave left + Rang lista shared standard
+
+- Obrazac 2/M2: Broj prijave lijevo (uklonjen `flex-end` na `.obrazac-broj-i-naslov`)
+- Rang lista: `obrazac-form-page` + dijeljeno zaglavlje/stilovi; ranking tabela zadržava podatke
+- Konvencije §4 + Cursor pravilo: lijevi meta + Rang lista u scope dijeljenog standarda
 
 ## 2026-11-03 — Obrazac 4 / 4a shared zaglavlje header
 

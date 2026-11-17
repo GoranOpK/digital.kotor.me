@@ -368,32 +368,34 @@ class DocumentProcessor
             }
             $outputPath = "{$directory}/{$outputFilename}";
 
-            // Kreiraj Imagick objekat za spajanje
-            $mergedPdf = new \Imagick();
-            $mergedPdf->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
-
             $tempFiles = [];
+            $mergedPdf = null;
+            $tempPdfPath = null;
+            $createdOutput = false;
 
             try {
-                // Procesiraj svaki fajl page-by-page (ne drži sve rastere ulaznog PDF-a odjednom)
-                foreach ($files as $index => $file) {
-                    $mime = $file->getMimeType();
+                // Prvo provjeri svaki ulaz. Nepotpuno spajanje nije uspjeh.
+                $prepared = [];
+                foreach ($files as $file) {
+                    $displayName = $this->mergeDisplayName($file);
+                    $mime = (string) $file->getMimeType();
                     $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-                    
-                    if (!in_array($mime, $allowedMimes)) {
-                        Log::warning('Skipping invalid file type in merge', [
+
+                    if (! in_array($mime, $allowedMimes, true)) {
+                        Log::warning('Rejecting unsupported file type in merge', [
                             'mime' => $mime,
-                            'filename' => $file->getClientOriginalName()
+                            'filename' => $displayName,
                         ]);
-                        continue;
+
+                        return $this->failedMerge(
+                            'Dokument „'.$displayName.'“ nije podržanog tipa. Spajanje je odbijeno jer svi dokumenti moraju biti uključeni.'
+                        );
                     }
 
-                    // Sačuvaj privremeno fajl ako je UploadedFile
-                    $tempFilePath = null;
                     if ($file instanceof \Illuminate\Http\UploadedFile) {
-                        $tempFilePath = sys_get_temp_dir() . '/' . uniqid('merge_', true) . '_' . $file->getClientOriginalName();
+                        $tempFilePath = sys_get_temp_dir().'/'.uniqid('merge_', true).'_'.$file->getClientOriginalName();
                         $file->move(sys_get_temp_dir(), basename($tempFilePath));
-                        $tempFilePath = sys_get_temp_dir() . '/' . basename($tempFilePath);
+                        $tempFilePath = sys_get_temp_dir().'/'.basename($tempFilePath);
                         $tempFiles[] = $tempFilePath;
                     } else {
                         $tempFilePath = $file;
@@ -404,38 +406,65 @@ class DocumentProcessor
                         : 1;
 
                     if ($pageCount < 1) {
-                        Log::warning('Could not determine page count, skipping file', [
+                        Log::warning('Could not determine page count, rejecting merge', [
                             'path' => $tempFilePath,
                             'mime' => $mime,
+                            'filename' => $displayName,
                         ]);
-                        continue;
+
+                        return $this->failedMerge(
+                            'Dokument „'.$displayName.'“ nije moguće pročitati. Spajanje je odbijeno jer svi dokumenti moraju biti uključeni.'
+                        );
                     }
 
-                    for ($pageIndex = 0; $pageIndex < $pageCount; $pageIndex++) {
-                        $page = new \Imagick();
-                        $page->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
+                    $prepared[] = [
+                        'path' => $tempFilePath,
+                        'mime' => $mime,
+                        'page_count' => $pageCount,
+                        'name' => $displayName,
+                    ];
+                }
 
-                        if ($mime === 'application/pdf') {
-                            $page->readImage($tempFilePath . '[' . $pageIndex . ']');
-                        } else {
-                            $page->readImage($tempFilePath);
+                $mergedPdf = new \Imagick();
+                $mergedPdf->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
+                $currentName = 'dokument';
+
+                try {
+                    foreach ($prepared as $item) {
+                        $currentName = $item['name'];
+                        for ($pageIndex = 0; $pageIndex < $item['page_count']; $pageIndex++) {
+                            $page = new \Imagick();
+                            $page->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
+
+                            if ($item['mime'] === 'application/pdf') {
+                                $page->readImage($item['path'].'['.$pageIndex.']');
+                            } else {
+                                $page->readImage($item['path']);
+                            }
+
+                            $this->prepareImagickPageForPdf($page);
+                            $mergedPdf->addImage($page);
+                            $page->clear();
+                            $page->destroy();
+                            unset($page);
                         }
-
-                        $this->prepareImagickPageForPdf($page);
-                        $mergedPdf->addImage($page);
-                        $page->clear();
-                        $page->destroy();
-                        unset($page);
                     }
+                } catch (\Throwable $e) {
+                    Log::error('Document merge read failed', [
+                        'filename' => $currentName,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $this->releaseMergeImagick($mergedPdf);
+
+                    return $this->failedMerge(
+                        'Dokument „'.$currentName.'“ nije moguće pročitati. Spajanje je odbijeno jer svi dokumenti moraju biti uključeni.'
+                    );
                 }
 
                 if ($mergedPdf->getNumberImages() === 0) {
-                    $mergedPdf->clear();
-                    $mergedPdf->destroy();
-                    return [
-                        'success' => false,
-                        'error' => 'Nijedan fajl nije uspešno učitan za spajanje.',
-                    ];
+                    $this->releaseMergeImagick($mergedPdf);
+
+                    return $this->failedMerge('Nijedan fajl nije uspešno učitan za spajanje.');
                 }
 
                 Log::info('Preparing to merge PDF', [
@@ -453,11 +482,12 @@ class DocumentProcessor
                 $imagesCount = $mergedPdf->getNumberImages();
 
                 // Oslobodi Imagick PRIJE bilo kakvog čitanja fajla u PHP
-                $mergedPdf->clear();
-                $mergedPdf->destroy();
-                unset($mergedPdf);
+                $this->releaseMergeImagick($mergedPdf);
                 
                 if (!$writeResult || !file_exists($tempPdfPath)) {
+                    if (is_string($tempPdfPath) && is_file($tempPdfPath)) {
+                        @unlink($tempPdfPath);
+                    }
                     Log::error('writeImages failed', [
                         'images_count' => $imagesCount,
                         'write_result' => $writeResult,
@@ -482,6 +512,7 @@ class DocumentProcessor
                         'error' => $stored['error'] ?? 'Greška pri snimanju spojenog PDF-a.',
                     ];
                 }
+                $createdOutput = true;
 
                 // Napomena: Upload na MEGA se sada vrši direktno iz browser-a preko megajs
                 // Ova metoda samo procesira i čuva fajl lokalno
@@ -496,15 +527,27 @@ class DocumentProcessor
                 ];
 
             } finally {
-                // Obriši privremene fajlove
                 foreach ($tempFiles as $tempFile) {
-                    if (file_exists($tempFile)) {
+                    if (is_string($tempFile) && is_file($tempFile)) {
                         @unlink($tempFile);
                     }
+                }
+                if (is_string($tempPdfPath) && is_file($tempPdfPath)) {
+                    @unlink($tempPdfPath);
                 }
             }
 
         } catch (\Exception $e) {
+            if (isset($mergedPdf)) {
+                $this->releaseMergeImagick($mergedPdf);
+            }
+            if (isset($tempPdfPath) && is_string($tempPdfPath) && is_file($tempPdfPath)) {
+                @unlink($tempPdfPath);
+            }
+            if (! empty($createdOutput) && isset($outputPath) && is_string($outputPath) && Storage::disk('local')->exists($outputPath)) {
+                Storage::disk('local')->delete($outputPath);
+            }
+
             Log::error('Document merge exception', [
                 'message' => $e->getMessage(),
                 'user_id' => $userId,
@@ -513,7 +556,7 @@ class DocumentProcessor
 
             return [
                 'success' => false,
-                'error' => 'Greška pri spajanju dokumenata: ' . $e->getMessage(),
+                'error' => 'Greška pri spajanju dokumenata: '.$this->mergeExceptionMessage($e),
             ];
         } finally {
             if ($previousMemoryLimit !== false) {
@@ -1324,6 +1367,69 @@ class DocumentProcessor
         }
 
         return false;
+    }
+
+    /**
+     * @param  \Illuminate\Http\UploadedFile|string  $file
+     */
+    private function mergeDisplayName(mixed $file): string
+    {
+        $name = '';
+        if ($file instanceof \Illuminate\Http\UploadedFile) {
+            $name = (string) $file->getClientOriginalName();
+        } elseif (is_string($file)) {
+            $name = basename(str_replace('\\', '/', $file));
+        }
+
+        $name = trim(str_replace(['\\', '/', "\0"], '', $name));
+        if ($name === '' || $name === '.' || $name === '..') {
+            return 'dokument';
+        }
+
+        return $name;
+    }
+
+    /**
+     * @return array{success: false, error: string}
+     */
+    private function failedMerge(string $error): array
+    {
+        return [
+            'success' => false,
+            'error' => $error,
+        ];
+    }
+
+    private function releaseMergeImagick(?\Imagick &$imagick): void
+    {
+        if (! $imagick instanceof \Imagick) {
+            return;
+        }
+
+        try {
+            $imagick->clear();
+            $imagick->destroy();
+        } catch (\Throwable $e) {
+            Log::warning('Failed to release merge Imagick', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $imagick = null;
+    }
+
+    private function mergeExceptionMessage(\Exception $e): string
+    {
+        $message = trim($e->getMessage());
+        if ($message === ''
+            || str_contains($message, '/')
+            || str_contains($message, '\\')
+            || str_contains($message, DIRECTORY_SEPARATOR)
+        ) {
+            return 'Spajanje je odbijeno jer svi dokumenti moraju biti uključeni.';
+        }
+
+        return $message;
     }
 }
 

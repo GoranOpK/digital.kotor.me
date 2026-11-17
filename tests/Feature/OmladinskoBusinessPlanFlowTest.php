@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\ApplicationController;
 use App\Models\Application;
 use App\Models\BusinessPlan;
 use App\Models\Commission;
@@ -202,29 +203,183 @@ class OmladinskoBusinessPlanFlowTest extends TestCase
         ]);
     }
 
-    public function test_omladinsko_submit_rejects_missing_point_seven_even_with_confirmation(): void
+    public function test_omladinsko_submit_allows_missing_point_seven_even_with_confirmation(): void
     {
+        $this->assertFalse(KnOmladinskoDocumentPackage::realizationChoiceInvalid(null));
+        $this->assertFalse(KnOmladinskoDocumentPackage::realizationChoiceInvalid(''));
+        $this->assertFalse(KnOmladinskoDocumentPackage::realizationChoiceInvalid('   '));
+
         [$owner, $application] = $this->createOmladinskoReadyDraft([
             'realization_type' => null,
             'product_service' => null,
         ]);
+
+        $page = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk()->getContent();
+        $this->assertStringNotContainsString('Tačka 7 biznis plana mora imati tačno jedan odgovor.', $page);
+        $this->assertStringNotContainsString('Biznis plan nije kompletno popunjen.', $page);
+        $this->assertStringNotContainsString(ApplicationController::PM_M2_DRUGO_MESSAGE, $page);
+        $this->assertNull(KnOmladinskoDocumentPackage::realizationError($application->businessPlan));
 
         $this->actingAs($owner)
             ->post(route('applications.final-submit', $application), [
                 'confirm_incomplete_forms' => '1',
                 'confirm_missing_documents' => '1',
             ])
-            ->assertSessionHasErrors('error');
+            ->assertSessionHasNoErrors();
         $application->refresh();
-        $this->assertSame('draft', $application->status);
-        $this->assertNull($application->submitted_at);
+        $this->assertSame('submitted', $application->status);
+        $this->assertNotNull($application->submitted_at);
         $this->assertNull($application->businessPlan->fresh()->realization_type);
+    }
 
-        $application->businessPlan->update([
+    public function test_unknown_point_seven_answer_blocks_submit_even_with_both_confirmations(): void
+    {
+        [$owner, $application] = $this->createOmladinskoReadyDraft([
+            'realization_type' => 'nije_dozvoljeno',
+            'product_service' => null,
+        ]);
+
+        $page = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk()->getContent();
+        $this->assertStringContainsString(KnOmladinskoDocumentPackage::REALIZATION_INVALID_MESSAGE, $page);
+        $this->assertStringContainsString(route('applications.business-plan.create', $application), $page);
+        $this->assertStringNotContainsString('name="confirm_incomplete_forms"', $page);
+        $this->assertStringNotContainsString('Podnesi prijavu sa nepotpunim obrascima', $page);
+        $this->assertStringNotContainsString('🚀 Podnesi prijavu', $page);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
+                'confirm_missing_documents' => '1',
+            ])
+            ->assertSessionHasErrors(['error' => KnOmladinskoDocumentPackage::REALIZATION_INVALID_MESSAGE]);
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertNull($application->fresh()->submitted_at);
+        $this->assertSame('nije_dozvoljeno', $application->fresh()->businessPlan->realization_type);
+    }
+
+    public function test_drugo_without_explanation_blocks_submit_and_hides_the_bypass(): void
+    {
+        [$owner, $application] = $this->createOmladinskoReadyDraft([
             'realization_type' => KnOmladinskoDocumentPackage::REALIZATION_DRUGO,
             'product_service' => '',
         ]);
-        $this->assertSame('', (string) $application->businessPlan->fresh()->product_service);
+
+        $page = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk()->getContent();
+        $this->assertStringContainsString(ApplicationController::PM_M2_DRUGO_MESSAGE, $page);
+        $this->assertStringContainsString(route('applications.business-plan.create', $application), $page);
+        $this->assertStringNotContainsString('name="confirm_incomplete_forms"', $page);
+        $this->assertStringNotContainsString('Podnesi prijavu sa nepotpunim obrascima', $page);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application))
+            ->assertSessionHasErrors(['error' => ApplicationController::PM_M2_DRUGO_MESSAGE]);
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertNull($application->fresh()->submitted_at);
+    }
+
+    public function test_drugo_with_only_whitespace_blocks_submit(): void
+    {
+        [$owner, $application] = $this->createOmladinskoReadyDraft([
+            'realization_type' => KnOmladinskoDocumentPackage::REALIZATION_DRUGO,
+            'product_service' => " \n\t ",
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application))
+            ->assertSessionHasErrors(['error' => ApplicationController::PM_M2_DRUGO_MESSAGE]);
+        $this->assertSame('draft', $application->fresh()->status);
+    }
+
+    public function test_drugo_without_explanation_stays_blocked_with_either_confirmation(): void
+    {
+        [$owner, $application] = $this->createOmladinskoReadyDraft([
+            'realization_type' => KnOmladinskoDocumentPackage::REALIZATION_DRUGO,
+            'product_service' => '',
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
+            ])
+            ->assertSessionHasErrors(['error' => ApplicationController::PM_M2_DRUGO_MESSAGE]);
+        $this->assertSame('draft', $application->fresh()->status);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application), [
+                'confirm_incomplete_forms' => '1',
+                'confirm_missing_documents' => '1',
+            ])
+            ->assertSessionHasErrors(['error' => ApplicationController::PM_M2_DRUGO_MESSAGE]);
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertNull($application->fresh()->submitted_at);
+    }
+
+    public function test_drugo_with_explanation_continues_the_existing_submit_flow(): void
+    {
+        [$owner, $application] = $this->createOmladinskoReadyDraft([
+            'realization_type' => KnOmladinskoDocumentPackage::REALIZATION_DRUGO,
+            'product_service' => 'Drugačiji model usluge',
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('omladinsko_confirm_missing_documents');
+        $this->assertSame('draft', $application->fresh()->status);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application), [
+                'confirm_missing_documents' => '1',
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('submitted', $application->fresh()->status);
+        $this->assertSame('Drugačiji model usluge', $application->fresh()->businessPlan->product_service);
+    }
+
+    public function test_other_point_seven_answer_does_not_require_an_explanation(): void
+    {
+        [$owner, $application] = $this->createOmladinskoReadyDraft([
+            'realization_type' => 'stvori_novi',
+            'product_service' => null,
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('applications.final-submit', $application))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('omladinsko_confirm_missing_documents');
+        $this->assertSame('draft', $application->fresh()->status);
+    }
+
+    public function test_drugo_without_explanation_can_still_be_saved_as_a_draft(): void
+    {
+        [$owner, $application] = $this->createOmladinskoApplicationWithoutPlan();
+
+        $this->actingAs($owner)
+            ->post(route('applications.business-plan.store', $application), [
+                'save_as_draft' => '1',
+                'has_registered_business' => '0',
+                'business_idea_name' => 'Drugo bez obrazloženja',
+                'realization_type' => KnOmladinskoDocumentPackage::REALIZATION_DRUGO,
+                'realization_other_text' => '   ',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $saved = $application->fresh();
+        $this->assertSame('draft', $saved->status);
+        $this->assertNull($saved->submitted_at);
+        $this->assertSame('Drugo bez obrazloženja', $saved->businessPlan->business_idea_name);
+        $this->assertSame(KnOmladinskoDocumentPackage::REALIZATION_DRUGO, $saved->businessPlan->realization_type);
+        $this->assertSame('', $saved->businessPlan->product_service);
+
+        $form = $this->actingAs($owner)
+            ->get(route('applications.business-plan.create', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Obavezno za konačno podnošenje.', $form);
+        $this->assertMatchesRegularExpression(
+            '/<textarea(?![^>]*\srequired\b)[^>]*name="realization_other_text"[^>]*>/',
+            $form
+        );
     }
 
     public function test_omladinsko_submit_allows_empty_purchase_table_without_autofill(): void

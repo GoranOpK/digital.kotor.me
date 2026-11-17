@@ -580,10 +580,7 @@ class EliminatoryPrigovorChairmanNoticeTest extends TestCase
     private function youthPrigovorPayload(): array
     {
         return [
-            'criterion_obrazlozenja' => [
-                1 => 'Izvod je već bio u prijavi.',
-                2 => 'M4 je dostavljen uz prijavu.',
-            ],
+            'obrazlozenje' => 'Izvod je već bio u prijavi. M4 je dostavljen uz prijavu.',
         ];
     }
 }

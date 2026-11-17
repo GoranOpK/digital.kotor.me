@@ -18,6 +18,7 @@ use App\Support\CompetitionProgramCatalog;
 use App\Support\BusinessPlanM2Completeness;
 use App\Support\KnApplicationClassification;
 use App\Support\KnApplicationStartContext;
+use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\Pib;
 use App\Support\SensitiveIdentifierLogSanitizer;
 use App\Support\UserType;
@@ -46,6 +47,12 @@ use Illuminate\View\View;
 class ApplicationController extends Controller
 {
     public const CANONICAL_OBRAZAC_1_MESSAGE = 'Prijava na javni poziv za preduzetnike i MMSP popunjava se kroz Obrazac P1a (preduzetnik) ili P1b (društvo), ne kroz Obrazac 1a/1b.';
+
+    public const PM_M1_INCOMPLETE_MESSAGE = 'Obrazac M1 nije potpuno popunjen. Prije konačnog podnošenja prijave morate popuniti sva obavezna polja.';
+
+    public const PM_M2_DRUGO_MESSAGE = 'U tački 7 biznis plana izabrali ste „Drugo“. Prije konačnog podnošenja prijave morate unijeti obrazloženje.';
+
+    public const ZP_SUMMARY_REQUIRED_MESSAGE = 'Konačno podnošenje nije dozvoljeno dok nije popunjena tačka 5 — Rezime biznis plana.';
 
     /**
      * Autoritativni start-context za novu prijavu. Query parametar nije authority.
@@ -344,6 +351,17 @@ class ApplicationController extends Controller
      * Snimi prijavu (Obrazac 1a/1b)
      */
     public function store(Request $request, Competition $competition): RedirectResponse
+    {
+        if (! $competition->isOmladinskoProfile()) {
+            return $this->storeCurrent($request, $competition);
+        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $competition) {
+            Application::query()->where('competition_id', $competition->id)->where('user_id', Auth::id())->lockForUpdate()->first();
+            return $this->storeCurrent($request, $competition);
+        });
+    }
+
+    private function storeCurrent(Request $request, Competition $competition): RedirectResponse
     {
         if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
             return back()->withErrors(['error' => self::CANONICAL_OBRAZAC_1_MESSAGE])->withInput();
@@ -723,7 +741,9 @@ class ApplicationController extends Controller
                     : $existingApplication->doo_address,
                 'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : $existingApplication->requested_amount,
                 'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : $existingApplication->total_budget_needed,
-                'business_area' => $request->filled('business_area') ? $request->business_area : $existingApplication->business_area,
+                'business_area' => $competition->isOmladinskoProfile()
+                    ? $this->pmBusinessAreaForStore($request, $existingApplication)
+                    : ($request->filled('business_area') ? $request->business_area : $existingApplication->business_area),
                 'website' => $request->filled('website') ? $request->website : $existingApplication->website,
                 'bank_account' => $request->filled('bank_account') ? $request->bank_account : $existingApplication->bank_account,
                 'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
@@ -785,7 +805,9 @@ class ApplicationController extends Controller
                     'doo_address' => $request->filled('doo_address') ? $request->doo_address : null,
                     'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : null,
                     'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : null,
-                    'business_area' => $request->filled('business_area') ? $request->business_area : null,
+                    'business_area' => $competition->isOmladinskoProfile()
+                        ? $this->pmBusinessAreaForStore($request)
+                        : ($request->filled('business_area') ? $request->business_area : null),
                     'website' => $request->filled('website') ? $request->website : null,
                     'bank_account' => $request->filled('bank_account') ? $request->bank_account : null,
                     'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
@@ -930,25 +952,37 @@ class ApplicationController extends Controller
                            ($application->competition?->is_open ?? false) &&
                            $this->kotorAddressErrorForApplication($application) === null;
 
-        $pmNeedsIncompleteFormsConfirmation = $application->isOmladinskoProfile()
+        $pmDraftCanReachFormCheck = $application->isOmladinskoProfile()
             && $application->status === 'draft'
             && $application->businessPlan !== null
             && (bool) $application->businessPlan->finances_notice_confirmed
             && ($application->competition?->is_open ?? false)
-            && $this->kotorAddressErrorForApplication($application) === null
-            && (
-                ! $application->isObrazacComplete()
-                || ! $application->businessPlan->isComplete()
-            );
+            && $this->kotorAddressErrorForApplication($application) === null;
+        $pmM1SubmitBlocked = $pmDraftCanReachFormCheck && ! $application->isObrazacComplete();
+        $pmM2DrugoSubmitBlocked = $pmDraftCanReachFormCheck
+            && $application->isObrazacComplete()
+            && $this->pmDrugoExplanationMissing($application);
+        $pmM2RealizationInvalidSubmitBlocked = $pmDraftCanReachFormCheck
+            && $application->isObrazacComplete()
+            && KnOmladinskoDocumentPackage::realizationChoiceInvalid($application->businessPlan->realization_type);
+        $pmNeedsIncompleteFormsConfirmation = $pmDraftCanReachFormCheck
+            && $application->isObrazacComplete()
+            && ! $pmM2DrugoSubmitBlocked
+            && ! $pmM2RealizationInvalidSubmitBlocked
+            && ! $application->businessPlan->isComplete();
 
         // Samo vlasnik može da mijenja dok Prijava nije zaključana (podnesena ili draft nakon isteka roka)
         $canManage = $isOwner && ! $application->isApplicantContentWriteLocked();
+        $canReadYouthFinalRanking = $isOwner
+            && $application->status !== 'draft'
+            && $application->competition !== null
+            && app(EvaluationController::class)->applicantMayReadYouthFinalRanking($application->competition, $user);
         $canSubmitPrigovor = $isOwner
             && app(\App\Services\ApplicationPrigovorService::class)->applicantCanSubmit($application, $user);
         // Isti rezultat koji submit() već vraća. Ekran ga ne može izračunati bez ponavljanja pravila adrese.
         $kotorAddressError = $this->kotorAddressErrorForApplication($application);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'kotorAddressError'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition', 'canSubmitPrigovor', 'pmNeedsIncompleteFormsConfirmation', 'pmM1SubmitBlocked', 'pmM2DrugoSubmitBlocked', 'pmM2RealizationInvalidSubmitBlocked', 'kotorAddressError', 'canReadYouthFinalRanking'));
     }
 
     /**
@@ -1012,6 +1046,25 @@ class ApplicationController extends Controller
      */
     public function submit(Request $request, Application $application): RedirectResponse
     {
+        if (! $application->isOmladinskoProfile()) {
+            return $this->submitCurrent($request, $application);
+        }
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $application) {
+            // Same lock order as PM closing: competition, application, plan.
+            $competition = Competition::query()->whereKey($application->competition_id)->lockForUpdate()->firstOrFail();
+            $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
+            if ($locked->competition_id !== $competition->id) {
+                throw ValidationException::withMessages(['identity' => 'Kontekst prijave je promijenjen. Ponovite predaju.']);
+            }
+            $plan = \App\Models\BusinessPlan::query()->where('application_id', $locked->id)->lockForUpdate()->first();
+            $locked->setRelation('businessPlan', $plan);
+            $locked->setRelation('competition', $competition);
+            return $this->submitCurrent($request, $locked);
+        });
+    }
+
+    private function submitCurrent(Request $request, Application $application): RedirectResponse
+    {
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
             abort(403, 'Nemate pristup ovoj prijavi.');
@@ -1058,6 +1111,13 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => 'Morate potvrditi napomenu o finansijama u biznis planu prije konačne predaje.']);
         }
 
+        if ($application->competition?->type === CompetitionProfileResolver::TYPE_WOMEN
+            && ! $this->savedSummaryHasText($application->businessPlan->summary)) {
+            return back()->withErrors([
+                'error' => self::ZP_SUMMARY_REQUIRED_MESSAGE,
+            ]);
+        }
+
         if (! BusinessPlanM2Completeness::hasRequiredAsterisks($application->businessPlan)) {
             return back()->withErrors([
                 'error' => BusinessPlanM2Completeness::SUBMIT_BLOCKED_MESSAGE,
@@ -1069,8 +1129,29 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => $kotorAddressError]);
         }
 
+        // BM-ML-022: obavezna polja M1 ne može zaobići potvrda nepotpunih obrazaca.
+        if ($application->isOmladinskoProfile() && ! $application->isObrazacComplete()) {
+            return back()->withErrors([
+                'error' => self::PM_M1_INCOMPLETE_MESSAGE,
+            ]);
+        }
+
+        // Tačka 7 nije obavezna. „Drugo“ bez obrazloženja i nepoznat odgovor blokiraju prije obje potvrde.
+        if ($this->pmDrugoExplanationMissing($application)) {
+            return back()->withErrors([
+                'error' => self::PM_M2_DRUGO_MESSAGE,
+            ]);
+        }
+
         if ($application->isOmladinskoProfile()
-            && (! $application->isObrazacComplete() || ! $application->businessPlan->isComplete())
+            && KnOmladinskoDocumentPackage::realizationChoiceInvalid($application->businessPlan->realization_type)) {
+            return back()->withErrors([
+                'error' => KnOmladinskoDocumentPackage::REALIZATION_INVALID_MESSAGE,
+            ]);
+        }
+
+        if ($application->isOmladinskoProfile()
+            && ! $application->businessPlan->isComplete()
             && (string) $request->input('confirm_incomplete_forms') !== '1') {
             return redirect()
                 ->route('applications.show', $application)
@@ -1097,6 +1178,10 @@ class ApplicationController extends Controller
             }
         }
 
+        if ($application->isOmladinskoProfile()) {
+            app(\App\Services\Competitions\PmRegisteredDooName::class)->assertMatchesForSubmission($application);
+            app(YouthDecisionApplicantIdentity::class)->validateForSubmission($application);
+        }
         // Dodeli redni broj prijave (1, 2, 3, ...) po konkursu
         $maxRedni = Application::where('competition_id', $application->competition_id)->max('redni_broj');
         $application->update([
@@ -1105,6 +1190,9 @@ class ApplicationController extends Controller
             'redni_broj' => ($maxRedni ?? 0) + 1,
         ]);
 
+        if ($application->isOmladinskoProfile() && $application->fresh()->status !== 'submitted') {
+            throw ValidationException::withMessages(['identity' => 'Konacna predaja nije sacuvana.']);
+        }
         $redirect = redirect()->route('applications.show', $application)
             ->with('success', 'Poštovani, vaša prijava će biti proslijeđena komisiji na razmatranje, nakon isteka roka za prijavljivanje!');
 
@@ -1113,6 +1201,22 @@ class ApplicationController extends Controller
         }
 
         return $redirect;
+    }
+
+    /** PM drafts distinguish an omitted field from an explicit clear. Validation runs first. */
+    private function pmBusinessAreaForStore(Request $request, ?Application $existingApplication = null): ?string
+    {
+        if (! $request->has('business_area')) {
+            return $existingApplication?->business_area;
+        }
+
+        $area = $request->input('business_area');
+        return is_string($area) && trim($area) !== '' ? trim($area) : null;
+    }
+
+    private function savedSummaryHasText(mixed $summary): bool
+    {
+        return is_string($summary) && trim($summary) !== '';
     }
 
     /**
@@ -1665,6 +1769,23 @@ class ApplicationController extends Controller
 
         return redirect()->route('applications.show', $application)
             ->with('success', 'Dokument je uspješno obrisan.');
+    }
+
+    /**
+     * BM-ML-027: sačuvano obrazloženje tačke 7 kada je izabrano „Drugo“.
+     * Čita business_plans.product_service. Ne dira ostale odgovore ni druge konkurse.
+     */
+    protected function pmDrugoExplanationMissing(Application $application): bool
+    {
+        if (! $application->isOmladinskoProfile() || $application->businessPlan === null) {
+            return false;
+        }
+
+        if (trim((string) $application->businessPlan->realization_type) !== KnOmladinskoDocumentPackage::REALIZATION_DRUGO) {
+            return false;
+        }
+
+        return trim((string) ($application->businessPlan->product_service ?? '')) === '';
     }
 
     /**

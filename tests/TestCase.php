@@ -5,6 +5,7 @@ namespace Tests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use RuntimeException;
+use Tests\Support\PmIsolatedDatabase;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -27,13 +28,32 @@ abstract class TestCase extends BaseTestCase
             throw new RuntimeException('Testovi moraju koristiti posebnu MySQL test bazu.');
         }
 
-        if (! preg_match('/test(?:ing)?/i', $database)) {
+        $pmIsolated = defined('PM_ISOLATED_DATABASE')
+            && in_array(PM_ISOLATED_DATABASE, ['opstinakotor_digital_pm_regression', 'opstinakotor_digital_pm_concurrency'], true);
+        if ($pmIsolated) {
+            $prefix = "database.connections.{$connection}.";
+            if ($database !== PM_ISOLATED_DATABASE
+                || $app['config']->get($prefix.'host') !== '127.0.0.1'
+                || (string) $app['config']->get($prefix.'port') !== '3306'
+                || $app['config']->get($prefix.'username') !== PM_ISOLATED_USERNAME
+                || $app['config']->get($prefix.'url') || $app['config']->get($prefix.'unix_socket')) {
+                throw new RuntimeException('Isolated PM database configuration mismatch.');
+            }
+            PmIsolatedDatabase::verifyPdo($app['db']->connection()->getPdo(), PM_ISOLATED_DATABASE, PM_ISOLATED_USERNAME);
+        }
+        if (! $pmIsolated && ! preg_match('/test(?:ing)?/i', $database)) {
             throw new RuntimeException(
                 'Naziv testne MySQL baze mora sadržati "test" ili "testing".'
             );
         }
 
         return $app;
+    }
+
+    /** Exact database expected by the verified isolated harness, or the existing test setup. */
+    protected function expectedTestDatabase(): string
+    {
+        return defined('PM_ISOLATED_DATABASE') ? PM_ISOLATED_DATABASE : 'opstinakotor_digital_testing';
     }
 
     protected function enableEpIdentityFlows(): void

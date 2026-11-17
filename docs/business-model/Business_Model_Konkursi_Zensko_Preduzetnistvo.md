@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.23
-**Datum:** 2026-10-29
+**Verzija:** 1.0.27
+**Datum:** 2026-11-09
 
 Povezani dokumenti:
 
@@ -17,7 +17,7 @@ Povezani dokumenti:
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJENO v0.2.11)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (USVOJENO v0.2.13)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (NACRT v0.1.0)
-* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md`
+* Funkcionalni profil ovog konkursa: **KN-FS-003** — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (v1.0.24)
 
 Ovaj dokument **ne** mijenja `KN-BM-001`. Zajednička pravila se ne ponavljaju osim koliko je potrebno da profil bude samodovoljan (`BM-KN-008`).
 
@@ -53,6 +53,10 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.21 | 2026-09-18 | §13.6 runtime closeout (dokumentacija): runtime implementacija evidentirana commitom `35a0da8` (`feat(competitions): enforce equal-score allocation rules`) — IMPLEMENTED IN CODE; TESTED LOCALLY (`ZpEqualScoreAllocationGateTest` i regresija); PUSHED TO `origin/main`. Produkcijski runtime acceptance **nije** još izvršen/potvrđen. Poslovno pravilo §13.6 KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.22 | 2026-09-18 | V1 COMPLETE / PRODUCTION ACCEPTED: nakon uspješnog produkcionog deploya i production acceptance potvrđenih 2026-09-18, te finalnog closeout audita (0 blockera), tok „Podrška ženskom preduzetništvu“ V1 formalno zatvoren. Poslovna pravila KEEP. Status dokumenta ostaje `USVOJEN`. |
 | 1.0.23 | 2026-10-29 | KN-PATCH-BM-027 — Buduća odluka Komisije zaključava se prvim uspješnim čuvanjem. Odluka sačuvana prije toga ostaje bez vremena zaključavanja i može se ispraviti. Prije upisa iznos mora ostaviti zakonit završetak: budžet, postojeći limit od 20% kada je potvrđen zeleni ili inovativni bonus, traženi iznos i prednost otpočinjanja. Limiti 10% i 5% se ne uvode u ovaj upis. Istovremeni upisi dijele jednu transakciju. |
+| 1.0.24 | 2026-11-08 | ŽP-PM-RANK-01. Jednak broj bodova i dalje dijeli rang-poziciju, a naredna pozicija preskače zauzeta mjesta. Unutar te grupe otpočinjanje se prikazuje ispred razvoja. Taj redoslijed ne mijenja bodove ni rang i nije prednost pri dodjeli sredstava. Komisija i dalje ručno bira Podržava ili Odbija i ručno unosi iznos. Aplikacija ne određuje koje prijave moraju biti podržane. |
+| 1.0.25 | 2026-11-08 | ŽP-REZ-01. Rezime Obrasca 2 obavezan je za status „Popunjen“ i za konačno podnošenje prijave. Tekst od samih razmaka smatra se praznim. Nacrt se može sačuvati bez Rezimea. Obaveznost Rezimea ne čini ostale djelove Obrasca 2 obaveznim za predaju. PM i MMSP nijesu dirani. |
+| 1.0.26 | 2026-11-09 | ŽP-KOM-11. Međusobni uvid u tuđe ocjene, napomene i zajednički zbir, kao i preliminarna rang-lista, čekaju završen prigovorni postupak i zaključane ocjene svih pet kanonskih mjesta za prijave koje tada imaju pravo na pozitivno bodovanje. Završetak trenutno podobnih prijava nije dovoljan dok postoji otvoren rok ili neriješen prigovor. Sopstvene ocjene ostaju dostupne. Ocjenjivanje ostalih podobnih prijava se ne zaustavlja. PM i MMSP nijesu dirani. |
+| 1.0.27 | 2026-11-09 | ŽP-RANK-01. Pravila Poglavlja 12.3 i 13.1 nijesu mijenjana. Lista i dalje nastaje tek kada je ocjenjivanje završeno i prigovorni postupak završen, ne samim otvaranjem stranice. Ako je taj završetak već nastupio, a upis preskočen, naredni zahtjev samo bilježi već dospjeli rezultat. KN-FS-003 v1.0.24 opisuje taj upis. PM i MMSP nijesu dirani. |
 
 Napomena:
 
@@ -531,6 +535,8 @@ Ako je odgovor **NE**, podaci o registrovanoj djelatnosti nijesu obavezni. Nereg
 
 **Q4 — trgovački / naziv subjekta:** „Ime i prezime preduzetnice i trgovački naziv za oblik registracije ‘Preduzetnik’, odnosno naziv privrednog društva:“
 
+**Rezime** je obavezan za kompletnost Obrasca 2 i za konačno podnošenje prijave. Tekst koji sadrži samo razmake smatra se praznim. Nacrt se smije sačuvati bez Rezimea. Obrazac 2 bez Rezimea nema status „Popunjen“. Potvrda nedostajućih priloga ne zamjenjuje Rezime. Ostali djelovi Obrasca 2 time ne postaju obavezni za konačno podnošenje.
+
 Ako je odgovor **DA**, primjenjuju se odgovarajući podaci i dokumentacija za registrovani biznis.
 
 Elektronski Obrazac 2 **ne** zahtijeva polje Potpis niti papirni footer kao platformsku funkcionalnost.
@@ -615,6 +621,8 @@ Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za 
 
 Podnositeljka prima **email obavještenje** da je odluka po Prigovoru donesena. Autoritativni zapis odluke, obrazloženje i posljedica za bodovanje ostaju na Platformi. Email nije kanal za podnošenje ni izmjenu Prigovora.
 
+Dok na konkursu postoji otvoren rok za podnošenje prigovora ili podnesen prigovor o kojem Komisija još nije odlučila, članovi ne vide tuđe ocjene, tuđe napomene ni zajednički zbir i preliminarna rang-lista se ne formira. Ocjenjivanje drugih prijava koje su već stekle pravo na pozitivno bodovanje time nije zaustavljeno. Sopstvene sačuvane ocjene i napomene ostaju dostupne.
+
 ---
 
 # 10. Eliminatorni kriterijumi
@@ -663,7 +671,7 @@ Nakon potvrđenog **Da / Da / Da** Prijava prolazi eliminatornu provjeru i član
 
 Ako je potvrđeno najmanje jedno **Ne\***, Prijava se odbija i bodovanje se ne aktivira.
 
-**Pravo na Prigovor odnosi se na sva tri eliminatorna kriterijuma.** Postupovni rokovi i kanal Prigovora ostaju u Poglavlju 9.2. Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja postupak i omogućava se individualno bodovanje. Ako i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava.
+**Pravo na Prigovor odnosi se na sva tri eliminatorna kriterijuma.** Postupovni rokovi i kanal Prigovora ostaju u Poglavlju 9.2. Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja postupak i omogućava se individualno bodovanje. Ako i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava. Odbijen prigovor sam po sebi ne uvodi prijavu u bodovanje. Dok rok te prijave ili neriješen prigovor traje, međusobni uvid i preliminarna rang-lista ostaju zatvoreni iako su ostale podobne prijave već ocijenjene (Poglavlja 12.3 i 13.1).
 
 Nakon potvrđenog odbijanja Obrazac 3 ostaje trajno dostupan u režimu pregleda. Mora biti evidentirano najmanje: rezultat sva tri eliminatorna kriterijuma; postojeća Napomena; činjenica da je Prijava odbijena po eliminatornoj provjeri; datum i vrijeme potvrde; predsjednik Komisije koji je izvršio potvrdu.
 
@@ -750,6 +758,8 @@ Dok ocjenjivanje traje, članovi Komisije imaju uvid samo u svoje ocjene (čl. 2
 
 Dok svih **pet kanonskih mjesta** ne završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje, **niko** preko Platforme ne vidi tuđe individualne ocjene, prosjeke, zbirne rezultate ni rang-listu. Isto važi za predsjednika Komisije, Administratora konkursa, Administratora platforme i Super administratora.
 
+Završetak ocjenjivanja prijava koje su u tom trenutku podobne nije sam po sebi dovoljan. Međusobni uvid i preliminarna rang-lista ostaju zatvoreni dok istovremeno nijesu ispunjeni svi ovi uslovi: nema otvorenog roka za podnošenje prigovora, nema podnesenog prigovora o kojem Komisija još nije odlučila, sve prijave koje nakon eliminatornog i prigovornog postupka imaju pravo na pozitivno bodovanje uključene su u ocjenjivanje i svih pet kanonskih mjesta zaključalo je njihove individualne ocjene. Predsjednik nema raniji uvid. Kada prijava prihvatanjem prigovora uđe u bodovanje, uvid i rang-lista ostaju zatvoreni dok svih pet mjesta ne zaključa i njene ocjene. Ranije zaključane ocjene drugih prijava se ne brišu i ne otključavaju.
+
 Činjenica da je pet mjesta završilo jednu konkretnu Prijavu **ne** otkriva rezultate i **ne** prestaje tajnost ciklusa.
 
 Naknadni uvid u ocjene drugih članova **ne** otključava sopstvene ocjene.
@@ -787,7 +797,7 @@ Konačna ocjena = osnovna ocjena + primjenjivi dodatni bodovi.
 
 Maksimum ostaje **50 + 8 = 58**.
 
-Zbirni rezultat Prijave **ne** formira se dok svih pet kanonskih mjesta nema konačnu ocjenu za tu Prijavu. **Ne** formira se rang-lista niti se primjenjuje prag od 30 bodova samo zato što je peta ocjena stigla za jednu Prijavu. Prag i rang-lista pripadaju fazi rezultata **nakon** završetka cjelokupnog ciklusa (`PO-IB-03`, `PO-IB-05`).
+Zbirni rezultat Prijave **ne** formira se dok svih pet kanonskih mjesta nema konačnu ocjenu za tu Prijavu. **Ne** formira se rang-lista niti se primjenjuje prag od 30 bodova samo zato što je peta ocjena stigla za jednu Prijavu. Prag i rang-lista pripadaju fazi rezultata **nakon** završetka cjelokupnog ciklusa (`PO-IB-03`, `PO-IB-05`) i **nakon** završetka prigovornog postupka iz Poglavlja 12.3. Otvoren rok ili neriješen prigovor zadržava tuđe ocjene, zajednički zbir i preliminarnu rang-listu zatvorenim iako je ciklus trenutno podobnih prijava završen.
 
 ## 12.6. Dodatni bodovi
 
@@ -845,9 +855,9 @@ Preliminarna i konačna rang-lista **nijesu** dva fizički odvojena poslovna obj
 
 ## 13.1. Preliminarna rang-lista
 
-Kada svih pet kanonskih mjesta ocjeni sve biznis planove koji su ušli u pozitivno ocjenjivanje, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20).
+Kada svih pet kanonskih mjesta ocjeni sve biznis planove koji su ušli u pozitivno ocjenjivanje i kada je prigovorni postupak završen prema Poglavlju 12.3, automatski se formira preliminarna rang-lista sa bodovima, bez utvrđenih iznosa koji se dodjeljuju (čl. 20). Otvoren rok ili neriješen prigovor sprečava i formiranje i prikaz te liste. Direktan zahtjev ne otkriva rangirane prijave prije tih uslova.
 
-Preliminarna rang-lista **ne** smije nastajati samo otvaranjem stranice. Nastaje završetkom ocjenjivanja.
+Preliminarna rang-lista **ne** smije nastajati samo otvaranjem stranice. Nastaje završetkom ocjenjivanja. Otvaranje stranice ne zamjenjuje taj završetak. Ako je završetak već nastupio, a upis nije bio izvršen, naredni zahtjev samo bilježi već dospjeli rezultat.
 
 ## 13.2. Treća sjednica
 
@@ -927,23 +937,29 @@ Odobreni iznos:
 
 U slučaju preklapanja 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%, prema §13.4.
 
-## 13.6. Tie-break
+## 13.6. Jednaki bodovi i odluka Komisije
 
-**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Runtime implementacija **postoji** u kodu (commit `35a0da8`). V1 tok „Podrška ženskom preduzetništvu“ je **COMPLETE / PRODUCTION ACCEPTED** — produkcioni deploy i production acceptance potvrđeni 2026-09-18; finalni closeout audit: 0 blockera. V1 platformski closeout (v1.0.17) i documentation reconciliation (v1.0.20) ostaju historijski zapisi tadašnjeg stanja.
+**Status (ACTIVE):** Poslovno pravilo je **PO USVOJENO**. Ranije tumačenje da otpočinjanje ima obaveznu prednost pri dodjeli sredstava više nije važeće. Istorijski zapisi v1.0.16–v1.0.23 ostaju.
 
-Ako dva ili više biznis planova dobije isti broj bodova, a raspoloživa sredstva nisu dovoljna za njihovo finansiranje (čl. 21), utvrđuje se **prioritet finansiranja**. To **ne** mijenja konačni broj bodova niti dijeljene rang-pozicije.
+Prijave se rangiraju prema konačnom broju bodova, opadajuće.
 
-Prvo se primjenjuje prednost plana za **otpočinjanje biznisa** (faza Započinjanje) u odnosu na plan za **razvoj** postojeće djelatnosti. Prednost otpočinjanja važi i u mješovitoj grupi: plan za razvoj **ne** može dobiti prioritet ispred plana za otpočinjanje dok među planovima za otpočinjanje još treba razriješiti prioritet za raspoloživa sredstva.
+Kada dvije ili više prijava imaju isti broj bodova:
 
-Ako je samo jedan od izjednačenih planova plan za otpočinjanje biznisa, sredstva se dodjeljuju tom planu.
+* dijele istu rang-poziciju;
+* plan za otpočinjanje biznisa (`business_stage` = započinjanje) prikazuje se ispred plana za razvoj (`business_stage` = razvoj);
+* taj redoslijed važi samo za prikaz unutar grupe;
+* bodovi i rang-pozicija se ne mijenjaju;
+* naredna pozicija preskače zauzeta mjesta.
 
-Ako nakon primjene prednosti otpočinjanja ostanu međusobno nerazriješene Prijave za raspoloživa sredstva (npr. nijedan nije otpočinjanje; svi su otpočinjanje; ili više otpočinjanja među kojima treba izabrati), sredstva se dodjeljuju na osnovu odluke Komisije donijete **većinom glasova od ukupnog broja članova** (najmanje **3 od 5**). Ta odluka mora biti **obrazložena**.
+Primjeri: `1, 2, 3, 4, 4, 6`. Ako tri prijave dijele četvrto mjesto: `1, 2, 3, 4, 4, 4, 7`.
 
-Prioritet se razrješava **samo u obimu potrebnom** da se jednoznačno utvrdi koje Prijave dobijaju raspoloživa sredstva. Ako budžet može finansirati sve Prijave sa tom ocjenom, ovo pravilo se **ne** aktivira.
+Prijave iste faze i istih bodova zadržavaju stabilan tehnički redoslijed. Taj redoslijed nije poslovni rang i nije prednost pri finansiranju.
 
-Tehnički identifikator Prijave **nije** poslovni tie-break. Detalj funkcionalnog toka, evidentiranja i gate-ova: `KN-FS-003` §14.9.
+Komisija za svaku prijavu sa ocjenom od najmanje 30 bodova odlučuje **Podržava** ili **Odbija**. Predsjednik unosi odluku, ručno unosi dodijeljeni iznos i evidentira obrazloženje prema §14.8. Aplikacija ne bira koje prijave moraju biti podržane. Redoslijed prikaza otpočinjanja ne stvara obaveznog primaoca sredstava.
 
-Predsjednik može evidentirati odluku bilo kojim redoslijedom. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno zaključava ishod, iznos i obrazloženje. Odluka koja je već bila sačuvana, a nema vrijeme zaključavanja, ostaje ispravljiva i ovim pravilom se ne prepisuje. Upis se odbija ako poslije njega ne ostaje zakonit završetak: zbir u budžetu, traženi iznos, limit od 20% kada je zeleni ili inovativni bonus potvrđen, i prednost otpočinjanja nad razvojem pri istim bodovima. Limiti 10% i 5% ostaju poslovne granice iz §13.4 i ovim upisom se ne mijenjaju. Dva istovremena čuvanja ne mogu zajedno preći budžet.
+Predsjednik može evidentirati odluku bilo kojim redoslijedom. Prvo uspješno čuvanje odluke koja do tada nije postojala trajno zaključava ishod, iznos i obrazloženje. Odluka koja je već bila sačuvana, a nema vrijeme zaključavanja, ostaje ispravljiva. Upis iznosa se odbija kada prelazi traženi iznos, limit od 20% kada je zeleni ili inovativni bonus potvrđen, ili preostala sredstva nakon već sačuvanih dodjela. Neriješena prijava strogo višeg ranga i dalje rezerviše svoj zahtjev. Isti rang ne rezerviše sredstva. Limiti 10% i 5% ostaju poslovne granice iz §13.4 i ovim upisom se ne mijenjaju. Dva istovremena čuvanja ne mogu zajedno preći budžet.
+
+Kada više prijava iste faze dijeli bodove, a sredstva ne pokrivaju cijelu tu grupu, obrazloženje odluke Komisije je obavezno. To ne određuje koja prijava mora biti podržana.
 
 ## 13.7. Konačna rang-lista
 
@@ -1142,4 +1158,4 @@ Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.23**
+**Kraj dokumenta KN-BM-003 v1.0.24**

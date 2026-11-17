@@ -47,7 +47,7 @@ class EliminatoryProfileConfigTest extends TestCase
         $statement = $profile->statement(3);
 
         $this->assertSame(
-            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?',
+            'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?',
             $statement
         );
         $this->assertStringNotContainsString('članu 11 Odluke', $statement);

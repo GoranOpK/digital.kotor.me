@@ -866,6 +866,23 @@
 
                     @if($isOmladinskoScoring)
                         @include('evaluation.partials.youth_bonus_form')
+                        @foreach($allMembers as $member)
+                            @php
+                                $youthNoteScore = $allScores->get($member->id);
+                                $youthNoteIsOwn = $commissionMember && $member->id === $commissionMember->id;
+                                $youthNoteText = is_string($youthNoteScore?->notes) ? trim($youthNoteScore->notes) : '';
+                                $youthNoteVisible = $youthNoteText !== ''
+                                    && ($youthNoteIsOwn || ($canViewOtherMembersScores ?? false));
+                            @endphp
+                            @if($youthNoteVisible)
+                                <div style="margin-top: 16px;">
+                                    <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                        {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član mjesta ' . ($youthNoteScore->canonical_seat_no ?? '') }}
+                                    </div>
+                                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">{{ $youthNoteText }}</div>
+                                </div>
+                            @endif
+                        @endforeach
                     @endif
                 </div>
 

@@ -111,22 +111,7 @@ class CompetitionDecisionDocumentBuilder
 
                 return $application->meetsMinimumScore();
             })
-            ->sort(function (Application $a, Application $b): int {
-                $aPos = $a->ranking_position ?? PHP_INT_MAX;
-                $bPos = $b->ranking_position ?? PHP_INT_MAX;
-
-                if ($aPos !== $bPos) {
-                    return $aPos <=> $bPos;
-                }
-
-                $aScore = (float) ($a->final_score ?? 0);
-                $bScore = (float) ($b->final_score ?? 0);
-                if ($aScore !== $bScore) {
-                    return $bScore <=> $aScore;
-                }
-
-                return $a->id <=> $b->id;
-            })
+            ->sort(fn (Application $a, Application $b): int => \App\Support\EqualScoreDisplayOrder::compareRanked($a, $b))
             ->values();
     }
 
@@ -142,6 +127,8 @@ class CompetitionDecisionDocumentBuilder
             ->with(['user', 'businessPlan'])
             ->orderBy('ranking_position')
             ->orderBy('id')
-            ->get();
+            ->get()
+            ->sort(fn (Application $a, Application $b): int => \App\Support\EqualScoreDisplayOrder::compareRanked($a, $b))
+            ->values();
     }
 }

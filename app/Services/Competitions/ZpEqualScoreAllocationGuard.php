@@ -10,13 +10,11 @@ use Illuminate\Support\Collection;
  * Minimal §13.6 / §14.9 equal-score financing check for ŽP.
  *
  * Final-allocation guard only — no persistence subsystem, no score/rank changes,
- * no application-ID tie-break. Does not block mid-flow storeDecision for stage priority.
+ * no application-ID tie-break. Equal-score display order is not a funding priority.
+ * A same-stage choice still needs a justification when funds do not cover the group.
  */
 final class ZpEqualScoreAllocationGuard
 {
-    public const STAGE_PRIORITY_VIOLATION_MESSAGE =
-        'Raspodjela kod jednakog broja bodova ne poštuje prednost prijave za započinjanje poslovanja.';
-
     public const SAME_STAGE_JUSTIFICATION_MESSAGE =
         'Kod jednakog broja bodova i istog poslovnog stadijuma, kada sredstva nijesu dovoljna za sve, obrazloženje odluke Komisije je obavezno.';
 
@@ -41,10 +39,6 @@ final class ZpEqualScoreAllocationGuard
         foreach ($this->equalScoreGroups($ranking) as $group) {
             if (! $this->priorityRuleActive($competition, $ranking, $group)) {
                 continue;
-            }
-
-            if ($this->stagePriorityViolated($group)) {
-                return self::STAGE_PRIORITY_VIOLATION_MESSAGE;
             }
 
             if ($this->sameStageChoiceLacksJustification($group)) {
@@ -211,29 +205,6 @@ final class ZpEqualScoreAllocationGuard
         }
 
         return $sum;
-    }
-
-    /**
-     * @param  Collection<int, Application>  $group
-     */
-    private function stagePriorityViolated(Collection $group): bool
-    {
-        $stages = $group->pluck('business_stage')->unique()->filter()->values();
-        if (! $stages->contains('započinjanje') || ! $stages->contains('razvoj')) {
-            return false;
-        }
-
-        $razvojSupported = $group->contains(
-            fn (Application $app) => $app->business_stage === 'razvoj'
-                && $app->commission_decision === 'podrzava_potpuno'
-        );
-
-        $zapocinjanjeRejected = $group->contains(
-            fn (Application $app) => $app->business_stage === 'započinjanje'
-                && $app->commission_decision === 'odbija'
-        );
-
-        return $razvojSupported && $zapocinjanjeRejected;
     }
 
     /**

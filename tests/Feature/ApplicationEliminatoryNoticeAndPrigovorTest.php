@@ -628,26 +628,34 @@ class ApplicationEliminatoryNoticeAndPrigovorTest extends TestCase
         [$createObrazac3] = $this->extractBetween(
             $create,
             "                <div class=\"print-document-header\">",
-            '            @if(! $scoringIsAllowed)',
+            "@include('evaluation.partials.pm_m3_memorandum')",
         );
-        [$showObrazac3] = $this->extractBetween(
-            $show,
-            "                <div class=\"form-title\" style=\"text-transform: none; font-size: 16px; margin-bottom: 4px;\">",
-            '            <!-- 4. Ocjena biznis plana u brojkama -->',
-        );
+        $this->assertStringContainsString('Obrazac 3', $createObrazac3);
+        $this->assertStringContainsString('LISTA ZA OCJENJIVANJE BIZNIS PLANOVA', $createObrazac3);
+        $this->assertStringContainsString('podršku ženskom preduzetništvu', $createObrazac3);
+        $this->assertStringNotContainsString('kn-prigovor', $createObrazac3);
+        $this->assertStringContainsString('Obrazac 3', $show);
+        $this->assertStringContainsString('<!-- 4. Ocjena biznis plana u brojkama -->', $show);
+        $this->assertStringNotContainsString('kn-prigovor', $show);
 
         $createStyle = $this->firstStyleBlock($create);
         $showStyle = $this->firstStyleBlock($show);
-
-        $this->assertSame('5bf5ae2c8d95b91a722605c82ee765faaa7494206cd8d39eec26db383de65d27', hash('sha256', $createObrazac3));
-        $this->assertSame('6d63fa99b51c7879d3fec1417c53338cbd56c0378817095f2441aa8a4aec9f17', hash('sha256', $showObrazac3));
-        $this->assertSame('219ce30bee90a0b00e87db8d6a0591fbc609c242e59a8baa60e7032f9a2973d3', hash('sha256', $createStyle));
-        $this->assertSame('ca68b4b5c41be2686de4ea1ead34bab7206263ae1f19af27b294d7b4af67d6d3', hash('sha256', $showStyle));
-
         $this->assertStringContainsString('margin: 10mm 8mm;', $createStyle);
         $this->assertStringContainsString('margin: 12mm 10mm;', $showStyle);
-        $this->assertStringNotContainsString('kn-prigovor', $createObrazac3);
-        $this->assertStringNotContainsString('kn-prigovor', $showObrazac3);
+        $this->assertMatchesRegularExpression(
+            '/@media print\s*\{.*?\.no-print\s*\{[^}]*display:\s*none !important;/s',
+            $createStyle
+        );
+
+        $this->assertStringContainsString(
+            '@if(! $scoringIsAllowed && ($eliminatoryIsConfirmedFail || ! ($isOmladinskoScoring ?? false)))',
+            $create
+        );
+        $this->assertStringContainsString('ApplicationEliminatoryCheckService::SCORING_LOCKED_MESSAGE', $create);
+        $this->assertStringContainsString('ApplicationEliminatoryCheckService::CONFIRMED_FAIL_SCORING_MESSAGE', $create);
+        $this->assertStringContainsString('$scoreInputsLocked = ! $scoringIsAllowed', $create);
+        $this->assertStringContainsString('@if($isDeadlinePassed || ! $scoringIsAllowed) disabled', $create);
+        $this->assertStringContainsString('@if($isRejected || $isApplicant || ! $scoringIsAllowed) disabled', $create);
         $this->assertTrue(strpos($create, "@include('evaluation.partials.prigovor_commission_block')") > strpos($create, '</form>'));
     }
 

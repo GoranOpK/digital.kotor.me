@@ -392,6 +392,12 @@ class Application extends Model
         });
     }
 
+    protected function performUpdate(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return app(\App\Services\Competitions\PmIdentityWriteGuard::class)->applicationUpdate(
+            $this, fn () => parent::performUpdate($query)
+        );
+    }
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -447,6 +453,8 @@ class Application extends Model
         'commission_justification',
         'commission_notes',
         'commission_decision_date',
+        'commission_decision_author_member_id',
+        'commission_decision_author_name',
         'signed_by_chairman',
         'commission_decision_locked_at',
         'signed_by_members',
@@ -1143,11 +1151,15 @@ class Application extends Model
      */
     public function isObrazacComplete(): bool
     {
+        $businessAreaMissing = $this->isOmladinskoProfile()
+            ? (! is_string($this->business_area) || trim($this->business_area) === '')
+            : ! $this->business_area;
+
         // Proveri osnovna obavezna polja (bez finansijskih iznosa – oni se više ne unose u Obrazac 1a/1b)
         if (!$this->business_plan_name || 
             !$this->applicant_type || 
             !$this->business_stage || 
-            !$this->business_area) {
+            $businessAreaMissing) {
             return false;
         }
 

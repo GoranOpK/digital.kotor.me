@@ -7,6 +7,19 @@
     $profile = \App\Support\EliminatoryProfileConfig::for($application->competition?->type);
     $activatedReasons = $profile->activatedReasonDetails($eliminatoryCheck);
     $submittedExplanations = \App\Support\YouthPrigovorObrazlozenje::parse($prigovor?->obrazlozenje);
+    $sharedApplicantExplanation = \App\Support\YouthPrigovorObrazlozenje::sharedText($prigovor?->obrazlozenje);
+    $activatedCommissionExplanations = [];
+    foreach ($activatedReasons as $reason) {
+        $explanation = trim((string) ($reason['explanation'] ?? ''));
+        if ($explanation !== '' && ! in_array($explanation, $activatedCommissionExplanations, true)) {
+            $activatedCommissionExplanations[] = $explanation;
+        }
+    }
+    // Isto zajedničko polje note obrasca M3 ne ponavlja se uz svaki kriterijum.
+    // Različita istorijska obrazloženja ostaju uz svoj kriterijum.
+    $sharedCommissionExplanation = count($activatedCommissionExplanations) === 1
+        ? $activatedCommissionExplanations[0]
+        : null;
     $deadlinePassed = $prigovor?->isFinished()
         ? $prigovor->wasDecidedAfterKomisijaDeadline()
         : $prigovor?->komisijaDeadlineHasPassed();
@@ -78,12 +91,16 @@
                 @foreach($activatedReasons as $reason)
                     <li>
                         {{ $reason['statement'] }}
-                        @if($reason['explanation'] !== '')
+                        @if($sharedCommissionExplanation === null && $reason['explanation'] !== '')
                             <br>Obrazloženje Komisije: {{ $reason['explanation'] }}
                         @endif
                     </li>
                 @endforeach
             </ul>
+            @if($sharedCommissionExplanation !== null)
+                <p><strong>Zajedničko obrazloženje Komisije</strong></p>
+                <p style="white-space: pre-wrap;">{{ $sharedCommissionExplanation }}</p>
+            @endif
         @endif
         <p>
             Rok za Prigovor: {{ $eliminatoryNotice->prigovorDeadlineAt()->format('d.m.Y. H:i') }}
@@ -104,12 +121,16 @@
             @foreach($activatedReasons as $reason)
                 <li>
                     {{ $reason['statement'] }}
-                    @if(($submittedExplanations[$reason['number']] ?? '') !== '')
+                    @if($sharedApplicantExplanation === null && ($submittedExplanations[$reason['number']] ?? '') !== '')
                         <br>Obrazloženje podnosioca: {{ $submittedExplanations[$reason['number']] }}
                     @endif
                 </li>
             @endforeach
         </ul>
+        @if($sharedApplicantExplanation !== null && $sharedApplicantExplanation !== '')
+            <p><strong>Obrazloženje prigovora</strong></p>
+            <p style="white-space: pre-wrap;">{{ $sharedApplicantExplanation }}</p>
+        @endif
 
         @if($youth107MappingCorrection ?? null)
             <p>

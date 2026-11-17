@@ -57,7 +57,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
             ->assertSee('id="eliminatoryForm"', false)
             ->assertSee('Dostavljena je potpuna dokumentacija?', false)
             ->assertSee('Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?', false)
-            ->assertSee('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?', false);
+            ->assertSee('Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?', false);
 
         $this->actingAs($ctx['chairman']->user)
             ->post(route('evaluation.eliminatory.store', $ctx['application']), $this->youthPayload())
@@ -164,7 +164,7 @@ class OmladinskoEliminatoryCheckTest extends TestCase
 
         $pos1 = strpos($html, 'Dostavljena je potpuna dokumentacija?');
         $pos2 = strpos($html, 'Ako je podnosilac ranije koristio podršku, da li je dostavio M4/M4a?');
-        $pos3 = strpos($html, 'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o mladima?');
+        $pos3 = strpos($html, 'Biznis plan je povezan sa prioritetnim oblastima iz člana 12 Odluke o podršci preduzetništvu mladih?');
         $this->assertNotFalse($pos1);
         $this->assertNotFalse($pos2);
         $this->assertNotFalse($pos3);

@@ -343,6 +343,13 @@
             </div>
         @endif
 
+        @if($application->isOmladinskoProfile() && $errors->has('company_name'))
+            <div class="alert" role="alert">
+                <p>{{ $errors->first('company_name') }}</p>
+                <a href="{{ route('applications.business-plan.create', $application) }}">Ispravite naziv u Obrascu M2</a>
+                <a href="{{ route('profile.edit') }}">Provjerite naziv u profilu</a>
+            </div>
+        @endif
         @if(session('info'))
             <div class="alert alert-info">
                 {{ session('info') }}
@@ -361,6 +368,9 @@
         @php
             $canManage = $canManage ?? false;
             $pmNeedsIncompleteFormsConfirmation = $pmNeedsIncompleteFormsConfirmation ?? false;
+            $pmM1SubmitBlocked = $pmM1SubmitBlocked ?? false;
+            $pmM2DrugoSubmitBlocked = $pmM2DrugoSubmitBlocked ?? false;
+            $pmM2RealizationInvalidSubmitBlocked = $pmM2RealizationInvalidSubmitBlocked ?? false;
             $kotorAddressError = $kotorAddressError ?? null;
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
@@ -464,7 +474,9 @@
                             @endif
                         </span>
                     </div>
-                    @if($application->approved_amount)
+                    @if($application->isOmladinskoProfile()
+                        ? ($application->status === 'approved' && (float) $application->approved_amount > 0)
+                        : $application->approved_amount)
                     <div class="info-item">
                         <span class="info-label">Odobreni iznos</span>
                         <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
@@ -503,6 +515,11 @@
                             @endif
                         </span>
                     </div>
+                    @if(!empty($canReadYouthFinalRanking))
+                        <div class="info-item" style="margin-bottom: 16px;">
+                            <a href="{{ route('applications.youth-final-ranking', $application->competition) }}" data-testid="youth-final-ranking-link" style="color: #0B3D91; font-weight: 600;">Konačna rang-lista Komisije</a>
+                        </div>
+                    @endif
                     @if($application->status === 'rejected' && $application->rejection_reason)
                         <div class="info-item" style="margin-bottom: 16px; padding: 12px; background: #fee2e2; border-radius: 8px; border-left: 4px solid #dc2626;">
                             <span class="info-label" style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">Razlog odbijanja</span>
@@ -609,7 +626,11 @@
                                 @if($application->competition?->type !== 'omladinsko' && $application->businessPlan && $application->businessPlan->isComplete())
                                     {{-- UX napomena: objašnjenje šta znači status "Biznis plan - popunjen" (lako uklonjivo ako ne odgovara) --}}
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 4px; max-width: 460px;">
-                                        Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
+                                        @if($application->competition?->type === 'zensko')
+                                            Status „Biznis plan - popunjen“ znači da je ispunjena tehnička kompletnost Obrasca 2, uključujući Rezime. Konačno podnošenje prijave ima zasebne poslovne uslove, među kojima je obavezan i Rezime.
+                                        @else
+                                            Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
+                                        @endif
                                     </div>
                                 @endif
                                 @if($application->businessPlan?->isComplete() && in_array($application->competition?->type, ['omladinsko', 'zensko'], true))
@@ -669,7 +690,28 @@
                     @endif
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                            @if(!empty($pmNeedsIncompleteFormsConfirmation))
+                            @if(!empty($pmM1SubmitBlocked))
+                                <div id="pm-m1-incomplete-block" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Http\Controllers\ApplicationController::PM_M1_INCOMPLETE_MESSAGE }}</p>
+                                    <p style="margin: 0;">
+                                        <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}">Povratak na uređivanje</a>
+                                    </p>
+                                </div>
+                            @elseif(!empty($pmM2DrugoSubmitBlocked))
+                                <div id="pm-m2-drugo-block" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Http\Controllers\ApplicationController::PM_M2_DRUGO_MESSAGE }}</p>
+                                    <p style="margin: 0;">
+                                        <a href="{{ route('applications.business-plan.create', $application) }}">Povratak na uređivanje</a>
+                                    </p>
+                                </div>
+                            @elseif(!empty($pmM2RealizationInvalidSubmitBlocked))
+                                <div id="pm-m2-realization-invalid-block" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">{{ \App\Support\KnOmladinskoDocumentPackage::REALIZATION_INVALID_MESSAGE }}</p>
+                                    <p style="margin: 0;">
+                                        <a href="{{ route('applications.business-plan.create', $application) }}">Povratak na uređivanje</a>
+                                    </p>
+                                </div>
+                            @elseif(!empty($pmNeedsIncompleteFormsConfirmation))
                                 <div id="pm-incomplete-forms-warning" style="margin-bottom: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
                                     <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Jedan ili više obrazaca vaše prijave nijesu u potpunosti popunjeni.</p>
                                     <p style="font-size: 12px; color: #92400e; margin: 0 0 8px 0;">Prijavu možete podnijeti i u ovom stanju, ali Komisija će ocjenjivati isključivo dostavljene podatke i dokumentaciju. Nepopunjena polja mogu uticati na broj ostvarenih bodova.</p>

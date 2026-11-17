@@ -154,8 +154,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             ->post(route('evaluation.eliminatory.confirm', $failed), $this->youthFailPayload())
             ->assertRedirect();
         $this->actingAs($failed->user)->post(route('applications.prigovor.store', $failed), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+            'obrazlozenje' => 'Obrazloženje 1. Obrazloženje 2.',
         ])->assertRedirect();
         $failed->fresh()->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
         $this->assertTrue($failed->fresh()->prigovor->isPodnesen());
@@ -201,8 +200,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($application->user)->post(route('applications.prigovor.store', $application), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+            'obrazlozenje' => 'Obrazloženje 1. Obrazloženje 2.',
         ])->assertRedirect();
         $this->assertTrue($application->fresh()->prigovor->isPodnesen());
         $this->assertFalse(app(ApplicationEliminatoryCheckService::class)->scoringIsAllowed($application->fresh()));
@@ -240,8 +238,7 @@ class YouthSecondSessionAndOralPresentationTest extends TestCase
     {
         $ctx = $this->confirmYouthFail();
         $this->actingAs($ctx['application']->user)->post(route('applications.prigovor.store', $ctx['application']), [
-            'contested' => [1, 2],
-            'criterion_obrazlozenja' => [1 => 'Obrazloženje 1.', 2 => 'Obrazloženje 2.'],
+            'obrazlozenje' => 'Obrazloženje 1. Obrazloženje 2.',
         ])->assertRedirect();
         $ctx['application']->eliminatoryNotice->update(['sent_at' => now()->subDays(4)]);
         $this->actingAs($ctx['chairman']->user)->post(route('evaluation.prigovor.decide', $ctx['application']), [

@@ -127,7 +127,7 @@ class Step8CutoverCapabilityTest extends TestCase
                 'role_id' => $user->role_id,
                 'activation_status' => 'active',
             ])
-            ->assertRedirect(route('admin.users.show', $user));
+            ->assertSessionHasErrors('first_name')->assertSessionMissing('success');
         $this->assertSame('Ana', $user->fresh()->first_name);
         $this->assertSame('+38267000001', $user->fresh()->phone);
     }
@@ -228,7 +228,7 @@ class Step8CutoverCapabilityTest extends TestCase
             ->assertRedirect(route('dashboard'));
 
         $this->assertSame('Petar', PhysicalPersonIdentity::query()->value('first_name'));
-        $this->assertSame('Ana', $user->fresh()->first_name);
+        $this->assertSame('Petar', $user->fresh()->first_name);
 
         $this->actingAs($user)
             ->from(route('profile.edit'))
@@ -328,7 +328,7 @@ class Step8CutoverCapabilityTest extends TestCase
         $this->assertSame(0, PlatformIdentity::query()->where('user_id', $created->id)->count());
     }
 
-    public function test_admin_account_edit_works_while_freeze_skips_identity_fields(): void
+    public function test_admin_update_under_freeze_rejects_identity_change_atomically(): void
     {
         $admin = User::factory()->create([
             'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
@@ -349,12 +349,12 @@ class Step8CutoverCapabilityTest extends TestCase
                 'password' => 'new-admin-pass',
                 'password_confirmation' => 'new-admin-pass',
             ])
-            ->assertRedirect(route('admin.users.show', $target));
+            ->assertSessionHasErrors('first_name')->assertSessionMissing('success');
 
         $target->refresh();
-        $this->assertSame('target.step8.new@example.com', $target->email);
-        $this->assertSame('deactivated', $target->activation_status);
-        $this->assertTrue(Hash::check('new-admin-pass', $target->password));
+        $this->assertSame('target.step8@example.com', $target->email);
+        $this->assertSame('active', $target->activation_status);
+        $this->assertFalse(Hash::check('new-admin-pass', $target->password));
         $this->assertSame('+38267000001', $target->phone);
         $this->assertSame('Ana', $target->first_name);
         $this->assertSame('Anić', $target->last_name);

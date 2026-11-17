@@ -83,6 +83,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [HomeController::class, 'register'])->middleware('throttle:registration'); // Slanje podataka za registraciju
 });
 
+// Name-only self service keeps the remaining profile behind its existing verification gate.
+Route::middleware(['auth', 'module_access_restrict', 'mmsp_test_access'])->group(function () {
+    Route::get('/profile/name', [\App\Http\Controllers\ProfileController::class, 'editName'])->name('profile.name.edit');
+    Route::put('/profile/name', [\App\Http\Controllers\ProfileController::class, 'updateName'])->name('profile.name.update');
+});
 // Grupe ruta dostupne samo prijavljenim korisnicima
 Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_access'])->group(function () {
     // Dashboard - profil korisnika nakon prijave
@@ -159,6 +164,25 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
 
         abort(404, 'PDF uputstvo nije pronađeno.');
     })->name('competitions.guide.pdf');
+    Route::get('/competitions/youth/guide/pdf', function () {
+        $filename = 'uputstvo-omladinsko-preduzetnistvo.pdf';
+        $candidatePaths = [
+            public_path('pdf/'.$filename),
+            storage_path('app/public/pdf/'.$filename),
+            storage_path('app/public/documents/'.$filename),
+        ];
+
+        foreach ($candidatePaths as $path) {
+            if (is_file($path)) {
+                return response()->file($path, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="'.$filename.'"',
+                ]);
+            }
+        }
+
+        abort(404, 'PDF uputstvo nije pronađeno.');
+    })->name('competitions.youth-guide.pdf');
     // Arhiva konkursa (mora biti pre rute sa parametrom)
     Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
         Route::get('/competitions/archive', [AdminController::class, 'competitionsArchive'])->name('competitions.archive');
@@ -453,6 +477,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
     Route::get('/competitions/{competition}/apply', [ApplicationController::class, 'create'])->name('applications.create'); // Prikaz forme za prijavu
     Route::post('/competitions/{competition}/apply', [ApplicationController::class, 'store'])->name('applications.store'); // Snimi prijavu
     Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show'); // Prikaz detalja prijave
+    Route::get('/competitions/{competition}/youth-final-ranking', [EvaluationController::class, 'youthFinalRankingForApplicant'])->name('applications.youth-final-ranking');
     Route::post('/applications/{application}/prigovor', [ApplicationPrigovorController::class, 'store'])->name('applications.prigovor.store');
     Route::post('/applications/{application}/complaint', [ApplicationProcessController::class, 'submitComplaint'])->name('applications.complaint');
     // Kanonski MMSP — status provjere potpunosti i prigovor podnosioca (KN-SYNC-014)

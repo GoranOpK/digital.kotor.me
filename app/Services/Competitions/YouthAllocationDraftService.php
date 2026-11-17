@@ -222,7 +222,7 @@ final class YouthAllocationDraftService
             abort(403, self::RANKING_NOT_READY_MESSAGE);
         }
 
-        DB::transaction(function () use ($application, $input, $competition) {
+        DB::transaction(function () use ($application, $input, $competition, $chairman) {
             $lockedCompetition = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
             if ($lockedCompetition === null || ! $lockedCompetition->isOmladinskoProfile()) {
                 abort(403, self::NOT_YOUTH_MESSAGE);
@@ -290,10 +290,6 @@ final class YouthAllocationDraftService
                     ]);
                 }
 
-                if ($this->completion->developmentSupportBlocked($pool, $locked)) {
-                    abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
-                }
-
                 $budget = $this->money((string) ($lockedCompetition->budget ?? 0));
                 $remaining = $this->completion->supportRoom(
                     $budget,
@@ -315,16 +311,14 @@ final class YouthAllocationDraftService
                     'rejection_reason' => null,
                     'commission_decision_date' => now(),
                     'signed_by_chairman' => true,
+                    'commission_decision_author_member_id' => $chairman->id,
+                    'commission_decision_author_name' => $this->authorNameSnapshot($chairman),
                 ])->save();
             } elseif ($decision === 'odbija') {
                 if ($justification === '') {
                     throw ValidationException::withMessages([
                         'commission_justification' => self::REJECT_JUSTIFICATION_REQUIRED_MESSAGE,
                     ]);
-                }
-
-                if ($this->completion->startupRejectionBlocked($pool, $locked)) {
-                    abort(403, AllocationCompletionGuard::DEVELOPMENT_INSTEAD_OF_STARTUP_MESSAGE);
                 }
 
                 $locked->forceFill([
@@ -335,6 +329,8 @@ final class YouthAllocationDraftService
                     'rejection_reason' => $justification,
                     'commission_decision_date' => now(),
                     'signed_by_chairman' => true,
+                    'commission_decision_author_member_id' => $chairman->id,
+                    'commission_decision_author_name' => $this->authorNameSnapshot($chairman),
                 ])->save();
             } else {
                 throw ValidationException::withMessages([
@@ -365,6 +361,17 @@ final class YouthAllocationDraftService
     private function percentOfBudget(string $budget, int $percent): string
     {
         return bcmul($budget, bcdiv((string) $percent, '100', 2), 2);
+    }
+
+    private function authorNameSnapshot(CommissionMember $chairman): ?string
+    {
+        $chairman->loadMissing('user');
+        $name = trim((string) $chairman->name);
+        if ($name === '') {
+            $name = trim((string) ($chairman->user->name ?? ''));
+        }
+
+        return $name === '' ? null : $name;
     }
 
     private function activeChairman(Competition $competition, User $user): ?CommissionMember
