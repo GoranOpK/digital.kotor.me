@@ -737,6 +737,27 @@ class CommissionUpdateSharedFormTest extends TestCase
         $payload['name'] = 'Komisija MMSP update '.uniqid();
         $payload['competition_type'] = CompetitionProfileResolver::TYPE_CANONICAL;
 
+        foreach ($payload['members'] as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? null;
+            unset($payload['members'][$index]['pm_function']);
+            if ($function === 'clan') {
+                $function = 'spoljasnji';
+            }
+            if (! in_array($function, ['predsjednik', 'sekretar', 'spoljasnji'], true)) {
+                continue;
+            }
+            $payload['members'][$index]['mmsp_function'] = $function;
+            if ($function === 'spoljasnji') {
+                $payload['members'][$index]['external_category'] = 'udruzenje';
+                $payload['members'][$index]['organization'] = 'Udruženje primjer';
+            } else {
+                $payload['members'][$index]['organization'] = 'Opština Kotor';
+            }
+        }
+
         return $payload;
     }
 

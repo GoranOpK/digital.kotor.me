@@ -384,13 +384,31 @@
                             @if($activeSubstitute->organization)
                                 <br>Organizacija: {{ $activeSubstitute->organization }}
                             @endif
+                            @if($commission->isCanonicalProfile())
+                                <br>Status:
+                                {{ $activeSubstitute->status === 'active' ? 'Aktivan' : ($activeSubstitute->status === 'inactive' ? 'Neaktivan' : ($activeSubstitute->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen')) }}
+                                @if($activeSubstitute->user)
+                                    <br>E-mail: {{ $activeSubstitute->user->email }}
+                                @endif
+                            @endif
                         </div>
+                        @if($commission->isCanonicalProfile())
+                            @include('admin.commissions.partials.mmsp-member-details', ['member' => $activeSubstitute])
+                        @endif
                         <div class="composition-slot-actions">
+                            @if($commission->isCanonicalProfile())
+                                <form method="POST" action="{{ route('admin.commissions.members.delete', $activeSubstitute) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-sm btn-danger">Obriši</button>
+                                </form>
+                            @else
                             <form method="POST" action="{{ route('admin.commissions.members.delete', $activeSubstitute) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da uklonite zamjenskog člana? Redovni član će biti vraćen u aktivni status.');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-sm btn-danger">Ukloni zamjenskog</button>
                             </form>
+                            @endif
                         </div>
                     @elseif($regularMember)
                         <div class="composition-slot-name">{{ $regularMember->name }}</div>
@@ -409,7 +427,10 @@
                                 <br>E-mail: {{ $regularMember->user->email }}
                             @endif
                         </div>
-                        @if($allowsSharedMembershipMutation)
+                        @if($commission->isCanonicalProfile())
+                            @include('admin.commissions.partials.mmsp-member-details', ['member' => $regularMember])
+                        @endif
+                        @if($allowsSharedMembershipMutation || $commission->isCanonicalProfile())
                         <div class="composition-slot-actions">
                             <form method="POST" action="{{ route('admin.commissions.members.delete', $regularMember) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                 @csrf
@@ -429,8 +450,94 @@
             @php
                 $regularMembersCount = $commission->members->reject(fn($m) => !empty($m->is_substitute))->count();
                 $hasActiveSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
+                $mmspEmptySeats = [];
+                $mmspHeldFunctions = [];
+                if ($commission->isCanonicalProfile()) {
+                    foreach ($compositionSlots as $compositionSlot) {
+                        $slotHolder = $compositionSlot['active_substitute'] ?? $compositionSlot['regular_member'];
+                        if ($slotHolder) {
+                            if (!empty($slotHolder->canonical_seat)) {
+                                $mmspHeldFunctions[] = $slotHolder->canonical_seat;
+                            }
+                        } else {
+                            $mmspEmptySeats[] = $compositionSlot['number'];
+                        }
+                    }
+                }
             @endphp
-            @if($allowsSharedMembershipMutation && $regularMembersCount < $commissionSeatCount)
+            @if($commission->isCanonicalProfile() && count($mmspEmptySeats) > 0)
+            <div class="form-card">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Dodaj novog člana</h3>
+                <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}">
+                    @csrf
+                    <div class="form-group">
+                        <label class="form-label">Korisnik iz sistema</label>
+                        <select name="user_id" id="member_user_id" class="form-control" onchange="toggleMemberFields()">
+                            <option value="">Izaberi korisnika...</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            @endforeach
+                        </select>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Ako član već postoji u sistemu, izaberi ga. Inače unesi podatke ispod.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ime i prezime *</label>
+                        <input type="text" name="name" id="member_name" class="form-control" value="{{ old('name', '') }}" autocomplete="off" required>
+                    </div>
+                    <div class="form-group" id="member_email_group">
+                        <label class="form-label">E-mail *</label>
+                        <input type="email" name="email" id="member_email" class="form-control" value="{{ old('email') }}">
+                    </div>
+                    <div class="form-group" id="member_password_group">
+                        <label class="form-label">Password *</label>
+                        <input type="password" name="password" id="member_password" class="form-control" value="" minlength="8" autocomplete="new-password">
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Minimum 8 karaktera. Obavezno ako član ne postoji u sistemu.
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Funkcija *</label>
+                            <select name="mmsp_function" class="form-control" required>
+                                <option value="">Izaberite funkciju</option>
+                                @foreach(['predsjednik' => 'Predsjednik Komisije', 'sekretar' => 'Sekretar Komisije', 'spoljasnji' => 'Član Komisije'] as $functionValue => $functionLabel)
+                                    @if(!in_array($functionValue, $mmspHeldFunctions, true))
+                                        <option value="{{ $functionValue }}" @selected(old('mmsp_function') === $functionValue)>{{ $functionLabel }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kanonsko mjesto *</label>
+                            <select name="canonical_seat_no" class="form-control" required>
+                                @foreach($mmspEmptySeats as $seat)
+                                    <option value="{{ $seat }}" @selected((string) old('canonical_seat_no') === (string) $seat)>{{ $seat }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kategorija člana</label>
+                        <select name="external_category" class="form-control">
+                            <option value="">Nije spoljašnji član</option>
+                            <option value="udruzenje" @selected(old('external_category') === 'udruzenje')>Poslovno ili strukovno udruženje</option>
+                            <option value="biznis" @selected(old('external_category') === 'biznis')>Biznis</option>
+                            <option value="akademska_zajednica" @selected(old('external_category') === 'akademska_zajednica')>Akademska zajednica</option>
+                        </select>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Obavezno za člana Komisije. Predsjednik Komisije — Opština Kotor. Sekretar Komisije — Opština Kotor.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Organizacija *</label>
+                        <input type="text" name="organization" class="form-control" value="{{ old('organization') }}" required>
+                    </div>
+                    <button type="submit" class="btn-sm btn-success">Dodaj člana</button>
+                </form>
+            </div>
+            @elseif($allowsSharedMembershipMutation && $regularMembersCount < $commissionSeatCount)
             <div class="form-card">
                 <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Dodaj novog člana</h3>
                 <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}">

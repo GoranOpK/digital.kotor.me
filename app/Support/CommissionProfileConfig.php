@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Commission;
+use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 
@@ -69,6 +70,20 @@ final class CommissionProfileConfig
     public const PM_ASSOCIATION_AFFILIATION = 'Udruženje mladih preduzetnika Crne Gore, strukovna udruženja, biznis ili akademska zajednica';
 
     public const CANONICAL_MEMBER_TYPE_REJECTED_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima ne koristi kategorije članova ženskog profila.';
+
+    public const MMSP_FUNCTION_INCOMPLETE_MESSAGE = 'Komisija za podršku mikro, malim i srednjim preduzećima mora imati tačno jednog predsjednika, jednog sekretara i jednog člana.';
+
+    public const MMSP_FUNCTION_INVALID_MESSAGE = 'Funkcija člana MMSP Komisije nije ispravna.';
+
+    public const MMSP_ORGANIZATION_REQUIRED_MESSAGE = 'Organizacija člana Komisije je obavezna.';
+
+    public const MMSP_MUNICIPAL_AFFILIATION = 'Opština Kotor';
+
+    public const MMSP_EMAIL_OTHER_ACCOUNT_MESSAGE = 'E-mail pripada drugom korisničkom nalogu. Veza sa postojećim nalogom je sačuvana i identitet naloga nije promijenjen. Ime i organizacija ovog člana su sačuvani.';
+
+    public const MMSP_EMAIL_SHARED_ACCOUNT_MESSAGE = 'Ovaj nalog je povezan i sa drugim članstvom. E-mail nije promijenjen da se ne promijeni identitet naloga. Ime i organizacija ovog člana su sačuvani.';
+
+    public const MMSP_EMAIL_NO_ACCOUNT_MESSAGE = 'Član nema povezan korisnički nalog. E-mail nije promijenjen. Ime i organizacija ovog člana su sačuvani.';
 
     public const OMLADINSKO_INCOMPLETE_PUBLISH_WARNING = 'Komisija još nije formalno kompletirana. Administrativna provjera (M3) ne može početi dok sva tri mjesta nijesu popunjena.';
 
@@ -223,6 +238,41 @@ final class CommissionProfileConfig
         }
 
         return null;
+    }
+
+    /**
+     * MMSP natpis slijedi sačuvani canonical_seat. Prazno mjesto se ne popunjava ulogom.
+     */
+    public static function mmspFunctionLabel(?CommissionMember $member): string
+    {
+        if ($member === null) {
+            return 'Nepopunjeno';
+        }
+
+        return match ($member->canonical_seat) {
+            'predsjednik' => 'Predsjednik Komisije',
+            'sekretar' => 'Sekretar Komisije',
+            'spoljasnji' => 'Član Komisije',
+            default => 'Funkcija nije evidentirana',
+        };
+    }
+
+    public static function mmspFunctionDetail(?CommissionMember $member): ?string
+    {
+        if ($member === null) {
+            return null;
+        }
+
+        return match ($member->canonical_seat) {
+            'predsjednik', 'sekretar' => self::MMSP_MUNICIPAL_AFFILIATION,
+            'spoljasnji' => match ($member->external_category) {
+                'udruzenje' => 'Poslovno ili strukovno udruženje',
+                'biznis' => 'Biznis',
+                'akademska_zajednica' => 'Akademska zajednica',
+                default => null,
+            },
+            default => null,
+        };
     }
 
     public static function memberTypeRejectedMessage(string $type): string

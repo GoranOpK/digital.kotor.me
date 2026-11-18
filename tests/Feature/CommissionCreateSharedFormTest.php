@@ -6,6 +6,8 @@ use App\Mail\CommissionAssignedToCompetition;
 use App\Mail\CommissionMemberAdded;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\CommissionSession;
+use App\Models\CommissionSessionAttendance;
 use App\Models\Competition;
 use App\Models\Role;
 use App\Models\UpNumber;
@@ -134,22 +136,27 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringContainsString('Podrška mikro, malim i srednjim preduzećima', $html);
         $this->assertStringContainsString('value="'.CompetitionProfileResolver::TYPE_CANONICAL.'"', $html);
         $this->assertStringNotContainsString('value="canonical"', $html);
-        $this->assertStringContainsString('name="members[0][position]"', $html);
+        $this->assertStringContainsString('name="members[0][mmsp_function]"', $html);
+        $this->assertStringNotContainsString('name="members[0][position]"', $html);
         $this->assertStringNotContainsString('pm_function', $html);
-        $this->assertStringNotContainsString('Sekretar Komisije', $html);
         $this->assertStringContainsString('name="members[2][canonical_seat_no]"', $html);
         $this->assertStringNotContainsString('name="members[3]', $html);
         $this->assertStringNotContainsString('name="members[4]', $html);
-        $this->assertStringNotContainsString('member_type', $html);
+        $this->assertStringNotContainsString('name="members[0][member_type]"', $html);
         $this->assertStringNotContainsString('Ženske političke mreže', $html);
         $this->assertStringNotContainsString('Udruženja preduzetnica', $html);
         $this->assertStringNotContainsString('zene_mreza', $html);
         $this->assertEquals(3, substr_count($html, 'value="predsjednik"'));
+        $this->assertEquals(3, substr_count($html, 'value="sekretar"'));
+        $this->assertEquals(3, substr_count($html, 'value="spoljasnji"'));
         $this->assertStringContainsString('sva 3 redovna mjesta', $html);
-        $this->assertStringContainsString('>Mjesto 1<', $html);
-        $this->assertStringContainsString('>Mjesto 2<', $html);
-        $this->assertStringContainsString('>Mjesto 3<', $html);
-        $this->assertStringNotContainsString('Predsjednik Komisije', $html);
+        $this->assertStringNotContainsString('>Mjesto 1<', $html);
+        $this->assertStringNotContainsString('>Mjesto 2<', $html);
+        $this->assertStringNotContainsString('>Mjesto 3<', $html);
+        $this->assertStringContainsString('Predsjednik Komisije', $html);
+        $this->assertStringContainsString('Sekretar Komisije', $html);
+        $this->assertStringContainsString('Član Komisije', $html);
+        $this->assertStringContainsString('Opština Kotor', $html);
         $this->assertMatchesRegularExpression('/name="members\[0\]\[name\]"[^>]*required/', $html);
         $this->assertMatchesRegularExpression('/name="members\[2\]\[email\]"[^>]*required/', $html);
     }
@@ -199,6 +206,9 @@ class CommissionCreateSharedFormTest extends TestCase
             $president = $competition->commission->activeMembers->firstWhere('position', 'predsjednik');
             $this->assertSame($presidentSeat, (int) $president->canonical_seat_no);
             $this->assertSame(1, $competition->commission->activeMembers()->where('position', 'predsjednik')->count());
+            $this->assertTrue($competition->commission->activeMembers->every(
+                fn (CommissionMember $member) => $member->canonical_seat === null && $member->external_category === null
+            ));
         }
     }
 
@@ -429,8 +439,19 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertSame(CompetitionProfileResolver::TYPE_CANONICAL, $commission->profile_type);
         $this->assertSame(3, $commission->activeMembers()->count());
         $this->assertSame(1, $commission->activeMembers()->where('position', 'predsjednik')->count());
+        $this->assertSame(2, $commission->activeMembers()->where('position', 'clan')->count());
         $this->assertEqualsCanonicalizing([1, 2, 3], $commission->activeMembers->pluck('canonical_seat_no')->all());
-        $this->assertTrue($commission->activeMembers->every(fn (CommissionMember $member) => $member->member_type === null));
+        $this->assertEqualsCanonicalizing(
+            CanonicalCommissionGovernance::ROLES,
+            $commission->activeMembers->pluck('canonical_seat')->all()
+        );
+        $this->assertTrue($commission->activeMembers->every(fn (CommissionMember $member) => $member->member_type === null && $member->user_id !== null));
+        $external = $commission->activeMembers->firstWhere('canonical_seat', CanonicalCommissionGovernance::ROLE_SPOLJASNJI);
+        $this->assertSame('udruzenje', $external->external_category);
+        $this->assertSame('Udruženje primjer', $external->organization);
+        $this->assertTrue($commission->activeMembers
+            ->whereIn('canonical_seat', [CanonicalCommissionGovernance::ROLE_PREDSJEDNIK, CanonicalCommissionGovernance::ROLE_SEKRETAR])
+            ->every(fn (CommissionMember $member) => $member->external_category === null && $member->organization === 'Opština Kotor'));
         $this->assertSame($commission->id, $competition->fresh()->commission_id);
 
         $html = $this->actingAs($admin)
@@ -439,12 +460,20 @@ class CommissionCreateSharedFormTest extends TestCase
             ->getContent();
         foreach ($commission->activeMembers()->orderBy('canonical_seat_no')->get() as $member) {
             $this->assertStringContainsString($member->name, $html);
+            $this->assertStringContainsString($member->user->email, $html);
+            $this->assertSame($member->canonical_seat, $member->fresh()->canonical_seat);
         }
         $this->assertStringNotContainsString('Nije dodijeljen', $html);
-        $this->assertStringContainsString('1. Mjesto Komisije', $html);
-        $this->assertStringContainsString('2. Mjesto Komisije', $html);
-        $this->assertStringContainsString('3. Mjesto Komisije', $html);
-        $this->assertStringNotContainsString('Predsjednik Komisije', $html);
+        $this->assertStringNotContainsString('1. Mjesto Komisije', $html);
+        $this->assertStringNotContainsString('Funkcija nije evidentirana', $html);
+        $this->assertSame(1, substr_count($html, 'Predsjednik Komisije'));
+        $this->assertSame(1, substr_count($html, 'Sekretar Komisije'));
+        $this->assertSame(1, substr_count($html, '>Član Komisije<'));
+        $this->assertStringContainsString('Opština Kotor', $html);
+        $this->assertStringContainsString('Poslovno ili strukovno udruženje', $html);
+        $this->assertStringContainsString('Udruženje primjer', $html);
+        $this->assertStringContainsString('Aktivan', $html);
+        $this->assertStringContainsString('Sačuvaj podatke člana', $html);
         $this->assertStringNotContainsString('Možete dodati još <strong>1 zamjenskog člana</strong>', $html);
 
         Mail::assertSent(CommissionMemberAdded::class, 3);
@@ -567,7 +596,7 @@ class CommissionCreateSharedFormTest extends TestCase
             3 => ['name' => 'Clan Tri', 'email' => 'mnp3.'.uniqid().'@kotor.me', 'position' => 'clan'],
         ]), 'members', $withoutPresident);
         $this->assertSame(
-            CommissionProfileConfig::CANONICAL_PRESIDENT_COUNT_MESSAGE,
+            CommissionProfileConfig::MMSP_FUNCTION_INCOMPLETE_MESSAGE,
             session('errors')->first('members')
         );
 
@@ -605,6 +634,403 @@ class CommissionCreateSharedFormTest extends TestCase
             session('errors')->first('competition_ids')
         );
         $this->assertSame(0, Commission::query()->count());
+    }
+
+    public function test_mmsp_create_validates_functions_category_and_contact_fields(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft();
+
+        $duplicateFunction = $this->mmspCommissionPayload($competition);
+        $duplicateFunction['members'][1]['mmsp_function'] = 'predsjednik';
+        unset($duplicateFunction['members'][1]['external_category']);
+        $duplicateFunction['members'][1]['organization'] = 'Opština Kotor';
+        $this->assertStoreRejected($admin, $duplicateFunction, 'members', $competition);
+        $this->assertSame(
+            CommissionProfileConfig::MMSP_FUNCTION_INCOMPLETE_MESSAGE,
+            session('errors')->first('members')
+        );
+
+        $missingCategory = $this->mmspCommissionPayload($competition);
+        unset($missingCategory['members'][2]['external_category']);
+        $this->assertStoreRejected($admin, $missingCategory, 'members.2.external_category', $competition);
+        $this->assertSame(
+            CanonicalCommissionGovernance::EXTERNAL_CATEGORY_MESSAGE,
+            session('errors')->first('members.2.external_category')
+        );
+
+        $municipalCategory = $this->mmspCommissionPayload($competition);
+        $municipalCategory['members'][0]['external_category'] = 'biznis';
+        $this->assertStoreRejected($admin, $municipalCategory, 'members.0.external_category', $competition);
+        $this->assertSame(
+            CanonicalCommissionGovernance::MUNICIPAL_CATEGORY_MESSAGE,
+            session('errors')->first('members.0.external_category')
+        );
+
+        $blankOrganization = $this->mmspCommissionPayload($competition);
+        $blankOrganization['members'][2]['organization'] = '   ';
+        $this->assertStoreRejected($admin, $blankOrganization, 'members.2.organization', $competition);
+        $this->assertSame(
+            CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
+            session('errors')->first('members.2.organization')
+        );
+
+        $blankName = $this->mmspCommissionPayload($competition);
+        $blankName['members'][0]['name'] = '';
+        $this->assertStoreRejected($admin, $blankName, 'members.0.name', $competition);
+
+        $invalidEmail = $this->mmspCommissionPayload($competition);
+        $invalidEmail['members'][1]['email'] = 'nije-email';
+        $this->assertStoreRejected($admin, $invalidEmail, 'members.1.email', $competition);
+        $this->assertSame(0, Commission::query()->count());
+    }
+
+    public function test_mmsp_member_details_update_preserves_account_seat_and_role(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $member = Commission::query()->latest('id')->first()->activeMembers()
+            ->where('canonical_seat', CanonicalCommissionGovernance::ROLE_SEKRETAR)
+            ->first();
+        $original = [
+            'id' => $member->id,
+            'user_id' => $member->user_id,
+            'canonical_seat' => $member->canonical_seat,
+            'canonical_seat_no' => $member->canonical_seat_no,
+            'position' => $member->position,
+            'external_category' => $member->external_category,
+            'status' => $member->status,
+        ];
+        $newEmail = 'ispravka.'.uniqid().'@kotor.me';
+
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.members.update-details', $member), [
+                '_member_id' => $member->id,
+                'name' => 'Ana Petrović',
+                'organization' => 'Sekretarijat Opštine Kotor',
+                'email' => $newEmail,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $member->refresh();
+        $this->assertSame('Ana Petrović', $member->name);
+        $this->assertSame('Sekretarijat Opštine Kotor', $member->organization);
+        $this->assertSame($original['id'], $member->id);
+        $this->assertSame($original['user_id'], $member->user_id);
+        $this->assertSame($original['canonical_seat'], $member->canonical_seat);
+        $this->assertSame($original['canonical_seat_no'], $member->canonical_seat_no);
+        $this->assertSame($original['position'], $member->position);
+        $this->assertSame($original['external_category'], $member->external_category);
+        $this->assertSame($original['status'], $member->status);
+        $this->assertSame($newEmail, $member->user->fresh()->email);
+        $this->assertSame('Ana Petrović', $member->user->name);
+        $this->assertSame(3, $member->commission->members()->count());
+
+        $taken = $this->userWithRole('komisija');
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.members.update-details', $member), [
+                '_member_id' => $member->id,
+                'name' => 'Ana Petrović Ispravka',
+                'organization' => 'Sekretarijat Opštine Kotor',
+                'email' => $taken->email,
+            ])
+            ->assertSessionHasErrors('email');
+        $this->assertSame(
+            CommissionProfileConfig::MMSP_EMAIL_OTHER_ACCOUNT_MESSAGE,
+            session('errors')->first('email')
+        );
+        $member->refresh();
+        $this->assertSame($original['user_id'], $member->user_id);
+        $this->assertSame($newEmail, $member->user->fresh()->email);
+        $this->assertSame('Ana Petrović Ispravka', $member->name);
+
+        $otherCommission = Commission::create([
+            'name' => 'Druga komisija '.uniqid(),
+            'year' => 2026,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addYear()->toDateString(),
+            'status' => 'active',
+            'profile_type' => 'omladinsko',
+        ]);
+        CommissionMember::create([
+            'commission_id' => $otherCommission->id,
+            'user_id' => $member->user_id,
+            'name' => 'Isto lice drugdje',
+            'position' => 'clan',
+            'member_type' => 'udruzenje',
+            'canonical_seat_no' => 3,
+            'status' => 'active',
+        ]);
+        $blockedEmail = 'drugi-nalog.'.uniqid().'@kotor.me';
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.members.update-details', $member), [
+                '_member_id' => $member->id,
+                'name' => 'Ana Petrović Dijeljeno',
+                'organization' => 'Opština Kotor',
+                'email' => $blockedEmail,
+            ])
+            ->assertSessionHasErrors('email');
+        $this->assertSame(
+            CommissionProfileConfig::MMSP_EMAIL_SHARED_ACCOUNT_MESSAGE,
+            session('errors')->first('email')
+        );
+        $member->refresh();
+        $this->assertSame($newEmail, $member->user->fresh()->email);
+        $this->assertSame($original['user_id'], $member->user_id);
+        $this->assertSame('Ana Petrović Dijeljeno', $member->name);
+        $this->assertSame('Isto lice drugdje', $otherCommission->members()->first()->name);
+
+        $youthCompetition = $this->makeOmladinskoDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->youthCommissionPayload($youthCompetition))
+            ->assertSessionHasNoErrors();
+        $youthMember = $youthCompetition->fresh()->commission->activeMembers()->first();
+        $youthName = $youthMember->name;
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.members.update-details', $youthMember), [
+                '_member_id' => $youthMember->id,
+                'name' => 'Ne smije se promijeniti',
+                'organization' => 'Opština Kotor',
+                'email' => 'youth.'.uniqid().'@kotor.me',
+            ])
+            ->assertSessionHasErrors('error');
+        $this->assertSame($youthName, $youthMember->fresh()->name);
+        $this->assertNull($youthMember->fresh()->canonical_seat);
+    }
+
+    public function test_mmsp_member_without_history_can_be_deleted_and_the_seat_refilled(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $commission = Commission::query()->latest('id')->firstOrFail();
+        $removed = $commission->activeMembers()->where('canonical_seat', CanonicalCommissionGovernance::ROLE_SEKRETAR)->firstOrFail();
+        $kept = $commission->members()->where('id', '!=', $removed->id)->orderBy('id')->get();
+        $keptSnapshot = $kept->map(fn (CommissionMember $member) => $member->only([
+            'id', 'user_id', 'name', 'canonical_seat', 'canonical_seat_no', 'position', 'external_category', 'status',
+        ]))->all();
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertSame(3, substr_count($html, '>Obriši<'));
+        $this->assertStringNotContainsString('Dodaj novog člana', $html);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.commissions.members.delete', $removed))
+            ->assertRedirect(route('admin.commissions.show', $commission))
+            ->assertSessionHasNoErrors();
+
+        $this->assertNull(CommissionMember::query()->find($removed->id));
+        $this->assertNotNull(User::query()->find($removed->user_id));
+        $commission->refresh();
+        $this->assertSame($keptSnapshot, $commission->members()->orderBy('id')->get()->map(fn (CommissionMember $member) => $member->only([
+            'id', 'user_id', 'name', 'canonical_seat', 'canonical_seat_no', 'position', 'external_category', 'status',
+        ]))->all());
+
+        $openHtml = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('Dodaj novog člana', $openHtml);
+        $this->assertStringContainsString('name="mmsp_function"', $openHtml);
+        $this->assertStringContainsString('value="sekretar"', $openHtml);
+        $this->assertStringNotContainsString('name="member_type"', $openHtml);
+        $this->assertStringNotContainsString('name="pm_function"', $openHtml);
+
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.members.add', $commission), [
+                'name' => 'Stari obrazac',
+                'email' => 'stari.'.uniqid().'@kotor.me',
+                'password' => 'password12',
+                'position' => 'clan',
+                'member_type' => 'opstina',
+            ])
+            ->assertSessionHasErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+        $this->assertSame(2, $commission->members()->count());
+
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.members.add', $commission), [
+                'name' => 'Nova Sekretarka',
+                'email' => 'sekretar.'.uniqid().'@kotor.me',
+                'password' => 'password12',
+                'mmsp_function' => CanonicalCommissionGovernance::ROLE_SEKRETAR,
+                'canonical_seat_no' => $removed->canonical_seat_no,
+                'organization' => 'Opština Kotor',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $commission->refresh();
+        $this->assertSame(3, $commission->members()->count());
+        $replacement = $commission->activeMembers()->where('canonical_seat', CanonicalCommissionGovernance::ROLE_SEKRETAR)->firstOrFail();
+        $this->assertSame((int) $removed->canonical_seat_no, (int) $replacement->canonical_seat_no);
+        $this->assertSame('clan', $replacement->position);
+        $this->assertNull($replacement->member_type);
+        $this->assertNull($replacement->external_category);
+        $this->assertNull($replacement->appointment_reference);
+        $this->assertSame('Opština Kotor', $replacement->organization);
+        $this->assertSame('Nova Sekretarka', $replacement->name);
+        $this->assertNotSame($removed->user_id, $replacement->user_id);
+        $this->assertEqualsCanonicalizing(
+            CanonicalCommissionGovernance::ROLES,
+            $commission->activeMembers()->pluck('canonical_seat')->all()
+        );
+        $this->assertSame($keptSnapshot, $commission->members()->whereIn('id', $kept->pluck('id'))->orderBy('id')->get()->map(fn (CommissionMember $member) => $member->only([
+            'id', 'user_id', 'name', 'canonical_seat', 'canonical_seat_no', 'position', 'external_category', 'status',
+        ]))->all());
+    }
+
+    public function test_mmsp_member_with_session_or_appointment_cannot_be_deleted(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $commission = $competition->fresh()->commission;
+        $withSession = $commission->activeMembers()->where('canonical_seat', CanonicalCommissionGovernance::ROLE_PREDSJEDNIK)->firstOrFail();
+        $appointed = $commission->activeMembers()->where('canonical_seat', CanonicalCommissionGovernance::ROLE_SPOLJASNJI)->firstOrFail();
+        $session = CommissionSession::query()->create([
+            'competition_id' => $competition->id,
+            'commission_id' => $commission->id,
+            'session_type' => CommissionSession::TYPE_FIRST,
+            'held_at' => now(),
+        ]);
+        $attendance = CommissionSessionAttendance::query()->create([
+            'commission_session_id' => $session->id,
+            'commission_member_id' => $withSession->id,
+            'present' => true,
+        ]);
+        $appointed->update([
+            'appointment_reference' => 'Rješenje 01-7/26',
+            'appointed_at' => now(),
+        ]);
+
+        foreach ([$withSession, $appointed] as $member) {
+            $this->actingAs($admin)
+                ->delete(route('admin.commissions.members.delete', $member))
+                ->assertRedirect(route('admin.commissions.show', $commission))
+                ->assertSessionHasErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+            $this->assertNotNull($member->fresh());
+        }
+
+        $this->assertSame(3, $commission->members()->count());
+        $this->assertNotNull($attendance->fresh());
+        $this->assertSame('Rješenje 01-7/26', $appointed->fresh()->appointment_reference);
+        $this->assertSame(1, CommissionSessionAttendance::query()->count());
+    }
+
+    public function test_youth_and_womens_member_delete_stays_on_the_existing_path(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $youth = $this->makeOmladinskoDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->youthCommissionPayload($youth))
+            ->assertSessionHasNoErrors();
+        $youthCommission = $youth->fresh()->commission;
+        $youthMember = $youthCommission->activeMembers()->where('position', 'clan')->firstOrFail();
+        $this->actingAs($admin)
+            ->delete(route('admin.commissions.members.delete', $youthMember))
+            ->assertSessionHasNoErrors();
+        $this->assertNull(CommissionMember::query()->find($youthMember->id));
+        $this->assertSame(2, $youthCommission->members()->count());
+        $this->assertTrue($youthCommission->members()->whereNull('canonical_seat')->count() === 2);
+
+        $zensko = $this->makeZenskoDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->zenskoCommissionPayload($zensko))
+            ->assertSessionHasNoErrors();
+        $zenskoCommission = $zensko->fresh()->commission;
+        $zenskoMember = $zenskoCommission->activeMembers()->where('member_type', 'zene_mreza')->firstOrFail();
+        $this->actingAs($admin)
+            ->delete(route('admin.commissions.members.delete', $zenskoMember))
+            ->assertSessionHasNoErrors();
+        $this->assertNull(CommissionMember::query()->find($zenskoMember->id));
+        $this->assertSame(4, $zenskoCommission->members()->count());
+        $this->assertSame(
+            ['opstina', 'opstina', 'opstina', 'udruzenje'],
+            $zenskoCommission->members()->orderBy('id')->pluck('member_type')->all()
+        );
+    }
+
+    public function test_existing_mmsp_members_without_canonical_seat_stay_until_canonical_appoint(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft('MMSP staro '.uniqid());
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $commission = Commission::query()->latest('id')->firstOrFail();
+        CommissionMember::query()->where('commission_id', $commission->id)->update([
+            'canonical_seat' => null,
+            'external_category' => null,
+        ]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertSame(3, substr_count($html, 'Funkcija nije evidentirana'));
+        $this->assertStringNotContainsString('Predsjednik Komisije', $html);
+        $this->assertStringNotContainsString('Sekretar Komisije', $html);
+        $this->assertTrue(CommissionMember::query()->where('commission_id', $commission->id)->whereNotNull('canonical_seat')->doesntExist());
+
+        $today = now()->toDateString();
+        $this->actingAs($admin)
+            ->post(route('admin.competitions.canonical-commission.establish', $competition), [
+                'name' => $commission->name,
+                'appointment_reference' => 'Akt o obrazovanju TEST',
+                'appointed_on' => $today,
+                'mandate_starts_on' => $today,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $members = $commission->activeMembers()->with('user')->orderBy('canonical_seat_no')->get();
+        $nonPresidentRoles = [
+            CanonicalCommissionGovernance::ROLE_SEKRETAR,
+            CanonicalCommissionGovernance::ROLE_SPOLJASNJI,
+        ];
+        $nonPresidentIndex = 0;
+        foreach ($members as $member) {
+            $role = $member->position === 'predsjednik'
+                ? CanonicalCommissionGovernance::ROLE_PREDSJEDNIK
+                : $nonPresidentRoles[$nonPresidentIndex++];
+            $payload = [
+                'email' => $member->user->email,
+                'seat_no' => $member->canonical_seat_no,
+                'role' => $role,
+                'appointment_reference' => 'Akt člana '.$member->canonical_seat_no,
+                'appointed_on' => $today,
+            ];
+            if ($role === CanonicalCommissionGovernance::ROLE_SPOLJASNJI) {
+                $payload['external_category'] = 'biznis';
+            }
+            $this->actingAs($admin)
+                ->post(route('admin.competitions.canonical-commission.appoint', $competition), $payload)
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(3, $commission->activeMembers()->count());
+        $this->assertEqualsCanonicalizing(
+            CanonicalCommissionGovernance::ROLES,
+            $commission->activeMembers()->pluck('canonical_seat')->all()
+        );
     }
 
     public function test_store_requires_a_supported_profile_and_matching_optional_calls(): void
@@ -1074,6 +1500,28 @@ class CommissionCreateSharedFormTest extends TestCase
         $payload = $this->youthCommissionPayload($competition, $overridesBySeat);
         $payload['name'] = 'Komisija MMSP forma '.uniqid();
         $payload['competition_type'] = CompetitionProfileResolver::TYPE_CANONICAL;
+
+        foreach ($payload['members'] as $index => $member) {
+            if (! is_array($member)) {
+                continue;
+            }
+            $function = $member['pm_function'] ?? null;
+            unset($payload['members'][$index]['pm_function']);
+            if ($function === 'clan') {
+                $function = 'spoljasnji';
+            }
+            if (! in_array($function, ['predsjednik', 'sekretar', 'spoljasnji'], true)) {
+                continue;
+            }
+            $payload['members'][$index]['mmsp_function'] = $function;
+            if ($function === 'spoljasnji') {
+                $payload['members'][$index]['external_category'] = $member['external_category'] ?? 'udruzenje';
+                $payload['members'][$index]['organization'] = $member['organization'] ?? 'Udruženje primjer';
+            } else {
+                unset($payload['members'][$index]['external_category']);
+                $payload['members'][$index]['organization'] = $member['organization'] ?? 'Opština Kotor';
+            }
+        }
 
         return $payload;
     }
