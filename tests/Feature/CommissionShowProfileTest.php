@@ -222,6 +222,8 @@ class CommissionShowProfileTest extends TestCase
         $this->assertSame(1, substr_count($html, 'Predsjednik Komisije'));
         $this->assertSame(1, substr_count($html, 'Sekretar Komisije'));
         $this->assertSame(1, substr_count($html, 'Član Komisije'));
+        $this->assertStringNotContainsString('/details', $html);
+        $this->assertStringNotContainsString('mmsp_function', $html);
         $this->assertSame(2, substr_count($html, 'Opština Kotor'));
         $this->assertMatchesRegularExpression(
             '/Predsjednik Komisije[\s\S]*Predsjednik Show[\s\S]*Opština Kotor[\s\S]*Sekretar Komisije[\s\S]*Clan Show 2[\s\S]*Opština Kotor[\s\S]*Član Komisije[\s\S]*Clan Show 3/',

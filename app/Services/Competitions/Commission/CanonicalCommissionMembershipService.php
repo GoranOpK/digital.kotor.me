@@ -261,13 +261,19 @@ class CanonicalCommissionMembershipService
         }
 
         $active = $locked->activeMembers()->lockForUpdate()->get();
-        $existingSharedMember = $active->first(fn (CommissionMember $member) =>
-            (int) $member->user_id === (int) $user->id
-            && (int) $member->canonical_seat_no === $seatNo
-            && $member->canonical_seat === null
-            && $member->appointment_reference === null
-            && $member->appointed_at === null
-        );
+        $existingSharedMember = $active->first(function (CommissionMember $member) use ($user, $seatNo, $role) {
+            if ((int) $member->user_id !== (int) $user->id || (int) $member->canonical_seat_no !== $seatNo) {
+                return false;
+            }
+            if ($member->appointment_reference !== null || $member->appointed_at !== null) {
+                return false;
+            }
+            if ($member->canonical_seat === null || $member->canonical_seat === '') {
+                return true;
+            }
+
+            return $member->canonical_seat === $role;
+        });
 
         if ($active->count() >= $this->governance->commissionConfig()->seatCount && $existingSharedMember === null) {
             return [ProcessWriteResult::failed(CanonicalCommissionGovernance::FOURTH_SEAT_MESSAGE), null];

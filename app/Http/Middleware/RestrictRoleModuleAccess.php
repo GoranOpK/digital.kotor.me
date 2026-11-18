@@ -145,6 +145,7 @@ class RestrictRoleModuleAccess
                 'admin.commissions.members.sign',
                 'admin.commissions.members.store-declarations',
                 'admin.commissions.members.update-status',
+                'admin.commissions.members.update-details',
                 'admin.commissions.members.delete',
             ];
 

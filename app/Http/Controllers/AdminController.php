@@ -27,6 +27,7 @@ use App\Services\MmspTestAccessService;
 use App\Services\Competitions\CallPublicationService;
 use App\Services\Competitions\CanonicalTestApplicationPhaseService;
 use App\Services\Competitions\Commission\CanonicalCommissionAdministrationService;
+use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\Lifecycle\PublishedCallLifecycleLock;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
@@ -40,6 +41,7 @@ use App\Services\Competitions\ZenskoDecisionProposalHtmlReader;
 use App\Services\Competitions\ZenskoDecisionProposalReadException;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Support\CommissionProfileConfig;
+use App\Support\MmspCommissionMembershipGuard;
 use App\Support\CompetitionAnnualInstance;
 use App\Support\CompetitionProgramCatalog;
 use DomainException;
@@ -2038,6 +2040,15 @@ class AdminController extends Controller
             $request->merge(['members' => $membersData]);
         }
 
+        if ($requestedProfile['type'] === CommissionProfileConfig::PROFILE_CANONICAL) {
+            $appliedFunctions = $this->applyMmspArticle7Functions($membersData);
+            if ($appliedFunctions['error']) {
+                return back()->withErrors($appliedFunctions['error'])->withInput();
+            }
+            $membersData = $appliedFunctions['members'];
+            $request->merge(['members' => $membersData]);
+        }
+
         if (count($filledMembers) !== $maxMembers) {
             return back()->withErrors(['members' => $incompleteMessage])->withInput();
         }
@@ -2058,7 +2069,14 @@ class AdminController extends Controller
             $rules["members.{$i}.email"] = 'required|email|max:255';
             $rules["members.{$i}.password"] = 'nullable|string|min:8';
             $rules["members.{$i}.position"] = 'required|in:predsjednik,clan';
-            $rules["members.{$i}.organization"] = 'nullable|string|max:255';
+            $rules["members.{$i}.organization"] = $requestedProfile['type'] === CommissionProfileConfig::PROFILE_CANONICAL
+                ? 'required|string|max:255'
+                : 'nullable|string|max:255';
+            if ($requestedProfile['type'] === CommissionProfileConfig::PROFILE_CANONICAL) {
+                $rules["members.{$i}.mmsp_function"] = 'required|in:predsjednik,sekretar,spoljasnji';
+                $rules["members.{$i}.external_category"] = 'nullable|in:udruzenje,biznis,akademska_zajednica';
+                $rules["members.{$i}.canonical_seat"] = 'required|in:predsjednik,sekretar,spoljasnji';
+            }
             if ($isThreeSeatForm) {
                 $rules["members.{$i}.canonical_seat_no"] = 'required|integer|in:1,2,3';
             } else {
@@ -2089,7 +2107,10 @@ class AdminController extends Controller
             $messages["members.{$i}.member_type.required"] = 'Tip člana je obavezan.';
             $messages["members.{$i}.canonical_seat_no.required"] = 'Kanonsko mjesto člana je obavezno.';
             $messages["members.{$i}.canonical_seat_no.in"] = $invalidSeatMessage;
+            $messages["members.{$i}.organization.required"] = CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE;
             $messages["members.{$i}.organization.required_if"] = 'Organizacija je obavezna za člana iz udruženja.';
+            $messages["members.{$i}.mmsp_function.required"] = CommissionProfileConfig::MMSP_FUNCTION_INCOMPLETE_MESSAGE;
+            $messages["members.{$i}.mmsp_function.in"] = CommissionProfileConfig::MMSP_FUNCTION_INVALID_MESSAGE;
         }
 
         $validated = $request->validate($rules, $messages);
@@ -2223,6 +2244,12 @@ class AdminController extends Controller
                         : ($isThreeSeatForm ? null : ($memberData['member_type'] ?? null)),
                     'organization' => $memberData['organization'] ?? null,
                     'canonical_seat_no' => $isThreeSeatForm ? (int) $memberData['canonical_seat_no'] : null,
+                    'canonical_seat' => $requestedProfile['type'] === CommissionProfileConfig::PROFILE_CANONICAL
+                        ? ($memberData['canonical_seat'] ?? null)
+                        : null,
+                    'external_category' => $requestedProfile['type'] === CommissionProfileConfig::PROFILE_CANONICAL
+                        ? (($memberData['external_category'] ?? null) ?: null)
+                        : null,
                     'status' => 'active',
                 ]);
 
@@ -2318,9 +2345,9 @@ class AdminController extends Controller
         $profile = $commission->assignedProfileType();
         if ($profile === CommissionProfileConfig::PROFILE_CANONICAL) {
             $slotLabels = [
-                1 => '1. Mjesto Komisije',
-                2 => '2. Mjesto Komisije',
-                3 => '3. Mjesto Komisije',
+                1 => null,
+                2 => null,
+                3 => null,
             ];
         } elseif ($profile === CommissionProfileConfig::PROFILE_OMLADINSKO) {
             $slotLabels = [
@@ -2352,14 +2379,18 @@ class AdminController extends Controller
             $functionMember = $activeSubstitute ?? $regularMember;
             if ($profile === CommissionProfileConfig::PROFILE_OMLADINSKO) {
                 $label = $this->pmCommissionFunctionLabel($functionMember);
+            } elseif ($profile === CommissionProfileConfig::PROFILE_CANONICAL) {
+                $label = CommissionProfileConfig::mmspFunctionLabel($functionMember);
             }
 
             $slots[] = [
                 'number' => $slotNumber,
                 'label' => $label,
-                'detail' => $profile === CommissionProfileConfig::PROFILE_OMLADINSKO
-                    ? $this->pmCommissionFunctionDetail($functionMember)
-                    : null,
+                'detail' => match ($profile) {
+                    CommissionProfileConfig::PROFILE_OMLADINSKO => $this->pmCommissionFunctionDetail($functionMember),
+                    CommissionProfileConfig::PROFILE_CANONICAL => CommissionProfileConfig::mmspFunctionDetail($functionMember),
+                    default => null,
+                },
                 'regular_member' => $regularMember,
                 'active_substitute' => $activeSubstitute,
             ];
@@ -2456,6 +2487,97 @@ class AdminController extends Controller
         }
 
         return ['members' => $mappedMembers, 'types' => $types, 'error' => null];
+    }
+
+    /**
+     * MMSP formiranje traži izričit mmsp_function. Uloga ide u canonical_seat.
+     * position predsjednik ostaje jedini izvor predsjedničkih ovlašćenja; sekretar i član ostaju clan.
+     * member_type se ne upisuje. Postojeći red sa praznim canonical_seat se ovdje ne dira.
+     *
+     * @param  array<int|string, mixed>  $members
+     * @return array{members: array<int|string, mixed>, error: array<string, string>|null}
+     */
+    protected function applyMmspArticle7Functions(array $members): array
+    {
+        $mappedMembers = $members;
+        $present = [];
+        $filledIndexes = [];
+        foreach ($members as $index => $member) {
+            if (! is_array($member) || empty($member['email'])) {
+                continue;
+            }
+            $filledIndexes[] = $index;
+            $function = $member['mmsp_function'] ?? null;
+            if (! is_string($function) || $function === '') {
+                continue;
+            }
+            $present[$index] = $function;
+        }
+
+        if (count($filledIndexes) !== 3 || count($present) !== 3) {
+            return [
+                'members' => $members,
+                'error' => ['members' => CommissionProfileConfig::MMSP_FUNCTION_INCOMPLETE_MESSAGE],
+            ];
+        }
+
+        $counts = ['predsjednik' => 0, 'sekretar' => 0, 'spoljasnji' => 0];
+        foreach ($present as $index => $function) {
+            if (! array_key_exists($function, $counts)) {
+                return [
+                    'members' => $members,
+                    'error' => ['members.'.$index.'.mmsp_function' => CommissionProfileConfig::MMSP_FUNCTION_INVALID_MESSAGE],
+                ];
+            }
+            $counts[$function]++;
+
+            $organization = trim((string) ($mappedMembers[$index]['organization'] ?? ''));
+            $category = $mappedMembers[$index]['external_category'] ?? null;
+            $category = is_string($category) && $category !== '' ? $category : null;
+
+            if ($function === 'spoljasnji') {
+                if (! in_array($category, CanonicalCommissionGovernance::EXTERNAL_CATEGORIES, true)) {
+                    return [
+                        'members' => $members,
+                        'error' => ['members.'.$index.'.external_category' => CanonicalCommissionGovernance::EXTERNAL_CATEGORY_MESSAGE],
+                    ];
+                }
+                if ($organization === '') {
+                    return [
+                        'members' => $members,
+                        'error' => ['members.'.$index.'.organization' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE],
+                    ];
+                }
+                $mappedMembers[$index]['position'] = 'clan';
+                $mappedMembers[$index]['canonical_seat'] = CanonicalCommissionGovernance::ROLE_SPOLJASNJI;
+                $mappedMembers[$index]['external_category'] = $category;
+                $mappedMembers[$index]['organization'] = $organization;
+            } else {
+                if ($category !== null) {
+                    return [
+                        'members' => $members,
+                        'error' => ['members.'.$index.'.external_category' => CanonicalCommissionGovernance::MUNICIPAL_CATEGORY_MESSAGE],
+                    ];
+                }
+                $mappedMembers[$index]['position'] = $function === 'predsjednik' ? 'predsjednik' : 'clan';
+                $mappedMembers[$index]['canonical_seat'] = $function === 'predsjednik'
+                    ? CanonicalCommissionGovernance::ROLE_PREDSJEDNIK
+                    : CanonicalCommissionGovernance::ROLE_SEKRETAR;
+                $mappedMembers[$index]['external_category'] = null;
+                $mappedMembers[$index]['organization'] = $organization !== ''
+                    ? $organization
+                    : CommissionProfileConfig::MMSP_MUNICIPAL_AFFILIATION;
+            }
+        }
+
+        if ($counts['predsjednik'] !== 1 || $counts['sekretar'] !== 1 || $counts['spoljasnji'] !== 1) {
+            return [
+                'members' => $members,
+                'error' => ['members' => CommissionProfileConfig::MMSP_FUNCTION_INCOMPLETE_MESSAGE],
+            ];
+        }
+
+        return ['members' => $mappedMembers, 'error' => null];
     }
 
     /**
@@ -2623,7 +2745,7 @@ class AdminController extends Controller
     public function addCommissionMember(Request $request, Commission $commission)
     {
         if ($commission->isCanonicalProfile()) {
-            return back()->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE])->withInput();
+            return $this->addCanonicalCommissionMember($request, $commission);
         }
 
         $isSubstituteRequest = $request->input('member_type') === 'zamjenski';
@@ -2871,6 +2993,162 @@ class AdminController extends Controller
     }
 
     /**
+     * Popunjava prazno MMSP mjesto. Ne evidentira pravni akt i ne dira članove sa istorijom.
+     * Stari obrazac sa member_type ostaje odbijen.
+     */
+    protected function addCanonicalCommissionMember(Request $request, Commission $commission)
+    {
+        if ($request->filled('member_type') || ! $request->filled('mmsp_function')) {
+            return back()->withErrors([
+                'error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE,
+            ])->withInput();
+        }
+
+        if ($commission->status !== 'active' || now()->lt($commission->start_date) || now()->gt($commission->end_date)) {
+            return back()->withErrors([
+                'error' => 'Mandat komisije nije aktivan. Nije moguće dodavanje člana.',
+            ])->withInput();
+        }
+
+        $validated = $request->validate([
+            'user_id' => 'nullable|exists:users,id',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|required_without:user_id|email|max:255',
+            'password' => 'nullable|string|min:8',
+            'mmsp_function' => 'required|in:predsjednik,sekretar,spoljasnji',
+            'canonical_seat_no' => 'required|integer|in:1,2,3',
+            'organization' => 'required|string|max:255',
+            'external_category' => 'nullable|in:udruzenje,biznis,akademska_zajednica',
+        ], [
+            'name.required' => 'Ime i prezime je obavezno.',
+            'email.required_without' => 'E-mail je obavezan ako član ne postoji u sistemu.',
+            'email.email' => 'E-mail mora biti validan.',
+            'password.min' => 'Password mora imati minimum 8 karaktera.',
+            'organization.required' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
+            'mmsp_function.required' => CommissionProfileConfig::MMSP_FUNCTION_INVALID_MESSAGE,
+            'mmsp_function.in' => CommissionProfileConfig::MMSP_FUNCTION_INVALID_MESSAGE,
+            'canonical_seat_no.required' => 'Kanonsko mjesto člana je obavezno.',
+            'canonical_seat_no.in' => CanonicalCommissionGovernance::SEAT_INVALID_MESSAGE,
+        ]);
+
+        $commission->loadMissing('members');
+        $seatNo = (int) $validated['canonical_seat_no'];
+        $function = $validated['mmsp_function'];
+        $seatTaken = $commission->members->contains(function (CommissionMember $member) use ($seatNo) {
+            if ((int) $member->canonicalSeatNumber() === $seatNo) {
+                return true;
+            }
+
+            return ! empty($member->is_substitute) && (int) $member->replaces_member_number === $seatNo;
+        });
+        if ($seatTaken) {
+            return back()->withErrors([
+                'canonical_seat_no' => CanonicalCommissionGovernance::SEAT_DUPLICATE_MESSAGE,
+            ])->withInput();
+        }
+        if ($commission->members->contains(fn (CommissionMember $member) => $member->canonical_seat === $function)) {
+            return back()->withErrors([
+                'mmsp_function' => CanonicalCommissionGovernance::SEAT_DUPLICATE_MESSAGE,
+            ])->withInput();
+        }
+
+        $category = $validated['external_category'] ?? null;
+        $category = is_string($category) && $category !== '' ? $category : null;
+        $organization = trim((string) $validated['organization']);
+        if ($function === CanonicalCommissionGovernance::ROLE_SPOLJASNJI) {
+            if (! in_array($category, CanonicalCommissionGovernance::EXTERNAL_CATEGORIES, true)) {
+                return back()->withErrors([
+                    'external_category' => CanonicalCommissionGovernance::EXTERNAL_CATEGORY_MESSAGE,
+                ])->withInput();
+            }
+        } else {
+            if ($category !== null) {
+                return back()->withErrors([
+                    'external_category' => CanonicalCommissionGovernance::MUNICIPAL_CATEGORY_MESSAGE,
+                ])->withInput();
+            }
+            $category = null;
+        }
+        if ($organization === '') {
+            return back()->withErrors([
+                'organization' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
+            ])->withInput();
+        }
+
+        $userId = $validated['user_id'] ?? null;
+        $normalizedEmail = isset($validated['email']) && $validated['email'] !== ''
+            ? strtolower($validated['email'])
+            : null;
+        if (! $userId && $normalizedEmail) {
+            $existingUser = User::where('email', $normalizedEmail)->first();
+            if ($existingUser) {
+                $userId = $existingUser->id;
+            }
+        }
+
+        $duplicateMemberError = $this->validateCommissionMemberUserUniqueness(
+            $commission,
+            $userId,
+            $normalizedEmail
+        );
+        if ($duplicateMemberError) {
+            return back()->withErrors($duplicateMemberError)->withInput();
+        }
+
+        if (! $userId) {
+            $komisijaRole = Role::where('name', 'komisija')->first();
+            if (! $komisijaRole) {
+                return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
+            }
+            if (empty($validated['password'])) {
+                return back()->withErrors([
+                    'password' => 'Password je obavezan kada korisnik ne postoji u sistemu.',
+                ])->withInput();
+            }
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $normalizedEmail,
+                'password' => Hash::make($validated['password']),
+                'role_id' => $komisijaRole->id,
+                'activation_status' => 'active',
+            ]);
+            $this->sendEmailVerificationToCommissionMember($user);
+            $userId = $user->id;
+        }
+
+        $member = CommissionMember::create([
+            'commission_id' => $commission->id,
+            'user_id' => $userId,
+            'name' => trim($validated['name']),
+            'position' => $function === CanonicalCommissionGovernance::ROLE_PREDSJEDNIK ? 'predsjednik' : 'clan',
+            'member_type' => null,
+            'organization' => $organization,
+            'is_substitute' => false,
+            'canonical_seat_no' => $seatNo,
+            'canonical_seat' => $function,
+            'external_category' => $category,
+            'status' => 'active',
+        ]);
+
+        \App\Support\CommissionCanonicalSeat::persistForCommission($commission->fresh('members'));
+
+        $targetUser = $member->user;
+        if ($targetUser && $targetUser->email) {
+            $this->sendEmailVerificationToCommissionMember($targetUser);
+            try {
+                Mail::to($targetUser->email)->send(new CommissionMemberAdded(
+                    $member,
+                    CommissionAppointmentMailCopy::fromStoredCommissionProfile($commission->profile_type)
+                ));
+            } catch (\Throwable $e) {
+                // Ne prekidaj tok zbog mail greške
+            }
+        }
+
+        return back()->with('success', 'Član komisije je uspješno dodat.');
+    }
+
+    /**
      * Slanje obavještenja članovima komisije da su dodijeljeni na određeni konkurs
      */
     protected function notifyCommissionMembersAboutCompetition(Commission $commission, Competition $competition): void
@@ -2928,6 +3206,105 @@ class AdminController extends Controller
     }
 
     /**
+     * Ispravka imena, organizacije i e-maila člana MMSP komisije.
+     * Ne mijenja mjesto, ulogu, status, ocjene ni vezu sa drugim nalogom.
+     */
+    public function updateCanonicalMemberDetails(Request $request, CommissionMember $member)
+    {
+        $commission = $member->commission;
+        if ($commission === null || ! $commission->isCanonicalProfile()) {
+            return back()->withErrors([
+                'error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE,
+            ])->withInput();
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'organization' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            '_member_id' => ['required', 'integer', 'in:'.$member->id],
+        ], [
+            'name.required' => 'Ime i prezime člana je obavezno.',
+            'organization.required' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
+            'email.required' => 'E-mail člana je obavezan.',
+            'email.email' => 'E-mail člana mora biti validan.',
+        ]);
+
+        $member->load('user');
+        $user = $member->user;
+        $name = trim($validated['name']);
+        $organization = trim($validated['organization']);
+        if ($name === '') {
+            return back()->withErrors(['name' => 'Ime i prezime člana je obavezno.'])->withInput();
+        }
+        if ($organization === '') {
+            return back()->withErrors([
+                'organization' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
+            ])->withInput();
+        }
+
+        if ($user === null) {
+            $member->update([
+                'name' => $name,
+                'organization' => $organization,
+            ]);
+
+            return back()->withErrors([
+                'email' => CommissionProfileConfig::MMSP_EMAIL_NO_ACCOUNT_MESSAGE,
+            ])->withInput();
+        }
+
+        $normalizedEmail = strtolower(trim($validated['email']));
+        $currentEmail = strtolower((string) $user->email);
+        $emailChanges = $normalizedEmail !== $currentEmail;
+        $sharedAccount = CommissionMember::query()
+            ->where('user_id', $user->id)
+            ->where('id', '!=', $member->id)
+            ->exists();
+
+        if ($emailChanges && User::query()->where('email', $normalizedEmail)->where('id', '!=', $user->id)->exists()) {
+            $member->update([
+                'name' => $name,
+                'organization' => $organization,
+            ]);
+
+            return back()->withErrors([
+                'email' => CommissionProfileConfig::MMSP_EMAIL_OTHER_ACCOUNT_MESSAGE,
+            ])->withInput();
+        }
+
+        if ($emailChanges && $sharedAccount) {
+            $member->update([
+                'name' => $name,
+                'organization' => $organization,
+            ]);
+
+            return back()->withErrors([
+                'email' => CommissionProfileConfig::MMSP_EMAIL_SHARED_ACCOUNT_MESSAGE,
+            ])->withInput();
+        }
+
+        DB::transaction(function () use ($member, $user, $name, $organization, $emailChanges, $normalizedEmail, $sharedAccount) {
+            $member->update([
+                'name' => $name,
+                'organization' => $organization,
+            ]);
+
+            if ($sharedAccount) {
+                return;
+            }
+
+            $user->name = $name;
+            if ($emailChanges) {
+                $user->email = $normalizedEmail;
+            }
+            $user->save();
+        });
+
+        return back()->with('success', 'Podaci člana komisije su sačuvani.');
+    }
+
+    /**
      * Ažuriranje statusa člana komisije
      */
     public function updateMemberStatus(Request $request, CommissionMember $member)
@@ -2958,8 +3335,18 @@ class AdminController extends Controller
     {
         $commission = $member->commission;
         if ($commission->isCanonicalProfile()) {
+            $block = MmspCommissionMembershipGuard::hardDeleteBlockReason($member);
+            if ($block !== null) {
+                return redirect()->route('admin.commissions.show', $commission)
+                    ->withErrors(['error' => $block]);
+            }
+
+            DB::transaction(function () use ($member) {
+                $member->delete();
+            });
+
             return redirect()->route('admin.commissions.show', $commission)
-                ->withErrors(['error' => CommissionProfileConfig::CANONICAL_LEGACY_FORM_MESSAGE]);
+                ->with('success', 'Član komisije je uspješno obrisan.');
         }
         $commission->loadMissing(['members', 'competitions']);
 

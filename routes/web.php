@@ -752,6 +752,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
             Route::get('/commissions/members/{member}/sign', [AdminController::class, 'signDeclarations'])->name('commissions.members.sign');
             Route::post('/commissions/members/{member}/sign', [AdminController::class, 'storeDeclarations'])->name('commissions.members.store-declarations');
             Route::post('/commissions/members/{member}/status', [AdminController::class, 'updateMemberStatus'])->name('commissions.members.update-status');
+            Route::post('/commissions/members/{member}/details', [AdminController::class, 'updateCanonicalMemberDetails'])->name('commissions.members.update-details');
             Route::delete('/commissions/members/{member}', [AdminController::class, 'deleteMember'])->name('commissions.members.delete');
 
             // Kanonska MMSP Komisija — evidencija imenovanja, izjava, upražnjenosti i zamjena (KN-SYNC-012)
