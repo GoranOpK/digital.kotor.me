@@ -144,6 +144,11 @@
                     <button type="submit" class="btn-primary">Potpiši konačnu rang listu</button>
                 </form>
             @endif
+            @if($isChair && $finalRanking->isFinal())
+                <p style="margin-top: 12px;">
+                    <a href="{{ route('evaluation.mmsp-decision', $competition) }}" data-testid="mmsp-decision-open" class="btn-primary">Generiši odluku</a>
+                </p>
+            @endif
             <p style="margin-top: 8px;">
                 @if($predlogBlockReason === null && $predlog)
                     <span>Predlog je spreman (interni skup podataka, nije objavljen).</span>

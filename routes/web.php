@@ -543,6 +543,10 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
             Route::post('/competitions/{competition}/canonical-outcome/sign', [CanonicalOutcomeController::class, 'sign'])->name('canonical-outcome.sign');
             Route::post('/competitions/{competition}/canonical-outcome/ties', [CanonicalOutcomeController::class, 'proposeTie'])->name('canonical-outcome.tie.propose');
             Route::post('/competitions/{competition}/canonical-outcome/ties/{resolution}/vote', [CanonicalOutcomeController::class, 'voteTie'])->name('canonical-outcome.tie.vote');
+            Route::get('/competitions/{competition}/mmsp-decision', [\App\Http\Controllers\MmspDecisionController::class, 'show'])->name('mmsp-decision');
+            Route::post('/competitions/{competition}/mmsp-decision', [\App\Http\Controllers\MmspDecisionController::class, 'generate'])->name('mmsp-decision.generate');
+            Route::get('/competitions/{competition}/mmsp-decision/download', [\App\Http\Controllers\MmspDecisionController::class, 'download'])->name('mmsp-decision.download');
+            Route::post('/competitions/{competition}/mmsp-decision/close', [\App\Http\Controllers\MmspDecisionController::class, 'close'])->name('mmsp-decision.close');
             // Kanonski MMSP — finalizacija Predloga, predaja Sekretarijatu, zatvaranje (KN-SYNC-009)
             Route::get('/competitions/{competition}/canonical-administrative', [CanonicalAdministrativeController::class, 'commission'])->name('canonical-administrative.show');
             Route::post('/competitions/{competition}/canonical-administrative/predlog/finalize', [CanonicalAdministrativeController::class, 'finalizePredlog'])->name('canonical-administrative.predlog.finalize');

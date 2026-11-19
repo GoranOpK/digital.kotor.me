@@ -99,7 +99,15 @@
     @endif
 
     @if($rankingView['visible'])
-        <h2 style="font-size: 20px; font-weight: 700; margin: 24px 0 8px;">Preliminarna rang-lista</h2>
+        @php
+            $canonicalFinalRanking = \App\Models\CanonicalFinalRanking::query()->where('competition_id', $competition->id)->first();
+            $canonicalRankingIsFinal = $canonicalFinalRanking?->isFinal() === true;
+            $canonicalChairCanOpenDecision = $canonicalRankingIsFinal
+                && ($commissionMember->canonical_seat ?? null) === \App\Services\Competitions\Commission\CanonicalCommissionGovernance::ROLE_PREDSJEDNIK
+                && ($commissionMember->position ?? null) === 'predsjednik'
+                && ($commissionMember->status ?? null) === 'active';
+        @endphp
+        <h2 data-testid="mmsp-ranking-title" style="font-size: 20px; font-weight: 700; margin: 24px 0 8px;">{{ $canonicalRankingIsFinal ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }}</h2>
         <p style="color: #4b5563; margin-bottom: 8px;">
             Bez utvrđenih iznosa. Podrška ili odbijanje i iznosi utvrđuju se na trećoj sjednici Komisije.
             Isti rang znači stvarno jednak konačni rezultat; redoslijed unutar istog ranga je tehnički i ne daje prednost.
@@ -121,6 +129,9 @@
         </table>
         <p style="margin-top: 12px;">
             <a href="{{ route('evaluation.canonical-outcome.show', $competition) }}" class="btn-primary">Treća sjednica — ishod i iznosi</a>
+            @if($canonicalChairCanOpenDecision)
+                <a href="{{ route('evaluation.mmsp-decision', $competition) }}" data-testid="mmsp-decision-open" class="btn-primary" style="margin-left: 8px;">Generiši odluku</a>
+            @endif
         </p>
     @endif
 </div>
