@@ -614,17 +614,15 @@ class MmspDecisionFinalPhaseTest extends TestCase
     private function assertOfficialTemplatePreserved(string $generatedPath): void
     {
         $template = resource_path('templates/mmsp/odluka-o-dodjeli-subvencija.docx');
-        foreach ([
-            'word/header1.xml',
-            'word/header2.xml',
-            'word/header3.xml',
-            'word/footer1.xml',
-            'word/footer2.xml',
-            'word/footer3.xml',
-            'word/media/image1.jpeg',
-        ] as $entry) {
+        $entries = $this->zipNames($template);
+        $this->assertSame($entries, $this->zipNames($generatedPath));
+        foreach ($entries as $entry) {
+            if ($entry === 'word/document.xml') {
+                continue;
+            }
             $this->assertSame($this->zipEntry($template, $entry), $this->zipEntry($generatedPath, $entry), $entry);
         }
+        $this->assertSame($this->sectPr($template), $this->sectPr($generatedPath));
 
         $text = $this->docxText($generatedPath);
         foreach ([
@@ -655,5 +653,34 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertIsString($contents, $entry);
 
         return $contents;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function zipNames(string $path): array
+    {
+        $zip = new ZipArchive();
+        $this->assertTrue($zip->open($path) === true, $path);
+        $names = [];
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $name = $zip->getNameIndex($index);
+            if (is_string($name)) {
+                $names[] = $name;
+            }
+        }
+        $zip->close();
+        sort($names);
+
+        return $names;
+    }
+
+    private function sectPr(string $path): string
+    {
+        $xml = $this->zipEntry($path, 'word/document.xml');
+        $count = preg_match_all('/<w:sectPr\b.*?<\/w:sectPr>/s', $xml, $matches);
+        $this->assertGreaterThan(0, $count);
+
+        return implode("\n", $matches[0]);
     }
 }

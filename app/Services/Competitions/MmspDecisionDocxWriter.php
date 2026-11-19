@@ -142,8 +142,8 @@ class MmspDecisionDocxWriter
             throw new RuntimeException('Template nema polje za nepotpune prijave.');
         }
         $incomplete[0]->textContent = (string) $proposal->incompleteCount;
-        $this->replaceExact($first, 'prihvatanju', 'prihvatanju ('.$proposal->appealsAccepted.')');
-        $this->replaceExact($first, 'odbijanju', 'odbijanju ('.$proposal->appealsRejected.')');
+        $this->replaceFirstContaining($first, 'prihvatanju', 'prihvatanju ('.$proposal->appealsAccepted.')');
+        $this->replaceFirstContaining($first, 'odbijanju', 'odbijanju ('.$proposal->appealsRejected.')');
 
         $second = $this->requireParagraph($document, 'drugoj sjednici');
         $this->replaceExact($second, 'XX', $proposal->secondSessionDate);
@@ -279,6 +279,19 @@ class MmspDecisionDocxWriter
                 $node->textContent = $to;
             }
         }
+    }
+
+    private function replaceFirstContaining(DOMElement $paragraph, string $needle, string $replacement): void
+    {
+        foreach ($this->textNodes($paragraph) as $node) {
+            if (str_contains($node->textContent, $needle)) {
+                $node->textContent = str_replace($needle, $replacement, $node->textContent);
+
+                return;
+            }
+        }
+
+        throw new RuntimeException('Template nema polje: '.$needle);
     }
 
     private function removeTextHighlights(DOMDocument $document): void
