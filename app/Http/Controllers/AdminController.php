@@ -3220,12 +3220,11 @@ class AdminController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'organization' => ['required', 'string', 'max:255'],
+            'organization' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             '_member_id' => ['required', 'integer', 'in:'.$member->id],
         ], [
             'name.required' => 'Ime i prezime člana je obavezno.',
-            'organization.required' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
             'email.required' => 'E-mail člana je obavezan.',
             'email.email' => 'E-mail člana mora biti validan.',
         ]);
@@ -3233,15 +3232,17 @@ class AdminController extends Controller
         $member->load('user');
         $user = $member->user;
         $name = trim($validated['name']);
-        $organization = trim($validated['organization']);
+        $submittedOrganization = trim((string) ($validated['organization'] ?? ''));
+        $storedOrganization = trim((string) $member->organization);
         if ($name === '') {
             return back()->withErrors(['name' => 'Ime i prezime člana je obavezno.'])->withInput();
         }
-        if ($organization === '') {
+        if ($submittedOrganization === '' && $storedOrganization !== '') {
             return back()->withErrors([
                 'organization' => CommissionProfileConfig::MMSP_ORGANIZATION_REQUIRED_MESSAGE,
             ])->withInput();
         }
+        $organization = $submittedOrganization !== '' ? $submittedOrganization : $member->organization;
 
         if ($user === null) {
             $member->update([

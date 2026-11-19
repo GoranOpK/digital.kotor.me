@@ -474,6 +474,8 @@ class CommissionCreateSharedFormTest extends TestCase
         $this->assertStringContainsString('Udruženje primjer', $html);
         $this->assertStringContainsString('Aktivan', $html);
         $this->assertStringContainsString('Sačuvaj podatke člana', $html);
+        $this->assertSame(3, substr_count($html, 'Izmijeni podatke'));
+        $this->assertStringNotContainsString('data-testid="mmsp-member-edit" open', $html);
         $this->assertStringNotContainsString('Možete dodati još <strong>1 zamjenskog člana</strong>', $html);
 
         Mail::assertSent(CommissionMemberAdded::class, 3);
@@ -802,6 +804,111 @@ class CommissionCreateSharedFormTest extends TestCase
             ->assertSessionHasErrors('error');
         $this->assertSame($youthName, $youthMember->fresh()->name);
         $this->assertNull($youthMember->fresh()->canonical_seat);
+    }
+
+    public function test_mmsp_member_card_edit_can_be_repeated_and_keeps_blank_organization_affiliation(): void
+    {
+        Mail::fake();
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->makeMmspDraft('MMSP kartica '.uniqid());
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->mmspCommissionPayload($competition))
+            ->assertSessionHasNoErrors();
+
+        $commission = Commission::query()->latest('id')->firstOrFail();
+        $member = $commission->activeMembers()
+            ->where('canonical_seat', CanonicalCommissionGovernance::ROLE_PREDSJEDNIK)
+            ->firstOrFail();
+        $member->update(['organization' => null]);
+        $member->refresh();
+        $seat = $member->canonical_seat;
+        $seatNo = $member->canonical_seat_no;
+        $userId = $member->user_id;
+        $email = $member->user->email;
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString($member->name, $html);
+        $this->assertStringContainsString($email, $html);
+        $this->assertStringContainsString('Predsjednik Komisije', $html);
+        $this->assertStringContainsString('Pripadnost: Opština Kotor', $html);
+        $this->assertStringContainsString('Izmijeni podatke', $html);
+        $this->assertStringContainsString('value="'.$member->name.'"', $html);
+        $this->assertStringContainsString('value="'.$email.'"', $html);
+        $this->assertStringNotContainsString('data-testid="mmsp-member-edit" open', $html);
+
+        $show = route('admin.commissions.show', $commission);
+        $this->actingAs($admin)
+            ->from($show)
+            ->post(route('admin.commissions.members.update-details', $member), [
+                '_member_id' => $member->id,
+                'name' => 'Prva ispravka',
+                'organization' => '',
+                'email' => $email,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $member->refresh();
+        $this->assertSame('Prva ispravka', $member->name);
+        $this->assertNull($member->organization);
+        $this->assertSame($seat, $member->canonical_seat);
+        $this->assertSame($seatNo, $member->canonical_seat_no);
+        $this->assertSame($userId, $member->user_id);
+        $this->assertSame($email, $member->user->fresh()->email);
+
+        $afterFirst = $this->actingAs($admin)->get($show)->assertOk()->getContent();
+        $this->assertStringContainsString('Prva ispravka', $afterFirst);
+        $this->assertStringContainsString('Pripadnost: Opština Kotor', $afterFirst);
+        $this->assertStringContainsString('Izmijeni podatke', $afterFirst);
+        $this->assertStringNotContainsString('data-testid="mmsp-member-edit" open', $afterFirst);
+
+        $this->actingAs($admin)
+            ->from($show)
+            ->post(route('admin.commissions.members.update-details', $member), [
+                '_member_id' => $member->id,
+                'name' => 'Druga ispravka',
+                'organization' => '   ',
+                'email' => $email,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $member->refresh();
+        $this->assertSame('Druga ispravka', $member->name);
+        $this->assertNull($member->organization);
+        $this->assertSame($seat, $member->canonical_seat);
+        $this->assertSame('Druga ispravka', $member->user->fresh()->name);
+
+        $filled = $commission->activeMembers()
+            ->where('canonical_seat', CanonicalCommissionGovernance::ROLE_SEKRETAR)
+            ->firstOrFail();
+        $this->actingAs($admin)
+            ->from($show)
+            ->post(route('admin.commissions.members.update-details', $filled), [
+                '_member_id' => $filled->id,
+                'name' => $filled->name,
+                'organization' => '   ',
+                'email' => $filled->user->email,
+            ])
+            ->assertSessionHasErrors('organization');
+        $this->assertSame('Opština Kotor', $filled->fresh()->organization);
+        $this->assertSame(CanonicalCommissionGovernance::ROLE_SEKRETAR, $filled->fresh()->canonical_seat);
+
+        $reopened = $this->actingAs($admin)->get($show)->assertOk()->getContent();
+        $this->assertStringContainsString('data-testid="mmsp-member-edit" open', $reopened);
+
+        $youthCompetition = $this->makeOmladinskoDraft();
+        $this->actingAs($admin)
+            ->post(route('admin.commissions.store'), $this->youthCommissionPayload($youthCompetition))
+            ->assertSessionHasNoErrors();
+        $youthHtml = $this->actingAs($admin)
+            ->get(route('admin.commissions.show', $youthCompetition->fresh()->commission))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('Izmijeni podatke', $youthHtml);
+        $this->assertStringNotContainsString('data-testid="mmsp-member-edit"', $youthHtml);
     }
 
     public function test_mmsp_member_without_history_can_be_deleted_and_the_seat_refilled(): void

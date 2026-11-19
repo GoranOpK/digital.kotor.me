@@ -227,7 +227,21 @@
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-start;
+    }
+    .mmsp-member-edit {
+        display: inline-block;
+    }
+    .mmsp-member-edit > summary {
+        cursor: pointer;
+        list-style: none;
+        display: inline-block;
+    }
+    .mmsp-member-edit > summary::-webkit-details-marker {
+        display: none;
+    }
+    .mmsp-member-edit > form {
+        margin-top: 12px;
     }
 </style>
 
@@ -392,11 +406,9 @@
                                 @endif
                             @endif
                         </div>
-                        @if($commission->isCanonicalProfile())
-                            @include('admin.commissions.partials.mmsp-member-details', ['member' => $activeSubstitute])
-                        @endif
                         <div class="composition-slot-actions">
                             @if($commission->isCanonicalProfile())
+                                @include('admin.commissions.partials.mmsp-member-details', ['member' => $activeSubstitute])
                                 <form method="POST" action="{{ route('admin.commissions.members.delete', $activeSubstitute) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                     @csrf
                                     @method('DELETE')
@@ -427,11 +439,11 @@
                                 <br>E-mail: {{ $regularMember->user->email }}
                             @endif
                         </div>
-                        @if($commission->isCanonicalProfile())
-                            @include('admin.commissions.partials.mmsp-member-details', ['member' => $regularMember])
-                        @endif
                         @if($allowsSharedMembershipMutation || $commission->isCanonicalProfile())
                         <div class="composition-slot-actions">
+                            @if($commission->isCanonicalProfile())
+                                @include('admin.commissions.partials.mmsp-member-details', ['member' => $regularMember])
+                            @endif
                             <form method="POST" action="{{ route('admin.commissions.members.delete', $regularMember) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                 @csrf
                                 @method('DELETE')
