@@ -337,12 +337,16 @@
                         <span class="info-label">Ukupan budžet</span>
                         <span class="info-value">{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</span>
                     </div>
-                    @unless($competition->isCanonicalTestPreview())
-                        <div class="info-item">
-                            <span class="info-label">Datum objavljivanja</span>
-                            <span class="info-value">{{ $competition->published_at ? $competition->published_at->format('d.m.Y H:i') : 'N/A' }}</span>
-                        </div>
-                    @endunless
+                    <div class="info-item">
+                        <span class="info-label">Datum objavljivanja</span>
+                        <span class="info-value">
+                            @if($competition->isCanonicalTestPreview() && ! $competition->published_at)
+                                {{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}
+                            @else
+                                {{ $competition->published_at ? $competition->published_at->format('d.m.Y H:i') : 'N/A' }}
+                            @endif
+                        </span>
+                    </div>
                     <div class="info-item">
                         <span class="info-label">Datum početka</span>
                         <span class="info-value">{{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</span>
