@@ -37,7 +37,7 @@ class CompetitionProgramCatalogTest extends TestCase
             $definitions[$canonical]['title']
         );
         $this->assertSame(
-            'Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.',
+            'Konkursi za podršku preduzetnicima, mikro, malim i srednjim preduzećima — prijave, dokumentacija, komisija i evaluacija.',
             $definitions[$canonical]['description']
         );
 

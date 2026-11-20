@@ -81,7 +81,7 @@ class CompetitionsUserHubTest extends TestCase
         $canonical = $this->linkedProgramCardHtml($html, CompetitionProfileResolver::TYPE_CANONICAL);
         $this->assertStringContainsString('Aktivan modul', $this->visiblePageText($canonical));
         $this->assertStringContainsString(
-            'Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.',
+            'Konkursi za podršku preduzetnicima, mikro, malim i srednjim preduzećima — prijave, dokumentacija, komisija i evaluacija.',
             $this->visiblePageText($canonical)
         );
         $this->assertStringNotContainsString('is-development', $canonical);

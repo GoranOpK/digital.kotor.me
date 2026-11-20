@@ -67,7 +67,7 @@ class MmspTestPreviewHubListTest extends TestCase
         $hub = $this->actingAs($owner)->get(route('competitions.index'))->assertOk();
         $html = $hub->getContent();
         $hub->assertSee('Aktivan modul', false)
-            ->assertSee('Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.', false)
+            ->assertSee('Konkursi za podršku preduzetnicima, mikro, malim i srednjim preduzećima — prijave, dokumentacija, komisija i evaluacija.', false)
             ->assertDontSee('U razvoju', false)
             ->assertDontSee($preview->title, false)
             ->assertDontSee($published->title, false);
