@@ -183,6 +183,110 @@ class MmspTestPreviewRemovalSafetyTest extends TestCase
         Storage::disk('local')->assertExists($cycle['women_file']);
     }
 
+    public function test_foreign_competition_conflict_that_references_the_test_application_stops_the_removal(): void
+    {
+        $admin = $this->user('konkurs_admin');
+        $owner = $this->user('korisnik');
+        $commissionId = DB::table('commissions')->insertGetId([
+            'name' => 'Zajednička komisija',
+            'year' => 2026,
+            'start_date' => '2026-01-01',
+            'end_date' => '2026-12-31',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $memberId = DB::table('commission_members')->insertGetId([
+            'commission_id' => $commissionId,
+            'user_id' => $admin->id,
+            'name' => 'Ana Anić',
+            'position' => 'predsjednik',
+            'member_type' => 'opstina',
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('commission_member_replacements')->insert([
+            'commission_id' => $commissionId,
+            'seat_no' => 1,
+            'canonical_seat' => 'predsjednik',
+            'vacated_member_id' => $memberId,
+            'vacancy_reason' => 'test',
+            'vacancy_triggered_at' => now(),
+            'due_at' => now()->addDays(15),
+            'recorded_by_user_id' => $admin->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $preview = $this->preview('TEST 5 tuđi sukob', ['commission_id' => $commissionId]);
+        $official = $this->competition('Zvanični MMSP ostaje', 'published', ['commission_id' => $commissionId]);
+        $application = $this->application($preview, $owner);
+        $path = 'mmsp-test/'.$application->id.'/ostaje.pdf';
+        Storage::disk('local')->put($path, 'ostaje');
+        ApplicationDocument::create([
+            'application_id' => $application->id,
+            'name' => 'Ostaje',
+            'file_path' => $path,
+            'type' => 'pdf',
+            'document_type' => 'licna_karta',
+        ]);
+        $ownedConflict = DB::table('commission_governance_conflicts')->insertGetId([
+            'commission_id' => $commissionId,
+            'competition_id' => $preview->id,
+            'application_id' => $application->id,
+            'conflict_type' => 'applicant',
+            'normalized_value' => '01019901',
+            'reason' => 'Sukob testnog nacrta',
+            'detected_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $foreignConflict = DB::table('commission_governance_conflicts')->insertGetId([
+            'commission_id' => $commissionId,
+            'competition_id' => $official->id,
+            'application_id' => $application->id,
+            'conflict_type' => 'cross_reference',
+            'normalized_value' => '01019901',
+            'reason' => 'Zvanični konkurs referencira testnu prijavu',
+            'detected_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $assessmentId = DB::table('application_completeness_assessments')->insertGetId([
+            'application_id' => $application->id,
+            'competition_id' => $official->id,
+            'outcome' => 'complete',
+            'evidence_snapshot' => json_encode(['documents' => 1]),
+            'evidence_fingerprint' => hash('sha256', 'tudi'),
+            'recorded_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($admin)
+            ->from(route('admin.competitions.show', $preview))
+            ->post(route('admin.competitions.mmsp-test-preview.remove', $preview), [
+                'confirmation' => 'UKLONI TEST '.$preview->id,
+            ])
+            ->assertRedirect(route('admin.competitions.show', $preview))
+            ->assertSessionHasErrors('confirmation');
+
+        $this->assertNotNull(Competition::query()->find($preview->id));
+        $this->assertNotNull(Competition::query()->find($official->id));
+        $this->assertNotNull(Application::query()->find($application->id));
+        $this->assertSame(1, ApplicationDocument::query()->where('application_id', $application->id)->count());
+        Storage::disk('local')->assertExists($path);
+        $this->assertNotNull(DB::table('commissions')->find($commissionId));
+        $this->assertSame(1, DB::table('commission_members')->where('commission_id', $commissionId)->count());
+        $this->assertSame(1, DB::table('commission_member_replacements')->where('commission_id', $commissionId)->count());
+        $this->assertSame($preview->id, (int) DB::table('commission_governance_conflicts')->where('id', $ownedConflict)->value('competition_id'));
+        $this->assertSame($application->id, (int) DB::table('commission_governance_conflicts')->where('id', $ownedConflict)->value('application_id'));
+        $this->assertSame($official->id, (int) DB::table('commission_governance_conflicts')->where('id', $foreignConflict)->value('competition_id'));
+        $this->assertSame($application->id, (int) DB::table('commission_governance_conflicts')->where('id', $foreignConflict)->value('application_id'));
+        $this->assertSame($official->id, (int) DB::table('application_completeness_assessments')->where('id', $assessmentId)->value('competition_id'));
+        $this->assertSame($application->id, (int) DB::table('application_completeness_assessments')->where('id', $assessmentId)->value('application_id'));
+    }
+
     public function test_removal_refuses_official_women_and_youth_competitions(): void
     {
         $admin = $this->user('konkurs_admin');

@@ -224,16 +224,7 @@ class MmspTestPreviewRemoval
             return $message;
         }
 
-        if ($applicationIds !== [] && $this->otherCompetitionReferences(
-            'canonical_outcomes',
-            'application_id',
-            $applicationIds,
-            $competitionId
-        )) {
-            return $message;
-        }
-
-        return null;
+        return $this->foreignApplicationOwnerReason($competitionId, $applicationIds);
     }
 
     /**
@@ -311,7 +302,6 @@ class MmspTestPreviewRemoval
             'final_application_claims',
         ] as $table) {
             $this->deleteWhereCompetition($table, $competitionId);
-            $this->deleteWhereIn($table, 'application_id', $applicationIds);
         }
 
         $this->deleteOwnNotices($competitionId);
@@ -319,24 +309,55 @@ class MmspTestPreviewRemoval
         $this->deleteWhereCompetition('competition_official_decision_copies', $competitionId);
         $this->deleteWhereCompetition('mmsp_decision_documents', $competitionId);
         $this->deleteWhereCompetition('competition_publication_claims', $competitionId);
-        $this->deleteTestGovernanceConflicts($competitionId, $applicationIds);
+        $this->deleteTestGovernanceConflicts($competitionId);
         $this->deleteWhereIn('applications', 'id', $applicationIds);
+    }
+
+    /**
+     * Briše samo sukobe čiji competition_id jeste ovaj testni konkurs.
+     * application_id nije ključ vlasništva: zapis drugog konkursa može pokazivati
+     * na prijavu koja se uklanja, a baza tu vezu ne zabranjuje.
+     */
+    private function deleteTestGovernanceConflicts(int $competitionId): void
+    {
+        $this->deleteWhereCompetition('commission_governance_conflicts', $competitionId);
     }
 
     /**
      * @param  list<int>  $applicationIds
      */
-    private function deleteTestGovernanceConflicts(int $competitionId, array $applicationIds): void
+    private function foreignApplicationOwnerReason(int $competitionId, array $applicationIds): ?string
     {
-        if (! Schema::hasTable('commission_governance_conflicts')) {
-            return;
+        if ($applicationIds === []) {
+            return null;
         }
 
-        DB::table('commission_governance_conflicts')
-            ->where('competition_id', $competitionId)
-            ->delete();
+        $message = 'Uklanjanje je zaustavljeno jer zapis drugog konkursa referencira prijavu ovog testnog nacrta.';
 
-        $this->deleteWhereIn('commission_governance_conflicts', 'application_id', $applicationIds);
+        foreach ([
+            'application_complaints',
+            'application_completeness_assessments',
+            'final_application_claims',
+            'canonical_outcomes',
+        ] as $table) {
+            if ($this->otherCompetitionReferences($table, 'application_id', $applicationIds, $competitionId)) {
+                return $message;
+            }
+        }
+
+        if (! Schema::hasTable('commission_governance_conflicts') || ! Schema::hasColumn('commission_governance_conflicts', 'application_id')) {
+            return null;
+        }
+
+        $foreignConflict = DB::table('commission_governance_conflicts')
+            ->whereIn('application_id', $applicationIds)
+            ->where(function ($query) use ($competitionId): void {
+                $query->whereNull('competition_id')
+                    ->orWhere('competition_id', '!=', $competitionId);
+            })
+            ->exists();
+
+        return $foreignConflict ? $message : null;
     }
 
     /**
