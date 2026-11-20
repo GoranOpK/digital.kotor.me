@@ -267,7 +267,7 @@
                     <div class="mmsp-form-section">
                         <h2><span class="mmsp-section-number">III</span> FINANSIJSKI OKVIR ULAGANJA</h2>
                         <p class="mmsp-form-text" style="margin-bottom:16px;">
-                            Unesite planirane troškove. Zbir stavki mora biti jednak ukupnoj vrijednosti ulaganja. Iznosi se unose u EUR, sa najviše dvije decimale.
+                            Unesite planirane troškove i sopstveno učešće. Ukupna vrijednost ulaganja i očekivani iznos subvencije računaju se automatski. Iznosi se unose u EUR, sa najviše dvije decimale.
                         </p>
 
                         <div style="overflow-x:auto;">
@@ -284,7 +284,7 @@
                                         <tr>
                                             <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][cost_type]" value="{{ $lines[$i]['cost_type'] ?? '' }}"></td>
                                             <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][description]" value="{{ $lines[$i]['description'] ?? '' }}"></td>
-                                            <td><input class="mmsp-form-control" type="text" inputmode="decimal" name="expense_lines[{{ $i }}][amount]" value="{{ $lines[$i]['amount'] ?? '' }}"></td>
+                                            <td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[{{ $i }}][amount]" value="{{ $lines[$i]['amount'] ?? '' }}"></td>
                                         </tr>
                                     @endfor
                                 </tbody>
@@ -294,7 +294,7 @@
                         <div class="mmsp-form-row-3">
                             <div class="mmsp-form-group">
                                 <label class="mmsp-form-label" for="total_investment">Ukupna vrijednost ulaganja (EUR) <span class="mmsp-required">*</span></label>
-                                <input id="total_investment" class="mmsp-form-control @error('total_investment') error @enderror" type="text" inputmode="decimal" name="total_investment" value="{{ old('total_investment', $plan?->total_investment) }}">
+                                <input id="total_investment" class="mmsp-form-control @error('total_investment') error @enderror" type="text" inputmode="decimal" name="total_investment" value="{{ old('total_investment', $plan?->total_investment) }}" readonly>
                                 @error('total_investment')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                             </div>
                             <div class="mmsp-form-group">
@@ -304,7 +304,7 @@
                             </div>
                             <div class="mmsp-form-group">
                                 <label class="mmsp-form-label" for="expected_subsidy">Očekivani iznos subvencije (EUR) <span class="mmsp-required">*</span></label>
-                                <input id="expected_subsidy" class="mmsp-form-control @error('expected_subsidy') error @enderror" type="text" inputmode="decimal" name="expected_subsidy" value="{{ old('expected_subsidy', $plan?->expected_subsidy) }}">
+                                <input id="expected_subsidy" class="mmsp-form-control @error('expected_subsidy') error @enderror" type="text" inputmode="decimal" name="expected_subsidy" value="{{ old('expected_subsidy', $plan?->expected_subsidy) }}" readonly>
                                 @error('expected_subsidy')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                             </div>
                         </div>
@@ -347,6 +347,10 @@
                 ← Nazad na pregled prijave
             </a>
         </p>
+
+        @unless($readOnly)
+            <script src="{{ asset('js/mmsp-p2-financials.js') }}"></script>
+        @endunless
 
         <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">
             <button type="button"
