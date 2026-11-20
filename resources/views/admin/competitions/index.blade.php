@@ -213,6 +213,8 @@
                     <p><strong>Budžet:</strong> {{ number_format($fc->budget ?? 0, 2, ',', '.') }} €</p>
                     @if($fc->published_at)
                         <p><strong>Datum objave:</strong> {{ $fc->published_at->format('d.m.Y H:i') }}</p>
+                    @elseif($fc->isCanonicalTestPreview() && $fc->start_date)
+                        <p><strong>Datum objavljivanja:</strong> {{ $fc->start_date->format('d.m.Y') }}</p>
                     @endif
                     @if($fc->start_date)
                         <p><strong>Datum početka:</strong> {{ $fc->start_date->format('d.m.Y') }}</p>
@@ -298,7 +300,7 @@
                                     $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
                                     $isEvaluationDeadlinePassed = $competition->isEvaluationDeadlinePassed();
                                 @endphp
-                                @if($competition->status === 'published' && $daysUntilApplicationDeadline !== null)
+                                @if(($competition->status === 'published' || $competition->isCanonicalTestPreview()) && $daysUntilApplicationDeadline !== null)
                                     @if($competition->is_upcoming)
                                         <span style="color: #3b82f6; font-size: 13px; font-weight: 600;">Počinje za:</span>
                                         <div class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6;">
