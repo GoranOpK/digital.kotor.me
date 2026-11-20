@@ -6,6 +6,7 @@ use App\Models\Competition;
 use App\Models\CompetitionPublicationClaim;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -13,12 +14,14 @@ use Illuminate\Support\Facades\DB;
 /**
  * Authoritative CALL publication path for guarded/unrestricted profiles.
  *
- * Quarter, slot, duration, and day-counting come from the resolved
- * profile policy. This service does not own those values.
+ * Duration and the calendar-year check come from the resolved profile policy.
+ * A canonical MMSP publication records its own slot, call_{id}.
  * Youth annual-instance publication stays outside this service.
  */
 class CallPublicationService
 {
+    public const TEST_PREVIEW_PUBLISH_BLOCKED = 'Zvanična objava nije dozvoljena dok je uključen testni MMSP pregled.';
+
     public function publish(Competition $competition, ?User $actor): CallPublicationResult
     {
         if (! $this->isAdmin($actor)) {
@@ -43,6 +46,10 @@ class CallPublicationService
         $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
         if ($locked->canonicalTestApplicationWindowIsClosed()) {
             return CallPublicationResult::failed(CanonicalTestApplicationPhaseService::PUBLICATION_BLOCKED_MESSAGE);
+        }
+
+        if ((bool) $locked->is_test_preview) {
+            return CallPublicationResult::failed(self::TEST_PREVIEW_PUBLISH_BLOCKED);
         }
 
         $policy = $locked->profile();
@@ -82,7 +89,9 @@ class CallPublicationService
                 return CallPublicationResult::failed('Objava nije dozvoljena u tekućem periodu za ovaj profil.');
             }
 
-            $slot = $policy->publicationSlotFor('primary');
+            $slot = $locked->type === CompetitionProfileResolver::TYPE_CANONICAL
+                ? 'call_'.$locked->id
+                : $policy->publicationSlotFor('primary');
             if ($slot === null || $slot === '') {
                 return CallPublicationResult::failed('Profil ne definiše slot objave.');
             }

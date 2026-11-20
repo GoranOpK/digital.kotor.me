@@ -64,10 +64,9 @@ class OmladinskoProfileAndClassificationTest extends TestCase
         $response->assertSee('Podrška ženskom preduzetništvu', false);
         $response->assertSee('Podrška mikro, malim i srednjim preduzećima', false);
         $this->assertStringContainsString('Aktivan modul', $text);
-        $this->assertSame(2, substr_count($text, 'Aktivan modul'));
-        // Only the canonical MMSP card remains DEVELOPMENT on the hub.
-        $this->assertSame(1, substr_count($text, 'U razvoju'));
-        $this->assertSame(1, substr_count($text, 'Profil je u implementaciji i još nije pušten korisnicima.'));
+        $this->assertSame(3, substr_count($text, 'Aktivan modul'));
+        $this->assertSame(0, substr_count($text, 'U razvoju'));
+        $this->assertSame(0, substr_count($text, 'Profil je u implementaciji i još nije pušten korisnicima.'));
 
         $omladinskoCard = $this->programCardHtml($html, 'omladinsko');
         $omladinskoText = $this->visiblePageText($omladinskoCard);
@@ -92,7 +91,7 @@ class OmladinskoProfileAndClassificationTest extends TestCase
             CompetitionProgramCatalog::definitions()['zensko']['status']
         );
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()['preduzetnici_mikro_mala_i_srednja_preduzeca']['status']
         );
         $this->assertSame(

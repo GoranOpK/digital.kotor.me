@@ -470,7 +470,7 @@ class CompletenessComplaintTest extends TestCase
         $this->assertSame('canonical_mmsp_document_catalog', $canonical->documentCatalogHook());
 
         $entry = CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL];
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, $entry['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, $entry['status']);
     }
 
     public function test_frozen_evidence_unchanged_after_completeness_and_complaint_cycle(): void

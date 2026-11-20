@@ -696,6 +696,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
             Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
             Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            Route::post('/competitions/{competition}/mmsp-test-preview/remove', [\App\Http\Controllers\Admin\MmspTestPreviewRemovalController::class, 'destroy'])
+                ->name('competitions.mmsp-test-preview.remove');
             Route::get('/competitions/{competition}/second-call/create', [AdminController::class, 'createSecondCall'])->name('competitions.second-call.create');
             Route::post('/competitions/{competition}/second-call', [AdminController::class, 'storeSecondCall'])->name('competitions.second-call.store');
             Route::get('/notices/create', [StandaloneNoticeController::class, 'create'])->name('notices.create');

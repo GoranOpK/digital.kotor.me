@@ -180,7 +180,7 @@
             <h1>{{ $competition->title }}</h1>
             <div>
                 @if(isset($isAdmin) && $isAdmin)
-                    @if($competition->status === 'draft')
+                    @if($competition->status === 'draft' && ! $competition->isCanonicalTestPreview())
                         <form method="POST" action="{{ route('admin.competitions.publish', $competition) }}" style="display: inline;">
                             @csrf
                             <button type="submit" class="btn btn-success">Objavi konkurs</button>
@@ -201,11 +201,19 @@
                 @endif
                 @if(isset($isAdmin) && $isAdmin && !in_array($competition->status, ['closed', 'completed']))
                     <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
+                    @if($competition->isCanonicalTestPreview())
+                        <form action="{{ route('admin.competitions.mmsp-test-preview.remove', $competition) }}" method="POST" style="display: inline-flex; gap: 8px; align-items: center;">
+                            @csrf
+                            <input name="confirmation" placeholder="UKLONI TEST {{ $competition->id }}" aria-label="Potvrda uklanjanja testnog MMSP konkursa" style="padding: 8px;">
+                            <button type="submit" class="btn btn-danger">Ukloni testni konkurs</button>
+                        </form>
+                    @else
                     <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Obriši</button>
                     </form>
+                    @endif
                 @else
                     {{-- Članovi komisije mogu da vide i pristupaju, ali ne mogu da edituju i brišu --}}
                 @endif

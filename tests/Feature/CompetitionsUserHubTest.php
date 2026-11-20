@@ -81,7 +81,7 @@ class CompetitionsUserHubTest extends TestCase
         $canonical = $this->linkedProgramCardHtml($html, CompetitionProfileResolver::TYPE_CANONICAL);
         $this->assertStringContainsString('Aktivan modul', $this->visiblePageText($canonical));
         $this->assertStringContainsString(
-            'Testni modul za MMSP testne nacrte. Prijava nije zvanični zahtjev za subvenciju.',
+            'Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.',
             $this->visiblePageText($canonical)
         );
         $this->assertStringNotContainsString('is-development', $canonical);
@@ -113,7 +113,7 @@ class CompetitionsUserHubTest extends TestCase
         $this->actingAs($user)
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertOk()
-            ->assertDontSee($publishedMmsp->title)
+            ->assertSee($publishedMmsp->title)
             ->assertSee('Nazad na konkurse')
             ->assertDontSee('page-header is-hub', false);
     }
@@ -171,7 +171,9 @@ class CompetitionsUserHubTest extends TestCase
             ->assertSee($women->title);
         $this->actingAs($user)
             ->get(route('competitions.show', $canonical))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertSee($canonical->title)
+            ->assertDontSee('Prijava nije zvanični zahtjev za subvenciju', false);
         $this->actingAs($user)
             ->get(route('competitions.show', $upcoming))
             ->assertNotFound();

@@ -109,7 +109,7 @@ class CompetitionsController extends Controller
                 $definition['total_competitions'] = $previews->count();
                 $definition['test_preview_list'] = true;
                 $definition['public_badge'] = 'Aktivan modul';
-                $definition['description'] = 'Testni modul za MMSP testne nacrte. Prijava nije zvanični zahtjev za subvenciju.';
+                $definition['description'] = 'Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.';
             }
 
             $programs[$type] = $definition;

@@ -97,14 +97,27 @@ final class CanonicalMmspPolicy extends CompetitionProfilePolicy
         return self::PUBLICATION_GUARDED;
     }
 
+    /**
+     * Kvartal više nije programska blokada objave. Pravni osnov objave ostaje
+     * izvan ovog koda.
+     */
     public function publicationQuarter(): ?int
     {
-        return 3;
+        return null;
     }
 
+    public function isPublicationAllowedAt(\DateTimeInterface $instant): bool
+    {
+        return true;
+    }
+
+    /**
+     * Evidencija objave više ne koristi jedan godišnji slot. Servis objave
+     * dodjeljuje poseban slot svakom konkursu.
+     */
     public function publicationSlots(): array
     {
-        return ['annual_call'];
+        return [];
     }
 
     public function locksPublishedCall(): bool

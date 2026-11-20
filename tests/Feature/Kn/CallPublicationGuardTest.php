@@ -161,11 +161,11 @@ class CallPublicationGuardTest extends TestCase
             'competition_id' => $draft->id,
             'calendar_year' => 2026,
             'competition_type' => CompetitionProfileResolver::TYPE_CANONICAL,
-            'publication_slot' => 'annual_call',
+            'publication_slot' => 'call_'.$draft->id,
         ]);
     }
 
-    public function test_canonical_publish_outside_q3_is_rejected(): void
+    public function test_canonical_publish_outside_the_former_third_quarter_is_allowed(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-06-30 23:30:00', 'Europe/Belgrade'));
         $admin = $this->admin();
@@ -178,13 +178,14 @@ class CallPublicationGuardTest extends TestCase
             ->from(route('admin.competitions.show', $draft))
             ->post(route('admin.competitions.publish', $draft))
             ->assertRedirect()
-            ->assertSessionHasErrors('error');
+            ->assertSessionHas('success');
 
         $draft->refresh();
-        $this->assertSame('draft', $draft->status);
-        $this->assertNull($draft->published_at);
-        $this->assertSame(7, (int) $draft->deadline_days);
-        $this->assertSame(0, CompetitionPublicationClaim::query()->count());
+        $this->assertSame('published', $draft->status);
+        $this->assertNotNull($draft->published_at);
+        $this->assertSame(20, (int) $draft->deadline_days);
+        $this->assertSame('2026-07-20', $draft->end_date->toDateString());
+        $this->assertSame(1, CompetitionPublicationClaim::query()->count());
     }
 
     public function test_first_annual_call_succeeds_and_duplicate_same_year_type_slot_is_rejected(): void
@@ -203,13 +204,16 @@ class CallPublicationGuardTest extends TestCase
         $this->actingAs($admin)
             ->from(route('admin.competitions.show', $second))
             ->post(route('admin.competitions.publish', $second))
-            ->assertSessionHasErrors('error');
+            ->assertSessionHas('success');
 
         $this->assertSame('published', $first->fresh()->status);
-        $this->assertSame('draft', $second->fresh()->status);
-        $this->assertNull($second->fresh()->published_at);
-        $this->assertSame(1, CompetitionPublicationClaim::query()->count());
+        $this->assertSame('published', $second->fresh()->status);
+        $this->assertSame(2, CompetitionPublicationClaim::query()->count());
         $this->assertSame('draft', $waiting->fresh()->status);
+        $this->assertNotSame(
+            CompetitionPublicationClaim::query()->where('competition_id', $first->id)->value('publication_slot'),
+            CompetitionPublicationClaim::query()->where('competition_id', $second->id)->value('publication_slot')
+        );
     }
 
     public function test_next_calendar_year_annual_call_is_allowed(): void
@@ -236,7 +240,7 @@ class CallPublicationGuardTest extends TestCase
         $this->assertDatabaseHas('competition_publication_claims', [
             'competition_id' => $year2027->id,
             'calendar_year' => 2027,
-            'publication_slot' => 'annual_call',
+            'publication_slot' => 'call_'.$year2027->id,
         ]);
     }
 
@@ -246,8 +250,8 @@ class CallPublicationGuardTest extends TestCase
 
         $this->assertFalse($policy->allowsSecondCall());
         $this->assertFalse($policy->allowsResidualFundsReopen());
-        $this->assertSame(['annual_call'], $policy->publicationSlots());
-        $this->assertSame('annual_call', $policy->publicationSlotFor('primary'));
+        $this->assertSame([], $policy->publicationSlots());
+        $this->assertNull($policy->publicationSlotFor('primary'));
         $this->assertNull($policy->publicationSlotFor('residual'));
 
         Carbon::setTestNow(Carbon::parse('2026-09-20 09:00:00', 'Europe/Belgrade'));
@@ -264,9 +268,13 @@ class CallPublicationGuardTest extends TestCase
         $challenger = $this->competition(CompetitionProfileResolver::TYPE_CANONICAL, 'KN-SYNC-003-CHALLENGER');
         $result = app(CallPublicationService::class)->publish($challenger, $this->admin());
 
-        $this->assertFalse($result->succeeded);
-        $this->assertSame('draft', $challenger->fresh()->status);
-        $this->assertSame(1, CompetitionPublicationClaim::query()->count());
+        $this->assertTrue($result->succeeded);
+        $this->assertSame('published', $challenger->fresh()->status);
+        $this->assertSame(2, CompetitionPublicationClaim::query()->count());
+        $this->assertSame(
+            'call_'.$challenger->id,
+            CompetitionPublicationClaim::query()->where('competition_id', $challenger->id)->value('publication_slot')
+        );
     }
 
     public function test_same_competition_publish_retry_is_idempotent(): void
@@ -380,24 +388,22 @@ class CallPublicationGuardTest extends TestCase
         ]);
     }
 
-    public function test_canonical_remains_development_and_not_publicly_listed(): void
+    public function test_canonical_is_active_and_a_published_call_is_listed_only_on_its_own_program(): void
     {
         $definitions = CompetitionProgramCatalog::definitions();
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             $definitions[CompetitionProfileResolver::TYPE_CANONICAL]['status']
         );
-        $this->assertFalse(
+        $this->assertTrue(
             CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL)
-        );
-        $this->assertNotContains(
-            CompetitionProfileResolver::TYPE_CANONICAL,
-            CompetitionProgramCatalog::publiclyAvailableTypes()
         );
 
         Carbon::setTestNow(Carbon::parse('2026-09-14 10:00:00', 'Europe/Belgrade'));
         $admin = $this->admin();
-        $draft = $this->competition(CompetitionProfileResolver::TYPE_CANONICAL, 'KN-SYNC-003-DEV-PUBLIC');
+        $draft = $this->competition(CompetitionProfileResolver::TYPE_CANONICAL, 'KN-SYNC-003-DEV-PUBLIC', [
+            'start_date' => '2026-09-14',
+        ]);
 
         $this->actingAs($admin)
             ->post(route('admin.competitions.publish', $draft))
@@ -407,6 +413,10 @@ class CallPublicationGuardTest extends TestCase
             ->get(route('competitions.index'))
             ->assertOk()
             ->assertDontSee('KN-SYNC-003-DEV-PUBLIC');
+        $this->actingAs($admin)
+            ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
+            ->assertOk()
+            ->assertSee('KN-SYNC-003-DEV-PUBLIC');
         $this->actingAs($admin)
             ->get(route('competitions.index', ['type' => 'zensko']))
             ->assertOk()
