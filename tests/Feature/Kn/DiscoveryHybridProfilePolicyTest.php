@@ -94,18 +94,22 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             \App\Services\Competitions\Profile\CompetitionProfilePolicy::PUBLICATION_GUARDED,
             $policy->publicationMode()
         );
-        $this->assertSame(3, $policy->publicationQuarter());
-        $this->assertSame(['annual_call'], $policy->publicationSlots());
+        $this->assertNull($policy->publicationQuarter());
+        $this->assertTrue($policy->isPublicationAllowedAt(\Carbon\Carbon::parse('2026-12-15', 'Europe/Belgrade')));
+        $this->assertSame([], $policy->publicationSlots());
         $this->assertSame(20, $policy->deadlineDays());
         $this->assertFalse($policy->allowsSecondCall());
         $this->assertFalse($policy->allowsResidualFundsReopen());
 
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL]['status']
         );
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
-        $this->assertSame(['zensko', 'omladinsko'], CompetitionProfileResolver::publiclyDiscoverableTypeKeys());
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
+        $this->assertSame(
+            ['zensko', 'omladinsko', CompetitionProfileResolver::TYPE_CANONICAL],
+            CompetitionProfileResolver::publiclyDiscoverableTypeKeys()
+        );
     }
 
     public function test_women_and_youth_catalog_active_and_public_index_hides_canonical(): void
@@ -128,7 +132,7 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
 
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('zensko'));
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
 
         $viewer = User::factory()->create();
         $this->actingAs($viewer)
@@ -155,7 +159,7 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
         $this->actingAs($viewer)
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertOk()
-            ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL')
+            ->assertSee('KN-SYNC-002-PUBLIC-CANONICAL')
             ->assertSee('Nazad na konkurse')
             ->assertDontSee('U razvoju');
 
@@ -165,7 +169,8 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             ->assertSee('KN-SYNC-002-PUBLIC-YOUTH');
         $this->actingAs($viewer)
             ->get(route('competitions.show', $canonical))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertDontSee('Prijava nije zvanični zahtjev za subvenciju', false);
     }
 
     public function test_admin_type_options_include_canonical_and_validation_accepts_storable_keys(): void

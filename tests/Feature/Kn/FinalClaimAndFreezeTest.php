@@ -344,7 +344,7 @@ class FinalClaimAndFreezeTest extends TestCase
     public function test_canonical_remains_development(): void
     {
         $entry = CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL];
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, $entry['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, $entry['status']);
         $this->assertFalse(CompetitionProfileResolver::resolve(CompetitionProfileResolver::TYPE_CANONICAL)->allowsWomenBonus());
         $this->assertFalse(CompetitionProfileResolver::resolve(CompetitionProfileResolver::TYPE_CANONICAL)->allowsYouthBonus());
     }

@@ -14,7 +14,7 @@ class CompetitionProgramCatalogTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_zensko_and_omladinsko_active_canonical_development_not_public(): void
+    public function test_women_youth_and_mmsp_are_active_and_public(): void
     {
         $definitions = CompetitionProgramCatalog::definitions();
 
@@ -31,24 +31,27 @@ class CompetitionProgramCatalogTest extends TestCase
 
         $canonical = CompetitionProfileResolver::TYPE_CANONICAL;
         $this->assertArrayHasKey($canonical, $definitions);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, $definitions[$canonical]['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, $definitions[$canonical]['status']);
         $this->assertSame(
             'Podrška mikro, malim i srednjim preduzećima',
             $definitions[$canonical]['title']
         );
         $this->assertSame(
-            'Profil je u implementaciji i još nije pušten korisnicima.',
+            'Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.',
             $definitions[$canonical]['description']
         );
 
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
         $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable('zensko'));
-        $this->assertSame(['zensko', 'omladinsko'], CompetitionProgramCatalog::publiclyAvailableTypes());
+        $this->assertSame(
+            ['zensko', 'omladinsko', $canonical],
+            CompetitionProgramCatalog::publiclyAvailableTypes()
+        );
         $this->assertStringNotContainsString(
             'Profil je u implementaciji i još nije pušten korisnicima.',
             $definitions['omladinsko']['description']
         );
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable($canonical));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable($canonical));
         $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable('ostalo'));
     }
 
@@ -60,7 +63,10 @@ class CompetitionProgramCatalogTest extends TestCase
         );
 
         $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable('omladinsko'));
-        $this->assertSame(['zensko'], CompetitionProgramCatalog::publiclyAvailableTypes());
+        $this->assertSame(
+            ['zensko', CompetitionProfileResolver::TYPE_CANONICAL],
+            CompetitionProgramCatalog::publiclyAvailableTypes()
+        );
 
         CompetitionProgramCatalog::clearTestOverrides();
 

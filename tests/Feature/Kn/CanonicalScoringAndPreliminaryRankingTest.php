@@ -77,7 +77,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertStringStartsWith('Lokalna autentičnost', $scoring->criteria[5]);
         $this->assertStringStartsWith('Doprinos digitalizaciji', $scoring->criteria[7]);
         $this->assertStringStartsWith('Prezentacija plana na intervjuu', $scoring->criteria[10]);
-        $this->assertSame(CompetitionProgramCatalog::STATUS_DEVELOPMENT, CompetitionProgramCatalog::definitions()[self::CANONICAL]['status']);
+        $this->assertSame(CompetitionProgramCatalog::STATUS_ACTIVE, CompetitionProgramCatalog::definitions()[self::CANONICAL]['status']);
     }
 
     public function test_women_youth_profiles_are_unchanged_and_ostalo_stays_fail_closed(): void

@@ -37,10 +37,10 @@ class MmspTestPreviewHubListTest extends TestCase
     public function test_ordinary_user_without_a_grant_opens_only_test_drafts_and_can_submit_p1_and_p2(): void
     {
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL]['status']
         );
-        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
+        $this->assertTrue(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
 
         $owner = $this->user('korisnik');
         $second = $this->user('korisnik');
@@ -67,7 +67,7 @@ class MmspTestPreviewHubListTest extends TestCase
         $hub = $this->actingAs($owner)->get(route('competitions.index'))->assertOk();
         $html = $hub->getContent();
         $hub->assertSee('Aktivan modul', false)
-            ->assertSee('Testni modul za MMSP testne nacrte. Prijava nije zvanični zahtjev za subvenciju.', false)
+            ->assertSee('Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.', false)
             ->assertDontSee('U razvoju', false)
             ->assertDontSee($preview->title, false)
             ->assertDontSee($published->title, false);
@@ -75,7 +75,7 @@ class MmspTestPreviewHubListTest extends TestCase
             'href="'.route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]).'"',
             $html
         );
-        $this->assertSame([1, 2], $this->linkedStatValues($html, CompetitionProfileResolver::TYPE_CANONICAL));
+        $this->assertSame([2, 3], $this->linkedStatValues($html, CompetitionProfileResolver::TYPE_CANONICAL));
         $this->assertSame([1, 1], $this->linkedStatValues($html, 'zensko'));
 
         $list = $this->actingAs($owner)
@@ -86,7 +86,7 @@ class MmspTestPreviewHubListTest extends TestCase
             ->assertSee($closedLater->title, false)
             ->assertDontSee($future->title, false)
             ->assertDontSee($plainDraft->title, false)
-            ->assertDontSee($published->title, false)
+            ->assertSee($published->title, false)
             ->assertDontSee($women->title, false)
             ->assertDontSee('Preuzmi uputstvo (PDF)', false);
         $this->assertStringNotContainsString('page-header is-hub', $list->getContent());
@@ -104,7 +104,10 @@ class MmspTestPreviewHubListTest extends TestCase
             ->assertOk()
             ->assertSee('Prijavi se na konkurs', false)
             ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
-        $this->actingAs($owner)->get(route('competitions.show', $published))->assertNotFound();
+        $this->actingAs($owner)
+            ->get(route('competitions.show', $published))
+            ->assertOk()
+            ->assertDontSee('Prijava nije zvanični zahtjev za subvenciju', false);
         $this->actingAs($owner)->get(route('competitions.show', $plainDraft))->assertNotFound();
         $this->actingAs($owner)->get(route('competitions.show', $future))->assertNotFound();
 
@@ -170,9 +173,9 @@ class MmspTestPreviewHubListTest extends TestCase
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertOk()
             ->assertSee($preview->title, false)
-            ->assertDontSee($published->title, false);
+            ->assertSee($published->title, false);
         $this->actingAs($revoked)->get(route('competitions.show', $preview))->assertOk();
-        $this->actingAs($revoked)->get(route('competitions.show', $published))->assertNotFound();
+        $this->actingAs($revoked)->get(route('competitions.show', $published))->assertOk();
 
         $this->actingAs($this->user('komisija'))
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
@@ -219,10 +222,10 @@ class MmspTestPreviewHubListTest extends TestCase
         $this->assertStringContainsString('Aktivan modul', $html);
         $this->assertStringNotContainsString('U razvoju', $html);
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL]['status']
         );
-        $this->assertSame([1, 2], $this->linkedStatValues($html, CompetitionProfileResolver::TYPE_CANONICAL));
+        $this->assertSame([2, 3], $this->linkedStatValues($html, CompetitionProfileResolver::TYPE_CANONICAL));
         $this->assertSame([1, 1], $this->linkedStatValues($html, 'zensko'));
 
         $list = $this->actingAs($owner)
@@ -233,7 +236,7 @@ class MmspTestPreviewHubListTest extends TestCase
             ->assertSee($closedLater->title, false)
             ->assertDontSee($future->title, false)
             ->assertDontSee($plainDraft->title, false)
-            ->assertDontSee($published->title, false)
+            ->assertSee($published->title, false)
             ->assertDontSee($women->title, false)
             ->assertDontSee('Preuzmi uputstvo (PDF)', false);
         $this->assertStringNotContainsString('page-header is-hub', $list->getContent());
@@ -285,7 +288,7 @@ class MmspTestPreviewHubListTest extends TestCase
                 ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
                 ->assertOk()
                 ->assertSee($preview->title, false)
-                ->assertDontSee($published->title, false)
+                ->assertSee($published->title, false)
                 ->assertDontSee('page-header is-hub', false);
         }
     }

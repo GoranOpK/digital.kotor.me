@@ -853,7 +853,7 @@ class CanonicalCommissionGovernanceTest extends TestCase
     public function test_canonical_catalogue_status_stays_development(): void
     {
         $this->assertSame(
-            CompetitionProgramCatalog::STATUS_DEVELOPMENT,
+            CompetitionProgramCatalog::STATUS_ACTIVE,
             CompetitionProgramCatalog::definitions()[self::CANONICAL]['status']
         );
     }
