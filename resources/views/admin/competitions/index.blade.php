@@ -355,7 +355,8 @@
                             <td>{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</td>
                             <td>
                                 <span class="status-badge status-{{ $competition->status === 'published' && $isApplicationDeadlinePassed ? 'evaluating' : $competition->status }}">
-                                    @if($competition->status === 'draft') Nacrt
+                                    @if($competition->isCanonicalTestPreview()) Testni konkurs
+                                    @elseif($competition->status === 'draft') Nacrt
                                     @elseif($competition->status === 'published' && $isApplicationDeadlinePassed) Zatvoren za prijave
                                     @elseif($competition->status === 'published') Objavljen
                                     @elseif($competition->status === 'closed') Zatvoren
