@@ -297,6 +297,15 @@ class AdminController extends Controller
             ->orderByDesc('published_at')
             ->get();
 
+        if ($candidates->isEmpty() && $type === CompetitionProfileResolver::TYPE_CANONICAL) {
+            $candidates = Competition::where('type', $type)
+                ->where('status', 'draft')
+                ->where('is_test_preview', true)
+                ->with(['commission', 'upNumber'])
+                ->orderByDesc('start_date')
+                ->get();
+        }
+
         if ($candidates->isEmpty()) {
             return null;
         }
