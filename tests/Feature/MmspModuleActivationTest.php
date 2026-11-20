@@ -129,9 +129,20 @@ class MmspModuleActivationTest extends TestCase
 
         $adminPage = $this->actingAs($admin)->get(route('admin.dashboard'))->assertOk();
         $adminPage->assertSee('Aktivan modul', false);
-        $adminPage->assertSee('Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.', false);
+        $adminPage->assertSee('Podrška mikro, malim i srednjim preduzećima', false);
+        $adminPage->assertSee('Konkursi za podršku preduzetnicima, mikro, malim i srednjim preduzećima — prijave, dokumentacija, komisija i evaluacija.', false);
+        $adminPage->assertSee('Kompletan modul — prijave, dokumentacija, komisija i evaluacija.', false);
+        $adminPage->assertSee('Konkurs za podršku preduzetništvu mladih — prijave, dokumentacija, komisija i evaluacija.', false);
+        $adminPage->assertDontSee('Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.', false);
         $adminPage->assertDontSee('Profil je u implementaciji i još nije pušten korisnicima.', false);
         $adminPage->assertDontSee('U razvoju', false);
+        $adminPage->assertSee(
+            e(route('admin.competitions.index', [
+                'type' => CompetitionProfileResolver::TYPE_CANONICAL,
+                'tab' => 'active',
+            ])),
+            false
+        );
 
         $publicPage = $this->actingAs($user)->get(route('competitions.index'))->assertOk();
         $publicPage->assertSee('Aktivan modul', false);

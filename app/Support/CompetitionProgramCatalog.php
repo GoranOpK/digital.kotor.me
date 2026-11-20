@@ -96,7 +96,7 @@ final class CompetitionProgramCatalog
             'preduzetnici_mikro_mala_i_srednja_preduzeca' => [
                 'type' => 'preduzetnici_mikro_mala_i_srednja_preduzeca',
                 'title' => 'Podrška mikro, malim i srednjim preduzećima',
-                'description' => 'Zvanični MMSP modul. Testni nacrti su posebno označeni, a prijava na njih nije zvanični zahtjev za subvenciju.',
+                'description' => 'Konkursi za podršku preduzetnicima, mikro, malim i srednjim preduzećima — prijave, dokumentacija, komisija i evaluacija.',
                 'status' => self::STATUS_ACTIVE,
                 'icon' => '🏢',
             ],
