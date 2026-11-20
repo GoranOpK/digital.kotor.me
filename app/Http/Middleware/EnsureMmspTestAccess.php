@@ -42,6 +42,11 @@ class EnsureMmspTestAccess
             return $next($request);
         }
 
+        // Svaki registrovani korisnik može da koristi samo MMSP nacrte označene za testiranje.
+        if ($role === 'korisnik' && $competition->isCanonicalTestPreview()) {
+            return $next($request);
+        }
+
         if ($role === 'korisnik' && $this->access->allows($user)) {
             return $next($request);
         }

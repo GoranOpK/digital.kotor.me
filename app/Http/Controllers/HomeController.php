@@ -16,7 +16,6 @@ use App\Models\Notice;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
-use App\Services\MmspTestAccessService;
 use App\Support\UserType;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
@@ -389,16 +388,10 @@ class HomeController extends Controller
         }
 
         // Za običnog korisnika
-        $applicationsQuery = Application::where('user_id', $user->id)
+        $applications = Application::where('user_id', $user->id)
             ->with('competition', 'businessPlan')
-            ->latest();
-        if (! app(MmspTestAccessService::class)->allows($user)) {
-            $applicationsQuery->whereDoesntHave('competition', function ($competition) {
-                $competition->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
-                    ->where('is_test_preview', true);
-            });
-        }
-        $applications = $applicationsQuery->get();
+            ->latest()
+            ->get();
 
         // Podaci za skladište dokumenata
         $maxStorageMB = 20;
