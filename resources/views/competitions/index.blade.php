@@ -279,8 +279,8 @@
                                 <strong style="color: #1e40af;">Počinje: {{ $competition->start_date->format('d.m.Y') }}</strong>
                             </div>
                         @elseif($competition->is_open && ($competition->days_remaining > 0 || $competition->hours_remaining > 0 || $competition->minutes_remaining > 0))
-                            <div class="deadline-info" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
-                                <strong>Preostalo vreme za prijavu: <span class="countdown-{{ $competition->id }}">Učitavanje...</span></strong>
+                            <div class="deadline-info" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}" @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL) data-mmsp-countdown @endif>
+                                <strong>{{ $competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL ? 'Preostalo vrijeme za prijavu' : 'Preostalo vreme za prijavu' }}: <span class="countdown-{{ $competition->id }}">Učitavanje...</span></strong>
                                 <div style="font-size: 12px; color: #92400e; margin-top: 4px;">
                                     Rok za prijave: {{ $competition->deadline->format('d.m.Y H:i') }}
                                 </div>
@@ -310,17 +310,26 @@
     </div>
 </div>
 
+@if(!empty($competitions) && $competitions->contains(fn ($listedCompetition) => $listedCompetition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL))
+    <script src="{{ asset('js/mmsp-list-countdown.js') }}"></script>
+@endif
 <script>
     (function() {
         document.querySelectorAll('[data-deadline]').forEach(function(element) {
             const deadline = new Date(element.getAttribute('data-deadline')).getTime();
             const countdownEl = element.querySelector('[class^="countdown-"]');
+            const useMmspCountdown = element.hasAttribute('data-mmsp-countdown') && window.MmspListCountdown;
             
             if (!countdownEl) return;
             
             function updateCountdown() {
                 const now = new Date().getTime();
                 const distance = deadline - now;
+
+                if (useMmspCountdown) {
+                    countdownEl.textContent = window.MmspListCountdown.format(distance);
+                    return;
+                }
                 
                 if (distance < 0) {
                     countdownEl.textContent = 'Rok je istekao';
