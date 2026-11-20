@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Services\MmspTestAccessService;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\CanonicalDocumentCatalog;
 use App\Support\CanonicalLegalForm;
@@ -19,12 +20,26 @@ class CompetitionsController extends Controller
 {
     /**
      * Prikaz programskog huba ili filtrirane liste javno dostupnih konkursa.
-     * Tip je dodatni uslov postojećeg javnog upita. Nepoznat tip i MMSP vraćaju hub.
+     * Tip je dodatni uslov postojećeg javnog upita. Nepoznat tip i MMSP bez
+     * testne dozvole vraćaju hub. Ovlašćeni MMSP test ostaje development lista nacrta.
      */
     public function index(Request $request): View
     {
         $requestedType = $request->query('type');
         $requestedType = is_string($requestedType) ? $requestedType : null;
+
+        if ($requestedType === CompetitionProfileResolver::TYPE_CANONICAL
+            && ! $this->isPublicCompetitionListType($requestedType)
+            && $this->viewerMayListMmspTestPreviews()) {
+            return view('competitions.index', [
+                'showHub' => false,
+                'programs' => [],
+                'competitions' => $this->canonicalTestPreviewCompetitions(),
+                'showZenskoGuidePdf' => false,
+                'showOmladinskoGuidePdf' => false,
+                'selectedProgramTitle' => CompetitionProgramCatalog::definitions()[$requestedType]['title'] ?? null,
+            ]);
+        }
 
         if (! $this->isPublicCompetitionListType($requestedType)) {
             return view('competitions.index', [
@@ -58,13 +73,15 @@ class CompetitionsController extends Controller
     }
 
     /**
-     * Javni brojevi po programu. Program u razvoju ostaje na nuli, bez upita.
+     * Javni brojevi po programu. Program u razvoju ostaje na nuli, bez upita,
+     * osim ovlašćenog MMSP testnog pregleda.
      *
      * @return array<string, array<string, mixed>>
      */
     private function programsWithPublicStats(): array
     {
         $programs = [];
+        $mayListMmspTests = $this->viewerMayListMmspTestPreviews();
 
         foreach (CompetitionProgramCatalog::definitions() as $type => $definition) {
             $programType = is_string($definition['type'] ?? null) ? $definition['type'] : null;
@@ -82,10 +99,79 @@ class CompetitionsController extends Controller
                 $definition['total_competitions'] = 0;
             }
 
+            $definition['test_preview_list'] = false;
+            if (! $isPublic
+                && $programType === CompetitionProfileResolver::TYPE_CANONICAL
+                && $mayListMmspTests) {
+                $previews = $this->canonicalTestPreviewCompetitions();
+                $definition['active_competitions'] = $previews
+                    ->filter(fn (Competition $competition) => (bool) $competition->is_open)
+                    ->count();
+                $definition['total_competitions'] = $previews->count();
+                $definition['test_preview_list'] = true;
+            }
+
             $programs[$type] = $definition;
         }
 
         return $programs;
+    }
+
+    /**
+     * Dozvola za MMSP testni režim ili administratorska uloga konkursa.
+     * Komisija i ostale uloge ostaju na postojećem middleware pravilu.
+     */
+    private function viewerMayListMmspTestPreviews(): bool
+    {
+        $user = auth()->user();
+        if ($user === null) {
+            return false;
+        }
+
+        $user->loadMissing('role');
+        if (in_array($user->role?->name, ['admin', 'konkurs_admin', 'superadmin'], true)) {
+            return true;
+        }
+
+        return app(MmspTestAccessService::class)->allows($user);
+    }
+
+    /**
+     * Samo kanonski MMSP nacrti sa testnim pregledom. Datumski uslov je isti
+     * kao na javnoj listi: početak je nastupio, nije upisan, ili je testna
+     * prijavna faza već zatvorena.
+     */
+    private function canonicalTestPreviewCompetitions()
+    {
+        $now = now();
+
+        return Competition::query()
+            ->where('type', CompetitionProfileResolver::TYPE_CANONICAL)
+            ->where('status', 'draft')
+            ->where('is_test_preview', true)
+            ->where(function ($query) use ($now) {
+                $query->where('start_date', '<=', $now->toDateString())
+                    ->orWhereNull('start_date')
+                    ->orWhereNotNull('canonical_test_applications_closed_at');
+            })
+            ->orderBy('start_date', 'asc')
+            ->get()
+            ->map(function ($competition) {
+                $competition->is_open = $competition->is_open;
+
+                if ($competition->is_open) {
+                    $diff = now()->diff($competition->deadline);
+                    $competition->days_remaining = $diff->days;
+                    $competition->hours_remaining = $diff->h;
+                    $competition->minutes_remaining = $diff->i;
+                } else {
+                    $competition->days_remaining = 0;
+                    $competition->hours_remaining = 0;
+                    $competition->minutes_remaining = 0;
+                }
+
+                return $competition;
+            });
     }
 
     /**
