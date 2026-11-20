@@ -156,7 +156,8 @@ class DiscoveryHybridProfilePolicyTest extends TestCase
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertOk()
             ->assertDontSee('KN-SYNC-002-PUBLIC-CANONICAL')
-            ->assertSee('U razvoju');
+            ->assertSee('Nazad na konkurse')
+            ->assertDontSee('U razvoju');
 
         $this->actingAs($viewer)
             ->get(route('competitions.show', $youth))

@@ -225,6 +225,8 @@
             @endif
         </div>
 
+        @include('partials.mmsp-test-preview-notice')
+
         @if ($errors->any())
             <div class="alert alert-error" style="background: #fef2f2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
                 <ul style="margin: 0; padding-left: 18px;">

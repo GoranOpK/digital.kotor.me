@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Application;
 use App\Models\Competition;
+use App\Models\CompetitionPublicationClaim;
+use App\Models\Contract;
 use App\Models\MmspTestAccessGrant;
 use App\Models\Role;
 use App\Models\User;
@@ -32,44 +34,116 @@ class MmspTestPreviewHubListTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_mmsp_program_stays_in_development_and_unauthorized_users_stay_on_the_hub(): void
+    public function test_ordinary_user_without_a_grant_opens_only_test_drafts_and_can_submit_p1_and_p2(): void
     {
         $this->assertSame(
             CompetitionProgramCatalog::STATUS_DEVELOPMENT,
             CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL]['status']
         );
+        $this->assertFalse(CompetitionProgramCatalog::isPubliclyAvailable(CompetitionProfileResolver::TYPE_CANONICAL));
 
-        $user = $this->user('korisnik');
+        $owner = $this->user('korisnik');
+        $second = $this->user('korisnik');
         $preview = $this->preview('TEST 5 – Podrška preduzetnicima i MMSP 2026');
+        $closedLater = $this->preview('Zatvorena testna faza', [
+            'start_date' => now()->addDays(10)->toDateString(),
+            'canonical_test_applications_closed_at' => now(),
+        ]);
+        $future = $this->preview('MMSP test još nije počeo', [
+            'start_date' => now()->addDays(12)->toDateString(),
+        ]);
+        $plainDraft = $this->competition(
+            CompetitionProfileResolver::TYPE_CANONICAL,
+            'MMSP nacrt bez testnog pregleda',
+            'draft'
+        );
         $published = $this->competition(
             CompetitionProfileResolver::TYPE_CANONICAL,
             'Zvanični MMSP poziv',
             'published'
         );
+        $women = $this->competition('zensko', 'Javni zenski poziv', 'published');
 
-        $hub = $this->actingAs($user)->get(route('competitions.index'))->assertOk();
+        $hub = $this->actingAs($owner)->get(route('competitions.index'))->assertOk();
         $html = $hub->getContent();
-        $hub->assertSee('U razvoju', false)
+        $hub->assertSee('Aktivan modul', false)
+            ->assertSee('Testni modul za MMSP testne nacrte. Prijava nije zvanični zahtjev za subvenciju.', false)
+            ->assertDontSee('U razvoju', false)
             ->assertDontSee($preview->title, false)
             ->assertDontSee($published->title, false);
-        $this->assertStringNotContainsString(
-            route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]),
+        $this->assertStringContainsString(
+            'href="'.route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]).'"',
             $html
         );
-        $this->assertSame([0, 0], $this->developmentStatValues($html));
+        $this->assertSame([1, 2], $this->linkedStatValues($html, CompetitionProfileResolver::TYPE_CANONICAL));
+        $this->assertSame([1, 1], $this->linkedStatValues($html, 'zensko'));
 
-        $this->actingAs($user)
+        $list = $this->actingAs($owner)
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertOk()
-            ->assertSee('page-header is-hub', false)
+            ->assertSee('Nazad na konkurse', false)
+            ->assertSee($preview->title, false)
+            ->assertSee($closedLater->title, false)
+            ->assertDontSee($future->title, false)
+            ->assertDontSee($plainDraft->title, false)
+            ->assertDontSee($published->title, false)
+            ->assertDontSee($women->title, false)
+            ->assertDontSee('Preuzmi uputstvo (PDF)', false);
+        $this->assertStringNotContainsString('page-header is-hub', $list->getContent());
+
+        $this->actingAs($owner)
+            ->get(route('competitions.index', ['type' => 'zensko']))
+            ->assertOk()
+            ->assertSee($women->title, false)
             ->assertDontSee($preview->title, false)
             ->assertDontSee($published->title, false)
-            ->assertDontSee('Nazad na konkurse', false);
+            ->assertSee('Preuzmi uputstvo (PDF)', false);
 
-        $this->actingAs($user)->get(route('competitions.show', $preview))->assertNotFound();
+        $this->actingAs($owner)
+            ->get(route('competitions.show', $preview))
+            ->assertOk()
+            ->assertSee('Prijavi se na konkurs', false)
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
+        $this->actingAs($owner)->get(route('competitions.show', $published))->assertNotFound();
+        $this->actingAs($owner)->get(route('competitions.show', $plainDraft))->assertNotFound();
+        $this->actingAs($owner)->get(route('competitions.show', $future))->assertNotFound();
+
+        $p1a = $this->actingAs($owner)->post(route('applications.canonical.start', $preview), [
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+        ]);
+        $first = Application::query()->where('user_id', $owner->id)->sole();
+        $p1a->assertRedirect(route('applications.canonical-p1.edit', $first));
+        $this->assertSame(CanonicalLegalForm::PREDUZETNIK, $first->canonicalApplicantForm->legal_form);
+        $this->actingAs($owner)
+            ->get(route('applications.canonical-p1.edit', $first))
+            ->assertOk()
+            ->assertSee('Obrazac P1a', false)
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
+        $this->actingAs($owner)
+            ->get(route('applications.canonical-p2.edit', $first))
+            ->assertOk()
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
+
+        $p1b = $this->actingAs($second)->post(route('applications.canonical.start', $preview), [
+            'legal_form' => CanonicalLegalForm::DRUSTVO,
+        ]);
+        $company = Application::query()->where('user_id', $second->id)->sole();
+        $p1b->assertRedirect(route('applications.canonical-p1.edit', $company));
+        $this->assertSame(CanonicalLegalForm::DRUSTVO, $company->canonicalApplicantForm->legal_form);
+        $this->actingAs($second)
+            ->get(route('applications.canonical-p1.edit', $company))
+            ->assertOk()
+            ->assertSee('Obrazac P1b', false);
+
+        $preview->refresh();
+        $this->assertSame('draft', $preview->status);
+        $this->assertTrue((bool) $preview->is_test_preview);
+        $this->assertSame(0, CompetitionPublicationClaim::query()->count());
+        $this->assertSame(0, Contract::query()->count());
+        $this->assertSame(0, MmspTestAccessGrant::query()->count());
     }
 
-    public function test_revoked_grant_and_non_admin_roles_cannot_open_the_mmsp_test_list(): void
+    public function test_revoked_grant_still_opens_a_test_draft_while_other_roles_stay_restricted(): void
     {
         $actor = $this->user('admin');
         $revoked = $this->user('korisnik');
@@ -81,20 +155,31 @@ class MmspTestPreviewHubListTest extends TestCase
             'reason' => MmspTestAccessGrant::REASON_MANUAL,
         ]);
         $preview = $this->preview('TEST 5 opozvan');
+        $published = $this->competition(
+            CompetitionProfileResolver::TYPE_CANONICAL,
+            'Zvanični MMSP ostaje sakriven',
+            'published'
+        );
 
         $html = $this->actingAs($revoked)->get(route('competitions.index'))->assertOk()->getContent();
-        $this->assertStringNotContainsString(
+        $this->assertStringContainsString(
             route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]),
             $html
         );
         $this->actingAs($revoked)
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertOk()
-            ->assertDontSee($preview->title, false);
+            ->assertSee($preview->title, false)
+            ->assertDontSee($published->title, false);
+        $this->actingAs($revoked)->get(route('competitions.show', $preview))->assertOk();
+        $this->actingAs($revoked)->get(route('competitions.show', $published))->assertNotFound();
 
         $this->actingAs($this->user('komisija'))
             ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
             ->assertRedirect(route('dashboard'));
+        $this->actingAs($this->user('kk_admin'))
+            ->get(route('competitions.index'))
+            ->assertRedirect(route('cultural-calendar.index'));
     }
 
     public function test_granted_user_opens_only_test_drafts_and_can_start_p1a_and_p1b(): void
@@ -131,7 +216,8 @@ class MmspTestPreviewHubListTest extends TestCase
             'href="'.route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]).'"',
             $html
         );
-        $this->assertStringContainsString('U razvoju', $html);
+        $this->assertStringContainsString('Aktivan modul', $html);
+        $this->assertStringNotContainsString('U razvoju', $html);
         $this->assertSame(
             CompetitionProgramCatalog::STATUS_DEVELOPMENT,
             CompetitionProgramCatalog::definitions()[CompetitionProfileResolver::TYPE_CANONICAL]['status']

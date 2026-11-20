@@ -96,15 +96,16 @@
             $isAvailable = ($program['status'] ?? '') === \App\Support\CompetitionProgramCatalog::STATUS_ACTIVE
                 && \App\Support\CompetitionProgramCatalog::isPubliclyAvailable($program['type'] ?? null);
             $isTestPreviewList = (bool) ($program['test_preview_list'] ?? false);
-            $badgeClass = ($program['status'] ?? '') === \App\Support\CompetitionProgramCatalog::STATUS_ACTIVE
+            $badgeLabel = $program['public_badge']
+                ?? ((($program['status'] ?? '') === \App\Support\CompetitionProgramCatalog::STATUS_ACTIVE)
+                    ? 'Aktivan modul'
+                    : 'U razvoju');
+            $badgeClass = $badgeLabel === 'Aktivan modul'
                 ? 'program-badge-active'
                 : 'program-badge-development';
-            $badgeLabel = ($program['status'] ?? '') === \App\Support\CompetitionProgramCatalog::STATUS_ACTIVE
-                ? 'Aktivan modul'
-                : 'U razvoju';
         @endphp
         @if($isAvailable || $isTestPreviewList)
-            <a href="{{ route('competitions.index', ['type' => $program['type']]) }}" class="program-card{{ $isTestPreviewList && ! $isAvailable ? ' is-development' : '' }}">
+            <a href="{{ route('competitions.index', ['type' => $program['type']]) }}" class="program-card">
         @else
             <div class="program-card is-development">
         @endif

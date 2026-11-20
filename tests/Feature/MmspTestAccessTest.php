@@ -8,6 +8,7 @@ use App\Models\CanonicalApplicantForm;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Models\CompetitionPublicationClaim;
 use App\Models\Contract;
 use App\Models\MmspTestAccessGrant;
 use App\Models\Report;
@@ -36,10 +37,16 @@ class MmspTestAccessTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    public function test_user_without_a_grant_cannot_reach_mmsp_test_resources_or_the_dashboard_row(): void
+    public function test_user_without_a_grant_can_use_own_test_draft_but_not_official_calls_or_someone_elses_data(): void
     {
         $user = $this->account('korisnik');
+        $other = $this->account('korisnik', 'drugi-pristup@example.test');
         $preview = $this->preview('MMSP skriveni test');
+        $published = $this->competition(
+            CompetitionProfileResolver::TYPE_CANONICAL,
+            'Zvanični MMSP poziv',
+            'published'
+        );
         $application = $this->application($preview, $user, 'Skrivena test prijava');
         $document = $this->applicationDocument($application);
         $contract = Contract::query()->create(['application_id' => $application->id]);
@@ -49,30 +56,48 @@ class MmspTestAccessTest extends TestCase
         ]);
         Storage::disk('local')->put($report->document_file, 'izvjestaj');
 
-        $this->actingAs($user)->get(route('competitions.show', $preview))->assertNotFound();
-        $this->actingAs($user)->post(route('applications.start', $preview))->assertNotFound();
-        $this->actingAs($user)->get(route('applications.canonical.legal-form', $preview))->assertNotFound();
+        $this->actingAs($user)
+            ->get(route('competitions.show', $preview))
+            ->assertOk()
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
+        $this->actingAs($user)->post(route('applications.start', $preview))->assertRedirect();
+        $this->actingAs($user)->get(route('applications.canonical.legal-form', $preview))->assertRedirect();
         $this->actingAs($user)
             ->post(route('applications.canonical.start', $preview), ['legal_form' => CanonicalLegalForm::PREDUZETNIK])
-            ->assertNotFound();
-        $this->actingAs($user)->get(route('applications.show', $application))->assertNotFound();
-        $this->actingAs($user)->get(route('applications.canonical-p1.edit', $application))->assertNotFound();
-        $this->actingAs($user)->put(route('applications.canonical-p1.update', $application), [
-            'person_name' => 'Nedozvoljena izmjena',
-        ])->assertNotFound();
-        $this->actingAs($user)->get(route('applications.canonical-p2.edit', $application))->assertNotFound();
-        $this->actingAs($user)->get(route('applications.document.view', [$application, $document]))->assertNotFound();
-        $this->actingAs($user)->get(route('contracts.show', $contract))->assertNotFound();
-        $this->actingAs($user)->get(route('reports.download', $report))->assertNotFound();
-        $this->actingAs($user)->post(route('applications.final-submit', $application))->assertNotFound();
+            ->assertRedirect();
+        $this->actingAs($user)
+            ->get(route('applications.show', $application))
+            ->assertOk();
+        $this->actingAs($user)
+            ->get(route('applications.canonical-p1.edit', $application))
+            ->assertOk()
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
+        $this->actingAs($user)
+            ->get(route('applications.canonical-p2.edit', $application))
+            ->assertOk()
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
+        $this->actingAs($user)
+            ->post(route('applications.final-submit', $application))
+            ->assertRedirect();
+
+        $this->actingAs($user)->get(route('competitions.show', $published))->assertNotFound();
+        $this->actingAs($other)->get(route('applications.show', $application))->assertForbidden();
+        $this->actingAs($other)->get(route('applications.document.view', [$application, $document]))->assertForbidden();
+        $this->actingAs($other)->get(route('contracts.show', $contract))->assertForbidden();
+        $this->actingAs($other)->get(route('reports.download', $report))->assertForbidden();
+        $this->actingAs($other)->post(route('applications.final-submit', $application))->assertForbidden();
 
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertDontSee('MMSP skriveni test', false);
+            ->assertSee('MMSP skriveni test', false);
 
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertSame('draft', $preview->fresh()->status);
         $this->assertSame(1, Application::query()->count());
         $this->assertSame(1, ApplicationDocument::query()->count());
+        $this->assertSame(1, Contract::query()->count());
+        $this->assertSame(0, CompetitionPublicationClaim::query()->count());
         $this->assertSame(0, MmspTestAccessGrant::query()->count());
     }
 
@@ -179,12 +204,12 @@ class MmspTestAccessTest extends TestCase
 
         $this->assertSame(MmspTestAccessGrant::ACTION_REVOKED, $this->latestAction($user));
         $this->assertSame(MmspTestAccessGrant::REASON_MANUAL, $this->latest($user)->reason);
-        $this->actingAs($user)->get(route('competitions.show', $preview))->assertNotFound();
-        $this->actingAs($user)->get(route('applications.show', $application))->assertNotFound();
+        $this->actingAs($user)->get(route('competitions.show', $preview))->assertOk();
+        $this->actingAs($user)->get(route('applications.show', $application))->assertOk();
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertDontSee('MMSP opoziv testa', false);
+            ->assertSee('MMSP opoziv testa', false);
         $this->assertNotNull(Application::query()->find($application->id));
         $this->assertSame(1, ApplicationDocument::query()->where('application_id', $application->id)->count());
 
@@ -232,7 +257,7 @@ class MmspTestAccessTest extends TestCase
         $user->refresh();
         $this->assertSame('korisnik', $user->role->name);
         $this->assertSame(MmspTestAccessGrant::ACTION_REVOKED, $this->latestAction($user));
-        $this->actingAs($user)->get(route('competitions.show', $preview))->assertNotFound();
+        $this->actingAs($user)->get(route('competitions.show', $preview))->assertOk();
 
         $this->grant($admin, $user);
         $this->actingAs($user)->get(route('competitions.show', $preview))->assertOk();
@@ -291,7 +316,8 @@ class MmspTestAccessTest extends TestCase
         $this->actingAs($user)
             ->get(route('competitions.index'))
             ->assertOk()
-            ->assertSee('U razvoju', false);
+            ->assertSee('Aktivan modul', false)
+            ->assertDontSee('U razvoju', false);
 
         $this->get(route('competitions.canonical-result', $preview))->assertNotFound();
 

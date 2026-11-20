@@ -478,6 +478,7 @@
 
 <div class="mmsp-p1 canonical-ui-page mmsp-form-page">
     <div class="mmsp-p1-wrap container mx-auto px-4">
+        @include('partials.mmsp-test-preview-notice', ['competition' => $application->competition])
         <div class="mmsp-p1-header">
             <div class="mmsp-p1-header-top">
                 <div class="mmsp-p1-crest">

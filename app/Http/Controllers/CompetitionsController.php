@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Competition;
 use App\Models\Application;
 use App\Identity\Runtime\CurrentIdentityResolver;
-use App\Services\MmspTestAccessService;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\CanonicalDocumentCatalog;
 use App\Support\CanonicalLegalForm;
@@ -109,6 +108,8 @@ class CompetitionsController extends Controller
                     ->count();
                 $definition['total_competitions'] = $previews->count();
                 $definition['test_preview_list'] = true;
+                $definition['public_badge'] = 'Aktivan modul';
+                $definition['description'] = 'Testni modul za MMSP testne nacrte. Prijava nije zvanični zahtjev za subvenciju.';
             }
 
             $programs[$type] = $definition;
@@ -118,22 +119,12 @@ class CompetitionsController extends Controller
     }
 
     /**
-     * Dozvola za MMSP testni režim ili administratorska uloga konkursa.
-     * Komisija i ostale uloge ostaju na postojećem middleware pravilu.
+     * Svaki prijavljeni korisnik koji može da otvori početnu stranicu konkursa
+     * vidi MMSP testne nacrte. Komisija i kulturne uloge ostaju na middleware pravilu.
      */
     private function viewerMayListMmspTestPreviews(): bool
     {
-        $user = auth()->user();
-        if ($user === null) {
-            return false;
-        }
-
-        $user->loadMissing('role');
-        if (in_array($user->role?->name, ['admin', 'konkurs_admin', 'superadmin'], true)) {
-            return true;
-        }
-
-        return app(MmspTestAccessService::class)->allows($user);
+        return auth()->check();
     }
 
     /**

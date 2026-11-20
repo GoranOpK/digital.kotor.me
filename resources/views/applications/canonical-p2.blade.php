@@ -127,6 +127,7 @@
 
 <div class="canonical-ui-page mmsp-form-page mmsp-business-plan">
     <div class="container mx-auto px-4">
+        @include('partials.mmsp-test-preview-notice', ['competition' => $application->competition])
         <div class="mmsp-obrazac-zaglavlje">
             <div class="mmsp-obrazac-top">
                 <div class="mmsp-obrazac-grb">

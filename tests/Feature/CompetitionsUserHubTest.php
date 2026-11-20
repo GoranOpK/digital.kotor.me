@@ -49,8 +49,8 @@ class CompetitionsUserHubTest extends TestCase
         $response->assertSee('Podrška ženskom preduzetništvu', false);
         $response->assertSee('Podrška preduzetništvu mladih', false);
         $response->assertSee('Podrška mikro, malim i srednjim preduzećima', false);
-        $this->assertSame(2, substr_count($text, 'Aktivan modul'));
-        $this->assertSame(1, substr_count($text, 'U razvoju'));
+        $this->assertSame(3, substr_count($text, 'Aktivan modul'));
+        $this->assertSame(0, substr_count($text, 'U razvoju'));
         $this->assertStringContainsString(
             'href="'.route('competitions.index', ['type' => 'zensko']).'"',
             $html
@@ -78,15 +78,17 @@ class CompetitionsUserHubTest extends TestCase
         $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($html, 'zensko')));
         $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($html, 'omladinsko')));
 
-        $development = $this->developmentCardHtml($html);
-        $this->assertStringContainsString('is-development', $development);
-        $this->assertStringContainsString('U razvoju', $this->visiblePageText($development));
-        $this->assertStringNotContainsString('href', $development);
-        $this->assertStringNotContainsString('admin', $development);
-        $this->assertStringNotContainsString('Prijavi', $development);
-        $this->assertSame([0, 0], $this->programStatValues($development));
+        $canonical = $this->linkedProgramCardHtml($html, CompetitionProfileResolver::TYPE_CANONICAL);
+        $this->assertStringContainsString('Aktivan modul', $this->visiblePageText($canonical));
+        $this->assertStringContainsString(
+            'Testni modul za MMSP testne nacrte. Prijava nije zvanični zahtjev za subvenciju.',
+            $this->visiblePageText($canonical)
+        );
+        $this->assertStringNotContainsString('is-development', $canonical);
+        $this->assertStringNotContainsString('admin', $canonical);
+        $this->assertSame([0, 0], $this->programStatValues($canonical));
 
-        $this->assertSame(2, $this->programCardLinkCount($html));
+        $this->assertSame(3, $this->programCardLinkCount($html));
     }
 
     public function test_unknown_and_mmsp_type_parameters_stay_on_the_hub(): void
@@ -98,15 +100,22 @@ class CompetitionsUserHubTest extends TestCase
             'published'
         );
 
-        foreach (['ostalo', 'mmsp', CompetitionProfileResolver::TYPE_CANONICAL, 'zensko-extra'] as $type) {
+        foreach (['ostalo', 'mmsp', 'zensko-extra'] as $type) {
             $this->actingAs($user)
                 ->get(route('competitions.index', ['type' => $type]))
                 ->assertOk()
                 ->assertSee('Aktivan modul')
-                ->assertSee('U razvoju')
+                ->assertDontSee('U razvoju')
                 ->assertDontSee($publishedMmsp->title)
                 ->assertDontSee('Nazad na konkurse');
         }
+
+        $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
+            ->assertOk()
+            ->assertDontSee($publishedMmsp->title)
+            ->assertSee('Nazad na konkurse')
+            ->assertDontSee('page-header is-hub', false);
     }
 
     public function test_public_filters_keep_existing_visibility_and_back_link(): void
@@ -182,7 +191,7 @@ class CompetitionsUserHubTest extends TestCase
         $this->assertProgramGuideBelowHeader($response->getContent());
     }
 
-    public function test_canonical_test_preview_stays_off_the_hub_and_direct_url_is_hidden_without_a_grant(): void
+    public function test_ordinary_user_sees_only_the_mmsp_test_draft_and_its_warning(): void
     {
         $user = $this->userWithRole('korisnik');
         $preview = $this->competition(
@@ -203,8 +212,14 @@ class CompetitionsUserHubTest extends TestCase
             ->assertDontSee($preview->title);
 
         $this->actingAs($user)
+            ->get(route('competitions.index', ['type' => CompetitionProfileResolver::TYPE_CANONICAL]))
+            ->assertOk()
+            ->assertSee($preview->title);
+
+        $this->actingAs($user)
             ->get(route('competitions.show', $preview))
-            ->assertNotFound();
+            ->assertOk()
+            ->assertSee('Prijava nije zvanični zahtjev za subvenciju', false);
     }
 
     public function test_restricted_roles_keep_their_competition_access_rules(): void
@@ -223,7 +238,8 @@ class CompetitionsUserHubTest extends TestCase
         $html = $this->actingAs($competitionAdmin)
             ->get(route('competitions.index'))
             ->assertOk()
-            ->assertSee('U razvoju')
+            ->assertSee('Aktivan modul')
+            ->assertDontSee('U razvoju')
             ->getContent();
         $this->assertStringNotContainsString(route('admin.competitions.index', absolute: false), $html);
     }
@@ -259,9 +275,10 @@ class CompetitionsUserHubTest extends TestCase
         $this->assertSame(3, $this->programCardCount($userHtml));
         $this->assertSame([1, 2], $this->programStatValues($this->linkedProgramCardHtml($userHtml, 'zensko')));
         $this->assertSame([0, 0], $this->programStatValues($this->linkedProgramCardHtml($userHtml, 'omladinsko')));
-        $development = $this->developmentCardHtml($userHtml);
-        $this->assertSame([0, 0], $this->programStatValues($development));
-        $this->assertStringNotContainsString('href', $development);
+        $this->assertSame(
+            [1, 1],
+            $this->programStatValues($this->linkedProgramCardHtml($userHtml, CompetitionProfileResolver::TYPE_CANONICAL))
+        );
         $this->assertStringNotContainsString('MMSP testni pregled', $userHtml);
         $this->assertStringNotContainsString('program-stat-label">Prijave', $userHtml);
 
