@@ -234,7 +234,12 @@
                         <div class="competition-meta">
                             <div class="meta-item">
                                 <span>📅</span>
-                                <span>Objavljen: {{ $competition->published_at ? $competition->published_at->format('d.m.Y') : 'N/A' }}</span>
+                                @php
+                                    $listedPublicationDate = ($competition->isCanonicalTestPreview() && ! $competition->published_at)
+                                        ? $competition->start_date
+                                        : $competition->published_at;
+                                @endphp
+                                <span>Objavljen: {{ $listedPublicationDate ? $listedPublicationDate->format('d.m.Y') : 'N/A' }}</span>
                             </div>
                             <div class="meta-item">
                                 <span>💰</span>
