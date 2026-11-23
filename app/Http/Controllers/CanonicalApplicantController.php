@@ -78,6 +78,9 @@ class CanonicalApplicantController extends Controller
         $jmbgForForm = null;
         $verifiedJmbg = null;
         $snapshotJmbg = null;
+        $jmbgBlocked = false;
+        $jmbgMustMatchPrefill = false;
+        $jmbgEmptyOk = true;
         if ($form->isEntrepreneur()) {
             try {
                 $accountJmb = app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
@@ -90,6 +93,14 @@ class CanonicalApplicantController extends Controller
                 } else {
                     $jmbgForForm = $accountJmb;
                 }
+                $displayedJmbg = old('applicant_jmbg', $jmbgForForm);
+                $displayedJmbg = is_scalar($displayedJmbg) ? trim((string) $displayedJmbg) : '';
+                $snapshotUnusable = is_string($snapshotJmbg) && preg_match('/^[0-9]{13}$/', $snapshotJmbg) !== 1;
+                $snapshotMismatch = is_string($verifiedJmbg) && is_string($snapshotJmbg) && $snapshotJmbg !== $verifiedJmbg;
+                $displayedMatchesVerified = is_string($verifiedJmbg) && $displayedJmbg === $verifiedJmbg;
+                $jmbgBlocked = $snapshotUnusable || $snapshotMismatch || (is_string($verifiedJmbg) && ! $displayedMatchesVerified);
+                $jmbgMustMatchPrefill = $displayedMatchesVerified && ! $snapshotUnusable && ! $snapshotMismatch;
+                $jmbgEmptyOk = ! $snapshotUnusable && ! $snapshotMismatch;
             } catch (JmbEncryptedReadException) {
                 return redirect()->route('applications.show', $application)
                     ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
@@ -103,8 +114,9 @@ class CanonicalApplicantController extends Controller
             'accuracyStatement' => CanonicalApplicantFormService::accuracyStatement($form->legal_form),
             'readOnly' => $form->isFrozen() || $application->isApplicantContentWriteLocked(),
             'jmbgForForm' => $jmbgForForm,
-            'verifiedJmbg' => $verifiedJmbg,
-            'snapshotJmbg' => $snapshotJmbg,
+            'jmbgBlocked' => $jmbgBlocked,
+            'jmbgMustMatchPrefill' => $jmbgMustMatchPrefill,
+            'jmbgEmptyOk' => $jmbgEmptyOk,
             'p2SubsidyType' => $application->canonicalInvestmentPlan?->subsidy_type,
             'p1ReadyForPlan' => $form->isEntrepreneur() && $this->forms->finalBlockReason($application) === null,
             'p1RequiredFields' => array_keys($this->forms->requiredFields($form->legal_form)),

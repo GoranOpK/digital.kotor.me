@@ -312,6 +312,28 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertNull(app(CanonicalApplicantFormService::class)->finalBlockReason($ready));
         $readyPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $ready))->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/id="p1a-save-button"[^>]*name="continue_to_plan"[^>]*>\s*Sačuvaj i nastavi na Plan ulaganja\s*</', $readyPage);
+        $this->assertStringNotContainsString('data-verified-jmbg', $readyPage);
+        $this->assertStringNotContainsString('data-snapshot-jmbg', $readyPage);
+        $this->assertDoesNotMatchRegularExpression('/data-[a-z0-9-]*="[^"]*\d{13}/', $readyPage);
+        $this->assertStringContainsString('data-jmbg-must-match-prefill="1"', $readyPage);
+        $this->assertStringContainsString('data-jmbg-blocked="0"', $readyPage);
+        $this->assertStringContainsString('function formatOk', $readyPage);
+        $this->assertStringContainsString('registrationDateOk', $readyPage);
+
+        $this->actingAs($owner)
+            ->from(route('applications.canonical-p1.edit', $ready))
+            ->put(route('applications.canonical-p1.update', $ready), $this->canonicalP1Payload($ready, [
+                'continue_to_plan' => '1',
+                'activity_code' => 'abc',
+                'employee_count' => '2.5',
+                'phone' => '12',
+                'email' => 'nije-email',
+                'registration_date' => now()->addDay()->toDateString(),
+            ]))
+            ->assertRedirect(route('applications.canonical-p1.edit', $ready))
+            ->assertSessionHasErrors(['activity_code', 'employee_count', 'phone', 'email', 'registration_date']);
+        $this->assertSame('draft', $ready->fresh()->status);
+        $this->assertSame('56.10', CanonicalApplicantForm::query()->where('application_id', $ready->id)->value('activity_code'));
 
         $this->actingAs($owner)
             ->put(route('applications.canonical-p1.update', $ready), $this->canonicalP1Payload($ready, [

@@ -746,8 +746,10 @@
                                         data-label-plan="Sačuvaj i nastavi na Plan ulaganja"
                                         data-required="{{ json_encode($p1RequiredFields) }}"
                                         data-subsidy-codes="{{ json_encode(\App\Support\CanonicalSubsidyType::codes()) }}"
-                                        data-verified-jmbg="{{ $verifiedJmbg }}"
-                                        data-snapshot-jmbg="{{ $snapshotJmbg }}"
+                                        data-jmbg-blocked="{{ $jmbgBlocked ? '1' : '0' }}"
+                                        data-jmbg-must-match-prefill="{{ $jmbgMustMatchPrefill ? '1' : '0' }}"
+                                        data-jmbg-empty-ok="{{ $jmbgEmptyOk ? '1' : '0' }}"
+                                        data-today="{{ now()->toDateString() }}"
                                         data-p2-subsidy="{{ $p2SubsidyType }}">
                                     {{ $p1ReadyForPlan ? 'Sačuvaj i nastavi na Plan ulaganja' : 'Sačuvaj kao nacrt' }}
                                 </button>
@@ -771,6 +773,8 @@
 
                         var required = JSON.parse(button.dataset.required || '[]');
                         var subsidyCodes = JSON.parse(button.dataset.subsidyCodes || '[]');
+                        var jmbgField = form.elements.namedItem('applicant_jmbg');
+                        var prefillJmbg = jmbgField && !jmbgField.disabled ? String(jmbgField.defaultValue || '').trim() : '';
 
                         function fieldValue(name) {
                             var field = form.elements.namedItem(name);
@@ -783,10 +787,70 @@
                             return String(field.value || '').trim();
                         }
 
+                        function registrationDateOk(value) {
+                            if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                                return false;
+                            }
+                            var parts = value.split('-');
+                            var year = Number(parts[0]);
+                            var month = Number(parts[1]);
+                            var day = Number(parts[2]);
+                            var parsed = new Date(Date.UTC(year, month - 1, day));
+                            if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+                                return false;
+                            }
+                            var today = button.dataset.today || '';
+
+                            return today === '' || value <= today;
+                        }
+
+                        function formatOk(name, value) {
+                            if (name === 'activity_code') {
+                                return /^(\d{2})\.?(\d{2})$/.test(value);
+                            }
+                            if (name === 'employee_count') {
+                                return /^\d+$/.test(value) && Number(value) <= 100000;
+                            }
+                            if (name === 'phone') {
+                                return /^[0-9+\/\-\s()]{6,32}$/.test(value);
+                            }
+                            if (name === 'email') {
+                                return value.length <= 255 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                            }
+                            if (name === 'registration_date') {
+                                return registrationDateOk(value);
+                            }
+                            if (name === 'bank_account') {
+                                return /^\d[\d\- ]{5,29}$/.test(value);
+                            }
+
+                            return true;
+                        }
+
+                        function jmbgOk() {
+                            if (button.dataset.jmbgBlocked === '1') {
+                                return false;
+                            }
+                            var typed = fieldValue('applicant_jmbg');
+                            if (typed === '') {
+                                return button.dataset.jmbgEmptyOk === '1';
+                            }
+                            if (!/^[0-9]{13}$/.test(typed)) {
+                                return false;
+                            }
+                            if (button.dataset.jmbgMustMatchPrefill === '1' && typed !== prefillJmbg) {
+                                return false;
+                            }
+
+                            return true;
+                        }
+
                         function p1aReadyForPlan() {
                             var index;
                             for (index = 0; index < required.length; index += 1) {
-                                if (fieldValue(required[index]) === '') {
+                                var name = required[index];
+                                var value = fieldValue(name);
+                                if (value === '' || !formatOk(name, value)) {
                                     return false;
                                 }
                             }
@@ -806,21 +870,7 @@
                                 return false;
                             }
 
-                            var typedJmbg = fieldValue('applicant_jmbg');
-                            var verifiedJmbg = button.dataset.verifiedJmbg || '';
-                            var snapshotJmbg = button.dataset.snapshotJmbg || '';
-                            var effectiveJmbg = typedJmbg !== '' ? typedJmbg : (snapshotJmbg !== '' ? snapshotJmbg : verifiedJmbg);
-                            if (typedJmbg !== '' && !/^[0-9]{13}$/.test(typedJmbg)) {
-                                return false;
-                            }
-                            if (verifiedJmbg !== '' && effectiveJmbg !== '' && effectiveJmbg !== verifiedJmbg) {
-                                return false;
-                            }
-                            if (effectiveJmbg !== '' && !/^[0-9]{13}$/.test(effectiveJmbg)) {
-                                return false;
-                            }
-
-                            return true;
+                            return jmbgOk();
                         }
 
                         function applyButton(ready) {
