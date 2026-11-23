@@ -7,6 +7,27 @@
 .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-top {
     margin-bottom: 0;
 }
+.canonical-ui-page.mmsp-business-plan #p2-save-button {
+    padding: 12px 24px;
+    border: 0;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    color: #fff;
+}
+.canonical-ui-page.mmsp-business-plan #p2-save-button.mmsp-p2-save-draft {
+    background: #6b7280;
+}
+.canonical-ui-page.mmsp-business-plan #p2-save-button.mmsp-p2-save-draft:hover {
+    background: #4b5563;
+}
+.canonical-ui-page.mmsp-business-plan #p2-save-button.mmsp-p2-save-ready {
+    background: #0B3D91;
+}
+.canonical-ui-page.mmsp-business-plan #p2-save-button.mmsp-p2-save-ready:hover {
+    background: #0A347B;
+}
 @media (max-width: 640px) {
     .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-top {
         flex-direction: row;
@@ -123,6 +144,7 @@
     $brojPrijave = $upBroj.'/'.$redniBroj;
     $p1 = $application->canonicalApplicantForm;
     $p1Complete = app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
+    $p2Ready = app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
 @endphp
 
 <div class="canonical-ui-page mmsp-form-page mmsp-business-plan">
@@ -333,8 +355,13 @@
                     <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center;">
                         <div style="display:flex; justify-content:center; flex-wrap:wrap;">
                             <button type="submit"
-                                    style="background:#0B3D91; color:#fff; padding:12px 24px; border:0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer;">
-                                Sačuvaj Nacrt plana
+                                    id="p2-save-button"
+                                    class="{{ $p2Ready ? 'mmsp-p2-save-ready' : 'mmsp-p2-save-draft' }}"
+                                    data-label-draft="Sačuvaj Nacrt plana"
+                                    data-label-plan="Sačuvaj Plan ulaganja"
+                                    data-subsidy-codes='@json(array_values(\App\Support\CanonicalSubsidyType::codes()))'
+                                    data-narrative-fields='@json(array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS))'>
+                                {{ $p2Ready ? 'Sačuvaj Plan ulaganja' : 'Sačuvaj Nacrt plana' }}
                             </button>
                         </div>
                     </div>
@@ -350,6 +377,7 @@
 
         @unless($readOnly)
             <script src="{{ asset('js/mmsp-p2-financials.js') }}"></script>
+            <script src="{{ asset('js/mmsp-p2-save-label.js') }}"></script>
         @endunless
 
         <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">
