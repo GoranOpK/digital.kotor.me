@@ -45,6 +45,7 @@ class MmspP2SaveLabelTest extends TestCase
         $this->assertButtonLabel($empty->getContent(), 'Sačuvaj Nacrt plana', 'mmsp-p2-save-draft');
         $empty->assertSee('js/mmsp-p2-save-label.js', false);
         $empty->assertSee('js/mmsp-p2-financials.js', false);
+        $empty->assertSee('/plan-ulaganja', false);
         $this->assertStringNotContainsString(route('applications.final-submit', $application), $empty->getContent());
 
         $partial = $this->payload();
@@ -190,6 +191,9 @@ class MmspP2SaveLabelTest extends TestCase
             $page->assertSee("allFilled ? 'Sačuvaj biznis plan' : 'Sačuvaj nacrt biznis plana'", false);
             $page->assertDontSee('Sačuvaj Plan ulaganja', false);
             $page->assertDontSee('mmsp-p2-save-label.js', false);
+            $page->assertDontSee('id="p2-save-button"', false);
+            $page->assertDontSee('mmsp-p2-save-draft', false);
+            $page->assertDontSee('mmsp-p2-save-ready', false);
             $this->actingAs($owner)->get(route('applications.canonical-p2.edit', $application))->assertNotFound();
         }
     }

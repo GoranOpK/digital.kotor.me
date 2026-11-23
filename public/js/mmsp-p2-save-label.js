@@ -117,7 +117,7 @@
             ? rootElement.querySelector('#p2-save-button').form
             : null;
 
-        if (!button || !form) {
+        if (!button || !form || String(form.getAttribute('action') || '').indexOf('/plan-ulaganja') === -1) {
             return;
         }
 
