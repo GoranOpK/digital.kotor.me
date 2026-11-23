@@ -91,6 +91,47 @@ class MmspP2SaveLabelTest extends TestCase
         $this->assertSame('1000.00', $application->canonicalInvestmentPlan()->value('total_investment'));
     }
 
+    public function test_expected_subsidy_may_differ_from_total_minus_own_contribution(): void
+    {
+        $owner = $this->owner();
+        $application = $this->canonicalDraft($owner, $this->competition(), [
+            'with_p2' => false,
+            'with_documents' => false,
+        ]);
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload())
+            ->assertSessionHasNoErrors();
+
+        $plan = $application->canonicalInvestmentPlan()->firstOrFail();
+        $this->assertSame('1000.00', $plan->total_investment);
+        $this->assertSame('200.00', $plan->own_contribution);
+        $this->assertSame('500.00', $plan->expected_subsidy);
+        $this->assertNull(app(CanonicalInvestmentPlanService::class)->finalBlockReason($application->fresh()));
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertNull($application->fresh()->submitted_at);
+
+        $page = $this->actingAs($owner)
+            ->get(route('applications.canonical-p2.edit', $application))
+            ->assertOk();
+        $this->assertButtonLabel($page->getContent(), 'Sačuvaj Plan ulaganja', 'mmsp-p2-save-ready');
+        $page->assertSee('value="500.00"', false);
+
+        $overTotal = $this->payload();
+        $overTotal['expected_subsidy'] = '1000.01';
+        $this->actingAs($owner)
+            ->from(route('applications.canonical-p2.edit', $application))
+            ->put(route('applications.canonical-p2.update', $application), $overTotal)
+            ->assertSessionHasErrors('expected_subsidy');
+
+        $plan->refresh();
+        $this->assertSame('500.00', $plan->expected_subsidy);
+        $this->assertSame('200.00', $plan->own_contribution);
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertNull($application->fresh()->submitted_at);
+        $this->assertNull(app(CanonicalInvestmentPlanService::class)->finalBlockReason($application->fresh()));
+    }
+
     public function test_reopened_complete_p2_shows_the_plan_label_before_any_edit(): void
     {
         $owner = $this->owner();

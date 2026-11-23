@@ -85,6 +85,9 @@
         if (own.invalid || own.empty || own.cents < 0n || own.cents > total.cents) {
             return false;
         }
+        // Same bounds as CanonicalInvestmentPlanService: above zero and no greater
+        // than the total. The form may display total - own contribution, but that
+        // identity is not a completeness rule.
         if (expected.invalid || expected.empty || expected.cents <= 0n || expected.cents > total.cents) {
             return false;
         }
