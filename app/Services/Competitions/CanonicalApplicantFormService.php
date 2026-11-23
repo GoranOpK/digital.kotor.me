@@ -121,10 +121,20 @@ final class CanonicalApplicantFormService
                 'status' => 'draft',
             ]);
 
-            CanonicalApplicantForm::query()->create([
+            $formAttributes = [
                 'application_id' => $application->id,
                 'legal_form' => $legalForm,
-            ]);
+            ];
+            $profilePib = null;
+            if ($legalForm === CanonicalLegalForm::DRUSTVO) {
+                [$profileFields, $profilePib] = $this->p1bProfileSeed($user);
+                $formAttributes = array_merge($formAttributes, $profileFields);
+            }
+
+            CanonicalApplicantForm::query()->create($formAttributes);
+            if ($profilePib !== null) {
+                $application->forceFill(['pib' => $profilePib])->save();
+            }
 
             return ProcessWriteResult::ok((int) $application->id);
         });
@@ -282,6 +292,58 @@ final class CanonicalApplicantFormService
         return $legalForm === CanonicalLegalForm::PREDUZETNIK
             ? self::ACCURACY_STATEMENT_P1A
             : self::ACCURACY_STATEMENT_P1B;
+    }
+
+    /**
+     * Copy the logged-in legal entity profile into a new P1b. Empty profile
+     * fields stay empty. CRPS has no P1b field. The user account is not written.
+     *
+     * @return array{0: array<string, string>, 1: ?string}
+     */
+    private function p1bProfileSeed(User $user): array
+    {
+        if (! $user->isLegalEntity()) {
+            return [[], null];
+        }
+
+        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
+        if (! $identity->hasCurrentSubjectIdentity()) {
+            return [[], null];
+        }
+
+        $fields = [];
+        $company = $this->profileText($identity->companyName);
+        if ($company !== null) {
+            $fields['company_name'] = $company;
+        }
+        $person = $this->profileText(trim((string) $identity->firstName.' '.(string) $identity->lastName));
+        if ($person !== null) {
+            $fields['person_name'] = $person;
+        }
+        $address = $this->profileText(KotorAddress::formatStreetAndCity($identity->address, $identity->city));
+        if ($address !== null) {
+            $fields['address'] = $address;
+        }
+        $phone = $this->profileText($identity->phone);
+        if ($phone !== null) {
+            $fields['phone'] = $phone;
+        }
+        $email = $this->profileText($user->email);
+        if ($email !== null) {
+            $fields['email'] = $email;
+        }
+
+        return [$fields, Pib::normalize($identity->pib)];
+    }
+
+    private function profileText(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+        $text = trim($value);
+
+        return $text === '' ? null : $text;
     }
 
     /**

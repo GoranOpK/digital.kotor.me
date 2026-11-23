@@ -754,8 +754,18 @@
                                     {{ $p1ReadyForPlan ? 'Sačuvaj i nastavi na Plan ulaganja' : 'Sačuvaj kao nacrt' }}
                                 </button>
                             @else
-                                <button type="submit" class="mmsp-p1-submit" style="background:#6b7280; padding:12px 24px; font-size:14px; margin:0;">
-                                    Sačuvaj kao nacrt
+                                <button type="submit"
+                                        id="p1b-save-button"
+                                        class="mmsp-p1-submit"
+                                        style="padding:12px 24px; font-size:14px; margin:0;{{ $p1ReadyForPlan ? '' : ' background:#6b7280;' }}"
+                                        @if($p1ReadyForPlan) name="continue_to_plan" value="1" @endif
+                                        data-label-draft="Sačuvaj kao nacrt"
+                                        data-label-plan="Sačuvaj i nastavi na plan ulaganja"
+                                        data-required="{{ json_encode($p1RequiredFields) }}"
+                                        data-subsidy-codes="{{ json_encode(\App\Support\CanonicalSubsidyType::codes()) }}"
+                                        data-today="{{ now()->toDateString() }}"
+                                        data-p2-subsidy="{{ $p2SubsidyType }}">
+                                    {{ $p1ReadyForPlan ? 'Sačuvaj i nastavi na plan ulaganja' : 'Sačuvaj kao nacrt' }}
                                 </button>
                             @endif
                         </div>
@@ -888,6 +898,119 @@
 
                         function refresh() {
                             applyButton(p1aReadyForPlan());
+                        }
+
+                        form.addEventListener('input', refresh);
+                        form.addEventListener('change', refresh);
+                        refresh();
+                    })();
+                </script>
+            @elseif(! $readOnly)
+                <script>
+                    (function () {
+                        var button = document.getElementById('p1b-save-button');
+                        var form = document.getElementById('canonical-p1-form');
+                        if (!button || !form) {
+                            return;
+                        }
+
+                        var required = JSON.parse(button.dataset.required || '[]');
+                        var subsidyCodes = JSON.parse(button.dataset.subsidyCodes || '[]');
+
+                        function fieldValue(name) {
+                            var field = form.elements.namedItem(name);
+                            if (!field || field.disabled) {
+                                return '';
+                            }
+                            if (field.type === 'checkbox') {
+                                return field.checked ? '1' : '';
+                            }
+                            return String(field.value || '').trim();
+                        }
+
+                        function registrationDateOk(value) {
+                            if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                                return false;
+                            }
+                            var parts = value.split('-');
+                            var year = Number(parts[0]);
+                            var month = Number(parts[1]);
+                            var day = Number(parts[2]);
+                            var parsed = new Date(Date.UTC(year, month - 1, day));
+                            if (parsed.getUTCFullYear() !== year || parsed.getUTCMonth() !== month - 1 || parsed.getUTCDate() !== day) {
+                                return false;
+                            }
+                            var today = button.dataset.today || '';
+
+                            return today === '' || value <= today;
+                        }
+
+                        function formatOk(name, value) {
+                            if (name === 'activity_code') {
+                                return /^(\d{2})\.?(\d{2})$/.test(value);
+                            }
+                            if (name === 'employee_count') {
+                                return /^\d+$/.test(value) && Number(value) <= 100000;
+                            }
+                            if (name === 'phone') {
+                                return /^[0-9+\/\-\s()]{6,32}$/.test(value);
+                            }
+                            if (name === 'email') {
+                                return value.length <= 255 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                            }
+                            if (name === 'registration_date') {
+                                return registrationDateOk(value);
+                            }
+                            if (name === 'bank_account') {
+                                return /^\d[\d\- ]{5,29}$/.test(value);
+                            }
+
+                            return true;
+                        }
+
+                        function p1bReadyForPlan() {
+                            var index;
+                            for (index = 0; index < required.length; index += 1) {
+                                var name = required[index];
+                                var value = fieldValue(name);
+                                if (value === '' || !formatOk(name, value)) {
+                                    return false;
+                                }
+                            }
+                            var pib = fieldValue('pib').replace(/[\s.\-\/]/g, '');
+                            if (!/^[0-9]{8}$/.test(pib)) {
+                                return false;
+                            }
+                            if (fieldValue('accuracy_confirmed') !== '1') {
+                                return false;
+                            }
+                            var subsidy = fieldValue('subsidy_type');
+                            if (subsidyCodes.indexOf(subsidy) === -1) {
+                                return false;
+                            }
+                            var savedPlanSubsidy = button.dataset.p2Subsidy || '';
+                            if (savedPlanSubsidy !== '' && subsidy !== savedPlanSubsidy) {
+                                return false;
+                            }
+
+                            return true;
+                        }
+
+                        function applyButton(ready) {
+                            button.textContent = ready ? button.dataset.labelPlan : button.dataset.labelDraft;
+                            if (ready) {
+                                button.name = 'continue_to_plan';
+                                button.value = '1';
+                                button.style.background = '';
+                            } else {
+                                button.removeAttribute('name');
+                                button.removeAttribute('value');
+                                button.style.background = '#6b7280';
+                            }
+                        }
+
+                        function refresh() {
+                            applyButton(p1bReadyForPlan());
                         }
 
                         form.addEventListener('input', refresh);
