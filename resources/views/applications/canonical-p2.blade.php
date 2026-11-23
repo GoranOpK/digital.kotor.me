@@ -357,11 +357,11 @@
                             <button type="submit"
                                     id="p2-save-button"
                                     class="{{ $p2Ready ? 'mmsp-p2-save-ready' : 'mmsp-p2-save-draft' }}"
-                                    data-label-draft="Sačuvaj Nacrt plana"
-                                    data-label-plan="Sačuvaj Plan ulaganja"
+                                    data-label-draft="Sačuvaj nacrt plana"
+                                    data-label-plan="Sačuvaj plan ulaganja"
                                     data-subsidy-codes='@json(array_values(\App\Support\CanonicalSubsidyType::codes()))'
                                     data-narrative-fields='@json(array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS))'>
-                                {{ $p2Ready ? 'Sačuvaj Plan ulaganja' : 'Sačuvaj Nacrt plana' }}
+                                {{ $p2Ready ? 'Sačuvaj plan ulaganja' : 'Sačuvaj nacrt plana' }}
                             </button>
                         </div>
                     </div>
