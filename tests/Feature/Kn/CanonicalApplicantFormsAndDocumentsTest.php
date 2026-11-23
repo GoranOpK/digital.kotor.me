@@ -287,6 +287,83 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame('03123456', $application->fresh()->pib);
     }
 
+    public function test_p1a_save_button_follows_final_completeness_and_opens_the_investment_plan(): void
+    {
+        $owner = $this->makeOwner();
+        $incomplete = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::PREDUZETNIK);
+        $draftPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $incomplete))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/id="p1a-save-button"(?![^>]*name="continue_to_plan")[^>]*>\s*Sačuvaj kao nacrt\s*</', $draftPage);
+        $this->assertStringContainsString('data-label-plan="Sačuvaj i nastavi na Plan ulaganja"', $draftPage);
+        $this->assertStringContainsString('ime i prezime preduzetnika', app(CanonicalApplicantFormService::class)->finalBlockReason($incomplete) ?? '');
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $incomplete), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+                'person_name' => '',
+                'continue_to_plan' => '1',
+            ]))
+            ->assertRedirect(route('applications.canonical-p1.edit', $incomplete))
+            ->assertSessionHasErrors('error');
+        $this->assertSame('draft', $incomplete->fresh()->status);
+        $this->assertNull($incomplete->fresh()->submitted_at);
+        $this->assertNull(FinalApplicationClaim::query()->where('application_id', $incomplete->id)->first());
+        $this->assertNotNull(app(CanonicalApplicantFormService::class)->finalBlockReason($incomplete->fresh()));
+
+        $ready = $this->canonicalDraft($owner, $this->openCall());
+        $this->assertNull(app(CanonicalApplicantFormService::class)->finalBlockReason($ready));
+        $readyPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $ready))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/id="p1a-save-button"[^>]*name="continue_to_plan"[^>]*>\s*Sačuvaj i nastavi na Plan ulaganja\s*</', $readyPage);
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $ready), $this->canonicalP1Payload($ready, [
+                'person_name' => 'Ana Anić',
+                'continue_to_plan' => '1',
+                'applicant_jmbg' => (string) $owner->jmb,
+            ]))
+            ->assertRedirect(route('applications.canonical-p2.edit', $ready))
+            ->assertSessionHas('success', 'Obrazac P1a je sačuvan. Nastavite sa Planom ulaganja (Obrazac P2).');
+        $this->assertSame('Ana Anić', CanonicalApplicantForm::query()->where('application_id', $ready->id)->value('person_name'));
+        $this->assertSame((string) $owner->jmb, $ready->fresh()->applicantJmbgForRead());
+        $this->assertSame('draft', $ready->fresh()->status);
+        $this->assertNull($ready->fresh()->submitted_at);
+        $this->assertNull(FinalApplicationClaim::query()->where('application_id', $ready->id)->first());
+        $this->actingAs($owner)->get(route('applications.canonical-p2.edit', $ready))->assertOk()->assertSee('Obrazac P2');
+
+        $this->actingAs($owner)
+            ->from(route('applications.canonical-p1.edit', $ready))
+            ->put(route('applications.canonical-p1.update', $ready), $this->canonicalP1Payload($ready, [
+                'continue_to_plan' => '1',
+                'applicant_jmbg' => '9999999999999',
+                'pib' => '123',
+            ]))
+            ->assertRedirect(route('applications.canonical-p1.edit', $ready))
+            ->assertSessionHasErrors(['applicant_jmbg', 'pib']);
+        $this->assertSame((string) $owner->jmb, $ready->fresh()->applicantJmbgForRead());
+
+        $company = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::DRUSTVO);
+        $companyPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $company))->assertOk()->getContent();
+        $this->assertStringContainsString('Sačuvaj kao nacrt', $companyPage);
+        $this->assertStringNotContainsString('id="p1a-save-button"', $companyPage);
+        $this->assertStringNotContainsString('data-label-plan="Sačuvaj i nastavi na Plan ulaganja"', $companyPage);
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $company), [
+                'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+                'company_name' => 'Primjer d.o.o.',
+                'person_name' => 'Odgovorno Lice',
+                'pib' => '03123456',
+                'address' => 'Stari grad 1, 85330 Kotor',
+                'registration_date' => '2019-02-01',
+                'activity_code' => '62.01',
+                'employee_count' => '5',
+                'bank_account' => '510-0000000000002-22',
+                'phone' => '067111222',
+                'email' => 'drustvo@example.com',
+                'accuracy_confirmed' => '1',
+                'continue_to_plan' => '1',
+            ])
+            ->assertRedirect(route('dashboard'));
+        $this->assertSame('draft', $company->fresh()->status);
+    }
+
     public function test_p1b_final_requires_company_specific_facts(): void
     {
         $owner = $this->makeOwner();

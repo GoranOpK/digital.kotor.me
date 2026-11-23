@@ -561,7 +561,7 @@
             </div>
         @endunless
 
-        <form method="POST" action="{{ route('applications.canonical-p1.update', $application) }}">
+        <form id="canonical-p1-form" method="POST" action="{{ route('applications.canonical-p1.update', $application) }}">
             @csrf
             @method('PUT')
 
@@ -736,13 +736,116 @@
                 @unless($readOnly)
                     <div class="mmsp-p1-card mmsp-p1-screen-actions" style="text-align:center; padding:32px;">
                         <div style="display:flex; justify-content:center; flex-wrap:wrap;">
-                            <button type="submit" class="mmsp-p1-submit" style="background:#6b7280; padding:12px 24px; font-size:14px; margin:0;">
-                                Sačuvaj kao nacrt
-                            </button>
+                            @if($isEntrepreneur)
+                                <button type="submit"
+                                        id="p1a-save-button"
+                                        class="mmsp-p1-submit"
+                                        style="padding:12px 24px; font-size:14px; margin:0;{{ $p1ReadyForPlan ? '' : ' background:#6b7280;' }}"
+                                        @if($p1ReadyForPlan) name="continue_to_plan" value="1" @endif
+                                        data-label-draft="Sačuvaj kao nacrt"
+                                        data-label-plan="Sačuvaj i nastavi na Plan ulaganja"
+                                        data-required="{{ json_encode($p1RequiredFields) }}"
+                                        data-subsidy-codes="{{ json_encode(\App\Support\CanonicalSubsidyType::codes()) }}"
+                                        data-verified-jmbg="{{ $verifiedJmbg }}"
+                                        data-snapshot-jmbg="{{ $snapshotJmbg }}"
+                                        data-p2-subsidy="{{ $p2SubsidyType }}">
+                                    {{ $p1ReadyForPlan ? 'Sačuvaj i nastavi na Plan ulaganja' : 'Sačuvaj kao nacrt' }}
+                                </button>
+                            @else
+                                <button type="submit" class="mmsp-p1-submit" style="background:#6b7280; padding:12px 24px; font-size:14px; margin:0;">
+                                    Sačuvaj kao nacrt
+                                </button>
+                            @endif
                         </div>
                     </div>
                 @endunless
             </fieldset>
+            @if($isEntrepreneur && ! $readOnly)
+                <script>
+                    (function () {
+                        var button = document.getElementById('p1a-save-button');
+                        var form = document.getElementById('canonical-p1-form');
+                        if (!button || !form) {
+                            return;
+                        }
+
+                        var required = JSON.parse(button.dataset.required || '[]');
+                        var subsidyCodes = JSON.parse(button.dataset.subsidyCodes || '[]');
+
+                        function fieldValue(name) {
+                            var field = form.elements.namedItem(name);
+                            if (!field || field.disabled) {
+                                return '';
+                            }
+                            if (field.type === 'checkbox') {
+                                return field.checked ? '1' : '';
+                            }
+                            return String(field.value || '').trim();
+                        }
+
+                        function p1aReadyForPlan() {
+                            var index;
+                            for (index = 0; index < required.length; index += 1) {
+                                if (fieldValue(required[index]) === '') {
+                                    return false;
+                                }
+                            }
+                            var pib = fieldValue('pib').replace(/[\s.\-\/]/g, '');
+                            if (!/^[0-9]{8}$/.test(pib)) {
+                                return false;
+                            }
+                            if (fieldValue('accuracy_confirmed') !== '1') {
+                                return false;
+                            }
+                            var subsidy = fieldValue('subsidy_type');
+                            if (subsidyCodes.indexOf(subsidy) === -1) {
+                                return false;
+                            }
+                            var savedPlanSubsidy = button.dataset.p2Subsidy || '';
+                            if (savedPlanSubsidy !== '' && subsidy !== savedPlanSubsidy) {
+                                return false;
+                            }
+
+                            var typedJmbg = fieldValue('applicant_jmbg');
+                            var verifiedJmbg = button.dataset.verifiedJmbg || '';
+                            var snapshotJmbg = button.dataset.snapshotJmbg || '';
+                            var effectiveJmbg = typedJmbg !== '' ? typedJmbg : (snapshotJmbg !== '' ? snapshotJmbg : verifiedJmbg);
+                            if (typedJmbg !== '' && !/^[0-9]{13}$/.test(typedJmbg)) {
+                                return false;
+                            }
+                            if (verifiedJmbg !== '' && effectiveJmbg !== '' && effectiveJmbg !== verifiedJmbg) {
+                                return false;
+                            }
+                            if (effectiveJmbg !== '' && !/^[0-9]{13}$/.test(effectiveJmbg)) {
+                                return false;
+                            }
+
+                            return true;
+                        }
+
+                        function applyButton(ready) {
+                            button.textContent = ready ? button.dataset.labelPlan : button.dataset.labelDraft;
+                            if (ready) {
+                                button.name = 'continue_to_plan';
+                                button.value = '1';
+                                button.style.background = '';
+                            } else {
+                                button.removeAttribute('name');
+                                button.removeAttribute('value');
+                                button.style.background = '#6b7280';
+                            }
+                        }
+
+                        function refresh() {
+                            applyButton(p1aReadyForPlan());
+                        }
+
+                        form.addEventListener('input', refresh);
+                        form.addEventListener('change', refresh);
+                        refresh();
+                    })();
+                </script>
+            @endif
         </form>
 
         <div class="mmsp-p1-card mmsp-p1-screen-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">

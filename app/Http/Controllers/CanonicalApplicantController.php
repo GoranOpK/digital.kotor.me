@@ -76,11 +76,20 @@ class CanonicalApplicantController extends Controller
         abort_unless($form && CanonicalLegalForm::isValid($form->legal_form), 404);
 
         $jmbgForForm = null;
+        $verifiedJmbg = null;
+        $snapshotJmbg = null;
         if ($form->isEntrepreneur()) {
             try {
-                $jmbgForForm = $application->hasApplicantJmbgSnapshot()
-                    ? $application->applicantJmbgForRead()
-                    : app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
+                $accountJmb = app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
+                if (is_string($accountJmb) && preg_match('/^[0-9]{13}$/', trim($accountJmb)) === 1) {
+                    $verifiedJmbg = trim($accountJmb);
+                }
+                if ($application->hasApplicantJmbgSnapshot()) {
+                    $snapshotJmbg = $application->applicantJmbgForRead();
+                    $jmbgForForm = $snapshotJmbg;
+                } else {
+                    $jmbgForForm = $accountJmb;
+                }
             } catch (JmbEncryptedReadException) {
                 return redirect()->route('applications.show', $application)
                     ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
@@ -94,6 +103,11 @@ class CanonicalApplicantController extends Controller
             'accuracyStatement' => CanonicalApplicantFormService::accuracyStatement($form->legal_form),
             'readOnly' => $form->isFrozen() || $application->isApplicantContentWriteLocked(),
             'jmbgForForm' => $jmbgForForm,
+            'verifiedJmbg' => $verifiedJmbg,
+            'snapshotJmbg' => $snapshotJmbg,
+            'p2SubsidyType' => $application->canonicalInvestmentPlan?->subsidy_type,
+            'p1ReadyForPlan' => $form->isEntrepreneur() && $this->forms->finalBlockReason($application) === null,
+            'p1RequiredFields' => array_keys($this->forms->requiredFields($form->legal_form)),
         ]);
     }
 
@@ -120,6 +134,21 @@ class CanonicalApplicantController extends Controller
 
         if (! $result->succeeded) {
             return back()->withErrors(['error' => $result->error])->withInput();
+        }
+
+        $saved = $application->fresh();
+        $savedForm = CanonicalApplicantForm::query()->where('application_id', $saved->id)->first();
+        if ($savedForm?->isEntrepreneur() && $request->boolean('continue_to_plan')) {
+            $block = $this->forms->finalBlockReason($saved);
+            if ($block !== null) {
+                return redirect()
+                    ->route('applications.canonical-p1.edit', $saved)
+                    ->withErrors(['error' => $block]);
+            }
+
+            return redirect()
+                ->route('applications.canonical-p2.edit', $saved)
+                ->with('success', 'Obrazac P1a je sačuvan. Nastavite sa Planom ulaganja (Obrazac P2).');
         }
 
         return redirect()->route('dashboard')
