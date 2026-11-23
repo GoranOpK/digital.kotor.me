@@ -42,7 +42,7 @@ class MmspP2SaveLabelTest extends TestCase
             ->get(route('applications.canonical-p2.edit', $application))
             ->assertOk();
         $this->assertNotNull($service->finalBlockReason($application));
-        $this->assertButtonLabel($empty->getContent(), 'Sačuvaj Nacrt plana', 'mmsp-p2-save-draft');
+        $this->assertButtonLabel($empty->getContent(), 'Sačuvaj nacrt plana', 'mmsp-p2-save-draft');
         $empty->assertSee('js/mmsp-p2-save-label.js', false);
         $empty->assertSee('js/mmsp-p2-financials.js', false);
         $empty->assertSee('/plan-ulaganja', false);
@@ -64,7 +64,7 @@ class MmspP2SaveLabelTest extends TestCase
         $draftPage = $this->actingAs($owner)
             ->get(route('applications.canonical-p2.edit', $application))
             ->assertOk();
-        $this->assertButtonLabel($draftPage->getContent(), 'Sačuvaj Nacrt plana', 'mmsp-p2-save-draft');
+        $this->assertButtonLabel($draftPage->getContent(), 'Sačuvaj nacrt plana', 'mmsp-p2-save-draft');
         $draftPage->assertSee('Testni opis plana ulaganja.', false);
 
         $complete = $this->payload();
@@ -81,7 +81,7 @@ class MmspP2SaveLabelTest extends TestCase
         $readyPage = $this->actingAs($owner)
             ->get(route('applications.canonical-p2.edit', $application))
             ->assertOk();
-        $this->assertButtonLabel($readyPage->getContent(), 'Sačuvaj Plan ulaganja', 'mmsp-p2-save-ready');
+        $this->assertButtonLabel($readyPage->getContent(), 'Sačuvaj plan ulaganja', 'mmsp-p2-save-ready');
 
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), $complete)
@@ -115,7 +115,7 @@ class MmspP2SaveLabelTest extends TestCase
         $page = $this->actingAs($owner)
             ->get(route('applications.canonical-p2.edit', $application))
             ->assertOk();
-        $this->assertButtonLabel($page->getContent(), 'Sačuvaj Plan ulaganja', 'mmsp-p2-save-ready');
+        $this->assertButtonLabel($page->getContent(), 'Sačuvaj plan ulaganja', 'mmsp-p2-save-ready');
         $page->assertSee('value="500.00"', false);
 
         $overTotal = $this->payload();
@@ -142,7 +142,7 @@ class MmspP2SaveLabelTest extends TestCase
         $page = $this->actingAs($owner)
             ->get(route('applications.canonical-p2.edit', $application))
             ->assertOk();
-        $this->assertButtonLabel($page->getContent(), 'Sačuvaj Plan ulaganja', 'mmsp-p2-save-ready');
+        $this->assertButtonLabel($page->getContent(), 'Sačuvaj plan ulaganja', 'mmsp-p2-save-ready');
     }
 
     public function test_youth_and_women_business_plan_buttons_stay_unchanged(): void
@@ -189,7 +189,7 @@ class MmspP2SaveLabelTest extends TestCase
                 ->assertOk();
             $page->assertSee('id="bpSubmitBtnText">Sačuvaj nacrt biznis plana</span>', false);
             $page->assertSee("allFilled ? 'Sačuvaj biznis plan' : 'Sačuvaj nacrt biznis plana'", false);
-            $page->assertDontSee('Sačuvaj Plan ulaganja', false);
+            $page->assertDontSee('Sačuvaj plan ulaganja', false);
             $page->assertDontSee('mmsp-p2-save-label.js', false);
             $page->assertDontSee('id="p2-save-button"', false);
             $page->assertDontSee('mmsp-p2-save-draft', false);
