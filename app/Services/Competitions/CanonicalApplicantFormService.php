@@ -10,6 +10,9 @@ use App\Models\User;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\Decision\CanonicalAdministrativeGate;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Security\JmbDualWrite;
+use App\Security\JmbEncryptedReadException;
 use App\Support\CanonicalLegalForm;
 use App\Support\CanonicalSubsidyType;
 use App\Support\KotorAddress;
@@ -38,6 +41,10 @@ final class CanonicalApplicantFormService
     public const ACCURACY_STATEMENT_P1A = 'Za tačnost datih podataka odgovara preduzetnik.';
 
     public const ACCURACY_STATEMENT_P1B = 'Za tačnost datih podataka odgovara podnosilac prijave.';
+
+    public const P1A_JMBG_FORMAT = 'JMBG mora imati tačno 13 cifara.';
+
+    public const P1A_JMBG_IDENTITY_MISMATCH = 'JMBG u Obrascu P1a mora se poklapati sa JMBG-om verifikovanog naloga.';
 
     private const ACTIVITY_CODE_PATTERN = '/^(\d{2})\.?(\d{2})$/';
 
@@ -153,6 +160,7 @@ final class CanonicalApplicantFormService
         }
 
         [$values, $pib, $errors] = $this->normalize($form->legal_form, $input);
+        $jmbgToAssign = $this->p1aJmbgToAssign($form, $application, $actor, $input, $errors);
 
         if (! isset($errors['subsidy_type']) && $values['subsidy_type'] !== null) {
             $p2Type = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->value('subsidy_type');
@@ -171,7 +179,7 @@ final class CanonicalApplicantFormService
             throw ValidationException::withMessages($errors);
         }
 
-        return DB::transaction(function () use ($application, $values, $pib) {
+        return DB::transaction(function () use ($application, $values, $pib, $jmbgToAssign) {
             $locked = Application::query()->whereKey($application->id)->lockForUpdate()->first();
             if (! $locked || $locked->isApplicantContentWriteLocked()) {
                 return ProcessWriteResult::failed('Prijava je zaključana i Obrazac P1 više nije moguće mijenjati.');
@@ -193,6 +201,9 @@ final class CanonicalApplicantFormService
             $values['accuracy_confirmed_at'] = $confirmed ? ($form->accuracy_confirmed_at ?? now()) : null;
 
             $form->fill($values)->save();
+            if ($form->isEntrepreneur() && $jmbgToAssign !== null) {
+                JmbDualWrite::assignLogical($locked, 'applicant_jmbg', $jmbgToAssign);
+            }
             $locked->forceFill(['pib' => $pib])->save();
 
             return ProcessWriteResult::ok((int) $form->id);
@@ -225,6 +236,12 @@ final class CanonicalApplicantFormService
         }
         if (Pib::normalize($application->pib) === null) {
             return CanonicalBeneficiaryApplications::PIB_REQUIRED_MESSAGE;
+        }
+        if ($form->isEntrepreneur()) {
+            $jmbgBlock = $this->p1aJmbgFinalBlock($application);
+            if ($jmbgBlock !== null) {
+                return $jmbgBlock;
+            }
         }
 
         if (! CanonicalSubsidyType::isValid($form->subsidy_type)) {
@@ -410,5 +427,92 @@ final class CanonicalApplicantFormService
         }
 
         return [$values, $pib, $errors];
+    }
+
+    /**
+     * P1a only. Empty keeps a saved snapshot, otherwise stores the verified account JMBG.
+     * A typed value must be 13 digits and, when the account has a verified JMBG, must match it.
+     * P1b ignores the field. Returns the value to encrypt, or null when nothing should be written.
+     *
+     * @param  array<string, mixed>  $input
+     * @param  array<string, string>  $errors
+     */
+    private function p1aJmbgToAssign(CanonicalApplicantForm $form, Application $application, User $actor, array $input, array &$errors): ?string
+    {
+        if (! $form->isEntrepreneur() || ! array_key_exists('applicant_jmbg', $input)) {
+            return null;
+        }
+
+        $raw = $input['applicant_jmbg'];
+        if ($raw !== null && ! is_scalar($raw)) {
+            $errors['applicant_jmbg'] = 'Neispravan unos.';
+
+            return null;
+        }
+
+        $value = trim((string) $raw);
+        $verified = $this->verifiedJmbg($actor);
+        if ($value === '') {
+            if ($application->hasApplicantJmbgSnapshot() || $verified === null) {
+                return null;
+            }
+
+            return $verified;
+        }
+
+        if (! preg_match('/^[0-9]{13}$/', $value)) {
+            $errors['applicant_jmbg'] = self::P1A_JMBG_FORMAT;
+
+            return null;
+        }
+
+        if ($verified !== null && $value !== $verified) {
+            $errors['applicant_jmbg'] = self::P1A_JMBG_IDENTITY_MISMATCH;
+
+            return null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Draft may already hold a JMBG. Final refuses to freeze one that no longer matches the account.
+     * A missing snapshot stays allowed: ApplicationEvidenceFreezer still binds the verified JMBG.
+     */
+    private function p1aJmbgFinalBlock(Application $application): ?string
+    {
+        if (! $application->hasApplicantJmbgSnapshot()) {
+            return null;
+        }
+
+        try {
+            $saved = $application->applicantJmbgForRead();
+        } catch (JmbEncryptedReadException) {
+            return JmbEncryptedReadException::USER_MESSAGE;
+        }
+
+        if (! is_string($saved) || ! preg_match('/^[0-9]{13}$/', $saved)) {
+            return self::P1A_JMBG_FORMAT;
+        }
+
+        $application->loadMissing('user');
+        $verified = $application->user ? $this->verifiedJmbg($application->user) : null;
+        if ($verified !== null && $saved !== $verified) {
+            return self::P1A_JMBG_IDENTITY_MISMATCH;
+        }
+
+        return null;
+    }
+
+    private function verifiedJmbg(User $user): ?string
+    {
+        $jmb = app(CurrentIdentityResolver::class)->viewFor($user)->jmb;
+        if (! is_string($jmb)) {
+            return null;
+        }
+
+        $jmb = trim($jmb);
+
+        return preg_match('/^[0-9]{13}$/', $jmb) === 1 ? $jmb : null;
     }
 }

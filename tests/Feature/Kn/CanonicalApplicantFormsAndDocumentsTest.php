@@ -136,14 +136,15 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSee('PRIJAVA')
             ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
             ->assertSee('PREDUZETNIK')
-            ->assertDontSee((string) $owner->jmb)
+            ->assertSee((string) $owner->jmb)
             ->getContent();
         $form = $this->formSection($html, route('applications.canonical-p1.update', $application));
 
         foreach ([
             'Vrsta subvencije',
             'Ime i prezime preduzetnika',
-            'JMBG/PIB — PIB preduzetnika',
+            'JMBG preduzetnika',
+            'PIB preduzetnika',
             'Adresa',
             'Šifra djelatnosti',
             'Broj zaposlenih',
@@ -665,6 +666,186 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
     // ---------------------------------------------------------------- 6. FINAL validation and freeze
 
+    public function test_p1a_jmbg_is_shown_from_the_account_saved_on_draft_and_locked_after_final(): void
+    {
+        config(['jmb.plaintext_retirement.enabled' => false]);
+        $owner = $this->makeOwner();
+        $verified = (string) $owner->jmb;
+        $application = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::PREDUZETNIK);
+
+        $html = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $application))->assertOk()->getContent();
+        $formHtml = $this->formSection($html, route('applications.canonical-p1.update', $application));
+        $this->assertStringContainsString('JMBG preduzetnika', $formHtml);
+        $this->assertStringContainsString('PIB preduzetnika', $formHtml);
+        $this->assertStringContainsString('name="applicant_jmbg"', $formHtml);
+        $this->assertStringContainsString('value="'.$verified.'"', $formHtml);
+        $this->assertStringNotContainsString('JMBG/PIB', $formHtml);
+        $this->assertFalse($application->fresh()->hasApplicantJmbgSnapshot());
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+                'applicant_jmbg' => '12345',
+            ]))
+            ->assertSessionHasErrors(['applicant_jmbg' => CanonicalApplicantFormService::P1A_JMBG_FORMAT]);
+        $this->assertFalse($application->fresh()->hasApplicantJmbgSnapshot());
+        $this->assertNull($application->fresh()->pib);
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+                'applicant_jmbg' => '9999999999999',
+            ]))
+            ->assertSessionHasErrors(['applicant_jmbg' => CanonicalApplicantFormService::P1A_JMBG_IDENTITY_MISMATCH]);
+        $this->assertFalse($application->fresh()->hasApplicantJmbgSnapshot());
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->p1aPayload('123', CanonicalSubsidyType::INNOVATIVE, [
+                'applicant_jmbg' => $verified,
+            ]))
+            ->assertSessionHasErrors(['pib' => 'PIB mora imati tačno 8 cifara.']);
+        $this->assertFalse($application->fresh()->hasApplicantJmbgSnapshot());
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+                'applicant_jmbg' => $verified,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $saved = $application->fresh();
+        $this->assertSame('02345678', $saved->pib);
+        $this->assertSame($verified, $saved->applicantJmbgForRead());
+        $this->assertNotNull($saved->applicant_jmbg_encrypted);
+        $this->assertNotSame($verified, $saved->applicant_jmbg_encrypted);
+
+        $reopened = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $application))->assertOk()->getContent();
+        $this->assertStringContainsString('value="'.$verified.'"', $this->formSection($reopened, route('applications.canonical-p1.update', $application)));
+
+        $ready = $this->canonicalDraft($owner, $this->openCall());
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $ready), $this->canonicalP1Payload($ready, [
+                'applicant_jmbg' => $verified,
+            ]))
+            ->assertSessionHasNoErrors();
+        $this->actingAs($owner)->post(route('applications.final-submit', $ready))->assertRedirect(route('applications.show', $ready));
+        $this->assertSame($verified, $ready->fresh()->applicantJmbgForRead());
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $ready), $this->canonicalP1Payload($ready, [
+                'applicant_jmbg' => '9999999999999',
+            ]))
+            ->assertSessionHasErrors('error');
+        $this->assertSame($verified, $ready->fresh()->applicantJmbgForRead());
+
+        $replace = $ready->fresh();
+        JmbDualWrite::assignLogical($replace, 'applicant_jmbg', '9999999999999');
+        $this->assertThrowsImmutable(fn () => $replace->save(), Application::CANONICAL_FINAL_JMBG_LOCKED_MESSAGE);
+
+        $withoutAccountJmbg = $this->makeOwner();
+        JmbDualWrite::assignLogical($withoutAccountJmbg, 'jmb', null);
+        $withoutAccountJmbg->save();
+        $manual = '1111111111111';
+        $manualDraft = $this->startedDraft($withoutAccountJmbg, $this->openCall(), CanonicalLegalForm::PREDUZETNIK);
+        $this->actingAs($withoutAccountJmbg)
+            ->put(route('applications.canonical-p1.update', $manualDraft), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+                'applicant_jmbg' => $manual,
+            ]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame($manual, $manualDraft->fresh()->applicantJmbgForRead());
+
+        $prefilled = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::PREDUZETNIK);
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $prefilled), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+                'applicant_jmbg' => '',
+            ]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame($verified, $prefilled->fresh()->applicantJmbgForRead());
+    }
+
+    public function test_p1a_final_refuses_a_saved_jmbg_that_no_longer_matches_the_verified_account(): void
+    {
+        config(['jmb.plaintext_retirement.enabled' => false]);
+        $owner = $this->makeOwner();
+        $verified = (string) $owner->jmb;
+        $application = $this->canonicalDraft($owner, $this->openCall());
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->canonicalP1Payload($application, [
+                'applicant_jmbg' => $verified,
+            ]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame($verified, $application->fresh()->applicantJmbgForRead());
+
+        JmbDualWrite::assignLogical($owner, 'jmb', '1111111111111');
+        $owner->save();
+
+        $this->actingAs($owner)
+            ->from(route('applications.show', $application))
+            ->post(route('applications.final-submit', $application))
+            ->assertRedirect(route('applications.show', $application))
+            ->assertSessionHasErrors(['error' => CanonicalApplicantFormService::P1A_JMBG_IDENTITY_MISMATCH]);
+
+        $this->assertSame('draft', $application->fresh()->status);
+        $this->assertSame($verified, $application->fresh()->applicantJmbgForRead());
+        $this->assertFalse($application->fresh()->canonicalApplicantForm->isFrozen());
+    }
+
+    public function test_p1b_ignores_applicant_jmbg_and_women_youth_keep_their_jmbg_columns(): void
+    {
+        config(['jmb.plaintext_retirement.enabled' => false]);
+        $owner = $this->makeOwner();
+        $company = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::DRUSTVO);
+        $html = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $company))->assertOk()->getContent();
+        $formHtml = $this->formSection($html, route('applications.canonical-p1.update', $company));
+        $this->assertStringNotContainsString('JMBG', $formHtml);
+        $this->assertStringNotContainsString('name="applicant_jmbg"', $formHtml);
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $company), [
+                'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+                'company_name' => 'Primjer d.o.o.',
+                'person_name' => 'Odgovorno Lice',
+                'pib' => '03123456',
+                'address' => 'Stari grad 1, 85330 Kotor',
+                'registration_date' => '2019-02-01',
+                'activity_code' => '62.01',
+                'employee_count' => '5',
+                'bank_account' => '510-0000000000002-22',
+                'phone' => '067111222',
+                'email' => 'drustvo@example.com',
+                'applicant_jmbg' => (string) $owner->jmb,
+            ])
+            ->assertSessionHasNoErrors();
+        $this->assertFalse($company->fresh()->hasApplicantJmbgSnapshot());
+        $this->assertSame('03123456', $company->fresh()->pib);
+
+        foreach (['zensko' => 'applicant_jmbg', 'omladinsko' => 'physical_person_jmbg'] as $type => $column) {
+            $subject = $this->makeOwner();
+            $call = $this->openCall(['type' => $type]);
+            $application = Application::create([
+                'competition_id' => $call->id,
+                'user_id' => $subject->id,
+                'applicant_type' => $type === 'omladinsko' ? 'fizicko_lice' : 'preduzetnica',
+                'business_stage' => 'započinjanje',
+                'status' => 'draft',
+            ]);
+            JmbDualWrite::assignLogical($application, $column, (string) $subject->jmb);
+            $application->save();
+            $application->refresh();
+
+            $read = $column === 'physical_person_jmbg'
+                ? $application->physicalPersonJmbgForRead()
+                : $application->applicantJmbgForRead();
+            $this->assertSame((string) $subject->jmb, $read, $type);
+            $this->assertNotNull($application->{$column.'_encrypted'}, $type);
+            $this->actingAs($subject)->put(route('applications.canonical-p1.update', $application), [
+                'applicant_jmbg' => '9999999999999',
+            ])->assertNotFound();
+            $still = $column === 'physical_person_jmbg'
+                ? $application->fresh()->physicalPersonJmbgForRead()
+                : $application->fresh()->applicantJmbgForRead();
+            $this->assertSame((string) $subject->jmb, $still, $type);
+        }
+    }
+
     public function test_p1a_jmbg_is_bound_at_final_encrypted_and_cannot_be_replaced_afterwards(): void
     {
         config(['jmb.plaintext_retirement.enabled' => false]);
@@ -699,7 +880,10 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
         $this->assertStringNotContainsString($verifiedJmb, json_encode(app(CanonicalReviewBasis::class)->snapshot($retired), JSON_UNESCAPED_UNICODE));
         $this->actingAs($owner)->get(route('applications.show', $application))->assertOk()->assertDontSee($verifiedJmb);
-        $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $application))->assertOk()->assertDontSee($verifiedJmb);
+        $lockedForm = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $application))->assertOk()->getContent();
+        $this->assertStringContainsString('value="'.$verifiedJmb.'"', $lockedForm);
+        $this->assertStringContainsString('name="applicant_jmbg"', $lockedForm);
+        $this->assertMatchesRegularExpression('/name="applicant_jmbg"[^>]*disabled/', $lockedForm);
 
         // Women applications keep their existing behaviour.
         config(['jmb.plaintext_retirement.enabled' => false]);
