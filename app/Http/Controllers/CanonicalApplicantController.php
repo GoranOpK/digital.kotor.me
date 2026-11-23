@@ -10,6 +10,7 @@ use App\Models\Application;
 use App\Models\CanonicalApplicantForm;
 use App\Models\Competition;
 use App\Models\UserDocument;
+use App\Security\JmbEncryptedReadException;
 use App\Services\Competitions\CanonicalApplicantFormService;
 use App\Services\Competitions\CanonicalBeneficiaryApplications;
 use App\Services\Competitions\CanonicalDocumentService;
@@ -67,12 +68,24 @@ class CanonicalApplicantController extends Controller
             ->with('success', 'Prijava je započeta. Popunite Obrazac P1.');
     }
 
-    public function editP1(Request $request, Application $application): View
+    public function editP1(Request $request, Application $application): View|RedirectResponse
     {
         $this->authorizeOwnerOnCanonical($request, $application);
 
         $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->first();
         abort_unless($form && CanonicalLegalForm::isValid($form->legal_form), 404);
+
+        $jmbgForForm = null;
+        if ($form->isEntrepreneur()) {
+            try {
+                $jmbgForForm = $application->hasApplicantJmbgSnapshot()
+                    ? $application->applicantJmbgForRead()
+                    : app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
+            } catch (JmbEncryptedReadException) {
+                return redirect()->route('applications.show', $application)
+                    ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
+            }
+        }
 
         return view('applications.canonical-p1', [
             'application' => $application,
@@ -80,6 +93,7 @@ class CanonicalApplicantController extends Controller
             'subsidyTypes' => CanonicalSubsidyType::labels(),
             'accuracyStatement' => CanonicalApplicantFormService::accuracyStatement($form->legal_form),
             'readOnly' => $form->isFrozen() || $application->isApplicantContentWriteLocked(),
+            'jmbgForForm' => $jmbgForForm,
         ]);
     }
 
@@ -101,6 +115,7 @@ class CanonicalApplicantController extends Controller
             'website',
             'registration_date',
             'accuracy_confirmed',
+            'applicant_jmbg',
         ]));
 
         if (! $result->succeeded) {

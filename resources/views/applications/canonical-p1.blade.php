@@ -663,11 +663,19 @@
                         </div>
                         <div class="mmsp-p1-row">
                             <div class="mmsp-p1-field">
-                                <label class="mmsp-p1-label" for="pib">JMBG/PIB — PIB preduzetnika @if(in_array('pib', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
-                                <input id="pib" type="text" name="pib" inputmode="numeric" value="{{ old('pib', $application->pib) }}" class="mmsp-p1-control @error('pib') is-invalid @enderror">
-                                <div class="mmsp-p1-help">JMBG preduzetnika preuzima se iz verifikovanog identiteta naloga pri konačnoj predaji, čuva se šifrovano i ne prikazuje se.</div>
+                                <label class="mmsp-p1-label" for="applicant_jmbg">JMBG preduzetnika</label>
+                                <input id="applicant_jmbg" type="text" name="applicant_jmbg" inputmode="numeric" maxlength="13" value="{{ old('applicant_jmbg', $jmbgForForm) }}" class="mmsp-p1-control @error('applicant_jmbg') is-invalid @enderror" @disabled($readOnly)>
+                                <div class="mmsp-p1-help">13 cifara. Ako je JMBG verifikovan na nalogu, prikazuje se ovdje i prijava može da sačuva samo tu vrijednost. Poslije konačne predaje izmjena nije moguća.</div>
+                                @error('applicant_jmbg')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mmsp-p1-field">
+                                <label class="mmsp-p1-label" for="pib">PIB preduzetnika @if(in_array('pib', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
+                                <input id="pib" type="text" name="pib" inputmode="numeric" maxlength="8" value="{{ old('pib', $application->pib) }}" class="mmsp-p1-control @error('pib') is-invalid @enderror">
+                                <div class="mmsp-p1-help">PIB ima tačno 8 cifara.</div>
                                 @error('pib')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                             </div>
+                        </div>
+                        <div class="mmsp-p1-row">
                             <div class="mmsp-p1-field">
                                 <label class="mmsp-p1-label" for="activity_code">Šifra djelatnosti @if(in_array('activity_code', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
                                 <input id="activity_code" type="text" name="activity_code" value="{{ $value('activity_code') }}" placeholder="00.00" class="mmsp-p1-control @error('activity_code') is-invalid @enderror">
