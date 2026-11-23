@@ -42,7 +42,10 @@ final class CanonicalInvestmentPlanService
     }
 
     /**
-     * Draft save. Presence is only required at FINAL; values that are present must be consistent.
+     * Draft save. Empty fields, a zero total, and a zero expected subsidy are accepted
+     * while no expense line has been entered. The form calculates that zero from blank
+     * rows. Entered values must still be well formed, non-negative, and consistent.
+     * Completeness is enforced only by finalBlockReason().
      *
      * @param  array<string, mixed>  $input
      *
@@ -224,6 +227,9 @@ final class CanonicalInvestmentPlanService
         $own = $values['own_contribution'];
         $expected = $values['expected_subsidy'];
         $lines = $values['expense_lines'];
+        $zeroTotalDraft = ! $requireComplete
+            && $lines === []
+            && ($total === null || bccomp($total, '0', self::SCALE) === 0);
 
         if ($values['subsidy_type'] === null) {
             if ($requireComplete) {
@@ -237,7 +243,7 @@ final class CanonicalInvestmentPlanService
             if ($requireComplete) {
                 $errors['total_investment'] = 'Ukupna vrijednost ulaganja je obavezna.';
             }
-        } elseif (bccomp($total, '0', self::SCALE) <= 0) {
+        } elseif (bccomp($total, '0', self::SCALE) < 0 || (bccomp($total, '0', self::SCALE) === 0 && ! $zeroTotalDraft)) {
             $errors['total_investment'] = 'Ukupna vrijednost ulaganja mora biti veća od 0.';
         }
 
@@ -255,7 +261,7 @@ final class CanonicalInvestmentPlanService
             if ($requireComplete) {
                 $errors['expected_subsidy'] = 'Očekivani iznos subvencije je obavezan.';
             }
-        } elseif (bccomp($expected, '0', self::SCALE) <= 0) {
+        } elseif (bccomp($expected, '0', self::SCALE) < 0 || (bccomp($expected, '0', self::SCALE) === 0 && ! $zeroTotalDraft)) {
             $errors['expected_subsidy'] = 'Očekivani iznos subvencije mora biti veći od 0.';
         } elseif ($total !== null && bccomp($expected, $total, self::SCALE) > 0) {
             $errors['expected_subsidy'] = 'Očekivani iznos subvencije ne može biti veći od ukupne vrijednosti ulaganja.';
