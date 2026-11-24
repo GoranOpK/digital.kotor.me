@@ -118,7 +118,7 @@ class CanonicalApplicantController extends Controller
             'jmbgMustMatchPrefill' => $jmbgMustMatchPrefill,
             'jmbgEmptyOk' => $jmbgEmptyOk,
             'p2SubsidyType' => $application->canonicalInvestmentPlan?->subsidy_type,
-            'p1ReadyForPlan' => $form->isEntrepreneur() && $this->forms->finalBlockReason($application) === null,
+            'p1ReadyForPlan' => $this->forms->finalBlockReason($application) === null,
             'p1RequiredFields' => array_keys($this->forms->requiredFields($form->legal_form)),
         ]);
     }
@@ -150,7 +150,7 @@ class CanonicalApplicantController extends Controller
 
         $saved = $application->fresh();
         $savedForm = CanonicalApplicantForm::query()->where('application_id', $saved->id)->first();
-        if ($savedForm?->isEntrepreneur() && $request->boolean('continue_to_plan')) {
+        if ($savedForm && $request->boolean('continue_to_plan')) {
             $block = $this->forms->finalBlockReason($saved);
             if ($block !== null) {
                 return redirect()
@@ -160,7 +160,7 @@ class CanonicalApplicantController extends Controller
 
             return redirect()
                 ->route('applications.canonical-p2.edit', $saved)
-                ->with('success', 'Obrazac P1a je sačuvan. Nastavite sa Planom ulaganja (Obrazac P2).');
+                ->with('success', 'Obrazac '.$savedForm->formCode().' je sačuvan. Nastavite sa Planom ulaganja (Obrazac P2).');
         }
 
         return redirect()->route('dashboard')

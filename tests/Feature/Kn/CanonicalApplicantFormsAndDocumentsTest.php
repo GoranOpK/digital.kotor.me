@@ -363,9 +363,11 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
         $company = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::DRUSTVO);
         $companyPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $company))->assertOk()->getContent();
-        $this->assertStringContainsString('Sačuvaj kao nacrt', $companyPage);
         $this->assertStringNotContainsString('id="p1a-save-button"', $companyPage);
-        $this->assertStringNotContainsString('data-label-plan="Sačuvaj i nastavi na plan ulaganja"', $companyPage);
+        $this->assertMatchesRegularExpression(
+            '/id="p1b-save-button"(?![^>]*name="continue_to_plan")[^>]*data-label-plan="Sačuvaj i nastavi na plan ulaganja"[^>]*>\s*Sačuvaj kao nacrt\s*</',
+            $companyPage
+        );
         $this->actingAs($owner)
             ->put(route('applications.canonical-p1.update', $company), [
                 'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
@@ -382,8 +384,10 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
                 'accuracy_confirmed' => '1',
                 'continue_to_plan' => '1',
             ])
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('applications.canonical-p2.edit', $company))
+            ->assertSessionHas('success', 'Obrazac P1b je sačuvan. Nastavite sa Planom ulaganja (Obrazac P2).');
         $this->assertSame('draft', $company->fresh()->status);
+        $this->assertNull($company->fresh()->submitted_at);
     }
 
     public function test_p1b_final_requires_company_specific_facts(): void
