@@ -52,7 +52,7 @@ class CanonicalInvestmentPlanController extends Controller
             return back()->withErrors(['error' => $result->error])->withInput();
         }
 
-        return redirect()->route('applications.canonical-p2.edit', $application)
+        return redirect()->route('applications.show', $application)
             ->with('success', 'Plan ulaganja (Obrazac P2) je sačuvan.');
     }
 

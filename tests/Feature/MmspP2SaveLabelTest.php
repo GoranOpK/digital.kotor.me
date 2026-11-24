@@ -53,7 +53,8 @@ class MmspP2SaveLabelTest extends TestCase
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), $partial)
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('applications.canonical-p2.edit', $application));
+            ->assertRedirect(route('applications.show', $application))
+            ->assertSessionHas('success', 'Plan ulaganja (Obrazac P2) je sačuvan.');
 
         $application->refresh();
         $this->assertSame('draft', $application->status);

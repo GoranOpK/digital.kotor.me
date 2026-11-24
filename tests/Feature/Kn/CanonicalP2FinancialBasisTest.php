@@ -120,7 +120,8 @@ class CanonicalP2FinancialBasisTest extends TestCase
             $this->actingAs($owner)
                 ->put(route('applications.canonical-p2.update', $application), $this->p2Payload($code))
                 ->assertSessionHasNoErrors()
-                ->assertRedirect(route('applications.canonical-p2.edit', $application));
+                ->assertRedirect(route('applications.show', $application))
+                ->assertSessionHas('success', 'Plan ulaganja (Obrazac P2) je sačuvan.');
 
             $this->assertSame($code, $application->canonicalInvestmentPlan()->value('subsidy_type'));
         }

@@ -42,7 +42,8 @@ class MmspP2IncompleteDraftTest extends TestCase
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), $this->browserPayload($description))
             ->assertSessionHasNoErrors()
-            ->assertRedirect(route('applications.canonical-p2.edit', $application));
+            ->assertRedirect(route('applications.show', $application))
+            ->assertSessionHas('success', 'Plan ulaganja (Obrazac P2) je sačuvan.');
 
         $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->firstOrFail();
         $this->assertSame($description, $plan->narrative_sections['investment_description']);
