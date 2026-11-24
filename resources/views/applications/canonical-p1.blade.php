@@ -743,7 +743,7 @@
                                         style="padding:12px 24px; font-size:14px; margin:0;{{ $p1ReadyForPlan ? '' : ' background:#6b7280;' }}"
                                         @if($p1ReadyForPlan) name="continue_to_plan" value="1" @endif
                                         data-label-draft="Sačuvaj kao nacrt"
-                                        data-label-plan="Sačuvaj i nastavi na Plan ulaganja"
+                                        data-label-plan="Sačuvaj i nastavi na plan ulaganja"
                                         data-required="{{ json_encode($p1RequiredFields) }}"
                                         data-subsidy-codes="{{ json_encode(\App\Support\CanonicalSubsidyType::codes()) }}"
                                         data-jmbg-blocked="{{ $jmbgBlocked ? '1' : '0' }}"
@@ -751,7 +751,7 @@
                                         data-jmbg-empty-ok="{{ $jmbgEmptyOk ? '1' : '0' }}"
                                         data-today="{{ now()->toDateString() }}"
                                         data-p2-subsidy="{{ $p2SubsidyType }}">
-                                    {{ $p1ReadyForPlan ? 'Sačuvaj i nastavi na Plan ulaganja' : 'Sačuvaj kao nacrt' }}
+                                    {{ $p1ReadyForPlan ? 'Sačuvaj i nastavi na plan ulaganja' : 'Sačuvaj kao nacrt' }}
                                 </button>
                             @else
                                 <button type="submit"

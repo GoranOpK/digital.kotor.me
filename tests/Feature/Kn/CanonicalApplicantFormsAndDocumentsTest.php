@@ -293,7 +293,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $incomplete = $this->startedDraft($owner, $this->openCall(), CanonicalLegalForm::PREDUZETNIK);
         $draftPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $incomplete))->assertOk()->getContent();
         $this->assertMatchesRegularExpression('/id="p1a-save-button"(?![^>]*name="continue_to_plan")[^>]*>\s*Sačuvaj kao nacrt\s*</', $draftPage);
-        $this->assertStringContainsString('data-label-plan="Sačuvaj i nastavi na Plan ulaganja"', $draftPage);
+        $this->assertStringContainsString('data-label-plan="Sačuvaj i nastavi na plan ulaganja"', $draftPage);
         $this->assertStringContainsString('ime i prezime preduzetnika', app(CanonicalApplicantFormService::class)->finalBlockReason($incomplete) ?? '');
 
         $this->actingAs($owner)
@@ -311,7 +311,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $ready = $this->canonicalDraft($owner, $this->openCall());
         $this->assertNull(app(CanonicalApplicantFormService::class)->finalBlockReason($ready));
         $readyPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $ready))->assertOk()->getContent();
-        $this->assertMatchesRegularExpression('/id="p1a-save-button"[^>]*name="continue_to_plan"[^>]*>\s*Sačuvaj i nastavi na Plan ulaganja\s*</', $readyPage);
+        $this->assertMatchesRegularExpression('/id="p1a-save-button"[^>]*name="continue_to_plan"[^>]*>\s*Sačuvaj i nastavi na plan ulaganja\s*</', $readyPage);
         $this->assertStringNotContainsString('data-verified-jmbg', $readyPage);
         $this->assertStringNotContainsString('data-snapshot-jmbg', $readyPage);
         $this->assertDoesNotMatchRegularExpression('/data-[a-z0-9-]*="[^"]*\d{13}/', $readyPage);
@@ -365,7 +365,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $companyPage = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $company))->assertOk()->getContent();
         $this->assertStringContainsString('Sačuvaj kao nacrt', $companyPage);
         $this->assertStringNotContainsString('id="p1a-save-button"', $companyPage);
-        $this->assertStringNotContainsString('data-label-plan="Sačuvaj i nastavi na Plan ulaganja"', $companyPage);
+        $this->assertStringNotContainsString('data-label-plan="Sačuvaj i nastavi na plan ulaganja"', $companyPage);
         $this->actingAs($owner)
             ->put(route('applications.canonical-p1.update', $company), [
                 'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
