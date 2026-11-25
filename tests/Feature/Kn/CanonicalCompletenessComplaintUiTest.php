@@ -371,8 +371,19 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
                 ->assertSee('Nedostaje potvrda poreske uprave.')
                 ->assertSee('Imate pravo na jedan Prigovor')
                 ->assertSee('28.09.2026. 10:00')
+                ->assertDontSee('Obavještenje poslato')
                 ->assertDontSee('28.09.2026 10:00:00', false)
                 ->assertDontSee('28.09.2026. 10:00:00', false);
+            $html = $page->getContent();
+            $gridAt = strpos($html, '<div class="summary-grid">');
+            $reviewAt = strpos($html, 'id="application-review"');
+            $documentsAt = strpos($html, 'id="application-documents"');
+            $this->assertNotFalse($gridAt, $key);
+            $this->assertNotFalse($reviewAt, $key);
+            $this->assertNotFalse($documentsAt, $key);
+            $this->assertLessThan($reviewAt, $gridAt, $key);
+            $this->assertLessThan($documentsAt, $reviewAt, $key);
+            $this->assertDoesNotMatchRegularExpression('/class="mmsp-prigovor-card"[^>]*grid-column/', $html, $key);
 
             if ($allowed) {
                 $page->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)
@@ -389,11 +400,19 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
                 $this->assertSame($at, $stored->submitted_at->timezone(self::TZ)->format('Y-m-d H:i:s'), $key);
                 $this->assertSame($due->timezone(self::TZ)->format('Y-m-d H:i:s'), $stored->decision_due_at->timezone(self::TZ)->format('Y-m-d H:i:s'), $key);
                 $this->applicantStatusPage($owner, $application)->assertOk()
-                    ->assertSee('Prigovor '.$key)
-                    ->assertSee('Vaše obrazloženje prigovora')
-                    ->assertSee($due->timezone(self::TZ)->format('d.m.Y. H:i'))
+                    ->assertSeeInOrder([
+                        'Stanje Vašeg Prigovora:',
+                        'Podnesen',
+                        'Vaše obrazloženje prigovora',
+                        'Prigovor '.$key,
+                        'Prigovor je podnesen Komisiji.',
+                        'Rok Komisije za odluku:',
+                        $due->timezone(self::TZ)->format('d.m.Y. H:i'),
+                        'Čeka se odluka Komisije.',
+                    ])
                     ->assertDontSee($due->timezone(self::TZ)->format('d.m.Y. H:i:s'), false)
-                    ->assertDontSee('name="body"', false);
+                    ->assertDontSee('name="body"', false)
+                    ->assertDontSee('Rok od 7 dana je prekoračen');
             } else {
                 $page->assertSee('data-status="'.ComplaintService::STATUS_INCOMPLETE.'"', false)
                     ->assertSee('Rok za Prigovor je istekao.')
@@ -550,10 +569,15 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $this->applicantStatusPage($owner, $application)
             ->assertOk()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_ACCEPTED.'"', false)
-            ->assertSee('prihvaćen')
-            ->assertSee('Prilog je bio u dosijeu.')
-            ->assertSee('Prigovor.')
-            ->assertSee('nastavlja postupak u fazi bodovanja');
+            ->assertSeeInOrder([
+                'Vaše obrazloženje prigovora',
+                'Prigovor.',
+                'Konačna odluka Komisije:',
+                'Prihvaćen',
+                'Obrazloženje odluke:',
+                'Prilog je bio u dosijeu.',
+                'Prijava se smatra potpunom i nastavlja postupak u fazi bodovanja.',
+            ]);
     }
 
     // F — notifications after commit, rollback, duplicates, canonical wording
@@ -679,10 +703,23 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $owner = $application->user;
         $status = fn () => $this->applicantStatusPage($owner, $application)->assertOk();
 
-        $status()->assertSee('data-status="'.ComplaintService::STATUS_AWAITING_REVIEW.'"', false);
+        $awaiting = $status()->assertSee('data-status="'.ComplaintService::STATUS_AWAITING_REVIEW.'"', false);
+        $awaitingHtml = $awaiting->getContent();
+        $this->assertLessThan(
+            strpos($awaitingHtml, 'id="application-review"'),
+            strpos($awaitingHtml, 'id="application-documents"')
+        );
 
         $this->actingAs($chair)->post(route('evaluation.completeness', $application), ['outcome' => 'incomplete', 'notes' => 'Nedostaje prilog A.']);
-        $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)->assertSee('Nedostaje prilog A.');
+        $available = $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)
+            ->assertSee('Nedostaje prilog A.')
+            ->assertDontSee('Obavještenje poslato')
+            ->assertDontSee('Prigovor je moguć do isteka roka.');
+        $availableHtml = $available->getContent();
+        $this->assertLessThan(
+            strpos($availableHtml, 'id="application-documents"'),
+            strpos($availableHtml, 'id="application-review"')
+        );
 
         Carbon::setTestNow(Carbon::parse('2026-09-26 10:00:00', self::TZ));
         $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => "Prilog A je predat.\n<script>alert(1)</script>"]);
@@ -691,11 +728,27 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $status()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_SUBMITTED.'"', false)
             ->assertDontSee('name="body"', false)
-            ->assertSee('Prilog A je predat.')
-            ->assertSee('03.10.2026. 10:00')
+            ->assertSeeInOrder([
+                'Stanje Vašeg Prigovora:',
+                'Podnesen',
+                'Vaše obrazloženje prigovora',
+                'Prilog A je predat.',
+                'Prigovor je podnesen Komisiji.',
+                'Rok Komisije za odluku:',
+                '03.10.2026. 10:00',
+                'Čeka se odluka Komisije.',
+            ])
             ->assertDontSee('03.10.2026. 10:00:00', false)
             ->assertDontSee('<script>alert(1)</script>', false)
+            ->assertDontSee('Rok od 7 dana je prekoračen')
+            ->assertDontSee('Prigovor je podnesen i čeka odluku Komisije.')
             ->assertSee('white-space: pre-wrap', false);
+
+        Carbon::setTestNow(Carbon::parse('2026-10-03 10:00:00', self::TZ));
+        $status()->assertDontSee('Rok od 7 dana je prekoračen');
+        Carbon::setTestNow(Carbon::parse('2026-10-03 10:00:01', self::TZ));
+        $status()->assertSee('Rok od 7 dana je prekoračen. Čeka se odluka Komisije. Platforma ne donosi automatsku odluku.');
+        Carbon::setTestNow(Carbon::parse('2026-09-26 10:00:00', self::TZ));
 
         $status()->assertDontSee('Prilog A nije pronađen u dosijeu.');
         $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$application, $complaint]), [
@@ -705,20 +758,31 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $fingerprint = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->sole()->evidence_fingerprint;
         $status()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_REJECTED.'"', false)
-            ->assertSee('odbijen')
-            ->assertSee('ne učestvuje u daljem bodovanju')
-            ->assertSee('Prilog A nije pronađen u dosijeu.')
-            ->assertSee('Prilog A je predat.')
+            ->assertSeeInOrder([
+                'Vaše obrazloženje prigovora',
+                'Prilog A je predat.',
+                'Konačna odluka Komisije:',
+                'Odbijen',
+                'Obrazloženje odluke:',
+                'Prilog A nije pronađen u dosijeu.',
+                'prijava ne učestvuje u daljem bodovanju',
+            ])
             ->assertDontSee($chair->name)
             ->assertDontSee($fingerprint)
             ->assertDontSee('<script>alert(1)</script>', false);
 
         $complete = $this->finalApplication($call);
         $this->actingAs($chair)->post(route('evaluation.completeness', $complete), ['outcome' => 'complete', 'notes' => 'Interna bilješka.']);
-        $this->applicantStatusPage($complete->user, $complete)->assertOk()
+        $completePage = $this->applicantStatusPage($complete->user, $complete)->assertOk()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLETE.'"', false)
             ->assertSee('nastavlja postupak u fazi bodovanja')
-            ->assertDontSee('Interna bilješka.');
+            ->assertDontSee('Interna bilješka.')
+            ->assertDontSee('name="body"', false);
+        $completeHtml = $completePage->getContent();
+        $this->assertLessThan(
+            strpos($completeHtml, 'id="application-review"'),
+            strpos($completeHtml, 'id="application-documents"')
+        );
 
         DB::table('competitions')->where('id', $call->id)->update(['canonical_ranking_formed_at' => now()]);
         $this->applicantStatusPage($complete->user, $complete)->assertOk()
