@@ -152,6 +152,15 @@
                     $profileLastName = app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user)
                         ? $user->last_name
                         : $subjectIdentity->lastName;
+                    $domesticIdentifiersEditable = $legalEntityProfile
+                        && (bool) config('identity.canonical_read')
+                        && (bool) config('identity.canonical_write');
+                    $authorizedUsesPassport = false;
+                    if ($domesticIdentifiersEditable) {
+                        $authorizedUsesPassport = app(\App\Identity\CanonicalIdentityReader::class)
+                            ->forUser($user)
+                            ->legalEntity?->authorizedPerson?->idDocumentType === \App\Models\PhysicalPersonIdentity::DOCUMENT_PASSPORT;
+                    }
                 @endphp
                 @if($legalEntityProfile)
                     <input type="hidden" name="first_name" value="{{ $profileFirstName }}">
@@ -394,20 +403,54 @@
                     @if($legalEntityProfile)
                     <div class="form-group">
                         <label for="authorized_person_jmb" class="form-label">JMB ovlašćenog lica</label>
+                        @if($domesticIdentifiersEditable && ! $authorizedUsesPassport)
+                        <input type="text" name="jmb" id="authorized_person_jmb" class="form-control"
+                               value="{{ old('jmb', $subjectIdentity->jmb) }}"
+                               maxlength="13"
+                               inputmode="numeric"
+                               pattern="[0-9]{13}"
+                               placeholder="13 cifara">
+                        @else
                         <input type="text" id="authorized_person_jmb" class="form-control"
                                value="{{ $subjectIdentity->jmb }}"
                                readonly disabled>
+                        @endif
+                        @error('jmb')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            JMB ovlašćenog lica se ne može mijenjati na ovoj stranici.
+                            @if($authorizedUsesPassport)
+                                Za pasoš se JMB ne unosi na ovoj stranici.
+                            @elseif($domesticIdentifiersEditable)
+                                Koristi se pri kreiranju novih prijava.
+                            @else
+                                JMB ovlašćenog lica se ne može mijenjati na ovoj stranici.
+                            @endif
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="authorized_entity_crps" class="form-label">Broj registracije u CRPS</label>
+                        @if($domesticIdentifiersEditable)
+                        <input type="text" name="crps_number" id="authorized_entity_crps" class="form-control"
+                               value="{{ old('crps_number', $subjectIdentity->crpsNumber) }}"
+                               maxlength="8"
+                               inputmode="numeric"
+                               pattern="[0-9]{8}"
+                               placeholder="8 cifara">
+                        @else
                         <input type="text" id="authorized_entity_crps" class="form-control"
                                value="{{ $subjectIdentity->crpsNumber }}"
                                readonly disabled>
+                        @endif
+                        @error('crps_number')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            CRPS se ne može mijenjati na ovoj stranici.
+                            @if($domesticIdentifiersEditable)
+                                Koristi se pri kreiranju novih prijava.
+                            @else
+                                CRPS se ne može mijenjati na ovoj stranici.
+                            @endif
                         </div>
                     </div>
                     @endif

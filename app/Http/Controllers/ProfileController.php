@@ -123,7 +123,7 @@ class ProfileController extends Controller
             $user->residential_status = $request->residential_status;
         }
 
-        if ($request->has('jmb')) {
+        if ($request->has('jmb') && ! $keepStoredLegalIdentity) {
             JmbDualWrite::assignLogical($user, 'jmb', $request->jmb ?: null);
         }
 
@@ -172,8 +172,9 @@ class ProfileController extends Controller
 
     /**
      * Domaće privredno društvo (DOO, AD, OD, KD) ispravlja ime samo kroz
-     * namjensku formu. Polja glavne forme ne smiju vratiti starije ime niti
-     * promijeniti JMB, CRPS ili pasoš. Strane podružnice i ostale kategorije
+     * namjensku formu. Glavna forma zadržava sačuvano ime i pasoš. JMB
+     * ovlašćenog lica i CRPS se čuvaju kada su poslati, a prazna polja
+     * ostavljaju postojeću vrijednost. Strane podružnice i ostale kategorije
      * zadržavaju raniji način čuvanja.
      */
     private function keepsStoredLegalEntityIdentity(User $user): bool
@@ -201,9 +202,7 @@ class ProfileController extends Controller
             'last_name' => is_string($identity->lastName) ? $identity->lastName : '',
         ]);
 
-        foreach (['jmb', 'crps_number', 'passport_number'] as $field) {
-            $request->request->remove($field);
-            $request->query->remove($field);
-        }
+        $request->request->remove('passport_number');
+        $request->query->remove('passport_number');
     }
 }
