@@ -145,8 +145,7 @@
                 @method('PUT')
 
                 @php
-                    $legalEntityProfile = \App\Support\UserType::isLegalEntity($subjectIdentity->userType)
-                        && ! \App\Support\UserType::isForeignBranch($subjectIdentity->userType);
+                    $legalEntityProfile = \App\Http\Controllers\ProfileController::domesticCompanyProfile($subjectIdentity->userType);
                     $profileFirstName = app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user)
                         ? $user->first_name
                         : $subjectIdentity->firstName;
@@ -159,7 +158,7 @@
                     <input type="hidden" name="last_name" value="{{ $profileLastName }}">
                 @else
                 <div class="form-group">
-                    <label for="first_name" class="form-label">Ime <span class="required">*</span></label>
+                    <label for="first_name" class="form-label">{{ \App\Support\UserType::isLegalEntity($subjectIdentity->userType) ? 'Ime ovlašćenog lica' : 'Ime' }} <span class="required">*</span></label>
                     <input type="text" name="first_name" id="first_name" class="form-control" 
                            value="{{ old('first_name', $profileFirstName) }}" required>
                     @error('first_name')
@@ -168,7 +167,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="last_name" class="form-label">Prezime <span class="required">*</span></label>
+                    <label for="last_name" class="form-label">{{ \App\Support\UserType::isLegalEntity($subjectIdentity->userType) ? 'Prezime ovlašćenog lica' : 'Prezime' }} <span class="required">*</span></label>
                     <input type="text" name="last_name" id="last_name" class="form-control" 
                            value="{{ old('last_name', $profileLastName) }}" required>
                     @error('last_name')

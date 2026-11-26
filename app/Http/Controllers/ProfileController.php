@@ -171,13 +171,26 @@ class ProfileController extends Controller
     }
 
     /**
-     * Pravno lice ispravlja ime samo kroz namjensku formu. Polja glavne forme
-     * ne smiju vratiti starije ime niti promijeniti JMB, CRPS ili pasoš.
+     * Domaće privredno društvo (DOO, AD, OD, KD) ispravlja ime samo kroz
+     * namjensku formu. Polja glavne forme ne smiju vratiti starije ime niti
+     * promijeniti JMB, CRPS ili pasoš. Strane podružnice i ostale kategorije
+     * zadržavaju raniji način čuvanja.
      */
     private function keepsStoredLegalEntityIdentity(User $user): bool
     {
-        return UserType::isLegalEntity($user->user_type)
-            && ! UserType::isForeignBranch($user->user_type);
+        return self::domesticCompanyProfile(
+            app(CurrentIdentityResolver::class)->viewFor($user)->userType
+        );
+    }
+
+    public static function domesticCompanyProfile(?string $type): bool
+    {
+        return in_array($type, [
+            UserType::LIMITED_LIABILITY_COMPANY,
+            UserType::JOINT_STOCK_COMPANY,
+            UserType::GENERAL_PARTNERSHIP,
+            UserType::LIMITED_PARTNERSHIP,
+        ], true);
     }
 
     private function restoreStoredLegalEntityIdentity(ProfileUpdateRequest $request, User $user): void

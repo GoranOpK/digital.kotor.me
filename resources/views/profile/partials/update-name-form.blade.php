@@ -2,13 +2,18 @@
     $accountName = app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user);
     $nameFirst = $accountName ? $user->first_name : $subjectIdentity->firstName;
     $nameLast = $accountName ? $user->last_name : $subjectIdentity->lastName;
-    $authorizedName = \App\Support\UserType::isLegalEntity($subjectIdentity->userType)
-        && ! \App\Support\UserType::isForeignBranch($subjectIdentity->userType);
-    $restoreSubmittedName = old('name_context') !== null
+    $authorizedName = \App\Support\UserType::isLegalEntity($subjectIdentity->userType);
+    $domesticCompanyProfile = \App\Http\Controllers\ProfileController::domesticCompanyProfile($subjectIdentity->userType);
+    $restoreSubmittedName = $domesticCompanyProfile
+        && old('name_context') !== null
         && old('company_name') === null
         && old('phone') === null;
-    $nameFirstValue = $restoreSubmittedName ? old('first_name', $nameFirst) : $nameFirst;
-    $nameLastValue = $restoreSubmittedName ? old('last_name', $nameLast) : $nameLast;
+    $nameFirstValue = $domesticCompanyProfile
+        ? ($restoreSubmittedName ? old('first_name', $nameFirst) : $nameFirst)
+        : old('first_name', $nameFirst);
+    $nameLastValue = $domesticCompanyProfile
+        ? ($restoreSubmittedName ? old('last_name', $nameLast) : $nameLast)
+        : old('last_name', $nameLast);
 @endphp
 <div class="profile-card bg-white rounded-lg p-6 mb-6">
     <h2>{{ $authorizedName ? 'Ime i prezime postojećeg ovlašćenog lica' : 'Ime i prezime' }}</h2>

@@ -259,7 +259,7 @@
     $isResident = $identityResidency === 'resident';
     $isNonResident = $identityResidency === 'non-resident';
     $isLegalEntity = \App\Support\UserType::isLegalEntity($identityType);
-    $showLegalEntityIdentity = $isLegalEntity && ! \App\Support\UserType::isForeignBranch($identityType);
+    $showLegalEntityIdentity = \App\Http\Controllers\ProfileController::domesticCompanyProfile($identityType);
     
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
