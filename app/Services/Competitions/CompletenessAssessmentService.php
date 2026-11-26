@@ -103,10 +103,11 @@ class CompletenessAssessmentService
     }
 
     /**
-     * When every finally submitted application has an assessment: send each incomplete
-     * notice once, then record the first-session date once. Later steps do not move that date.
+     * When every finally submitted application has an assessment, record the first-session
+     * date once and queue each unsent incomplete notice. The complaint clock starts only
+     * after that notice is actually delivered. Later steps do not move the session date.
      *
-     * @return list<int> assessment ids whose notice was marked sent in this call
+     * @return list<int> assessment ids queued for delivery in this call
      */
     public function releaseAdministrativeReview(Competition $competition, User $actor): array
     {
@@ -137,18 +138,14 @@ class CompletenessAssessmentService
 
             $this->recordFirstSessionDateOnce($locked, $actor);
 
-            $pending = ApplicationCompletenessAssessment::query()
+            return ApplicationCompletenessAssessment::query()
                 ->whereIn('id', $latestIds)
                 ->where('outcome', ApplicationCompletenessAssessment::INCOMPLETE)
-                ->whereNull('notice_sent_at')
+                ->whereNull('mail_sent_at')
                 ->lockForUpdate()
-                ->get();
-            $sentAt = now();
-            foreach ($pending as $assessment) {
-                $assessment->forceFill(['notice_sent_at' => $sentAt])->save();
-            }
-
-            return $pending->pluck('id')->map(fn ($id) => (int) $id)->all();
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
         });
 
         DB::afterCommit(function () use ($pendingIds): void {
@@ -319,15 +316,30 @@ class CompletenessAssessmentService
     }
 
     /**
-     * Email the recorded incompleteness notice. Runs after the assessment committed and may be
-     * invoked again after a failure; the portal notice (notice_sent_at) stays the legal event.
+     * Email one incompleteness notice after the assessment transaction has committed.
+     * notice_sent_at is the successful send time and the start of the complaint window.
+     * A failure leaves that clock unset. A later call retries once; a sent notice is not sent again.
      */
     public function deliverNotice(ApplicationCompletenessAssessment $assessment): void
+    {
+        $lockName = 'mmsp-notice-'.$assessment->id;
+        $locked = DB::selectOne('SELECT GET_LOCK(?, 10) AS locked', [$lockName]);
+        if ((int) ($locked->locked ?? 0) !== 1) {
+            return;
+        }
+
+        try {
+            $this->deliverNoticeWhileLocked($assessment);
+        } finally {
+            DB::select('SELECT RELEASE_LOCK(?)', [$lockName]);
+        }
+    }
+
+    private function deliverNoticeWhileLocked(ApplicationCompletenessAssessment $assessment): void
     {
         $assessment = ApplicationCompletenessAssessment::query()->find($assessment->id);
         if ($assessment === null
             || $assessment->outcome !== ApplicationCompletenessAssessment::INCOMPLETE
-            || $assessment->notice_sent_at === null
             || $assessment->mail_sent_at !== null) {
             return;
         }
@@ -335,12 +347,14 @@ class CompletenessAssessmentService
         $application = Application::query()->with(['user', 'competition'])->find($assessment->application_id);
         $recipient = $application?->user?->email;
         if (! is_string($recipient) || trim($recipient) === '') {
-            $assessment->forceFill(['mail_failed_at' => now()])->save();
+            $this->markNoticeFailed($assessment);
 
             return;
         }
 
         $policy = $application->competition->profile();
+        $sentAt = now();
+        $legalStart = $assessment->notice_sent_at ?? $sentAt;
 
         try {
             $snapshot = $assessment->evidence_snapshot ?: $this->basis->snapshot($application);
@@ -359,7 +373,7 @@ class CompletenessAssessmentService
                 $policy->complaintWindowDays() ?? 0,
                 'Komisija za sprovođenje javnog konkursa za podršku preduzetnicima i mikro, malim i srednjim preduzećima',
                 route('applications.canonical-review.show', $application),
-                $policy->complaintWindowEndsAt($assessment->notice_sent_at),
+                $policy->complaintWindowEndsAt($legalStart),
                 (string) $assessment->notes,
             ));
         } catch (\Throwable $exception) {
@@ -368,12 +382,31 @@ class CompletenessAssessmentService
                 'assessment_id' => $assessment->id,
                 'error' => $exception->getMessage(),
             ]);
-            $assessment->forceFill(['mail_failed_at' => now()])->save();
+            $this->markNoticeFailed($assessment);
 
             return;
         }
 
-        $assessment->forceFill(['mail_sent_at' => now(), 'mail_failed_at' => null])->save();
+        $fresh = ApplicationCompletenessAssessment::query()->find($assessment->id);
+        if ($fresh === null || $fresh->mail_sent_at !== null) {
+            return;
+        }
+
+        $payload = ['mail_sent_at' => $sentAt, 'mail_failed_at' => null];
+        if ($fresh->notice_sent_at === null) {
+            $payload['notice_sent_at'] = $sentAt;
+        }
+        $fresh->forceFill($payload)->save();
+    }
+
+    private function markNoticeFailed(ApplicationCompletenessAssessment $assessment): void
+    {
+        $fresh = ApplicationCompletenessAssessment::query()->find($assessment->id);
+        if ($fresh === null || $fresh->mail_sent_at !== null) {
+            return;
+        }
+
+        $fresh->forceFill(['mail_failed_at' => now()])->save();
     }
 
     private function frozenApplicantName(Application $application, ?array $snapshot = null): string

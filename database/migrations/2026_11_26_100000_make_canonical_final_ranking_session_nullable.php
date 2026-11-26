@@ -25,6 +25,13 @@ return new class extends Migration
 
     public function down(): void
     {
+        $withoutSession = DB::table('canonical_final_rankings')->whereNull('final_decision_session_id')->count();
+        if ($withoutSession > 0) {
+            throw new \RuntimeException(
+                'Rollback zaustavljen jer '.$withoutSession.' zapis(a) u canonical_final_rankings ima NULL final_decision_session_id. Kolona ostaje nullable, a strani ključ ostaje na mjestu.'
+            );
+        }
+
         Schema::table('canonical_final_rankings', function (Blueprint $table) {
             $table->dropForeign(['final_decision_session_id']);
         });

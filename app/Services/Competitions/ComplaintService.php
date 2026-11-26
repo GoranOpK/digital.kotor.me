@@ -41,6 +41,8 @@ class ComplaintService
 
     public const STATUS_INCOMPLETE = 'incomplete';
 
+    public const STATUS_NOTICE_PENDING = 'notice_pending';
+
     public const STATUS_COMPLAINT_AVAILABLE = 'complaint_available';
 
     public const STATUS_COMPLAINT_SUBMITTED = 'complaint_submitted';
@@ -54,6 +56,7 @@ class ComplaintService
         self::STATUS_AWAITING_REVIEW => 'Prijava je podnesena i čeka provjeru potpunosti dokumentacije.',
         self::STATUS_COMPLETE => 'Dokumentacija je potpuna. Prijava nastavlja postupak u fazi bodovanja.',
         self::STATUS_INCOMPLETE => 'Dokumentacija je ocijenjena kao nepotpuna. Rok za prigovor je istekao.',
+        self::STATUS_NOTICE_PENDING => 'Dokumentacija je ocijenjena kao nepotpuna. Rok za prigovor počinje kada obavještenje bude uspješno poslato.',
         self::STATUS_COMPLAINT_AVAILABLE => 'Dokumentacija je ocijenjena kao nepotpuna. Prigovor je moguć do isteka roka.',
         self::STATUS_COMPLAINT_SUBMITTED => 'Prigovor je podnesen i čeka odluku Komisije.',
         self::STATUS_COMPLAINT_ACCEPTED => 'Prigovor je prihvaćen. Prijava se smatra potpunom i nastavlja postupak u fazi bodovanja.',
@@ -296,6 +299,9 @@ class ComplaintService
                 ? self::STATUS_COMPLAINT_ACCEPTED
                 : self::STATUS_COMPLAINT_REJECTED,
         };
+        if ($status === self::STATUS_INCOMPLETE && $incomplete && $incomplete->notice_sent_at === null) {
+            $status = self::STATUS_NOTICE_PENDING;
+        }
 
         $closed = CanonicalAdministrativeGate::isClosed($competition);
         $rankingFormed = $this->governance->canonicalRankingFormed($competition);

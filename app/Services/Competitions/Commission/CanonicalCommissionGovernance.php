@@ -400,7 +400,7 @@ class CanonicalCommissionGovernance
 
     /**
      * Scoring opens only after every finally submitted application has an assessment,
-     * incomplete notices have been sent, and the first-session date has been recorded once.
+     * every incomplete notice has been sent successfully, and the first-session date has been recorded once.
      */
     public function administrativeReviewReleased(Competition $competition): bool
     {

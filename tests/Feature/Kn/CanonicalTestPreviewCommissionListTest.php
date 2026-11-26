@@ -4,6 +4,7 @@ namespace Tests\Feature\Kn;
 
 use App\Models\Application;
 use App\Models\CanonicalApplicantForm;
+use App\Models\FinalApplicationClaim;
 use App\Models\CanonicalInvestmentPlan;
 use App\Models\Commission;
 use App\Models\CommissionMember;
@@ -140,6 +141,48 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
 
         $this->assertProfileListStaysHidden('zensko', 'Skrivena Zenska Prijava');
         $this->assertProfileListStaysHidden('omladinsko', 'Skrivena Omladinska Prijava');
+    }
+
+    public function test_chair_secretary_and_member_open_p1_and_p2_read_only(): void
+    {
+        [, $members] = $this->canonicalCommission();
+        $commission = $members[G::ROLE_PREDSJEDNIK]->commission;
+        $preview = $this->openCompetition($commission, self::CANONICAL, 'draft', true);
+        $submitted = $this->application($preview, 'Zajednicki Pregled');
+        CanonicalApplicantForm::query()->create([
+            'application_id' => $submitted->id,
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ])->forceFill(['frozen_at' => now()])->save();
+        CanonicalInvestmentPlan::query()->create([
+            'application_id' => $submitted->id,
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ])->forceFill(['frozen_at' => now()])->save();
+        FinalApplicationClaim::query()->create([
+            'user_id' => $submitted->user_id,
+            'competition_id' => $preview->id,
+            'application_id' => $submitted->id,
+            'claimed_at' => now(),
+        ]);
+
+        $p1Url = route('applications.canonical-p1.edit', $submitted);
+        $p2Url = route('applications.canonical-p2.edit', $submitted);
+        foreach ([G::ROLE_PREDSJEDNIK, G::ROLE_SEKRETAR, G::ROLE_SPOLJASNJI] as $seat) {
+            $user = $members[$seat]->user;
+            $this->actingAs($user)->get($p1Url)->assertOk()->assertSee('Obrazac P1a')->assertDontSee('id="p1a-save-button"', false);
+            $this->actingAs($user)->put(route('applications.canonical-p1.update', $submitted), [])->assertRedirect(route('dashboard'));
+            $this->actingAs($user)->get($p2Url)->assertOk()->assertSee('Obrazac P2')->assertDontSee('id="p2-save-button"', false);
+            $this->actingAs($user)->put(route('applications.canonical-p2.update', $submitted), [])->assertRedirect(route('dashboard'));
+            $page = $this->actingAs($user)->get(route('evaluation.create', $submitted))->assertOk()->assertSee('Administrativna provjera');
+            if ($seat === G::ROLE_PREDSJEDNIK) {
+                $page->assertSee('Potvrdi administrativnu provjeru');
+            } else {
+                $page->assertSee(G::CHAIR_COMPLETENESS_REQUIRED_MESSAGE)->assertDontSee('Potvrdi administrativnu provjeru');
+                $this->actingAs($user)
+                    ->post(route('evaluation.completeness', $submitted), ['outcome' => 'complete'])
+                    ->assertForbidden();
+            }
+        }
     }
 
     private function assertProfileListStaysHidden(string $type, string $applicantName): void

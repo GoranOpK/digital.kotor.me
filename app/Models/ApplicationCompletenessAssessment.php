@@ -56,27 +56,40 @@ class ApplicationCompletenessAssessment extends Model
     }
 
     /**
-     * Only the notice of a recorded finding carries delivery state, and only until the mail succeeded.
+     * Delivery bookkeeping until the mail succeeds.
+     * notice_sent_at is written only together with a successful send, and only once.
      */
     private function isPendingDeliveryUpdate(): bool
     {
         $dirty = array_keys($this->getDirty());
-        if (array_diff($dirty, self::DELIVERY_FIELDS) !== []) {
+        if ($dirty === [] || array_diff($dirty, self::DELIVERY_FIELDS) !== []) {
             return false;
         }
 
-        $settingNotice = in_array('notice_sent_at', $dirty, true)
-            && $this->getOriginal('notice_sent_at') === null
-            && $this->notice_sent_at !== null
-            && array_diff($dirty, ['notice_sent_at', 'updated_at']) === [];
-        if ($settingNotice) {
+        if ($this->getOriginal('mail_sent_at') !== null) {
+            return false;
+        }
+
+        $settingNotice = in_array('notice_sent_at', $dirty, true);
+        $settingMailSent = in_array('mail_sent_at', $dirty, true);
+        if ($settingNotice || $settingMailSent) {
+            if (! $settingMailSent || $this->mail_sent_at === null) {
+                return false;
+            }
+
+            if ($this->getOriginal('notice_sent_at') === null) {
+                if (! $settingNotice || $this->notice_sent_at === null) {
+                    return false;
+                }
+            } elseif ($settingNotice) {
+                return false;
+            }
+
             return true;
         }
 
-        return $this->getOriginal('notice_sent_at') !== null
-            && $this->getOriginal('mail_sent_at') === null
-            && ! in_array('notice_sent_at', $dirty, true)
-            && array_intersect($dirty, ['mail_sent_at', 'mail_failed_at']) !== [];
+        return in_array('mail_failed_at', $dirty, true)
+            && $this->mail_failed_at !== null;
     }
 
     public function application(): BelongsTo
