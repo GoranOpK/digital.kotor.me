@@ -313,6 +313,60 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame('03123456', $application->fresh()->pib);
     }
 
+    public function test_p1a_pairs_crps_registration_date_with_activity_code(): void
+    {
+        $owner = $this->makeOwner();
+        $call = $this->openCall();
+        $p1a = $this->startedDraft($owner, $call, CanonicalLegalForm::PREDUZETNIK);
+        $draft = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $p1a))->assertOk()->getContent();
+
+        $this->assertSame([
+            ['applicant_jmbg', 'pib'],
+            ['registration_date', 'activity_code'],
+            ['employee_count', 'bank_account'],
+            ['phone', 'email'],
+        ], $this->canonicalP1Rows($draft));
+        $this->assertStringContainsString('class="mmsp-p1-card mmsp-p1a-sheet"', $draft);
+        $this->assertMatchesRegularExpression(
+            '/for="registration_date">Datum registracije u CRPS\s*<span class="mmsp-p1-req">\*<\/span>/',
+            $draft
+        );
+        $this->assertMatchesRegularExpression(
+            '/for="activity_code">Šifra djelatnosti\s*<span class="mmsp-p1-req">\*<\/span>/',
+            $draft
+        );
+        $this->assertStringContainsString('grid-template-columns: 1fr;', $draft);
+        $this->assertStringContainsString('@media (min-width: 768px)', $draft);
+        $this->assertStringContainsString('.mmsp-p1a-sheet:not(.mmsp-p1-screen-actions) > .mmsp-p1-row', $draft);
+
+        $form = CanonicalApplicantForm::query()->where('application_id', $p1a->id)->firstOrFail();
+        $form->forceFill([
+            'registration_date' => '2021-05-10',
+            'activity_code' => '56.10',
+            'frozen_at' => now(),
+        ])->save();
+        $p1a->forceFill(['status' => 'submitted', 'submitted_at' => now()])->save();
+
+        $submitted = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $p1a))->assertOk()->getContent();
+        $this->assertSame($this->canonicalP1Rows($draft), $this->canonicalP1Rows($submitted));
+        $this->assertStringContainsString('value="2021-05-10"', $submitted);
+        $this->assertStringContainsString('value="56.10"', $submitted);
+        $this->assertStringContainsString('<fieldset disabled', $submitted);
+
+        $companyOwner = $this->makeOwner();
+        $p1b = $this->startedDraft($companyOwner, $call, CanonicalLegalForm::DRUSTVO);
+        $company = $this->actingAs($companyOwner)->get(route('applications.canonical-p1.edit', $p1b))->assertOk()->getContent();
+        $this->assertSame([
+            ['person_name', 'pib'],
+            ['registration_date', 'activity_code'],
+            ['employee_count', 'bank_account'],
+            ['phone', 'email'],
+        ], $this->canonicalP1Rows($company));
+        $this->assertStringContainsString('Datum osnivanja', $company);
+        $this->assertStringNotContainsString('Datum registracije u CRPS', $company);
+        $this->assertStringNotContainsString('mmsp-p1a-sheet"', $company);
+    }
+
     public function test_p1a_save_button_follows_final_completeness_and_opens_the_investment_plan(): void
     {
         $owner = $this->makeOwner();
@@ -1514,6 +1568,10 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSee('data-section="canonical-review-p1"', false)
             ->assertSee('Obrazac P1a — podaci o podnosiocu')
             ->assertSee('Ime i prezime preduzetnika: Marko Marković')
+            ->assertSeeInOrder([
+                'Datum registracije u CRPS: 2020-03-15',
+                'Šifra djelatnosti: 56.10',
+            ], false)
             ->assertSee('Šifra djelatnosti: 56.10')
             ->assertSee('Rješenje o registraciji za PDV ili potvrda da nije PDV obveznik')
             ->assertSee('Rješenje o registraciji za PDV (PDV obveznik)')
@@ -1521,6 +1579,18 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSee($fingerprint)
             ->assertSee('data-form="completeness"', false)
             ->assertDontSee((string) $owner->jmb);
+
+        $commissionForm = $this->actingAs($chair)
+            ->get(route('applications.canonical-p1.edit', $application))
+            ->assertOk()
+            ->getContent();
+        $this->assertSame([
+            ['applicant_jmbg', 'pib'],
+            ['registration_date', 'activity_code'],
+            ['employee_count', 'bank_account'],
+            ['phone', 'email'],
+        ], $this->canonicalP1Rows($commissionForm));
+        $this->assertStringContainsString('<fieldset disabled', $commissionForm);
 
         $this->actingAs($chair)
             ->from(route('evaluation.canonical-review.show', $application))
@@ -1677,6 +1747,31 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $normalized = preg_replace('/Broj prijave:\s*[^<]*/', 'Broj prijave: ', $header);
 
         return is_string($normalized) ? $normalized : $header;
+    }
+
+    /**
+     * @return list<list<string>>
+     */
+    private function canonicalP1Rows(string $html): array
+    {
+        $dom = new \DOMDocument();
+        $internal = libxml_use_internal_errors(true);
+        $loaded = $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        libxml_clear_errors();
+        libxml_use_internal_errors($internal);
+        $this->assertTrue($loaded);
+
+        $rows = [];
+        $xpath = new \DOMXPath($dom);
+        foreach ($xpath->query('//form[@id="canonical-p1-form"]//div[contains(concat(" ", normalize-space(@class), " "), " mmsp-p1-row ")]') as $row) {
+            $names = [];
+            foreach ($xpath->query('.//input[@name] | .//select[@name] | .//textarea[@name]', $row) as $field) {
+                $names[] = $field->getAttribute('name');
+            }
+            $rows[] = $names;
+        }
+
+        return $rows;
     }
 
     private function formSection(string $html, string $action): string
