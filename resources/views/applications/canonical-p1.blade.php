@@ -269,14 +269,10 @@
         padding-top: 12px;
         border-top: 1px solid #e5e7eb;
     }
-    .mmsp-p1-number,
-    .mmsp-p1-code {
+    .mmsp-p1-number {
         font-size: 14px;
         font-weight: 700;
         color: #111;
-    }
-    .mmsp-p1-code {
-        color: #374151;
     }
     .mmsp-p1-title {
         width: 100%;
@@ -294,12 +290,6 @@
         line-height: 1.5;
         color: #374151;
         margin: 12px 0 0;
-    }
-    .mmsp-p1-call {
-        text-align: center;
-        font-size: 13px;
-        color: #6b7280;
-        margin: 8px 0 0;
     }
     .mmsp-p1-nav {
         display: flex;
@@ -393,10 +383,9 @@
         .mmsp-p1-crest img { height: 2cm !important; }
         .mmsp-p1-meta { margin-top: 12px !important; padding-top: 12px !important; }
         .mmsp-p1-org, .mmsp-p1-contact { font-size: 11.7px !important; }
-        .mmsp-p1-number, .mmsp-p1-code { font-size: 12.6px !important; }
+        .mmsp-p1-number { font-size: 12.6px !important; }
         .mmsp-p1-title { font-size: 19.8px !important; margin-top: 8px !important; }
         .mmsp-p1-subtitle { font-size: 12.6px !important; margin-top: 12px !important; }
-        .mmsp-p1-call { margin-top: 3px !important; }
         .mmsp-p1-card {
             padding: 0 !important;
             border: 0 !important;
@@ -500,17 +489,12 @@
             </div>
             <div class="mmsp-p1-meta">
                 <div class="mmsp-p1-number">Broj prijave: {{ $brojPrijave }}</div>
-                <div class="mmsp-p1-code">Obrazac {{ $code }}</div>
             </div>
             <h1 class="mmsp-p1-title">PRIJAVA</h1>
             <p class="mmsp-p1-subtitle">
                 na javni konkurs za raspodjelu bespovratnih sredstava<br>
-                namijenjenih za podršku mikro, malim i srednjim preduzećima<br>
-                Tip prijave: <strong>{{ $isEntrepreneur ? 'PREDUZETNIK' : 'PRIVREDNO DRUŠTVO (DOO)' }}</strong>
+                namijenjenih za podršku mikro, malim i srednjim preduzećima
             </p>
-            @if($competition?->title)
-                <p class="mmsp-p1-call">{{ $competition->title }}</p>
-            @endif
         </div>
 
         @if(!$readOnly)

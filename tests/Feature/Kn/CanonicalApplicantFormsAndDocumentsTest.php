@@ -134,7 +134,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSee('Obrazac P1a')
             ->assertSee('PRIJAVA')
             ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
-            ->assertSee('PREDUZETNIK')
+            ->assertDontSee('Tip prijave')
+            ->assertDontSee('PREDUZETNIK')
             ->assertSee((string) $owner->jmb)
             ->getContent();
         $form = $this->formSection($html, route('applications.canonical-p1.update', $application));
@@ -221,6 +222,31 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         }
     }
 
+    public function test_p1a_and_p1b_headers_keep_the_same_crest_and_title(): void
+    {
+        $call = $this->openCall(['title' => 'Test konačno']);
+        $entrepreneur = $this->startedDraft($this->makeOwner(), $call, CanonicalLegalForm::PREDUZETNIK);
+        $company = $this->startedDraft($this->makeOwner(), $call, CanonicalLegalForm::DRUSTVO);
+
+        $p1a = $this->p1Header($this->actingAs($entrepreneur->user)->get(route('applications.canonical-p1.edit', $entrepreneur))->assertOk()->getContent());
+        $p1b = $this->p1Header($this->actingAs($company->user)->get(route('applications.canonical-p1.edit', $company))->assertOk()->getContent());
+        $entrepreneur->forceFill(['status' => 'submitted', 'submitted_at' => now()])->save();
+        $submitted = $this->p1Header($this->actingAs($entrepreneur->user)->get(route('applications.canonical-p1.edit', $entrepreneur))->assertOk()->getContent());
+
+        foreach ([$p1a, $p1b] as $header) {
+            $this->assertStringContainsString('images/srednji_grb.png', $header);
+            $this->assertStringContainsString('>PRIJAVA<', $header);
+            $this->assertStringContainsString('na javni konkurs za raspodjelu bespovratnih sredstava', $header);
+            $this->assertStringContainsString('namijenjenih za podršku mikro, malim i srednjim preduzećima', $header);
+            $this->assertStringNotContainsString('Tip prijave', $header);
+            $this->assertStringNotContainsString('Test konačno', $header);
+            $this->assertStringNotContainsString('Obrazac P1', $header);
+        }
+
+        $this->assertSame($this->headerWithoutApplicationNumber($p1a), $this->headerWithoutApplicationNumber($p1b));
+        $this->assertSame($p1a, $submitted);
+    }
+
     // ---------------------------------------------------------------- 2. P1b fields and wording
 
     public function test_drustvo_starts_obrazac_p1b_with_company_fields_and_wording(): void
@@ -235,7 +261,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSee('PRIJAVA')
             ->assertSee('na javni konkurs za raspodjelu bespovratnih sredstava')
             ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
-            ->assertSee('DRUŠTVO (DOO)')
+            ->assertDontSee('Tip prijave')
+            ->assertDontSee('DRUŠTVO (DOO)')
             ->getContent();
         $form = $this->formSection($html, route('applications.canonical-p1.update', $application));
 
@@ -1631,6 +1658,25 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
                 'document_type' => $type,
                 'user_document_id' => $document->id,
             ], $extra));
+    }
+
+    private function p1Header(string $html): string
+    {
+        $start = strpos($html, '<div class="mmsp-p1-header">');
+        $this->assertNotFalse($start);
+        $subtitle = strpos($html, 'namijenjenih za podršku mikro, malim i srednjim preduzećima', $start);
+        $this->assertNotFalse($subtitle);
+        $end = strpos($html, '</div>', $subtitle);
+        $this->assertNotFalse($end);
+
+        return substr($html, $start, $end + strlen('</div>') - $start);
+    }
+
+    private function headerWithoutApplicationNumber(string $header): string
+    {
+        $normalized = preg_replace('/Broj prijave:\s*[^<]*/', 'Broj prijave: ', $header);
+
+        return is_string($normalized) ? $normalized : $header;
     }
 
     private function formSection(string $html, string $action): string

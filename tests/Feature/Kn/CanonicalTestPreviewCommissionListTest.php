@@ -102,7 +102,9 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         $this->actingAs($chair)
             ->get($p1Url)
             ->assertOk()
-            ->assertSee('Obrazac P1a')
+            ->assertSee('PRIJAVA')
+            ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
+            ->assertSee('JMBG preduzetnika')
             ->assertDontSee('id="p1a-save-button"', false);
         $this->actingAs($chair)
             ->put($p1Url, [])
@@ -169,7 +171,11 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         $p2Url = route('applications.canonical-p2.edit', $submitted);
         foreach ([G::ROLE_PREDSJEDNIK, G::ROLE_SEKRETAR, G::ROLE_SPOLJASNJI] as $seat) {
             $user = $members[$seat]->user;
-            $this->actingAs($user)->get($p1Url)->assertOk()->assertSee('Obrazac P1a')->assertDontSee('id="p1a-save-button"', false);
+            $this->actingAs($user)->get($p1Url)->assertOk()
+                ->assertSee('PRIJAVA')
+                ->assertSee('namijenjenih za podršku mikro, malim i srednjim preduzećima')
+                ->assertSee('JMBG preduzetnika')
+                ->assertDontSee('id="p1a-save-button"', false);
             $this->actingAs($user)->put(route('applications.canonical-p1.update', $submitted), [])->assertRedirect(route('dashboard'));
             $this->actingAs($user)->get($p2Url)->assertOk()->assertSee('Obrazac P2')->assertDontSee('id="p2-save-button"', false);
             $this->actingAs($user)->put(route('applications.canonical-p2.update', $submitted), [])->assertRedirect(route('dashboard'));
