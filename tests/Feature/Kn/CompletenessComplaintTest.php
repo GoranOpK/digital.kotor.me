@@ -546,10 +546,19 @@ class CompletenessComplaintTest extends TestCase
 
         $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->sole();
         $this->assertSame(ApplicationCompletenessAssessment::INCOMPLETE, $assessment->outcome);
-        $this->assertSame('2026-09-01 10:00:00', $this->belgrade($assessment->notice_sent_at));
-        $this->assertSame('2026-09-04 10:00:00.000000', $this->windowEnd($application)->format('Y-m-d H:i:s.u'));
+        $this->assertNull($assessment->notice_sent_at);
         $this->assertNull($assessment->mail_sent_at);
         $this->assertSame('2026-09-01 10:00:00', $this->belgrade($assessment->mail_failed_at));
+        $this->assertNotSame(CanonicalReviewState::COMPLAINT_ELIGIBLE, CanonicalReviewState::resolve($application->fresh()));
+        $this->actingAs($owner)
+            ->from(route('applications.show', $application))
+            ->post(route('applications.complaint', $application), ['body' => 'Prije obavještenja.'])
+            ->assertSessionHasErrors('error');
+        $this->assertSame(0, ApplicationComplaint::query()->count());
+        $pending = app(ComplaintService::class)->applicantStatus($application->fresh());
+        $this->assertSame(ComplaintService::STATUS_NOTICE_PENDING, $pending['status']);
+        $this->assertFalse($pending['complaintOpen']);
+        $this->assertNull($pending['complaintDeadline']);
 
         Carbon::setTestNow(Carbon::parse('2026-09-01 12:00:00', 'Europe/Belgrade'));
         Mail::swap($fake);
@@ -560,13 +569,14 @@ class CompletenessComplaintTest extends TestCase
         $this->assertSame(1, ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->count());
         $this->assertSame('2026-09-01 12:00:00', $this->belgrade($delivered->mail_sent_at));
         $this->assertNull($delivered->mail_failed_at);
-        $this->assertSame('2026-09-01 10:00:00', $this->belgrade($delivered->notice_sent_at));
+        $this->assertSame('2026-09-01 12:00:00', $this->belgrade($delivered->notice_sent_at));
         $this->assertSame($this->belgrade($assessment->recorded_at), $this->belgrade($delivered->recorded_at));
         $this->assertSame([$assessment->outcome, $assessment->notes, $assessment->evidence_fingerprint], [$delivered->outcome, $delivered->notes, $delivered->evidence_fingerprint]);
-        $this->assertSame('2026-09-04 10:00:00.000000', $this->windowEnd($application)->format('Y-m-d H:i:s.u'));
+        $this->assertSame('2026-09-04 12:00:00.000000', $this->windowEnd($application)->format('Y-m-d H:i:s.u'));
+        $this->assertSame(CanonicalReviewState::COMPLAINT_ELIGIBLE, CanonicalReviewState::resolve($application->fresh()));
         Mail::assertSent(IncompleteDocumentationNoticeMail::class, function (IncompleteDocumentationNoticeMail $mail) use ($owner) {
             return $mail->hasTo($owner->email)
-                && $mail->complaintDeadline?->format('Y-m-d H:i:s') === '2026-09-04 10:00:00';
+                && $mail->complaintDeadline?->format('Y-m-d H:i:s') === '2026-09-04 12:00:00';
         });
 
         Carbon::setTestNow(Carbon::parse('2026-09-01 13:00:00', 'Europe/Belgrade'));
@@ -716,7 +726,7 @@ class CompletenessComplaintTest extends TestCase
 
         $this->assertSame('Prigovor.', $complaint()->body);
         $this->assertSame(ApplicationComplaint::ACCEPTED, $complaint()->decision);
-        $this->assertSame('2026-09-01 10:00:00', $this->belgrade($assessment()->notice_sent_at));
+        $this->assertSame('2026-09-01 11:00:00', $this->belgrade($assessment()->notice_sent_at));
         $this->assertSame(ApplicationCompletenessAssessment::INCOMPLETE, $assessment()->outcome);
     }
 

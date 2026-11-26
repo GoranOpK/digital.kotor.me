@@ -91,18 +91,23 @@ class MmspDecisionController extends Controller
             abort(403, $reason ?? MmspDecisionProposalGate::CHAIRMAN_ONLY_MESSAGE);
         }
 
+        $recordedFirst = app(MmspDecisionSessionDates::class)->forCompetition($competition)['first'] ?? null;
+        if (! is_string($recordedFirst) || $recordedFirst === '') {
+            return back()->withErrors([
+                'first_session_date' => 'Datum prve sjednice još nije evidentiran završetkom administrativne provjere.',
+            ])->withInput();
+        }
+
         $validated = $request->validate([
-            'first_session_date' => ['required', 'date_format:Y-m-d'],
             'second_session_date' => ['required', 'date_format:Y-m-d'],
             'third_session_date' => ['required', 'date_format:Y-m-d'],
         ], [
-            'first_session_date.required' => 'Unesite datum prve sjednice.',
             'second_session_date.required' => 'Unesite datum druge sjednice.',
             'third_session_date.required' => 'Unesite datum treće sjednice.',
-            'first_session_date.date_format' => 'Datum prve sjednice nije ispravan.',
             'second_session_date.date_format' => 'Datum druge sjednice nije ispravan.',
             'third_session_date.date_format' => 'Datum treće sjednice nije ispravan.',
         ]);
+        $validated['first_session_date'] = $recordedFirst;
 
         try {
             $generator->generate($competition, $user, $validated, now());

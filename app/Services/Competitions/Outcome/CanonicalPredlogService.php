@@ -222,7 +222,9 @@ final class CanonicalPredlogService
      */
     private function payload(CanonicalFinalRanking $ranking, Competition $competition): array
     {
-        $session = CommissionSession::query()->findOrFail($ranking->final_decision_session_id);
+        $session = $ranking->final_decision_session_id !== null
+            ? CommissionSession::query()->find($ranking->final_decision_session_id)
+            : null;
         $outcomes = CanonicalOutcome::query()->where('final_ranking_id', $ranking->id)->get()->keyBy('application_id');
         $applications = Application::query()
             ->whereIn('id', $outcomes->keys())
@@ -314,7 +316,7 @@ final class CanonicalPredlogService
                 'mandate_starts_at' => $commission?->mandate_starts_at?->toIso8601String(),
                 'mandate_ends_at' => $commission?->mandate_ends_at?->toIso8601String(),
             ],
-            'final_decision_session' => [
+            'final_decision_session' => $session === null ? null : [
                 'id' => (int) $session->id,
                 'held_at' => $session->held_at?->toIso8601String(),
                 'due_at' => $session->due_at?->toIso8601String(),

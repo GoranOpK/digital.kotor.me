@@ -8,7 +8,9 @@ use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Models\Application;
 use App\Models\CanonicalApplicantForm;
+use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Models\User;
 use App\Models\UserDocument;
 use App\Security\JmbEncryptedReadException;
 use App\Services\Competitions\CanonicalApplicantFormService;
@@ -61,11 +63,11 @@ class CanonicalApplicantController extends Controller
 
     public function editP1(Request $request, Application $application): View|RedirectResponse
     {
-        $this->authorizeOwnerOnCanonical($request, $application);
+        $readOnlyVisitor = $this->authorizeCanonicalFormRead($request, $application);
 
         $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->first();
         abort_unless($form && CanonicalLegalForm::isValid($form->legal_form), 404);
-        $readOnly = $form->isFrozen() || $application->isApplicantContentWriteLocked();
+        $readOnly = $readOnlyVisitor || $form->isFrozen() || $application->isApplicantContentWriteLocked();
         if (! $readOnly) {
             abort_unless($this->forms->legalFormForUser($request->user()) === $form->legal_form, 403);
         }
@@ -76,7 +78,7 @@ class CanonicalApplicantController extends Controller
         $jmbgBlocked = false;
         $jmbgMustMatchPrefill = false;
         $jmbgEmptyOk = true;
-        if ($form->isEntrepreneur()) {
+        if ($form->isEntrepreneur() && ! $readOnlyVisitor) {
             try {
                 $accountJmb = app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
                 if (is_string($accountJmb) && preg_match('/^[0-9]{13}$/', trim($accountJmb)) === 1) {
@@ -100,6 +102,8 @@ class CanonicalApplicantController extends Controller
                 return redirect()->route('applications.show', $application)
                     ->withErrors(['error' => JmbEncryptedReadException::USER_MESSAGE]);
             }
+        } elseif ($form->isEntrepreneur() && $application->hasApplicantJmbgSnapshot()) {
+            $jmbgForForm = $application->applicantJmbgForRead();
         }
 
         return view('applications.canonical-p1', [
@@ -230,5 +234,53 @@ class CanonicalApplicantController extends Controller
         if (! $application->isCanonicalProfile()) {
             abort(404);
         }
+    }
+
+    /**
+     * Owner keeps the existing write path. A commission member or administrator may open
+     * the saved MMSP form read-only after the application is finally submitted.
+     */
+    private function authorizeCanonicalFormRead(Request $request, Application $application): bool
+    {
+        $application->loadMissing(['competition', 'finalClaim']);
+        if (! $application->isCanonicalProfile()) {
+            abort(404);
+        }
+
+        $user = $request->user();
+        if ($user instanceof User && (int) $application->user_id === (int) $user->id) {
+            return false;
+        }
+
+        if ($user instanceof User && $this->commissionOrAdminMayView($application, $user)) {
+            return true;
+        }
+
+        abort(403, 'Nemate pristup ovoj prijavi.');
+    }
+
+    private function commissionOrAdminMayView(Application $application, User $user): bool
+    {
+        $competition = $application->competition;
+        if ($competition === null || $application->status === 'draft') {
+            return false;
+        }
+
+        if (! $competition->isCanonicalTestPreview()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            return false;
+        }
+
+        $role = $user->role?->name;
+        if (in_array($role, ['admin', 'superadmin', 'konkurs_admin', 'kk_admin'], true)) {
+            return true;
+        }
+
+        if (! $competition->commission_id) {
+            return false;
+        }
+
+        return CommissionMember::activeForCommission((int) $user->id, (int) $competition->commission_id) !== null;
     }
 }

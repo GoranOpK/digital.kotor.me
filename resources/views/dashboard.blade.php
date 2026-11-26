@@ -258,9 +258,8 @@
     $isCurrentEntrepreneur = \App\Support\UserType::isEntrepreneur($identityType);
     $isResident = $identityResidency === 'resident';
     $isNonResident = $identityResidency === 'non-resident';
-    $isLegalEntity = \App\Support\UserType::isLegalEntity($identityType);
     $showLegalEntityIdentity = \App\Http\Controllers\ProfileController::domesticCompanyProfile($identityType);
-    
+
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
         $userTypeLabel = 'Super Administrator';
@@ -654,19 +653,6 @@
             @endif
             </div>
         </div>
-
-        <!-- Brzi servisi (samo za pravna lica, ne za komisiju) -->
-        @if($isLegalEntity && !$isKomisija)
-            <div style="margin-bottom: 24px;">
-                <div class="services-grid" style="margin-top: 0;">
-                    <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                        <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏢</div>
-                        <h3 style="font-size: 16px;">Servisi za pravna lica</h3>
-                        <p style="font-size: 12px;">Izvještaji i administrativne procedure.</p>
-                    </div>
-                </div>
-            </div>
-        @endif
     @endif
 
         <!-- Services - Super Admin (samo Administracija) -->
@@ -803,12 +789,8 @@
                                     <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
                                         Pregled konkursa
                                     </a>
-                                    @if($competition->isRankingFormed())
-                                        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-                                            <a href="{{ route('evaluation.canonical-outcome.show', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
-                                                Rang lista
-                                            </a>
-                                        @elseif($competition->isOmladinskoProfile())
+                                    @if($competition->isRankingFormed() && $competition->type !== \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                                        @if($competition->isOmladinskoProfile())
                                             <a href="{{ route('evaluation.youth-ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
                                                 Rang lista
                                             </a>

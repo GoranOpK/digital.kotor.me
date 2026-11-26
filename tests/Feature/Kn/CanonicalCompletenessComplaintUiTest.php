@@ -271,6 +271,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         [$call, $members] = $this->canonicalCall();
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $pending = $this->finalApplication($call);
+        $this->assertTrue(app(CompletenessAssessmentService::class)->record($pending, $chair, 'complete')->succeeded);
         [$owner, $incomplete] = $this->incompleteApplication($call, $members);
         [, $withComplaint, $complaint] = $this->pendingComplaint($call, $members);
 
@@ -286,7 +287,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->post(route('evaluation.complaint-decision', [$withComplaint, $complaint]), ['decision' => 'accepted', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors(['error' => CompletenessAssessmentService::STAGE_LOCKED_MESSAGE]);
 
-        $this->assertSame(0, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
+        $this->assertSame(1, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
         $this->assertSame(0, ApplicationComplaint::query()->where('application_id', $incomplete->id)->count());
         $this->assertNull($complaint->fresh()->decision);
 
@@ -323,6 +324,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         [$call, $members] = $this->canonicalCall();
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $pending = $this->finalApplication($call);
+        $this->assertTrue(app(CompletenessAssessmentService::class)->record($pending, $chair, 'complete')->succeeded);
         [$owner, $incomplete] = $this->incompleteApplication($call, $members);
         [, $withComplaint, $complaint] = $this->pendingComplaint($call, $members);
 
@@ -335,7 +337,7 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$withComplaint, $complaint]), ['decision' => 'rejected', 'decision_notes' => 'Obrazloženje.'])
             ->assertSessionHasErrors(['error' => CanonicalAdministrativeGate::CLOSED_MESSAGE]);
 
-        $this->assertSame(0, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
+        $this->assertSame(1, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
         $this->assertNull($complaint->fresh()->decision);
         $this->actingAs($chair)->get(route('evaluation.canonical-review.show', $incomplete))->assertOk()->assertSee('Poziv je zatvoren');
         $this->applicantStatusPage($owner, $incomplete)

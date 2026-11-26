@@ -93,7 +93,7 @@ class CanonicalCommissionSessionUiTest extends TestCase
         $this->actingAs($this->userWithRole('konkurs_admin'))
             ->get(route('admin.competitions.show', $call))
             ->assertOk()
-            ->assertSee(route('admin.competitions.canonical-sessions.show', $call), false);
+            ->assertDontSee(route('admin.competitions.canonical-sessions.show', $call), false);
     }
 
     public function test_wrong_role_profile_foreign_member_and_admin_cannot_act(): void
@@ -431,21 +431,7 @@ class CanonicalCommissionSessionUiTest extends TestCase
 
         $this->actingAs($chair)
             ->get(route('evaluation.canonical-outcome.show', $call))
-            ->assertOk()
-            ->assertSee(G::FINAL_DECISION_SESSION_REQUIRED_MESSAGE, false);
-        $this->actingAs($chair)
-            ->post(route('evaluation.canonical-outcome.confirm', $call))
-            ->assertSessionHasErrors(['canonical_outcome' => G::FINAL_DECISION_SESSION_REQUIRED_MESSAGE]);
-
-        $this->record($chair, $call, $members, G::PURPOSE_FINAL_DECISION)->assertSessionHasNoErrors();
-        $this->actingAs($chair)
-            ->post(route('evaluation.canonical-sessions.confirm', [$call, $this->sessionFor($call, G::PURPOSE_FINAL_DECISION)]))
-            ->assertSessionHasNoErrors();
-
-        $this->actingAs($chair)
-            ->get(route('evaluation.canonical-outcome.show', $call))
-            ->assertOk()
-            ->assertDontSee(G::FINAL_DECISION_SESSION_REQUIRED_MESSAGE, false);
+            ->assertRedirect(route('evaluation.create', $application));
         $this->actingAs($chair)
             ->post(route('evaluation.canonical-outcome.draft', [$call, $application]), ['decision' => 'support', 'amount' => '1000'])
             ->assertSessionHasNoErrors();
