@@ -42,8 +42,8 @@ class ApplicationCompletenessAssessment extends Model
 
     public const IMMUTABLE_MESSAGE = 'Ocjena potpunosti je nepromjenjiva. Nova ocjena se dodaje kao novi zapis.';
 
-    /** Email delivery bookkeeping; never part of the legal record. */
-    public const DELIVERY_FIELDS = ['mail_sent_at', 'mail_failed_at', 'updated_at'];
+    /** Email delivery bookkeeping; never part of the legal finding. */
+    public const DELIVERY_FIELDS = ['notice_sent_at', 'mail_sent_at', 'mail_failed_at', 'updated_at'];
 
     protected static function booted(): void
     {
@@ -61,11 +61,22 @@ class ApplicationCompletenessAssessment extends Model
     private function isPendingDeliveryUpdate(): bool
     {
         $dirty = array_keys($this->getDirty());
+        if (array_diff($dirty, self::DELIVERY_FIELDS) !== []) {
+            return false;
+        }
+
+        $settingNotice = in_array('notice_sent_at', $dirty, true)
+            && $this->getOriginal('notice_sent_at') === null
+            && $this->notice_sent_at !== null
+            && array_diff($dirty, ['notice_sent_at', 'updated_at']) === [];
+        if ($settingNotice) {
+            return true;
+        }
 
         return $this->getOriginal('notice_sent_at') !== null
             && $this->getOriginal('mail_sent_at') === null
-            && array_intersect($dirty, ['mail_sent_at', 'mail_failed_at']) !== []
-            && array_diff($dirty, self::DELIVERY_FIELDS) === [];
+            && ! in_array('notice_sent_at', $dirty, true)
+            && array_intersect($dirty, ['mail_sent_at', 'mail_failed_at']) !== [];
     }
 
     public function application(): BelongsTo

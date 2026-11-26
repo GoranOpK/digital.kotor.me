@@ -6,6 +6,7 @@ use App\Mail\IncompleteDocumentationNoticeMail;
 use App\Models\Application;
 use App\Models\ApplicationComplaint;
 use App\Models\ApplicationCompletenessAssessment;
+use App\Models\CommissionSession;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
 use App\Models\User;
@@ -60,7 +61,7 @@ class CompletenessAssessmentService
         $policy = $competition->profile();
 
         try {
-            return DB::transaction(function () use ($application, $actor, $outcome, $notes, $competition, $policy) {
+            $result = DB::transaction(function () use ($application, $actor, $outcome, $notes, $competition, $policy) {
                 $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
                 if (ApplicationCompletenessAssessment::query()->where('application_id', $locked->id)->exists()) {
                     return ProcessWriteResult::failed(self::ALREADY_ASSESSED_MESSAGE);
@@ -69,7 +70,6 @@ class CompletenessAssessmentService
                 $locked->load(['businessPlan', 'finalClaim', 'user', 'competition']);
                 $guard = $this->basis->dossierGuard($locked);
                 $snapshot = $this->basis->snapshot($locked);
-                $incomplete = $outcome === ApplicationCompletenessAssessment::INCOMPLETE;
 
                 $assessment = ApplicationCompletenessAssessment::query()->create([
                     'application_id' => $locked->id,
@@ -81,7 +81,7 @@ class CompletenessAssessmentService
                     'evidence_snapshot' => $snapshot,
                     'evidence_fingerprint' => $this->basis->fingerprint($snapshot),
                     'recorded_at' => now(),
-                    'notice_sent_at' => $incomplete ? now() : null,
+                    'notice_sent_at' => null,
                 ]);
 
                 $locked->refresh();
@@ -89,15 +89,99 @@ class CompletenessAssessmentService
                     throw new \RuntimeException('Provjera potpunosti ne smije mijenjati podneseni dosije.');
                 }
 
-                if ($incomplete) {
-                    DB::afterCommit(fn () => $this->deliverNotice($assessment));
-                }
-
                 return ProcessWriteResult::ok($assessment->id);
             });
         } catch (\RuntimeException $exception) {
             return ProcessWriteResult::failed($exception->getMessage());
         }
+
+        if ($result->succeeded) {
+            $this->releaseAdministrativeReview($competition, $actor);
+        }
+
+        return $result;
+    }
+
+    /**
+     * When every finally submitted application has an assessment: send each incomplete
+     * notice once, then record the first-session date once. Later steps do not move that date.
+     *
+     * @return list<int> assessment ids whose notice was marked sent in this call
+     */
+    public function releaseAdministrativeReview(Competition $competition, User $actor): array
+    {
+        $pendingIds = DB::transaction(function () use ($competition, $actor): array {
+            $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
+            if ($locked === null || ! $this->governance->isCanonicalCompetition($locked)) {
+                return [];
+            }
+
+            $applicationIds = Application::query()
+                ->where('competition_id', $locked->id)
+                ->where('status', '!=', 'draft')
+                ->whereHas('finalClaim')
+                ->lockForUpdate()
+                ->pluck('id');
+            if ($applicationIds->isEmpty()) {
+                return [];
+            }
+
+            $latestIds = ApplicationCompletenessAssessment::query()
+                ->selectRaw('max(id) as id')
+                ->whereIn('application_id', $applicationIds)
+                ->groupBy('application_id')
+                ->pluck('id');
+            if ($latestIds->count() !== $applicationIds->count()) {
+                return [];
+            }
+
+            $this->recordFirstSessionDateOnce($locked, $actor);
+
+            $pending = ApplicationCompletenessAssessment::query()
+                ->whereIn('id', $latestIds)
+                ->where('outcome', ApplicationCompletenessAssessment::INCOMPLETE)
+                ->whereNull('notice_sent_at')
+                ->lockForUpdate()
+                ->get();
+            $sentAt = now();
+            foreach ($pending as $assessment) {
+                $assessment->forceFill(['notice_sent_at' => $sentAt])->save();
+            }
+
+            return $pending->pluck('id')->map(fn ($id) => (int) $id)->all();
+        });
+
+        DB::afterCommit(function () use ($pendingIds): void {
+            foreach ($pendingIds as $assessmentId) {
+                $assessment = ApplicationCompletenessAssessment::query()->find($assessmentId);
+                if ($assessment !== null) {
+                    $this->deliverNotice($assessment);
+                }
+            }
+        });
+
+        return $pendingIds;
+    }
+
+    private function recordFirstSessionDateOnce(Competition $competition, User $actor): void
+    {
+        $exists = CommissionSession::query()
+            ->where('competition_id', $competition->id)
+            ->where('session_type', CommissionSession::TYPE_FIRST)
+            ->exists();
+        if ($exists || $competition->commission_id === null) {
+            return;
+        }
+
+        CommissionSession::query()->create([
+            'competition_id' => $competition->id,
+            'commission_id' => $competition->commission_id,
+            'session_type' => CommissionSession::TYPE_FIRST,
+            'canonical_purpose' => CanonicalCommissionGovernance::PURPOSE_ORDINARY,
+            'held_at' => now(),
+            'recorded_by_user_id' => $actor->id,
+            'notes' => 'Datum prve sjednice evidentiran završetkom administrativne provjere svih podnesenih prijava.',
+        ]);
     }
 
     public function recordBlockReason(Application $application, User $actor): ?string
@@ -126,9 +210,7 @@ class CompletenessAssessmentService
             return self::STAGE_LOCKED_MESSAGE;
         }
 
-        $phase = $competition->isCanonicalTestMode()
-            ? $this->governance->ordinarySessionBlockReason($competition)
-            : $this->governance->commissionProcessBlockReason($competition);
+        $phase = $this->governance->administrativePhaseBlockReason($competition);
         if ($phase !== null) {
             return $phase;
         }

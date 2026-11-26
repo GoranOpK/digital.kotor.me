@@ -125,7 +125,7 @@ final class CanonicalOutcomeService
             return ProcessWriteResult::failed(self::TEXT_TOO_LONG_MESSAGE);
         }
 
-        return DB::transaction(function () use ($competition, $chair, $applicationId, $outcome) {
+        return DB::transaction(function () use ($competition, $actor, $chair, $applicationId, $outcome) {
             $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->firstOrFail();
             if (CanonicalFinalRanking::query()->where('competition_id', $locked->id)->exists()) {
                 return ProcessWriteResult::failed(self::ALREADY_CONFIRMED_MESSAGE);
@@ -168,6 +168,19 @@ final class CanonicalOutcomeService
                 ],
             );
 
+            $rankedIds = Application::query()
+                ->where('competition_id', $locked->id)
+                ->whereNotNull('ranking_position')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id);
+            $recordedIds = CanonicalOutcome::query()
+                ->where('competition_id', $locked->id)
+                ->pluck('application_id')
+                ->map(fn ($id) => (int) $id);
+            if ($rankedIds->isNotEmpty() && $rankedIds->diff($recordedIds)->isEmpty()) {
+                $this->confirm($locked, $actor);
+            }
+
             return ProcessWriteResult::ok($record->id);
         });
     }
@@ -188,9 +201,7 @@ final class CanonicalOutcomeService
             if ($locked->canonical_ranking_formed_at === null) {
                 return ProcessWriteResult::failed(self::RANKING_REQUIRED_MESSAGE);
             }
-            if (CanonicalFinalRanking::query()->where('competition_id', $locked->id)->exists()) {
-                return ProcessWriteResult::failed(self::ALREADY_CONFIRMED_MESSAGE);
-            }
+            $existing = CanonicalFinalRanking::query()->where('competition_id', $locked->id)->first();
 
             $applications = Application::query()->where('competition_id', $locked->id)->orderBy('id')->lockForUpdate()->get();
             $ranked = $applications->filter(fn (Application $application) => $application->ranking_position !== null)->values();
@@ -227,12 +238,20 @@ final class CanonicalOutcomeService
             if ($reason !== null) {
                 return ProcessWriteResult::failed($reason);
             }
+            if ($existing !== null) {
+                return ProcessWriteResult::ok($existing->id);
+            }
 
-            $session = $this->finalDecisionSession($locked);
+            $session = CommissionSession::query()
+                ->where('competition_id', $locked->id)
+                ->where('session_type', CommissionSession::TYPE_THIRD)
+                ->where('canonical_purpose', CanonicalCommissionGovernance::PURPOSE_FINAL_DECISION)
+                ->whereNotNull('completed_at')
+                ->first();
             $ranking = CanonicalFinalRanking::query()->create([
                 'competition_id' => $locked->id,
                 'commission_id' => $locked->commission_id,
-                'final_decision_session_id' => $session->id,
+                'final_decision_session_id' => $session?->id,
                 'confirmed_by_member_id' => $chair->id,
                 'budget' => $budget,
                 'total_approved' => $this->allocation->totalSupported($rows, $inputs),
@@ -256,7 +275,7 @@ final class CanonicalOutcomeService
                 $resolution->forceFill(['locked_at' => now()])->save();
             }
 
-            return ProcessWriteResult::ok($ranking->id, $session->compliance_warning);
+            return ProcessWriteResult::ok($ranking->id, $session?->compliance_warning);
         });
     }
 
@@ -389,7 +408,7 @@ final class CanonicalOutcomeService
             return self::RANKING_REQUIRED_MESSAGE;
         }
 
-        return $this->governance->finalDecisionSessionBlockReason($competition);
+        return null;
     }
 
     /**

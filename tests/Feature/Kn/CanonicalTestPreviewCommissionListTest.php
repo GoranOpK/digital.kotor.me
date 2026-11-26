@@ -72,7 +72,8 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         $this->assertTrue($preview->isCanonicalTestPreview());
         $this->assertFalse($preview->isApplicationDeadlinePassed());
 
-        $reviewUrl = route('evaluation.canonical-review.show', $submitted);
+        $p1Url = route('applications.canonical-p1.edit', $submitted);
+        $p2Url = route('applications.canonical-p2.edit', $submitted);
         $this->actingAs($chair)
             ->get(route('admin.competitions.show', $preview))
             ->assertOk()
@@ -82,7 +83,8 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
             ->assertSee('U obradi')
             ->assertSee('P1a popunjen')
             ->assertSee('P2 popunjen')
-            ->assertSee($reviewUrl)
+            ->assertSee($p1Url)
+            ->assertSee($p2Url)
             ->assertSee(route('admin.applications.show', $submitted))
             ->assertSee(route('evaluation.create', $submitted))
             ->assertDontSee('Sjednice Komisije')
@@ -96,14 +98,25 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
             ->assertDontSee('Skriveni Nacrt MMSP')
             ->assertDontSee(self::HIDDEN_UNTIL_DEADLINE);
 
-        $this->actingAs($chair)->get(route('applications.canonical-p1.edit', $submitted))->assertRedirect(route('dashboard'));
-        $this->actingAs($chair)->get(route('applications.canonical-p2.edit', $submitted))->assertRedirect(route('dashboard'));
-        $this->actingAs($chair)->get($reviewUrl)->assertOk()->assertSee('Obrazac P1a');
+        $this->actingAs($chair)
+            ->get($p1Url)
+            ->assertOk()
+            ->assertSee('Obrazac P1a')
+            ->assertDontSee('id="p1a-save-button"', false);
+        $this->actingAs($chair)
+            ->put($p1Url, [])
+            ->assertRedirect(route('dashboard'));
+        $this->actingAs($chair)
+            ->get($p2Url)
+            ->assertOk()
+            ->assertSee('Obrazac P2')
+            ->assertDontSee('id="p2-save-button"', false);
         $this->actingAs($chair)
             ->get(route('evaluation.create', $submitted))
             ->assertOk()
-            ->assertSee('Sjednice Komisije')
-            ->assertSee('Provjera potpunosti i prigovori');
+            ->assertSee('Administrativna provjera')
+            ->assertDontSee('Sjednice Komisije')
+            ->assertDontSee('Provjera potpunosti i prigovori');
 
         $published = $this->openCompetition($commission, self::CANONICAL, 'published', false);
         $this->application($published, 'Skriveni Redovni MMSP');

@@ -535,9 +535,8 @@
                                         'rejected' => 'Odbijena',
                                     ];
                                     $statusClass = 'status-'.$app->status;
-                                    $formReviewUrl = ($isCommissionMember && ! $isAdmin)
-                                        ? route('evaluation.canonical-review.show', $app)
-                                        : route('admin.competitions.canonical-review.show', [$competition, $app]);
+                                    $p1Url = route('applications.canonical-p1.edit', $app);
+                                    $p2Url = route('applications.canonical-p2.edit', $app);
                                 @endphp
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
                                     <td style="padding: 12px; vertical-align: top;">{{ $planTitle }}</td>
@@ -549,7 +548,7 @@
                                     </td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($canonicalForm)
-                                            <a href="{{ $formReviewUrl }}" class="status-badge status-evaluated" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
+                                            <a href="{{ $p1Url }}" class="status-badge status-evaluated" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
                                                 {{ $formCode }} popunjen
                                             </a>
                                         @else
@@ -558,7 +557,7 @@
                                     </td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($canonicalPlan)
-                                            <a href="{{ $formReviewUrl }}" class="status-badge status-evaluated" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
+                                            <a href="{{ $p2Url }}" class="status-badge status-evaluated" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
                                                 P2 popunjen
                                             </a>
                                         @else

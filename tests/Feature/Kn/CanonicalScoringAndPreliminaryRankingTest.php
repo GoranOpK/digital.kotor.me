@@ -217,11 +217,12 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->confirmOrdinarySession($competition);
         $this->assertTrue(app(CompletenessAssessmentService::class)
             ->record($incomplete, $members[G::ROLE_PREDSJEDNIK]->user, ApplicationCompletenessAssessment::INCOMPLETE, 'Nedostaje prilog.')->succeeded);
-        $this->confirmedSession($competition, $members);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
 
-        $this->assertSame(G::SCORING_STAGE_CLOSED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $pending));
-        $this->assertSame(G::SCORING_STAGE_CLOSED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $incomplete));
+        $this->assertSame(G::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $pending));
+        $this->assertSame(G::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $incomplete));
+        $this->assertTrue(app(CompletenessAssessmentService::class)
+            ->record($pending, $chair, ApplicationCompletenessAssessment::COMPLETE)->succeeded);
 
         Carbon::setTestNow(Carbon::parse('2026-09-14 10:00:01', 'Europe/Belgrade'));
         $this->assertSame(CanonicalReviewState::INCOMPLETE, CanonicalReviewState::resolve($incomplete->fresh()));
@@ -271,11 +272,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->complete($application, $members);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
 
-        $this->assertSame(G::INTERVIEW_REQUIRED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $application));
-        $this->assertForbiddenWith(G::INTERVIEW_REQUIRED_MESSAGE, fn () => $this->score($members[G::ROLE_PREDSJEDNIK], $application, 40));
-        $this->actingAs($chair)
-            ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), ['scoring_confirmed' => '1']))
-            ->assertForbidden();
+        $this->assertNull($this->scoring()->canonicalScoreWriteBlockReason($chair, $application));
+        $this->score($members[G::ROLE_PREDSJEDNIK], $application, 40);
 
         $unconfirmed = app(CanonicalCommissionSessionService::class)->record($competition, $chair, G::PURPOSE_INTERVIEW, now(), [
             $members[G::ROLE_PREDSJEDNIK]->id => G::ATTENDANCE_IN_PERSON,
@@ -283,8 +281,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             $members[G::ROLE_SPOLJASNJI]->id => G::ATTENDANCE_REMOTE,
         ]);
         $this->assertTrue($unconfirmed->succeeded, (string) $unconfirmed->error);
-        $this->assertSame(G::INTERVIEW_REQUIRED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $application));
-        $this->assertSame(0, EvaluationScore::query()->count());
+        $this->assertSame(1, EvaluationScore::query()->count());
     }
 
     public function test_scoring_is_rejected_before_the_commission_phase_and_opens_after_the_full_canonical_flow(): void
@@ -321,27 +318,18 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $assertScoringBlocked(G::APPLICATION_DEADLINE_OPEN_MESSAGE);
         $this->assertSame(G::APPLICATION_DEADLINE_OPEN_MESSAGE, $completeness->record($application, $chair, ApplicationCompletenessAssessment::COMPLETE)->error);
 
-        // Deadline passed, but no ordinary session yet: the phase gate precedes the interview gate.
+        // Deadline passed. Scoring stays closed until every submitted application is reviewed.
+        // An electronic session or quorum record is not a prerequisite.
         Carbon::setTestNow(Carbon::parse('2026-09-22 10:00:00', 'Europe/Belgrade'));
         $this->assertTrue($competition->fresh()->isApplicationDeadlinePassed());
-        $assertScoringBlocked(G::ORDINARY_SESSION_REQUIRED_MESSAGE);
-        $this->assertSame(G::ORDINARY_SESSION_REQUIRED_MESSAGE, $completeness->record($application, $chair, ApplicationCompletenessAssessment::COMPLETE)->error);
-
-        // Recorded but unconfirmed ordinary session is not enough.
-        $ordinary = app(CanonicalCommissionSessionService::class)->record($competition, $chair, G::PURPOSE_ORDINARY, now(), [
-            $members[G::ROLE_PREDSJEDNIK]->id => G::ATTENDANCE_IN_PERSON,
-            $members[G::ROLE_SEKRETAR]->id => G::ATTENDANCE_IN_PERSON,
-            $members[G::ROLE_SPOLJASNJI]->id => G::ATTENDANCE_REMOTE,
-        ]);
-        $this->assertTrue($ordinary->succeeded, (string) $ordinary->error);
-        $assertScoringBlocked(G::ORDINARY_SESSION_REQUIRED_MESSAGE);
-        $this->assertSame(0, ApplicationCompletenessAssessment::query()->count());
-
-        // Valid order: confirmed ordinary session → COMPLETE → confirmed interview → scoring.
-        $this->confirmOrdinarySession($competition);
-        $assertScoringBlocked(G::INTERVIEW_REQUIRED_MESSAGE);
-        $this->complete($application, $members);
-        $this->confirmedSession($competition, $members);
+        $assertScoringBlocked(G::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE);
+        $this->assertTrue($completeness->record($application, $chair, ApplicationCompletenessAssessment::COMPLETE)->succeeded);
+        $this->assertNotNull(
+            CommissionSession::query()
+                ->where('competition_id', $competition->id)
+                ->where('canonical_purpose', G::PURPOSE_ORDINARY)
+                ->value('held_at')
+        );
 
         foreach ($members as $member) {
             $this->assertNull($this->scoring()->canonicalScoreWriteBlockReason($member->user, $application->fresh()));
@@ -550,14 +538,12 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $scored = $this->finalApplication($competition);
         $other = $this->finalApplication($competition);
         $this->complete($scored, $members);
-        $this->confirmedSession($competition, $members);
+        $this->assertTrue(app(CompletenessAssessmentService::class)
+            ->record($other, $members[G::ROLE_PREDSJEDNIK]->user, ApplicationCompletenessAssessment::INCOMPLETE, 'Nedostaje prilog.')->succeeded);
         $this->scoreAll($members, $scored, [42, 42, 42]);
 
         $this->assertSame(S::CANONICAL_REVIEW_UNRESOLVED_MESSAGE, $this->scoring()->canonicalCycleBlockReason($competition->fresh()));
         $this->assertFalse($this->scoring()->canonicalRankingIsFormed($competition));
-
-        $this->assertTrue(app(CompletenessAssessmentService::class)
-            ->record($other, $members[G::ROLE_PREDSJEDNIK]->user, ApplicationCompletenessAssessment::INCOMPLETE, 'Nedostaje prilog.')->succeeded);
         $this->assertSame(CanonicalReviewState::COMPLAINT_ELIGIBLE, CanonicalReviewState::resolve($other->fresh()));
         $this->assertFalse($this->scoring()->persistCanonicalPreliminaryRankingIfReady($competition->fresh()));
         $this->assertSame(S::CANONICAL_REVIEW_UNRESOLVED_MESSAGE, $this->scoring()->canonicalCycleBlockReason($competition->fresh()));

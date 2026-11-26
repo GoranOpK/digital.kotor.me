@@ -754,12 +754,8 @@
                                     <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
                                         Pregled konkursa
                                     </a>
-                                    @if($competition->isRankingFormed())
-                                        @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-                                            <a href="{{ route('evaluation.canonical-outcome.show', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
-                                                Rang lista
-                                            </a>
-                                        @elseif($competition->isOmladinskoProfile())
+                                    @if($competition->isRankingFormed() && $competition->type !== \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                                        @if($competition->isOmladinskoProfile())
                                             <a href="{{ route('evaluation.youth-ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
                                                 Rang lista
                                             </a>

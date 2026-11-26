@@ -109,11 +109,12 @@ class CanonicalTestPreviewScoringTest extends TestCase
         $this->actingAs($chair)
             ->get(route('evaluation.create', $incomplete))
             ->assertOk()
-            ->assertSee(G::SCORING_STAGE_CLOSED_MESSAGE);
+            ->assertSee(G::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE);
         $this->assertForbiddenSee(
-            G::SCORING_STAGE_CLOSED_MESSAGE,
+            G::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE,
             fn () => $this->actingAs($chair)->post(route('evaluation.store', $incomplete), $this->scorePayload()),
         );
+        $this->recordComplete($incomplete, $members);
 
         $outsider = User::factory()->create([
             'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
@@ -128,15 +129,14 @@ class CanonicalTestPreviewScoringTest extends TestCase
         $this->confirmOrdinarySession($unconfirmed);
         $this->recordComplete($waiting, $members);
         $this->recordInterview($unconfirmed, $members, false);
-        $this->assertForbiddenSee(
-            G::INTERVIEW_REQUIRED_MESSAGE,
-            fn () => $this->actingAs($chair)->post(route('evaluation.store', $waiting), $this->scorePayload()),
-        );
+        $this->actingAs($chair)
+            ->post(route('evaluation.store', $waiting), $this->scorePayload())
+            ->assertRedirect();
 
         $noOrdinary = $this->previewCompetition($competition->commission);
         $early = $this->application($noOrdinary);
         $this->assertForbiddenSee(
-            G::ORDINARY_SESSION_REQUIRED_MESSAGE,
+            G::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE,
             fn () => $this->actingAs($chair)->post(route('evaluation.store', $early), $this->scorePayload()),
         );
 

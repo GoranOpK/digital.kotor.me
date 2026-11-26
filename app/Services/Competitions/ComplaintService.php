@@ -259,7 +259,7 @@ class ComplaintService
             return self::ALREADY_DECIDED_MESSAGE;
         }
 
-        return $this->governance->commissionProcessBlockReason($competition);
+        return $this->governance->administrativePhaseBlockReason($competition);
     }
 
     /**

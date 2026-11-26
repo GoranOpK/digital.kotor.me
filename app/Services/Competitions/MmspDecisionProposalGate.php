@@ -50,7 +50,7 @@ class MmspDecisionProposalGate
             ->where('competition_id', $competition->id)
             ->first();
 
-        return $ranking !== null && $ranking->isFinal();
+        return $ranking !== null;
     }
 
     private function isActiveChairman(Competition $competition, User $user): bool

@@ -129,6 +129,8 @@ class CanonicalCommissionGovernance
     public const APPLICATION_DEADLINE_OPEN_MESSAGE = 'Postupak Komisije (provjera potpunosti i prigovori) počinje tek nakon isteka roka za prijave.';
 
     public const ORDINARY_SESSION_REQUIRED_MESSAGE = 'Provjera potpunosti i odluka o prigovoru zahtijevaju potvrđenu redovnu (prvu) sjednicu Komisije sa kvorumom od najmanje 2 od 3 važeća člana.';
+
+    public const ADMINISTRATIVE_REVIEW_PENDING_MESSAGE = 'Bodovanje počinje kada predsjednik završi administrativnu provjeru svih podnesenih prijava.';
     public static function roleLabel(?string $role): string
     {
         return self::ROLE_LABELS[$role] ?? 'Nepoznata uloga';
@@ -376,6 +378,71 @@ class CanonicalCommissionGovernance
     }
 
     /**
+     * Deadline and a usable Commission, without an electronic session or quorum record.
+     * The duty to hold the session stays outside this gate.
+     */
+    public function administrativePhaseBlockReason(Competition $competition): ?string
+    {
+        if (
+            ! $competition->isCanonicalTestMode()
+            && ! $competition->isApplicationDeadlinePassed()
+            && ! in_array($competition->status, ['closed', 'completed'], true)
+        ) {
+            return self::APPLICATION_DEADLINE_OPEN_MESSAGE;
+        }
+
+        if ($competition->isCommissionProcessingBlocked()) {
+            return Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE;
+        }
+
+        return null;
+    }
+
+    /**
+     * Scoring opens only after every finally submitted application has an assessment,
+     * incomplete notices have been sent, and the first-session date has been recorded once.
+     */
+    public function administrativeReviewReleased(Competition $competition): bool
+    {
+        if (! $this->isCanonicalCompetition($competition)) {
+            return false;
+        }
+
+        $applicationIds = Application::query()
+            ->where('competition_id', $competition->id)
+            ->where('status', '!=', 'draft')
+            ->whereHas('finalClaim')
+            ->pluck('id');
+        if ($applicationIds->isEmpty()) {
+            return false;
+        }
+
+        $latestIds = ApplicationCompletenessAssessment::query()
+            ->selectRaw('max(id) as id')
+            ->whereIn('application_id', $applicationIds)
+            ->groupBy('application_id')
+            ->pluck('id');
+        if ($latestIds->count() !== $applicationIds->count()) {
+            return false;
+        }
+
+        $noticeMissing = ApplicationCompletenessAssessment::query()
+            ->whereIn('id', $latestIds)
+            ->where('outcome', ApplicationCompletenessAssessment::INCOMPLETE)
+            ->whereNull('notice_sent_at')
+            ->exists();
+        if ($noticeMissing) {
+            return false;
+        }
+
+        return CommissionSession::query()
+            ->where('competition_id', $competition->id)
+            ->where('canonical_purpose', self::PURPOSE_ORDINARY)
+            ->whereNotNull('held_at')
+            ->exists();
+    }
+
+    /**
      * Confirmed attendance is historical: a later vacancy or replacement does not reopen the quorum.
      */
     public function ordinarySessionBlockReason(Competition $competition): ?string
@@ -449,14 +516,13 @@ class CanonicalCommissionGovernance
             return $reason;
         }
 
-        $phase = $this->commissionProcessBlockReason($competition);
+        $phase = $this->administrativePhaseBlockReason($competition);
         if ($phase !== null) {
             return $phase;
         }
 
-        $interview = $this->interviewBlockReason($competition);
-        if ($interview !== null) {
-            return $interview;
+        if (! $this->administrativeReviewReleased($competition)) {
+            return self::ADMINISTRATIVE_REVIEW_PENDING_MESSAGE;
         }
 
         if (! $this->scoringStageOpen($application)) {
