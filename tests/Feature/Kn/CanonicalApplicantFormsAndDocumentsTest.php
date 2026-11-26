@@ -724,6 +724,63 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($noStaff->user)->post(route('applications.final-submit', $noStaff))->assertRedirect(route('applications.show', $noStaff));
     }
 
+    public function test_mismatched_ioppd_can_be_removed_and_replaced_until_submit_opens(): void
+    {
+        $owner = $this->makeOwner(UserType::PHYSICAL_PERSON);
+        $application = $this->canonicalDraft($owner, $this->openCall(), [
+            'employee_count' => 3,
+            'variants' => [Catalog::TYPE_IOPPD => Catalog::VARIANT_NO_EMPLOYEES],
+        ]);
+        $ioppd = $application->documents()->where('document_type', Catalog::TYPE_IOPPD)->sole();
+        $library = $this->libraryDocument($owner, 'ioppd.pdf');
+        $ioppd->update([
+            'user_document_id' => $library->id,
+            'file_path' => $library->file_path,
+        ]);
+        $reason = 'Prema broju zaposlenih iz Obrasca P1a prilaže se IOPPD obrazac, ne potvrda da nema zaposlenih.';
+
+        $blocked = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk();
+        $blocked->assertSee($reason, false);
+        $blocked->assertDontSee('Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.', false);
+        $blocked->assertSee('Ukloni', false);
+        $blocked->assertSee('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?', false);
+        $blocked->assertDontSee('value="'.Catalog::TYPE_IOPPD.'"', false);
+
+        $this->actingAs($owner)
+            ->delete(route('applications.document.destroy', [$application, $ioppd]))
+            ->assertRedirect(route('applications.show', $application))
+            ->assertSessionHas('success', 'Dokument je uspješno obrisan.');
+        $this->assertNull(ApplicationDocument::query()->find($ioppd->id));
+        $this->assertSame(0, CanonicalDocumentEvidence::query()->where('application_document_id', $ioppd->id)->count());
+        $this->assertNotNull($library->fresh());
+        $this->assertSame($library->file_path, $library->fresh()->file_path);
+
+        $removed = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk();
+        $removed->assertSee('value="'.Catalog::TYPE_IOPPD.'"', false);
+        $removed->assertSee('Nedostaje prilog:', false);
+
+        $this->uploadFromLibrary($owner, $application, Catalog::TYPE_IOPPD, [
+            'document_variant' => Catalog::VARIANT_IOPPD,
+        ])->assertSessionHasNoErrors();
+        $this->assertSame(
+            Catalog::VARIANT_IOPPD,
+            CanonicalDocumentEvidence::query()->where('application_id', $application->id)->where('document_type', Catalog::TYPE_IOPPD)->sole()->variant
+        );
+
+        $ready = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk();
+        $ready->assertSee(route('applications.final-submit', $application), false);
+        $ready->assertDontSee($reason, false);
+        $ready->assertDontSee('disabled style="width:100%; background:#9ca3af;"', false);
+
+        $this->actingAs($owner)->post(route('applications.final-submit', $application))
+            ->assertRedirect(route('applications.show', $application));
+        $this->assertSame('submitted', $application->fresh()->status);
+
+        $this->actingAs($owner)->get(route('applications.show', $application))
+            ->assertOk()
+            ->assertDontSee('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?', false);
+    }
+
     public function test_thirty_day_validity_and_missing_items_are_rechecked_at_final(): void
     {
         $call = $this->openCall();

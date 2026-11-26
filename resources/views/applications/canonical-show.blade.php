@@ -146,6 +146,8 @@
     .btn-primary:hover { background: var(--primary-dark); }
     .btn-secondary { background:#6b7280; color:#fff; }
     .btn-secondary:hover { background:#4b5563; }
+    .btn-danger { background:#ef4444; color:#fff; }
+    .btn-danger:hover { background:#dc2626; }
     .alert {
         border-radius: 12px;
         padding: 16px 20px;
@@ -433,9 +435,17 @@
                                 </form>
                             @else
                                 <button class="btn btn-secondary" disabled style="width:100%; background:#9ca3af;">Podnesi prijavu</button>
-                                <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center;">
-                                    Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.
-                                </span>
+                                @if($blockers !== [])
+                                    @foreach($blockers as $blocker)
+                                        <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center; display:block;">
+                                            {{ $blocker }}
+                                        </span>
+                                    @endforeach
+                                @else
+                                    <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center;">
+                                        Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.
+                                    </span>
+                                @endif
                             @endif
                         </div>
                     @endif
@@ -684,6 +694,18 @@
                         @if($uploaded)
                             <div class="document-actions">
                                 <a class="btn btn-primary" target="_blank" href="{{ route('applications.document.view', [$application, $row['document']]) }}">Pregled</a>
+                                @if($canManage)
+                                    <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $row['document']]) }}"
+                                          method="POST"
+                                          style="display: inline;"
+                                          onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                                            Ukloni
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         @endif
                     </li>
