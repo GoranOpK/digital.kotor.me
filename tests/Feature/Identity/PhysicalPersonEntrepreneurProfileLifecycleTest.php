@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Identity;
 
+use App\Identity\CanonicalIdentityReader;
 use App\Identity\CanonicalIdentityWriter;
 use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Runtime\DerivedUserTypeMirror;
+use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
@@ -587,9 +590,298 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Informacije o korisniku', $html);
+        $this->assertDashboardLabeledValue($html, 'Tip korisnika', UserType::LIMITED_LIABILITY_COMPANY);
+        $this->assertDashboardLabeledValue($html, 'Naziv privrednog subjekta', 'Primjer DOO');
+        $this->assertDashboardLabeledValue($html, 'Ime i prezime ovlašćenog lica', 'Marko Marković');
+        $this->assertDashboardLabeledValue($html, 'JMB ovlašćenog lica', '0000000000000');
         $this->assertDashboardLabeledValue($html, 'PIB', '12345672');
+        $this->assertDashboardLabeledValue($html, 'CRPS', '50000001');
+        $this->assertStringNotContainsString('<span class="info-label">Ime i prezime</span>', $html);
         $this->assertStringNotContainsString('<span class="info-label">Poslovno ime</span>', $html);
-        $this->assertStringNotContainsString('<span class="info-label">CRPS</span>', $html);
+    }
+
+    public function test_legal_entity_profile_shows_one_name_form_and_locked_jmb_and_crps(): void
+    {
+        $user = $this->legalEntityUser();
+
+        $html = $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($html, 'Ime ovlašćenog lica'));
+        $this->assertSame(1, substr_count($html, 'Prezime ovlašćenog lica'));
+        $this->assertStringContainsString('id="account_first_name"', $html);
+        $this->assertStringNotContainsString('id="first_name"', $html);
+        $this->assertStringContainsString('type="hidden" name="first_name"', $html);
+        $this->assertStringContainsString('id="authorized_person_jmb"', $html);
+        $this->assertStringContainsString('value="0000000000000"', $html);
+        $this->assertStringContainsString('value="50000001"', $html);
+        $this->assertStringNotContainsString('name="jmb"', $html);
+        $this->assertStringNotContainsString('name="crps_number"', $html);
+        $this->assertStringNotContainsString('name="passport_number"', $html);
+    }
+
+    public function test_legal_entity_account_save_ignores_stale_name_and_posted_jmb_and_crps(): void
+    {
+        $user = $this->legalEntityUser();
+        $pib = '12345672';
+        $storedJmb = '0000000000000';
+        $storedCrps = '50000001';
+
+        $this->actingAs($user)
+            ->put(route('profile.name.update'), [
+                'first_name' => 'Mila',
+                'last_name' => 'Milić',
+                'name_context' => 'profile',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('profile.edit'));
+
+        $this->assertSame('Mila Milić', $user->fresh()->name);
+
+        $this->actingAs($user)
+            ->put(route('profile.update'), [
+                'first_name' => 'Ana',
+                'last_name' => 'Stara',
+                'email' => $user->email,
+                'phone' => '+38267111000',
+                'address' => 'Njegoševa 12',
+                'city' => 'Kotor',
+                'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+                'company_name' => 'Nova DOO',
+                'pib' => $pib,
+                'jmb' => $this->validJmb(71),
+                'crps_number' => $this->validCrps(5, 71),
+                'passport_number' => 'X999999',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard'));
+
+        $saved = (new CanonicalIdentityReader)->forUser($user->fresh());
+        $this->assertSame('Mila', $saved->legalEntity->authorizedPerson->firstName);
+        $this->assertSame('Milić', $saved->legalEntity->authorizedPerson->lastName);
+        $this->assertSame($storedJmb, $saved->legalEntity->authorizedPerson->jmb);
+        $this->assertNull($saved->legalEntity->authorizedPerson->passportNumber);
+        $this->assertSame($storedCrps, $saved->legalEntity->crpsNumber);
+        $this->assertSame('Nova DOO', $saved->legalEntity->legalName);
+        $this->assertSame('+38267111000', $saved->mobilePhone);
+        $this->assertSame('Mila Milić', $user->fresh()->name);
+    }
+
+    public function test_physical_person_and_entrepreneur_profile_fields_stay_editable(): void
+    {
+        $physical = $this->seedPhysicalPerson();
+        $physicalHtml = $this->actingAs($physical)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('id="first_name"', $physicalHtml);
+        $this->assertStringContainsString('name="jmb"', $physicalHtml);
+        $this->assertStringNotContainsString('Naziv privrednog subjekta', $physicalHtml);
+
+        $entrepreneur = $this->seedPhysicalPerson([
+            'isEntrepreneur' => true,
+            'jmb' => $this->validJmb(44),
+        ]);
+        $entrepreneurHtml = $this->actingAs($entrepreneur)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('id="first_name"', $entrepreneurHtml);
+        $this->assertStringContainsString('name="crps_number"', $entrepreneurHtml);
+        $this->assertStringContainsString('name="jmb"', $entrepreneurHtml);
+
+        $dashboard = $this->actingAs($physical)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('<span class="info-label">Ime i prezime</span>', $dashboard);
+        $this->assertStringNotContainsString('Naziv privrednog subjekta', $dashboard);
+        $this->assertStringNotContainsString('Ime i prezime ovlašćenog lica', $dashboard);
+    }
+
+    public function test_rejected_name_values_stay_on_the_main_path_for_people_and_commission(): void
+    {
+        $physical = $this->seedPhysicalPerson(['jmb' => $this->validJmb(81)]);
+        $entrepreneur = $this->seedPhysicalPerson([
+            'isEntrepreneur' => true,
+            'jmb' => $this->validJmb(82),
+            'pib' => $this->validPib(82),
+            'crpsNumber' => $this->validCrps(1, 82),
+            'entrepreneurBusinessName' => 'Radnja Ana',
+        ]);
+        $commission = $this->makeKorisnik([
+            'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
+            'user_type' => null,
+            'residential_status' => null,
+            'jmb' => null,
+            'first_name' => 'Komisija',
+            'last_name' => 'Član',
+            'name' => 'Komisija Član',
+        ]);
+
+        foreach ([
+            'physical' => [$physical, 'Ana'],
+            'entrepreneur' => [$entrepreneur, 'Ana'],
+            'commission' => [$commission, 'Komisija'],
+        ] as [$user, $storedFirst]) {
+            $typed = 'Predugačko'.str_repeat('A', 260);
+            $this->actingAs($user)
+                ->from(route('profile.edit'))
+                ->put(route('profile.name.update'), [
+                    'first_name' => $typed,
+                    'last_name' => 'Prezime',
+                    'name_context' => 'profile',
+                ])
+                ->assertSessionHasErrors('first_name')
+                ->assertRedirect(route('profile.edit'));
+
+            $afterName = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+            $this->assertSame($typed, $this->inputValueById($afterName, 'account_first_name'));
+
+            $this->actingAs($user)
+                ->from(route('profile.edit'))
+                ->put(route('profile.update'), $this->rejectedProfilePayload($user, [
+                    'first_name' => 'Novoime',
+                    'last_name' => 'Nović',
+                ]))
+                ->assertSessionHasErrors('email')
+                ->assertRedirect(route('profile.edit'));
+
+            $afterAccount = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+            $this->assertSame('Novoime', $this->inputValueById($afterAccount, 'account_first_name'));
+            $this->assertSame('Novoime', $this->inputValueById($afterAccount, 'first_name'));
+            $this->assertSame($storedFirst, $user->fresh()->first_name);
+        }
+    }
+
+    public function test_domestic_company_name_card_keeps_the_stored_name_after_a_rejected_profile_save(): void
+    {
+        $user = $this->legalEntityUser();
+        $typed = 'Predugačko'.str_repeat('B', 260);
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('profile.name.update'), [
+                'first_name' => $typed,
+                'last_name' => 'Prezime',
+                'name_context' => 'profile',
+            ])
+            ->assertSessionHasErrors('first_name')
+            ->assertRedirect(route('profile.edit'));
+
+        $afterName = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+        $this->assertSame($typed, $this->inputValueById($afterName, 'account_first_name'));
+
+        $this->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('profile.update'), [
+                'first_name' => 'Novoime',
+                'last_name' => 'Nović',
+                'email' => 'nije-email',
+                'phone' => '+38267111000',
+                'address' => 'Njegoševa 12',
+                'city' => 'Kotor',
+                'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+                'company_name' => 'Primjer DOO',
+                'pib' => '12345672',
+            ])
+            ->assertSessionHasErrors('email')
+            ->assertRedirect(route('profile.edit'));
+
+        $afterAccount = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+        $this->assertSame('Marko', $this->inputValueById($afterAccount, 'account_first_name'));
+        $this->assertStringNotContainsString('id="first_name"', $afterAccount);
+        $this->assertSame('Primjer DOO', $user->fresh()->name);
+    }
+
+    public function test_other_company_forms_follow_the_domestic_company_boundary(): void
+    {
+        foreach ([
+            [UserType::JOINT_STOCK_COMPANY, LegalEntityIdentity::FORM_AD, 83, true],
+            [UserType::GENERAL_PARTNERSHIP, LegalEntityIdentity::FORM_OD, 84, true],
+            [UserType::LIMITED_PARTNERSHIP, LegalEntityIdentity::FORM_KD, 85, true],
+            [UserType::NGO_ASSOCIATION, LegalEntityIdentity::FORM_NVO_ASSOCIATION, 86, false],
+        ] as [$userType, $form, $serial, $domestic]) {
+            $user = $this->companyUser($userType, $form, $serial, 'Subjekt '.$serial);
+            $dashboard = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+            $profile = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+
+            if ($domestic) {
+                $this->assertDashboardLabeledValue($dashboard, 'Naziv privrednog subjekta', 'Subjekt '.$serial);
+                $this->assertDashboardLabeledValue($dashboard, 'Ime i prezime ovlašćenog lica', 'Marko Marković');
+                $this->assertStringNotContainsString('id="first_name"', $profile);
+                $this->assertStringContainsString('id="authorized_person_jmb"', $profile);
+                continue;
+            }
+
+            $this->assertStringContainsString('<span class="info-label">Ime i prezime</span>', $dashboard);
+            $this->assertStringNotContainsString('Naziv privrednog subjekta', $dashboard);
+            $this->assertStringNotContainsString('Ime i prezime ovlašćenog lica', $dashboard);
+            $this->assertSame(2, substr_count($profile, 'Ime ovlašćenog lica'));
+            $this->assertStringContainsString('id="first_name"', $profile);
+            $this->assertStringContainsString('name="jmb"', $profile);
+            $this->assertStringNotContainsString('id="authorized_person_jmb"', $profile);
+        }
+    }
+
+    public function test_foreign_branch_keeps_the_previous_profile_display_and_save_path(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LEGACY_FOREIGN_BRANCH,
+            'residential_status' => null,
+            'jmb' => null,
+            'name' => 'Ogranak CG',
+            'first_name' => null,
+            'last_name' => null,
+            'company_name' => 'Ogranak CG',
+        ]);
+        $snapshot = $this->dspdSnapshot($user);
+        (new CanonicalIdentityWriter)->createForUser($user, $snapshot);
+        (new DerivedUserTypeMirror)->sync($user, $snapshot);
+        $user->refresh();
+
+        $dashboard = $this->actingAs($user)->get(route('dashboard'))->assertOk()->getContent();
+        $this->assertDashboardLabeledValue($dashboard, 'Ime i prezime', 'Ogranak CG');
+        $this->assertDashboardLabeledValue($dashboard, 'PIB', '00000007');
+        $this->assertStringNotContainsString('Naziv privrednog subjekta', $dashboard);
+        $this->assertStringNotContainsString('Ime i prezime ovlašćenog lica', $dashboard);
+        $this->assertStringNotContainsString('<span class="info-label">CRPS</span>', $dashboard);
+
+        $profile = $this->actingAs($user)->get(route('profile.edit'))->assertOk()->getContent();
+        $this->assertSame(2, substr_count($profile, 'Ime ovlašćenog lica'));
+        $this->assertSame(2, substr_count($profile, 'Prezime ovlašćenog lica'));
+        $this->assertStringContainsString('id="first_name"', $profile);
+        $this->assertStringNotContainsString('type="hidden" name="first_name"', $profile);
+        $this->assertSame('Jelena', $this->inputValueById($profile, 'first_name'));
+        $this->assertSame('Jelena', $this->inputValueById($profile, 'account_first_name'));
+        $this->assertStringContainsString('name="jmb"', $profile);
+        $this->assertStringContainsString('name="passport_number"', $profile);
+        $this->assertStringNotContainsString('id="authorized_person_jmb"', $profile);
+        $this->assertStringNotContainsString('id="authorized_entity_crps"', $profile);
+
+        $this->actingAs($user)
+            ->put(route('profile.update'), [
+                'first_name' => 'Novo',
+                'last_name' => 'Ime',
+                'email' => $user->email,
+                'phone' => '+38267000003',
+                'address' => 'Njegoševa 12',
+                'city' => 'Kotor',
+                'user_type' => UserType::LEGACY_FOREIGN_BRANCH,
+                'company_name' => 'Foreign Co',
+                'pib' => '00000007',
+            ])
+            ->assertForbidden()
+            ->assertSee('Ova grana identiteta ne može se mijenjati sa administratorske forme.', false);
+
+        $user->refresh();
+        $saved = (new CanonicalIdentityReader)->forUser($user);
+        $this->assertSame('Ogranak CG', $user->name);
+        $this->assertSame('Jelena', $saved->foreignBranch->representative->firstName);
+        $this->assertSame('Jovanović', $saved->foreignBranch->representative->lastName);
+        $this->assertSame('Foreign Co', $saved->foreignBranch->foreignCompanyName);
     }
 
     public function test_validation_failure_preserves_entrepreneur_selection_and_entered_values(): void
@@ -664,6 +956,93 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
             'residential_status' => 'resident',
             'jmb' => $user->jmb,
         ], $overrides);
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function rejectedProfilePayload(User $user, array $overrides = []): array
+    {
+        $payload = [
+            'email' => 'nije-email',
+            'phone' => $user->phone,
+            'address' => $user->address,
+            'city' => $user->city,
+        ];
+
+        if ($user->user_type === UserType::ENTREPRENEUR) {
+            $payload['user_type'] = UserType::PHYSICAL_PERSON;
+            $payload['registers_as_entrepreneur'] = '1';
+            $payload['residential_status'] = 'resident';
+            $payload['jmb'] = $user->jmb;
+            $payload['entrepreneur_business_name'] = 'Radnja Ana';
+            $payload['pib'] = $this->validPib(82);
+            $payload['crps_number'] = $this->validCrps(1, 82);
+        }
+
+        return array_merge($payload, $overrides);
+    }
+
+    private function companyUser(string $userType, string $legalForm, int $serial, string $legalName): User
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => $userType,
+            'residential_status' => null,
+            'jmb' => null,
+            'pib' => $this->validPib($serial),
+            'company_name' => $legalName,
+            'name' => $legalName,
+            'first_name' => null,
+            'last_name' => null,
+        ]);
+        $snapshot = $this->plSnapshot($user, [
+            'jmb' => $this->validJmb($serial),
+        ], [
+            'legalForm' => $legalForm,
+            'legalName' => $legalName,
+            'pib' => $this->validPib($serial),
+            'crpsNumber' => $this->validCrps(5, $serial),
+            'city' => 'Kotor',
+            'streetAndNumber' => 'Njegoševa 12',
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $snapshot);
+        (new DerivedUserTypeMirror)->sync($user, $snapshot);
+
+        return $user->refresh();
+    }
+
+    private function inputValueById(string $html, string $id): string
+    {
+        $this->assertMatchesRegularExpression(
+            '/<input[^>]*id="'.preg_quote($id, '/').'"[^>]*>/s',
+            $html
+        );
+        preg_match('/<input[^>]*id="'.preg_quote($id, '/').'"[^>]*>/s', $html, $tag);
+        if (! preg_match('/value="([^"]*)"/', $tag[0], $value)) {
+            return '';
+        }
+
+        return html_entity_decode($value[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    private function legalEntityUser(): User
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'residential_status' => null,
+            'jmb' => null,
+            'pib' => '12345672',
+            'company_name' => 'Primjer DOO',
+            'name' => 'Primjer DOO',
+            'first_name' => null,
+            'last_name' => null,
+        ]);
+        $snapshot = $this->plSnapshot($user);
+        (new CanonicalIdentityWriter)->createForUser($user, $snapshot);
+        (new DerivedUserTypeMirror)->sync($user, $snapshot);
+
+        return $user->refresh();
     }
 
     private function platform(User $user): PlatformIdentity

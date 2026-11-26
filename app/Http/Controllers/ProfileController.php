@@ -86,9 +86,17 @@ class ProfileController extends Controller
     private function updateAccount(ProfileUpdateRequest $request, User $user): RedirectResponse
     {
         $service = app(CanonicalHttpIdentityService::class);
-        $user = app(UserNameService::class)->update($user, $request->first_name, $request->last_name);
+        $keepStoredLegalIdentity = $this->keepsStoredLegalEntityIdentity($user);
+        if ($keepStoredLegalIdentity) {
+            $this->restoreStoredLegalEntityIdentity($request, $user);
+        } else {
+            $user = app(UserNameService::class)->update($user, $request->first_name, $request->last_name);
+        }
         $service->updateProfileIdentity($user, $request);
         if ($service->usesCanonicalWrites()) {
+            if ($keepStoredLegalIdentity) {
+                $user->refresh();
+            }
             if ($user->email !== $request->email) {
                 $user->email = strtolower($request->email);
                 $user->email_verified_at = null;
@@ -160,5 +168,42 @@ class ProfileController extends Controller
         ]);
 
         return redirect()->route('profile.edit')->with('success', 'Lozinka je uspješno promijenjena.');
+    }
+
+    /**
+     * Domaće privredno društvo (DOO, AD, OD, KD) ispravlja ime samo kroz
+     * namjensku formu. Polja glavne forme ne smiju vratiti starije ime niti
+     * promijeniti JMB, CRPS ili pasoš. Strane podružnice i ostale kategorije
+     * zadržavaju raniji način čuvanja.
+     */
+    private function keepsStoredLegalEntityIdentity(User $user): bool
+    {
+        return self::domesticCompanyProfile(
+            app(CurrentIdentityResolver::class)->viewFor($user)->userType
+        );
+    }
+
+    public static function domesticCompanyProfile(?string $type): bool
+    {
+        return in_array($type, [
+            UserType::LIMITED_LIABILITY_COMPANY,
+            UserType::JOINT_STOCK_COMPANY,
+            UserType::GENERAL_PARTNERSHIP,
+            UserType::LIMITED_PARTNERSHIP,
+        ], true);
+    }
+
+    private function restoreStoredLegalEntityIdentity(ProfileUpdateRequest $request, User $user): void
+    {
+        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
+        $request->merge([
+            'first_name' => is_string($identity->firstName) ? $identity->firstName : '',
+            'last_name' => is_string($identity->lastName) ? $identity->lastName : '',
+        ]);
+
+        foreach (['jmb', 'crps_number', 'passport_number'] as $field) {
+            $request->request->remove($field);
+            $request->query->remove($field);
+        }
     }
 }

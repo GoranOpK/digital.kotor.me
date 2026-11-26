@@ -3,6 +3,17 @@
     $nameFirst = $accountName ? $user->first_name : $subjectIdentity->firstName;
     $nameLast = $accountName ? $user->last_name : $subjectIdentity->lastName;
     $authorizedName = \App\Support\UserType::isLegalEntity($subjectIdentity->userType);
+    $domesticCompanyProfile = \App\Http\Controllers\ProfileController::domesticCompanyProfile($subjectIdentity->userType);
+    $restoreSubmittedName = $domesticCompanyProfile
+        && old('name_context') !== null
+        && old('company_name') === null
+        && old('phone') === null;
+    $nameFirstValue = $domesticCompanyProfile
+        ? ($restoreSubmittedName ? old('first_name', $nameFirst) : $nameFirst)
+        : old('first_name', $nameFirst);
+    $nameLastValue = $domesticCompanyProfile
+        ? ($restoreSubmittedName ? old('last_name', $nameLast) : $nameLast)
+        : old('last_name', $nameLast);
 @endphp
 <div class="profile-card bg-white rounded-lg p-6 mb-6">
     <h2>{{ $authorizedName ? 'Ime i prezime postojećeg ovlašćenog lica' : 'Ime i prezime' }}</h2>
@@ -18,13 +29,13 @@
         <input type="hidden" name="name_context" value="{{ ($nameFormContext ?? 'name') === 'profile' ? 'profile' : 'name' }}">
         <div class="form-group">
             <label class="form-label" for="account_first_name">{{ $authorizedName ? 'Ime ovlašćenog lica' : 'Ime' }}</label>
-            <input type="text" class="form-control" id="account_first_name" name="first_name" value="{{ old('first_name', $nameFirst) }}" maxlength="255" required
+            <input type="text" class="form-control" id="account_first_name" name="first_name" value="{{ $nameFirstValue }}" maxlength="255" required
                    @error('first_name') aria-invalid="true" aria-describedby="account_first_name_error" @enderror>
             @error('first_name')<p class="form-error" id="account_first_name_error">{{ $message }}</p>@enderror
         </div>
         <div class="form-group">
             <label class="form-label" for="account_last_name">{{ $authorizedName ? 'Prezime ovlašćenog lica' : 'Prezime' }}</label>
-            <input type="text" class="form-control" id="account_last_name" name="last_name" value="{{ old('last_name', $nameLast) }}" maxlength="255" required
+            <input type="text" class="form-control" id="account_last_name" name="last_name" value="{{ $nameLastValue }}" maxlength="255" required
                    @error('last_name') aria-invalid="true" aria-describedby="account_last_name_error" @enderror>
             @error('last_name')<p class="form-error" id="account_last_name_error">{{ $message }}</p>@enderror
         </div>
