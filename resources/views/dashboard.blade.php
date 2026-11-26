@@ -258,8 +258,7 @@
     $isCurrentEntrepreneur = \App\Support\UserType::isEntrepreneur($identityType);
     $isResident = $identityResidency === 'resident';
     $isNonResident = $identityResidency === 'non-resident';
-    $isLegalEntity = \App\Support\UserType::isLegalEntity($identityType);
-    
+
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
         $userTypeLabel = 'Super Administrator';
@@ -605,19 +604,6 @@
             @endif
             </div>
         </div>
-
-        <!-- Brzi servisi (samo za pravna lica, ne za komisiju) -->
-        @if($isLegalEntity && !$isKomisija)
-            <div style="margin-bottom: 24px;">
-                <div class="services-grid" style="margin-top: 0;">
-                    <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                        <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏢</div>
-                        <h3 style="font-size: 16px;">Servisi za pravna lica</h3>
-                        <p style="font-size: 12px;">Izvještaji i administrativne procedure.</p>
-                    </div>
-                </div>
-            </div>
-        @endif
     @endif
 
         <!-- Services - Super Admin (samo Administracija) -->
