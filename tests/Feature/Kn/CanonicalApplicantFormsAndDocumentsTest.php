@@ -19,6 +19,7 @@ use App\Security\JmbDualWrite;
 use App\Services\Competitions\ApplicationEvidenceFreezer;
 use App\Services\Competitions\CanonicalApplicantFormService;
 use App\Services\Competitions\CanonicalBeneficiaryApplications;
+use App\Services\Competitions\CanonicalInvestmentPlanService;
 use App\Services\Competitions\CanonicalDocumentService;
 use App\Services\Competitions\CanonicalReviewBasis;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance as G;
@@ -32,6 +33,7 @@ use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use LogicException;
 use RuntimeException;
@@ -238,12 +240,21 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             $this->assertStringContainsString('>PRIJAVA<', $header);
             $this->assertStringContainsString('na javni konkurs za raspodjelu bespovratnih sredstava', $header);
             $this->assertStringContainsString('namijenjenih za podršku mikro, malim i srednjim preduzećima', $header);
+            $this->assertStringContainsString('Broj prijave:', $header);
             $this->assertStringNotContainsString('Tip prijave', $header);
             $this->assertStringNotContainsString('Test konačno', $header);
-            $this->assertStringNotContainsString('Obrazac P1', $header);
         }
+        $this->assertStringContainsString('Obrazac P1a', $p1a);
+        $this->assertStringNotContainsString('Obrazac P1b', $p1a);
+        $this->assertStringContainsString('Obrazac P1b', $p1b);
+        $this->assertStringNotContainsString('Obrazac P1a', $p1b);
 
-        $this->assertSame($this->headerWithoutApplicationNumber($p1a), $this->headerWithoutApplicationNumber($p1b));
+        $normalize = fn (string $header) => str_replace(
+            ['Obrazac P1a', 'Obrazac P1b'],
+            'Obrazac P1',
+            $this->headerWithoutApplicationNumber($header)
+        );
+        $this->assertSame($normalize($p1a), $normalize($p1b));
         $this->assertSame($p1a, $submitted);
     }
 
@@ -630,23 +641,39 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $owner = $this->makeOwner();
         $application = $this->canonicalDraft($owner, $this->openCall(), ['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
 
+        $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->firstOrFail();
+        $keptTotal = $plan->total_investment;
+        $keptNarrative = $plan->narrative_sections;
+
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), $this->p2Payload(CanonicalSubsidyType::DIGITALIZATION))
             ->assertSessionHasErrors(['subsidy_type' => CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE]);
+        $plan->refresh();
+        $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $plan->subsidy_type);
+        $this->assertSame($keptTotal, $plan->total_investment);
+        $this->assertEquals($keptNarrative, $plan->narrative_sections);
+
         $this->actingAs($owner)
             ->put(route('applications.canonical-p1.update', $application), $this->canonicalP1Payload($application, ['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]))
-            ->assertSessionHasErrors(['subsidy_type' => CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE]);
-        $this->assertSame(CanonicalSubsidyType::INNOVATIVE, CanonicalInvestmentPlan::query()->where('application_id', $application->id)->value('subsidy_type'));
-        $this->assertSame(CanonicalSubsidyType::INNOVATIVE, CanonicalApplicantForm::query()->where('application_id', $application->id)->value('subsidy_type'));
+            ->assertSessionHasNoErrors();
+        $plan->refresh();
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, $plan->subsidy_type);
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, CanonicalApplicantForm::query()->where('application_id', $application->id)->value('subsidy_type'));
+        $this->assertSame($keptTotal, $plan->total_investment);
+        $this->assertEquals($keptNarrative, $plan->narrative_sections);
 
         // A divergence that bypassed the draft checks is still refused at FINAL.
-        CanonicalApplicantForm::query()->where('application_id', $application->id)->update(['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]);
+        CanonicalApplicantForm::query()->where('application_id', $application->id)->update(['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
         $this->actingAs($owner)->post(route('applications.final-submit', $application))
             ->assertSessionHasErrors(['error' => CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE]);
         $this->assertSame('draft', $application->fresh()->status);
         $this->assertSame(0, FinalApplicationClaim::query()->count());
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, $plan->fresh()->subsidy_type);
 
-        CanonicalApplicantForm::query()->where('application_id', $application->id)->update(['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->canonicalP1Payload($application, ['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $plan->fresh()->subsidy_type);
         $this->actingAs($owner)->post(route('applications.final-submit', $application))
             ->assertRedirect(route('applications.show', $application));
 
@@ -655,6 +682,164 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $claim->subsidy_type);
         $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $basis->frozenP1($application->fresh())['subsidy_type']);
         $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $basis->snapshot($application->fresh())['canonical_p2']['subsidy_type']);
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->canonicalP1Payload($application, ['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]))
+            ->assertSessionHasErrors('error');
+        $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $plan->fresh()->subsidy_type);
+        $this->assertEquals($keptNarrative, $plan->fresh()->narrative_sections);
+    }
+
+    public function test_p2_save_adopts_the_subsidy_type_read_after_the_application_lock(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->canonicalDraft($owner, $this->openCall(), ['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
+        $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->firstOrFail();
+        $keptNarrative = $plan->narrative_sections;
+
+        $sawApplicationLock = false;
+        DB::listen(function ($query) use ($application, &$sawApplicationLock): void {
+            $sql = strtolower($query->sql);
+            if ($sawApplicationLock || ! str_contains($sql, 'for update') || ! str_contains($sql, 'applications')) {
+                return;
+            }
+            $sawApplicationLock = true;
+            CanonicalApplicantForm::query()
+                ->where('application_id', $application->id)
+                ->update(['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]);
+        });
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), array_merge($this->p2Payload(CanonicalSubsidyType::INNOVATIVE), [
+                'subsidy_type' => '',
+                'narrative_sections' => $keptNarrative,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue($sawApplicationLock);
+        $plan->refresh();
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, CanonicalApplicantForm::query()->where('application_id', $application->id)->value('subsidy_type'));
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, $plan->subsidy_type);
+        $this->assertEquals($keptNarrative, $plan->narrative_sections);
+        $this->assertSame('1000.00', $plan->total_investment);
+    }
+
+    public function test_p2_subsidy_authority_locks_application_then_p1_then_p2(): void
+    {
+        $method = new \ReflectionMethod(CanonicalInvestmentPlanService::class, 'save');
+        $lines = file($method->getFileName());
+        $body = implode('', array_slice($lines, $method->getStartLine() - 1, $method->getEndLine() - $method->getStartLine() + 1));
+
+        $transaction = strpos($body, 'DB::transaction');
+        $applicationLock = strpos($body, 'Application::query()->whereKey($application->id)->lockForUpdate()');
+        $formLock = strpos($body, 'CanonicalApplicantForm::query()');
+        $mismatch = strpos($body, 'SUBSIDY_MISMATCH_MESSAGE');
+        $adopt = strpos($body, "\$values['subsidy_type'] = \$p1Type");
+        $duplicate = strpos($body, 'subsidyTypeAlreadyTaken');
+        $planLock = strpos($body, 'CanonicalInvestmentPlan::query()');
+        $frozen = strpos($body, 'FROZEN_MESSAGE');
+
+        $this->assertNotFalse($transaction);
+        $beforeTransaction = substr($body, 0, $transaction);
+        $this->assertStringNotContainsString('CanonicalApplicantForm', $beforeTransaction);
+        $this->assertStringNotContainsString('subsidyTypeAlreadyTaken', $beforeTransaction);
+        $this->assertStringContainsString('consistencyErrors', $beforeTransaction);
+        $this->assertTrue($transaction < $applicationLock);
+        $this->assertTrue($applicationLock < $formLock);
+        $this->assertTrue($formLock < $mismatch);
+        $this->assertTrue($mismatch < $adopt);
+        $this->assertTrue($adopt < $duplicate);
+        $this->assertTrue($duplicate < $planLock);
+        $this->assertTrue($planLock < $frozen);
+    }
+
+    public function test_p2_basic_data_follows_the_saved_p1_form_not_the_later_profile(): void
+    {
+        $owner = $this->makeOwner();
+        $call = $this->openCall();
+        $entrepreneur = $this->startedDraft($owner, $call, CanonicalLegalForm::PREDUZETNIK);
+        $this->actingAs($owner)->put(route('applications.canonical-p1.update', $entrepreneur), $this->p1aPayload('02345678', CanonicalSubsidyType::INNOVATIVE, [
+            'person_name' => 'Marko Marković',
+            'address' => 'Njegoševa 1, 85330 Kotor',
+            'activity_code' => '56.10',
+            'employee_count' => '3',
+            'phone' => '067123456',
+            'email' => 'marko@example.com',
+        ]))->assertSessionHasNoErrors();
+
+        $owner->forceFill([
+            'name' => 'Novi Profil',
+            'phone' => '068999999',
+            'address' => 'Druga adresa',
+        ])->save();
+
+        $p1aPage = $this->actingAs($owner)->get(route('applications.canonical-p2.edit', $entrepreneur))->assertOk()->getContent();
+        foreach ([
+            'Ime i prezime preduzetnika',
+            'Adresa preduzetnika',
+            'PIB preduzetnika',
+            'Šifra djelatnosti',
+            'Broj zaposlenih',
+            'Kontakt telefon',
+            'E-mail',
+            'value="Marko Marković"',
+            'value="Njegoševa 1, 85330 Kotor"',
+            'value="02345678"',
+            'value="56.10"',
+            'value="3"',
+            'value="067123456"',
+            'value="marko@example.com"',
+            'Podaci su automatski preuzeti iz Obrasca P1a.',
+            'Subvencije za razvoj inovativnih proizvoda/usluga',
+        ] as $expected) {
+            $this->assertStringContainsString($expected, $p1aPage, $expected);
+        }
+        $this->assertSame(1, substr_count($p1aPage, 'Ime i prezime preduzetnika'));
+        foreach (['Šifra djelatnosti / broj zaposlenih', 'Kontakt i e-mail', 'Podnosilac / naziv društva', '<select id="subsidy_type"'] as $absent) {
+            $this->assertStringNotContainsString($absent, $p1aPage, $absent);
+        }
+        $this->assertStringContainsString('name="subsidy_type" value="'.CanonicalSubsidyType::INNOVATIVE.'"', $p1aPage);
+        $this->assertStringContainsString('FORMA ZA PLAN ULAGANJA', $p1aPage);
+        $this->assertStringContainsString('Obrazac P2', $p1aPage);
+        $this->assertSame(2, substr_count($p1aPage, 'Nazad na pregled prijave'));
+
+        $companyOwner = $this->makeOwner();
+        $company = $this->startedDraft($companyOwner, $call, CanonicalLegalForm::DRUSTVO);
+        $this->actingAs($companyOwner)->put(route('applications.canonical-p1.update', $company), [
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+            'company_name' => 'Primjer d.o.o.',
+            'person_name' => 'Ana Anić',
+            'pib' => '03123456',
+            'address' => 'Stari grad 1, 85330 Kotor',
+            'registration_date' => '2019-02-01',
+            'activity_code' => '62.01',
+            'employee_count' => '5',
+            'bank_account' => '510-0000000000002-22',
+            'phone' => '067111222',
+            'email' => 'drustvo@example.com',
+            'accuracy_confirmed' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $p1bPage = $this->actingAs($companyOwner)->get(route('applications.canonical-p2.edit', $company))->assertOk()->getContent();
+        foreach ([
+            'Naziv društva',
+            'Ime i prezime odgovornog lica',
+            'Sjedište društva',
+            'PIB društva',
+            'Kontakt telefon odgovornog lica',
+            'E-mail odgovornog lica',
+            'value="Primjer d.o.o."',
+            'value="Ana Anić"',
+            'value="03123456"',
+            'value="62.01"',
+            'value="5"',
+            'Podaci su automatski preuzeti iz Obrasca P1b.',
+            'Subvencije za digitalizaciju',
+        ] as $expected) {
+            $this->assertStringContainsString($expected, $p1bPage, $expected);
+        }
+        $this->assertStringNotContainsString('Ime i prezime preduzetnika', $p1bPage);
+        $this->assertStringNotContainsString('Adresa preduzetnika', $p1bPage);
     }
 
     public function test_untyped_p1_blocks_final(): void
@@ -1591,6 +1776,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ['phone', 'email'],
         ], $this->canonicalP1Rows($commissionForm));
         $this->assertStringContainsString('<fieldset disabled', $commissionForm);
+        $this->assertStringContainsString('Obrazac P1a', $commissionForm);
+        $this->assertStringNotContainsString('Tip prijave', $commissionForm);
 
         $this->actingAs($chair)
             ->from(route('evaluation.canonical-review.show', $application))

@@ -28,6 +28,10 @@
 .canonical-ui-page.mmsp-business-plan #p2-save-button.mmsp-p2-save-ready:hover {
     background: #0A347B;
 }
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-locked {
+    background: #f3f4f6;
+    color: #374151;
+}
 @media (max-width: 640px) {
     .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-top {
         flex-direction: row;
@@ -143,6 +147,39 @@
     $redniBroj = $application->redni_broj ?? '—';
     $brojPrijave = $upBroj.'/'.$redniBroj;
     $p1 = $application->canonicalApplicantForm;
+    $p1Entrepreneur = $p1?->isEntrepreneur() ?? false;
+    $p1Code = $p1?->formCode() ?? 'P1a/P1b';
+    $showBasic = function (mixed $value): string {
+        if ($value === null) {
+            return '';
+        }
+
+        return trim((string) $value);
+    };
+    $basicFields = $p1Entrepreneur
+        ? [
+            ['Ime i prezime preduzetnika', $showBasic($p1?->person_name)],
+            ['Adresa preduzetnika', $showBasic($p1?->address)],
+            ['PIB preduzetnika', $showBasic($application->pib)],
+            ['Šifra djelatnosti', $showBasic($p1?->activity_code)],
+            ['Broj zaposlenih', $showBasic($p1?->employee_count)],
+            ['Kontakt telefon', $showBasic($p1?->phone)],
+            ['E-mail', $showBasic($p1?->email)],
+        ]
+        : [
+            ['Naziv društva', $showBasic($p1?->company_name)],
+            ['Ime i prezime odgovornog lica', $showBasic($p1?->person_name)],
+            ['Sjedište društva', $showBasic($p1?->address)],
+            ['PIB društva', $showBasic($application->pib)],
+            ['Šifra djelatnosti', $showBasic($p1?->activity_code)],
+            ['Broj zaposlenih', $showBasic($p1?->employee_count)],
+            ['Kontakt telefon odgovornog lica', $showBasic($p1?->phone)],
+            ['E-mail odgovornog lica', $showBasic($p1?->email)],
+        ];
+    $subsidyCode = is_string($p1?->subsidy_type) ? $p1->subsidy_type : '';
+    $subsidyLabel = \App\Support\CanonicalSubsidyType::isValid($subsidyCode)
+        ? \App\Support\CanonicalSubsidyType::label($subsidyCode)
+        : '';
     $p1Complete = app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
     $p2Ready = app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
 @endphp
@@ -219,53 +256,29 @@
                 <div class="mmsp-form-card">
                     <div class="mmsp-form-section">
                         <h2><span class="mmsp-section-number">I</span> OSNOVNI PODACI</h2>
+                        @foreach(array_chunk($basicFields, 2) as $row)
+                            @if(count($row) === 1)
+                                <div class="mmsp-form-group">
+                                    <label class="mmsp-form-label">{{ $row[0][0] }}</label>
+                                    <input class="mmsp-form-control mmsp-p2-locked" value="{{ $row[0][1] }}" readonly>
+                                </div>
+                            @else
+                                <div class="mmsp-form-row">
+                                    @foreach($row as $field)
+                                        <div>
+                                            <label class="mmsp-form-label">{{ $field[0] }}</label>
+                                            <input class="mmsp-form-control mmsp-p2-locked" value="{{ $field[1] }}" readonly>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @endforeach
+                        <p class="mmsp-form-text">Podaci su automatski preuzeti iz Obrasca {{ $p1Code }}.</p>
                         <div class="mmsp-form-group">
-                            <label class="mmsp-form-label" for="subsidy_type">Vrsta subvencije za koju se aplicira <span class="mmsp-required">*</span></label>
-                            <select id="subsidy_type" name="subsidy_type" class="mmsp-form-control @error('subsidy_type') error @enderror">
-                                <option value="">— izaberite vrstu subvencije —</option>
-                                @foreach($subsidyTypes as $code => $label)
-                                    <option value="{{ $code }}" @selected(old('subsidy_type', $plan?->subsidy_type ?? $p1?->subsidy_type) === $code)>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            <div class="mmsp-form-text">
-                                Jedna prijava odnosi se na jednu vrstu subvencije. Izbor mora biti isti kao u Obrascu {{ $application->canonicalApplicantForm?->formCode() ?? 'P1a/P1b' }}.
-                            </div>
+                            <label class="mmsp-form-label" for="p2-subsidy-display">Vrsta subvencije za koju se aplicira</label>
+                            <input id="subsidy_type" type="hidden" name="subsidy_type" value="{{ $subsidyCode }}">
+                            <input id="p2-subsidy-display" class="mmsp-form-control mmsp-p2-locked @error('subsidy_type') error @enderror" value="{{ $subsidyLabel }}" readonly>
                             @error('subsidy_type')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mmsp-form-card">
-                    <div class="mmsp-form-section">
-                        <div class="mmsp-form-group">
-                            <label class="mmsp-form-label">Osnovni podaci o preduzetniku / društvu (iz Obrasca {{ $p1?->formCode() ?? 'P1' }})</label>
-                            <div class="mmsp-form-row" style="gap:12px;">
-                                <div>
-                                    <label class="mmsp-form-label">Podnosilac / naziv društva</label>
-                                    <input class="mmsp-form-control" value="{{ $p1?->company_name ?: $p1?->person_name }}" readonly>
-                                </div>
-                                <div>
-                                    <label class="mmsp-form-label">Odgovorno lice / preduzetnik</label>
-                                    <input class="mmsp-form-control" value="{{ $p1?->person_name }}" readonly>
-                                </div>
-                                <div>
-                                    <label class="mmsp-form-label">Adresa / sjedište</label>
-                                    <input class="mmsp-form-control" value="{{ $p1?->address }}" readonly>
-                                </div>
-                                <div>
-                                    <label class="mmsp-form-label">PIB</label>
-                                    <input class="mmsp-form-control" value="{{ $application->pib }}" readonly>
-                                </div>
-                                <div>
-                                    <label class="mmsp-form-label">Šifra djelatnosti / broj zaposlenih</label>
-                                    <input class="mmsp-form-control" value="{{ trim(($p1?->activity_code ?? '').' / '.($p1?->employee_count ?? ''), ' /') }}" readonly>
-                                </div>
-                                <div>
-                                    <label class="mmsp-form-label">Kontakt i e-mail</label>
-                                    <input class="mmsp-form-control" value="{{ trim(($p1?->phone ?? '').' / '.($p1?->email ?? ''), ' /') }}" readonly>
-                                </div>
-                            </div>
-                            <p class="mmsp-form-text">Ovi podaci se uređuju u Obrascu {{ $p1?->formCode() ?? 'P1a/P1b' }}, ne ponavljaju se u P2.</p>
                         </div>
                     </div>
                 </div>

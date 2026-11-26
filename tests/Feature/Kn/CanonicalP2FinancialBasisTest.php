@@ -4,6 +4,7 @@ namespace Tests\Feature\Kn;
 
 use App\Models\Application;
 use App\Models\BusinessPlan;
+use App\Models\CanonicalApplicantForm;
 use App\Models\CanonicalInvestmentPlan;
 use App\Models\Competition;
 use App\Models\FinalApplicationClaim;
@@ -53,7 +54,9 @@ class CanonicalP2FinancialBasisTest extends TestCase
             ->assertSee('OČEKIVANI REZULTATI')
             ->assertSee('UTICAJ NA LOKALNU EKONOMIJU')
             ->assertSee('ODRŽIVOST I DUGOROČNI EFEKTI')
-            ->assertSee('value="'.CanonicalSubsidyType::INNOVATIVE.'" selected', false);
+            ->assertSee('Subvencije za razvoj inovativnih proizvoda/usluga', false)
+            ->assertSee('name="subsidy_type" value="'.CanonicalSubsidyType::INNOVATIVE.'"', false)
+            ->assertDontSee('<select id="subsidy_type"', false);
     }
 
     public function test_article17_narratives_save_as_draft_but_are_required_for_final(): void
@@ -114,9 +117,10 @@ class CanonicalP2FinancialBasisTest extends TestCase
     public function test_all_three_subsidy_types_accepted_on_canonical_p2(): void
     {
         $owner = $this->makeOwner();
-        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), p1Typed: false);
+        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), withP2: false, p1Typed: false);
 
         foreach (CanonicalSubsidyType::codes() as $code) {
+            CanonicalApplicantForm::query()->where('application_id', $application->id)->update(['subsidy_type' => $code]);
             $this->actingAs($owner)
                 ->put(route('applications.canonical-p2.update', $application), $this->p2Payload($code))
                 ->assertSessionHasNoErrors()
@@ -147,15 +151,16 @@ class CanonicalP2FinancialBasisTest extends TestCase
     public function test_subsidy_type_required_before_final(): void
     {
         $owner = $this->makeOwner();
-        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL));
+        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), p1Typed: false);
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), array_merge($this->p2Payload(), ['subsidy_type' => '']))
             ->assertSessionHasNoErrors();
+        $this->assertNull($application->canonicalInvestmentPlan()->value('subsidy_type'));
 
         $this->actingAs($owner)
             ->from(route('applications.show', $application))
             ->post(route('applications.final-submit', $application))
-            ->assertSessionHasErrors(['error' => 'Plan ulaganja (Obrazac P2) nije kompletan: Vrsta subvencije je obavezna.']);
+            ->assertSessionHasErrors(['error' => 'Obrazac P1a nije kompletan. Nedostaje: vrsta subvencije.']);
 
         $this->assertSame('draft', $application->fresh()->status);
         $this->assertSame(0, FinalApplicationClaim::query()->count());
@@ -194,7 +199,7 @@ class CanonicalP2FinancialBasisTest extends TestCase
     public function test_p2_financial_frame_persisted_decimal_safe(): void
     {
         $owner = $this->makeOwner();
-        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), p1Typed: false);
+        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), subsidyType: CanonicalSubsidyType::DIGITALIZATION);
 
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), [
@@ -350,10 +355,11 @@ class CanonicalP2FinancialBasisTest extends TestCase
     public function test_draft_p2_is_editable(): void
     {
         $owner = $this->makeOwner();
-        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), 'EDIT', withP2: false, p1Typed: false);
+        $application = $this->draft($owner, $this->openCompetition(CompetitionProfileResolver::TYPE_CANONICAL), 'EDIT', withP2: false);
         $route = route('applications.canonical-p2.update', $application);
 
         $this->actingAs($owner)->put($route, $this->p2Payload(CanonicalSubsidyType::INNOVATIVE))->assertSessionHasNoErrors();
+        CanonicalApplicantForm::query()->where('application_id', $application->id)->update(['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]);
         $this->actingAs($owner)->put($route, $this->p2Payload(CanonicalSubsidyType::DIGITALIZATION, '2000.00'))->assertSessionHasNoErrors();
 
         $plan = $application->canonicalInvestmentPlan()->firstOrFail();
@@ -364,7 +370,8 @@ class CanonicalP2FinancialBasisTest extends TestCase
             ->assertOk()
             ->assertSee('FORMA ZA PLAN ULAGANJA')
             ->assertSee('Obrazac P2')
-            ->assertSee('Subvencije za razvoj autentičnih lokalnih proizvoda/usluga')
+            ->assertSee('Subvencije za digitalizaciju')
+            ->assertDontSee('<select id="subsidy_type"', false)
             ->assertDontSee('biznis ideja');
     }
 
@@ -504,11 +511,13 @@ class CanonicalP2FinancialBasisTest extends TestCase
         $second = $this->draft($owner, $competition, 'SECOND', withP2: false, p1Typed: false);
         $this->assertSame($second->id, app(CanonicalBeneficiaryApplications::class)->userApplicationForCompetition($competition, $owner->id)?->id);
 
+        CanonicalApplicantForm::query()->where('application_id', $second->id)->update(['subsidy_type' => CanonicalSubsidyType::AUTHENTIC_LOCAL]);
         $this->actingAs($owner)
             ->from(route('applications.canonical-p2.edit', $second))
             ->put(route('applications.canonical-p2.update', $second), $this->p2Payload(CanonicalSubsidyType::AUTHENTIC_LOCAL))
             ->assertSessionHasErrors(['subsidy_type' => CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE]);
 
+        CanonicalApplicantForm::query()->where('application_id', $second->id)->update(['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]);
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $second), $this->p2Payload(CanonicalSubsidyType::DIGITALIZATION, '2500.00'))
             ->assertSessionHasNoErrors();

@@ -263,16 +263,21 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 12px;
         margin-top: 12px;
         padding-top: 12px;
         border-top: 1px solid #e5e7eb;
     }
-    .mmsp-p1-number {
+    .mmsp-p1-number,
+    .mmsp-p1-code {
         font-size: 14px;
         font-weight: 700;
         color: #111;
+    }
+    .mmsp-p1-code {
+        margin-left: auto;
+        text-align: right;
     }
     .mmsp-p1-title {
         width: 100%;
@@ -383,7 +388,8 @@
         .mmsp-p1-crest img { height: 2cm !important; }
         .mmsp-p1-meta { margin-top: 12px !important; padding-top: 12px !important; }
         .mmsp-p1-org, .mmsp-p1-contact { font-size: 11.7px !important; }
-        .mmsp-p1-number { font-size: 12.6px !important; }
+        .mmsp-p1-number,
+        .mmsp-p1-code { font-size: 12.6px !important; }
         .mmsp-p1-title { font-size: 19.8px !important; margin-top: 8px !important; }
         .mmsp-p1-subtitle { font-size: 12.6px !important; margin-top: 12px !important; }
         .mmsp-p1-card {
@@ -499,6 +505,7 @@
             </div>
             <div class="mmsp-p1-meta">
                 <div class="mmsp-p1-number">Broj prijave: {{ $brojPrijave }}</div>
+                <div class="mmsp-p1-code">Obrazac {{ $code }}</div>
             </div>
             <h1 class="mmsp-p1-title">PRIJAVA</h1>
             <p class="mmsp-p1-subtitle">
