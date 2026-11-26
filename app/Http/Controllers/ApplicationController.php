@@ -1075,14 +1075,30 @@ class ApplicationController extends Controller
         // KN-SYNC-004: canonical FINAL → FinalSubmissionService (claim + freeze, atomic).
         // Women / Youth keep the existing submit path below (unchanged).
         if ($application->competition?->type === CompetitionProfileResolver::TYPE_CANONICAL) {
-            $result = app(FinalSubmissionService::class)->submit($application, Auth::user());
+            $result = app(FinalSubmissionService::class)->submit(
+                $application,
+                Auth::user(),
+                (string) $request->input('confirm_missing_documents') === '1',
+            );
+
+            if ($result->needsMissingDocumentConfirmation) {
+                return redirect()
+                    ->route('applications.show', $application)
+                    ->with('mmsp_confirm_missing_documents', true)
+                    ->with('mmsp_missing_document_labels', $result->missingDocumentLabels);
+            }
 
             if (! $result->succeeded) {
                 return back()->withErrors(['error' => $result->error]);
             }
 
-            return redirect()->route('applications.show', $application)
+            $redirect = redirect()->route('applications.show', $application)
                 ->with('success', 'Poštovani, vaša prijava će biti proslijeđena komisiji na razmatranje, nakon isteka roka za prijavljivanje!');
+            if ($result->documentWarning !== null) {
+                $redirect->with('document_warning', $result->documentWarning);
+            }
+
+            return $redirect;
         }
 
         if ($application->status !== 'draft') {
@@ -1648,16 +1664,17 @@ class ApplicationController extends Controller
         $isDraft = $application->status === 'draft';
         $writeLocked = $application->isApplicantContentWriteLocked();
 
+        $checkedAt = now();
+        $p1Block = $isDraft ? $forms->finalBlockReason($application) : null;
+        $p2Block = $isDraft
+            ? app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application)
+            : null;
+        $documentBlock = $isDraft ? $documents->finalBlockReason($application, $checkedAt) : null;
+        $documentHardBlock = $isDraft ? $documents->finalBlockReason($application, $checkedAt, true) : null;
         $blockers = [];
-        if ($isDraft) {
-            foreach ([
-                $forms->finalBlockReason($application),
-                app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application),
-                $documents->finalBlockReason($application, now()),
-            ] as $reason) {
-                if ($reason !== null) {
-                    $blockers[] = $reason;
-                }
+        foreach ([$p1Block, $p2Block, $documentBlock] as $reason) {
+            if ($reason !== null) {
+                $blockers[] = $reason;
             }
         }
 
@@ -1673,7 +1690,7 @@ class ApplicationController extends Controller
             'checklist' => $documents->checklist($application, now()),
             'blockers' => $blockers,
             'canManage' => $isDraft && ! $writeLocked,
-            'canSubmit' => $isDraft && ! $writeLocked && $blockers === [],
+            'canSubmit' => $isDraft && ! $writeLocked && $p1Block === null && $p2Block === null && $documentHardBlock === null,
             'canStartAnother' => $canStartAnother,
             'subsidyLabels' => CanonicalSubsidyType::labels(),
             'libraryDocuments' => $isDraft && ! $writeLocked

@@ -349,6 +349,34 @@
             </div>
         @endif
 
+        @if(session('mmsp_confirm_missing_documents') && $application->status === 'draft')
+            <div id="mmsp-missing-documents-warning" class="alert" style="background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e;">
+                <p style="margin: 0 0 8px 0; font-weight: 600;">
+                    Upozorenje prije podnošenja: nisu priloženi svi obavezni prilozi.
+                </p>
+                <p style="margin: 0 0 8px 0;">
+                    @foreach(session('mmsp_missing_document_labels', []) as $label)
+                        Nedostaje prilog: {{ $label }}.@if(! $loop->last)<br>@endif
+                    @endforeach
+                </p>
+                <p style="margin: 0 0 12px 0;">
+                    Prijava ostaje u pripremi. Možete se vratiti na uređivanje i dopuniti priloge, ili svjesno podnijeti prijavu bez dopune. Komisija utvrđuje administrativnu potpunost prijave u skladu sa članom 18 Odluke.
+                </p>
+                <p style="margin: 0 0 12px 0;">
+                    <a href="#application-documents">Vrati se na uređivanje</a>
+                </p>
+                @if($competition?->is_open)
+                    <form method="POST" action="{{ route('applications.final-submit', $application) }}">
+                        @csrf
+                        <input type="hidden" name="confirm_missing_documents" value="1">
+                        <button type="submit" class="btn btn-primary" style="background: #10b981;">
+                            Podnesi prijavu uprkos nedostajućim prilozima
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @endif
+
         <div class="summary-grid">
             <div class="info-card">
                 <h2>Osnovni podaci</h2>
@@ -448,32 +476,17 @@
 
                     @if($application->status === 'draft')
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                            @if($canSubmit)
+                            @if($canSubmit && ! session('mmsp_confirm_missing_documents'))
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
                                     @csrf
                                     <button type="submit" class="btn btn-primary" style="background: #10b981; width: 100%; font-size: 13px;">
                                         🚀 Podnesi prijavu
                                     </button>
                                 </form>
-                            @else
+                            @elseif(! $canSubmit)
                                 <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
                                     Podnesi prijavu
                                 </button>
-                                @if($missingRequiredRows->isNotEmpty())
-                                    <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                                        <p style="font-size: 12px; color: #92400e; margin: 0 0 6px 0; font-weight: 600;">
-                                            ⚠️ Napomena: Niste priložili sva neophodna dokumenta
-                                        </p>
-                                        <p style="font-size: 11px; color: #78350f; margin: 0;">
-                                            @foreach($missingRequiredRows as $row)
-                                                Nedostaje prilog: {{ $row['label'] }}.@if(! $loop->last)<br>@endif
-                                            @endforeach
-                                        </p>
-                                        <p style="font-size: 11px; color: #78350f; margin: 6px 0 0 0;">
-                                            Prijava se ne može podnijeti dok nisu priloženi svi obavezni dokumenti.
-                                        </p>
-                                    </div>
-                                @endif
                                 @if($noticeBlockers !== [])
                                     @foreach($noticeBlockers as $blocker)
                                         <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center; display:block;">
@@ -485,6 +498,23 @@
                                         Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.
                                     </span>
                                 @endif
+                            @endif
+                            @if($missingRequiredRows->isNotEmpty())
+                                <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                    <p style="font-size: 12px; color: #92400e; margin: 0 0 6px 0; font-weight: 600;">
+                                        ⚠️ Napomena: Niste priložili sva neophodna dokumenta
+                                    </p>
+                                    <p style="font-size: 11px; color: #78350f; margin: 0;">
+                                        @foreach($missingRequiredRows as $row)
+                                            Nedostaje prilog: {{ $row['label'] }}.@if(! $loop->last)<br>@endif
+                                        @endforeach
+                                    </p>
+                                    @if($canSubmit)
+                                        <p style="font-size: 11px; color: #78350f; margin: 6px 0 0 0;">
+                                            Možete podnijeti prijavu uz izričitu potvrdu. Komisija utvrđuje administrativnu potpunost prijave u skladu sa članom 18 Odluke.
+                                        </p>
+                                    @endif
+                                </div>
                             @endif
                         </div>
                     @endif

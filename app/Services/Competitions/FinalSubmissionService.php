@@ -14,7 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Canonical FINAL — one atomic transaction:
- * validate (P1a/P1b, Kotor address, P2, P1/P2 subsidy type, čl.14 documents, beneficiary PIB)
+ * validate (P1a/P1b, Kotor address, P2, P1/P2 subsidy type, čl.14 defects other than a
+ * confirmed absence of required uploads, beneficiary PIB)
  * → freeze → claim → status → submitted_at → redni_broj. No Women business plan / Obrazac 1a/1b gate.
  *
  * Profile isolation: only CompetitionProfileResolver::TYPE_CANONICAL.
@@ -34,14 +35,14 @@ final class FinalSubmissionService
     ) {
     }
 
-    public function submit(Application $application, User $actor): FinalSubmissionResult
+    public function submit(Application $application, User $actor, bool $confirmMissingDocuments = false): FinalSubmissionResult
     {
         if ((int) $application->user_id !== (int) $actor->id) {
             return FinalSubmissionResult::failed('Nemate pristup ovoj prijavi.');
         }
 
         try {
-            return DB::transaction(function () use ($application, $actor) {
+            return DB::transaction(function () use ($application, $actor, $confirmMissingDocuments) {
                 $locked = Application::query()->whereKey($application->id)->lockForUpdate()->first();
                 if (! $locked || (int) $locked->user_id !== (int) $actor->id) {
                     return FinalSubmissionResult::failed('Nemate pristup ovoj prijavi.');
@@ -106,9 +107,14 @@ final class FinalSubmissionService
                     return FinalSubmissionResult::failed(CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE);
                 }
 
-                $documentError = $this->documents->finalBlockReason($locked, now());
+                $checkedAt = now();
+                $missingLabels = $this->documents->missingRequiredUploadLabels($locked, $checkedAt);
+                $documentError = $this->documents->finalBlockReason($locked, $checkedAt, true);
                 if ($documentError !== null) {
                     return FinalSubmissionResult::failed($documentError);
+                }
+                if ($missingLabels !== [] && ! $confirmMissingDocuments) {
+                    return FinalSubmissionResult::needsMissingDocumentConfirmation($missingLabels);
                 }
 
                 $beneficiaryPib = Pib::normalize($locked->pib);
@@ -151,7 +157,11 @@ final class FinalSubmissionService
                     'redni_broj' => ($maxRedni ?? 0) + 1,
                 ]);
 
-                return FinalSubmissionResult::submitted();
+                $documentWarning = $missingLabels === []
+                    ? null
+                    : 'Napomena: nisu priloženi svi obavezni prilozi ('.implode(', ', $missingLabels).'). Podnošenje je evidentirano. Komisija utvrđuje administrativnu potpunost prijave u skladu sa članom 18 Odluke.';
+
+                return FinalSubmissionResult::submitted($documentWarning);
             });
         } catch (QueryException $exception) {
             if ($this->isUniqueViolation($exception)) {
