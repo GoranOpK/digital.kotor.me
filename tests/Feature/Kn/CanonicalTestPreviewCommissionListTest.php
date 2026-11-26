@@ -3,6 +3,8 @@
 namespace Tests\Feature\Kn;
 
 use App\Models\Application;
+use App\Models\CanonicalApplicantForm;
+use App\Models\CanonicalInvestmentPlan;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -10,6 +12,8 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance as G;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CanonicalLegalForm;
+use App\Support\CanonicalSubsidyType;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -53,18 +57,53 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         $preview = $this->openCompetition($commission, self::CANONICAL, 'draft', true);
         $submitted = $this->application($preview, 'Vidljivi Podnosilac MMSP');
         $this->application($preview, 'Skriveni Nacrt MMSP', 'draft');
+        $form = CanonicalApplicantForm::query()->create([
+            'application_id' => $submitted->id,
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ]);
+        $plan = CanonicalInvestmentPlan::query()->create([
+            'application_id' => $submitted->id,
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ]);
+        $form->forceFill(['frozen_at' => now()])->save();
+        $plan->forceFill(['frozen_at' => now()])->save();
 
         $this->assertTrue($preview->isCanonicalTestPreview());
         $this->assertFalse($preview->isApplicationDeadlinePassed());
 
+        $reviewUrl = route('evaluation.canonical-review.show', $submitted);
         $this->actingAs($chair)
             ->get(route('admin.competitions.show', $preview))
             ->assertOk()
+            ->assertSee('Naziv plana ulaganja')
+            ->assertSee('Plan Vidljivi Podnosilac MMSP')
             ->assertSee('Vidljivi Podnosilac MMSP')
-            ->assertSee('Podnesena')
+            ->assertSee('U obradi')
+            ->assertSee('P1a popunjen')
+            ->assertSee('P2 popunjen')
+            ->assertSee($reviewUrl)
             ->assertSee(route('admin.applications.show', $submitted))
+            ->assertSee(route('evaluation.create', $submitted))
+            ->assertDontSee('Sjednice Komisije')
+            ->assertDontSee('Provjera potpunosti i prigovori')
+            ->assertDontSee(route('evaluation.canonical-sessions.show', $preview))
+            ->assertDontSee(route('evaluation.canonical-review.index', $preview))
+            ->assertDontSee('Podnesena')
+            ->assertDontSee('Dokumentacija')
+            ->assertDontSee('zamrznut')
+            ->assertDontSee('>Provjera potpunosti<', false)
             ->assertDontSee('Skriveni Nacrt MMSP')
             ->assertDontSee(self::HIDDEN_UNTIL_DEADLINE);
+
+        $this->actingAs($chair)->get(route('applications.canonical-p1.edit', $submitted))->assertRedirect(route('dashboard'));
+        $this->actingAs($chair)->get(route('applications.canonical-p2.edit', $submitted))->assertRedirect(route('dashboard'));
+        $this->actingAs($chair)->get($reviewUrl)->assertOk()->assertSee('Obrazac P1a');
+        $this->actingAs($chair)
+            ->get(route('evaluation.create', $submitted))
+            ->assertOk()
+            ->assertSee('Sjednice Komisije')
+            ->assertSee('Provjera potpunosti i prigovori');
 
         $published = $this->openCompetition($commission, self::CANONICAL, 'published', false);
         $this->application($published, 'Skriveni Redovni MMSP');
@@ -120,7 +159,10 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.competitions.show', $competition))
             ->assertOk()
+            ->assertSee('Naziv biznis plana')
             ->assertSee(self::HIDDEN_UNTIL_DEADLINE)
+            ->assertDontSee('Naziv plana ulaganja')
+            ->assertDontSee('Sjednice Komisije')
             ->assertDontSee($applicantName)
             ->assertDontSee('Ocijeni');
     }
