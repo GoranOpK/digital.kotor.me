@@ -144,23 +144,38 @@
                 @csrf
                 @method('PUT')
 
+                @php
+                    $legalEntityProfile = \App\Support\UserType::isLegalEntity($subjectIdentity->userType)
+                        && ! \App\Support\UserType::isForeignBranch($subjectIdentity->userType);
+                    $profileFirstName = app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user)
+                        ? $user->first_name
+                        : $subjectIdentity->firstName;
+                    $profileLastName = app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user)
+                        ? $user->last_name
+                        : $subjectIdentity->lastName;
+                @endphp
+                @if($legalEntityProfile)
+                    <input type="hidden" name="first_name" value="{{ $profileFirstName }}">
+                    <input type="hidden" name="last_name" value="{{ $profileLastName }}">
+                @else
                 <div class="form-group">
-                    <label for="first_name" class="form-label">{{ \App\Support\UserType::isLegalEntity($subjectIdentity->userType) ? 'Ime ovlašćenog lica' : 'Ime' }} <span class="required">*</span></label>
+                    <label for="first_name" class="form-label">Ime <span class="required">*</span></label>
                     <input type="text" name="first_name" id="first_name" class="form-control" 
-                           value="{{ old('first_name', app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user) ? $user->first_name : $subjectIdentity->firstName) }}" required>
+                           value="{{ old('first_name', $profileFirstName) }}" required>
                     @error('first_name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="last_name" class="form-label">{{ \App\Support\UserType::isLegalEntity($subjectIdentity->userType) ? 'Prezime ovlašćenog lica' : 'Prezime' }} <span class="required">*</span></label>
+                    <label for="last_name" class="form-label">Prezime <span class="required">*</span></label>
                     <input type="text" name="last_name" id="last_name" class="form-control" 
-                           value="{{ old('last_name', app(\App\Identity\Runtime\UserNameService::class)->isAccountOnly($user) ? $user->last_name : $subjectIdentity->lastName) }}" required>
+                           value="{{ old('last_name', $profileLastName) }}" required>
                     @error('last_name')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
+                @endif
 
                 <div class="form-group">
                     <label for="email" class="form-label">Email adresa <span class="required">*</span></label>
@@ -279,6 +294,7 @@
                     @enderror
                 </div>
 
+                @if(! $legalEntityProfile)
                 <div id="physicalPersonFields" class="{{ $isNaturalPerson ? '' : 'conditional-field' }}" style="{{ $isNaturalPerson ? '' : 'display: none;' }}">
                     <div class="form-group">
                         <label for="jmb" class="form-label">JMB @if(old('residential_status', $subjectIdentity->residentialStatus) === 'resident')<span class="required">*</span>@endif</label>
@@ -300,6 +316,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
                 @if($isNaturalPersonIdentity)
                 <div id="entrepreneurFields" class="{{ $isEntrepreneur ? '' : 'conditional-field' }}" style="{{ $isEntrepreneur ? '' : 'display: none;' }}">
@@ -375,9 +392,30 @@
                             Poreski identifikacioni broj (8 cifara)
                         </div>
                     </div>
+                    @if($legalEntityProfile)
+                    <div class="form-group">
+                        <label for="authorized_person_jmb" class="form-label">JMB ovlašćenog lica</label>
+                        <input type="text" id="authorized_person_jmb" class="form-control"
+                               value="{{ $subjectIdentity->jmb }}"
+                               readonly disabled>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            JMB ovlašćenog lica se ne može mijenjati na ovoj stranici.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="authorized_entity_crps" class="form-label">Broj registracije u CRPS</label>
+                        <input type="text" id="authorized_entity_crps" class="form-control"
+                               value="{{ $subjectIdentity->crpsNumber }}"
+                               readonly disabled>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            CRPS se ne može mijenjati na ovoj stranici.
+                        </div>
+                    </div>
+                    @endif
                 </div>
                 @endif
 
+                @if(! $legalEntityProfile)
                 <!-- Polje za passport (opciono za nerezidente fizička lica / preduzetnike) -->
                 <div id="passportFields" class="{{ ($isNaturalPerson && old('residential_status', $subjectIdentity->residentialStatus) !== 'resident') ? '' : 'conditional-field' }}" style="{{ ($isNaturalPerson && old('residential_status', $subjectIdentity->residentialStatus) !== 'resident') ? '' : 'display: none;' }}">
                     <div class="form-group">
@@ -394,6 +432,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
                     @endif
 
                 <div style="display: flex; gap: 12px; margin-top: 24px;">

@@ -217,6 +217,9 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Preduzetnik', $html);
+        $this->assertStringContainsString('<span class="info-label">Ime i prezime</span>', $html);
+        $this->assertStringNotContainsString('Naziv privrednog subjekta', $html);
+        $this->assertStringNotContainsString('Ime i prezime ovlašćenog lica', $html);
         $this->assertStringNotContainsString('Servisi za pravna lica', $html);
     }
 
@@ -271,10 +274,44 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
 
         $this->assertStringContainsString('Informacije o korisniku', $html);
         $this->assertMatchesRegularExpression(
+            '/<span class="info-label">Naziv privrednog subjekta<\/span>\s*<span class="info-value">Firma DOO<\/span>/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/<span class="info-label">Ime i prezime ovlašćenog lica<\/span>\s*<span class="info-value">Ana Anić<\/span>/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/<span class="info-label">JMB ovlašćenog lica<\/span>\s*<span class="info-value">N\/A<\/span>/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
             '/<span class="info-label">PIB<\/span>\s*<span class="info-value">12345678<\/span>/',
             $html
         );
+        $this->assertStringNotContainsString('<span class="info-label">Ime i prezime</span>', $html);
         $this->assertStringNotContainsString('<span class="info-label">Poslovno ime</span>', $html);
         $this->assertStringNotContainsString('<span class="info-label">CRPS</span>', $html);
+    }
+
+    public function test_unassigned_commission_member_keeps_the_personal_name_label(): void
+    {
+        $user = $this->makeKorisnik([
+            'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'residential_status' => null,
+            'jmb' => null,
+            'pib' => '12345678',
+            'company_name' => 'Firma DOO',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('<span class="info-label">Ime i prezime</span>', $html);
+        $this->assertStringNotContainsString('Naziv privrednog subjekta', $html);
+        $this->assertStringNotContainsString('Ime i prezime ovlašćenog lica', $html);
     }
 }

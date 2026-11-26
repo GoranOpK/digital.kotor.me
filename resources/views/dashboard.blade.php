@@ -259,6 +259,7 @@
     $isResident = $identityResidency === 'resident';
     $isNonResident = $identityResidency === 'non-resident';
     $isLegalEntity = \App\Support\UserType::isLegalEntity($identityType);
+    $showLegalEntityIdentity = $isLegalEntity && ! \App\Support\UserType::isForeignBranch($identityType);
     
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
@@ -376,6 +377,53 @@
                     <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni</a>
                 </div>
                 <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                    @if($showLegalEntityIdentity)
+                        @php
+                            $authorizedPersonName = trim((string) ($subjectIdentity->firstName ?? '').' '.(string) ($subjectIdentity->lastName ?? ''));
+                        @endphp
+                        <div class="info-item">
+                            <span class="info-label">Tip korisnika</span>
+                            <span class="info-value">{{ $userTypeLabel }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Naziv privrednog subjekta</span>
+                            <span class="info-value">{{ $subjectIdentity->companyName ?: 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ime i prezime ovlašćenog lica</span>
+                            <span class="info-value">{{ $authorizedPersonName !== '' ? $authorizedPersonName : 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">JMB ovlašćenog lica</span>
+                            <span class="info-value">{{ $subjectIdentity->jmb ?: 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">PIB</span>
+                            <span class="info-value">{{ $subjectIdentity->pib ?: 'N/A' }}</span>
+                        </div>
+                        @if($subjectIdentity->crpsNumber)
+                            <div class="info-item">
+                                <span class="info-label">CRPS</span>
+                                <span class="info-value">{{ $subjectIdentity->crpsNumber }}</span>
+                            </div>
+                        @endif
+                        <div class="info-item">
+                            <span class="info-label">Email adresa</span>
+                            <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Broj telefona</span>
+                            <span class="info-value">{{ $subjectIdentity->phone ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Adresa</span>
+                            <span class="info-value">{{ $subjectIdentity->address ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Grad</span>
+                            <span class="info-value">{{ $subjectIdentity->city ?? 'N/A' }}</span>
+                        </div>
+                    @else
                     <div class="info-item">
                         <span class="info-label">Tip korisnika</span>
                         <span class="info-value">{{ $userTypeLabel }}</span>
@@ -430,6 +478,7 @@
                             <span class="info-label">PIB</span>
                             <span class="info-value">{{ $subjectIdentity->pib }}</span>
                         </div>
+                    @endif
                     @endif
                 </div>
             </div>
