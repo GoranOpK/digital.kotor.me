@@ -270,6 +270,8 @@ class CanonicalUserModelProfileDashboardTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Informacije o korisniku', $html);
+        $this->assertStringNotContainsString('Servisi za pravna lica', $html);
+        $this->assertStringNotContainsString('Izvještaji i administrativne procedure.', $html);
         $this->assertMatchesRegularExpression(
             '/<span class="info-label">PIB<\/span>\s*<span class="info-value">12345678<\/span>/',
             $html
