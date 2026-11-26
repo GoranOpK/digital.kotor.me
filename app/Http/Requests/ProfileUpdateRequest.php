@@ -2,10 +2,16 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Controllers\ProfileController;
+use App\Identity\CanonicalIdentityReadException;
+use App\Identity\CanonicalIdentityReader;
 use App\Identity\Runtime\CanonicalIdentifierUniqueness;
 use App\Identity\Runtime\CurrentIdentityResolver;
 use App\Identity\Validation\CrpsIdentifierValidator;
+use App\Identity\Validation\JmbIdentifierValidator;
+use App\Models\PhysicalPersonIdentity;
 use App\Models\User;
+use App\Security\JmbEncryptedReadException;
 use App\Rules\ValidCrps;
 use App\Rules\ValidPib;
 use App\Support\KotorAddress;
@@ -121,8 +127,15 @@ class ProfileUpdateRequest extends FormRequest
                 'size:'.Pib::LENGTH,
                 'regex:'.Pib::REGEX,
             ];
-            $rules['jmb'] = ['nullable'];
             $rules['company_name'] = ['required', 'string', 'max:255'];
+            if ($this->domesticCompanyTypeForValidation() !== null) {
+                $rules['crps_number'] = ['nullable', 'string', 'regex:/^[0-9]{8}$/'];
+                $rules['jmb'] = $this->authorizedPersonUsesPassport()
+                    ? ['nullable']
+                    : ['nullable', 'string', 'regex:/^[0-9]{13}$/'];
+            } else {
+                $rules['jmb'] = ['nullable'];
+            }
         }
 
         if ($this->input('residential_status') !== 'resident' && UserType::requiresResidentialStatus($incomingType)) {
@@ -178,6 +191,8 @@ class ProfileUpdateRequest extends FormRequest
             if ($this->collectsLegalEntityPib()) {
                 $this->refinePibUniqueness($validator);
             }
+
+            $this->refineDomesticCompanyIdentifiers($validator);
         });
 
         $validator->after(function (Validator $validator): void {
@@ -318,6 +333,82 @@ class ProfileUpdateRequest extends FormRequest
         if (app(CanonicalIdentifierUniqueness::class)->pibTaken($pib, $userId)) {
             $validator->errors()->add('pib', CanonicalIdentifierUniqueness::PIB_TAKEN_MESSAGE);
         }
+    }
+
+    private function domesticCompanyTypeForValidation(): ?string
+    {
+        $current = $this->currentSubjectType($this->user());
+        if (! ProfileController::domesticCompanyProfile($current)) {
+            return null;
+        }
+
+        $posted = $this->input('user_type');
+        if (is_string($posted) && ProfileController::domesticCompanyProfile($posted)) {
+            return $posted;
+        }
+
+        return $current;
+    }
+
+    private function authorizedPersonUsesPassport(): bool
+    {
+        $user = $this->user();
+        if ($user === null || ! config('identity.canonical_read')) {
+            return false;
+        }
+
+        try {
+            $documentType = app(CanonicalIdentityReader::class)
+                ->forUser($user)
+                ->legalEntity?->authorizedPerson?->idDocumentType;
+        } catch (CanonicalIdentityReadException|JmbEncryptedReadException) {
+            return false;
+        }
+
+        return $documentType === PhysicalPersonIdentity::DOCUMENT_PASSPORT;
+    }
+
+    private function refineDomesticCompanyIdentifiers(Validator $validator): void
+    {
+        $type = $this->domesticCompanyTypeForValidation();
+        $mark = match ($type) {
+            UserType::LIMITED_LIABILITY_COMPANY => CrpsIdentifierValidator::MARK_DOO,
+            UserType::JOINT_STOCK_COMPANY => CrpsIdentifierValidator::MARK_AD,
+            UserType::GENERAL_PARTNERSHIP => CrpsIdentifierValidator::MARK_OD,
+            UserType::LIMITED_PARTNERSHIP => CrpsIdentifierValidator::MARK_KD,
+            default => null,
+        };
+        if ($mark === null) {
+            return;
+        }
+
+        if (! $this->authorizedPersonUsesPassport()) {
+            $jmb = $this->input('jmb');
+            if (is_string($jmb) && preg_match('/^[0-9]{13}$/', $jmb) && ! $validator->errors()->has('jmb')) {
+                if (! (new JmbIdentifierValidator)->isValid($jmb)) {
+                    $validator->errors()->add('jmb', 'JMB nije ispravan.');
+                }
+            }
+        }
+
+        $crps = $this->input('crps_number');
+        if (! is_string($crps) || ! preg_match('/^[0-9]{8}$/', $crps) || $validator->errors()->has('crps_number')) {
+            return;
+        }
+
+        $crpsValidator = new CrpsIdentifierValidator;
+        if ($crpsValidator->isValid($crps, $mark)) {
+            return;
+        }
+
+        $validator->errors()->forget('crps_number');
+        if (! $crpsValidator->isValid($crps)) {
+            $validator->errors()->add('crps_number', 'CRPS registracioni broj nije ispravan.');
+
+            return;
+        }
+
+        $validator->errors()->add('crps_number', 'CRPS registracioni broj ne odgovara izabranom pravnom obliku.');
     }
 
     private function refineJmbUniqueness(Validator $validator): void

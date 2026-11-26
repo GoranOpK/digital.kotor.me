@@ -9,6 +9,7 @@ use App\Identity\IdentitySnapshot;
 use App\Identity\LegalEntitySnapshot;
 use App\Identity\PersonInRoleSnapshot;
 use App\Identity\PhysicalPersonSnapshot;
+use App\Models\LegalEntityIdentity;
 use App\Models\PhysicalPersonIdentity;
 use App\Models\PlatformIdentity;
 use App\Models\User;
@@ -151,6 +152,20 @@ final class ProfileIdentityMapper
         }
 
         $person = $pl->authorizedPerson;
+        $jmb = $person->jmb;
+        $crpsNumber = $pl->crpsNumber;
+        if ($this->domesticCompanyForm($this->registrationMapper->legalForm($incomingType))) {
+            if ($person->idDocumentType !== PhysicalPersonIdentity::DOCUMENT_PASSPORT) {
+                $postedJmb = trim((string) $request->input('jmb', ''));
+                if ($postedJmb !== '') {
+                    $jmb = $postedJmb;
+                }
+            }
+            $postedCrps = trim((string) $request->input('crps_number', ''));
+            if ($postedCrps !== '') {
+                $crpsNumber = $postedCrps;
+            }
+        }
 
         return new IdentitySnapshot(
             userId: (int) $user->id,
@@ -170,14 +185,24 @@ final class ProfileIdentityMapper
                     firstName: (string) $request->input('first_name'),
                     lastName: (string) $request->input('last_name'),
                     idDocumentType: $person->idDocumentType,
-                    jmb: $person->jmb,
+                    jmb: $jmb,
                     passportNumber: $person->passportNumber,
                     passportIssuingCountryCode: $person->passportIssuingCountryCode,
                 ),
                 pib: $request->has('pib') ? ($request->input('pib') ?: null) : $pl->pib,
-                crpsNumber: $pl->crpsNumber,
+                crpsNumber: $crpsNumber,
             ),
         );
+    }
+
+    private function domesticCompanyForm(?string $legalForm): bool
+    {
+        return in_array($legalForm, [
+            LegalEntityIdentity::FORM_DOO,
+            LegalEntityIdentity::FORM_AD,
+            LegalEntityIdentity::FORM_OD,
+            LegalEntityIdentity::FORM_KD,
+        ], true);
     }
 
     public function snapshotForAdminContact(User $user, string $firstName, string $lastName, ?string $phone): IdentitySnapshot

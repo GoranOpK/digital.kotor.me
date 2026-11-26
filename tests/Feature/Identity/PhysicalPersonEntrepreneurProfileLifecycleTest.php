@@ -600,7 +600,7 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
         $this->assertStringNotContainsString('<span class="info-label">Poslovno ime</span>', $html);
     }
 
-    public function test_legal_entity_profile_shows_one_name_form_and_locked_jmb_and_crps(): void
+    public function test_legal_entity_profile_shows_one_name_form_and_editable_jmb_and_crps(): void
     {
         $user = $this->legalEntityUser();
 
@@ -615,19 +615,19 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
         $this->assertStringNotContainsString('id="first_name"', $html);
         $this->assertStringContainsString('type="hidden" name="first_name"', $html);
         $this->assertStringContainsString('id="authorized_person_jmb"', $html);
+        $this->assertStringContainsString('name="jmb"', $html);
+        $this->assertStringContainsString('name="crps_number"', $html);
         $this->assertStringContainsString('value="0000000000000"', $html);
         $this->assertStringContainsString('value="50000001"', $html);
-        $this->assertStringNotContainsString('name="jmb"', $html);
-        $this->assertStringNotContainsString('name="crps_number"', $html);
         $this->assertStringNotContainsString('name="passport_number"', $html);
     }
 
-    public function test_legal_entity_account_save_ignores_stale_name_and_posted_jmb_and_crps(): void
+    public function test_legal_entity_account_save_keeps_the_name_and_stores_posted_jmb_and_crps(): void
     {
         $user = $this->legalEntityUser();
         $pib = '12345672';
-        $storedJmb = '0000000000000';
-        $storedCrps = '50000001';
+        $newJmb = $this->validJmb(71);
+        $newCrps = $this->validCrps(5, 71);
 
         $this->actingAs($user)
             ->put(route('profile.name.update'), [
@@ -651,22 +651,26 @@ class PhysicalPersonEntrepreneurProfileLifecycleTest extends TestCase
                 'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
                 'company_name' => 'Nova DOO',
                 'pib' => $pib,
-                'jmb' => $this->validJmb(71),
-                'crps_number' => $this->validCrps(5, 71),
+                'jmb' => $newJmb,
+                'crps_number' => $newCrps,
                 'passport_number' => 'X999999',
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('dashboard'));
 
         $saved = (new CanonicalIdentityReader)->forUser($user->fresh());
+        $fresh = $user->fresh();
         $this->assertSame('Mila', $saved->legalEntity->authorizedPerson->firstName);
         $this->assertSame('Milić', $saved->legalEntity->authorizedPerson->lastName);
-        $this->assertSame($storedJmb, $saved->legalEntity->authorizedPerson->jmb);
+        $this->assertSame($newJmb, $saved->legalEntity->authorizedPerson->jmb);
         $this->assertNull($saved->legalEntity->authorizedPerson->passportNumber);
-        $this->assertSame($storedCrps, $saved->legalEntity->crpsNumber);
+        $this->assertSame(PhysicalPersonIdentity::DOCUMENT_JMB, $saved->legalEntity->authorizedPerson->idDocumentType);
+        $this->assertSame($newCrps, $saved->legalEntity->crpsNumber);
         $this->assertSame('Nova DOO', $saved->legalEntity->legalName);
         $this->assertSame('+38267111000', $saved->mobilePhone);
-        $this->assertSame('Mila Milić', $user->fresh()->name);
+        $this->assertSame('Mila Milić', $fresh->name);
+        $this->assertNull($fresh->getRawOriginal('jmb'));
+        $this->assertNull($fresh->getRawOriginal('jmb_lookup'));
     }
 
     public function test_physical_person_and_entrepreneur_profile_fields_stay_editable(): void
