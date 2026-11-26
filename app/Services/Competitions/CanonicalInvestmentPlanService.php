@@ -69,12 +69,16 @@ final class CanonicalInvestmentPlanService
         [$values, $errors] = $this->normalize($input);
         $errors += $this->consistencyErrors($values, false);
 
-        if ($errors === [] && $values['subsidy_type'] !== null) {
+        if ($errors === []) {
             $p1Type = CanonicalApplicantForm::query()->where('application_id', $application->id)->value('subsidy_type');
-            if ($p1Type !== null && $p1Type !== $values['subsidy_type']) {
+            $p1Type = is_string($p1Type) && $p1Type !== '' ? $p1Type : null;
+            if ($values['subsidy_type'] !== null && $values['subsidy_type'] !== $p1Type) {
                 $errors['subsidy_type'] = CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE;
-            } elseif ($this->beneficiaries->subsidyTypeAlreadyTaken($application, $values['subsidy_type'])) {
-                $errors['subsidy_type'] = CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE;
+            } else {
+                $values['subsidy_type'] = $p1Type;
+                if ($p1Type !== null && $this->beneficiaries->subsidyTypeAlreadyTaken($application, $p1Type)) {
+                    $errors['subsidy_type'] = CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE;
+                }
             }
         }
 

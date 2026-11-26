@@ -191,15 +191,10 @@ final class CanonicalApplicantFormService
         $jmbgToAssign = $this->p1aJmbgToAssign($form, $application, $actor, $input, $errors);
 
         if (! isset($errors['subsidy_type']) && $values['subsidy_type'] !== null) {
-            $p2Type = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->value('subsidy_type');
-            if ($p2Type !== null && $p2Type !== $values['subsidy_type']) {
-                $errors['subsidy_type'] = self::SUBSIDY_MISMATCH_MESSAGE;
-            } else {
-                $probe = clone $application;
-                $probe->pib = $pib ?? $application->pib;
-                if ($this->beneficiaries->subsidyTypeAlreadyTaken($probe, $values['subsidy_type'])) {
-                    $errors['subsidy_type'] = CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE;
-                }
+            $probe = clone $application;
+            $probe->pib = $pib ?? $application->pib;
+            if ($this->beneficiaries->subsidyTypeAlreadyTaken($probe, $values['subsidy_type'])) {
+                $errors['subsidy_type'] = CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE;
             }
         }
 
@@ -233,6 +228,14 @@ final class CanonicalApplicantFormService
                 JmbDualWrite::assignLogical($locked, 'applicant_jmbg', $jmbgToAssign);
             }
             $locked->forceFill(['pib' => $pib])->save();
+
+            $plan = CanonicalInvestmentPlan::query()
+                ->where('application_id', $locked->id)
+                ->lockForUpdate()
+                ->first();
+            if ($plan && ! $plan->isFrozen() && $plan->subsidy_type !== $form->subsidy_type) {
+                $plan->forceFill(['subsidy_type' => $form->subsidy_type])->save();
+            }
 
             return ProcessWriteResult::ok((int) $form->id);
         });

@@ -77,7 +77,8 @@ class MmspP2IncompleteDraftTest extends TestCase
             ->assertOk()
             ->assertSee('Nacrt', false)
             ->assertSee('Obrazac P2 - Nacrt', false)
-            ->assertSee('Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.', false);
+            ->assertSee('Plan ulaganja (Obrazac P2) nije kompletan: Ukupna vrijednost ulaganja mora biti veća od 0.', false)
+            ->assertDontSee('Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.', false);
 
         $this->actingAs($owner)
             ->from(route('applications.canonical-p2.edit', $application))
