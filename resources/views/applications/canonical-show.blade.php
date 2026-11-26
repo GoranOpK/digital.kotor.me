@@ -14,7 +14,25 @@
     $uploadRows = collect($checklist)->where('source', \App\Support\CanonicalDocumentCatalog::SOURCE_UPLOAD);
     $requiredUploads = $uploadRows->where('required_now', true);
     $uploadedRequired = $requiredUploads->whereNotNull('document')->count();
-    $missingRequired = $requiredUploads->whereNull('document')->count();
+    $missingRequiredRows = $requiredUploads->whereNull('document')->values();
+    $missingRequired = $missingRequiredRows->count();
+    $documentBlockPrefix = 'Prateća dokumentacija (čl.14) nije kompletna: ';
+    $noticeBlockers = [];
+    foreach ($blockers as $blocker) {
+        if (! str_starts_with($blocker, $documentBlockPrefix)) {
+            $noticeBlockers[] = $blocker;
+            continue;
+        }
+        $remaining = [];
+        foreach (preg_split('/(?<=\.)\s+/u', substr($blocker, strlen($documentBlockPrefix))) ?: [] as $sentence) {
+            if ($sentence !== '' && ! str_starts_with($sentence, 'Nedostaje prilog:')) {
+                $remaining[] = $sentence;
+            }
+        }
+        if ($remaining !== []) {
+            $noticeBlockers[] = implode(' ', $remaining);
+        }
+    }
     $uploadedUploads = $uploadRows->whereNotNull('document')->count();
     $totalUploads = $uploadRows->count();
     $uploadProgress = $totalUploads > 0 ? (int) round(($uploadedUploads / $totalUploads) * 100) : 0;
@@ -441,13 +459,28 @@
                                 <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
                                     Podnesi prijavu
                                 </button>
-                                @if($blockers !== [])
-                                    @foreach($blockers as $blocker)
+                                @if($missingRequiredRows->isNotEmpty())
+                                    <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                        <p style="font-size: 12px; color: #92400e; margin: 0 0 6px 0; font-weight: 600;">
+                                            ⚠️ Napomena: Niste priložili sva neophodna dokumenta
+                                        </p>
+                                        <p style="font-size: 11px; color: #78350f; margin: 0;">
+                                            @foreach($missingRequiredRows as $row)
+                                                Nedostaje prilog: {{ $row['label'] }}.@if(! $loop->last)<br>@endif
+                                            @endforeach
+                                        </p>
+                                        <p style="font-size: 11px; color: #78350f; margin: 6px 0 0 0;">
+                                            Prijava se ne može podnijeti dok nisu priloženi svi obavezni dokumenti.
+                                        </p>
+                                    </div>
+                                @endif
+                                @if($noticeBlockers !== [])
+                                    @foreach($noticeBlockers as $blocker)
                                         <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center; display:block;">
                                             {{ $blocker }}
                                         </span>
                                     @endforeach
-                                @else
+                                @elseif($missingRequiredRows->isEmpty())
                                     <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center;">
                                         Dovršite obrazac, plan ulaganja i obaveznu dokumentaciju.
                                     </span>
