@@ -5,7 +5,7 @@
     $formCode = $form ? $form->formCode() : 'P1a/P1b';
     $statusLabels = [
         'draft' => 'Nacrt',
-        'submitted' => 'U obradi',
+        'submitted' => 'Podnesena',
         'evaluated' => 'Ocijenjena',
         'approved' => 'Odobrena',
         'rejected' => 'Odbijena',
@@ -30,8 +30,8 @@
         $isFinallySubmitted
         || app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null
     );
-    $p1StatusLabel = $p1Complete ? 'popunjen' : 'Nacrt';
-    $p2StatusLabel = $p2Complete ? 'popunjen' : 'Nacrt';
+    $p1StatusLabel = $p1Complete ? 'Obrazac '.$formCode.' popunjen' : 'Obrazac '.$formCode.' - Nacrt';
+    $p2StatusLabel = $p2Complete ? 'Popunjen' : ($plan ? 'Nacrt' : 'Nije kreiran');
     $p1StatusClass = $p1Complete ? 'status-evaluated' : 'status-draft';
     $p2StatusClass = $p2Complete ? 'status-evaluated' : 'status-draft';
     $uploadRowMetadata = $uploadRows->whereNull('document')->values()->map(function ($row) {
@@ -325,11 +325,9 @@
         @if(session('info'))
             <div class="alert alert-info">{{ session('info') }}</div>
         @endif
-        @if($errors->any())
-            <div class="alert alert-error">
-                @foreach($errors->all() as $error)
-                    <div>{{ $error }}</div>
-                @endforeach
+        @if(session('document_warning'))
+            <div class="alert" style="background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e;">
+                {{ session('document_warning') }}
             </div>
         @endif
 
@@ -363,29 +361,31 @@
             </div>
 
             <div class="info-card">
-                <h2>Status prijave</h2>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Trenutni status</span>
+                <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
+                </div>
+                <div class="info-grid" style="grid-template-columns: 1fr;">
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Trenutni Status</span>
                         <span class="info-value">
-                            <span class="status-badge {{ $statusClass }}">{{ $statusLabels[$application->status] ?? $application->status }}</span>
+                            <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">{{ $statusLabels[$application->status] ?? $application->status }}</span>
                         </span>
                     </div>
-                    <div class="info-item">
+                    <div class="info-item" style="margin-bottom: 16px;">
                         <span class="info-label">Obrazac {{ $formCode }}</span>
                         <span class="info-value">
                             <a href="{{ route('applications.canonical-p1.edit', $application) }}"
-                               class="status-badge {{ $p1StatusClass }}">
-                                Obrazac {{ $formCode }} - {{ $p1StatusLabel }}
+                               class="status-badge {{ $p1StatusClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                {{ $p1StatusLabel }}
                             </a>
                         </span>
                     </div>
-                    <div class="info-item">
+                    <div class="info-item" style="margin-bottom: 16px;">
                         <span class="info-label">Plan ulaganja</span>
                         <span class="info-value">
                             <a href="{{ route('applications.canonical-p2.edit', $application) }}"
-                               class="status-badge {{ $p2StatusClass }}">
-                                Obrazac P2 - {{ $p2StatusLabel }}
+                               class="status-badge {{ $p2StatusClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                {{ $p2StatusLabel }}
                             </a>
                         </span>
                     </div>
@@ -402,23 +402,25 @@
 
                     <div class="info-item">
                         <span class="info-label">Datum podnošenja</span>
-                        <span class="info-value">{{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}</span>
+                        <span class="info-value" style="font-size: 13px;">{{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}</span>
                     </div>
 
                     @if($application->status === 'draft' && $canManage)
-                        <div class="info-item" style="margin-top:12px; padding-top:10px; border-top:1px solid #e5e7eb;">
+                        <div class="info-item" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
                             <span class="info-label">Akcije nad prijavom</span>
-                            <div class="info-value" style="display:block; margin-top:4px;">
-                                <p style="font-size:13px; color:#4b5563; margin:0 0 8px;">
+                            <div class="info-value" style="display: block; margin-top: 4px;">
+                                <p style="font-size: 13px; color: #4b5563; margin-bottom: 8px;">
                                     Prijavu možete obrisati najkasnije do isteka roka za prijavu na konkurs.
                                 </p>
-                                <form method="POST" action="{{ route('applications.destroy', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati ovu prijavu? Ova akcija se ne može poništiti.');" style="display:inline-block; margin-right:12px;">
+                                <form method="POST" action="{{ route('applications.destroy', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati ovu prijavu? Ova akcija se ne može poništiti.');" style="display: inline-block; margin-right: 12px;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn" style="background:#dc2626; color:#fff;">Obriši prijavu</button>
+                                    <button type="submit" class="btn-danger" style="background: #dc2626; color: #fff; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600;">
+                                        Obriši prijavu
+                                    </button>
                                 </form>
                                 @if($competition?->deadline)
-                                    <span style="display:inline-block; font-size:12px; color:#6b7280; margin-top:4px;">
+                                    <span style="display: inline-block; font-size: 12px; color: #6b7280; margin-top: 4px;">
                                         Rok za prijave: {{ $competition->deadline->format('d.m.Y. H:i') }}
                                     </span>
                                 @endif
@@ -427,14 +429,18 @@
                     @endif
 
                     @if($application->status === 'draft')
-                        <div class="info-item" style="margin-top:4px;">
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($canSubmit)
-                                <form method="POST" action="{{ route('applications.final-submit', $application) }}">
+                                <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary" style="width:100%;">Podnesi prijavu</button>
+                                    <button type="submit" class="btn btn-primary" style="background: #10b981; width: 100%; font-size: 13px;">
+                                        🚀 Podnesi prijavu
+                                    </button>
                                 </form>
                             @else
-                                <button class="btn btn-secondary" disabled style="width:100%; background:#9ca3af;">Podnesi prijavu</button>
+                                <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
+                                    Podnesi prijavu
+                                </button>
                                 @if($blockers !== [])
                                     @foreach($blockers as $blocker)
                                         <span style="font-size:10px; color:#ef4444; margin-top:6px; text-align:center; display:block;">
@@ -576,13 +582,13 @@
                 <h2>Dodaj dokument</h2>
 
                 @if($canManage)
-                    <div class="upload-section">
+                    <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
                         <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data" id="canonical-status-upload-form">
                             @csrf
 
-                            <div class="form-group">
-                                <label class="form-label" for="canonical_document_type">Tip dokumenta</label>
-                                <select name="document_type" id="canonical_document_type" class="form-control" required>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label" for="canonical_document_type" style="font-size: 13px;">Tip dokumenta</label>
+                                <select name="document_type" id="canonical_document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
                                     <option value="">Izaberite tip</option>
                                     @foreach($uploadRows->whereNull('document') as $row)
                                         <option value="{{ $row['key'] }}">{{ $row['label'] }}</option>
@@ -601,37 +607,57 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label">Fajl</label>
-                                <div class="file-input-wrapper">
-                                    <input id="canonical_status_files" type="file" name="files[]" accept="application/pdf" multiple>
-                                    <label for="canonical_status_files" class="file-input-label-custom">Izaberi fajlove (možete izabrati više)</label>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label class="form-label" style="font-size: 13px;">Fajl</label>
+                                <div class="file-input-wrapper" style="min-height: 32px;">
+                                    <input id="canonical_status_files" type="file" name="files[]" accept="application/pdf" multiple style="height: 32px;">
+                                    <label for="canonical_status_files" class="file-input-label-custom" id="canonical_file_label" style="padding: 6px 12px; font-size: 12px;">Izaberi fajlove (možete izabrati više)</label>
+                                    <div id="canonical_file_names" class="file-names-app" style="display: none; margin-top: 8px;"></div>
                                 </div>
-                                <div id="canonical_file_names" style="font-size:12px; color:#6b7280; margin-top:6px;"></div>
+                                <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 8px; border-radius: 4px;">
+                                    <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
+                                    <span style="color: #1e3a8a; font-size: 12px;">
+                                        Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong>, redoslijedom kojim su navedeni. Redoslijed fajlova možete promijeniti pomoću dugmadi ‘Gore’ i ‘Dolje’ prije upload-a.
+                                        MMSP prilozi se dostavljaju u PDF formatu.
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group" id="canonical-merged-document-name-wrap" style="display: none; margin-bottom: 12px;">
+                                <label class="form-label" style="font-size: 13px;" for="canonical_document_name">Naziv spojenog dokumenta <span style="color: #ef4444;">*</span></label>
+                                <input
+                                    type="text"
+                                    name="document_name"
+                                    id="canonical_document_name"
+                                    class="form-control @error('document_name') error @enderror"
+                                    value="{{ old('document_name') }}"
+                                    maxlength="255"
+                                    placeholder="Unesite naziv pod kojim će biti sačuvan spojeni PDF"
+                                    style="font-size: 13px; padding: 8px;"
+                                >
+                                <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
+                                    Ovaj naziv će biti prikazan u listi priložene dokumentacije. Ekstenzija .pdf se dodaje automatski.
+                                </div>
+                                @error('document_name')
+                                    <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <div class="upload-info-box">
-                                <strong style="display:block; font-size:14px; margin-bottom:6px;">ℹ️ Važno:</strong>
-                                Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> redosledom kojim su izabrani.
-                                MMSP prilozi se dostavljaju u PDF formatu.
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="canonical_library_document" style="font-weight:400;">Ili iz biblioteke</label>
-                                <select name="user_document_id" id="canonical_library_document" class="form-control">
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label class="form-label" for="canonical_library_document" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
+                                <select name="user_document_id" id="canonical_library_document" class="form-control" style="font-size: 12px; padding: 6px;">
                                     <option value="">Izaberi...</option>
                                     @foreach($libraryDocuments as $libraryDocument)
-                                        <option value="{{ $libraryDocument->id }}">{{ $libraryDocument->name }}</option>
+                                        <option value="{{ $libraryDocument->id }}">{{ \Illuminate\Support\Str::limit($libraryDocument->name, 20) }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#4b5563; margin:14px 0;">
-                                <input type="checkbox" name="save_to_library" value="1">
-                                <span>Sačuvaj dokument i u moju biblioteku</span>
-                            </label>
+                            <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" name="save_to_library" id="canonical-save-to-library" value="1" style="width: 18px; height: 18px; cursor: pointer;">
+                                <label for="canonical-save-to-library" class="form-label" style="font-weight: 400; font-size: 12px; margin: 0; cursor: pointer;">Sačuvaj dokument i u moju biblioteku</label>
+                            </div>
 
-                            <button type="submit" class="btn btn-primary" style="width:100%; text-align:center;">Priloži dokument</button>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
                         </form>
                     </div>
                 @else
@@ -660,14 +686,29 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b; margin-bottom: 24px;">
+                <strong>Greška:</strong>
+                <ul style="margin-top: 8px; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="info-card">
             <h2>Priložena dokumentacija</h2>
-            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px; font-size:13px; color:#374151;">
-                <span>Dokumenti: <strong>{{ $uploadedUploads }} / {{ $totalUploads }}</strong></span>
-                <span>{{ $uploadProgress }}%</span>
-            </div>
-            <div class="progress-bar" style="margin:0 0 20px;">
-                <div class="progress-fill" style="width:{{ $uploadProgress }}%;"></div>
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 14px; color: #374151; font-weight: 600;">
+                        Dokumenti: {{ $uploadedUploads }} / {{ $totalUploads }}
+                    </span>
+                    <span style="font-size: 14px; color: #6b7280;">{{ $uploadProgress }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ $uploadProgress }}%;"></div>
+                </div>
             </div>
             <ul class="documents-list">
                 @foreach($uploadRows as $row)
@@ -686,14 +727,17 @@
                             </div>
                             @if($uploaded)
                                 <div class="document-type">
-                                    Upload-ovano
+                                    Upload-ovano: {{ $row['document']->created_at->format('d.m.Y H:i') }}
                                     @if($row['issued_on']) · izdano {{ \Carbon\Carbon::parse($row['issued_on'])->format('d.m.Y.') }} @endif
                                 </div>
                             @endif
                         </div>
                         @if($uploaded)
                             <div class="document-actions">
-                                <a class="btn btn-primary" target="_blank" href="{{ route('applications.document.view', [$application, $row['document']]) }}">Pregled</a>
+                                <a href="{{ route('applications.document.view', [$application, $row['document']]) }}"
+                                   class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
+                                    Pogledaj
+                                </a>
                                 @if($canManage)
                                     <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $row['document']]) }}"
                                           method="POST"
@@ -720,7 +764,7 @@
             </div>
         @endif
 
-        <div class="info-card" style="text-align:center; padding:20px;">
+        <div class="info-card" style="text-align: center;">
             <a href="{{ route('dashboard') }}" class="btn btn-secondary">Nazad na Moj panel</a>
             @if($application->status === 'draft' && !$p1Complete)
                 <span style="font-size:12px; color:#6b7280; margin-left:8px;">Popunite Obrazac {{ $formCode }} prvo</span>
@@ -784,12 +828,101 @@
         updateEvidence();
     }
 
-    if (filesInput && fileNames) {
-        filesInput.addEventListener('change', function () {
-            const files = Array.from(filesInput.files || []);
-            fileNames.textContent = files.length
-                ? 'Izabrano: ' + files.map(f => f.name).join(', ')
-                : '';
+    const fileLabel = document.getElementById('canonical_file_label');
+    const mergedNameWrap = document.getElementById('canonical-merged-document-name-wrap');
+    const mergedNameInput = document.getElementById('canonical_document_name');
+    let selectedFiles = [];
+
+    function syncFileInput() {
+        if (!filesInput) return;
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(function (file) { dataTransfer.items.add(file); });
+        filesInput.files = dataTransfer.files;
+    }
+
+    function updateMergedName() {
+        if (!mergedNameWrap || !mergedNameInput) return;
+        const multiple = selectedFiles.length > 1;
+        mergedNameWrap.style.display = multiple ? 'block' : 'none';
+        mergedNameInput.required = multiple;
+    }
+
+    function renderSelectedFiles() {
+        if (!fileNames || !fileLabel) return;
+        if (selectedFiles.length === 0) {
+            fileNames.style.display = 'none';
+            fileNames.innerHTML = '';
+            fileLabel.textContent = 'Izaberi fajlove (možete izabrati više)';
+            updateMergedName();
+            return;
+        }
+
+        let html = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano fajlova: ' + selectedFiles.length + (selectedFiles.length > 1 ? ' (biće spojeni u jedan PDF)' : '') + '</div>';
+        html += '<ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #6b7280; list-style: none;">';
+        selectedFiles.forEach(function (file, index) {
+            const size = (file.size / 1024 / 1024).toFixed(2);
+            const safeName = String(file.name).replace(/[&<>"']/g, function (char) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+            });
+            html += '<li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 6px; background: #f9fafb; border-radius: 4px;">';
+            html += '<span style="flex: 1;"><strong style="color: var(--primary);">' + (index + 1) + '.</strong> ' + safeName + ' (' + size + ' MB)</span>';
+            html += '<div style="display: flex; gap: 4px; margin-left: 8px;">';
+            if (index > 0) {
+                html += '<button type="button" class="canonical-file-action" data-action="move-up" data-index="' + index + '" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
+            } else {
+                html += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬆️</button>';
+            }
+            if (index < selectedFiles.length - 1) {
+                html += '<button type="button" class="canonical-file-action" data-action="move-down" data-index="' + index + '" title="Pomeri dolje" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">Dolje</button>';
+            } else {
+                html += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">Dolje</button>';
+            }
+            html += '<button type="button" class="canonical-file-action" data-action="remove" data-index="' + index + '" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
+            html += '</div></li>';
+        });
+        html += '</ul>';
+        fileNames.innerHTML = html;
+        fileNames.style.display = 'block';
+        fileLabel.textContent = selectedFiles.length === 1
+            ? selectedFiles[0].name
+            : 'Izabrano ' + selectedFiles.length + ' fajlova (biće spojeni u jedan PDF)';
+        updateMergedName();
+    }
+
+    function refreshFromInput() {
+        if (!filesInput) return;
+        Array.from(filesInput.files || []).forEach(function (file) {
+            const exists = selectedFiles.some(function (current) {
+                return current.name === file.name && current.size === file.size;
+            });
+            if (!exists) selectedFiles.push(file);
+        });
+        syncFileInput();
+        renderSelectedFiles();
+    }
+
+    if (filesInput) {
+        filesInput.addEventListener('change', refreshFromInput);
+    }
+    if (fileNames) {
+        fileNames.addEventListener('click', function (event) {
+            const button = event.target.closest('.canonical-file-action');
+            if (!button) return;
+            event.preventDefault();
+            const index = Number(button.dataset.index);
+            if (button.dataset.action === 'remove') {
+                selectedFiles.splice(index, 1);
+            } else if (button.dataset.action === 'move-up' && index > 0) {
+                const current = selectedFiles[index];
+                selectedFiles[index] = selectedFiles[index - 1];
+                selectedFiles[index - 1] = current;
+            } else if (button.dataset.action === 'move-down' && index < selectedFiles.length - 1) {
+                const current = selectedFiles[index];
+                selectedFiles[index] = selectedFiles[index + 1];
+                selectedFiles[index + 1] = current;
+            }
+            syncFileInput();
+            renderSelectedFiles();
         });
     }
 })();
