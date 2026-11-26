@@ -3,7 +3,8 @@
 namespace App\Services\Competitions;
 
 use App\Models\Application;
-use App\Models\ApplicationPrigovor;
+use App\Models\ApplicationComplaint;
+use App\Models\ApplicationCompletenessAssessment;
 use App\Models\CanonicalOutcome;
 use App\Models\Competition;
 use App\Support\CanonicalLegalForm;
@@ -64,7 +65,7 @@ class MmspDecisionProposalBuilder
         }
 
         $received = $this->receivedApplications($competition);
-        $incomplete = $received->filter(fn (Application $application) => $application->isEliminatedFromScoring())->count();
+        $incomplete = $this->incompleteCount($competition);
         $appeals = $this->appealCounts($competition);
 
         return new MmspDecisionProposal(
@@ -173,9 +174,31 @@ class MmspDecisionProposalBuilder
         return Application::query()
             ->where('competition_id', $competition->id)
             ->whereIn('status', ['submitted', 'evaluated', 'approved', 'rejected'])
-            ->with(['eliminatoryCheck', 'prigovor'])
             ->orderBy('id')
             ->get();
+    }
+
+    private function incompleteCount(Competition $competition): int
+    {
+        $applicationIds = Application::query()
+            ->where('competition_id', $competition->id)
+            ->where('status', '!=', 'draft')
+            ->whereHas('finalClaim')
+            ->pluck('id');
+        if ($applicationIds->isEmpty()) {
+            return 0;
+        }
+
+        $latestIds = ApplicationCompletenessAssessment::query()
+            ->selectRaw('max(id) as id')
+            ->whereIn('application_id', $applicationIds)
+            ->groupBy('application_id')
+            ->pluck('id');
+
+        return ApplicationCompletenessAssessment::query()
+            ->whereIn('id', $latestIds)
+            ->where('outcome', ApplicationCompletenessAssessment::INCOMPLETE)
+            ->count();
     }
 
     /**
@@ -183,14 +206,11 @@ class MmspDecisionProposalBuilder
      */
     private function appealCounts(Competition $competition): array
     {
-        $base = ApplicationPrigovor::query()
-            ->whereHas('application', function ($query) use ($competition) {
-                $query->where('competition_id', $competition->id);
-            });
+        $base = ApplicationComplaint::query()->where('competition_id', $competition->id);
 
         return [
-            'accepted' => (clone $base)->where('status', ApplicationPrigovor::STATUS_PRIHVACEN)->count(),
-            'rejected' => (clone $base)->where('status', ApplicationPrigovor::STATUS_ODBIJEN)->count(),
+            'accepted' => (clone $base)->where('decision', ApplicationComplaint::ACCEPTED)->count(),
+            'rejected' => (clone $base)->where('decision', ApplicationComplaint::REJECTED)->count(),
         ];
     }
 

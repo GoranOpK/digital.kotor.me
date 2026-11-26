@@ -837,6 +837,8 @@ class EvaluationController extends Controller
 
         $this->abortIfCommissionProcessingBlocked($competition);
 
+        app(\App\Services\Competitions\CompletenessAssessmentService::class)
+            ->releaseAdministrativeReview($competition, $user);
         $this->canonicalScoring->persistCanonicalPreliminaryRankingIfReady($competition);
 
         $scoringProfile = ScoringProfileConfig::for($competition->type);

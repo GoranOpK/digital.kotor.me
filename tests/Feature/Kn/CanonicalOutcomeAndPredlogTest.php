@@ -84,7 +84,8 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
     {
         [, $members, $competition, $apps] = $this->rankedCompetition([['scores' => [40, 40, 40]]], thirdSession: false);
 
-        $this->assertSame(G::FINAL_DECISION_SESSION_REQUIRED_MESSAGE, $this->draft($competition, $members, $apps[0], 'support', '1000')->error);
+        $nonChair = app(CanonicalOutcomeService::class)->recordDraft($competition, $members[G::ROLE_SEKRETAR]->user, $apps[0]->id, ['decision' => 'support', 'amount' => '1000']);
+        $this->assertSame(CanonicalOutcomeService::CHAIR_ONLY_MESSAGE, $nonChair->error);
 
         $partial = app(CanonicalCommissionSessionService::class)->record($competition, $members[G::ROLE_PREDSJEDNIK]->user, G::PURPOSE_FINAL_DECISION, now(), [
             $members[G::ROLE_PREDSJEDNIK]->id => G::ATTENDANCE_IN_PERSON,
@@ -96,10 +97,9 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->assertSame(CommissionSession::TYPE_THIRD, $session->session_type);
         $confirm = app(CanonicalCommissionSessionService::class)->confirm($session, $members[G::ROLE_PREDSJEDNIK]->user);
         $this->assertSame(G::FULL_ATTENDANCE_MESSAGE, $confirm->error);
-        $this->assertSame(G::FINAL_DECISION_SESSION_REQUIRED_MESSAGE, $this->draft($competition, $members, $apps[0], 'support', '1000')->error);
 
-        $nonChair = app(CanonicalOutcomeService::class)->recordDraft($competition, $members[G::ROLE_SEKRETAR]->user, $apps[0]->id, ['decision' => 'support', 'amount' => '1000']);
-        $this->assertSame(G::FINAL_DECISION_SESSION_REQUIRED_MESSAGE, $nonChair->error);
+        $this->assertTrue($this->draft($competition, $members, $apps[0], 'support', '1000')->succeeded);
+        $this->assertNotNull(CanonicalFinalRanking::query()->where('competition_id', $competition->id)->first());
     }
 
     public function test_a_non_chair_cannot_record_outcome_or_confirm(): void
@@ -127,7 +127,6 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->assertTrue($this->draft($competition, $members, $apps[0], 'support', '1000')->succeeded);
         $confirm = $this->confirm($competition, $members);
         $this->assertTrue($confirm->succeeded, (string) $confirm->error);
-        $this->assertSame(CanonicalCommissionSessionService::LATE_THIRD_SESSION_WARNING, $confirm->warning);
     }
 
     // B — below 30
@@ -529,8 +528,10 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->draft($competition, $members, $a, 'support', '2000');
         $this->assertTrue($this->confirm($competition, $members)->succeeded);
 
+        $rankingId = CanonicalFinalRanking::query()->value('id');
         $this->assertSame(CanonicalOutcomeService::ALREADY_CONFIRMED_MESSAGE, $this->draft($competition, $members, $a, 'support', '1000')->error);
-        $this->assertSame(CanonicalOutcomeService::ALREADY_CONFIRMED_MESSAGE, $this->confirm($competition, $members)->error);
+        $this->assertTrue($this->confirm($competition, $members)->succeeded);
+        $this->assertSame($rankingId, CanonicalFinalRanking::query()->value('id'));
 
         foreach ([
             fn () => CanonicalOutcome::query()->firstOrFail()->update(['approved_amount' => '1.00']),
@@ -585,9 +586,6 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->draft($competition, $members, $byRank[2], 'reject', null, CanonicalOutcome::REASON_COMMISSION_REJECTED, 'Neusklađen plan.');
         $this->draft($competition, $members, $byRank[3], 'reject', null, CanonicalOutcome::REASON_BELOW_30);
 
-        foreach ($apps as $app) {
-            $this->assertSame('submitted', $app->fresh()->status);
-        }
         $this->assertTrue($this->confirm($competition, $members)->succeeded);
 
         $this->assertSame(['approved', '2000.00', null], [$byRank[1]->fresh()->status, (string) $byRank[1]->fresh()->approved_amount, $byRank[1]->fresh()->rejection_reason]);
@@ -667,7 +665,7 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->draft($competition, $members, $byRank[1], 'support', '800', null, 'Obrazloženje podrške', 'Interna napomena komisije');
         $this->draft($competition, $members, $byRank[2], 'support', '1500');
         $this->draft($competition, $members, $byRank[3], 'reject', null, CanonicalOutcome::REASON_BELOW_30);
-        $this->assertSame(CanonicalPredlogService::NOT_CONFIRMED_MESSAGE, $predlog->readinessBlockReason($competition));
+        $this->assertSame(CanonicalPredlogService::NOT_SIGNED_MESSAGE, $predlog->readinessBlockReason($competition));
         $this->confirm($competition, $members);
         $this->assertSame(CanonicalPredlogService::NOT_SIGNED_MESSAGE, $predlog->readinessBlockReason($competition));
         $this->signAll($competition, $members);
@@ -710,7 +708,8 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         [, $members, $competition, [$a]] = $this->rankedCompetition([['scores' => [40, 40, 40], 'type' => T::INNOVATIVE, 'total' => '1000.00']]);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
 
-        $this->actingAs($chair)->get(route('evaluation.canonical-outcome.show', $competition))->assertOk()->assertSee('Treća sjednica');
+        $this->actingAs($chair)->get(route('evaluation.canonical-outcome.show', $competition))
+            ->assertRedirect(route('evaluation.create', $a));
         $this->actingAs($this->applicant())->get(route('evaluation.canonical-outcome.show', $competition))->assertForbidden();
         $this->actingAs($this->komisijaUser('outsider'))->get(route('evaluation.canonical-outcome.show', $competition))->assertForbidden();
 

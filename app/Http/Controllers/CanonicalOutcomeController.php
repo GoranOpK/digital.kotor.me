@@ -31,31 +31,20 @@ class CanonicalOutcomeController extends Controller
     ) {
     }
 
-    public function show(Competition $competition): View
+    public function show(Competition $competition): RedirectResponse
     {
-        $member = $this->memberOrAbort($competition);
-
-        $rankingFormed = $this->governance->canonicalRankingFormed($competition);
-        $rows = $rankingFormed ? $this->outcomes->rankedRows($competition) : [];
-        $session = CommissionSession::query()
+        $this->memberOrAbort($competition);
+        $application = Application::query()
             ->where('competition_id', $competition->id)
-            ->where('session_type', CommissionSession::TYPE_THIRD)
-            ->where('canonical_purpose', CanonicalCommissionGovernance::PURPOSE_FINAL_DECISION)
+            ->where('status', '!=', 'draft')
+            ->whereHas('finalClaim')
+            ->orderByRaw('ranking_position is null')
+            ->orderBy('ranking_position')
+            ->orderBy('id')
             ->first();
+        abort_if($application === null, 404);
 
-        return view('evaluation.canonical-outcome', [
-            'competition' => $competition,
-            'member' => $member,
-            'rankingFormed' => $rankingFormed,
-            'sessionBlockReason' => $this->governance->finalDecisionSessionBlockReason($competition),
-            'session' => $session,
-            'rows' => $rows,
-            'outcomes' => $this->outcomes->outcomesFor($competition),
-            'resolutions' => CanonicalTieResolution::query()->where('competition_id', $competition->id)->with('votes')->orderBy('id')->get(),
-            'finalRanking' => $this->outcomes->finalRankingFor($competition),
-            'predlogBlockReason' => $this->predlog->readinessBlockReason($competition),
-            'predlog' => $this->predlog->predlogFor($competition),
-        ]);
+        return redirect()->route('evaluation.create', $application);
     }
 
     public function storeDraft(Request $request, Competition $competition, Application $application): RedirectResponse
@@ -69,7 +58,12 @@ class CanonicalOutcomeController extends Controller
             'remarks' => 'nullable|string|max:5000',
         ]);
 
-        return $this->respond($this->outcomes->recordDraft($competition, Auth::user(), (int) $application->id, $validated), 'Nacrt ishoda je sačuvan.');
+        $result = $this->outcomes->recordDraft($competition, Auth::user(), (int) $application->id, $validated);
+        $message = $result->succeeded && $this->outcomes->finalRankingFor($competition) !== null
+            ? 'Ishod je evidentiran. Konačna rang-lista je formirana.'
+            : 'Ishod je evidentiran.';
+
+        return $this->respond($result, $message);
     }
 
     public function confirm(Competition $competition): RedirectResponse

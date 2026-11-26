@@ -116,7 +116,7 @@ class PmCommissionRankingLinksTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString(route('evaluation.canonical-outcome.show', $canonical['competition']), $html);
+        $this->assertStringNotContainsString(route('evaluation.canonical-outcome.show', $canonical['competition']), $html);
         $this->assertStringNotContainsString(route('evaluation.youth-ranking', $canonical['competition']), $html);
         $this->assertStringNotContainsString(route('admin.competitions.ranking', $canonical['competition']), $html);
     }

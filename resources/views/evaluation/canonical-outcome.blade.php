@@ -32,7 +32,6 @@
         <div style="background: #fffbeb; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px; margin-bottom: 16px;">{{ $session->compliance_warning }}</div>
     @endif
 
-    <p style="margin-bottom: 12px;"><a href="{{ route('evaluation.canonical-sessions.show', $competition) }}">Sjednice Komisije</a></p>
 
     @if(! $rankingFormed)
         <div style="background: #fffbeb; border: 1px solid #f59e0b; padding: 12px; border-radius: 8px;">{{ \App\Services\Competitions\Outcome\CanonicalOutcomeService::RANKING_REQUIRED_MESSAGE }}</div>
@@ -128,22 +127,7 @@
             </form>
         @endif
 
-        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Konačna potvrda i potpisi</h2>
-        @if(! $confirmed)
-            @if($isChair)
-                <form method="POST" action="{{ route('evaluation.canonical-outcome.confirm', $competition) }}">
-                    @csrf
-                    <button type="submit" class="btn-primary">Konačno potvrdi kompletan ishod</button>
-                </form>
-            @endif
-        @else
-            <p>Potvrđeno {{ $finalRanking->confirmed_at->timezone('Europe/Belgrade')->format('d.m.Y H:i') }}; ukupno podržano {{ number_format((float) $finalRanking->total_approved, 2, ',', '.') }} €; potpisa {{ $finalRanking->signatures->count() }}/3.</p>
-            @if(! $finalRanking->isFinal() && ! $finalRanking->signatures->contains('commission_member_id', $member->id))
-                <form method="POST" action="{{ route('evaluation.canonical-outcome.sign', $competition) }}">
-                    @csrf
-                    <button type="submit" class="btn-primary">Potpiši konačnu rang listu</button>
-                </form>
-            @endif
+        @if($confirmed)
             @if($isChair && $finalRanking->isFinal())
                 <p style="margin-top: 12px;">
                     <a href="{{ route('evaluation.mmsp-decision', $competition) }}" data-testid="mmsp-decision-open" class="btn-primary">Generiši odluku</a>

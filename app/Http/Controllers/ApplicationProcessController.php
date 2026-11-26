@@ -36,12 +36,45 @@ class ApplicationProcessController extends Controller
             abort(403, $blockReason);
         }
 
-        $validated = $request->validate([
-            'outcome' => 'required|in:'.ApplicationCompletenessAssessment::COMPLETE.','.ApplicationCompletenessAssessment::INCOMPLETE,
-            'notes' => 'nullable|string|max:5000',
-        ]);
+        if ($request->exists('criterion_documentation')) {
+            $criteria = $request->validate([
+                'criterion_documentation' => 'required|in:da,ne',
+                'criterion_report' => 'required|in:da,ne',
+                'criterion_related' => 'required|in:da,ne',
+                'notes' => 'nullable|string|max:5000',
+            ]);
+            $failed = [];
+            if ($criteria['criterion_documentation'] === 'ne') {
+                $failed[] = 'dokumentacija nije potpuna';
+            }
+            if ($criteria['criterion_report'] === 'ne') {
+                $failed[] = 'nije dostavljen obavezan izvještaj o prethodnoj realizaciji';
+            }
+            if ($criteria['criterion_related'] === 'ne') {
+                $failed[] = 'plan ulaganja se ne odnosi na vrstu subvencije';
+            }
+            $notes = trim((string) ($criteria['notes'] ?? ''));
+            if ($failed !== [] && $notes === '') {
+                return back()->withInput()->withErrors([
+                    'notes' => CompletenessAssessmentService::REASON_REQUIRED_MESSAGE,
+                ]);
+            }
+            $outcome = $failed === []
+                ? ApplicationCompletenessAssessment::COMPLETE
+                : ApplicationCompletenessAssessment::INCOMPLETE;
+            if ($failed !== []) {
+                $notes = 'Nije ispunjeno: '.implode('; ', $failed).($notes !== '' ? "\n".$notes : '');
+            }
+        } else {
+            $validated = $request->validate([
+                'outcome' => 'required|in:'.ApplicationCompletenessAssessment::COMPLETE.','.ApplicationCompletenessAssessment::INCOMPLETE,
+                'notes' => 'nullable|string|max:5000',
+            ]);
+            $outcome = $validated['outcome'];
+            $notes = $validated['notes'] ?? null;
+        }
 
-        $result = $this->assessments->record($application, $user, $validated['outcome'], $validated['notes'] ?? null);
+        $result = $this->assessments->record($application, $user, $outcome, $notes);
         if (! $result->succeeded) {
             return back()->withInput()->withErrors(['error' => $result->error]);
         }

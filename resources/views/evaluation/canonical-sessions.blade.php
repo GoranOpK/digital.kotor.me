@@ -149,8 +149,5 @@
         </div>
     @endforeach
 
-    @unless($readOnly)
-        <p><a href="{{ route('evaluation.canonical-outcome.show', $competition) }}">Treća sjednica — ishod i iznosi</a></p>
-    @endunless
 </div>
 @endsection

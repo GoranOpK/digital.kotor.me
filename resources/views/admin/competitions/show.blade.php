@@ -508,25 +508,14 @@
                 <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>
                 <div style="overflow-x: auto;">
                     @if($competition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
-                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
-                        @if($isCommissionMember && ! $isAdmin)
-                            <a href="{{ route('evaluation.canonical-sessions.show', $competition) }}" class="btn" style="background:#6b7280; color:#fff; padding:6px 12px; font-size:12px; text-decoration:none;">
-                                Sjednice Komisije
-                            </a>
-                            <a href="{{ route('evaluation.canonical-review.index', $competition) }}" class="btn" style="background:var(--primary); color:#fff; padding:6px 12px; font-size:12px; text-decoration:none;">
-                                Provjera potpunosti i prigovori
-                            </a>
-                        @endif
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; min-width: 980px;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                         <thead>
                             <tr style="border-bottom: 2px solid #e5e7eb;">
-                                <th style="padding: 12px; text-align: left;">Prijava</th>
+                                <th style="padding: 12px; text-align: left;">Naziv plana ulaganja</th>
                                 <th style="padding: 12px; text-align: left;">Podnosilac</th>
-                                <th style="padding: 12px; text-align: left;">Status</th>
-                                <th style="padding: 12px; text-align: left;">Obrazac P1</th>
-                                <th style="padding: 12px; text-align: left;">Plan ulaganja P2</th>
-                                <th style="padding: 12px; text-align: left;">Dokumentacija</th>
+                                <th style="padding: 12px; text-align: left;">Status prijave</th>
+                                <th style="padding: 12px; text-align: left;">Obrazac</th>
+                                <th style="padding: 12px; text-align: left;">Plan ulaganja</th>
                                 <th style="padding: 12px; text-align: left;">Datum podnošenja</th>
                                 <th style="padding: 12px; text-align: left;">Akcije</th>
                             </tr>
@@ -537,69 +526,92 @@
                                     $canonicalForm = $app->canonicalApplicantForm;
                                     $canonicalPlan = $app->canonicalInvestmentPlan;
                                     $formCode = $canonicalForm?->formCode() ?? 'P1';
-                                    $requiredDocs = $app->getStrictlyRequiredDocuments();
-                                    $missingDocs = $app->getMissingRequiredDocumentTypes();
-                                    $attachedRequired = max(0, count($requiredDocs) - count($missingDocs));
-                                    $canonicalStatusLabels = [
+                                    $planTitle = filled($app->business_plan_name) ? $app->business_plan_name : '—';
+                                    $statusLabels = [
                                         'draft' => 'Nacrt',
-                                        'submitted' => 'Podnesena',
+                                        'submitted' => 'U obradi',
                                         'evaluated' => 'Ocijenjena',
                                         'approved' => 'Odobrena',
                                         'rejected' => 'Odbijena',
                                     ];
+                                    $statusClass = 'status-'.$app->status;
+                                    $p1Url = route('applications.canonical-p1.edit', $app);
+                                    $p2Url = route('applications.canonical-p2.edit', $app);
                                 @endphp
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
-                                    <td style="padding: 12px; vertical-align: top;">
-                                        <strong>#{{ $app->redni_broj ?? $app->id }}</strong>
-                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">{{ $planTitle }}</td>
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
-                                        <span class="status-badge status-{{ $app->status }}" style="font-size:11px; padding:3px 10px;">
-                                            {{ $canonicalStatusLabels[$app->status] ?? $app->status }}
+                                        <span class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px;">
+                                            {{ $statusLabels[$app->status] ?? $app->status }}
                                         </span>
                                     </td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($canonicalForm)
-                                            <span class="status-badge status-evaluated" style="font-size:11px; padding:3px 10px;">
-                                                {{ $formCode }} popunjen{{ $canonicalForm->isFrozen() ? ' · zamrznut' : '' }}
-                                            </span>
+                                            <a href="{{ $p1Url }}" class="status-badge status-evaluated" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
+                                                {{ $formCode }} popunjen
+                                            </a>
                                         @else
-                                            <span class="status-badge status-draft" style="font-size:11px; padding:3px 10px;">Nedostaje</span>
+                                            <span class="status-badge status-draft" style="font-size: 11px; padding: 3px 10px;">Nije popunjen</span>
                                         @endif
                                     </td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($canonicalPlan)
-                                            <span class="status-badge status-evaluated" style="font-size:11px; padding:3px 10px;">
-                                                P2 popunjen{{ $canonicalPlan->isFrozen() ? ' · zamrznut' : '' }}
-                                            </span>
+                                            <a href="{{ $p2Url }}" class="status-badge status-evaluated" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
+                                                P2 popunjen
+                                            </a>
                                         @else
-                                            <span class="status-badge status-draft" style="font-size:11px; padding:3px 10px;">Nedostaje</span>
+                                            <span class="status-badge status-draft" style="font-size: 11px; padding: 3px 10px;">Nije dostupan</span>
                                         @endif
                                     </td>
-                                    <td style="padding: 12px; vertical-align: top;">
-                                        <span class="status-badge {{ count($missingDocs) === 0 ? 'status-evaluated' : 'status-draft' }}" style="font-size:11px; padding:3px 10px;">
-                                            {{ $attachedRequired }}/{{ count($requiredDocs) }} obaveznih
-                                        </span>
-                                    </td>
-                                    <td style="padding: 12px; vertical-align: top; font-size:12px;">
+                                    <td style="padding: 12px; vertical-align: top; font-size: 12px;">
                                         {{ $app->submitted_at ? $app->submitted_at->format('d.m.Y H:i') : '-' }}
                                     </td>
                                     <td style="padding: 12px; vertical-align: top;">
-                                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                            <a href="{{ route('admin.applications.show', $app) }}" class="btn" style="background:#6b7280; color:#fff; padding:4px 12px; font-size:12px; text-decoration:none;">
-                                                Pregled prijave
-                                            </a>
-                                            @if($isCommissionMember && ! $isAdmin)
-                                                <a href="{{ route('evaluation.canonical-review.show', $app) }}" class="btn" style="background:var(--primary); color:#fff; padding:4px 12px; font-size:12px; text-decoration:none;">
-                                                    Provjera potpunosti
-                                                </a>
+                                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                            <a href="{{ route('admin.applications.show', $app) }}" class="btn" style="background: #6b7280; color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">Pregled prijave</a>
+                                            @php
+                                                $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                                                $isKomisija = $userRole === 'komisija';
+                                                $buttonText = 'Ocijeni';
+
+                                                if ($isKomisija && $competition->commission) {
+                                                    $commission = $competition->commission;
+                                                    $currentMember = $commission->activeMembers()->where('user_id', auth()->id())->first();
+                                                    $currentMemberHasEvaluated = $currentMember && \App\Models\EvaluationScore::where('application_id', $app->id)
+                                                        ->where('commission_member_id', $currentMember->id)
+                                                        ->whereNotNull('criterion_1')
+                                                        ->exists();
+
+                                                    if ($currentMemberHasEvaluated || $app->status === 'rejected') {
+                                                        $buttonText = 'Ocjene';
+                                                    } else {
+                                                        $totalMembers = $commission->activeMembers()->count();
+                                                        $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $app->id)
+                                                            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                                            ->whereNotNull('criterion_1')
+                                                            ->pluck('commission_member_id')
+                                                            ->unique()
+                                                            ->count();
+                                                        if ($evaluatedCount >= $totalMembers) {
+                                                            $buttonText = 'Ocjene';
+                                                        }
+                                                    }
+                                                }
+                                            @endphp
+                                            @if($isKomisija)
+                                                @if($competition->isCanonicalTestPreview() || $competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed']))
+                                                    <a href="{{ route('evaluation.create', $app) }}" class="btn" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">{{ $buttonText }}</a>
+                                                @else
+                                                    <span style="font-size: 11px; color: #6b7280;">Ocjenjivanje nakon roka za prijave</span>
+                                                @endif
                                             @endif
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" style="padding:40px; text-align:center; color:#6b7280;">
+                                    <td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
                                         @if($isCommissionMember && !$isAdmin && !$competition->isCanonicalTestPreview() && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
                                             Prijave će biti prikazane nakon isteka roka za prijavljivanje na konkurs.
                                         @else

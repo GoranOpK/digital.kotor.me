@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Application;
+use App\Models\ApplicationComplaint;
 use App\Models\ApplicationCompletenessAssessment;
 use App\Models\ApplicationPrigovor;
 use App\Models\CanonicalAdministrativeEvent;
@@ -80,18 +81,14 @@ class MmspDecisionFinalPhaseTest extends TestCase
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
             ->get(route('evaluation.canonical-outcome.show', $competition))
-            ->assertOk()
-            ->assertDontSee('data-testid="mmsp-decision-open"', false);
+            ->assertRedirect(route('evaluation.create', $application));
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
             ->get(route('evaluation.create', $application))
             ->assertOk()
-            ->assertSee('Preliminarna rang-lista', false)
-            ->assertDontSee('data-testid="mmsp-decision-open"', false);
-
-        $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
-            ->post(route('evaluation.mmsp-decision.generate', $competition), $this->dates())
-            ->assertForbidden();
+            ->assertSee('Konačna rang-lista', false)
+            ->assertSee('data-testid="mmsp-decision-open"', false)
+            ->assertSee('data-testid="mmsp-ranking-print"', false);
 
         $this->signAll($competition, $members);
         $competition->refresh();
@@ -104,18 +101,18 @@ class MmspDecisionFinalPhaseTest extends TestCase
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
             ->get(route('evaluation.canonical-outcome.show', $competition))
-            ->assertOk()
-            ->assertSee('data-testid="mmsp-decision-open"', false);
+            ->assertRedirect(route('evaluation.create', $application));
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
             ->get(route('evaluation.create', $application))
             ->assertOk()
             ->assertSee('data-testid="mmsp-ranking-title"', false)
             ->assertSee('Konačna rang-lista', false)
-            ->assertSee('data-testid="mmsp-decision-open"', false);
+            ->assertSee('data-testid="mmsp-decision-open"', false)
+            ->assertSee('Štampaj', false);
 
         $this->actingAs($members[G::ROLE_SEKRETAR]->user)
-            ->get(route('evaluation.canonical-outcome.show', $competition))
+            ->get(route('evaluation.create', $application))
             ->assertOk()
             ->assertDontSee('data-testid="mmsp-decision-open"', false);
 
@@ -145,10 +142,24 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->signAll($competition, $members);
         ApplicationPrigovor::query()->create([
             'application_id' => $application->id,
-            'obrazlozenje' => 'Prigovor je razmotren.',
+            'obrazlozenje' => 'Omladinski prigovor ne ulazi u MMSP odluku.',
             'status' => ApplicationPrigovor::STATUS_PRIHVACEN,
             'submitted_at' => now(),
             'submitted_by_user_id' => $application->user_id,
+        ]);
+        $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->firstOrFail();
+        ApplicationComplaint::query()->create([
+            'application_id' => $application->id,
+            'competition_id' => $competition->id,
+            'completeness_assessment_id' => $assessment->id,
+            'submitted_by_user_id' => $application->user_id,
+            'body' => 'Prigovor je razmotren.',
+            'submitted_at' => now(),
+            'decision_due_at' => now()->addDays(7),
+            'decision' => ApplicationComplaint::ACCEPTED,
+            'decided_at' => now(),
+            'decided_by_user_id' => $members[G::ROLE_PREDSJEDNIK]->user_id,
+            'decision_notes' => 'Prihvaćen.',
         ]);
 
         $scoreBefore = (string) $application->fresh()->final_score;
@@ -171,7 +182,7 @@ class MmspDecisionFinalPhaseTest extends TestCase
             ->from(route('evaluation.mmsp-decision', $competition))
             ->post(route('evaluation.mmsp-decision.generate', $competition), [])
             ->assertRedirect()
-            ->assertSessionHasErrors(['first_session_date', 'second_session_date', 'third_session_date']);
+            ->assertSessionHasErrors(['second_session_date', 'third_session_date']);
         $this->assertSame([], Storage::disk('local')->allFiles(MmspDecisionDocumentStore::DIRECTORY.'/'.$competition->id));
 
         $this->actingAs($chair)
@@ -193,7 +204,7 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertStringContainsString('40,00', $text);
         $this->assertStringContainsString('1.000,00', $text);
         $this->assertStringContainsString('5.000,00', $text);
-        $this->assertStringContainsString('25.08.2026', $text);
+        $this->assertStringContainsString('10.09.2026', $text);
         $this->assertStringContainsString('01.09.2026', $text);
         $this->assertStringContainsString('05.09.2026', $text);
         $this->assertStringContainsString('01.08.2026.', $text);

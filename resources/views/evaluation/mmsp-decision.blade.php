@@ -28,23 +28,21 @@
             @endif
             <form method="POST" action="{{ route('evaluation.mmsp-decision.generate', $competition) }}" data-testid="mmsp-decision-generate-form">
                 @csrf
-                @foreach([
-                    'first_session_date' => 'Datum prve sjednice',
-                    'second_session_date' => 'Datum druge sjednice',
-                    'third_session_date' => 'Datum treće sjednice',
-                ] as $field => $label)
-                    @php
-                        $suggested = match ($field) {
-                            'first_session_date' => $mmspDecisionDates['first'] ?? null,
-                            'second_session_date' => $mmspDecisionDates['second'] ?? null,
-                            'third_session_date' => $mmspDecisionDates['third'] ?? null,
-                        };
-                    @endphp
-                    <label style="display: block; margin-bottom: 12px;">
-                        {{ $label }}
-                        <input type="date" name="{{ $field }}" value="{{ old($field, $suggested) }}" required style="display: block; width: 100%; margin-top: 4px; padding: 8px;">
-                    </label>
-                @endforeach
+                @php
+                    $recordedFirst = $mmspDecisionDates['first'] ?? null;
+                @endphp
+                <label style="display: block; margin-bottom: 12px;">
+                    Datum prve sjednice
+                    <input type="date" name="first_session_date" value="{{ $recordedFirst }}" readonly required style="display: block; width: 100%; margin-top: 4px; padding: 8px; background: #f3f4f6;">
+                </label>
+                <label style="display: block; margin-bottom: 12px;">
+                    Datum druge sjednice
+                    <input type="date" name="second_session_date" value="{{ old('second_session_date') }}" required style="display: block; width: 100%; margin-top: 4px; padding: 8px;">
+                </label>
+                <label style="display: block; margin-bottom: 12px;">
+                    Datum treće sjednice
+                    <input type="date" name="third_session_date" value="{{ old('third_session_date') }}" required style="display: block; width: 100%; margin-top: 4px; padding: 8px;">
+                </label>
                 <button type="submit" class="btn btn-primary" style="background: #0B3D91; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-weight: 600;">Generiši odluku</button>
             </form>
         </div>
@@ -54,7 +52,7 @@
         @if(!empty($canDownloadMmspDecision))
             <a href="{{ route('evaluation.mmsp-decision.download', $competition) }}" data-testid="mmsp-decision-download" class="btn" style="background: #0B3D91; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; margin-right: 8px;">Preuzmi odluku</a>
         @endif
-        <a href="{{ route('evaluation.canonical-outcome.show', $competition) }}" class="btn" style="background: #6b7280; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">Nazad na rang listu</a>
+        <a href="{{ route('evaluation.index') }}" class="btn" style="background: #6b7280; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">Nazad na rang listu</a>
         @if(!empty($canCloseMmspCompetition))
             <form method="POST" action="{{ route('evaluation.mmsp-decision.close', $competition) }}" style="display: inline; margin-left: 8px;">
                 @csrf
