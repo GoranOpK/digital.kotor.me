@@ -294,9 +294,11 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->assertOk()
             ->assertSee(CompletenessAssessmentService::STAGE_LOCKED_MESSAGE)
             ->assertDontSee('data-form="complaint-decision"', false);
-        $this->actingAs($owner)->get(route('applications.canonical-review.show', $incomplete))
+        $this->applicantStatusPage($owner, $incomplete)
             ->assertOk()
-            ->assertDontSee('name="body"', false);
+            ->assertDontSee('name="body"', false)
+            ->assertSee(CompletenessAssessmentService::STAGE_LOCKED_MESSAGE)
+            ->assertDontSee('Rok za Prigovor je istekao.');
     }
 
     public function test_completeness_blocked_once_application_has_scores(): void
@@ -336,7 +338,11 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $this->assertSame(0, ApplicationCompletenessAssessment::query()->where('application_id', $pending->id)->count());
         $this->assertNull($complaint->fresh()->decision);
         $this->actingAs($chair)->get(route('evaluation.canonical-review.show', $incomplete))->assertOk()->assertSee('Poziv je zatvoren');
-        $this->actingAs($owner)->get(route('applications.canonical-review.show', $incomplete))->assertOk()->assertSee('zatvoren');
+        $this->applicantStatusPage($owner, $incomplete)
+            ->assertOk()
+            ->assertSee('Postupak po ovom Pozivu je zatvoren.')
+            ->assertDontSee('name="body"', false)
+            ->assertDontSee('Rok za Prigovor je istekao.');
     }
 
     // C — applicant complaint, 3-day exact-time boundary
@@ -356,20 +362,61 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             [$owner, $application] = $this->incompleteApplication($call, $members, 'Nedostaje potvrda poreske uprave.');
 
             Carbon::setTestNow(Carbon::parse($at, self::TZ));
-            $page = $this->actingAs($owner)->get(route('applications.canonical-review.show', $application))->assertOk()
+            $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->sole();
+            $deadline = $application->competition->profile()->complaintWindowEndsAt($assessment->notice_sent_at);
+            $this->assertSame('2026-09-25 10:00:00', $assessment->notice_sent_at->timezone(self::TZ)->format('Y-m-d H:i:s'), $key);
+            $this->assertSame('2026-09-28 10:00:00', $deadline->timezone(self::TZ)->format('Y-m-d H:i:s'), $key);
+
+            $page = $this->applicantStatusPage($owner, $application)->assertOk()
                 ->assertSee('Nedostaje potvrda poreske uprave.')
-                ->assertSee('28.09.2026 10:00:00');
+                ->assertSee('Imate pravo na jedan Prigovor')
+                ->assertSee('28.09.2026. 10:00')
+                ->assertDontSee('Obavještenje poslato')
+                ->assertDontSee('28.09.2026 10:00:00', false)
+                ->assertDontSee('28.09.2026. 10:00:00', false);
+            $html = $page->getContent();
+            $gridAt = strpos($html, '<div class="summary-grid">');
+            $reviewAt = strpos($html, 'id="application-review"');
+            $documentsAt = strpos($html, 'id="application-documents"');
+            $this->assertNotFalse($gridAt, $key);
+            $this->assertNotFalse($reviewAt, $key);
+            $this->assertNotFalse($documentsAt, $key);
+            $this->assertLessThan($reviewAt, $gridAt, $key);
+            $this->assertLessThan($documentsAt, $reviewAt, $key);
+            $this->assertDoesNotMatchRegularExpression('/class="mmsp-prigovor-card"[^>]*grid-column/', $html, $key);
 
             if ($allowed) {
-                $page->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)->assertSee('name="body"', false);
+                $page->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)
+                    ->assertSee('name="body"', false)
+                    ->assertSee('mmsp-prigovor-submit', false);
                 $this->actingAs($owner)
                     ->from(route('applications.canonical-review.show', $application))
                     ->post(route('applications.complaint', $application), ['body' => 'Prigovor '.$key])
                     ->assertRedirect(route('applications.canonical-review.show', $application))
                     ->assertSessionHas('success');
                 $this->assertSame(1, ApplicationComplaint::query()->where('application_id', $application->id)->count(), $key);
+                $stored = ApplicationComplaint::query()->where('application_id', $application->id)->sole();
+                $due = $application->competition->profile()->complaintDecisionDueAt($stored->submitted_at);
+                $this->assertSame($at, $stored->submitted_at->timezone(self::TZ)->format('Y-m-d H:i:s'), $key);
+                $this->assertSame($due->timezone(self::TZ)->format('Y-m-d H:i:s'), $stored->decision_due_at->timezone(self::TZ)->format('Y-m-d H:i:s'), $key);
+                $this->applicantStatusPage($owner, $application)->assertOk()
+                    ->assertSeeInOrder([
+                        'Stanje Vašeg Prigovora:',
+                        'Podnesen',
+                        'Vaše obrazloženje prigovora',
+                        'Prigovor '.$key,
+                        'Prigovor je podnesen Komisiji.',
+                        'Rok Komisije za odluku:',
+                        $due->timezone(self::TZ)->format('d.m.Y. H:i'),
+                        'Čeka se odluka Komisije.',
+                    ])
+                    ->assertDontSee($due->timezone(self::TZ)->format('d.m.Y. H:i:s'), false)
+                    ->assertDontSee('name="body"', false)
+                    ->assertDontSee('Rok od 7 dana je prekoračen');
             } else {
-                $page->assertSee('data-status="'.ComplaintService::STATUS_INCOMPLETE.'"', false)->assertDontSee('name="body"', false);
+                $page->assertSee('data-status="'.ComplaintService::STATUS_INCOMPLETE.'"', false)
+                    ->assertSee('Rok za Prigovor je istekao.')
+                    ->assertDontSee('name="body"', false);
                 $this->actingAs($owner)
                     ->post(route('applications.complaint', $application), ['body' => 'Prigovor '.$key])
                     ->assertSessionHasErrors(['error' => ComplaintService::WINDOW_CLOSED_MESSAGE]);
@@ -390,17 +437,27 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $this->assertSame(0, ApplicationComplaint::query()->count());
 
         $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => 'Prvi prigovor.'])->assertSessionHas('success');
+        $this->applicantStatusPage($owner, $application)->assertOk()
+            ->assertSee('Prvi prigovor.')
+            ->assertDontSee('name="body"', false);
+        [$otherOwner, $otherApplication] = $this->incompleteApplication($call, $members);
+        $this->actingAs($otherOwner)->post(route('applications.complaint', $otherApplication), ['body' => 'Tajno obrazlozenje drugog podnosioca'])
+            ->assertSessionHas('success');
+        $this->applicantStatusPage($owner, $application)->assertDontSee('Tajno obrazlozenje drugog podnosioca');
+        $this->applicantStatusPage($otherOwner, $otherApplication)->assertOk()
+            ->assertSee('Tajno obrazlozenje drugog podnosioca')
+            ->assertDontSee('Prvi prigovor.');
         $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => 'Drugi prigovor.'])
             ->assertSessionHasErrors(['error' => ComplaintService::DUPLICATE_MESSAGE]);
 
-        $complaint = ApplicationComplaint::query()->sole();
+        $complaint = ApplicationComplaint::query()->where('application_id', $application->id)->sole();
         $this->assertSame('Prvi prigovor.', $complaint->body);
 
         $this->assertThrowsImmutable(fn () => $complaint->update(['body' => 'Izmijenjen prigovor.']), ApplicationComplaint::IMMUTABLE_MESSAGE);
         $this->assertThrowsImmutable(fn () => $complaint->delete(), ApplicationComplaint::IMMUTABLE_MESSAGE);
         $this->assertSame('Prvi prigovor.', $complaint->fresh()->body);
 
-        $assessment = ApplicationCompletenessAssessment::query()->sole();
+        $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->sole();
         $this->assertThrowsImmutable(fn () => $assessment->update(['outcome' => 'complete']), ApplicationCompletenessAssessment::IMMUTABLE_MESSAGE);
         $this->assertThrowsImmutable(fn () => $assessment->delete(), ApplicationCompletenessAssessment::IMMUTABLE_MESSAGE);
         $this->assertSame('incomplete', $assessment->fresh()->outcome);
@@ -509,10 +566,18 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $this->assertTrue(app(G::class)->scoringStageOpen($application->fresh()));
         $this->assertSame('submitted', $application->fresh()->status);
 
-        $this->actingAs($owner)->get(route('applications.canonical-review.show', $application))
+        $this->applicantStatusPage($owner, $application)
             ->assertOk()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_ACCEPTED.'"', false)
-            ->assertSee('nastavlja postupak u fazi bodovanja');
+            ->assertSeeInOrder([
+                'Vaše obrazloženje prigovora',
+                'Prigovor.',
+                'Konačna odluka Komisije:',
+                'Prihvaćen',
+                'Obrazloženje odluke:',
+                'Prilog je bio u dosijeu.',
+                'Prijava se smatra potpunom i nastavlja postupak u fazi bodovanja.',
+            ]);
     }
 
     // F — notifications after commit, rollback, duplicates, canonical wording
@@ -636,40 +701,91 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $application = $this->finalApplication($call);
         $owner = $application->user;
-        $status = fn () => $this->actingAs($owner)->get(route('applications.canonical-review.show', $application))->assertOk();
+        $status = fn () => $this->applicantStatusPage($owner, $application)->assertOk();
 
-        $status()->assertSee('data-status="'.ComplaintService::STATUS_AWAITING_REVIEW.'"', false);
+        $awaiting = $status()->assertSee('data-status="'.ComplaintService::STATUS_AWAITING_REVIEW.'"', false);
+        $awaitingHtml = $awaiting->getContent();
+        $this->assertLessThan(
+            strpos($awaitingHtml, 'id="application-review"'),
+            strpos($awaitingHtml, 'id="application-documents"')
+        );
 
         $this->actingAs($chair)->post(route('evaluation.completeness', $application), ['outcome' => 'incomplete', 'notes' => 'Nedostaje prilog A.']);
-        $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)->assertSee('Nedostaje prilog A.');
+        $available = $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)
+            ->assertSee('Nedostaje prilog A.')
+            ->assertDontSee('Obavještenje poslato')
+            ->assertDontSee('Prigovor je moguć do isteka roka.');
+        $availableHtml = $available->getContent();
+        $this->assertLessThan(
+            strpos($availableHtml, 'id="application-documents"'),
+            strpos($availableHtml, 'id="application-review"')
+        );
 
         Carbon::setTestNow(Carbon::parse('2026-09-26 10:00:00', self::TZ));
-        $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => 'Prilog A je predat.']);
-        $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_SUBMITTED.'"', false)->assertDontSee('name="body"', false);
-
+        $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => "Prilog A je predat.\n<script>alert(1)</script>"]);
         $complaint = ApplicationComplaint::query()->sole();
+        $this->assertSame('2026-10-03 10:00:00', $complaint->decision_due_at->timezone(self::TZ)->format('Y-m-d H:i:s'));
+        $status()
+            ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_SUBMITTED.'"', false)
+            ->assertDontSee('name="body"', false)
+            ->assertSeeInOrder([
+                'Stanje Vašeg Prigovora:',
+                'Podnesen',
+                'Vaše obrazloženje prigovora',
+                'Prilog A je predat.',
+                'Prigovor je podnesen Komisiji.',
+                'Rok Komisije za odluku:',
+                '03.10.2026. 10:00',
+                'Čeka se odluka Komisije.',
+            ])
+            ->assertDontSee('03.10.2026. 10:00:00', false)
+            ->assertDontSee('<script>alert(1)</script>', false)
+            ->assertDontSee('Rok od 7 dana je prekoračen')
+            ->assertDontSee('Prigovor je podnesen i čeka odluku Komisije.')
+            ->assertSee('white-space: pre-wrap', false);
+
+        Carbon::setTestNow(Carbon::parse('2026-10-03 10:00:00', self::TZ));
+        $status()->assertDontSee('Rok od 7 dana je prekoračen');
+        Carbon::setTestNow(Carbon::parse('2026-10-03 10:00:01', self::TZ));
+        $status()->assertSee('Rok od 7 dana je prekoračen. Čeka se odluka Komisije. Platforma ne donosi automatsku odluku.');
+        Carbon::setTestNow(Carbon::parse('2026-09-26 10:00:00', self::TZ));
+
         $status()->assertDontSee('Prilog A nije pronađen u dosijeu.');
         $this->actingAs($chair)->post(route('evaluation.complaint-decision', [$application, $complaint]), [
             'decision' => 'rejected',
             'decision_notes' => 'Prilog A nije pronađen u dosijeu.',
         ]);
-        $fingerprint = ApplicationCompletenessAssessment::query()->sole()->evidence_fingerprint;
+        $fingerprint = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->sole()->evidence_fingerprint;
         $status()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_REJECTED.'"', false)
-            ->assertSee('ne učestvuje u daljem bodovanju')
-            ->assertSee('Prilog A nije pronađen u dosijeu.')
+            ->assertSeeInOrder([
+                'Vaše obrazloženje prigovora',
+                'Prilog A je predat.',
+                'Konačna odluka Komisije:',
+                'Odbijen',
+                'Obrazloženje odluke:',
+                'Prilog A nije pronađen u dosijeu.',
+                'prijava ne učestvuje u daljem bodovanju',
+            ])
             ->assertDontSee($chair->name)
-            ->assertDontSee($fingerprint);
+            ->assertDontSee($fingerprint)
+            ->assertDontSee('<script>alert(1)</script>', false);
 
         $complete = $this->finalApplication($call);
         $this->actingAs($chair)->post(route('evaluation.completeness', $complete), ['outcome' => 'complete', 'notes' => 'Interna bilješka.']);
-        $this->actingAs($complete->user)->get(route('applications.canonical-review.show', $complete))->assertOk()
+        $completePage = $this->applicantStatusPage($complete->user, $complete)->assertOk()
             ->assertSee('data-status="'.ComplaintService::STATUS_COMPLETE.'"', false)
             ->assertSee('nastavlja postupak u fazi bodovanja')
-            ->assertDontSee('Interna bilješka.');
+            ->assertDontSee('Interna bilješka.')
+            ->assertDontSee('name="body"', false);
+        $completeHtml = $completePage->getContent();
+        $this->assertLessThan(
+            strpos($completeHtml, 'id="application-review"'),
+            strpos($completeHtml, 'id="application-documents"')
+        );
 
         DB::table('competitions')->where('id', $call->id)->update(['canonical_ranking_formed_at' => now()]);
-        $this->actingAs($complete->user)->get(route('applications.canonical-review.show', $complete))->assertOk()
+        $this->applicantStatusPage($complete->user, $complete)->assertOk()
             ->assertSee('formirana je preliminarna rang lista');
 
         $this->actingAs($owner)->get(route('applications.show', $application))->assertOk()
@@ -764,6 +880,15 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
     }
 
     // Helpers
+
+    private function applicantStatusPage(User $user, Application $application)
+    {
+        $this->actingAs($user)
+            ->get(route('applications.canonical-review.show', $application))
+            ->assertRedirect(route('applications.show', $application).'#application-review');
+
+        return $this->actingAs($user)->get(route('applications.show', $application));
+    }
 
     /**
      * @return array{0: Competition, 1: array<string, CommissionMember>}

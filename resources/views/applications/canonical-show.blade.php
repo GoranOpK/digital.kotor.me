@@ -262,6 +262,50 @@
     @media (max-width: 700px) {
         .document-item { align-items:flex-start; flex-direction:column; }
     }
+    .mmsp-prigovor-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 24px;
+        box-sizing: border-box;
+    }
+    .mmsp-prigovor-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0B3D91;
+        margin: 0 0 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .mmsp-prigovor-card p,
+    .mmsp-prigovor-card li,
+    .mmsp-prigovor-card label {
+        font-size: 14px;
+        color: #111827;
+        line-height: 1.5;
+    }
+    .mmsp-prigovor-card textarea.mmsp-prigovor-textarea {
+        width: 100%;
+        min-height: 140px;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        margin-top: 8px;
+    }
+    .mmsp-prigovor-submit {
+        margin-top: 16px;
+        background: #0B3D91;
+        color: #fff;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
+    }
 </style>
 
 <div class="application-detail-page">
@@ -398,6 +442,126 @@
                 </div>
             </div>
 
+            @php
+                $mmspReview = $canonicalReview;
+                $mmspNoticeStatuses = [
+                    \App\Services\Competitions\ComplaintService::STATUS_INCOMPLETE,
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_AVAILABLE,
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_SUBMITTED,
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_ACCEPTED,
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_REJECTED,
+                ];
+                $mmspReviewNotice = $mmspReview !== null
+                    && $application->status !== 'draft'
+                    && in_array($mmspReview['status'], $mmspNoticeStatuses, true);
+                $mmspReviewSummary = $mmspReview !== null && $application->status !== 'draft' && ! $mmspReviewNotice;
+                $mmspComplaintState = match (is_array($mmspReview) ? ($mmspReview['status'] ?? null) : null) {
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_SUBMITTED => 'Podnesen',
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_ACCEPTED => 'Prihvaćen',
+                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_REJECTED => 'Odbijen',
+                    default => null,
+                };
+                $mmspDecisionDuePassed = false;
+                $mmspDecidedLate = false;
+                if ($mmspReview && $mmspReview['complaintDecisionDueAt']) {
+                    $mmspDue = \Carbon\CarbonImmutable::parse($mmspReview['complaintDecisionDueAt'])->timezone($mmspReview['timezone']);
+                    if ($mmspReview['complaintDecision'] === null) {
+                        $mmspDecisionDuePassed = \Carbon\CarbonImmutable::now($mmspReview['timezone'])->greaterThan($mmspDue);
+                    }
+                    if ($mmspReview['complaintDecidedAt']) {
+                        $mmspDecidedLate = \Carbon\CarbonImmutable::parse($mmspReview['complaintDecidedAt'])->timezone($mmspReview['timezone'])->greaterThan($mmspDue);
+                    }
+                }
+            @endphp
+
+            @if($mmspReviewNotice)
+                <div class="mmsp-prigovor-card" id="application-review" data-status="{{ $mmspReview['status'] }}">
+                    <h2>Obavještenje i Prigovor</h2>
+
+                    @if(filled($mmspReview['incompleteReason']) || $mmspReview['noticeSentAt'])
+                        @if(filled($mmspReview['incompleteReason']))
+                            <p><strong>Obrazloženje Komisije o nepotpunosti prijave</strong></p>
+                            <p style="white-space: pre-wrap;">{{ $mmspReview['incompleteReason'] }}</p>
+                        @endif
+                        @if($mmspReview['noticeSentAt'])
+                            <p>
+                                Imate pravo na jedan Prigovor putem Platforme u roku od 3 dana od slanja obavještenja.
+                                Rok ističe {{ $reviewAt($mmspReview['complaintDeadline']) }}.
+                            </p>
+                            <p>Vanjski e-mail nije važeći kanal podnošenja Prigovora. Prigovor nije dopuna prijave i njime se ne mogu dodavati, zamjenjivati ni brisati dokumenti, niti mijenjati obrasci ili podaci prijave.</p>
+                        @endif
+                    @endif
+
+                    @if($mmspReview['complaintSubmittedAt'])
+                        @if($mmspComplaintState)
+                            <p><strong>Stanje Vašeg Prigovora:</strong> {{ $mmspComplaintState }}</p>
+                        @endif
+                        <p>Podnesen: {{ $reviewAt($mmspReview['complaintSubmittedAt']) }}</p>
+                        @if(filled($mmspReview['complaintBody']))
+                            <p><strong>Vaše obrazloženje prigovora</strong></p>
+                            <p style="white-space: pre-wrap;">{{ $mmspReview['complaintBody'] }}</p>
+                        @endif
+                        @if($mmspReview['complaintDecision'] === null)
+                            <p>Prigovor je podnesen Komisiji.</p>
+                            @if($mmspReview['complaintDecisionDueAt'])
+                                <p>Rok Komisije za odluku: {{ $reviewAt($mmspReview['complaintDecisionDueAt']) }} (7 kalendarskih dana od prijema).</p>
+                            @endif
+                            @if($mmspDecisionDuePassed)
+                                <p>Rok od 7 dana je prekoračen. Čeka se odluka Komisije. Platforma ne donosi automatsku odluku.</p>
+                            @else
+                                <p>Čeka se odluka Komisije.</p>
+                            @endif
+                        @else
+                            <p>
+                                Konačna odluka Komisije: {{ $mmspComplaintState }}
+                                @if($mmspReview['complaintDecidedAt'])
+                                    ({{ $reviewAt($mmspReview['complaintDecidedAt']) }})
+                                @endif
+                            </p>
+                            @if($mmspDecidedLate)
+                                <p>Odluka je evidentirana nakon isteka roka od 7 dana.</p>
+                            @endif
+                            @if(filled($mmspReview['complaintDecisionNotes']))
+                                <p><strong>Obrazloženje odluke:</strong></p>
+                                <p style="white-space: pre-wrap;">{{ $mmspReview['complaintDecisionNotes'] }}</p>
+                            @endif
+                            @if($mmspReview['complaintDecision'] === \App\Models\ApplicationComplaint::ACCEPTED)
+                                <p>Prijava se smatra potpunom i nastavlja postupak u fazi bodovanja.</p>
+                            @else
+                                <p>Nalaz o nepotpunosti ostaje na snazi; prijava ne učestvuje u daljem bodovanju.</p>
+                            @endif
+                        @endif
+                    @elseif($mmspReview['complaintOpen'])
+                        <form method="POST" action="{{ route('applications.complaint', $application) }}">
+                            @csrf
+                            <label for="canonical_complaint_body"><strong>Vaše obrazloženje prigovora</strong></label>
+                            <textarea id="canonical_complaint_body"
+                                name="body"
+                                class="mmsp-prigovor-textarea"
+                                maxlength="5000"
+                                required>{{ old('body') }}</textarea>
+                            @error('body')
+                                <p style="color: #ef4444;">{{ $message }}</p>
+                            @enderror
+                            <button type="submit" class="mmsp-prigovor-submit">Podnesi Prigovor</button>
+                        </form>
+                    @elseif($mmspReview['closed'])
+                        <p>Postupak po ovom Pozivu je zatvoren.</p>
+                    @elseif($mmspReview['rankingFormed'])
+                        <p>{{ \App\Services\Competitions\CompletenessAssessmentService::STAGE_LOCKED_MESSAGE }}</p>
+                    @elseif($mmspReview['status'] === \App\Services\Competitions\ComplaintService::STATUS_INCOMPLETE)
+                        <p>Rok za Prigovor je istekao.</p>
+                    @endif
+
+                    @if($mmspReview['closed'] && $mmspReview['complaintSubmittedAt'])
+                        <p>Postupak po ovom Pozivu je zatvoren.</p>
+                    @endif
+                    @if($mmspReview['rankingFormed'] && $mmspReview['proceedsToScoring'])
+                        <p>Bodovanje je završeno i formirana je preliminarna rang lista.</p>
+                    @endif
+                </div>
+            @endif
+
             <div class="info-card" id="application-documents">
                 <h2>Dodaj dokument</h2>
 
@@ -474,6 +638,18 @@
             </div>
         </div>
 
+        @if($mmspReviewSummary)
+            <div class="mmsp-prigovor-card" id="application-review" data-status="{{ $mmspReview['status'] }}">
+                <h2>Provjera potpunosti</h2>
+                <p><strong>{{ $mmspReview['label'] }}</strong></p>
+                @if($mmspReview['closed'])
+                    <p>Postupak po ovom Pozivu je zatvoren.</p>
+                @elseif($mmspReview['rankingFormed'] && $mmspReview['proceedsToScoring'])
+                    <p>Bodovanje je završeno i formirana je preliminarna rang lista.</p>
+                @endif
+            </div>
+        @endif
+
         <div class="info-card">
             <h2>Priložena dokumentacija</h2>
             <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:8px; font-size:13px; color:#374151;">
@@ -514,78 +690,6 @@
                 @endforeach
             </ul>
         </div>
-
-        @if(
-            $canonicalReview !== null
-            && $application->status !== 'draft'
-            && (
-                $canonicalReview['incompleteReason'] !== null
-                || $canonicalReview['complaintSubmittedAt']
-                || $canonicalReview['complaintOpen']
-            )
-        )
-            <div class="info-card" id="application-review">
-                <h2>Obavještenje i Prigovor</h2>
-
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Provjera potpunosti</span>
-                        <span class="info-value"><strong>{{ $canonicalReview['label'] }}</strong></span>
-                    </div>
-
-                    @if($canonicalReview['incompleteReason'] !== null)
-                        <div class="info-item">
-                            <span class="info-label">Nalaz Komisije</span>
-                            <span class="info-value">{{ $canonicalReview['incompleteReason'] }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Obavještenje poslato</span>
-                            <span class="info-value">{{ $reviewAt($canonicalReview['noticeSentAt']) }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Rok za Prigovor</span>
-                            <span class="info-value">{{ $reviewAt($canonicalReview['complaintDeadline']) }}</span>
-                        </div>
-                        <p style="font-size:13px; color:#4b5563; line-height:1.5; margin:0;">
-                            Prigovor ne otvara prijavu za izmjenu niti omogućava naknadno dostavljanje dokumenata.
-                            Komisija odlučuje na osnovu podnesenog dosijea.
-                        </p>
-                    @endif
-
-                    @if($canonicalReview['complaintSubmittedAt'])
-                        <div class="info-item">
-                            <span class="info-label">Vaš Prigovor</span>
-                            <span class="info-value">Podnesen {{ $reviewAt($canonicalReview['complaintSubmittedAt']) }}</span>
-                        </div>
-                        @if($canonicalReview['complaintDecision'] === null)
-                            <div class="alert alert-info" style="margin:0;">Prigovor čeka odluku Komisije.</div>
-                        @else
-                            <div class="alert {{ $canonicalReview['complaintDecision'] === \App\Models\ApplicationComplaint::ACCEPTED ? 'alert-success' : 'alert-warning' }}" style="margin:0;">
-                                Odluka Komisije: prigovor je
-                                <strong>{{ $canonicalReview['complaintDecision'] === \App\Models\ApplicationComplaint::ACCEPTED ? 'prihvaćen' : 'odbijen' }}</strong>
-                                ({{ $reviewAt($canonicalReview['complaintDecidedAt']) }}).
-                                @if(filled($canonicalReview['complaintDecisionNotes']))
-                                    <div style="margin-top:8px;"><strong>Obrazloženje:</strong> {{ $canonicalReview['complaintDecisionNotes'] }}</div>
-                                @endif
-                            </div>
-                        @endif
-                    @elseif($canonicalReview['complaintOpen'])
-                        <form method="POST" action="{{ route('applications.complaint', $application) }}">
-                            @csrf
-                            <div class="form-group">
-                                <label class="form-label" for="canonical_complaint_body">Obrazloženje Prigovora</label>
-                                <textarea id="canonical_complaint_body" name="body" rows="5" maxlength="5000" required class="form-control" style="min-height:140px;">{{ old('body') }}</textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Podnesi Prigovor</button>
-                        </form>
-                    @elseif($canonicalReview['incompleteReason'] !== null)
-                        <div class="info-item">
-                            <span class="info-value">Prigovor nije podnesen ili je rok istekao.</span>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        @endif
 
         @if($canStartAnother)
             <div class="alert alert-info">

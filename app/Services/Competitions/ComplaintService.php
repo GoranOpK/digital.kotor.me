@@ -309,6 +309,8 @@ class ComplaintService
             'complaintDeadline' => $incomplete?->notice_sent_at ? $policy->complaintWindowEndsAt($incomplete->notice_sent_at) : null,
             'complaintOpen' => $complaintOpen,
             'complaintSubmittedAt' => $complaint?->submitted_at,
+            'complaintBody' => $complaint?->body,
+            'complaintDecisionDueAt' => $complaint?->decision_due_at,
             'complaintDecision' => $complaint?->decision,
             'complaintDecidedAt' => $complaint?->decided_at,
             'complaintDecisionNotes' => $complaint?->decision !== null ? $complaint->decision_notes : null,
