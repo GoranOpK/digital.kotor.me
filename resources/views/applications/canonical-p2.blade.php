@@ -31,6 +31,62 @@
 .canonical-ui-page.mmsp-business-plan .mmsp-p2-locked {
     background: #f3f4f6;
     color: #374151;
+    cursor: not-allowed;
+}
+/* Screen rhythm from Obrazac M2 (.obrazac-form-page in obrazac-form-styles). */
+.canonical-ui-page.mmsp-business-plan .mmsp-form-control {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-label {
+    font-size: 14px;
+    font-weight: 600;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-text {
+    font-size: 12px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-section h2 {
+    font-size: 20px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-obrazac-title {
+    font-size: 22px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-group {
+    margin-bottom: 20px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-row,
+.canonical-ui-page.mmsp-business-plan .mmsp-form-row-3 {
+    gap: 20px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-section > .mmsp-form-row {
+    margin-bottom: 20px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-form-section > .mmsp-form-text {
+    margin-top: 4px;
+    margin-bottom: 20px;
+}
+.canonical-ui-page.mmsp-business-plan textarea.mmsp-form-control {
+    min-height: 80px;
+    resize: vertical;
+    font-family: inherit;
+}
+.canonical-ui-page.mmsp-business-plan textarea.mmsp-form-control[rows="2"] {
+    min-height: 60px;
+}
+.canonical-ui-page.mmsp-business-plan textarea.mmsp-form-control[rows="1"] {
+    min-height: 40px;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-dynamic-table input,
+.canonical-ui-page.mmsp-business-plan .mmsp-dynamic-table textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
 }
 @media (max-width: 640px) {
     .canonical-ui-page.mmsp-business-plan .mmsp-obrazac-top {
@@ -64,8 +120,9 @@
         padding:0 !important; margin:0 !important; width:100% !important; max-width:none !important;
     }
     .mmsp-business-plan .mmsp-obrazac-zaglavlje {
-        background:#fff !important; box-shadow:none !important; border:none !important;
-        border-radius:0 !important; padding:0 0 8px !important; margin:0 0 8px !important;
+        background:#fff !important; box-shadow:none !important;
+        border:1px solid #ccc !important; border-radius:12px !important;
+        padding:12px 16px !important; margin:0 0 12px !important;
         break-inside:avoid;
     }
     .mmsp-business-plan .mmsp-obrazac-grb img { height:2cm !important; width:auto !important; }
@@ -73,69 +130,76 @@
     .mmsp-business-plan .mmsp-obrazac-contact { font-size:11.7px !important; }
     .mmsp-business-plan .mmsp-obrazac-number,
     .mmsp-business-plan .mmsp-obrazac-code { font-size:12.6px !important; }
-    .mmsp-business-plan .mmsp-obrazac-title { font-size:22px !important; }
+    .mmsp-business-plan .mmsp-obrazac-title { font-size:19.8px !important; }
     .mmsp-business-plan form, .mmsp-business-plan fieldset { margin:0 !important; padding:0 !important; width:100% !important; }
     .mmsp-business-plan .mmsp-form-card {
-        background:#fff !important; box-shadow:none !important; padding:0 !important;
-        margin:0 0 12px !important; border:0 !important; border-radius:0 !important;
+        background:transparent !important; box-shadow:none !important; padding:0 !important;
+        margin:0 0 10px !important; border:0 !important; border-radius:0 !important;
     }
-    .mmsp-business-plan .mmsp-form-section { margin:0 !important; break-inside:auto; page-break-inside:auto; }
+    .mmsp-business-plan .mmsp-form-section { margin:0 0 14px !important; break-inside:auto; page-break-inside:auto; }
     .mmsp-business-plan .mmsp-form-section h2 {
-        font-size:12pt !important; margin:7px 0 8px !important; padding-bottom:4px !important;
-        color:#000 !important; border-bottom:1px solid #000 !important;
+        font-size:12pt !important; margin:0 0 8px !important; padding-bottom:4px !important;
+        color:var(--canonical-primary) !important; border-bottom:1px solid var(--canonical-border) !important;
         break-after:avoid; page-break-after:avoid;
     }
     .mmsp-business-plan .mmsp-form-section > .mmsp-form-text {
+        margin-bottom:6px !important;
         break-after:avoid; page-break-after:avoid;
     }
     .mmsp-business-plan .mmsp-section-number {
-        background:transparent !important; color:#000 !important;
-        border:1px solid #000 !important; border-radius:0 !important;
+        background:transparent !important; color:var(--canonical-primary) !important;
+        border:1px solid var(--canonical-primary) !important; border-radius:0 !important;
         width:auto !important; height:auto !important; line-height:1.2 !important;
         padding:0 5px !important; font-size:11pt !important;
     }
-    .mmsp-business-plan .mmsp-form-group { margin-bottom:9px !important; break-inside:avoid; page-break-inside:avoid; }
+    .mmsp-business-plan .mmsp-form-group { margin-bottom:6px !important; break-inside:avoid; page-break-inside:avoid; }
     .mmsp-business-plan .mmsp-form-group:has(textarea) {
         break-inside:auto !important; page-break-inside:auto !important;
     }
     .mmsp-business-plan .mmsp-form-label {
         font-size:9.9pt !important; font-weight:600 !important; margin-bottom:2px !important;
+        color:#374151 !important;
     }
     .mmsp-business-plan .mmsp-form-control {
-        font-size:9pt !important; line-height:1.4 !important; box-sizing:border-box !important;
+        font-size:10pt !important; line-height:1.4 !important; box-sizing:border-box !important;
         width:100% !important; max-width:100% !important; min-width:0 !important;
-        padding:3px 5px !important; border:1px solid #d1d5db !important; border-radius:0 !important;
-        box-shadow:none !important; background:#fff !important; color:#111 !important;
+        padding:1px 0 !important; border:none !important; border-radius:0 !important;
+        box-shadow:none !important; background:transparent !important; color:#111 !important;
+        min-height:0 !important;
     }
     .mmsp-business-plan textarea.mmsp-form-control {
-        border:1px solid #000 !important; background:#fff !important;
+        border:1px solid #d1d5db !important; background:#fff !important;
         padding:6px 8px !important; margin-top:2px !important;
         min-height:5em !important; height:auto !important; max-height:none !important;
         resize:none !important; overflow:visible !important; field-sizing:content;
-        break-inside:auto; page-break-inside:auto;
+        break-inside:auto; page-break-inside:auto; font-size:10pt !important;
     }
-    .mmsp-business-plan .mmsp-form-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; gap:6px 16px !important; }
-    .mmsp-business-plan .mmsp-form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:6px 12px !important; }
-    .mmsp-business-plan .mmsp-form-text { font-size:9pt !important; }
+    .mmsp-business-plan .mmsp-form-section > .mmsp-form-row { margin-bottom:6px !important; }
+    .mmsp-business-plan .mmsp-form-row { grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; gap:20px !important; }
+    .mmsp-business-plan .mmsp-form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:20px !important; }
     .mmsp-business-plan [style*="overflow-x:auto"] {
         overflow:visible !important; break-inside:auto; page-break-inside:auto;
     }
     .mmsp-business-plan .mmsp-dynamic-table {
         width:100% !important; border-collapse:collapse !important; border-spacing:0 !important;
-        table-layout:fixed !important; break-inside:auto; page-break-inside:auto;
+        table-layout:fixed !important; font-size:9pt !important; margin:8px 0 !important;
+        break-inside:auto; page-break-inside:auto;
     }
     .mmsp-business-plan .mmsp-dynamic-table th,
     .mmsp-business-plan .mmsp-dynamic-table td {
-        border:1px solid #000 !important; padding:3px 5px !important; font-size:9pt !important;
+        border:1px solid var(--canonical-border) !important; padding:3px 5px !important; font-size:9pt !important;
         background:transparent !important;
     }
-    .mmsp-business-plan .mmsp-dynamic-table th { font-weight:bold !important; color:#000 !important; }
-    .mmsp-business-plan .mmsp-dynamic-table .mmsp-form-control {
+    .mmsp-business-plan .mmsp-dynamic-table th { font-weight:bold !important; color:#374151 !important; }
+    .mmsp-business-plan .mmsp-dynamic-table .mmsp-form-control,
+    .mmsp-business-plan .mmsp-dynamic-table textarea.mmsp-form-control {
         border:none !important; background:transparent !important; box-shadow:none !important;
-        padding:0 !important; min-height:0 !important; margin-top:0 !important;
+        padding:1px 0 !important; min-height:0 !important; margin-top:0 !important;
+        font-size:9pt !important; border-radius:0 !important;
     }
     .mmsp-business-plan .mmsp-dynamic-table tr { break-inside:avoid; page-break-inside:avoid; }
-    .mmsp-business-plan .mmsp-required { color:#111 !important; }
+    .mmsp-business-plan .mmsp-required,
+    .mmsp-business-plan .error-message { display:none !important; }
 }
 </style>
 @php
@@ -301,7 +365,7 @@
                 <div class="mmsp-form-card">
                     <div class="mmsp-form-section">
                         <h2><span class="mmsp-section-number">III</span> FINANSIJSKI OKVIR ULAGANJA</h2>
-                        <p class="mmsp-form-text" style="margin-bottom:16px;">
+                        <p class="mmsp-form-text">
                             Unesite planirane troškove i sopstveno učešće. Ukupna vrijednost ulaganja i očekivani iznos subvencije računaju se automatski. Iznosi se unose u EUR, sa najviše dvije decimale.
                         </p>
 
