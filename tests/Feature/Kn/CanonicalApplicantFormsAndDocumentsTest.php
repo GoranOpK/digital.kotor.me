@@ -19,6 +19,7 @@ use App\Security\JmbDualWrite;
 use App\Services\Competitions\ApplicationEvidenceFreezer;
 use App\Services\Competitions\CanonicalApplicantFormService;
 use App\Services\Competitions\CanonicalBeneficiaryApplications;
+use App\Services\Competitions\CanonicalInvestmentPlanService;
 use App\Services\Competitions\CanonicalDocumentService;
 use App\Services\Competitions\CanonicalReviewBasis;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance as G;
@@ -32,6 +33,7 @@ use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use LogicException;
 use RuntimeException;
@@ -686,6 +688,69 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertSessionHasErrors('error');
         $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $plan->fresh()->subsidy_type);
         $this->assertEquals($keptNarrative, $plan->fresh()->narrative_sections);
+    }
+
+    public function test_p2_save_adopts_the_subsidy_type_read_after_the_application_lock(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->canonicalDraft($owner, $this->openCall(), ['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
+        $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->firstOrFail();
+        $keptNarrative = $plan->narrative_sections;
+
+        $sawApplicationLock = false;
+        DB::listen(function ($query) use ($application, &$sawApplicationLock): void {
+            $sql = strtolower($query->sql);
+            if ($sawApplicationLock || ! str_contains($sql, 'for update') || ! str_contains($sql, 'applications')) {
+                return;
+            }
+            $sawApplicationLock = true;
+            CanonicalApplicantForm::query()
+                ->where('application_id', $application->id)
+                ->update(['subsidy_type' => CanonicalSubsidyType::DIGITALIZATION]);
+        });
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), array_merge($this->p2Payload(CanonicalSubsidyType::INNOVATIVE), [
+                'subsidy_type' => '',
+                'narrative_sections' => $keptNarrative,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue($sawApplicationLock);
+        $plan->refresh();
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, CanonicalApplicantForm::query()->where('application_id', $application->id)->value('subsidy_type'));
+        $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, $plan->subsidy_type);
+        $this->assertEquals($keptNarrative, $plan->narrative_sections);
+        $this->assertSame('1000.00', $plan->total_investment);
+    }
+
+    public function test_p2_subsidy_authority_locks_application_then_p1_then_p2(): void
+    {
+        $method = new \ReflectionMethod(CanonicalInvestmentPlanService::class, 'save');
+        $lines = file($method->getFileName());
+        $body = implode('', array_slice($lines, $method->getStartLine() - 1, $method->getEndLine() - $method->getStartLine() + 1));
+
+        $transaction = strpos($body, 'DB::transaction');
+        $applicationLock = strpos($body, 'Application::query()->whereKey($application->id)->lockForUpdate()');
+        $formLock = strpos($body, 'CanonicalApplicantForm::query()');
+        $mismatch = strpos($body, 'SUBSIDY_MISMATCH_MESSAGE');
+        $adopt = strpos($body, "\$values['subsidy_type'] = \$p1Type");
+        $duplicate = strpos($body, 'subsidyTypeAlreadyTaken');
+        $planLock = strpos($body, 'CanonicalInvestmentPlan::query()');
+        $frozen = strpos($body, 'FROZEN_MESSAGE');
+
+        $this->assertNotFalse($transaction);
+        $beforeTransaction = substr($body, 0, $transaction);
+        $this->assertStringNotContainsString('CanonicalApplicantForm', $beforeTransaction);
+        $this->assertStringNotContainsString('subsidyTypeAlreadyTaken', $beforeTransaction);
+        $this->assertStringContainsString('consistencyErrors', $beforeTransaction);
+        $this->assertTrue($transaction < $applicationLock);
+        $this->assertTrue($applicationLock < $formLock);
+        $this->assertTrue($formLock < $mismatch);
+        $this->assertTrue($mismatch < $adopt);
+        $this->assertTrue($adopt < $duplicate);
+        $this->assertTrue($duplicate < $planLock);
+        $this->assertTrue($planLock < $frozen);
     }
 
     public function test_p2_basic_data_follows_the_saved_p1_form_not_the_later_profile(): void

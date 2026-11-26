@@ -68,20 +68,6 @@ final class CanonicalInvestmentPlanService
 
         [$values, $errors] = $this->normalize($input);
         $errors += $this->consistencyErrors($values, false);
-
-        if ($errors === []) {
-            $p1Type = CanonicalApplicantForm::query()->where('application_id', $application->id)->value('subsidy_type');
-            $p1Type = is_string($p1Type) && $p1Type !== '' ? $p1Type : null;
-            if ($values['subsidy_type'] !== null && $values['subsidy_type'] !== $p1Type) {
-                $errors['subsidy_type'] = CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE;
-            } else {
-                $values['subsidy_type'] = $p1Type;
-                if ($p1Type !== null && $this->beneficiaries->subsidyTypeAlreadyTaken($application, $p1Type)) {
-                    $errors['subsidy_type'] = CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE;
-                }
-            }
-        }
-
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
@@ -90,6 +76,26 @@ final class CanonicalInvestmentPlanService
             $locked = Application::query()->whereKey($application->id)->lockForUpdate()->first();
             if (! $locked || $locked->isApplicantContentWriteLocked()) {
                 return ProcessWriteResult::failed('Prijava je zaključana i plan ulaganja više nije moguće mijenjati.');
+            }
+
+            // Same lock order as CanonicalApplicantFormService: application, P1, then P2.
+            // The subsidy type is read only after the application lock, so a concurrent
+            // P1 save cannot commit a newer type that this request then overwrites.
+            $form = CanonicalApplicantForm::query()
+                ->where('application_id', $locked->id)
+                ->lockForUpdate()
+                ->first();
+            $p1Type = is_string($form?->subsidy_type) && $form->subsidy_type !== '' ? $form->subsidy_type : null;
+            if ($values['subsidy_type'] !== null && $values['subsidy_type'] !== $p1Type) {
+                throw ValidationException::withMessages([
+                    'subsidy_type' => CanonicalApplicantFormService::SUBSIDY_MISMATCH_MESSAGE,
+                ]);
+            }
+            $values['subsidy_type'] = $p1Type;
+            if ($p1Type !== null && $this->beneficiaries->subsidyTypeAlreadyTaken($locked, $p1Type)) {
+                throw ValidationException::withMessages([
+                    'subsidy_type' => CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE,
+                ]);
             }
 
             $plan = CanonicalInvestmentPlan::query()
