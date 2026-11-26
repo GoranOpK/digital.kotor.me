@@ -419,6 +419,7 @@ class MmspTestAccessTest extends TestCase
             'role_id' => Role::where('name', $role)->firstOrFail()->id,
             'activation_status' => 'active',
             'email_verified_at' => now(),
+            'user_type' => $role === 'korisnik' ? UserType::PHYSICAL_PERSON : null,
         ]);
     }
 

@@ -283,9 +283,10 @@ class CompetitionsController extends Controller
 
             if ($competition->type === CompetitionProfileResolver::TYPE_CANONICAL) {
                 $storedCanonicalForm = $userApplication?->canonicalApplicantForm?->legal_form;
+                $identityForm = CanonicalLegalForm::forUserType(is_string($userType) ? $userType : null);
                 $canonicalLegalForm = CanonicalLegalForm::isValid($storedCanonicalForm)
                     ? $storedCanonicalForm
-                    : null;
+                    : $identityForm;
 
                 if ($canonicalLegalForm === CanonicalLegalForm::PREDUZETNIK) {
                     $canonicalApplicantTypeLabel = 'Preduzetnik — Obrazac P1a';

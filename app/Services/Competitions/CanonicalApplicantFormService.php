@@ -30,6 +30,8 @@ final class CanonicalApplicantFormService
 {
     public const LEGAL_FORM_REQUIRED_MESSAGE = 'Izaberite pravnu formu podnosioca: preduzetnik (Obrazac P1a) ili društvo (Obrazac P1b).';
 
+    public const FORM_IDENTITY_MISMATCH_MESSAGE = 'Ovaj obrazac nije dostupan za registrovani identitet na vašem nalogu.';
+
     public const NOT_CANONICAL_MESSAGE = 'Obrazac P1a/P1b postoji samo za kanonski MMSP profil.';
 
     public const OPEN_DRAFT_EXISTS_MESSAGE = 'Već imate započetu prijavu na ovaj javni poziv. Završite je ili obrišite prije nove.';
@@ -97,13 +99,16 @@ final class CanonicalApplicantFormService
         return null;
     }
 
-    public function start(Competition $competition, User $user, mixed $legalForm): ProcessWriteResult
+    public function legalFormForUser(User $user): ?string
     {
-        if (! CanonicalLegalForm::isValid($legalForm)) {
-            return ProcessWriteResult::failed(self::LEGAL_FORM_REQUIRED_MESSAGE);
-        }
+        $userType = app(CurrentIdentityResolver::class)->viewFor($user)->userType;
 
-        return DB::transaction(function () use ($competition, $user, $legalForm) {
+        return CanonicalLegalForm::forUserType(is_string($userType) ? $userType : null);
+    }
+
+    public function start(Competition $competition, User $user, mixed $requestedLegalForm = null): ProcessWriteResult
+    {
+        return DB::transaction(function () use ($competition, $user, $requestedLegalForm) {
             $locked = Competition::query()->whereKey($competition->id)->lockForUpdate()->first();
             if (! $locked) {
                 return ProcessWriteResult::failed('Javni poziv nije pronađen.');
@@ -112,6 +117,16 @@ final class CanonicalApplicantFormService
             $block = $this->startBlockReason($locked, $user);
             if ($block !== null) {
                 return ProcessWriteResult::failed($block);
+            }
+
+            $legalForm = $this->legalFormForUser($user);
+            if ($legalForm === null) {
+                return ProcessWriteResult::failed(CanonicalLegalForm::eligibilityMessage());
+            }
+
+            $requested = is_string($requestedLegalForm) ? $requestedLegalForm : null;
+            if ($requested !== null && $requested !== '' && $requested !== $legalForm) {
+                return ProcessWriteResult::failed(self::FORM_IDENTITY_MISMATCH_MESSAGE);
             }
 
             $application = Application::query()->create([
@@ -161,6 +176,9 @@ final class CanonicalApplicantFormService
         $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->first();
         if (! $form || ! CanonicalLegalForm::isValid($form->legal_form)) {
             return ProcessWriteResult::failed(self::LEGAL_FORM_REQUIRED_MESSAGE);
+        }
+        if ($this->legalFormForUser($actor) !== $form->legal_form) {
+            return ProcessWriteResult::failed(self::FORM_IDENTITY_MISMATCH_MESSAGE);
         }
         if ($form->isFrozen()) {
             return ProcessWriteResult::failed(CanonicalApplicantForm::FROZEN_MESSAGE);

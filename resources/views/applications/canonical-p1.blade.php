@@ -542,22 +542,15 @@
                     Tip podnosioca prijave <span class="mmsp-p1-req">*</span>
                 </label>
                 <p class="mmsp-p1-type-note">
-                    <strong>Napomena:</strong> Tip prijave birate na stranici konkursa i zaključan je za ovu prijavu.
+                    <strong>Napomena:</strong> Obrazac je određen prema registrovanom identitetu na nalogu i ne može se mijenjati.
                 </p>
-                <div class="mmsp-p1-radio-group">
-                    <label class="mmsp-p1-radio-option">
-                        <input type="radio" disabled @checked($isEntrepreneur)>
-                        <span>Preduzetnik — Obrazac P1a</span>
-                    </label>
-                    <label class="mmsp-p1-radio-option">
-                        <input type="radio" disabled @checked(!$isEntrepreneur)>
-                        <span>Privredno društvo (DOO) — Obrazac P1b</span>
-                    </label>
-                </div>
+                <p style="margin: 0; font-weight: 600;">
+                    {{ $isEntrepreneur ? 'Preduzetnik — Obrazac P1a' : 'Privredno društvo (DOO) — Obrazac P1b' }}
+                </p>
             </div>
 
             <div class="mmsp-p1-alert mmsp-p1-alert-info">
-                <strong>Važno:</strong> Odabrani tip prijave određuje Obrazac {{ $code }} i pripadajuću dokumentaciju prema MMSP Odluci.
+                <strong>Važno:</strong> Registrovani identitet određuje Obrazac {{ $code }} i pripadajuću dokumentaciju prema MMSP Odluci.
             </div>
         @endunless
 

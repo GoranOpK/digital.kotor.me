@@ -40,7 +40,6 @@ class CanonicalApplicantController extends Controller
             return $redirect;
         }
 
-        // Izbor P1a/P1b se radi na stranici MMSP konkursa.
         return redirect()->route('competitions.show', $competition);
     }
 
@@ -50,15 +49,7 @@ class CanonicalApplicantController extends Controller
             return $redirect;
         }
 
-        $legalForm = $request->input('legal_form');
-        if (! CanonicalLegalForm::isValid($legalForm)) {
-            return redirect()->route('competitions.show', $competition)
-                ->withErrors(['legal_form' => CanonicalApplicantFormService::LEGAL_FORM_REQUIRED_MESSAGE]);
-        }
-
-        // Za MMSP korisnik bira da li podnosi prijavu kao preduzetnik (P1a)
-        // ili privredno društvo (P1b), nezavisno od tipa naloga na Digitalu.
-        $result = $this->forms->start($competition, $request->user(), $legalForm);
+        $result = $this->forms->start($competition, $request->user(), $request->input('legal_form'));
         if (! $result->succeeded) {
             return redirect()->route('competitions.show', $competition)
                 ->withErrors(['error' => $result->error]);
@@ -74,6 +65,10 @@ class CanonicalApplicantController extends Controller
 
         $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->first();
         abort_unless($form && CanonicalLegalForm::isValid($form->legal_form), 404);
+        $readOnly = $form->isFrozen() || $application->isApplicantContentWriteLocked();
+        if (! $readOnly) {
+            abort_unless($this->forms->legalFormForUser($request->user()) === $form->legal_form, 403);
+        }
 
         $jmbgForForm = null;
         $verifiedJmbg = null;
@@ -112,7 +107,7 @@ class CanonicalApplicantController extends Controller
             'form' => $form,
             'subsidyTypes' => CanonicalSubsidyType::labels(),
             'accuracyStatement' => CanonicalApplicantFormService::accuracyStatement($form->legal_form),
-            'readOnly' => $form->isFrozen() || $application->isApplicantContentWriteLocked(),
+            'readOnly' => $readOnly,
             'jmbgForForm' => $jmbgForForm,
             'jmbgBlocked' => $jmbgBlocked,
             'jmbgMustMatchPrefill' => $jmbgMustMatchPrefill,
@@ -126,6 +121,9 @@ class CanonicalApplicantController extends Controller
     public function updateP1(Request $request, Application $application): RedirectResponse
     {
         $this->authorizeOwnerOnCanonical($request, $application);
+
+        $form = CanonicalApplicantForm::query()->where('application_id', $application->id)->first();
+        abort_unless($form && $this->forms->legalFormForUser($request->user()) === $form->legal_form, 403);
 
         $result = $this->forms->save($application, $request->user(), $request->only([
             'subsidy_type',

@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CanonicalLegalForm;
+use App\Support\UserType;
 use App\Support\CompetitionProgramCatalog;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,6 +45,8 @@ class MmspTestPreviewHubListTest extends TestCase
 
         $owner = $this->user('korisnik');
         $second = $this->user('korisnik');
+        $owner->forceFill(['user_type' => UserType::PHYSICAL_PERSON])->save();
+        $second->forceFill(['user_type' => UserType::LIMITED_LIABILITY_COMPANY])->save();
         $preview = $this->preview('TEST 5 – Podrška preduzetnicima i MMSP 2026');
         $closedLater = $this->preview('Zatvorena testna faza', [
             'start_date' => now()->addDays(10)->toDateString(),
@@ -190,6 +193,8 @@ class MmspTestPreviewHubListTest extends TestCase
         $actor = $this->user('admin');
         $owner = $this->user('korisnik');
         $second = $this->user('korisnik');
+        $owner->forceFill(['user_type' => UserType::PHYSICAL_PERSON])->save();
+        $second->forceFill(['user_type' => UserType::LIMITED_LIABILITY_COMPANY])->save();
         $this->grant($actor, $owner);
         $this->grant($actor, $second);
 
