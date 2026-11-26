@@ -3,8 +3,9 @@
 namespace App\Support;
 
 /**
- * Canonical MMSP applicant legal form (čl.14 / čl.16): explicitly chosen by the applicant,
- * never inferred from gender, business stage or Women/Youth applicant_type values.
+ * Canonical MMSP applicant legal form (čl.14 / čl.16).
+ * The obrazac follows the registered platform identity. It is not a free choice
+ * and it is not inferred from gender, business stage or Women/Youth applicant_type values.
  */
 final class CanonicalLegalForm
 {
@@ -69,13 +70,15 @@ final class CanonicalLegalForm
     }
 
     /**
-     * MMSP prijavni obrazac se određuje iz registrovanog tipa korisnika.
-     * Odluka poznaje podnosioca kao preduzetnika ili društvo; neregistrovano
-     * fizičko lice i ostali tipovi nijesu automatski svrstani u P1a/P1b.
+     * MMSP obrazac iz registrovanog identiteta na platformi.
+     * Fizičko lice i preduzetnik dobijaju P1a. DOO, AD, OD i KD zadržavaju
+     * postojeće svrstavanje u P1b. Ostali tipovi ostaju bez automatskog obrasca.
      */
     public static function forUserType(?string $userType): ?string
     {
-        if (UserType::isEntrepreneur($userType) || $userType === 'Preduzetnica') {
+        if ($userType === UserType::PHYSICAL_PERSON
+            || UserType::isEntrepreneur($userType)
+            || $userType === 'Preduzetnica') {
             return self::PREDUZETNIK;
         }
 
@@ -88,8 +91,8 @@ final class CanonicalLegalForm
 
     public static function eligibilityMessage(): string
     {
-        return 'Prema MMSP Odluci prijavu može podnijeti registrovani preduzetnik ili privredno društvo. '
-            .'Tip korisnika na vašem nalogu ne odgovara prihvatljivom podnosiocu za ovaj javni poziv.';
+        return 'Tip korisnika na vašem nalogu ne odgovara podnosiocu za ovaj MMSP javni poziv. '
+            .'Obrazac P1a je dostupan fizičkom licu i preduzetniku, a Obrazac P1b društvu sa ograničenom odgovornošću i ostalim privrednim društvima koja su već prihvatljiva.';
     }
 
     /**

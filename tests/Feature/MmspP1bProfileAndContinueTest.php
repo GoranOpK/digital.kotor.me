@@ -8,6 +8,7 @@ use App\Models\Competition;
 use App\Models\FinalApplicationClaim;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Competitions\CanonicalApplicantFormService;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CanonicalLegalForm;
 use App\Support\CanonicalSubsidyType;
@@ -115,16 +116,10 @@ class MmspP1bProfileAndContinueTest extends TestCase
     public function test_p1a_is_not_seeded_from_a_company_profile_and_other_programmes_stay_away(): void
     {
         $owner = $this->legalEntity();
-        $p1a = $this->start($owner, $this->competition(), CanonicalLegalForm::PREDUZETNIK);
-        $form = CanonicalApplicantForm::query()->where('application_id', $p1a->id)->firstOrFail();
-        $this->assertNull($form->company_name);
-        $this->assertNull($form->person_name);
-        $this->assertNull($form->address);
-        $this->assertNull($p1a->fresh()->pib);
-
-        $page = $this->actingAs($owner)->get(route('applications.canonical-p1.edit', $p1a))->assertOk();
-        $page->assertSee('id="p1a-save-button"', false);
-        $page->assertDontSee('id="p1b-save-button"', false);
+        $this->actingAs($owner)
+            ->post(route('applications.canonical.start', $this->competition()), ['legal_form' => CanonicalLegalForm::PREDUZETNIK])
+            ->assertSessionHasErrors(['error' => CanonicalApplicantFormService::FORM_IDENTITY_MISMATCH_MESSAGE]);
+        $this->assertSame(0, Application::query()->where('user_id', $owner->id)->count());
 
         $person = User::factory()->create([
             'email' => 'fizicko-p1b@example.com',
@@ -140,7 +135,7 @@ class MmspP1bProfileAndContinueTest extends TestCase
             'address' => 'Njegoševa 2',
             'city' => 'Kotor',
         ]);
-        $empty = $this->start($person, $this->competition(), CanonicalLegalForm::DRUSTVO);
+        $empty = $this->start($person, $this->competition(), CanonicalLegalForm::PREDUZETNIK);
         $emptyForm = CanonicalApplicantForm::query()->where('application_id', $empty->id)->firstOrFail();
         $this->assertNull($emptyForm->company_name);
         $this->assertNull($emptyForm->person_name);
@@ -155,7 +150,7 @@ class MmspP1bProfileAndContinueTest extends TestCase
                 ->post(route('applications.canonical.start', $call), ['legal_form' => CanonicalLegalForm::DRUSTVO])
                 ->assertNotFound();
         }
-        $this->assertSame(2, Application::query()->count());
+        $this->assertSame(1, Application::query()->count());
     }
 
     private function assertButtonLabel(string $html, string $label, bool $continues): void

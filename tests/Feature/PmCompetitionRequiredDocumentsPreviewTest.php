@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\KnApplicationStartContextFactory;
+use App\Support\CanonicalLegalForm;
 use App\Support\KnOmladinskoDocumentPackage;
 use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
@@ -196,8 +197,10 @@ class PmCompetitionRequiredDocumentsPreviewTest extends TestCase
 
         $html = $this->page($superadmin, $competition);
 
-        $this->assertStringContainsString('Preduzetnik — Obrazac P1a', $html);
-        $this->assertStringContainsString('Privredno društvo (DOO) — Obrazac P1b', $html);
+        $this->assertStringNotContainsString('name="canonical_legal_form_preview"', $html);
+        $this->assertStringNotContainsString('name="legal_form"', $html);
+        $this->assertStringContainsString(CanonicalLegalForm::eligibilityMessage(), $html);
+        $this->assertStringNotContainsString('Prijavi se na konkurs', $html);
         $this->assertStringNotContainsString(self::NOTICE, $html);
         $this->assertStringNotContainsString('Obrazac 1a ili 1b', $html);
         $this->assertStringNotContainsString(self::M1A, $html);

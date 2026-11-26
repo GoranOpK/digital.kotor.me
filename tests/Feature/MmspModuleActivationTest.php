@@ -15,6 +15,7 @@ use App\Services\Competitions\CallPublicationService;
 use App\Services\Competitions\Profile\CompetitionProfilePolicy;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CanonicalLegalForm;
+use App\Support\UserType;
 use App\Support\CompetitionProgramCatalog;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
@@ -276,6 +277,7 @@ class MmspModuleActivationTest extends TestCase
             'role_id' => Role::where('name', $role)->firstOrFail()->id,
             'activation_status' => 'active',
             'email_verified_at' => now(),
+            'user_type' => $role === 'korisnik' ? UserType::PHYSICAL_PERSON : null,
         ]);
     }
 
