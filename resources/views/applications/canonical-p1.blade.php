@@ -38,7 +38,12 @@
         --mmsp-primary-dark: #0A347B;
         background: #f9fafb;
         min-height: 100vh;
-        padding: 24px 0 40px;
+        padding: 24px 0;
+    }
+    @media screen {
+        .mmsp-p1.canonical-ui-page.mmsp-form-page {
+            padding-bottom: 24px !important;
+        }
     }
     .mmsp-p1-wrap {
         margin: 0 auto;
@@ -95,9 +100,10 @@
         border: 1px solid #d1d5db;
         border-radius: 8px;
         font-size: 14px;
+        font-family: inherit;
         transition: border-color 0.2s;
         background: #fff;
-        color: #111827;
+        color: #111;
         box-sizing: border-box;
     }
     .mmsp-p1-control:focus {
@@ -186,7 +192,7 @@
     .mmsp-p1-type-card {
         background:#fff;
         border-radius:16px;
-        padding:28px 32px;
+        padding:32px;
         box-shadow:0 1px 3px rgba(0,0,0,.1);
         margin-bottom:24px;
     }
@@ -263,7 +269,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 12px;
         margin-top: 12px;
         padding-top: 12px;
@@ -272,12 +278,16 @@
     .mmsp-p1-number,
     .mmsp-p1-code {
         font-size: 14px;
-        font-weight: 700;
+    }
+    .mmsp-p1-number {
+        font-weight: 600;
         color: #111;
     }
     .mmsp-p1-code {
         margin-left: auto;
         text-align: right;
+        font-weight: 700;
+        color: #374151;
     }
     .mmsp-p1-title {
         width: 100%;
@@ -316,18 +326,6 @@
         border-color: var(--mmsp-primary);
         background: #f8fafc;
     }
-    @media (max-width: 640px) {
-        .mmsp-p1-header-top {
-            flex-direction: column;
-        }
-        .mmsp-p1-contact {
-            text-align: left;
-        }
-        .mmsp-p1-card {
-            padding: 20px;
-        }
-    }
-
     /* Only the canonical MMSP P1a/P1b print view; on-screen layout stays unchanged. */
     @media print {
         @page { size: A4 portrait; margin: 12mm 10mm; }
@@ -343,8 +341,8 @@
         .mmsp-p1 .mmsp-p1-type-card,
         .mmsp-p1 .mmsp-p1-nav,
         .mmsp-p1 .mmsp-p1-hint,
-        .mmsp-p1 .mmsp-p1-help,
         .mmsp-p1 .mmsp-p1-error,
+        .mmsp-p1 .mmsp-p1-req,
         .mmsp-p1 .mmsp-p1-screen-actions,
         .mmsp-p1 button,
         .mmsp-p1-submit { display: none !important; }
@@ -380,7 +378,7 @@
         .mmsp-p1-header {
             padding: 12px 16px !important;
             margin: 0 0 12px !important;
-            border: 1px solid #ddd !important;
+            border: 1px solid #ccc !important;
             box-shadow: none !important;
             break-inside: avoid;
         }
@@ -405,6 +403,7 @@
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
             column-gap: 16px !important;
+            row-gap: 6px !important;
             align-items: start !important;
         }
         .mmsp-p1 .mmsp-p1-card:not(.mmsp-p1-screen-actions) > .mmsp-p1-row {
@@ -420,12 +419,12 @@
             grid-column: 1 / -1 !important;
         }
         .mmsp-p1-field, .mmsp-p1-full {
-            margin-bottom: 10px !important;
+            margin-bottom: 6px !important;
             min-width: 0 !important;
             break-inside: avoid;
         }
         .mmsp-p1-label {
-            margin-bottom: 4px !important;
+            margin-bottom: 2px !important;
             font-size: 9.9pt !important;
             font-weight: 600 !important;
             color: #374151 !important;
@@ -445,15 +444,12 @@
             min-width: 0 !important;
             box-sizing: border-box !important;
             border: 1px solid #d1d5db !important;
-            outline: 1px solid #d1d5db !important;
-            outline-offset: -1px !important;
             padding: 3px 5px !important;
             font-size: 9pt !important;
+            font-family: inherit !important;
             font-weight: 400 !important;
             border-radius: 0 !important;
-            background: #fff !important;
-            height: auto !important;
-            min-height: 29px !important;
+            color: #111 !important;
             box-shadow: none !important;
         }
         .mmsp-p1-section-divider {
@@ -461,13 +457,8 @@
             padding-top: 8px !important;
             break-inside: avoid;
         }
-        .mmsp-p1-check { gap: 8px !important; }
-        .mmsp-p1-check label { font-size: 11px !important; }
-        .mmsp-p1 .mmsp-p1-section-divider .mmsp-p1-help {
-            display: block !important;
-            font-size: 10px !important;
-            margin-top: 5px !important;
-        }
+        .mmsp-p1-check label { font-size: 9pt !important; color: #374151 !important; }
+        .mmsp-p1-control::placeholder { color: transparent; }
         /* P1a print keeps the on-screen pairs. P1b stays on the shared flattened grid. */
         .mmsp-p1 .mmsp-p1-card.mmsp-p1a-sheet:not(.mmsp-p1-screen-actions) > .mmsp-p1-full:not(:has(#subsidy_type)) {
             grid-column: 1 / -1 !important;
