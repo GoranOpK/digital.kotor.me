@@ -1059,7 +1059,33 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
 
         $missing = $this->canonicalDraft($this->makeOwner(), $call, ['without_documents' => ['dokaz_ziro_racun']]);
         $this->assertStringContainsString('Nedostaje prilog: Dokaz o broju poslovnog žiro računa.', (string) app(CanonicalDocumentService::class)->finalBlockReason($missing, now()));
-        $this->actingAs($missing->user)->post(route('applications.final-submit', $missing))->assertSessionHasErrors('error');
+        $this->assertNull(app(CanonicalDocumentService::class)->finalBlockReason($missing, now(), true));
+        $this->actingAs($missing->user)->get(route('applications.show', $missing))
+            ->assertOk()
+            ->assertSee('⚠️ Napomena: Niste priložili sva neophodna dokumenta', false)
+            ->assertSee('Možete podnijeti prijavu uz izričitu potvrdu.', false)
+            ->assertSee('članom 18 Odluke', false)
+            ->assertSee(route('applications.final-submit', $missing), false);
+        $this->actingAs($missing->user)->post(route('applications.final-submit', $missing))
+            ->assertRedirect(route('applications.show', $missing))
+            ->assertSessionHas('mmsp_confirm_missing_documents', true)
+            ->assertSessionHas('mmsp_missing_document_labels', ['Dokaz o broju poslovnog žiro računa']);
+        $this->assertSame('draft', $missing->fresh()->status);
+        $this->actingAs($missing->user)
+            ->followingRedirects()
+            ->post(route('applications.final-submit', $missing))
+            ->assertOk()
+            ->assertSee('Podnesi prijavu uprkos nedostajućim prilozima', false)
+            ->assertSee('name="confirm_missing_documents"', false);
+        $this->actingAs($missing->user)->post(route('applications.final-submit', $missing), [
+            'confirm_missing_documents' => '1',
+        ])->assertRedirect(route('applications.show', $missing))
+            ->assertSessionHas('document_warning');
+        $this->assertSame('submitted', $missing->fresh()->status);
+        $this->actingAs($stale->user)->post(route('applications.final-submit', $stale), [
+            'confirm_missing_documents' => '1',
+        ])->assertSessionHasErrors('error');
+        $this->assertSame('draft', $stale->fresh()->status);
 
         $boundary = $this->canonicalDraft($this->makeOwner(), $call, ['issued_on' => now()->subDays(30)->toDateString()]);
         $this->actingAs($boundary->user)->post(route('applications.final-submit', $boundary))->assertRedirect(route('applications.show', $boundary));
@@ -1137,7 +1163,10 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             'without_documents' => [Catalog::TYPE_CASH_REGISTER],
         ]);
         $this->assertStringContainsString('Nedostaje prilog: Periodični izvještaj sa registra kase.', (string) $documents->finalBlockReason($cashOnly, now()));
-        $this->actingAs($cashOnly->user)->post(route('applications.final-submit', $cashOnly))->assertSessionHasErrors('error');
+        $this->actingAs($cashOnly->user)->post(route('applications.final-submit', $cashOnly))
+            ->assertRedirect(route('applications.show', $cashOnly))
+            ->assertSessionHas('mmsp_confirm_missing_documents', true);
+        $this->assertSame('draft', $cashOnly->fresh()->status);
 
         $this->uploadFromLibrary($cashOnly->user, $cashOnly, 'dokaz_ziro_racun')
             ->assertSessionHasErrors(['document_type' => CanonicalDocumentService::UNKNOWN_TYPE_MESSAGE]);

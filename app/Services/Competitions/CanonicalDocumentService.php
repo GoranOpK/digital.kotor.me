@@ -23,6 +23,8 @@ final class CanonicalDocumentService
 
     public const LOCKED_MESSAGE = 'Prijava je zaključana. Dokumente više nije moguće dodavati.';
 
+    public const MISSING_UPLOAD_PREFIX = 'Nedostaje prilog: ';
+
     public const DUPLICATE_MESSAGE = 'Ovaj dokument je već priložen.';
 
     /**
@@ -151,12 +153,45 @@ final class CanonicalDocumentService
 
     /**
      * Authoritative FINAL document gate at $at (required/conditional items, alternatives, 30-day rule).
+     * Missing required uploads can be reported separately; they do not waive variant, validity, or catalog errors.
      */
-    public function finalBlockReason(Application $application, CarbonInterface $at): ?string
+    public function finalBlockReason(Application $application, CarbonInterface $at, bool $ignoreMissingUploads = false): ?string
     {
-        $issues = CanonicalDocumentCatalog::forApplication($application)->finalIssues($application, $at);
+        $issues = $this->finalIssues($application, $at);
+        if ($ignoreMissingUploads) {
+            $issues = array_values(array_filter(
+                $issues,
+                fn (string $issue): bool => ! str_starts_with($issue, self::MISSING_UPLOAD_PREFIX)
+            ));
+        }
 
         return $issues === [] ? null : 'Prateća dokumentacija (čl.14) nije kompletna: '.implode(' ', $issues);
+    }
+
+    /**
+     * Labels of required uploads that are absent at $at. Other čl.14 defects are not included.
+     *
+     * @return list<string>
+     */
+    public function missingRequiredUploadLabels(Application $application, CarbonInterface $at): array
+    {
+        $labels = [];
+        foreach ($this->finalIssues($application, $at) as $issue) {
+            if (! str_starts_with($issue, self::MISSING_UPLOAD_PREFIX)) {
+                continue;
+            }
+            $labels[] = rtrim(substr($issue, strlen(self::MISSING_UPLOAD_PREFIX)), '.');
+        }
+
+        return $labels;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function finalIssues(Application $application, CarbonInterface $at): array
+    {
+        return CanonicalDocumentCatalog::forApplication($application)->finalIssues($application, $at);
     }
 
     /**
