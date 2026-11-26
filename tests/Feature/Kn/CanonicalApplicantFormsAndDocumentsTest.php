@@ -1726,7 +1726,7 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
             ->assertSee('Obrazac P1a')
-            ->assertSee('Obrazac P2')
+            ->assertSee('Plan ulaganja')
             ->assertDontSee('Biznis plan');
     }
 
