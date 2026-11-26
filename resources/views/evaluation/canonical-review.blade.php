@@ -34,14 +34,21 @@
         'company_name' => 'Naziv društva',
         'person_name' => $p1Entrepreneur ? 'Ime i prezime preduzetnika' : 'Ime i prezime odgovornog lica',
         'address' => $p1Entrepreneur ? 'Adresa' : 'Sjedište',
+    ];
+    if ($p1Entrepreneur) {
+        $p1Labels['registration_date'] = 'Datum registracije u CRPS';
+    }
+    $p1Labels += [
         'activity_code' => 'Šifra djelatnosti',
         'employee_count' => 'Broj zaposlenih',
         'bank_account' => 'Broj žiro računa',
         'phone' => $p1Entrepreneur ? 'Kontakt telefon' : 'Kontakt telefon odgovornog lica',
         'email' => $p1Entrepreneur ? 'E-mail' : 'E-mail odgovornog lica',
         'website' => 'Website',
-        'registration_date' => $p1Entrepreneur ? 'Datum registracije u CRPS' : 'Datum osnivanja',
     ];
+    if (! $p1Entrepreneur) {
+        $p1Labels['registration_date'] = 'Datum osnivanja';
+    }
     $canRecord = ! $readOnly && $recordBlock === null;
     $canDecide = ! $readOnly && $complaint && $decideBlock === null;
 @endphp

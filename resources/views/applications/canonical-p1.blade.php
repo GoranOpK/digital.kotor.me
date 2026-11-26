@@ -462,6 +462,16 @@
             font-size: 10px !important;
             margin-top: 5px !important;
         }
+        /* P1a print keeps the on-screen pairs. P1b stays on the shared flattened grid. */
+        .mmsp-p1 .mmsp-p1-card.mmsp-p1a-sheet:not(.mmsp-p1-screen-actions) > .mmsp-p1-full:not(:has(#subsidy_type)) {
+            grid-column: 1 / -1 !important;
+        }
+        .mmsp-p1 .mmsp-p1-card.mmsp-p1a-sheet:not(.mmsp-p1-screen-actions) > .mmsp-p1-row {
+            display: grid !important;
+            grid-column: 1 / -1 !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            column-gap: 16px !important;
+        }
     }
 </style>
 
@@ -543,7 +553,7 @@
             @method('PUT')
 
             <fieldset @disabled($readOnly) style="border: 0; padding: 0; margin: 0;">
-                <div class="mmsp-p1-card">
+                <div class="mmsp-p1-card{{ $isEntrepreneur ? ' mmsp-p1a-sheet' : '' }}">
                     <p class="mmsp-p1-hint">Polja označena <span class="mmsp-p1-req">*</span> obavezna su za konačnu predaju. Obrazac se može sačuvati i dok nijesu sva popunjena.</p>
 
                     <div class="mmsp-p1-full">
@@ -654,6 +664,11 @@
                         </div>
                         <div class="mmsp-p1-row">
                             <div class="mmsp-p1-field">
+                                <label class="mmsp-p1-label" for="registration_date">Datum registracije u CRPS @if(in_array('registration_date', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
+                                <input id="registration_date" type="date" name="registration_date" value="{{ $value('registration_date') }}" class="mmsp-p1-control @error('registration_date') is-invalid @enderror">
+                                @error('registration_date')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mmsp-p1-field">
                                 <label class="mmsp-p1-label" for="activity_code">Šifra djelatnosti @if(in_array('activity_code', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
                                 <input id="activity_code" type="text" name="activity_code" value="{{ $value('activity_code') }}" placeholder="00.00" class="mmsp-p1-control @error('activity_code') is-invalid @enderror">
                                 @error('activity_code')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
@@ -681,13 +696,6 @@
                                 <label class="mmsp-p1-label" for="email">E-mail @if(in_array('email', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
                                 <input id="email" type="email" name="email" value="{{ $prefillValue('email') }}" class="mmsp-p1-control @error('email') is-invalid @enderror">
                                 @error('email')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
-                            </div>
-                        </div>
-                        <div class="mmsp-p1-row">
-                            <div class="mmsp-p1-field">
-                                <label class="mmsp-p1-label" for="registration_date">Datum registracije u CRPS @if(in_array('registration_date', $required, true))<span class="mmsp-p1-req">*</span>@endif</label>
-                                <input id="registration_date" type="date" name="registration_date" value="{{ $value('registration_date') }}" class="mmsp-p1-control @error('registration_date') is-invalid @enderror">
-                                @error('registration_date')<div class="mmsp-p1-error">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     @endunless
