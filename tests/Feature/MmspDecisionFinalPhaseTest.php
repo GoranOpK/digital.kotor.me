@@ -194,7 +194,7 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->actingAs($chair)
             ->post(route('evaluation.mmsp-decision.generate', $competition), $this->dates())
             ->assertRedirect(route('evaluation.mmsp-decision', $competition))
-            ->assertSessionHas('success', 'Odluka je uspješno generisana i sačuvana.');
+            ->assertSessionHas('success', 'Nova Word odluka je uspješno generisana i sačuvana. Vrijeme generisanja: 10.09.2026. 10:00:00.');
 
         $files = Storage::disk('local')->allFiles(MmspDecisionDocumentStore::DIRECTORY.'/'.$competition->id);
         $this->assertCount(1, $files);
@@ -204,6 +204,9 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertSame($amountBefore, (string) CanonicalOutcome::query()->where('application_id', $application->id)->value('approved_amount'));
 
         $first = $this->actingAs($chair)->get(route('evaluation.mmsp-decision.download', $competition))->assertOk();
+        $this->assertDownloadIsNotCached($first);
+        $first->assertHeader('Pragma', 'no-cache');
+        $first->assertHeader('Expires', '0');
         $text = $this->docxText($first->baseResponse->getFile()->getPathname());
         $this->assertStringContainsString('Primjer DOO i Ana Anić', $text);
         $this->assertStringContainsString('Subvencije za razvoj autentičnih lokalnih proizvoda/usluga', $text);
@@ -674,17 +677,30 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertIsString($firstBytes);
         $this->assertSame($first->content_sha256, hash('sha256', $firstBytes));
 
-        $this->actingAs($chair)
+        sleep(2);
+        $generated = $this->actingAs($chair)
             ->post(route('evaluation.mmsp-decision.generate', $competition), $this->dates())
             ->assertRedirect()
-            ->assertSessionHas('success', 'Odluka je uspješno generisana i sačuvana.');
+            ->assertSessionHas('success', 'Nova Word odluka je uspješno generisana i sačuvana. Vrijeme generisanja: 10.09.2026. 10:00:00.');
 
         $this->assertSame(2, MmspDecisionDocument::query()->where('competition_id', $competition->id)->count());
         $this->assertSame($firstBytes, Storage::disk('local')->get($first->storage_path));
         $second = MmspDecisionDocument::query()->where('competition_id', $competition->id)->orderByDesc('id')->firstOrFail();
+        $this->assertNotSame($first->id, $second->id);
         $this->assertNotSame($first->storage_path, $second->storage_path);
+        $this->assertNotSame($first->content_sha256, $second->content_sha256);
         $this->assertSame($first->ranking_sha256, $second->ranking_sha256);
-        $this->actingAs($chair)->get(route('evaluation.mmsp-decision.download', $competition))->assertOk();
+
+        $page = $this->followRedirects($generated)->assertOk();
+        $page->assertSee('Nova Word odluka je uspješno generisana i sačuvana. Vrijeme generisanja: 10.09.2026. 10:00:00.', false);
+        $page->assertSee('?v='.$second->id, false);
+
+        $download = $this->actingAs($chair)->get(route('evaluation.mmsp-decision.download', $competition))->assertOk();
+        $this->assertDownloadIsNotCached($download);
+        $downloaded = hash_file('sha256', $download->baseResponse->getFile()->getPathname());
+        $this->assertSame($second->content_sha256, $downloaded);
+        $this->assertNotSame($first->content_sha256, $downloaded);
+        $this->assertSame($firstBytes, Storage::disk('local')->get($first->storage_path));
     }
 
     /**
@@ -894,6 +910,17 @@ class MmspDecisionFinalPhaseTest extends TestCase
         }
         $this->assertStringNotContainsString('XX', $text);
         $this->assertStringNotContainsString('xx', $text);
+    }
+
+    private function assertDownloadIsNotCached(object $response): void
+    {
+        $cache = (string) $response->baseResponse->headers->get('Cache-Control');
+        foreach (['private', 'no-store', 'no-cache', 'must-revalidate'] as $directive) {
+            $this->assertStringContainsString($directive, $cache);
+        }
+        $this->assertDoesNotMatchRegularExpression('/(^|,\s*)public($|,)/', $cache);
+        $response->assertHeader('Pragma', 'no-cache');
+        $response->assertHeader('Expires', '0');
     }
 
     private function zipEntry(string $path, string $entry): string

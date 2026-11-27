@@ -50,7 +50,7 @@
 
     <div class="no-print" style="margin: 24px 0 8px 0; text-align: center;">
         @if(!empty($canDownloadMmspDecision))
-            <a href="{{ route('evaluation.mmsp-decision.download', $competition) }}" data-testid="mmsp-decision-download" class="btn" style="background: #0B3D91; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; margin-right: 8px;">Preuzmi odluku</a>
+            <a href="{{ route('evaluation.mmsp-decision.download', $competition) }}?v={{ $mmspDecisionDownloadVersion }}" data-testid="mmsp-decision-download" class="btn" style="background: #0B3D91; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; margin-right: 8px;">Preuzmi odluku</a>
         @endif
         <a href="{{ route('evaluation.index') }}" class="btn" style="background: #6b7280; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">Nazad na rang listu</a>
         @if(!empty($canCloseMmspCompetition))

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Models\MmspDecisionDocument;
 use App\Models\User;
 use App\Services\Competitions\Decision\MmspDecisionCloseService;
 use App\Services\Competitions\MmspDecisionDocumentStore;
@@ -70,6 +71,7 @@ class MmspDecisionController extends Controller
             'competition' => $competition,
             'canGenerateMmspDecision' => $canGenerate,
             'canDownloadMmspDecision' => $isChairman && $validDocument !== null,
+            'mmspDecisionDownloadVersion' => $validDocument?->getKey(),
             'canCloseMmspCompetition' => $existingCloseConditions && $validDocument !== null,
             'mmspCloseBlockedByDocument' => $existingCloseConditions && $validDocument === null,
             'mmspCloseDocumentMessage' => MmspDecisionDocumentStore::CLOSE_BLOCKED,
@@ -110,7 +112,7 @@ class MmspDecisionController extends Controller
         $validated['first_session_date'] = $recordedFirst;
 
         try {
-            $generator->generate($competition, $user, $validated, now());
+            $document = $generator->generate($competition, $user, $validated, now());
         } catch (HttpException|ValidationException $exception) {
             throw $exception;
         } catch (MmspDecisionDocumentStoreException $exception) {
@@ -125,7 +127,7 @@ class MmspDecisionController extends Controller
 
         return redirect()
             ->route('evaluation.mmsp-decision', $competition)
-            ->with('success', MmspDecisionGenerator::GENERATED_MESSAGE);
+            ->with('success', $this->generatedMessage($document));
     }
 
     public function download(Competition $competition, MmspDecisionDocumentStore $store): Response
@@ -159,9 +161,21 @@ class MmspDecisionController extends Controller
             abort(404);
         }
 
-        return response()->download($absolute, 'Odluka-o-dodjeli-subvencija-MMSP-'.$competition->year.'-'.$competition->id.'.docx', [
+        $response = response()->download($absolute, 'Odluka-o-dodjeli-subvencija-MMSP-'.$competition->year.'-'.$competition->id.'.docx', [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ]);
+        $response->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', '0');
+
+        return $response;
+    }
+
+    private function generatedMessage(MmspDecisionDocument $document): string
+    {
+        $generatedAt = $document->generated_at?->timezone((string) config('app.timezone'))->format('d.m.Y. H:i:s');
+
+        return 'Nova Word odluka je uspješno generisana i sačuvana. Vrijeme generisanja: '.$generatedAt.'.';
     }
 
     public function close(Competition $competition, MmspDecisionCloseService $close): RedirectResponse
