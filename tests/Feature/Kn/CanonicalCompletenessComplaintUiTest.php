@@ -714,7 +714,8 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->assertDontSee('Pregled statusa')
             ->assertDontSee('Provjera potpunosti')
             ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
-            ->assertDontSee('repeat(2, 1fr)', false);
+            ->assertSee('.info-grid { grid-template-columns: repeat(2, 1fr);', false)
+            ->assertDontSee('summary-grid { grid-template-columns: repeat(2, 1fr)', false);
         $awaitingHtml = $awaiting->getContent();
         $this->assertFalse(strpos($awaitingHtml, 'id="application-documents"'));
         $this->assertFalse(strpos($awaitingHtml, 'id="application-review"'));
@@ -727,7 +728,8 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $availableHtml = $available->getContent();
         $this->assertNotFalse(strpos($availableHtml, 'id="application-review"'));
         $this->assertFalse(strpos($availableHtml, 'id="application-documents"'));
-        $this->assertStringNotContainsString('repeat(2, 1fr)', $availableHtml);
+        $this->assertStringNotContainsString('summary-grid { grid-template-columns: repeat(2, 1fr)', $availableHtml);
+        $this->assertStringContainsString('.info-grid { grid-template-columns: repeat(2, 1fr);', $availableHtml);
         $gridAt = strpos($availableHtml, '<div class="summary-grid" style="grid-template-columns: 1fr;">');
         $statusAt = strpos($availableHtml, '<h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>');
         $reviewAt = strpos($availableHtml, 'id="application-review"');

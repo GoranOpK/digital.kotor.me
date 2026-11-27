@@ -1837,7 +1837,9 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertOk()
             ->assertSee('<div class="summary-grid" style="grid-template-columns: 1fr;">', false)
             ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
-            ->assertDontSee('repeat(2, 1fr)', false)
+            ->assertSee('.info-grid { grid-template-columns: repeat(2, 1fr);', false)
+            ->assertDontSee('summary-grid { grid-template-columns: repeat(2, 1fr)', false)
+            ->assertDontSee('summary-grid-submitted', false)
             ->assertSee('Dodaj dokument')
             ->assertSee('Priloži dokument');
 
@@ -1848,7 +1850,9 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertOk()
             ->assertSee('<div class="summary-grid" style="grid-template-columns: 1fr;">', false)
             ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
-            ->assertDontSee('repeat(2, 1fr)', false)
+            ->assertSee('.info-grid { grid-template-columns: repeat(2, 1fr);', false)
+            ->assertDontSee('summary-grid { grid-template-columns: repeat(2, 1fr)', false)
+            ->assertDontSee('summary-grid-submitted', false)
             ->assertSee('Osnovni podaci')
             ->assertSee('Priložena dokumentacija')
             ->assertDontSee('Pregled statusa')
@@ -1858,6 +1862,57 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertDontSee('id="application-documents"', false)
             ->assertDontSee('Prijava je podnesena i čeka provjeru potpunosti dokumentacije.')
             ->assertDontSee('id="application-review"', false);
+    }
+
+    public function test_status_page_shows_stored_p2_amounts_and_does_not_recalculate_a_locked_plan(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->canonicalDraft($owner, $this->openCall(), ['with_documents' => false]);
+
+        $draft = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk();
+        $draft->assertSeeInOrder([
+            'Očekivani iznos subvencije',
+            '500,00 €',
+            'Ukupna vrijednost ulaganja',
+            '1.000,00 €',
+            'Ukupan budžet konkursa',
+            '10.000,00 €',
+        ]);
+        $this->assertSame(2, substr_count($draft->getContent(), 'Očekivani iznos subvencije'));
+        $this->assertMatchesRegularExpression(
+            '/Datum podnošenja<\/span>\s*<span class="info-value">/',
+            $draft->getContent()
+        );
+
+        $empty = $this->canonicalDraft($owner, $application->competition, [
+            'with_p2' => false,
+            'with_documents' => false,
+            'subsidy_type' => \App\Support\CanonicalSubsidyType::DIGITALIZATION,
+        ]);
+        $this->actingAs($owner)->get(route('applications.show', $empty))
+            ->assertOk()
+            ->assertSee('Nije unijeto')
+            ->assertSee('10.000,00 €')
+            ->assertDontSee('500,00 €');
+
+        $plan = $application->canonicalInvestmentPlan()->firstOrFail();
+        $plan->forceFill([
+            'total_investment' => '5000.00',
+            'own_contribution' => '0.00',
+            'expected_subsidy' => '5000.00',
+            'frozen_at' => now(),
+        ])->save();
+        $application->forceFill([
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ])->save();
+
+        $locked = $this->actingAs($owner)->get(route('applications.show', $application))->assertOk();
+        $locked->assertSee('5.000,00 €')
+            ->assertDontSee('2.500,00 €')
+            ->assertDontSee('Dodaj dokument')
+            ->assertDontSee('class="btn btn-danger"', false)
+            ->assertSee('Priložena dokumentacija');
     }
 
     // ---------------------------------------------------------------- Helpers
