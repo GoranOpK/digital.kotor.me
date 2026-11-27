@@ -709,16 +709,18 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
 
         $this->actingAs($chair)->get(route('evaluation.canonical-outcome.show', $competition))
-            ->assertRedirect(route('evaluation.create', $a));
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition));
         $this->actingAs($this->applicant())->get(route('evaluation.canonical-outcome.show', $competition))->assertForbidden();
         $this->actingAs($this->komisijaUser('outsider'))->get(route('evaluation.canonical-outcome.show', $competition))->assertForbidden();
 
-        $this->actingAs($chair)->from(route('evaluation.canonical-outcome.show', $competition))
+        $this->actingAs($chair)->from(route('evaluation.mmsp-ranking', $competition))
             ->post(route('evaluation.canonical-outcome.draft', [$competition, $a]), ['decision' => 'support', 'amount' => '999999'])
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition))
             ->assertSessionHasErrors(['canonical_outcome' => CanonicalAmountCapPolicy::AMOUNT_ABOVE_CAP_MESSAGE]);
         $this->assertSame(0, CanonicalOutcome::query()->count());
 
         $this->actingAs($chair)->post(route('evaluation.canonical-outcome.draft', [$competition, $a]), ['decision' => 'support', 'amount' => '500'])
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition))
             ->assertSessionHasNoErrors();
         $this->actingAs($chair)->post(route('evaluation.canonical-outcome.confirm', $competition))->assertSessionHasNoErrors();
         $this->assertSame('approved', $a->fresh()->status);

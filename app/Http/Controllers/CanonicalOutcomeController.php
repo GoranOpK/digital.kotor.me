@@ -44,7 +44,7 @@ class CanonicalOutcomeController extends Controller
             ->first();
         abort_if($application === null, 404);
 
-        return redirect()->route('evaluation.create', $application);
+        return redirect()->route('evaluation.mmsp-ranking', $competition);
     }
 
     public function storeDraft(Request $request, Competition $competition, Application $application): RedirectResponse
@@ -63,21 +63,21 @@ class CanonicalOutcomeController extends Controller
             ? 'Ishod je evidentiran. Konačna rang-lista je formirana.'
             : 'Ishod je evidentiran.';
 
-        return $this->respond($result, $message);
+        return $this->respond($competition, $result, $message);
     }
 
     public function confirm(Competition $competition): RedirectResponse
     {
         $this->memberOrAbort($competition);
 
-        return $this->respond($this->outcomes->confirm($competition, Auth::user()), 'Ishod je konačno potvrđen. Potrebni su potpisi sva 3 člana Komisije.');
+        return $this->respond($competition, $this->outcomes->confirm($competition, Auth::user()), 'Ishod je konačno potvrđen. Potrebni su potpisi sva 3 člana Komisije.');
     }
 
     public function sign(Competition $competition): RedirectResponse
     {
         $this->memberOrAbort($competition);
 
-        return $this->respond($this->outcomes->sign($competition, Auth::user()), 'Konačna rang lista je potpisana.');
+        return $this->respond($competition, $this->outcomes->sign($competition, Auth::user()), 'Konačna rang lista je potpisana.');
     }
 
     public function proposeTie(Request $request, Competition $competition): RedirectResponse
@@ -91,7 +91,7 @@ class CanonicalOutcomeController extends Controller
             'selected_application_ids.*' => 'integer',
         ]);
 
-        return $this->respond($this->ties->propose(
+        return $this->respond($competition, $this->ties->propose(
             $competition,
             Auth::user(),
             (int) $validated['shared_rank'],
@@ -106,7 +106,7 @@ class CanonicalOutcomeController extends Controller
         abort_unless((int) $resolution->competition_id === (int) $competition->id, 404);
         $validated = $request->validate(['in_favour' => 'required|boolean']);
 
-        return $this->respond($this->ties->vote($resolution, Auth::user(), (bool) $validated['in_favour']), 'Glas je evidentiran.');
+        return $this->respond($competition, $this->ties->vote($resolution, Auth::user(), (bool) $validated['in_favour']), 'Glas je evidentiran.');
     }
 
     private function memberOrAbort(Competition $competition): CommissionMember
@@ -118,9 +118,9 @@ class CanonicalOutcomeController extends Controller
         return $member;
     }
 
-    private function respond(ProcessWriteResult $result, string $success): RedirectResponse
+    private function respond(Competition $competition, ProcessWriteResult $result, string $success): RedirectResponse
     {
-        $redirect = back();
+        $redirect = redirect()->route('evaluation.mmsp-ranking', $competition);
         if (! $result->succeeded) {
             return $redirect->withErrors(['canonical_outcome' => $result->error]);
         }

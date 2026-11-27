@@ -257,7 +257,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         $this->assertSame(CanonicalReviewState::COMPLAINT_PENDING, CanonicalReviewState::resolve($application->fresh()));
         $pendingList = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk();
-        $pendingRow = $this->rowContaining($pendingList->getContent(), $application->business_plan_name);
+        $pendingRow = $this->rowContaining($pendingList->getContent(), CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL));
         $this->assertStringContainsString('Obrazac P3', $pendingRow);
         $this->assertStringNotContainsString('Ocjeni', $pendingRow);
         $this->assertSame(G::SCORING_STAGE_CLOSED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $application->fresh()));
@@ -277,7 +277,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         [$commission, $members] = $this->canonicalCommission();
         $competition = $this->competition($commission);
         $application = $this->finalApplication($competition, ['business_plan_name' => 'Plan koji se eliminiše']);
-        $kept = $this->finalApplication($competition, ['business_plan_name' => 'Plan koji ostaje u bodovanju']);
+        $kept = $this->finalApplication($competition, [
+            'business_plan_name' => 'Plan koji ostaje u bodovanju',
+            'claim_subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
+        ]);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $this->confirmOrdinarySession($competition);
         $this->assertTrue(app(CompletenessAssessmentService::class)
@@ -302,25 +305,27 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         foreach ($members as $member) {
             $user = $member->user;
+            $eliminatedLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+            $keptLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
             $this->actingAs($user)->get(route('evaluation.index'))
                 ->assertOk()
-                ->assertDontSee('Plan koji se eliminiše')
-                ->assertSee('Plan koji ostaje u bodovanju');
+                ->assertDontSee($eliminatedLabel)
+                ->assertSee($keptLabel);
             $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'pending']))
                 ->assertOk()
-                ->assertDontSee('Plan koji se eliminiše')
-                ->assertSee('Plan koji ostaje u bodovanju');
+                ->assertDontSee($eliminatedLabel)
+                ->assertSee($keptLabel);
             $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'evaluated']))
                 ->assertOk()
-                ->assertDontSee('Plan koji se eliminiše');
+                ->assertDontSee($eliminatedLabel);
             $rejectedList = $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'rejected']))
                 ->assertOk()
-                ->assertSee('Plan koji se eliminiše')
+                ->assertSee($eliminatedLabel)
                 ->assertSee('Pregledaj')
                 ->assertSee(ComplaintService::STATUS_LABELS[ComplaintService::STATUS_COMPLAINT_REJECTED])
                 ->assertDontSee('U ocjenjivanju')
-                ->assertDontSee('Plan koji ostaje u bodovanju');
-            $this->assertStringNotContainsString('U ocjenjivanju', $this->rowContaining($rejectedList->getContent(), 'Plan koji se eliminiše'));
+                ->assertDontSee($keptLabel);
+            $this->assertStringNotContainsString('U ocjenjivanju', $this->rowContaining($rejectedList->getContent(), $eliminatedLabel));
             $this->actingAs($user)->get(route('evaluation.create', $application))->assertOk();
             $this->actingAs($user)
                 ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), ['scoring_confirmed' => '1']))
@@ -336,7 +341,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         [$commission, $members] = $this->canonicalCommission();
         $competition = $this->competition($commission);
         $application = $this->finalApplication($competition, ['business_plan_name' => 'Plan bez prigovora']);
-        $kept = $this->finalApplication($competition, ['business_plan_name' => 'Plan koji ostaje u bodovanju']);
+        $kept = $this->finalApplication($competition, [
+            'business_plan_name' => 'Plan koji ostaje u bodovanju',
+            'claim_subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
+        ]);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $this->confirmOrdinarySession($competition);
         $this->assertTrue(app(CompletenessAssessmentService::class)
@@ -348,24 +356,26 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertSame('submitted', $application->fresh()->status);
         $this->assertSame(CanonicalReviewState::COMPLAINT_ELIGIBLE, CanonicalReviewState::resolve($application->fresh()));
 
+        $openLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $keptLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
         $openList = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk();
-        $openList->assertSee('Plan bez prigovora')->assertSee('Plan koji ostaje u bodovanju');
-        $openRow = $this->rowContaining($openList->getContent(), 'Plan bez prigovora');
+        $openList->assertSee($openLabel)->assertSee($keptLabel);
+        $openRow = $this->rowContaining($openList->getContent(), $openLabel);
         $this->assertStringContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::COMPLAINT_ELIGIBLE], $openRow);
         $this->assertStringContainsString('Obrazac P3', $openRow);
         $this->assertStringNotContainsString('Ocjeni', $openRow);
         $this->assertStringNotContainsString('U ocjenjivanju', $openRow);
-        $keptRow = $this->rowContaining($openList->getContent(), 'Plan koji ostaje u bodovanju');
+        $keptRow = $this->rowContaining($openList->getContent(), $keptLabel);
         $this->assertStringContainsString('Ocjeni', $keptRow);
         $this->assertStringNotContainsString('Obrazac P3', $keptRow);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
-            ->assertDontSee('Plan bez prigovora');
+            ->assertDontSee($openLabel);
 
         Carbon::setTestNow(Carbon::parse('2026-09-13 10:00:00', 'Europe/Belgrade'));
         $this->actingAs($chair)->get(route('evaluation.index'))
             ->assertOk()
-            ->assertSee('Plan bez prigovora');
+            ->assertSee($openLabel);
 
         Carbon::setTestNow(Carbon::parse('2026-09-13 10:00:01', 'Europe/Belgrade'));
         $fresh = $application->fresh();
@@ -378,23 +388,23 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             $user = $member->user;
             $this->actingAs($user)->get(route('evaluation.index'))
                 ->assertOk()
-                ->assertDontSee('Plan bez prigovora')
-                ->assertSee('Plan koji ostaje u bodovanju');
+                ->assertDontSee($openLabel)
+                ->assertSee($keptLabel);
             $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'pending']))
                 ->assertOk()
-                ->assertDontSee('Plan bez prigovora');
+                ->assertDontSee($openLabel);
             $this->actingAs($user)->get(route('dashboard'))
                 ->assertOk()
                 ->assertDontSee('Plan bez prigovora')
                 ->assertSee('Plan koji ostaje u bodovanju');
             $rejectedList = $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'rejected']))
                 ->assertOk()
-                ->assertSee('Plan bez prigovora')
+                ->assertSee($openLabel)
                 ->assertSee('Pregledaj')
                 ->assertSee(CanonicalReviewState::LABELS[CanonicalReviewState::INCOMPLETE])
                 ->assertDontSee('U ocjenjivanju')
-                ->assertDontSee('Plan koji ostaje u bodovanju');
-            $this->assertStringNotContainsString('U ocjenjivanju', $this->rowContaining($rejectedList->getContent(), 'Plan bez prigovora'));
+                ->assertDontSee($keptLabel);
+            $this->assertStringNotContainsString('U ocjenjivanju', $this->rowContaining($rejectedList->getContent(), $openLabel));
             $this->actingAs($user)->get(route('evaluation.create', $application))->assertOk();
             $this->actingAs($user)
                 ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), ['scoring_confirmed' => '1']))
@@ -423,8 +433,9 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-20 10:00:00', 'Europe/Belgrade'));
         $this->assertFalse(CanonicalReviewState::isFinallyEliminated($application->fresh()));
 
-        $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee('Plan čeka obavještenje');
-        $row = $this->rowContaining($list->getContent(), 'Plan čeka obavještenje');
+        $waitingLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee($waitingLabel);
+        $row = $this->rowContaining($list->getContent(), $waitingLabel);
         $this->assertStringContainsString(ComplaintService::STATUS_LABELS[ComplaintService::STATUS_NOTICE_PENDING], $row);
         $this->assertStringContainsString('Obrazac P3', $row);
         $this->assertStringNotContainsString('Ocjeni', $row);
@@ -432,10 +443,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertStringNotContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::INCOMPLETE], $row);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
-            ->assertDontSee('Plan čeka obavještenje');
+            ->assertDontSee($waitingLabel);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'pending']))
             ->assertOk()
-            ->assertSee('Plan čeka obavještenje');
+            ->assertSee($waitingLabel);
     }
 
     public function test_previously_recorded_rejection_stays_submitted_and_is_only_in_the_rejected_filter(): void
@@ -443,7 +454,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         [$commission, $members] = $this->canonicalCommission();
         $competition = $this->competition($commission);
         $application = $this->finalApplication($competition, ['business_plan_name' => 'Ranije odbijen plan']);
-        $kept = $this->finalApplication($competition, ['business_plan_name' => 'Plan koji ostaje u bodovanju']);
+        $kept = $this->finalApplication($competition, [
+            'business_plan_name' => 'Plan koji ostaje u bodovanju',
+            'claim_subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
+        ]);
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $this->confirmOrdinarySession($competition);
         $this->assertTrue(app(CompletenessAssessmentService::class)
@@ -471,16 +485,18 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertTrue(CanonicalReviewState::isFinallyEliminated($fresh));
         $this->assertTrue(ApplicationComplaint::query()->where('application_id', $application->id)->sole()->decision_due_at->greaterThan(now()));
 
+        $rejectedLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $keptLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
         $this->actingAs($chair)->get(route('evaluation.index'))
             ->assertOk()
-            ->assertDontSee('Ranije odbijen plan')
-            ->assertSee('Plan koji ostaje u bodovanju');
+            ->assertDontSee($rejectedLabel)
+            ->assertSee($keptLabel);
         $rejectedList = $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
-            ->assertSee('Ranije odbijen plan')
+            ->assertSee($rejectedLabel)
             ->assertSee('Pregledaj')
             ->assertDontSee('U ocjenjivanju');
-        $this->assertStringNotContainsString('U ocjenjivanju', $this->rowContaining($rejectedList->getContent(), 'Ranije odbijen plan'));
+        $this->assertStringNotContainsString('U ocjenjivanju', $this->rowContaining($rejectedList->getContent(), $rejectedLabel));
     }
 
     public function test_pending_review_shows_its_status_instead_of_scoring(): void
@@ -491,15 +507,16 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $this->confirmOrdinarySession($competition);
 
-        $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee('Plan na provjeri');
-        $row = $this->rowContaining($list->getContent(), 'Plan na provjeri');
+        $reviewLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee($reviewLabel);
+        $row = $this->rowContaining($list->getContent(), $reviewLabel);
         $this->assertStringContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::PENDING_REVIEW], $row);
         $this->assertStringContainsString('Obrazac P3', $row);
         $this->assertStringNotContainsString('Ocjeni', $row);
         $this->assertStringNotContainsString('U ocjenjivanju', $row);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
-            ->assertDontSee('Plan na provjeri');
+            ->assertDontSee($reviewLabel);
     }
 
     public function test_mmsp_list_shows_a_fifty_point_maximum(): void
@@ -514,7 +531,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $list = $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)->get(route('evaluation.index'))->assertOk();
         $list->assertSee('40.00 / 50');
         $list->assertDontSee(' / 58');
-        $row = $this->rowContaining($list->getContent(), $application->business_plan_name);
+        $row = $this->rowContaining($list->getContent(), CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL));
         $this->assertStringNotContainsString(' / 58', $row);
         $this->assertStringContainsString('Ocijenjena prijava', $row);
         $this->assertStringNotContainsString('Vaša ocjena je unesena', $row);
@@ -738,12 +755,103 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertOk()
             ->assertViewHas('visibleScores', fn ($scores) => $scores->count() === 3)
             ->assertViewHas('aggregate', fn ($aggregate) => $aggregate['final_score_display'] === '45.00')
-            ->assertSee('Preliminarna rang-lista')
+            ->assertDontSee('Preliminarna rang-lista')
             ->assertSee('Prosječna ocjena');
+        $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('Preliminarna rang-lista')
+            ->assertSee('45.00')
+            ->assertDontSee('Evidentiraj');
         $this->assertCount(3, $gov->visibleScores($admin, $application));
         $this->assertCount(0, $gov->visibleScores($outsider, $application));
         $this->assertTrue($this->scoring()->canonicalPreliminaryRankingView($competition, $admin)['visible']);
         $this->assertFalse($this->scoring()->canonicalPreliminaryRankingView($competition, $outsider)['visible']);
+    }
+
+    public function test_mmsp_ranking_page_stays_closed_until_formation_and_lists_the_claim_subsidy(): void
+    {
+        [, $members, $competition, [$application]] = $this->readyCompetition();
+        $chair = $members[G::ROLE_PREDSJEDNIK];
+        $secretary = $members[G::ROLE_SEKRETAR];
+        $external = $members[G::ROLE_SPOLJASNJI];
+        $local = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $digital = CanonicalSubsidyType::label(CanonicalSubsidyType::DIGITALIZATION);
+
+        $this->actingAs($chair->user)->get(route('evaluation.index'))
+            ->assertOk()
+            ->assertSee('Preliminarna rang-lista — MMSP — '.$competition->title)
+            ->assertSee('Naziv biznis plana')
+            ->assertDontSee('Vrsta subvencije')
+            ->assertSee($local)
+            ->assertDontSee($application->business_plan_name);
+
+        $second = $this->finalApplication($competition, [
+            'business_plan_name' => 'Druga prijava istog podnosioca',
+            'claim_subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ]);
+        $second->update(['user_id' => $application->user_id]);
+        $second->finalClaim->update(['user_id' => $application->user_id]);
+        $this->complete($second, $members);
+
+        $this->actingAs($secretary->user)->get(route('evaluation.index', ['competition_id' => $competition->id]))
+            ->assertOk()
+            ->assertSee('Vrsta subvencije')
+            ->assertDontSee('Naziv biznis plana')
+            ->assertSee($local)
+            ->assertSee($digital)
+            ->assertDontSee($application->business_plan_name)
+            ->assertDontSee('Druga prijava istog podnosioca');
+
+        $this->score($chair, $application, 50);
+        $this->score($chair, $second, 50);
+        foreach ([$chair, $secretary, $external] as $member) {
+            $this->actingAs($member->user)->get(route('evaluation.mmsp-ranking', $competition))
+                ->assertOk()
+                ->assertSee(S::CANONICAL_CYCLE_INCOMPLETE_MESSAGE)
+                ->assertDontSee('50.00')
+                ->assertDontSee('Ocjena /50')
+                ->assertDontSee('Evidentiraj');
+        }
+        $this->actingAs($this->komisijaUser('van-rang'))->get(route('evaluation.mmsp-ranking', $competition))->assertForbidden();
+        $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $this->competition($competition->commission, 'omladinsko')))->assertForbidden();
+        $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $this->competition($competition->commission, 'zensko')))->assertForbidden();
+
+        $this->score($secretary, $application, 40);
+        $this->score($secretary, $second, 40);
+        $this->score($external, $application, 45);
+        $this->score($external, $second, 45);
+        $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $competition))->assertOk();
+        $formedAt = $competition->fresh()->canonical_ranking_formed_at?->toIso8601String();
+        $position = $application->fresh()->ranking_position;
+        $this->assertNotNull($formedAt);
+
+        $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('Preliminarna rang-lista')
+            ->assertSee('RANG LISTA PLANOVA ULAGANJA')
+            ->assertSee('images/srednji_grb.png', false)
+            ->assertSee('Sekretarijat za razvoj preduzetništva')
+            ->assertSee('privreda@kotor.me')
+            ->assertSee('45.00 / 50', false)
+            ->assertDontSee('RANG LISTA BIZNIS PLANOVA')
+            ->assertDontSee('images/coat-of-arms.png', false)
+            ->assertDontSee('data-testid="mmsp-ranking-print"', false)
+            ->assertSee('Evidentiraj');
+        $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('45.00')
+            ->assertDontSee('Evidentiraj');
+        $this->actingAs($external->user)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('45.00')
+            ->assertDontSee('Evidentiraj');
+        $this->actingAs($chair->user)->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertSee('id="mmsp-p3-print"', false)
+            ->assertDontSee('data-testid="mmsp-ranking-title"', false);
+
+        $this->assertSame($position, $application->fresh()->ranking_position);
+        $this->assertSame($formedAt, $competition->fresh()->canonical_ranking_formed_at?->toIso8601String());
     }
 
     public function test_outcome_and_legacy_ranking_routes_stay_closed_for_canonical(): void
@@ -1200,7 +1308,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
     public function test_p3_shows_only_the_members_own_total_until_the_ranking_and_prints_apart_from_it(): void
     {
-        [, $members, , [$application]] = $this->readyCompetition();
+        [, $members, $competition, [$application]] = $this->readyCompetition();
         $chair = $members[G::ROLE_PREDSJEDNIK];
         $secretary = $members[G::ROLE_SEKRETAR];
 
@@ -1237,12 +1345,19 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $open = $this->actingAs($secretary->user)->get(route('evaluation.create', $application))->assertOk();
         $open->assertSee('Napomena predsjednika.')
             ->assertSee('Napomena sekretara.')
-            ->assertSee('Preliminarna rang-lista')
+            ->assertDontSee('Preliminarna rang-lista')
+            ->assertDontSee('class="form-card mmsp-p3-ranking"', false)
             ->assertSee('class="form-card mmsp-p3-form"', false)
-            ->assertSee('class="form-card mmsp-p3-ranking"', false)
+            ->assertSee('id="mmsp-p3-print"', false)
             ->assertSee('function printMmspSection', false)
             ->assertSee('mmsp-p3-ranking { display: none !important; }', false)
             ->assertSee('body.mmsp-print-ranking .mmsp-p3-form { display: none !important; }', false);
+        $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('Preliminarna rang-lista')
+            ->assertSee('45.00 / 50', false)
+            ->assertDontSee('data-testid="mmsp-ranking-print"', false)
+            ->assertDontSee('id="mmsp-p3-print"', false);
         $openRow = $this->finalScoreRow($open->getContent());
         $this->assertStringContainsString('>50<', $openRow);
         $this->assertStringContainsString('>40<', $openRow);
@@ -1427,6 +1542,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             'activation_status' => 'active',
             'email_verified_at' => now(),
         ]);
+        $subsidy = $overrides['claim_subsidy_type'] ?? CanonicalSubsidyType::AUTHENTIC_LOCAL;
+        unset($overrides['claim_subsidy_type']);
         $application = Application::create(array_merge([
             'competition_id' => $competition->id,
             'user_id' => $owner->id,
@@ -1442,6 +1559,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             'user_id' => $owner->id,
             'competition_id' => $competition->id,
             'application_id' => $application->id,
+            'subsidy_type' => $subsidy,
             'claimed_at' => now(),
         ]);
 

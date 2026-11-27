@@ -17,6 +17,7 @@ use App\Services\Competitions\Commission\CanonicalCommissionGovernance as G;
 use App\Services\Competitions\Commission\CanonicalCommissionSessionService;
 use App\Services\Competitions\CompletenessAssessmentService;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CanonicalSubsidyType;
 use App\Support\ScoringProfileConfig;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
@@ -64,7 +65,7 @@ class CanonicalTestPreviewScoringTest extends TestCase
         $this->actingAs($chair)
             ->get(route('evaluation.index'))
             ->assertOk()
-            ->assertSee($application->business_plan_name);
+            ->assertSee(CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL));
 
         $this->actingAs($chair)
             ->get(route('evaluation.create', $application))
@@ -288,6 +289,7 @@ class CanonicalTestPreviewScoringTest extends TestCase
                 'user_id' => $owner->id,
                 'competition_id' => $competition->id,
                 'application_id' => $application->id,
+                'subsidy_type' => CanonicalSubsidyType::AUTHENTIC_LOCAL,
                 'claimed_at' => now(),
             ]);
         }

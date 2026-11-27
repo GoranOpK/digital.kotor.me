@@ -431,7 +431,7 @@ class CanonicalCommissionSessionUiTest extends TestCase
 
         $this->actingAs($chair)
             ->get(route('evaluation.canonical-outcome.show', $call))
-            ->assertRedirect(route('evaluation.create', $application));
+            ->assertRedirect(route('evaluation.mmsp-ranking', $call));
         $this->actingAs($chair)
             ->post(route('evaluation.canonical-outcome.draft', [$call, $application]), ['decision' => 'support', 'amount' => '1000'])
             ->assertSessionHasNoErrors();
