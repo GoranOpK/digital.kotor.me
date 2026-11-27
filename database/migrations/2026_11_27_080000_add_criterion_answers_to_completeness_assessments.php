@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Additive MMSP-only column. Existing completeness rows stay unchanged.
+ * Additive MMSP-only column. Existing completeness rows stay unchanged:
+ * this migration never updates or backfills criterion_answers.
  * Women/Youth Obrazac 3 does not use this table.
  */
 return new class extends Migration

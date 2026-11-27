@@ -3,17 +3,13 @@
         ->where('application_id', $application->id)
         ->latest('id')
         ->first();
-    $complaint = \App\Models\ApplicationComplaint::query()
-        ->where('application_id', $application->id)
-        ->latest('id')
-        ->first();
     $isChair = ($commissionMember->canonical_seat ?? null) === \App\Services\Competitions\Commission\CanonicalCommissionGovernance::ROLE_PREDSJEDNIK
         && ($commissionMember->position ?? null) === 'predsjednik'
         && ($commissionMember->status ?? null) === 'active';
     $canRecord = $isChair
         && $assessment === null
         && app(\App\Services\Competitions\CompletenessAssessmentService::class)->recordBlockReason($application, auth()->user()) === null;
-    $presentation = \App\Support\MmspP3Form::administrativePresentation($application);
+    $presentation = $p3Administrative ?? \App\Support\MmspP3Form::administrativePresentation($application);
     $criteria = \App\Support\MmspP3Form::CRITERIA;
     $selected = function (string $field) {
         $old = old($field);
@@ -67,6 +63,9 @@
             <p style="margin: 0 0 12px;">{{ \App\Services\Competitions\Commission\CanonicalCommissionGovernance::CHAIR_COMPLETENESS_REQUIRED_MESSAGE }}</p>
         @endif
         <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
+            @if($presentation['complaint_accepted'])
+                <div style="margin-bottom: 12px; font-weight: 600;">Prvobitni eliminatorni odgovori</div>
+            @endif
             @foreach($criteria as $key => $criterion)
                 @if($loop->first)
                     <label class="form-label form-label-large">3. {{ $criterion['statement'] }}</label>
@@ -81,36 +80,29 @@
                 @endif
             @endforeach
             <p style="margin-bottom: 12px; font-size: 13px; color: #4b5563; line-height: 1.5;">{{ \App\Support\MmspP3Form::NE_STAR_FOOTNOTE }}</p>
+            @if($presentation['recorded'] && ! $presentation['answers_recorded'])
+                <p style="margin-bottom: 12px;">Pojedinačni odgovori nisu evidentirani u zapisu.</p>
+            @endif
             <div style="margin-bottom: 8px; font-weight: 600;">Napomena</div>
             <div style="white-space: pre-wrap; margin-bottom: 12px;">{{ $presentation['explanation'] !== '' ? $presentation['explanation'] : '—' }}</div>
-            <div>
-                <strong>Rezultat:</strong>
-                {{ $presentation['result'] }}
-            </div>
-        </div>
-    @endif
-
-    @if($complaint)
-        <div data-testid="mmsp-complaint" class="no-print" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-            <h3 style="font-size: 16px; font-weight: 700; margin: 0 0 8px;">Prigovor</h3>
-            <p style="margin: 0 0 8px; white-space: pre-wrap;">{{ $complaint->body }}</p>
-            @if($complaint->decision)
-                <p style="margin: 0;"><strong>{{ $complaint->decision === \App\Models\ApplicationComplaint::ACCEPTED ? 'Prigovor je prihvaćen.' : 'Prigovor je odbijen.' }}</strong></p>
-                @if(filled($complaint->decision_notes))
-                    <p style="margin: 8px 0 0; white-space: pre-wrap;">{{ $complaint->decision_notes }}</p>
+            @if($presentation['complaint_accepted'])
+                <div style="margin-bottom: 8px;">
+                    <strong>Prvobitni rezultat:</strong>
+                    {{ $presentation['original_result'] }}
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <strong>Konačni rezultat nakon prigovora:</strong>
+                    {{ $presentation['final_result'] }}
+                </div>
+                @if($presentation['final_note'] !== '')
+                    <div style="margin-bottom: 8px; font-weight: 600;">Napomena uz konačni rezultat</div>
+                    <div style="white-space: pre-wrap;">{{ $presentation['final_note'] }}</div>
                 @endif
-            @elseif($isChair)
-                <form method="POST" action="{{ route('evaluation.complaint-decision', [$application, $complaint]) }}">
-                    @csrf
-                    <label style="margin-right: 12px;"><input type="radio" name="decision" value="accepted" required @checked(old('decision') === 'accepted')> Prihvati</label>
-                    <label><input type="radio" name="decision" value="rejected" @checked(old('decision') === 'rejected')> Odbij</label>
-                    <label style="display: block; margin: 8px 0;">Obrazloženje odluke
-                        <textarea name="decision_notes" rows="3" required style="width: 100%;">{{ old('decision_notes') }}</textarea>
-                    </label>
-                    <button type="submit" class="btn-primary">Evidentiraj odluku o prigovoru</button>
-                </form>
             @else
-                <p style="margin: 0;">Odluka o prigovoru još nije evidentirana.</p>
+                <div>
+                    <strong>Rezultat:</strong>
+                    {{ $presentation['result'] }}
+                </div>
             @endif
         </div>
     @endif

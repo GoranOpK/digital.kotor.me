@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Application;
+use App\Models\ApplicationComplaint;
 use App\Models\ApplicationCompletenessAssessment;
 
 /**
@@ -93,7 +94,21 @@ final class MmspP3Form
     }
 
     /**
-     * @return array{recorded: bool, answers: array<string, string>, explanation: string, result: string}
+     * Prvobitni odgovori dolaze samo iz sačuvanog criterion_answers.
+     * Napomena se ne pretvara u Da/Ne. Novi red poslije prihvaćenog prigovora
+     * mijenja konačni rezultat, ne prvobitne odgovore.
+     *
+     * @return array{
+     *     recorded: bool,
+     *     answers: array<string, string>,
+     *     answers_recorded: bool,
+     *     explanation: string,
+     *     result: string,
+     *     original_result: string,
+     *     final_result: string,
+     *     complaint_accepted: bool,
+     *     final_note: string
+     * }
      */
     public static function administrativePresentation(Application $application): array
     {
@@ -106,8 +121,13 @@ final class MmspP3Form
             return [
                 'recorded' => false,
                 'answers' => self::unmarkedAnswers(),
+                'answers_recorded' => false,
                 'explanation' => '',
                 'result' => self::RESULT_PENDING,
+                'original_result' => self::RESULT_PENDING,
+                'final_result' => self::RESULT_PENDING,
+                'complaint_accepted' => false,
+                'final_note' => '',
             ];
         }
 
@@ -115,18 +135,38 @@ final class MmspP3Form
         $first = $rows->first();
         /** @var ApplicationCompletenessAssessment $latest */
         $latest = $rows->last();
-        $source = $rows->first(
-            fn (ApplicationCompletenessAssessment $row) => is_array($row->criterion_answers) && $row->criterion_answers !== []
-        ) ?? $first;
+        $storedRow = $rows->first(
+            fn (ApplicationCompletenessAssessment $row) => self::answersFor($row) !== self::unmarkedAnswers()
+                && is_array($row->criterion_answers)
+                && $row->criterion_answers !== []
+        );
+        $complaintAccepted = ApplicationComplaint::query()
+            ->where('application_id', $application->id)
+            ->where('decision', ApplicationComplaint::ACCEPTED)
+            ->exists();
+        $originalResult = self::resultLabel($first);
+        $finalResult = self::resultLabel($latest);
 
         return [
             'recorded' => true,
-            'answers' => self::answersFor($source),
+            'answers' => $storedRow instanceof ApplicationCompletenessAssessment
+                ? self::answersFor($storedRow)
+                : self::unmarkedAnswers(),
+            'answers_recorded' => $storedRow instanceof ApplicationCompletenessAssessment,
             'explanation' => trim((string) $first->notes),
-            'result' => $latest->outcome === ApplicationCompletenessAssessment::COMPLETE
-                ? self::RESULT_PASS
-                : self::RESULT_FAIL,
+            'result' => $finalResult,
+            'original_result' => $originalResult,
+            'final_result' => $finalResult,
+            'complaint_accepted' => $complaintAccepted,
+            'final_note' => $latest->id !== $first->id ? trim((string) $latest->notes) : '',
         ];
+    }
+
+    private static function resultLabel(ApplicationCompletenessAssessment $assessment): string
+    {
+        return $assessment->outcome === ApplicationCompletenessAssessment::COMPLETE
+            ? self::RESULT_PASS
+            : self::RESULT_FAIL;
     }
 
     /**
@@ -135,36 +175,23 @@ final class MmspP3Form
     private static function answersFor(ApplicationCompletenessAssessment $assessment): array
     {
         $stored = $assessment->criterion_answers;
-        if (is_array($stored)) {
-            $mapped = [];
-            foreach (self::CRITERIA as $key => $criterion) {
-                $value = $stored[$key] ?? null;
-                if ($value === 'da') {
-                    $mapped[$key] = 'Da';
-                } elseif ($value === 'ne') {
-                    $mapped[$key] = 'Ne*';
-                } else {
-                    $mapped = [];
-                    break;
-                }
-            }
-            if ($mapped !== []) {
-                return $mapped;
+        if (! is_array($stored) || $stored === []) {
+            return self::unmarkedAnswers();
+        }
+
+        $mapped = [];
+        foreach (self::CRITERIA as $key => $criterion) {
+            $value = $stored[$key] ?? null;
+            if ($value === 'da') {
+                $mapped[$key] = 'Da';
+            } elseif ($value === 'ne') {
+                $mapped[$key] = 'Ne*';
+            } else {
+                return self::unmarkedAnswers();
             }
         }
 
-        $notes = (string) $assessment->notes;
-        if (preg_match('/^Nije ispunjeno:\s*([^\n]*)/u', $notes, $matches) === 1) {
-            $text = $matches[1];
-            $mapped = [];
-            foreach (self::CRITERIA as $key => $criterion) {
-                $mapped[$key] = str_contains($text, $criterion['fail_phrase']) ? 'Ne*' : 'Da';
-            }
-
-            return $mapped;
-        }
-
-        return self::unmarkedAnswers();
+        return $mapped;
     }
 
     /**

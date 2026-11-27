@@ -830,7 +830,9 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertDontSee(CanonicalSubsidyType::label(CanonicalSubsidyType::DIGITALIZATION))
             ->assertSee('type="number"', false)
             ->assertSee('KRITERIJUMI ZA OCJENU', false)
-            ->assertDontSee('<select name="criterion_1"', false);
+            ->assertDontSee('<select name="criterion_1"', false)
+            ->assertDontSee('id="mmsp-p3-print"', false)
+            ->assertSee('UKUPAN ZBIR', false);
 
         $this->actingAs($chair)
             ->post(route('evaluation.completeness', $application), [
@@ -859,7 +861,9 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertDontSee('Potvrdi administrativnu provjeru')
             ->assertSee('Ne*')
             ->assertSee('Nedostaje obavezni prilog.')
-            ->assertSee(MmspP3Form::RESULT_FAIL);
+            ->assertSee(MmspP3Form::RESULT_FAIL)
+            ->assertSee('id="mmsp-p3-print"', false)
+            ->assertSee('UKUPAN ZBIR', false);
         $this->assertSame(2, substr_count($locked->getContent(), '<strong>Da</strong>'));
 
         $this->actingAs($members[G::ROLE_SEKRETAR]->user)
@@ -881,6 +885,167 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertOk()
             ->assertSee('Kotor MMSP d.o.o.')
             ->assertDontSee('Odgovorno lice');
+    }
+
+    public function test_p3_shows_only_the_members_own_total_until_the_ranking_and_prints_apart_from_it(): void
+    {
+        [, $members, , [$application]] = $this->readyCompetition();
+        $chair = $members[G::ROLE_PREDSJEDNIK];
+        $secretary = $members[G::ROLE_SEKRETAR];
+
+        $this->actingAs($secretary->user)->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertDontSee('id="mmsp-p3-print"', false);
+
+        $this->score($chair, $application, 50, 'Napomena predsjednika.');
+
+        $chairPage = $this->actingAs($chair->user)->get(route('evaluation.create', $application))->assertOk();
+        $chairPage->assertSee('id="mmsp-p3-print"', false)
+            ->assertSee('printMmspSection', false)
+            ->assertSee('Napomena predsjednika.');
+        $chairRow = $this->finalScoreRow($chairPage->getContent());
+        $this->assertStringContainsString('>50<', $chairRow);
+        $this->assertStringNotContainsString('45.00', $chairRow);
+
+        $secretaryPage = $this->actingAs($secretary->user)->get(route('evaluation.create', $application))->assertOk();
+        $secretaryPage->assertDontSee('Napomena predsjednika.')
+            ->assertDontSee('id="mmsp-p3-print"', false);
+        $this->assertStringNotContainsString('>50<', $this->finalScoreRow($secretaryPage->getContent()));
+
+        $this->score($secretary, $application, 40, 'Napomena sekretara.');
+        $midPage = $this->actingAs($secretary->user)->get(route('evaluation.create', $application))->assertOk();
+        $midPage->assertSee('Član mjesta '.$secretary->canonical_seat_no, false)
+            ->assertSee('Napomena sekretara.')
+            ->assertDontSee('Napomena predsjednika.')
+            ->assertSee('id="mmsp-p3-print"', false);
+        $midRow = $this->finalScoreRow($midPage->getContent());
+        $this->assertStringContainsString('>40<', $midRow);
+        $this->assertStringNotContainsString('>50<', $midRow);
+
+        $this->score($members[G::ROLE_SPOLJASNJI], $application, 45);
+        $open = $this->actingAs($secretary->user)->get(route('evaluation.create', $application))->assertOk();
+        $open->assertSee('Napomena predsjednika.')
+            ->assertSee('Napomena sekretara.')
+            ->assertSee('Preliminarna rang-lista')
+            ->assertSee('class="form-card mmsp-p3-form"', false)
+            ->assertSee('class="form-card mmsp-p3-ranking"', false)
+            ->assertSee('function printMmspSection', false)
+            ->assertSee('mmsp-p3-ranking { display: none !important; }', false)
+            ->assertSee('body.mmsp-print-ranking .mmsp-p3-form { display: none !important; }', false);
+        $openRow = $this->finalScoreRow($open->getContent());
+        $this->assertStringContainsString('>50<', $openRow);
+        $this->assertStringContainsString('>40<', $openRow);
+        $this->assertStringContainsString('>45<', $openRow);
+        $this->assertStringContainsString('45.00', $openRow);
+    }
+
+    public function test_p3_does_not_invent_historical_answers_and_keeps_them_after_an_accepted_complaint(): void
+    {
+        [$commission, $members] = $this->canonicalCommission();
+        $competition = $this->competition($commission);
+        $historical = $this->finalApplication($competition);
+        $this->confirmOrdinarySession($competition);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+        $notes = 'Nije ispunjeno: dokumentacija nije potpuna';
+        $recorded = app(CompletenessAssessmentService::class)->record(
+            $historical,
+            $chair,
+            ApplicationCompletenessAssessment::INCOMPLETE,
+            $notes,
+        );
+        $this->assertTrue($recorded->succeeded, (string) $recorded->error);
+        $stored = ApplicationCompletenessAssessment::query()->where('application_id', $historical->id)->first();
+        $this->assertNull($stored->criterion_answers);
+        $this->assertSame($notes, $stored->notes);
+        $presentation = MmspP3Form::administrativePresentation($historical->fresh());
+        $this->assertFalse($presentation['answers_recorded']);
+        $this->assertSame(array_fill_keys(array_keys(MmspP3Form::CRITERIA), 'Nije označeno'), $presentation['answers']);
+        $historicalPage = $this->actingAs($chair)->get(route('evaluation.create', $historical))->assertOk()->getContent();
+        $this->assertStringNotContainsString('<strong>Da</strong>', $historicalPage);
+        $this->assertStringNotContainsString('<strong>Ne*</strong>', $historicalPage);
+        $this->assertStringContainsString('Pojedinačni odgovori nisu evidentirani u zapisu.', $historicalPage);
+
+        [$commission, $members] = $this->canonicalCommission();
+        $competition = $this->competition($commission);
+        $application = $this->finalApplication($competition);
+        $this->confirmOrdinarySession($competition);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+        $this->actingAs($chair)
+            ->post(route('evaluation.completeness', $application), [
+                'criterion_documentation' => 'ne',
+                'criterion_report' => 'da',
+                'criterion_related' => 'da',
+                'notes' => 'Nedostaje obavezni prilog.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+        $original = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->first();
+        $this->assertEquals([
+            'documentation' => 'ne',
+            'report' => 'da',
+            'related' => 'da',
+        ], $original->criterion_answers);
+        if ($original->notice_sent_at === null) {
+            $original->forceFill([
+                'notice_sent_at' => now(),
+                'mail_sent_at' => now(),
+            ])->save();
+        }
+
+        $submitted = app(ComplaintService::class)->submit($application->fresh(), $application->user, 'Tekst prigovora.');
+        $this->assertTrue($submitted->succeeded, (string) $submitted->error);
+        $complaint = ApplicationComplaint::query()->findOrFail($submitted->recordId);
+        $pending = $this->actingAs($chair)->get(route('evaluation.create', $application))->assertOk();
+        $pending->assertSee('data-testid="mmsp-complaint"', false)
+            ->assertSee('kn-prigovor-card', false)
+            ->assertSee('Tekst prigovora.')
+            ->assertSee('Prihvati', false)
+            ->assertSee('Odbij', false)
+            ->assertSee('name="decision"', false)
+            ->assertSee('name="decision_notes"', false)
+            ->assertSee('Evidentiraj odluku o prigovoru', false);
+        $this->actingAs($members[G::ROLE_SEKRETAR]->user)->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertSee('Tekst prigovora.')
+            ->assertSee('Odluka o prigovoru još nije evidentirana.')
+            ->assertDontSee('Evidentiraj odluku o prigovoru');
+
+        $decided = app(ComplaintService::class)->decide($complaint, $chair, ApplicationComplaint::ACCEPTED, 'Prilog je bio u dosijeu.');
+        $this->assertTrue($decided->succeeded, (string) $decided->error);
+        $rows = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->orderBy('id')->get();
+        $this->assertCount(2, $rows);
+        $this->assertEquals([
+            'documentation' => 'ne',
+            'report' => 'da',
+            'related' => 'da',
+        ], $rows[0]->criterion_answers);
+        $this->assertSame($original->notes, $rows[0]->notes);
+        $this->assertNull($rows[1]->criterion_answers);
+        $this->assertSame(ApplicationCompletenessAssessment::COMPLETE, $rows[1]->outcome);
+
+        $accepted = $this->actingAs($chair)->get(route('evaluation.create', $application->fresh()))->assertOk();
+        $accepted->assertSee('Prvobitni eliminatorni odgovori')
+            ->assertSee('Prvobitni rezultat')
+            ->assertSee(MmspP3Form::RESULT_FAIL)
+            ->assertSee('Konačni rezultat nakon prigovora')
+            ->assertSee(MmspP3Form::RESULT_PASS)
+            ->assertSee('Prigovor je prihvaćen.')
+            ->assertSee('Prilog je bio u dosijeu.')
+            ->assertSee('Nedostaje obavezni prilog.')
+            ->assertDontSee('id="mmsp-p3-print"', false)
+            ->assertDontSee('Evidentiraj odluku o prigovoru');
+        $this->assertSame(2, substr_count($accepted->getContent(), '<strong>Da</strong>'));
+        $this->assertSame(1, substr_count($accepted->getContent(), '<strong>Ne*</strong>'));
+    }
+
+    private function finalScoreRow(string $html): string
+    {
+        $start = strpos($html, 'id="mmsp-final-score-row"');
+        $this->assertNotFalse($start);
+        $end = strpos($html, '</tr>', $start);
+        $this->assertNotFalse($end);
+
+        return substr($html, $start, $end - $start);
     }
 
     /**

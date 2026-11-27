@@ -88,7 +88,9 @@ class MmspDecisionFinalPhaseTest extends TestCase
             ->assertOk()
             ->assertSee('Konačna rang-lista', false)
             ->assertSee('data-testid="mmsp-decision-open"', false)
-            ->assertSee('data-testid="mmsp-ranking-print"', false);
+            ->assertSee('data-testid="mmsp-ranking-print"', false)
+            ->assertSee('printMmspSection(\'ranking\')', false)
+            ->assertSee('id="mmsp-p3-print"', false);
 
         $this->signAll($competition, $members);
         $competition->refresh();

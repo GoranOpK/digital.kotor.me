@@ -6,6 +6,11 @@
 @php
     $p3Subject = \App\Support\MmspP3Form::subjectName($application);
     $p3Subsidy = \App\Support\MmspP3Form::subsidyLabel($application);
+    $p3Administrative = \App\Support\MmspP3Form::administrativePresentation($application);
+    $p3EliminatoryFail = $p3Administrative['recorded']
+        && $p3Administrative['result'] === \App\Support\MmspP3Form::RESULT_FAIL
+        && ! $p3Administrative['complaint_accepted'];
+    $canPrintP3 = $ownScore !== null || $p3EliminatoryFail;
     $canEnterScores = $ownScore === null && $scoreBlockReason === null;
     $commissionSeats = $commissionSeats ?? collect([$commissionMember]);
 @endphp
@@ -29,7 +34,7 @@
             </div>
         @endif
 
-        <div class="form-card">
+        <div class="form-card mmsp-p3-form">
             @include('evaluation.partials.mmsp_p3_memorandum')
 
             <div class="print-document-header">
@@ -119,6 +124,34 @@
                                     </td>
                                 </tr>
                             @endforeach
+                            <tr class="final-score-row" id="mmsp-final-score-row">
+                                <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
+                                    <strong>UKUPAN ZBIR</strong>
+                                </td>
+                                @foreach($commissionSeats as $member)
+                                    @php
+                                        $sumScore = $visibleScores->get($member->id);
+                                        $sumIsFinal = $sumScore && $sumScore->completed_at !== null;
+                                        $sumValue = $sumIsFinal ? $sumScore->calculateTotalScore() : 0;
+                                        $sumIsCurrent = (int) $member->id === (int) $commissionMember->id;
+                                        $showSum = $sumIsFinal && $sumValue > 0 && ($sumIsCurrent || $rankingFormed);
+                                    @endphp
+                                    <td style="font-weight: bold !important;">
+                                        @if($showSum)
+                                            <strong>{{ $sumValue }}</strong>
+                                        @else
+                                            <strong style="color: #d1d5db;">—</strong>
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="average-col" id="mmsp_final_score" style="font-weight: bold !important;">
+                                    @if($rankingFormed && $aggregate && isset($aggregate['final_score_display']))
+                                        <strong>{{ $aggregate['final_score_display'] }}</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
 
@@ -137,7 +170,7 @@
                             @if($noteText !== '')
                                 <div style="margin-top: 16px;">
                                     <div style="font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                        {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član ' . $loop->index }}
+                                        {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član mjesta ' . ($noteScore->canonical_seat_no ?? $member->canonical_seat_no ?? '') }}
                                     </div>
                                     <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">{{ $noteText }}</div>
                                 </div>
@@ -169,7 +202,9 @@
                             <p style="color: #374151; margin-bottom: 16px;">Vaša ocjena je konačna i zaključana. Zbirni rezultati i ocjene ostalih članova biće vidljivi kada sva 3 člana ocijene sve prijave i formira se preliminarna rang-lista.</p>
                         @endif
                     @endif
-                    <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                    @if($canPrintP3)
+                        <button type="button" id="mmsp-p3-print" onclick="printMmspSection('p3')" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                    @endif
                     @if($ownScore === null)
                         <button type="submit" id="mmsp-save-scores" class="btn-primary" @if(! $canEnterScores) disabled @endif>Sačuvaj ocjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
@@ -185,6 +220,8 @@
                 </form>
             @endif
         </div>
+
+        @include('evaluation.partials.mmsp_p3_complaint')
 
         @if($rankingView['visible'])
             @php
@@ -202,7 +239,7 @@
                     ->orderBy('canonical_seat_no')
                     ->get();
             @endphp
-            <div class="form-card">
+            <div class="form-card mmsp-p3-ranking">
                 <h2 data-testid="mmsp-ranking-title" style="font-size: 20px; font-weight: 700; margin: 0 0 8px;">{{ $canonicalRankingIsFinal ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }}</h2>
                 <p style="color: #4b5563; margin-bottom: 8px;">
                     Planovi ispod 30 bodova ostaju na listi i ne mogu biti podržani.
@@ -286,7 +323,7 @@
                         @endforeach
                     </div>
                     <div class="no-print" style="margin: 24px 0 8px 0; text-align: center;">
-                        <button type="button" onclick="window.print()" data-testid="mmsp-ranking-print">Štampaj</button>
+                        <button type="button" onclick="printMmspSection('ranking')" data-testid="mmsp-ranking-print">Štampaj</button>
                         @if($canonicalChair)
                             <a href="{{ route('evaluation.mmsp-decision', $competition) }}" data-testid="mmsp-decision-open" class="btn-primary" style="margin-left: 8px;">Generiši Word odluku</a>
                         @endif
@@ -298,6 +335,17 @@
 </div>
 
 <script>
+    function printMmspSection(section) {
+        document.body.classList.remove('mmsp-print-p3', 'mmsp-print-ranking');
+        document.body.classList.add(section === 'ranking' ? 'mmsp-print-ranking' : 'mmsp-print-p3');
+        const cleanup = function () {
+            document.body.classList.remove('mmsp-print-p3', 'mmsp-print-ranking');
+            window.removeEventListener('afterprint', cleanup);
+        };
+        window.addEventListener('afterprint', cleanup);
+        window.print();
+    }
+
     function acknowledgeMmspAdministrativeConfirm(form) {
         const anyNo = ['criterion_documentation', 'criterion_report', 'criterion_related'].some(function (name) {
             const checked = form.querySelector('input[name="' + name + '"]:checked');

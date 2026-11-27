@@ -70,7 +70,6 @@
         border-radius: 8px;
         font-size: 14px;
         background: #fff;
-        color: #111827;
     }
     .mmsp-p3 .form-control:focus {
         outline: none;
@@ -92,7 +91,6 @@
         align-items: center;
         gap: 8px;
         cursor: pointer;
-        font-weight: 500;
     }
     .mmsp-p3 .radio-option input[type="radio"] { cursor: pointer; }
     .mmsp-p3 .evaluation-table {
@@ -104,13 +102,13 @@
     }
     .mmsp-p3 .evaluation-table th,
     .mmsp-p3 .evaluation-table td {
-        border: 1px solid #e5e7eb;
+        border: 1px solid #e5e7eb !important;
         padding: 6px 4px;
         text-align: center;
     }
     .mmsp-p3 .evaluation-table th {
         background: #f9fafb;
-        font-weight: bold;
+        font-weight: bold !important;
         color: #111827;
         font-size: 12px;
     }
@@ -132,18 +130,11 @@
         border-radius: 4px;
         text-align: center;
         font-size: 13px;
-        background: #fff;
-        color: #111827;
     }
     .mmsp-p3 .evaluation-table .score-input:focus {
         outline: none;
         border-color: var(--primary);
         box-shadow: 0 0 0 2px rgba(11, 61, 145, 0.1);
-    }
-    .mmsp-p3 .evaluation-table .score-input:disabled {
-        background: #f3f4f6;
-        color: #6b7280;
-        cursor: not-allowed;
     }
     .mmsp-p3 .evaluation-table .score-display {
         color: #6b7280;
@@ -153,6 +144,66 @@
         background: #f0f9ff;
         font-weight: 600;
         color: var(--primary);
+    }
+    .mmsp-p3 .evaluation-table .final-score-row {
+        background: var(--primary);
+        color: #fff !important;
+        font-weight: bold !important;
+    }
+    .mmsp-p3 .evaluation-table .final-score-row .average-col {
+        font-weight: bold !important;
+        color: #fff !important;
+    }
+    .mmsp-p3 .evaluation-table .final-score-row td {
+        background: var(--primary);
+        color: #fff !important;
+        font-weight: bold !important;
+    }
+    .mmsp-p3 .kn-prigovor-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        margin: 24px auto 0;
+        max-width: 1200px;
+        box-sizing: border-box;
+    }
+    .mmsp-p3 .kn-prigovor-card h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+    }
+    .mmsp-p3 .kn-prigovor-card p,
+    .mmsp-p3 .kn-prigovor-card li {
+        font-size: 14px;
+        color: #374151;
+        line-height: 1.5;
+    }
+    .mmsp-p3 .kn-prigovor-card textarea.kn-prigovor-textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    .mmsp-p3 .kn-prigovor-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .mmsp-p3 .kn-prigovor-btn {
+        background: #0B3D91;
+        color: #fff;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 14px;
     }
     .mmsp-p3 .btn-primary {
         background: var(--primary);
@@ -174,6 +225,10 @@
         margin-top: 4px;
     }
     @media print {
+        @page {
+            size: A4;
+            margin: 10mm 8mm;
+        }
         .mmsp-p3 nav,
         .mmsp-p3 .page-header,
         .mmsp-p3 .btn-primary,
@@ -183,6 +238,13 @@
             display: none !important;
         }
         .mmsp-p3 { padding: 0; background: #fff; }
+        .mmsp-p3 .container {
+            padding: 0;
+            max-width: 100%;
+        }
+        .mmsp-p3-ranking { display: none !important; }
+        body.mmsp-print-ranking .mmsp-p3-form { display: none !important; }
+        body.mmsp-print-ranking .mmsp-p3-ranking { display: block !important; }
         .mmsp-p3 .form-card {
             padding: 0;
             box-shadow: none;
@@ -212,6 +274,33 @@
         }
         .mmsp-p3 .print-segment-intro .form-section-compact { margin-bottom: 0; }
         .mmsp-p3 .print-segment-intro .form-section-compact:last-child { grid-column: 1 / -1; }
+        .mmsp-p3 .form-section {
+            margin-bottom: 0;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .mmsp-p3 .form-section-compact .radio-group {
+            margin-top: 4px;
+            gap: 12px;
+        }
+        .mmsp-p3 .form-section-compact .radio-option,
+        .mmsp-p3 .form-section-compact .radio-option label {
+            font-size: 9pt;
+        }
+        .mmsp-p3 .form-section-notes {
+            padding-top: 0 !important;
+            margin-top: 6px;
+        }
+        .mmsp-p3 .form-section textarea {
+            text-align: left !important;
+            width: 100% !important;
+            font-size: 9pt;
+        }
+        .mmsp-p3 .form-section-notes textarea {
+            min-height: 2em;
+            max-height: 3.5em;
+        }
+        .mmsp-p3 .form-label-large { page-break-after: avoid; }
         .mmsp-p3 .form-section-compact .form-label-large,
         .mmsp-p3 .form-section-scores > .form-label-large,
         .mmsp-p3 .form-section-notes > .form-label-large {
@@ -233,6 +322,15 @@
             table-layout: fixed;
         }
         .mmsp-p3 .evaluation-table thead { display: table-header-group; }
+        .mmsp-p3 .evaluation-table tbody { display: table-row-group; }
+        .mmsp-p3 .evaluation-table tr {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+        .mmsp-p3 .evaluation-table .final-score-row {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         .mmsp-p3 .evaluation-table th,
         .mmsp-p3 .evaluation-table td {
             border: 1px solid #000 !important;
@@ -264,7 +362,11 @@
         .mmsp-p3 .evaluation-table .average-col {
             font-weight: bold !important;
             color: #000 !important;
-            background: transparent;
+        }
+        .mmsp-p3 .evaluation-table .final-score-row td,
+        .mmsp-p3 .evaluation-table .final-score-row .average-col {
+            font-weight: bold !important;
+            color: #000 !important;
         }
     }
 </style>
