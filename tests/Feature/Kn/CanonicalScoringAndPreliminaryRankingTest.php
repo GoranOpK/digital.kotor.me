@@ -256,6 +256,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $complaint = ApplicationComplaint::query()->sole();
 
         $this->assertSame(CanonicalReviewState::COMPLAINT_PENDING, CanonicalReviewState::resolve($application->fresh()));
+        $pendingList = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk();
+        $pendingRow = $this->rowContaining($pendingList->getContent(), $application->business_plan_name);
+        $this->assertStringContainsString('Obrazac P3', $pendingRow);
+        $this->assertStringNotContainsString('Ocjeni', $pendingRow);
         $this->assertSame(G::SCORING_STAGE_CLOSED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $application->fresh()));
         $this->assertSame(S::CANONICAL_REVIEW_UNRESOLVED_MESSAGE, $this->scoring()->canonicalCycleBlockReason($competition->fresh()));
 
@@ -348,7 +352,12 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $openList->assertSee('Plan bez prigovora')->assertSee('Plan koji ostaje u bodovanju');
         $openRow = $this->rowContaining($openList->getContent(), 'Plan bez prigovora');
         $this->assertStringContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::COMPLAINT_ELIGIBLE], $openRow);
+        $this->assertStringContainsString('Obrazac P3', $openRow);
+        $this->assertStringNotContainsString('Ocjeni', $openRow);
         $this->assertStringNotContainsString('U ocjenjivanju', $openRow);
+        $keptRow = $this->rowContaining($openList->getContent(), 'Plan koji ostaje u bodovanju');
+        $this->assertStringContainsString('Ocjeni', $keptRow);
+        $this->assertStringNotContainsString('Obrazac P3', $keptRow);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
             ->assertDontSee('Plan bez prigovora');
@@ -417,6 +426,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee('Plan čeka obavještenje');
         $row = $this->rowContaining($list->getContent(), 'Plan čeka obavještenje');
         $this->assertStringContainsString(ComplaintService::STATUS_LABELS[ComplaintService::STATUS_NOTICE_PENDING], $row);
+        $this->assertStringContainsString('Obrazac P3', $row);
+        $this->assertStringNotContainsString('Ocjeni', $row);
         $this->assertStringNotContainsString('U ocjenjivanju', $row);
         $this->assertStringNotContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::INCOMPLETE], $row);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
@@ -483,6 +494,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee('Plan na provjeri');
         $row = $this->rowContaining($list->getContent(), 'Plan na provjeri');
         $this->assertStringContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::PENDING_REVIEW], $row);
+        $this->assertStringContainsString('Obrazac P3', $row);
+        $this->assertStringNotContainsString('Ocjeni', $row);
         $this->assertStringNotContainsString('U ocjenjivanju', $row);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
@@ -494,10 +507,17 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         [, $members, , [$application]] = $this->readyCompetition();
         $this->scoreAll($members, $application, [40, 40, 40]);
 
+        $fresh = $application->fresh();
+        $this->assertFalse($this->scoring()->applicationHasFiveCanonicalSeats($fresh));
+        $this->assertTrue($this->scoring()->applicationHasCanonicalCommissionSeats($fresh));
+
         $list = $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)->get(route('evaluation.index'))->assertOk();
         $list->assertSee('40.00 / 50');
         $list->assertDontSee(' / 58');
-        $this->assertStringNotContainsString(' / 58', $this->rowContaining($list->getContent(), $application->business_plan_name));
+        $row = $this->rowContaining($list->getContent(), $application->business_plan_name);
+        $this->assertStringNotContainsString(' / 58', $row);
+        $this->assertStringContainsString('Ocijenjena prijava', $row);
+        $this->assertStringNotContainsString('Vaša ocjena je unesena', $row);
     }
 
     public function test_missing_interview_session_blocks_scoring(): void
@@ -801,6 +821,35 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertNull($other->fresh()->final_score);
         $this->assertNull($other->fresh()->final_score_calc);
         $this->assertSame('submitted', $other->fresh()->status);
+    }
+
+    public function test_unsent_incomplete_notice_blocks_preliminary_ranking(): void
+    {
+        [$commission, $members] = $this->canonicalCommission();
+        $competition = $this->competition($commission);
+        $scored = $this->finalApplication($competition, ['business_plan_name' => 'Plan spreman za rang']);
+        $waiting = $this->finalApplication($competition, ['business_plan_name' => 'Plan bez poslatog obavještenja']);
+        $this->complete($scored, $members);
+        $fake = Mail::getFacadeRoot();
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('SMTP unavailable'));
+        $this->assertTrue(app(CompletenessAssessmentService::class)
+            ->record($waiting, $members[G::ROLE_PREDSJEDNIK]->user, ApplicationCompletenessAssessment::INCOMPLETE, 'Nedostaje prilog.')->succeeded);
+        Mail::swap($fake);
+
+        $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $waiting->id)->sole();
+        $this->assertNull($assessment->notice_sent_at);
+        $this->assertSame(CanonicalReviewState::INCOMPLETE, CanonicalReviewState::resolve($waiting->fresh()));
+        $this->assertTrue(CanonicalReviewState::blocksPreliminaryRanking($waiting->fresh()));
+        $this->assertFalse(app(G::class)->administrativeReviewReleased($competition->fresh()));
+
+        Carbon::setTestNow(Carbon::parse('2026-09-20 10:00:00', 'Europe/Belgrade'));
+        $this->assertSame(S::CANONICAL_REVIEW_UNRESOLVED_MESSAGE, $this->scoring()->canonicalCycleBlockReason($competition->fresh()));
+        $this->assertFalse($this->scoring()->persistCanonicalPreliminaryRankingIfReady($competition->fresh()));
+        $this->assertFalse($this->scoring()->canonicalRankingIsFormed($competition));
+        $this->assertNull($competition->fresh()->canonical_ranking_formed_at);
+        $this->assertNull($scored->fresh()->ranking_position);
+        $this->assertNull($scored->fresh()->final_score);
+        $this->assertSame('submitted', $waiting->fresh()->status);
     }
 
     // E — aggregate

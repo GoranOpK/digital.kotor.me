@@ -197,6 +197,24 @@ class CanonicalIndividualScoringService
         return count($bySeat) === 5;
     }
 
+    /**
+     * MMSP commission list: the evaluated status uses the three canonical seats, not the five-seat check.
+     */
+    public function applicationHasCanonicalCommissionSeats(Application $application): bool
+    {
+        $application->loadMissing('competition');
+        if (! $this->isCanonicalCompetition($application->competition)) {
+            return false;
+        }
+
+        $seats = $this->canonicalCompletedSeats($application);
+        if ($seats === null) {
+            return false;
+        }
+
+        return array_keys($seats) === ScoringProfileConfig::for($application->competition->type)->allowedSeats;
+    }
+
     public function applicationHasYouthCanonicalSeats(Application $application): bool
     {
         $bySeat = $this->completedEvaluationsBySeat($application);
@@ -1158,7 +1176,7 @@ class CanonicalIndividualScoringService
         }
 
         foreach ($applications as $application) {
-            if (in_array(CanonicalReviewState::resolve($application), self::CANONICAL_UNRESOLVED_REVIEW_STATES, true)) {
+            if (CanonicalReviewState::blocksPreliminaryRanking($application)) {
                 return self::CANONICAL_REVIEW_UNRESOLVED_MESSAGE;
             }
         }

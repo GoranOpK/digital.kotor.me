@@ -126,6 +126,36 @@ final class CanonicalReviewState
     }
 
     /**
+     * Ranking stays closed through review and the complaint procedure.
+     * An incomplete finding whose notice was never sent is still in that procedure:
+     * the complaint window has not started.
+     */
+    public static function blocksPreliminaryRanking(Application $application, ?CarbonImmutable $at = null): bool
+    {
+        $state = self::resolve($application, $at);
+        if (in_array($state, [
+            self::PENDING_REVIEW,
+            self::COMPLAINT_ELIGIBLE,
+            self::COMPLAINT_PENDING,
+        ], true)) {
+            return true;
+        }
+
+        if ($state !== self::INCOMPLETE) {
+            return false;
+        }
+
+        $latest = ApplicationCompletenessAssessment::query()
+            ->where('application_id', $application->id)
+            ->latest('id')
+            ->first();
+
+        return $latest !== null
+            && $latest->outcome === ApplicationCompletenessAssessment::INCOMPLETE
+            && $latest->notice_sent_at === null;
+    }
+
+    /**
      * Status text for the commission list while the application is still in review or complaint.
      * Null means scoring is open and the list keeps its scoring status.
      *

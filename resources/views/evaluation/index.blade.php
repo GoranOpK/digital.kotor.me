@@ -273,7 +273,9 @@
                                 && ($youthPreliminaryByCompetition[$application->competition_id]['ranking_ready'] ?? false);
                             $hasCanonicalSeats = $isYouthApplication
                                 ? app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasYouthCanonicalSeats($application)
-                                : app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application);
+                                : ($isCanonicalApplication
+                                    ? app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasCanonicalCommissionSeats($application)
+                                    : app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application));
 
                             if ($canonicalList !== null) {
                                 $displayStatus = $canonicalList['label'];
@@ -331,6 +333,10 @@
                                         {{-- Odbijene prijave - svi članovi mogu pristupiti (read-only) --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #dc2626; color: #fff;">
                                             Pregledaj
+                                        </a>
+                                    @elseif($isCanonicalApplication && $canonicalList !== null && ! ($canonicalList['eliminated'] ?? false))
+                                        <a href="{{ route('evaluation.create', $application) }}" class="btn-sm">
+                                            Obrazac P3
                                         </a>
                                     @elseif($canViewFinalScores)
                                         {{-- Rang lista je formirana — svi članovi vide ocijenjenu prijavu --}}
