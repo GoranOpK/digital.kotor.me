@@ -28,27 +28,32 @@ final class MmspP3Form
 
     public const RESULT_FAIL = 'Ne ispunjava eliminatorne kriterijume';
 
+    public const ARTICLE20_HEADING = 'Dodatna administrativna provjera – član 20 Odluke';
+
     /**
-     * Postojeće MMSP formulacije. Redoslijed i fail_phrase ostaju oni koje
-     * evidencija potpunosti već upisuje u obrazloženje i obavještenje.
+     * Tačka 3 je originalno pitanje Obrasca P3. Preostala dva kriterijuma
+     * prikazuju se pod čl.20, kao potvrdna pitanja: Da i dalje znači ispunjen
+     * uslov, Ne* eliminatorni razlog. fail_phrase ostaje tekst obrazloženja.
      *
-     * @var array<string, array{field: string, statement: string, fail_phrase: string}>
+     * @var array<string, array{field: string, statement: string, fail_phrase: string, article20?: bool}>
      */
     public const CRITERIA = [
         'documentation' => [
             'field' => 'criterion_documentation',
-            'statement' => 'Dokumentacija je potpuna',
+            'statement' => 'Dostavljena su sva potrebna dokumenta?',
             'fail_phrase' => 'dokumentacija nije potpuna',
         ],
         'report' => [
             'field' => 'criterion_report',
-            'statement' => 'Dostavljen je izvještaj o prethodnoj realizaciji, ako je obavezan',
+            'statement' => 'Dostavljen je izvještaj o realizaciji plana sa finansijskim izvještajem i pratećom dokumentacijom (fakture i izvodi) iz prethodnog perioda finansiranog/djelimično finansiranog iz budžeta Opštine?',
             'fail_phrase' => 'nije dostavljen obavezan izvještaj o prethodnoj realizaciji',
+            'article20' => true,
         ],
         'related' => [
             'field' => 'criterion_related',
-            'statement' => 'Plan ulaganja se odnosi na vrstu subvencije',
+            'statement' => 'Plan ulaganja je u vezi sa subvencijama navedenim u članu 13 ove Odluke?',
             'fail_phrase' => 'plan ulaganja se ne odnosi na vrstu subvencije',
+            'article20' => true,
         ],
     ];
 

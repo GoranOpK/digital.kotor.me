@@ -11,6 +11,7 @@
         && app(\App\Services\Competitions\CompletenessAssessmentService::class)->recordBlockReason($application, auth()->user()) === null;
     $presentation = $p3Administrative ?? \App\Support\MmspP3Form::administrativePresentation($application);
     $criteria = \App\Support\MmspP3Form::CRITERIA;
+    $article20HeadingShown = false;
     $selected = function (string $field) {
         $old = old($field);
 
@@ -27,8 +28,12 @@
         <form method="POST" action="{{ route('evaluation.completeness', $application) }}" id="mmspAdministrativeForm">
             @csrf
             @foreach($criteria as $key => $criterion)
+                @if(! empty($criterion['article20']) && ! $article20HeadingShown)
+                    <div class="mmsp-p3-article20-heading">{{ \App\Support\MmspP3Form::ARTICLE20_HEADING }}</div>
+                    @php $article20HeadingShown = true; @endphp
+                @endif
                 <label class="form-label form-label-large" @if(! $loop->first) style="margin-top: 16px;" @endif>
-                    @if($loop->first) 3. @endif{{ $criterion['statement'] }}
+                    @if(empty($criterion['article20'])) 3. @endif{{ $criterion['statement'] }}
                 </label>
                 <div class="radio-group">
                     <label class="radio-option">
@@ -66,8 +71,13 @@
             @if($presentation['complaint_accepted'])
                 <div style="margin-bottom: 12px; font-weight: 600;">Prvobitni eliminatorni odgovori</div>
             @endif
+            @php $article20HeadingShown = false; @endphp
             @foreach($criteria as $key => $criterion)
-                @if($loop->first)
+                @if(! empty($criterion['article20']) && ! $article20HeadingShown)
+                    <div class="mmsp-p3-article20-heading">{{ \App\Support\MmspP3Form::ARTICLE20_HEADING }}</div>
+                    @php $article20HeadingShown = true; @endphp
+                @endif
+                @if(empty($criterion['article20']))
                     <label class="form-label form-label-large">3. {{ $criterion['statement'] }}</label>
                     <div style="margin-bottom: 12px; margin-top: 12px;">
                         <strong>{{ $presentation['answers'][$key] }}</strong>
