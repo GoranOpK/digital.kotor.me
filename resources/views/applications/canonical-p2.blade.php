@@ -519,8 +519,8 @@
         </p>
 
         @unless($readOnly)
-            <script src="{{ asset('js/mmsp-p2-financials.js') }}"></script>
-            <script src="{{ asset('js/mmsp-p2-save-label.js') }}"></script>
+            <script src="{{ asset('js/mmsp-p2-financials.js') }}?v={{ @filemtime(public_path('js/mmsp-p2-financials.js')) ?: time() }}"></script>
+            <script src="{{ asset('js/mmsp-p2-save-label.js') }}?v={{ @filemtime(public_path('js/mmsp-p2-save-label.js')) ?: time() }}"></script>
         @endunless
 
         <div class="mmsp-form-card mmsp-p2-actions" style="text-align:center; margin-top:8px; margin-bottom:24px;">
