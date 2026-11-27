@@ -142,10 +142,10 @@
                 update();
             });
         }
-        document.addEventListener('beforeprint', function () {
+        window.addEventListener('beforeprint', function () {
             markEmptyRows(table);
         });
-        document.addEventListener('afterprint', function () {
+        window.addEventListener('afterprint', function () {
             clearPrintMarks(table);
         });
         update();

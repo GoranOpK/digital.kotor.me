@@ -109,7 +109,10 @@ class MmspP2FinancialTotalsTest extends TestCase
         $this->assertSame(1, $this->expenseRowCount($first->getContent()));
         $script = file_get_contents(public_path('js/mmsp-p2-financials.js'));
         $this->assertIsString($script);
-        $this->assertStringContainsString('beforeprint', $script);
+        $this->assertStringContainsString("window.addEventListener('beforeprint'", $script);
+        $this->assertStringContainsString("window.addEventListener('afterprint'", $script);
+        $this->assertStringNotContainsString("document.addEventListener('beforeprint'", $script);
+        $this->assertStringNotContainsString("document.addEventListener('afterprint'", $script);
         $this->assertStringContainsString("querySelectorAll('[data-mmsp-expense-amount]')", $script);
         $this->assertStringContainsString('data-mmsp-add-expense-row', $script);
 
