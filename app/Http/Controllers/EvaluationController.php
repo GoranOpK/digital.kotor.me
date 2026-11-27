@@ -13,7 +13,9 @@ use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\YouthPrigovorMappingCorrectionService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\CanonicalReviewState;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\Competitions\YouthAllocationDraftService;
 use App\Services\Competitions\YouthDecisionDocumentStore;
@@ -250,12 +252,21 @@ class EvaluationController extends Controller
                     });
                 });
             } elseif ($request->filter === 'rejected') {
-                // Odbijene prijave
-                $query->where('status', 'rejected');
+                // Odbijene prijave, uključujući MMSP prijave eliminisane stanjem provjere ili prigovora.
+                $query->where(function ($outer) {
+                    $outer->where('status', 'rejected')
+                        ->orWhere(function ($canonical) {
+                            CanonicalReviewState::constrainFinallyEliminated($canonical);
+                        });
+                });
             }
         } else {
             // Ako nema filtera, prikaži sve prijave (submitted, evaluated i rejected)
             $query->whereIn('status', ['submitted', 'evaluated', 'rejected']);
+        }
+
+        if ($request->filter !== 'rejected') {
+            CanonicalReviewState::excludeFinallyEliminated($query);
         }
 
         $applications = $query->latest()->paginate(20)->appends($request->query());

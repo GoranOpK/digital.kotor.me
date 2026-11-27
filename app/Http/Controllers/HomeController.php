@@ -14,6 +14,7 @@ use App\Models\Competition;
 use App\Services\ApplicationPrigovorService;
 use App\Models\Notice;
 use App\Models\User;
+use App\Services\Competitions\CanonicalReviewState;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Support\UserType;
@@ -322,6 +323,7 @@ class HomeController extends Controller
                     ->whereIn('status', ['submitted', 'evaluated'])
                     ->whereEliminatoryScoringNotBlocked()
                     ->with(['competition', 'user', 'businessPlan', 'eliminatoryCheck', 'prigovor']);
+                CanonicalReviewState::excludeFinallyEliminated($applicationsQuery);
 
                 if (! empty($evaluatedApplicationIds)) {
                     $applicationsQuery->whereNotIn('id', $evaluatedApplicationIds);

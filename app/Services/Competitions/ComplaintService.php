@@ -17,9 +17,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Canonical complaint lifecycle: 3 calendar days to submit, 7 calendar days for the
- * Commission decision. A late decision is recorded with its actual timestamp and
- * compliance evidence; history is never rewritten.
+ * Canonical complaint lifecycle: 3 calendar days to submit, 7 calendar days as the
+ * maximum for the Commission decision. The decision may be recorded earlier; the
+ * deadline is not a waiting period. Rejection eliminates the application through the
+ * recorded complaint decision and does not rewrite the submitted dossier.
+ * A late decision keeps its actual timestamp and compliance evidence. History is never rewritten.
  */
 class ComplaintService
 {
