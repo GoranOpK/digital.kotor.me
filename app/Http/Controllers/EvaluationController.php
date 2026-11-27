@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\ApplicationComplaint;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
@@ -14,6 +15,7 @@ use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\YouthPrigovorMappingCorrectionService;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
+use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
 use App\Services\Competitions\YouthAllocationDraftService;
 use App\Services\Competitions\YouthDecisionDocumentStore;
@@ -256,6 +258,16 @@ class EvaluationController extends Controller
         } else {
             // Ako nema filtera, prikaži sve prijave (submitted, evaluated i rejected)
             $query->whereIn('status', ['submitted', 'evaluated', 'rejected']);
+        }
+
+        if ($request->filter !== 'rejected') {
+            $query->where(function ($outer) {
+                $outer->whereDoesntHave('complaint', function ($complaint) {
+                    $complaint->where('decision', ApplicationComplaint::REJECTED);
+                })->orWhereHas('competition', function ($competition) {
+                    $competition->where('type', '!=', CompetitionProfileResolver::TYPE_CANONICAL);
+                });
+            });
         }
 
         $applications = $query->latest()->paginate(20)->appends($request->query());

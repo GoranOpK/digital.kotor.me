@@ -268,6 +268,62 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertSame(1, (int) $application->fresh()->ranking_position);
     }
 
+    public function test_rejected_complaint_leaves_the_active_list_before_the_decision_deadline(): void
+    {
+        [$commission, $members] = $this->canonicalCommission();
+        $competition = $this->competition($commission);
+        $application = $this->finalApplication($competition, ['business_plan_name' => 'Plan koji se eliminiše']);
+        $kept = $this->finalApplication($competition, ['business_plan_name' => 'Plan koji ostaje u bodovanju']);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+        $this->confirmOrdinarySession($competition);
+        $this->assertTrue(app(CompletenessAssessmentService::class)
+            ->record($application, $chair, ApplicationCompletenessAssessment::INCOMPLETE, 'Nedostaje prilog.')->succeeded);
+        $this->complete($kept, $members);
+        $this->confirmedSession($competition, $members);
+
+        Carbon::setTestNow(Carbon::parse('2026-09-11 10:00:00', 'Europe/Belgrade'));
+        $this->actingAs($application->user)
+            ->post(route('applications.complaint', $application), ['body' => 'Prigovor.'])
+            ->assertSessionHas('success');
+        $complaint = ApplicationComplaint::query()->where('application_id', $application->id)->sole();
+        $this->assertTrue($complaint->decision_due_at->greaterThan(now()));
+
+        $this->assertTrue(app(ComplaintService::class)->decide($complaint, $chair, ApplicationComplaint::REJECTED, 'Prilog nije dostavljen.')->succeeded);
+
+        $fresh = $application->fresh();
+        $this->assertSame('rejected', $fresh->status);
+        $this->assertNotNull($fresh->finalClaim);
+        $this->assertSame(G::SCORING_STAGE_CLOSED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $fresh));
+        $this->assertTrue($complaint->fresh()->decision_due_at->greaterThan(now()));
+
+        foreach ($members as $member) {
+            $user = $member->user;
+            $this->actingAs($user)->get(route('evaluation.index'))
+                ->assertOk()
+                ->assertDontSee('Plan koji se eliminiše')
+                ->assertSee('Plan koji ostaje u bodovanju');
+            $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'pending']))
+                ->assertOk()
+                ->assertDontSee('Plan koji se eliminiše')
+                ->assertSee('Plan koji ostaje u bodovanju');
+            $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'evaluated']))
+                ->assertOk()
+                ->assertDontSee('Plan koji se eliminiše');
+            $this->actingAs($user)->get(route('evaluation.index', ['filter' => 'rejected']))
+                ->assertOk()
+                ->assertSee('Plan koji se eliminiše')
+                ->assertSee('Pregledaj')
+                ->assertDontSee('Plan koji ostaje u bodovanju');
+            $this->actingAs($user)->get(route('evaluation.create', $application))->assertOk();
+            $this->actingAs($user)
+                ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), ['scoring_confirmed' => '1']))
+                ->assertForbidden();
+        }
+
+        $this->assertSame(0, EvaluationScore::query()->where('application_id', $application->id)->count());
+        $this->assertNull($this->scoring()->canonicalScoreWriteBlockReason($chair, $kept->fresh()));
+    }
+
     public function test_missing_interview_session_blocks_scoring(): void
     {
         [$commission, $members] = $this->canonicalCommission();
