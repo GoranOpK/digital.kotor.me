@@ -272,6 +272,8 @@ class CompletenessComplaintTest extends TestCase
                 $complaint->decision_due_at->timezone('Europe/Belgrade')->format('Y-m-d H:i:s')
             );
             $assessment = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->firstOrFail();
+            $originalSubmittedAt = DB::table('application_complaints')->where('id', $complaint->id)->value('submitted_at');
+            $originalDueAt = DB::table('application_complaints')->where('id', $complaint->id)->value('decision_due_at');
 
             Carbon::setTestNow(Carbon::parse($decidedAt, 'Europe/Belgrade'));
             $response = $this->actingAs($chair)
@@ -283,6 +285,8 @@ class CompletenessComplaintTest extends TestCase
                 ->assertSessionHas('success');
 
             $complaint->refresh();
+            $this->assertSame($originalSubmittedAt, DB::table('application_complaints')->where('id', $complaint->id)->value('submitted_at'), $key.' original submission time changed');
+            $this->assertSame($originalDueAt, DB::table('application_complaints')->where('id', $complaint->id)->value('decision_due_at'), $key.' original decision deadline changed');
             $this->assertSame('rejected', $complaint->decision, $key);
             $this->assertSame($expectLate, (bool) $complaint->decision_late, $key);
             $this->assertSame($storedDecidedAt, $complaint->decided_at->timezone('Europe/Belgrade')->format('Y-m-d H:i:s'), $key);
