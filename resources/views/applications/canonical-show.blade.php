@@ -62,6 +62,19 @@
     $reviewAt = fn ($at) => $at
         ? \Carbon\CarbonImmutable::parse($at)->timezone($canonicalReview['timezone'] ?? 'Europe/Belgrade')->format('d.m.Y. H:i')
         : '—';
+    $formatStoredEur = function (mixed $amount): ?string {
+        if ($amount === null || $amount === '') {
+            return null;
+        }
+
+        return number_format((float) $amount, 2, ',', '.').' €';
+    };
+    $expectedSubsidyText = $formatStoredEur($plan?->expected_subsidy);
+    $investmentTotalText = $formatStoredEur($plan?->total_investment);
+    $competitionBudgetAmount = $application->displayCompetitionBudget();
+    $competitionBudgetText = $competitionBudgetAmount !== null
+        ? number_format($competitionBudgetAmount, 2, ',', '.').' €'
+        : null;
 @endphp
 
 <style>
@@ -118,13 +131,16 @@
         grid-template-columns: 1fr;
         gap: 16px;
     }
+    @media (min-width: 768px) {
+        .info-grid { grid-template-columns: repeat(2, 1fr); }
+    }
     .info-item { display: flex; flex-direction: column; }
     .info-label {
         font-size: 12px;
         font-weight: 600;
         color: #6b7280;
         text-transform: uppercase;
-        letter-spacing: .5px;
+        letter-spacing: 0.5px;
         margin-bottom: 4px;
     }
     .info-value {
@@ -134,9 +150,9 @@
     }
     .status-badge {
         display: inline-block;
-        padding: 4px 12px;
+        padding: 6px 16px;
         border-radius: 9999px;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
         text-decoration: none;
     }
@@ -152,8 +168,7 @@
         text-decoration: none;
         cursor: pointer;
         border: none;
-        transition: all .2s;
-        display: inline-block;
+        transition: all 0.2s;
     }
     .btn-primary { background: var(--primary); color:#fff; }
     .btn-primary:hover { background: var(--primary-dark); }
@@ -193,34 +208,39 @@
         display:flex;
         justify-content:space-between;
         align-items:center;
-        gap:16px;
     }
     .document-item.required { border-left:4px solid #ef4444; }
     .document-item.uploaded { border-left:4px solid #10b981; }
-    .document-info { flex:1; min-width:0; }
+    .document-info { flex:1; }
     .document-name { font-weight:600; color:#111827; margin-bottom:4px; }
     .document-type { font-size:12px; color:#6b7280; }
-    .document-actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .upload-section {
-        background:#f9fafb;
-        padding:15px;
-        border-radius:8px;
-        margin-top:0;
+    .document-actions { display:flex; gap:8px; }
+    @media (max-width: 700px) {
+        .document-item { align-items:flex-start; flex-direction:column; }
+        .document-info { min-width:0; max-width:100%; }
+        .document-name, .document-type { overflow-wrap:anywhere; }
+        .document-actions { flex-wrap:wrap; max-width:100%; margin-top:12px; }
     }
-    .form-group { margin-bottom:12px; }
+    .upload-section {
+        background:#f3f4f6;
+        padding:20px;
+        border-radius:8px;
+        margin-top:16px;
+    }
+    .form-group { margin-bottom:16px; }
     .form-label {
         display:block;
-        font-size:13px;
+        font-size:14px;
         font-weight:600;
         color:#374151;
         margin-bottom:8px;
     }
     .form-control {
         width:100%;
-        padding:8px 12px;
+        padding:10px 14px;
         border:1px solid #d1d5db;
         border-radius:8px;
-        font-size:13px;
+        font-size:14px;
         background:#fff;
         box-sizing:border-box;
     }
@@ -231,7 +251,7 @@
     }
     .file-input-wrapper {
         position:relative;
-        display:block;
+        display:inline-block;
         width:100%;
         min-height:40px;
     }
@@ -254,6 +274,11 @@
         cursor:pointer;
         font-size:14px;
         font-weight:600;
+        transition: background 0.2s;
+    }
+    .file-input-label-custom:hover,
+    .file-input-wrapper:hover .file-input-label-custom {
+        background: var(--primary-dark);
     }
     .upload-info-box {
         background:#eff6ff;
@@ -273,9 +298,6 @@
         border-radius:8px;
         background:#f8fafc;
         font-size:12px;
-    }
-    @media (max-width: 700px) {
-        .document-item { align-items:flex-start; flex-direction:column; }
     }
     .mmsp-prigovor-card {
         background: #fff;
@@ -422,6 +444,36 @@
                         <span class="info-label">Redni broj prijave</span>
                         <span class="info-value">{{ $application->redni_broj ?? 'Biće dodijeljen nakon konačne predaje' }}</span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">Očekivani iznos subvencije</span>
+                        <span class="info-value">
+                            @if($expectedSubsidyText !== null)
+                                {{ $expectedSubsidyText }}
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ukupna vrijednost ulaganja</span>
+                        <span class="info-value">
+                            @if($investmentTotalText !== null)
+                                {{ $investmentTotalText }}
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ukupan budžet konkursa</span>
+                        <span class="info-value">
+                            @if($competitionBudgetText !== null)
+                                {{ $competitionBudgetText }}
+                            @else
+                                <span style="color: #6b7280;">Nije definisan</span>
+                            @endif
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -434,6 +486,36 @@
                         <span class="info-label">Trenutni Status</span>
                         <span class="info-value">
                             <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">{{ $statusLabels[$application->status] ?? $application->status }}</span>
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Očekivani iznos subvencije</span>
+                        <span class="info-value">
+                            @if($expectedSubsidyText !== null)
+                                {{ $expectedSubsidyText }}
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Ukupna vrijednost ulaganja</span>
+                        <span class="info-value">
+                            @if($investmentTotalText !== null)
+                                {{ $investmentTotalText }}
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Ukupan budžet konkursa</span>
+                        <span class="info-value">
+                            @if($competitionBudgetText !== null)
+                                {{ $competitionBudgetText }}
+                            @else
+                                <span style="color: #6b7280;">Nije definisan</span>
+                            @endif
                         </span>
                     </div>
                     <div class="info-item" style="margin-bottom: 16px;">
@@ -467,7 +549,7 @@
 
                     <div class="info-item">
                         <span class="info-label">Datum podnošenja</span>
-                        <span class="info-value" style="font-size: 13px;">{{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}</span>
+                        <span class="info-value">{{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}</span>
                     </div>
 
                     @if($application->status === 'draft' && $canManage)
@@ -732,7 +814,7 @@
                         </form>
                     </div>
                 @else
-                    <div class="info-grid">
+                    <div class="info-grid" style="grid-template-columns: 1fr;">
                         <div class="info-item">
                             <span class="info-label">Obavezni prilozi</span>
                             <span class="info-value">{{ $uploadedRequired }} od {{ $requiredUploads->count() }} priloženo</span>
