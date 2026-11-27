@@ -5,6 +5,7 @@ namespace Tests\Feature\Kn;
 use App\Models\Application;
 use App\Models\ApplicationComplaint;
 use App\Models\ApplicationCompletenessAssessment;
+use App\Models\CanonicalApplicantForm;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\CommissionSession;
@@ -21,8 +22,11 @@ use App\Services\Competitions\CanonicalReviewState;
 use App\Services\Competitions\ComplaintService;
 use App\Services\Competitions\CompletenessAssessmentService;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CanonicalLegalForm;
+use App\Support\CanonicalSubsidyType;
 use App\Support\CompetitionProgramCatalog;
 use App\Support\CompetitionRanking;
+use App\Support\MmspP3Form;
 use App\Support\ScoringProfileConfig;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
@@ -444,7 +448,12 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertViewHas('visibleScores', fn ($scores) => $scores->keys()->all() === [$chair->id])
             ->assertViewHas('aggregate', null)
             ->assertViewHas('rankingFormed', false)
-            ->assertSee('Moja ocjena')
+            ->assertSee('Predsjednik')
+            ->assertSee('Član 1')
+            ->assertSee('Član 2')
+            ->assertSee('Prosječna ocjena')
+            ->assertDontSee('Moja ocjena')
+            ->assertDontSee('<select name="criterion_1"', false)
             ->assertDontSee('Preliminarna rang-lista');
 
         $this->actingAs($secretary->user)->get(route('evaluation.create', $application))
@@ -453,6 +462,9 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertViewHas('ownScore', null)
             ->assertViewHas('aggregate', null)
             ->assertViewHas('members', fn ($visibleMembers) => $visibleMembers->pluck('id')->all() === [$secretary->id])
+            ->assertSee('type="number"', false)
+            ->assertSee('name="criterion_10"', false)
+            ->assertSee('Predsjednik')
             ->assertDontSee('Napomena predsjednika.')
             ->assertDontSee('Preliminarna rang-lista');
 
@@ -787,6 +799,88 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->score($members[G::ROLE_PREDSJEDNIK], $application, $totals[0]);
         $this->score($members[G::ROLE_SEKRETAR], $application, $totals[1]);
         $this->score($members[G::ROLE_SPOLJASNJI], $application, $totals[2]);
+    }
+
+    public function test_p3_uses_the_m3_table_and_shows_each_administrative_answer(): void
+    {
+        [$commission, $members] = $this->canonicalCommission();
+        $competition = $this->competition($commission);
+        $application = $this->finalApplication($competition, ['business_plan_name' => 'Naziv koji nije vrsta subvencije']);
+        $application->user->update(['name' => 'Profil Izmijenjen']);
+        CanonicalApplicantForm::query()->create([
+            'application_id' => $application->id,
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+            'person_name' => 'Ana Anić',
+            'company_name' => 'Društvo koje se ne prikazuje',
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ])->forceFill(['frozen_at' => now()])->save();
+        $application->finalClaim->update(['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
+        $this->confirmOrdinarySession($competition);
+
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+        $this->actingAs($chair)->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertSee('Obrazac P3')
+            ->assertSee(MmspP3Form::FORM_TITLE)
+            ->assertSee('Ana Anić')
+            ->assertSee(CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE))
+            ->assertDontSee('Profil Izmijenjen')
+            ->assertDontSee('Društvo koje se ne prikazuje')
+            ->assertDontSee('Naziv koji nije vrsta subvencije')
+            ->assertDontSee(CanonicalSubsidyType::label(CanonicalSubsidyType::DIGITALIZATION))
+            ->assertSee('type="number"', false)
+            ->assertSee('KRITERIJUMI ZA OCJENU', false)
+            ->assertDontSee('<select name="criterion_1"', false);
+
+        $this->actingAs($chair)
+            ->post(route('evaluation.completeness', $application), [
+                'criterion_documentation' => 'ne',
+                'criterion_report' => 'da',
+                'criterion_related' => 'da',
+                'notes' => 'Nedostaje obavezni prilog.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('application_completeness_assessments', [
+            'application_id' => $application->id,
+            'outcome' => ApplicationCompletenessAssessment::INCOMPLETE,
+        ]);
+        $stored = ApplicationCompletenessAssessment::query()->where('application_id', $application->id)->first();
+        $this->assertEquals([
+            'documentation' => 'ne',
+            'report' => 'da',
+            'related' => 'da',
+        ], $stored->criterion_answers);
+        $this->assertStringStartsWith('Nije ispunjeno: dokumentacija nije potpuna', (string) $stored->notes);
+
+        $locked = $this->actingAs($chair)->get(route('evaluation.create', $application->fresh()))
+            ->assertOk()
+            ->assertDontSee('Potvrdi administrativnu provjeru')
+            ->assertSee('Ne*')
+            ->assertSee('Nedostaje obavezni prilog.')
+            ->assertSee(MmspP3Form::RESULT_FAIL);
+        $this->assertSame(2, substr_count($locked->getContent(), '<strong>Da</strong>'));
+
+        $this->actingAs($members[G::ROLE_SEKRETAR]->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertSee('Ne*')
+            ->assertSee('Nedostaje obavezni prilog.')
+            ->assertDontSee('Potvrdi administrativnu provjeru');
+
+        $company = $this->finalApplication($competition);
+        CanonicalApplicantForm::query()->create([
+            'application_id' => $company->id,
+            'legal_form' => CanonicalLegalForm::DRUSTVO,
+            'person_name' => 'Odgovorno lice',
+            'company_name' => 'Kotor MMSP d.o.o.',
+        ])->forceFill(['frozen_at' => now()])->save();
+
+        $this->actingAs($chair)->get(route('evaluation.create', $company))
+            ->assertOk()
+            ->assertSee('Kotor MMSP d.o.o.')
+            ->assertDontSee('Odgovorno lice');
     }
 
     /**

@@ -22,6 +22,7 @@ class ApplicationCompletenessAssessment extends Model
         'catalog_key',
         'recorded_by_user_id',
         'notes',
+        'criterion_answers',
         'evidence_snapshot',
         'evidence_fingerprint',
         'recorded_at',
@@ -33,6 +34,7 @@ class ApplicationCompletenessAssessment extends Model
     ];
 
     protected $casts = [
+        'criterion_answers' => 'array',
         'evidence_snapshot' => 'array',
         'recorded_at' => 'datetime',
         'notice_sent_at' => 'datetime',

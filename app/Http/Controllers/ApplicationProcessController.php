@@ -9,6 +9,7 @@ use App\Models\Competition;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance;
 use App\Services\Competitions\ComplaintService;
 use App\Services\Competitions\CompletenessAssessmentService;
+use App\Support\MmspP3Form;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -37,21 +38,19 @@ class ApplicationProcessController extends Controller
         }
 
         if ($request->exists('criterion_documentation')) {
-            $criteria = $request->validate([
-                'criterion_documentation' => 'required|in:da,ne',
-                'criterion_report' => 'required|in:da,ne',
-                'criterion_related' => 'required|in:da,ne',
-                'notes' => 'nullable|string|max:5000',
-            ]);
+            $rules = ['notes' => 'nullable|string|max:5000'];
+            foreach (MmspP3Form::CRITERIA as $criterion) {
+                $rules[$criterion['field']] = 'required|in:da,ne';
+            }
+            $criteria = $request->validate($rules);
             $failed = [];
-            if ($criteria['criterion_documentation'] === 'ne') {
-                $failed[] = 'dokumentacija nije potpuna';
-            }
-            if ($criteria['criterion_report'] === 'ne') {
-                $failed[] = 'nije dostavljen obavezan izvještaj o prethodnoj realizaciji';
-            }
-            if ($criteria['criterion_related'] === 'ne') {
-                $failed[] = 'plan ulaganja se ne odnosi na vrstu subvencije';
+            $answers = [];
+            foreach (MmspP3Form::CRITERIA as $key => $criterion) {
+                $value = $criteria[$criterion['field']];
+                $answers[$key] = $value;
+                if ($value === 'ne') {
+                    $failed[] = $criterion['fail_phrase'];
+                }
             }
             $notes = trim((string) ($criteria['notes'] ?? ''));
             if ($failed !== [] && $notes === '') {
@@ -72,9 +71,10 @@ class ApplicationProcessController extends Controller
             ]);
             $outcome = $validated['outcome'];
             $notes = $validated['notes'] ?? null;
+            $answers = null;
         }
 
-        $result = $this->assessments->record($application, $user, $outcome, $notes);
+        $result = $this->assessments->record($application, $user, $outcome, $notes, $answers);
         if (! $result->succeeded) {
             return back()->withInput()->withErrors(['error' => $result->error]);
         }

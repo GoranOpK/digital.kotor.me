@@ -853,8 +853,15 @@ class EvaluationController extends Controller
             ? \App\Models\CommissionMember::query()->whereIn('id', $visibleScores->keys())->orderBy('canonical_seat_no')->get()
             : collect([$commissionMember]);
         $rankingView = $this->canonicalScoring->canonicalPreliminaryRankingView($competition, $user);
+        $commissionSeats = \App\Models\CommissionMember::query()
+            ->where('commission_id', $competition->commission_id)
+            ->where('status', 'active')
+            ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+            ->orderBy('canonical_seat_no')
+            ->orderBy('id')
+            ->get();
 
-        $application->load(['user', 'competition']);
+        $application->load(['user', 'competition.upNumber', 'canonicalApplicantForm', 'canonicalInvestmentPlan', 'finalClaim']);
 
         return view('evaluation.canonical', compact(
             'application',
@@ -867,6 +874,7 @@ class EvaluationController extends Controller
             'scoreBlockReason',
             'aggregate',
             'members',
+            'commissionSeats',
             'rankingView',
         ));
     }
