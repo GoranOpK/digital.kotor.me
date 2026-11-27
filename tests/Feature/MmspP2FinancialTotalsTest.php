@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\Competitions\CanonicalInvestmentPlanService;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Support\CanonicalSubsidyType;
+use App\Support\UserType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Kn\Concerns\BuildsCanonicalApplicantDraft;
@@ -38,7 +39,8 @@ class MmspP2FinancialTotalsTest extends TestCase
             ->get(route('applications.canonical-p2.edit', $application))
             ->assertOk()
             ->assertSee('data-mmsp-expense-amount', false)
-            ->assertSee('js/mmsp-p2-financials.js', false)
+            ->assertSee('js/mmsp-p2-financials.js?v='.filemtime(public_path('js/mmsp-p2-financials.js')), false)
+            ->assertSee('js/mmsp-p2-save-label.js?v='.filemtime(public_path('js/mmsp-p2-save-label.js')), false)
             ->assertSee('id="total_investment"', false)
             ->assertSee('id="expected_subsidy"', false)
             ->assertSee('name="total_investment"', false)
@@ -375,6 +377,80 @@ class MmspP2FinancialTotalsTest extends TestCase
         $this->assertSame('0.00', $plan->own_contribution);
         $this->assertSame('5000.00', $plan->expected_subsidy);
         $this->assertNotNull($plan->frozen_at);
+    }
+
+    public function test_p1_save_route_changes_the_subsidy_type_and_p2_stores_the_new_split(): void
+    {
+        $owner = $this->owner();
+        $owner->forceFill(['user_type' => UserType::ENTREPRENEUR])->save();
+        $application = $this->canonicalDraft($owner, $this->competition(), [
+            'with_p2' => false,
+            'with_documents' => false,
+            'subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
+        ]);
+        $edit = route('applications.canonical-p2.edit', $application);
+        $line = ['cost_type' => 'Oprema', 'description' => 'Mašina', 'amount' => '5000.00'];
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload([$line], '5000.00', '2500.00', '2500.00'))
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p1.update', $application), $this->canonicalP1Payload($application, [
+                'subsidy_type' => CanonicalSubsidyType::AUTHENTIC_LOCAL,
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(CanonicalSubsidyType::AUTHENTIC_LOCAL, $application->canonicalApplicantForm()->value('subsidy_type'));
+        $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->firstOrFail();
+        $this->assertSame(CanonicalSubsidyType::AUTHENTIC_LOCAL, $plan->subsidy_type);
+        $this->assertSame('2500.00', $plan->own_contribution);
+        $this->assertSame('2500.00', $plan->expected_subsidy);
+
+        $reopened = $this->actingAs($owner)->get($edit)->assertOk();
+        $reopened->assertSee('data-mmsp-subsidy-percent="80"', false)
+            ->assertSee('Sopstveno učešće (EUR) (20%)', false)
+            ->assertSee('Očekivani iznos subvencije (EUR) (80%)', false)
+            ->assertSee('value="1000.00"', false)
+            ->assertSee('value="4000.00"', false);
+        $plan->refresh();
+        $this->assertSame('2500.00', $plan->own_contribution);
+        $this->assertSame('2500.00', $plan->expected_subsidy);
+
+        $this->actingAs($owner)
+            ->from($edit)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload(
+                [$line],
+                '5000.00',
+                '2500.00',
+                '2500.00',
+                CanonicalSubsidyType::AUTHENTIC_LOCAL,
+            ))
+            ->assertSessionHasErrors('own_contribution');
+        $plan->refresh();
+        $this->assertSame('2500.00', $plan->own_contribution);
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload(
+                [$line],
+                '5000.00',
+                '1000.00',
+                '4000.00',
+                CanonicalSubsidyType::AUTHENTIC_LOCAL,
+            ))
+            ->assertSessionHasNoErrors();
+
+        $saved = $this->actingAs($owner)->get($edit)->assertOk();
+        $saved->assertSee('Sopstveno učešće (EUR) (20%)', false)
+            ->assertSee('Očekivani iznos subvencije (EUR) (80%)', false)
+            ->assertSee('value="1000.00"', false)
+            ->assertSee('value="4000.00"', false);
+        $plan->refresh();
+        $this->assertSame(CanonicalSubsidyType::AUTHENTIC_LOCAL, $plan->subsidy_type);
+        $this->assertSame('5000.00', $plan->total_investment);
+        $this->assertSame('1000.00', $plan->own_contribution);
+        $this->assertSame('4000.00', $plan->expected_subsidy);
     }
 
     private function expenseTable(string $html): string

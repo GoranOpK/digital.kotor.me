@@ -16,7 +16,10 @@ use Illuminate\Validation\ValidationException;
  *
  * Decimal-safe (bcmath, scale 2). The explicit P2 total is the only required-funds
  * basis: no fallback to BusinessPlan required/requested amounts, expense projections
- * or applications.total_budget_needed. No čl.19 cap is enforced on the applicant side.
+ * or applications.total_budget_needed. Own contribution and the expected subsidy are
+ * the fixed CanonicalSubsidyType shares of that total. The subsidy is floored to the
+ * cent so it never exceeds the type percentage, and own contribution is the remainder.
+ * The commission's čl.19 approval cap is not applied or changed here.
  */
 final class CanonicalInvestmentPlanService
 {
@@ -94,12 +97,11 @@ final class CanonicalInvestmentPlanService
     }
 
     /**
-     * Draft save. Empty fields, a zero total, and a zero expected subsidy are accepted
-     * while no expense line has been entered. The form calculates that zero from blank
-     * rows. Entered values must still be well formed, non-negative, and consistent.
-     * When the subsidy type is known, own contribution and the expected subsidy must
-     * be the fixed percentage split of the expense total. Completeness is enforced
-     * only by finalBlockReason().
+     * Draft save. Empty amounts, a zero total and a zero expected subsidy are accepted
+     * while no expense line has been entered. When the subsidy type is known and the
+     * frame is not that blank draft, the total, own contribution and expected subsidy
+     * must be the fixed percentage split of the expense sum. Another share is rejected.
+     * Completeness is enforced only by finalBlockReason().
      *
      * @param  array<string, mixed>  $input
      *
@@ -146,6 +148,8 @@ final class CanonicalInvestmentPlanService
                 ]);
             }
             $values['subsidy_type'] = $p1Type;
+            // The type just read from P1 fixes the percentage. Reject amounts that
+            // still belong to another share instead of storing them.
             $adoptedSplitErrors = $this->consistencyErrors($values, false);
             if ($adoptedSplitErrors !== []) {
                 throw ValidationException::withMessages($adoptedSplitErrors);
@@ -317,7 +321,7 @@ final class CanonicalInvestmentPlanService
 
         if ($own === null) {
             if ($requireComplete) {
-                $errors['own_contribution'] = 'Sopstveno učešće je obavezno (unesite 0 ako ga nema).';
+                $errors['own_contribution'] = 'Sopstveno učešće je obavezno i slijedi fiksni procenat vrste subvencije.';
             }
         } elseif (bccomp($own, '0', self::SCALE) < 0) {
             $errors['own_contribution'] = 'Sopstveno učešće ne može biti negativno.';
