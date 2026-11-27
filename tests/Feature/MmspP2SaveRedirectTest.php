@@ -74,7 +74,7 @@ class MmspP2SaveRedirectTest extends TestCase
             $this->assertSame('draft', $application->status);
             $this->assertNull($application->submitted_at);
             $this->assertSame('1000.00', $plan->total_investment);
-            $this->assertSame('200.00', $plan->own_contribution);
+            $this->assertSame('500.00', $plan->own_contribution);
             $this->assertSame('500.00', $plan->expected_subsidy);
             $this->assertSame($description, $plan->narrative_sections['investment_description']);
             $this->assertNull(app(CanonicalInvestmentPlanService::class)->finalBlockReason($application));
@@ -160,8 +160,8 @@ class MmspP2SaveRedirectTest extends TestCase
         return [
             'subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
             'total_investment' => '0.00',
-            'own_contribution' => '',
-            'expected_subsidy' => '',
+            'own_contribution' => '0.00',
+            'expected_subsidy' => '0.00',
             'expense_lines' => [
                 ['cost_type' => '', 'description' => '', 'amount' => ''],
             ],
@@ -180,7 +180,7 @@ class MmspP2SaveRedirectTest extends TestCase
         return [
             'subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
             'total_investment' => '1000.00',
-            'own_contribution' => '200.00',
+            'own_contribution' => '500.00',
             'expected_subsidy' => '500.00',
             'expense_lines' => [
                 ['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => '1000.00'],

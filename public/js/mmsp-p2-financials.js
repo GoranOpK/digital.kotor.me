@@ -25,28 +25,44 @@
         return (negative ? '-' : '') + whole + '.' + fraction;
     }
 
-    function recalculate(amounts, ownRaw) {
+    function subsidyPercent(scope) {
+        var field = (scope || document).querySelector('[name="subsidy_type"]');
+        var raw = field ? field.getAttribute('data-mmsp-subsidy-percent') : '';
+        if (!/^\d{1,3}$/.test(raw || '')) {
+            return null;
+        }
+        var percent = Number(raw);
+        if (percent > 100) {
+            return null;
+        }
+
+        return percent;
+    }
+
+    function recalculate(amounts, percent) {
         var total = 0n;
         var index;
 
         for (index = 0; index < amounts.length; index += 1) {
             var parsed = parseAmount(amounts[index]);
             if (parsed.invalid) {
-                return { total: '', subsidy: '' };
+                return { total: '', own: '', subsidy: '' };
             }
             if (!parsed.empty) {
                 total += parsed.cents;
             }
         }
 
-        var own = parseAmount(ownRaw);
-        if (own.invalid || own.empty) {
-            return { total: formatCents(total), subsidy: '' };
+        if (typeof percent !== 'number' || !Number.isInteger(percent) || percent < 0 || percent > 100) {
+            return { total: formatCents(total), own: '', subsidy: '' };
         }
+
+        var subsidy = (total * BigInt(percent)) / 100n;
 
         return {
             total: formatCents(total),
-            subsidy: formatCents(total - own.cents),
+            own: formatCents(total - subsidy),
+            subsidy: formatCents(subsidy),
         };
     }
 
@@ -158,6 +174,7 @@
         var ownInput = rootElement.querySelector('#own_contribution');
         var subsidyInput = rootElement.querySelector('#expected_subsidy');
         var fieldset = rootElement.querySelector('form[action*="obrazac-p2"] fieldset, form fieldset');
+        var percent = subsidyPercent(rootElement);
 
         if (!totalInput || !ownInput || !subsidyInput || (fieldset && fieldset.disabled)) {
             return;
@@ -168,8 +185,9 @@
             rootElement.querySelectorAll('[data-mmsp-expense-amount]').forEach(function (input) {
                 amounts.push(input.value);
             });
-            var result = recalculate(amounts, ownInput.value);
+            var result = recalculate(amounts, percent);
             totalInput.value = result.total;
+            ownInput.value = result.own;
             subsidyInput.value = result.subsidy;
         }
 
@@ -185,8 +203,6 @@
                 }
             });
         }
-        ownInput.addEventListener('input', update);
-        ownInput.addEventListener('change', update);
         if (addButton && table) {
             addButton.addEventListener('click', function () {
                 addExpenseRow(table, addButton);
@@ -223,6 +239,7 @@
     root.MmspP2Financials = {
         parseAmount: parseAmount,
         recalculate: recalculate,
+        subsidyPercent: subsidyPercent,
         bind: bind,
     };
 

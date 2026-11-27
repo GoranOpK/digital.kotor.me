@@ -61,12 +61,15 @@ trait BuildsCanonicalApplicantDraft
         ]);
 
         if ($options['with_p2'] ?? true) {
+            $split = CanonicalSubsidyType::isValid($subsidyType)
+                ? \App\Services\Competitions\CanonicalInvestmentPlanService::subsidySplit('1000.00', $subsidyType)
+                : ['own_contribution' => '0.00', 'expected_subsidy' => '0.00'];
             CanonicalInvestmentPlan::create([
                 'application_id' => $application->id,
                 'subsidy_type' => $subsidyType,
                 'total_investment' => '1000.00',
-                'own_contribution' => '200.00',
-                'expected_subsidy' => '500.00',
+                'own_contribution' => $split['own_contribution'],
+                'expected_subsidy' => $split['expected_subsidy'],
                 'expense_lines' => [['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => '1000.00']],
                 'narrative_sections' => array_fill_keys(array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS), 'Testni opis plana ulaganja.'),
             ]);

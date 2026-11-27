@@ -42,10 +42,64 @@ final class CanonicalInvestmentPlanService
     }
 
     /**
+     * Shares of the investment total fixed by CanonicalSubsidyType.
+     * The subsidy is truncated to the cent, same as the čl.19 investment cap, so it
+     * never exceeds that percentage. Own contribution is the remainder.
+     *
+     * @return array{total_investment: string, own_contribution: string, expected_subsidy: string, subsidy_percentage: int, own_percentage: int}
+     */
+    public static function subsidySplit(string $total, string $subsidyType): array
+    {
+        $percent = CanonicalSubsidyType::capPercentage($subsidyType);
+        $normalized = bcadd($total, '0', self::SCALE);
+        $subsidy = bcdiv(bcmul($normalized, (string) $percent, self::SCALE + 2), '100', self::SCALE);
+
+        return [
+            'total_investment' => $normalized,
+            'own_contribution' => bcsub($normalized, $subsidy, self::SCALE),
+            'expected_subsidy' => $subsidy,
+            'subsidy_percentage' => $percent,
+            'own_percentage' => 100 - $percent,
+        ];
+    }
+
+    /**
+     * @param  list<mixed>  $lines
+     * @return array{total_investment: string, own_contribution: string, expected_subsidy: string, subsidy_percentage: int, own_percentage: int}|null
+     */
+    public static function investmentAmountsForLines(array $lines, string $subsidyType): ?array
+    {
+        if (! CanonicalSubsidyType::isValid($subsidyType)) {
+            return null;
+        }
+
+        $sum = '0.00';
+        foreach ($lines as $line) {
+            if (! is_array($line)) {
+                return null;
+            }
+            $costType = trim((string) ($line['cost_type'] ?? ''));
+            $description = trim((string) ($line['description'] ?? ''));
+            $raw = trim((string) ($line['amount'] ?? ''));
+            if ($costType === '' && $description === '' && $raw === '') {
+                continue;
+            }
+            if (preg_match(self::AMOUNT_PATTERN, $raw) !== 1) {
+                return null;
+            }
+            $sum = bcadd($sum, bcadd(str_replace(',', '.', $raw), '0', self::SCALE), self::SCALE);
+        }
+
+        return self::subsidySplit($sum, $subsidyType);
+    }
+
+    /**
      * Draft save. Empty fields, a zero total, and a zero expected subsidy are accepted
      * while no expense line has been entered. The form calculates that zero from blank
      * rows. Entered values must still be well formed, non-negative, and consistent.
-     * Completeness is enforced only by finalBlockReason().
+     * When the subsidy type is known, own contribution and the expected subsidy must
+     * be the fixed percentage split of the expense total. Completeness is enforced
+     * only by finalBlockReason().
      *
      * @param  array<string, mixed>  $input
      *
@@ -92,6 +146,10 @@ final class CanonicalInvestmentPlanService
                 ]);
             }
             $values['subsidy_type'] = $p1Type;
+            $adoptedSplitErrors = $this->consistencyErrors($values, false);
+            if ($adoptedSplitErrors !== []) {
+                throw ValidationException::withMessages($adoptedSplitErrors);
+            }
             if ($p1Type !== null && $this->beneficiaries->subsidyTypeAlreadyTaken($locked, $p1Type)) {
                 throw ValidationException::withMessages([
                     'subsidy_type' => CanonicalBeneficiaryApplications::DUPLICATE_TYPE_MESSAGE,
@@ -303,6 +361,25 @@ final class CanonicalInvestmentPlanService
 
         if ($total !== null && ! isset($errors['total_investment']) && bccomp($sum, $total, self::SCALE) !== 0) {
             $errors['expense_lines'] = 'Zbir stavki troškova ('.$sum.' EUR) mora biti jednak ukupnoj vrijednosti ulaganja ('.$total.' EUR).';
+        }
+
+        $subsidyType = $values['subsidy_type'];
+        $blankDraft = ! $requireComplete
+            && $lines === []
+            && $total === null
+            && $own === null
+            && $expected === null;
+        if (is_string($subsidyType) && CanonicalSubsidyType::isValid($subsidyType) && ! isset($errors['expense_lines']) && ! $blankDraft) {
+            $split = self::subsidySplit($sum, $subsidyType);
+            if (! isset($errors['total_investment']) && ($total === null || bccomp($total, $split['total_investment'], self::SCALE) !== 0)) {
+                $errors['total_investment'] = 'Ukupna vrijednost ulaganja mora iznositi '.$split['total_investment'].' EUR, koliki je zbir stavki troškova.';
+            }
+            if ($own === null || bccomp($own, $split['own_contribution'], self::SCALE) !== 0) {
+                $errors['own_contribution'] = 'Sopstveno učešće mora iznositi '.$split['own_contribution'].' EUR ('.$split['own_percentage'].'% ukupne vrijednosti ulaganja).';
+            }
+            if ($expected === null || bccomp($expected, $split['expected_subsidy'], self::SCALE) !== 0) {
+                $errors['expected_subsidy'] = 'Očekivani iznos subvencije mora iznositi '.$split['expected_subsidy'].' EUR ('.$split['subsidy_percentage'].'% ukupne vrijednosti ulaganja, zaokruženo naniže na dvije decimale).';
+            }
         }
 
         if ($requireComplete) {
