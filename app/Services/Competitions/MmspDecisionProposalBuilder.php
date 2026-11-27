@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\ApplicationComplaint;
 use App\Models\ApplicationCompletenessAssessment;
 use App\Models\CanonicalOutcome;
+use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Support\CanonicalLegalForm;
 use App\Support\CanonicalSubsidyType;
@@ -65,7 +66,7 @@ class MmspDecisionProposalBuilder
         }
 
         $received = $this->receivedApplications($competition);
-        $incomplete = $this->incompleteCount($competition);
+        $review = $this->reviewCounts($competition, $received);
         $appeals = $this->appealCounts($competition);
 
         return new MmspDecisionProposal(
@@ -80,11 +81,14 @@ class MmspDecisionProposalBuilder
             thirdSessionDate: $this->documentDate($input['third_session_date']),
             winners: $rows,
             receivedCount: $received->count(),
-            incompleteCount: $incomplete,
+            incompleteCount: $review['original_incomplete'],
             appealsAccepted: $appeals['accepted'],
             appealsRejected: $appeals['rejected'],
-            proceedCount: $received->count() - $incomplete,
+            proceedCount: $review['proceed'],
             awardedTotal: $this->formatMoney($awarded),
+            callDurationDays: (int) ($competition->deadline_days ?? 20),
+            participantCount: $this->participantCount($received),
+            commissionMemberCount: $this->commissionMemberCount($competition),
         );
     }
 
@@ -178,26 +182,84 @@ class MmspDecisionProposalBuilder
             ->get();
     }
 
-    private function incompleteCount(Competition $competition): int
+    /**
+     * Brojevi za obrazloženje odluke. Ne mijenja ocjenu kompletnosti ni prigovor.
+     * Prvobitno nepotpuna je samo prijava čija je prva ocjena kompletnosti bila nepotpuna.
+     * Prijava bez te ocjene ne ulazi u dalje razmatranje.
+     * Prihvaćen prigovor vraća prvobitno nepotpunu prijavu u dalje razmatranje.
+     *
+     * @param  \Illuminate\Support\Collection<int, Application>  $received
+     * @return array{original_incomplete: int, proceed: int}
+     */
+    private function reviewCounts(Competition $competition, $received): array
     {
-        $applicationIds = Application::query()
+        $ids = $received->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $acceptedIds = ApplicationComplaint::query()
             ->where('competition_id', $competition->id)
-            ->where('status', '!=', 'draft')
-            ->whereHas('finalClaim')
-            ->pluck('id');
-        if ($applicationIds->isEmpty()) {
+            ->where('decision', ApplicationComplaint::ACCEPTED)
+            ->whereIn('application_id', $ids)
+            ->pluck('application_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique();
+        $assessments = ApplicationCompletenessAssessment::query()
+            ->whereIn('application_id', $ids)
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (ApplicationCompletenessAssessment $row) => (int) $row->application_id);
+
+        $originalIncomplete = 0;
+        $proceed = 0;
+        foreach ($ids as $id) {
+            $rows = $assessments->get($id);
+            $first = $rows?->first();
+            $latest = $rows?->last();
+            if (! $first instanceof ApplicationCompletenessAssessment) {
+                continue;
+            }
+            $originallyIncomplete = $first->outcome === ApplicationCompletenessAssessment::INCOMPLETE;
+            $stillIncomplete = $latest instanceof ApplicationCompletenessAssessment
+                && $latest->outcome === ApplicationCompletenessAssessment::INCOMPLETE;
+            if ($originallyIncomplete) {
+                $originalIncomplete++;
+            }
+            if ($stillIncomplete && ! $acceptedIds->contains($id)) {
+                continue;
+            }
+            $proceed++;
+        }
+
+        return [
+            'original_incomplete' => $originalIncomplete,
+            'proceed' => $proceed,
+        ];
+    }
+
+    /**
+     * Učesnici iz člana 5. Isti PIB je jedan podnosilac i kada ima više prijava.
+     * Prijava bez PIB-a ne spaja se sa drugom prijavom.
+     *
+     * @param  \Illuminate\Support\Collection<int, Application>  $received
+     */
+    private function participantCount($received): int
+    {
+        $seen = [];
+        foreach ($received as $application) {
+            $pib = trim((string) $application->pib);
+            $seen[$pib !== '' ? 'pib:'.$pib : 'application:'.$application->id] = true;
+        }
+
+        return count($seen);
+    }
+
+    private function commissionMemberCount(Competition $competition): int
+    {
+        if (! $competition->commission_id) {
             return 0;
         }
 
-        $latestIds = ApplicationCompletenessAssessment::query()
-            ->selectRaw('max(id) as id')
-            ->whereIn('application_id', $applicationIds)
-            ->groupBy('application_id')
-            ->pluck('id');
-
-        return ApplicationCompletenessAssessment::query()
-            ->whereIn('id', $latestIds)
-            ->where('outcome', ApplicationCompletenessAssessment::INCOMPLETE)
+        return CommissionMember::query()
+            ->where('commission_id', $competition->commission_id)
+            ->where('status', 'active')
             ->count();
     }
 

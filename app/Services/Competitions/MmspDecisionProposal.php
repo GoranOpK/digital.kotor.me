@@ -24,6 +24,9 @@ final class MmspDecisionProposal
         public readonly int $appealsRejected,
         public readonly int $proceedCount,
         public readonly string $awardedTotal,
+        public readonly int $callDurationDays,
+        public readonly int $participantCount,
+        public readonly int $commissionMemberCount,
     ) {}
 
     public function downloadName(): string
