@@ -50,9 +50,59 @@
         };
     }
 
+    function rowIsEmpty(row) {
+        var inputs = row.querySelectorAll('input');
+        var index;
+
+        for (index = 0; index < inputs.length; index += 1) {
+            if (String(inputs[index].value || '').trim() !== '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function markEmptyRows(table) {
+        if (!table) {
+            return;
+        }
+        table.querySelectorAll('tbody tr').forEach(function (row) {
+            row.classList.toggle('mmsp-p2-expense-print-hide', rowIsEmpty(row));
+        });
+    }
+
+    function clearPrintMarks(table) {
+        if (!table) {
+            return;
+        }
+        table.querySelectorAll('tbody tr').forEach(function (row) {
+            row.classList.remove('mmsp-p2-expense-print-hide');
+        });
+    }
+
+    function addExpenseRow(table, button) {
+        var body = table.querySelector('tbody');
+        var maxLines = Number(button.getAttribute('data-mmsp-max-expense-lines') || '50');
+        var index = body.querySelectorAll('tr').length;
+        var row;
+
+        if (index >= maxLines) {
+            return;
+        }
+
+        row = document.createElement('tr');
+        row.innerHTML = ''
+            + '<td><input class="mmsp-form-control" type="text" name="expense_lines[' + index + '][cost_type]" value=""></td>'
+            + '<td><input class="mmsp-form-control" type="text" name="expense_lines[' + index + '][description]" value=""></td>'
+            + '<td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[' + index + '][amount]" value=""></td>';
+        body.appendChild(row);
+    }
+
     function bind(scope) {
         var rootElement = scope || document;
-        var amountInputs = rootElement.querySelectorAll('[data-mmsp-expense-amount]');
+        var table = rootElement.querySelector('[data-mmsp-expense-table]');
+        var addButton = rootElement.querySelector('[data-mmsp-add-expense-row]');
         var totalInput = rootElement.querySelector('#total_investment');
         var ownInput = rootElement.querySelector('#own_contribution');
         var subsidyInput = rootElement.querySelector('#expected_subsidy');
@@ -64,7 +114,7 @@
 
         function update() {
             var amounts = [];
-            amountInputs.forEach(function (input) {
+            rootElement.querySelectorAll('[data-mmsp-expense-amount]').forEach(function (input) {
                 amounts.push(input.value);
             });
             var result = recalculate(amounts, ownInput.value);
@@ -72,12 +122,32 @@
             subsidyInput.value = result.subsidy;
         }
 
-        amountInputs.forEach(function (input) {
-            input.addEventListener('input', update);
-            input.addEventListener('change', update);
-        });
+        if (table) {
+            table.addEventListener('input', function (event) {
+                if (event.target && event.target.matches && event.target.matches('[data-mmsp-expense-amount]')) {
+                    update();
+                }
+            });
+            table.addEventListener('change', function (event) {
+                if (event.target && event.target.matches && event.target.matches('[data-mmsp-expense-amount]')) {
+                    update();
+                }
+            });
+        }
         ownInput.addEventListener('input', update);
         ownInput.addEventListener('change', update);
+        if (addButton && table) {
+            addButton.addEventListener('click', function () {
+                addExpenseRow(table, addButton);
+                update();
+            });
+        }
+        document.addEventListener('beforeprint', function () {
+            markEmptyRows(table);
+        });
+        document.addEventListener('afterprint', function () {
+            clearPrintMarks(table);
+        });
         update();
     }
 

@@ -78,6 +78,19 @@
 .canonical-ui-page.mmsp-business-plan textarea.mmsp-form-control[rows="1"] {
     min-height: 40px;
 }
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-add-row {
+    background: #6b7280;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-add-row:hover {
+    background: #4b5563;
+}
 .canonical-ui-page.mmsp-business-plan .mmsp-dynamic-table input,
 .canonical-ui-page.mmsp-business-plan .mmsp-dynamic-table textarea {
     width: 100%;
@@ -112,7 +125,8 @@
     .mmsp-business-plan .mmsp-alert,
     .mmsp-business-plan .mmsp-p2-screen-only,
     .mmsp-business-plan button,
-    .mmsp-business-plan .mmsp-p2-actions { display:none !important; }
+    .mmsp-business-plan .mmsp-p2-actions,
+    .mmsp-business-plan tr.mmsp-p2-expense-print-hide { display:none !important; }
     .canonical-ui-page.mmsp-form-page.mmsp-business-plan {
         padding:0 !important; margin:0 !important; min-height:0 !important; background:#fff !important;
     }
@@ -206,7 +220,9 @@
     $competition = $application->competition;
     $lines = old('expense_lines', $plan?->expenseLines() ?? []);
     $lines = is_array($lines) ? array_values($lines) : [];
-    $rowCount = $readOnly ? max(count($lines), 1) : max(count($lines) + 3, 5);
+    if (! $readOnly && $lines === []) {
+        $lines = [['cost_type' => '', 'description' => '', 'amount' => '']];
+    }
     $upBroj = $competition?->upNumber?->number ?? '—';
     $redniBroj = $application->redni_broj ?? '—';
     $brojPrijave = $upBroj.'/'.$redniBroj;
@@ -370,7 +386,7 @@
                         </p>
 
                         <div style="overflow-x:auto;">
-                            <table class="mmsp-dynamic-table">
+                            <table class="mmsp-dynamic-table" data-mmsp-expense-table>
                                 <thead>
                                     <tr>
                                         <th>Vrsta troška</th>
@@ -378,17 +394,25 @@
                                         <th style="width:180px;">Iznos (EUR)</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @for($i = 0; $i < $rowCount; $i++)
+                                <tbody id="mmsp-p2-expense-body">
+                                    @foreach($lines as $i => $line)
                                         <tr>
-                                            <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][cost_type]" value="{{ $lines[$i]['cost_type'] ?? '' }}"></td>
-                                            <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][description]" value="{{ $lines[$i]['description'] ?? '' }}"></td>
-                                            <td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[{{ $i }}][amount]" value="{{ $lines[$i]['amount'] ?? '' }}"></td>
+                                            <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][cost_type]" value="{{ $line['cost_type'] ?? '' }}"></td>
+                                            <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][description]" value="{{ $line['description'] ?? '' }}"></td>
+                                            <td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[{{ $i }}][amount]" value="{{ $line['amount'] ?? '' }}"></td>
                                         </tr>
-                                    @endfor
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        @unless($readOnly)
+                            <div class="no-print mmsp-p2-screen-only" style="margin-top: 12px;">
+                                <button type="button"
+                                        class="mmsp-p2-add-row"
+                                        data-mmsp-add-expense-row
+                                        data-mmsp-max-expense-lines="{{ \App\Services\Competitions\CanonicalInvestmentPlanService::MAX_EXPENSE_LINES }}">+ Dodaj red</button>
+                            </div>
+                        @endunless
 
                         <div class="mmsp-form-row-3">
                             <div class="mmsp-form-group">
