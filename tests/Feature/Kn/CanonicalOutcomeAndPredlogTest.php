@@ -811,6 +811,30 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->assertSame('submitted', $second->fresh()->status);
     }
 
+    public function test_ranking_table_shows_the_saved_rejection_reason_without_a_justification(): void
+    {
+        $owner = $this->applicant();
+        [, $members, $competition, [$first, $second]] = $this->rankedCompetition([
+            ['scores' => [45, 45, 45], 'owner' => $owner, 'pib' => '71234570', 'type' => T::AUTHENTIC_LOCAL],
+            ['scores' => [40, 40, 40], 'owner' => $owner, 'pib' => '71234570', 'type' => T::INNOVATIVE],
+        ]);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+        $reason = CanonicalOutcome::REASON_LABELS[CanonicalOutcome::REASON_DUPLICATE_BENEFICIARY_SUPPORT];
+
+        $this->assertTrue($this->draft($competition, $members, $first, 'support', '1000')->succeeded);
+        $rejected = $this->draft($competition, $members, $second, 'reject', null, CanonicalOutcome::REASON_DUPLICATE_BENEFICIARY_SUPPORT);
+        $this->assertTrue($rejected->succeeded, (string) $rejected->error);
+        $this->assertNull(CanonicalOutcome::query()->where('application_id', $second->id)->value('justification'));
+
+        $this->actingAs($chair)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee($reason)
+            ->assertSee('Odbija')
+            ->assertSee('class="mmsp-col-decision"', false)
+            ->assertSee('data-testid="mmsp-ranking-recorded-conclusions"', false)
+            ->assertSee('break-inside: avoid', false);
+    }
+
     public function test_below_threshold_card_locks_support_and_records_the_existing_reason(): void
     {
         [, $members, $competition, [$application]] = $this->rankedCompetition([['scores' => [20, 20, 20], 'total' => '5000.00']]);
