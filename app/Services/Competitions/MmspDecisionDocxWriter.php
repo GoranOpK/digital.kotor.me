@@ -23,6 +23,10 @@ class MmspDecisionDocxWriter
 
     public function write(MmspDecisionProposal $proposal): string
     {
+        if (! class_exists(ZipArchive::class)) {
+            throw new RuntimeException('PHP proširenje zip nije uključeno, pa MMSP odluka ne može biti sačuvana.');
+        }
+
         $template = $this->templatePath();
         if (! is_file($template)) {
             throw new RuntimeException('Službeni template Odluke za MMSP nije pronađen.');
@@ -57,12 +61,27 @@ class MmspDecisionDocxWriter
         }
         $output = new ZipArchive();
         if ($output->open($target) !== true) {
+            $this->discard($target);
             throw new RuntimeException('Privremeni fajl Odluke nije otvoren.');
         }
-        $output->addFromString('word/document.xml', $this->saveXml($document));
-        $output->close();
+        if ($output->addFromString('word/document.xml', $this->saveXml($document)) !== true) {
+            $output->close();
+            $this->discard($target);
+            throw new RuntimeException('Tekst Odluke nije upisan u dokument.');
+        }
+        if ($output->close() !== true) {
+            $this->discard($target);
+            throw new RuntimeException('Dokument Odluke nije zatvoren.');
+        }
 
         return $target;
+    }
+
+    private function discard(string $path): void
+    {
+        if (is_file($path)) {
+            unlink($path);
+        }
     }
 
     private function fillHeaderLine(DOMDocument $document, MmspDecisionProposal $proposal): void

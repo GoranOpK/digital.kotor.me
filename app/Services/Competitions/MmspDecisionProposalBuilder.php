@@ -184,8 +184,9 @@ class MmspDecisionProposalBuilder
 
     /**
      * Brojevi za obrazloženje odluke. Ne mijenja ocjenu kompletnosti ni prigovor.
-     * Prvobitno nepotpuna prijava ostaje u tom broju i kada je prigovor kasnije prihvaćen.
-     * Prihvaćen prigovor vraća tu prijavu u dalje razmatranje.
+     * Prvobitno nepotpuna je samo prijava čija je prva ocjena kompletnosti bila nepotpuna.
+     * Prijava bez te ocjene ne ulazi u dalje razmatranje.
+     * Prihvaćen prigovor vraća prvobitno nepotpunu prijavu u dalje razmatranje.
      *
      * @param  \Illuminate\Support\Collection<int, Application>  $received
      * @return array{original_incomplete: int, proceed: int}
@@ -210,13 +211,15 @@ class MmspDecisionProposalBuilder
         $proceed = 0;
         foreach ($ids as $id) {
             $rows = $assessments->get($id);
-            $hadIncomplete = $rows !== null && $rows->contains(
-                fn (ApplicationCompletenessAssessment $row) => $row->outcome === ApplicationCompletenessAssessment::INCOMPLETE
-            );
+            $first = $rows?->first();
             $latest = $rows?->last();
+            if (! $first instanceof ApplicationCompletenessAssessment) {
+                continue;
+            }
+            $originallyIncomplete = $first->outcome === ApplicationCompletenessAssessment::INCOMPLETE;
             $stillIncomplete = $latest instanceof ApplicationCompletenessAssessment
                 && $latest->outcome === ApplicationCompletenessAssessment::INCOMPLETE;
-            if ($hadIncomplete) {
+            if ($originallyIncomplete) {
                 $originalIncomplete++;
             }
             if ($stillIncomplete && ! $acceptedIds->contains($id)) {

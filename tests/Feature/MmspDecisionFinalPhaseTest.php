@@ -216,7 +216,8 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertStringContainsString('01.08.2026.', $text);
         $this->assertStringContainsString('21.08.2026.', $text);
         $this->assertStringContainsString('Kotor, 10.09.2026.', $text);
-        $this->assertStringContainsString('prihvatanju 1 prigovora ili odbijanju 0 prigovora', $text);
+        $this->assertStringContainsString('Komisija je donijela odluku o prihvatanju 1 prigovora.', $text);
+        $this->assertStringNotContainsString('0 prigovora', $text);
         $this->assertStringContainsString('prvobitno nepotpunih prijava nema', $text);
         $this->assertStringContainsString('1 prijava može biti uzeta', $text);
         $this->assertStringContainsString('trajao 20 dana', $text);
@@ -453,7 +454,7 @@ class MmspDecisionFinalPhaseTest extends TestCase
             $this->assertStringContainsString('pristigle ukupno 4 prijave', $text);
             $this->assertStringContainsString('prvobitno 1 prijava nepotpuna', $text);
             $this->assertStringContainsString('3 prijave mogu biti uzete', $text);
-            $this->assertStringContainsString('prihvatanju 1 prigovora ili odbijanju 1 prigovora', $text);
+            $this->assertStringContainsString('Komisija je donijela odluku o prihvatanju 1 prigovora i odbijanju 1 prigovora.', $text);
             $this->assertStringContainsString('trajao 20 dana', $text);
             $this->assertStringContainsString('Podnosiocima i podnositeljkama prijava (x1)', $text);
             $this->assertStringContainsString('Članovima Komisije (x4)', $text);
@@ -526,7 +527,8 @@ class MmspDecisionFinalPhaseTest extends TestCase
             $this->assertStringContainsString('Dobitnik 8', $text);
             $this->assertStringContainsString('8 planova ulaganja', $text);
             $this->assertStringContainsString('pristiglo ukupno 25 prijava', $text);
-            $this->assertStringContainsString('25 prijava mogu biti uzete', $text);
+            $this->assertStringContainsString('25 prijava može biti uzeto', $text);
+            $this->assertStringContainsString('Prigovora nije bilo', $text);
             $this->assertStringContainsString('trajao 22 dana', $text);
             $this->assertStringContainsString('(x22)', $text);
             $this->assertGreaterThanOrEqual(8, substr_count($xml, '<w:keepNext'));
@@ -578,69 +580,67 @@ class MmspDecisionFinalPhaseTest extends TestCase
                 'redni_broj' => $sequence,
             ]);
         };
-        $samePib = $make('81234567', 'A');
-        $restored = $make('81234567', 'B');
+        $complete = $make('81234567', 'A');
+        $accepted = $make('81234567', 'B');
         $rejected = $make('81234568', 'C');
+        $alsoComplete = $make('81234569', 'D');
         $chairId = $members[G::ROLE_PREDSJEDNIK]->user_id;
-        $incomplete = ApplicationCompletenessAssessment::query()->create([
-            'application_id' => $restored->id,
-            'competition_id' => $competition->id,
-            'outcome' => ApplicationCompletenessAssessment::INCOMPLETE,
-            'recorded_by_user_id' => $chairId,
-            'notes' => 'Nedostaje prilog.',
-            'evidence_snapshot' => [],
-            'evidence_fingerprint' => hash('sha256', 'b'),
-            'recorded_at' => now()->subDay(),
-        ]);
-        ApplicationCompletenessAssessment::query()->create([
-            'application_id' => $rejected->id,
-            'competition_id' => $competition->id,
-            'outcome' => ApplicationCompletenessAssessment::INCOMPLETE,
-            'recorded_by_user_id' => $chairId,
-            'notes' => 'Nedostaje drugi prilog.',
-            'evidence_snapshot' => [],
-            'evidence_fingerprint' => hash('sha256', 'd'),
-            'recorded_at' => now(),
-        ]);
-        ApplicationComplaint::query()->create([
-            'application_id' => $restored->id,
-            'competition_id' => $competition->id,
-            'completeness_assessment_id' => $incomplete->id,
-            'submitted_by_user_id' => $owner->id,
-            'body' => 'Dopuna je dostavljena.',
-            'submitted_at' => now(),
-            'decision_due_at' => now()->addDays(7),
-            'decision' => ApplicationComplaint::ACCEPTED,
-            'decided_at' => now(),
-            'decided_by_user_id' => $chairId,
-            'decision_notes' => 'Prihvaćen.',
-        ]);
-        ApplicationComplaint::query()->create([
-            'application_id' => $rejected->id,
-            'competition_id' => $competition->id,
-            'completeness_assessment_id' => ApplicationCompletenessAssessment::query()->where('application_id', $rejected->id)->value('id'),
-            'submitted_by_user_id' => $owner->id,
-            'body' => 'Dopuna nije dovoljna.',
-            'submitted_at' => now(),
-            'decision_due_at' => now()->addDays(7),
-            'decision' => ApplicationComplaint::REJECTED,
-            'decided_at' => now(),
-            'decided_by_user_id' => $chairId,
-            'decision_notes' => 'Odbijen.',
-        ]);
+        $assess = function (Application $application, string $outcome, string $marker) use ($competition, $chairId): ApplicationCompletenessAssessment {
+            return ApplicationCompletenessAssessment::query()->create([
+                'application_id' => $application->id,
+                'competition_id' => $competition->id,
+                'outcome' => $outcome,
+                'recorded_by_user_id' => $chairId,
+                'notes' => $marker,
+                'evidence_snapshot' => [],
+                'evidence_fingerprint' => hash('sha256', $marker),
+                'recorded_at' => now(),
+            ]);
+        };
+        $assess($complete, ApplicationCompletenessAssessment::COMPLETE, 'a-complete');
+        $original = $assess($accepted, ApplicationCompletenessAssessment::INCOMPLETE, 'b-incomplete');
+        $assess($rejected, ApplicationCompletenessAssessment::INCOMPLETE, 'c-incomplete');
+        $assess($alsoComplete, ApplicationCompletenessAssessment::COMPLETE, 'd-complete');
+        $complain = function (Application $application, int $assessmentId, string $decision) use ($competition, $owner, $chairId): void {
+            ApplicationComplaint::query()->create([
+                'application_id' => $application->id,
+                'competition_id' => $competition->id,
+                'completeness_assessment_id' => $assessmentId,
+                'submitted_by_user_id' => $owner->id,
+                'body' => 'Tekst prigovora.',
+                'submitted_at' => now(),
+                'decision_due_at' => now()->addDays(7),
+                'decision' => $decision,
+                'decided_at' => now(),
+                'decided_by_user_id' => $chairId,
+                'decision_notes' => $decision,
+            ]);
+        };
+        $complain($accepted, $original->id, ApplicationComplaint::ACCEPTED);
+        $complain($rejected, (int) ApplicationCompletenessAssessment::query()->where('application_id', $rejected->id)->value('id'), ApplicationComplaint::REJECTED);
 
-        $proposal = app(\App\Services\Competitions\MmspDecisionProposalBuilder::class)->build($competition, $this->dates(), now());
+        $builder = app(\App\Services\Competitions\MmspDecisionProposalBuilder::class);
+        $proposal = $builder->build($competition, $this->dates(), now());
 
-        $this->assertSame(3, $proposal->receivedCount);
+        $this->assertSame(4, $proposal->receivedCount);
         $this->assertSame(2, $proposal->incompleteCount);
         $this->assertSame(1, $proposal->appealsAccepted);
         $this->assertSame(1, $proposal->appealsRejected);
-        $this->assertSame(2, $proposal->proceedCount);
-        $this->assertSame(2, $proposal->participantCount);
+        $this->assertSame(3, $proposal->proceedCount);
+        $this->assertSame(3, $proposal->participantCount);
         $this->assertSame(15, $proposal->callDurationDays);
         $this->assertSame(3, $proposal->commissionMemberCount);
-        $this->assertSame([], $proposal->winners);
-        $this->assertSame($samePib->pib, $restored->pib);
+        $this->assertSame($complete->pib, $accepted->pib);
+
+        $make('81234570', 'E');
+        $later = $make('81234571', 'F');
+        $assess($later, ApplicationCompletenessAssessment::COMPLETE, 'f-first-complete');
+        $assess($later, ApplicationCompletenessAssessment::INCOMPLETE, 'f-later-incomplete');
+        $again = $builder->build($competition, $this->dates(), now());
+
+        $this->assertSame(6, $again->receivedCount);
+        $this->assertSame(2, $again->incompleteCount);
+        $this->assertSame(3, $again->proceedCount);
     }
 
     public function test_regeneration_keeps_the_previous_word_file(): void
