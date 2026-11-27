@@ -141,13 +141,11 @@ final class CanonicalOutcomeService
             }
 
             $drafts = CanonicalOutcome::query()->where('competition_id', $locked->id)->orderBy('id')->lockForUpdate()->get();
-            $otherSupported = '0.00';
-            foreach ($drafts as $draft) {
-                if ((int) $draft->application_id !== (int) $application->id && $draft->isSupport()) {
-                    $otherSupported = bcadd($otherSupported, (string) $draft->approved_amount, CanonicalAmountCapPolicy::SCALE);
-                }
-            }
-            $remaining = bcsub($this->budget($locked), $otherSupported, CanonicalAmountCapPolicy::SCALE);
+            $remaining = bcsub(
+                $this->budget($locked),
+                $this->sumSupported($drafts, (int) $application->id),
+                CanonicalAmountCapPolicy::SCALE,
+            );
 
             $row = $this->rankedRows($locked, collect([$application]))[0];
             $reason = $this->allocation->rowBlockReason($row, $outcome, $remaining);
@@ -178,7 +176,12 @@ final class CanonicalOutcomeService
                 ->pluck('application_id')
                 ->map(fn ($id) => (int) $id);
             if ($rankedIds->isNotEmpty() && $rankedIds->diff($recordedIds)->isEmpty()) {
-                $this->confirm($locked, $actor);
+                $confirmed = $this->confirm($locked, $actor);
+                if (! $confirmed->succeeded) {
+                    return ProcessWriteResult::failed((string) $confirmed->error);
+                }
+
+                return ProcessWriteResult::ok($record->id, $confirmed->warning);
             }
 
             return ProcessWriteResult::ok($record->id);
@@ -339,8 +342,34 @@ final class CanonicalOutcomeService
     }
 
     /**
-     * @return Collection<int, CanonicalOutcome> application id => outcome
+     * Budget position from the same sum used when a draft is validated.
+     * An application's own recorded support is excluded from its available amount
+     * so a later correction is not counted twice.
+     *
+     * @return array{budget: string, supported: string, remaining: string, available: array<int, string>}
      */
+    public function fundingPosition(Competition $competition): array
+    {
+        $budget = $this->budget($competition);
+        $outcomes = CanonicalOutcome::query()->where('competition_id', $competition->id)->get();
+        $supported = $this->sumSupported($outcomes);
+        $available = [];
+        $rankedIds = Application::query()
+            ->where('competition_id', $competition->id)
+            ->whereNotNull('ranking_position')
+            ->pluck('id');
+        foreach ($rankedIds as $id) {
+            $available[(int) $id] = bcsub($budget, $this->sumSupported($outcomes, (int) $id), CanonicalAmountCapPolicy::SCALE);
+        }
+
+        return [
+            'budget' => $budget,
+            'supported' => $supported,
+            'remaining' => bcsub($budget, $supported, CanonicalAmountCapPolicy::SCALE),
+            'available' => $available,
+        ];
+    }
+
     public function outcomesFor(Competition $competition): Collection
     {
         return CanonicalOutcome::query()
@@ -439,5 +468,24 @@ final class CanonicalOutcomeService
     private function budget(Competition $competition): string
     {
         return bcadd((string) ($competition->budget ?? '0'), '0', CanonicalAmountCapPolicy::SCALE);
+    }
+
+    /**
+     * @param  iterable<CanonicalOutcome>  $outcomes
+     */
+    private function sumSupported(iterable $outcomes, ?int $exceptApplicationId = null): string
+    {
+        $total = '0.00';
+        foreach ($outcomes as $outcome) {
+            if (! $outcome->isSupport()) {
+                continue;
+            }
+            if ($exceptApplicationId !== null && (int) $outcome->application_id === $exceptApplicationId) {
+                continue;
+            }
+            $total = bcadd($total, (string) $outcome->approved_amount, CanonicalAmountCapPolicy::SCALE);
+        }
+
+        return $total;
     }
 }

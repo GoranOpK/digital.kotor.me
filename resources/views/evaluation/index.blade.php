@@ -256,11 +256,15 @@
         @endif
 
         @php
-            $subsidyHeaderCompetition = request()->filled('competition_id')
-                ? collect($competitions ?? [])->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'))
-                : null;
-            $showSubsidyHeader = $subsidyHeaderCompetition
-                && $subsidyHeaderCompetition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
+            $listedCompetitions = collect($competitions ?? []);
+            $canonicalType = \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
+            if (request()->filled('competition_id')) {
+                $subsidyHeaderCompetition = $listedCompetitions->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'));
+                $showSubsidyHeader = $subsidyHeaderCompetition && $subsidyHeaderCompetition->type === $canonicalType;
+            } else {
+                $showSubsidyHeader = $listedCompetitions->isNotEmpty()
+                    && $listedCompetitions->every(fn ($comp) => $comp->type === $canonicalType);
+            }
         @endphp
         <div class="table-card">
             <table>

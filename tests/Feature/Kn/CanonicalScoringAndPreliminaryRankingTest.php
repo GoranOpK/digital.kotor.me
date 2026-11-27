@@ -780,8 +780,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->actingAs($chair->user)->get(route('evaluation.index'))
             ->assertOk()
             ->assertSee('Preliminarna rang-lista — MMSP — '.$competition->title)
-            ->assertSee('Naziv biznis plana')
-            ->assertDontSee('Vrsta subvencije')
+            ->assertSee('Vrsta subvencije')
+            ->assertDontSee('Naziv biznis plana')
             ->assertSee($local)
             ->assertDontSee($application->business_plan_name);
 
@@ -815,6 +815,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->actingAs($this->komisijaUser('van-rang'))->get(route('evaluation.mmsp-ranking', $competition))->assertForbidden();
         $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $this->competition($competition->commission, 'omladinsko')))->assertForbidden();
         $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $this->competition($competition->commission, 'zensko')))->assertForbidden();
+        $this->actingAs($chair->user)->get(route('evaluation.index'))
+            ->assertOk()
+            ->assertSee('Naziv biznis plana')
+            ->assertDontSee('Vrsta subvencije');
 
         $this->score($secretary, $application, 40);
         $this->score($secretary, $second, 40);
@@ -836,15 +840,27 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertDontSee('RANG LISTA BIZNIS PLANOVA')
             ->assertDontSee('images/coat-of-arms.png', false)
             ->assertDontSee('data-testid="mmsp-ranking-print"', false)
-            ->assertSee('Evidentiraj');
+            ->assertSee('Zaključak komisije i obrazloženje')
+            ->assertSee('Sačuvaj zaključak')
+            ->assertSee('name="decision" value="support"', false)
+            ->assertSee('name="decision" value="reject"', false)
+            ->assertSee('Ukupna vrijednost ulaganja')
+            ->assertSee('Tražena subvencija')
+            ->assertSee('Maksimalni dozvoljeni iznos')
+            ->assertSee('Raspoloživa sredstva za ovu prijavu')
+            ->assertSee('Ukupan budžet')
+            ->assertSee('Zbir evidentirane podrške')
+            ->assertSee('Preostala sredstva')
+            ->assertDontSee('<select name="decision"', false)
+            ->assertDontSee('data-mmsp-decision checked', false);
         $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('45.00')
-            ->assertDontSee('Evidentiraj');
+            ->assertDontSee('Sačuvaj zaključak');
         $this->actingAs($external->user)->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('45.00')
-            ->assertDontSee('Evidentiraj');
+            ->assertDontSee('Sačuvaj zaključak');
         $this->actingAs($chair->user)->get(route('evaluation.create', $application))
             ->assertOk()
             ->assertSee('id="mmsp-p3-print"', false)

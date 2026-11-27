@@ -198,6 +198,48 @@
         border-color: #2563eb;
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
     }
+    .mmsp-ranking-print-root .mmsp-decision-choices {
+        display: flex;
+        gap: 32px;
+        flex-wrap: wrap;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-choice {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 12px;
+        background: #fff;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        margin: 0;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-choice input[type="radio"] {
+        width: auto;
+        margin: 0;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-amount-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-budget-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-fact {
+        padding: 10px 12px;
+        background: #fff;
+        border-radius: 6px;
+        color: #374151;
+        font-size: 14px;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-field[hidden] {
+        display: none;
+    }
     .mmsp-ranking-note { margin-top: 6px; font-size: 12px; color: #6b7280; }
     .mmsp-ranking-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
     @media (max-width: 768px) {
@@ -214,6 +256,10 @@
             height: 28px;
             line-height: 28px;
             font-size: 12px;
+        }
+        .mmsp-ranking-print-root .mmsp-decision-amount-grid,
+        .mmsp-ranking-print-root .mmsp-decision-budget-grid {
+            grid-template-columns: 1fr;
         }
     }
     @media print {
@@ -499,52 +545,206 @@
                 @endif
 
                 @if($canonicalChair && ! $canonicalRankingIsFinal && count($outcomeRows) > 0)
-                <div class="mmsp-ranking-decision-section no-print" style="background: transparent; box-shadow: none; padding: 24px 0 0; margin-bottom: 0;">
-                    <h2>Odluka</h2>
+                @php
+                    $mmspMoney = static fn ($amount): string => $amount === null || $amount === ''
+                        ? '—'
+                        : number_format((float) $amount, 2, ',', '.').' €';
+                    $mmspBudget = $fundingPosition['budget'] ?? '0.00';
+                    $mmspSupported = $fundingPosition['supported'] ?? '0.00';
+                    $mmspRemaining = $fundingPosition['remaining'] ?? '0.00';
+                    $mmspAvailable = $fundingPosition['available'] ?? [];
+                @endphp
+                <div class="mmsp-ranking-decision-section no-print" data-testid="mmsp-ranking-conclusions" style="background: transparent; box-shadow: none; padding: 24px 0 0; margin-bottom: 0;">
+                    <h2>Zaključak komisije i obrazloženje</h2>
+                    <p class="no-print" style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                        Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
+                    </p>
+                    <div class="mmsp-decision-budget-grid" data-testid="mmsp-ranking-budget">
+                        <div>
+                            <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Ukupan budžet</span>
+                            <div class="mmsp-decision-fact">{{ $mmspMoney($mmspBudget) }}</div>
+                        </div>
+                        <div>
+                            <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Zbir evidentirane podrške</span>
+                            <div class="mmsp-decision-fact">{{ $mmspMoney($mmspSupported) }}</div>
+                        </div>
+                        <div>
+                            <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Preostala sredstva</span>
+                            <div class="mmsp-decision-fact">{{ $mmspMoney($mmspRemaining) }}</div>
+                        </div>
+                    </div>
                     @foreach($outcomeRows as $row)
                         @php
                             $outcome = $outcomeRecords->get($row->id());
-                            $belowThreshold = bccomp((string) $row->display, '30', 2) < 0;
+                            $belowThreshold = $row->belowThreshold();
+                            $plan = $row->application->canonicalInvestmentPlan;
+                            $requestedSubsidy = ($plan !== null && $plan->isFrozen()) ? $plan->expected_subsidy : null;
+                            $availableForRow = $mmspAvailable[$row->id()] ?? $mmspBudget;
+                            $entryCap = $row->legalMaximum;
+                            if ($entryCap !== null && bccomp((string) $availableForRow, (string) $entryCap, 2) < 0) {
+                                $entryCap = $availableForRow;
+                            }
+                            $siblingSupported = false;
+                            if (! $belowThreshold && $row->pib !== null) {
+                                foreach ($outcomeRows as $otherRow) {
+                                    if ($otherRow->id() === $row->id() || $otherRow->pib !== $row->pib) {
+                                        continue;
+                                    }
+                                    if ($outcomeRecords->get($otherRow->id())?->isSupport()) {
+                                        $siblingSupported = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            $decision = $belowThreshold ? 'reject' : $outcome?->decision;
+                            $showAmount = $decision === 'support';
+                            $showReason = $decision === 'reject';
+                            $reasonValue = $belowThreshold
+                                ? \App\Models\CanonicalOutcome::REASON_BELOW_30
+                                : ($outcome?->rejection_reason ?: ($siblingSupported ? \App\Models\CanonicalOutcome::REASON_DUPLICATE_BENEFICIARY_SUPPORT : ''));
                         @endphp
-                        <div class="mmsp-ranking-decision-block">
-                            <div style="margin-bottom: 16px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
-                                <h3 style="font-size: 18px; font-weight: 700; color: #0B3D91; margin: 0 0 4px 0;">{{ $mmspApplicantName($row) }}</h3>
-                                <p style="font-size: 14px; color: #6b7280; margin: 0;">
-                                    Vrsta subvencije: {{ $row->subsidyType && \App\Support\CanonicalSubsidyType::isValid($row->subsidyType) ? \App\Support\CanonicalSubsidyType::label($row->subsidyType) : '—' }} |
-                                    Pozicija: <strong>#{{ $row->rank }}</strong> |
-                                    Ocjena: <strong>{{ $mmspScoreText($row) }}</strong>
-                                </p>
+                        <div class="mmsp-ranking-decision-block" data-testid="mmsp-decision-card">
+                            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb; gap: 12px; flex-wrap: wrap;">
+                                <div>
+                                    <h3 style="font-size: 18px; font-weight: 700; color: #0B3D91; margin: 0 0 4px 0;">{{ $mmspApplicantName($row) }}</h3>
+                                    <p style="font-size: 14px; color: #6b7280; margin: 0;">
+                                        Vrsta subvencije: {{ $row->subsidyType && \App\Support\CanonicalSubsidyType::isValid($row->subsidyType) ? \App\Support\CanonicalSubsidyType::label($row->subsidyType) : '—' }} |
+                                        Pozicija: <strong>#{{ $row->rank }}</strong> |
+                                        Ocjena: <strong>{{ $mmspScoreText($row) }}</strong>
+                                    </p>
+                                </div>
+                                @if($outcome)
+                                    <span style="display: inline-block; padding: 6px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 12px; font-weight: 600;">✓ Zaključeno</span>
+                                @endif
                             </div>
                             @if($belowThreshold)
                                 <p class="mmsp-ranking-note" style="margin: 0 0 12px;">Ispod praga od 30 bodova. Ne može se podržati.</p>
                             @endif
-                            <form method="POST" action="{{ route('evaluation.canonical-outcome.draft', [$competition, $row->application]) }}" class="mmsp-ranking-decision-form no-print">
+                            @if($siblingSupported)
+                                <p data-testid="mmsp-duplicate-pib" style="margin: 0 0 12px; color: #92400e; font-size: 14px; font-weight: 600;">{{ \App\Services\Competitions\Outcome\CanonicalAllocationPolicy::DUPLICATE_REASON_REQUIRED_MESSAGE }}</p>
+                            @endif
+                            <form method="POST" action="{{ route('evaluation.canonical-outcome.draft', [$competition, $row->application]) }}" class="mmsp-ranking-decision-form no-print" data-mmsp-decision-form data-below-threshold="{{ $belowThreshold ? '1' : '0' }}" data-sibling-supported="{{ $siblingSupported ? '1' : '0' }}" data-cap-message="{{ \App\Services\Competitions\Outcome\CanonicalAmountCapPolicy::AMOUNT_ABOVE_CAP_MESSAGE }}" data-budget-message="{{ \App\Services\Competitions\Outcome\CanonicalAllocationPolicy::BUDGET_EXCEEDED_MESSAGE }}">
                                 @csrf
-                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Odluka</label>
-                                <select name="decision" required style="margin-bottom: 16px;">
-                                    <option value="support" @selected($outcome?->decision === 'support')>Podržava</option>
-                                    <option value="reject" @selected($outcome?->decision === 'reject')>Odbija</option>
-                                </select>
-                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Iznos €</label>
-                                <input type="text" name="amount" inputmode="decimal" placeholder="Iznos €" value="{{ $outcome?->approved_amount }}" style="margin-bottom: 16px;">
-                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Razlog odbijanja</label>
-                                <select name="reason" style="margin-bottom: 16px;">
-                                    <option value="">— razlog odbijanja —</option>
-                                    @foreach($reasonLabels as $code => $label)
-                                        <option value="{{ $code }}" @selected($outcome?->rejection_reason === $code)>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Obrazloženje</label>
-                                <textarea name="justification" rows="3" placeholder="Obrazloženje" style="margin-bottom: 16px;">{{ $outcome?->justification }}</textarea>
-                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Napomene i mišljenja</label>
-                                <textarea name="remarks" rows="2" placeholder="Napomene i mišljenja" style="margin-bottom: 16px;">{{ $outcome?->remarks }}</textarea>
+                                <div style="margin-bottom: 24px;">
+                                    <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 12px;">Zaključak komisije: *</span>
+                                    <div class="mmsp-decision-choices">
+                                        <label class="mmsp-decision-choice">
+                                            <input type="radio" name="decision" value="support" data-mmsp-decision{{ $decision === 'support' ? ' checked' : '' }}{{ $belowThreshold ? ' disabled' : ' required' }}>
+                                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Podržava</span>
+                                        </label>
+                                        <label class="mmsp-decision-choice">
+                                            <input type="radio" name="decision" value="reject" data-mmsp-decision{{ $decision === 'reject' ? ' checked' : '' }}{{ $belowThreshold ? '' : ' required' }}>
+                                            <span style="font-size: 14px; color: #374151; font-weight: 500;">Odbija</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mmsp-decision-amount-grid" data-testid="mmsp-ranking-financials">
+                                    <div>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Ukupna vrijednost ulaganja</span>
+                                        <div class="mmsp-decision-fact">{{ $mmspMoney($row->totalInvestment) }}</div>
+                                    </div>
+                                    <div>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Tražena subvencija</span>
+                                        <div class="mmsp-decision-fact">{{ $mmspMoney($requestedSubsidy) }}</div>
+                                    </div>
+                                    <div>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Maksimalni dozvoljeni iznos</span>
+                                        <div class="mmsp-decision-fact">{{ $mmspMoney($row->legalMaximum) }}</div>
+                                    </div>
+                                    <div>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Raspoloživa sredstva za ovu prijavu</span>
+                                        <div class="mmsp-decision-fact" data-testid="mmsp-available-for-row">{{ $mmspMoney($availableForRow) }}</div>
+                                    </div>
+                                    <label class="mmsp-decision-field" data-mmsp-amount {{ $showAmount ? '' : 'hidden' }}>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Iznos odobrenih sredstava</span>
+                                        <input type="text" name="amount" inputmode="decimal" placeholder="Iznos €" value="{{ $showAmount ? $outcome?->approved_amount : '' }}" data-mmsp-amount-input data-legal-maximum="{{ $row->legalMaximum }}" data-available="{{ $availableForRow }}" @disabled(! $showAmount)>
+                                    </label>
+                                    <label class="mmsp-decision-field" data-mmsp-reason {{ $showReason ? '' : 'hidden' }}>
+                                        <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Razlog odbijanja</span>
+                                        @if($belowThreshold)
+                                            <input type="hidden" name="reason" value="{{ \App\Models\CanonicalOutcome::REASON_BELOW_30 }}">
+                                        @endif
+                                        <select @if(! $belowThreshold) name="reason" @endif data-mmsp-reason-select @disabled($belowThreshold || ! $showReason)>
+                                            <option value="">— razlog odbijanja —</option>
+                                            @foreach($reasonLabels as $code => $label)
+                                                <option value="{{ $code }}" @selected($reasonValue === $code)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+                                </div>
+                                <label style="display: block; margin-bottom: 24px;">
+                                    <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Obrazloženje</span>
+                                    <textarea name="justification" rows="6" placeholder="Obrazloženje">{{ $outcome?->justification }}</textarea>
+                                </label>
+                                <label style="display: block; margin-bottom: 24px;">
+                                    <span style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">Napomene i mišljenja</span>
+                                    <textarea name="remarks" rows="3" placeholder="Napomene i mišljenja">{{ $outcome?->remarks }}</textarea>
+                                </label>
                                 <div style="text-align: right;">
-                                    <button type="submit" class="btn-primary">Evidentiraj</button>
+                                    <button type="submit" class="btn-primary" style="padding: 10px 24px; font-size: 14px; min-width: 160px;">Sačuvaj zaključak</button>
                                 </div>
                             </form>
                         </div>
                     @endforeach
                 </div>
+                <script>
+                    document.querySelectorAll('[data-mmsp-decision-form]').forEach(function (form) {
+                        var sync = function () {
+                            var selected = form.querySelector('[data-mmsp-decision]:checked');
+                            var decision = selected ? selected.value : '';
+                            var below = form.dataset.belowThreshold === '1';
+                            var amountWrap = form.querySelector('[data-mmsp-amount]');
+                            var reasonWrap = form.querySelector('[data-mmsp-reason]');
+                            var amount = form.querySelector('[data-mmsp-amount-input]');
+                            var reason = form.querySelector('[data-mmsp-reason-select]');
+                            var showAmount = !below && decision === 'support';
+                            var showReason = below || decision === 'reject';
+                            if (amountWrap) amountWrap.hidden = !showAmount;
+                            if (amount) {
+                                amount.disabled = !showAmount;
+                                if (!showAmount) amount.value = '';
+                            }
+                            if (reasonWrap) reasonWrap.hidden = !showReason;
+                            if (reason && !below) {
+                                reason.disabled = !showReason;
+                                if (showReason && reason.value === '' && form.dataset.siblingSupported === '1') {
+                                    reason.value = 'duplicate_beneficiary_support';
+                                }
+                            }
+                        };
+                        form.querySelectorAll('[data-mmsp-decision]').forEach(function (input) {
+                            input.addEventListener('change', sync);
+                        });
+                        var amount = form.querySelector('[data-mmsp-amount-input]');
+                        if (amount) {
+                            amount.addEventListener('input', function () {
+                                var raw = amount.value.trim().replace(',', '.');
+                                var legal = amount.dataset.legalMaximum;
+                                var available = amount.dataset.available;
+                                if (raw === '' || Number.isNaN(Number(raw))) {
+                                    amount.setCustomValidity('');
+                                    return;
+                                }
+                                if (legal !== '' && Number(raw) > Number(legal)) {
+                                    amount.setCustomValidity(form.dataset.capMessage);
+                                    return;
+                                }
+                                if (available !== '' && Number(raw) > Number(available)) {
+                                    amount.setCustomValidity(form.dataset.budgetMessage);
+                                    return;
+                                }
+                                amount.setCustomValidity('');
+                            });
+                        }
+                        form.addEventListener('submit', function (event) {
+                            if (amount && !amount.disabled && !amount.checkValidity()) {
+                                event.preventDefault();
+                                amount.reportValidity();
+                            }
+                        });
+                        sync();
+                    });
+                </script>
                 @endif
             </div>
 

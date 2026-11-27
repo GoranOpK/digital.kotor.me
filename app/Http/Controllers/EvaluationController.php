@@ -1178,6 +1178,7 @@ class EvaluationController extends Controller
             'outcomeRows' => ($rankingView['visible'] ?? false) ? $outcomes->rankedRows($competition) : [],
             'outcomeRecords' => ($rankingView['visible'] ?? false) ? $outcomes->outcomesFor($competition) : collect(),
             'reasonLabels' => \App\Models\CanonicalOutcome::REASON_LABELS,
+            'fundingPosition' => ($rankingView['visible'] ?? false) ? $outcomes->fundingPosition($competition) : null,
             'signatories' => $isFinal
                 ? CommissionMember::query()
                     ->where('commission_id', $competition->commission_id)

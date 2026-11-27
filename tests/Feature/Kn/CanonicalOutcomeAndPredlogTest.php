@@ -425,11 +425,17 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         $this->assertSame(CanonicalTieResolutionService::NOT_PROPOSED_MESSAGE, $ties->vote($resolution, $members[G::ROLE_SPOLJASNJI]->user, true)->error);
 
         $this->assertSame(A::BUDGET_EXCEEDED_MESSAGE, $this->draft($competition, $members, $a, 'support', '2000')->error);
-        $this->assertTrue($this->draft($competition, $members, $b, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED)->succeeded);
-        $this->assertTrue($this->draft($competition, $members, $a, 'support', '2000')->succeeded);
+        $rejectedSibling = $this->draft($competition, $members, $b, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED);
+        $this->assertStringStartsWith(A::TIE_REASON_INVALID_MESSAGE, (string) $rejectedSibling->error);
+        $this->assertSame(CanonicalOutcome::REJECT, CanonicalOutcome::query()->where('application_id', $b->id)->value('decision'));
+
+        $supportedOther = $this->draft($competition, $members, $a, 'support', '2000');
+        $this->assertStringStartsWith(A::MAJORITY_MISMATCH_MESSAGE, (string) $supportedOther->error);
+        $this->assertSame(CanonicalOutcome::SUPPORT, CanonicalOutcome::query()->where('application_id', $a->id)->value('decision'));
         $this->assertStringStartsWith(A::MAJORITY_MISMATCH_MESSAGE, (string) $this->confirm($competition, $members)->error);
 
-        $this->assertTrue($this->draft($competition, $members, $a, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED)->succeeded);
+        $rejectedSelected = $this->draft($competition, $members, $a, 'reject', null, CanonicalOutcome::REASON_TIE_BOUNDARY_NOT_SELECTED);
+        $this->assertStringStartsWith(A::TIE_REASON_INVALID_MESSAGE, (string) $rejectedSelected->error);
         $this->assertTrue($this->draft($competition, $members, $b, 'support', '2000')->succeeded);
         $this->assertTrue($this->confirm($competition, $members)->succeeded);
 
@@ -740,6 +746,109 @@ class CanonicalOutcomeAndPredlogTest extends TestCase
         ]);
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)->get(route('evaluation.canonical-outcome.show', $zensko))->assertNotFound();
+    }
+
+    public function test_recorded_support_is_not_counted_twice_when_the_same_amount_is_corrected(): void
+    {
+        [, $members, $competition, $apps] = $this->rankedCompetition($this->sixDistinct());
+        $byRank = $this->byRank($apps);
+        foreach (range(1, 4) as $rank) {
+            $this->assertTrue($this->draft($competition, $members, $byRank[$rank], 'support', '2000.00')->succeeded, "rank {$rank}");
+        }
+
+        $position = app(CanonicalOutcomeService::class)->fundingPosition($competition->fresh());
+        $this->assertSame('10000.00', $position['budget']);
+        $this->assertSame('8000.00', $position['supported']);
+        $this->assertSame('2000.00', $position['remaining']);
+        $this->assertSame('4000.00', $position['available'][$byRank[1]->id]);
+        $this->assertSame('2000.00', $position['available'][$byRank[5]->id]);
+
+        $corrected = $this->draft($competition, $members, $byRank[1], 'support', '2000.00');
+        $this->assertTrue($corrected->succeeded, (string) $corrected->error);
+        $this->assertSame('2000.00', (string) CanonicalOutcome::query()->where('application_id', $byRank[1]->id)->firstOrFail()->approved_amount);
+        $this->assertSame(0, CanonicalFinalRanking::query()->count());
+    }
+
+    public function test_chair_sees_the_confirm_failure_and_the_duplicate_notice(): void
+    {
+        $owner = $this->applicant();
+        [, $members, $competition, [$first, $second]] = $this->rankedCompetition([
+            ['scores' => [45, 45, 45], 'owner' => $owner, 'pib' => '71234569', 'type' => T::AUTHENTIC_LOCAL, 'total' => '5000.00'],
+            ['scores' => [40, 40, 40], 'owner' => $owner, 'pib' => '71234569', 'type' => T::INNOVATIVE, 'total' => '5000.00'],
+        ]);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+
+        $this->actingAs($chair)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('10.000,00 €', false)
+            ->assertSee('5.000,00 €', false)
+            ->assertSee('2.000,00 €', false)
+            ->assertDontSee('data-mmsp-decision checked', false)
+            ->assertDontSee(A::DUPLICATE_REASON_REQUIRED_MESSAGE);
+
+        $this->actingAs($chair)->post(route('evaluation.canonical-outcome.draft', [$competition, $first]), [
+            'decision' => 'support',
+            'amount' => '1000',
+        ])->assertRedirect(route('evaluation.mmsp-ranking', $competition))->assertSessionHasNoErrors();
+
+        $this->actingAs($chair)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee(A::DUPLICATE_REASON_REQUIRED_MESSAGE)
+            ->assertSee('1.000,00 €', false)
+            ->assertSee('9.000,00 €', false)
+            ->assertSee('value="duplicate_beneficiary_support" selected', false);
+
+        $this->actingAs($chair)->from(route('evaluation.mmsp-ranking', $competition))
+            ->post(route('evaluation.canonical-outcome.draft', [$competition, $second]), [
+                'decision' => 'support',
+                'amount' => '1000',
+            ])
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition))
+            ->assertSessionHasErrors(['canonical_outcome' => A::DUPLICATE_SUPPORT_MESSAGE]);
+
+        $this->assertSame(2, CanonicalOutcome::query()->where('competition_id', $competition->id)->count());
+        $this->assertNull(CanonicalFinalRanking::query()->where('competition_id', $competition->id)->first());
+        $this->assertSame('submitted', $second->fresh()->status);
+    }
+
+    public function test_below_threshold_card_locks_support_and_records_the_existing_reason(): void
+    {
+        [, $members, $competition, [$application]] = $this->rankedCompetition([['scores' => [20, 20, 20], 'total' => '5000.00']]);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+
+        $this->actingAs($chair)->get(route('evaluation.mmsp-ranking', $competition))
+            ->assertOk()
+            ->assertSee('Ispod praga od 30 bodova')
+            ->assertSee('value="reject" data-mmsp-decision checked', false)
+            ->assertSee('value="support" data-mmsp-decision disabled', false)
+            ->assertSee('name="reason" value="below_30"', false)
+            ->assertSee('data-mmsp-amount hidden', false)
+            ->assertSee($application->founder_name)
+            ->assertSee('#1');
+
+        $this->actingAs($chair)->from(route('evaluation.mmsp-ranking', $competition))
+            ->post(route('evaluation.canonical-outcome.draft', [$competition, $application]), [
+                'decision' => 'support',
+                'amount' => '100',
+            ])
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition))
+            ->assertSessionHasErrors(['canonical_outcome' => A::BELOW_30_SUPPORT_MESSAGE]);
+        $this->assertSame(0, CanonicalOutcome::query()->count());
+
+        $this->actingAs($chair)->post(route('evaluation.canonical-outcome.draft', [$competition, $application]), [
+            'decision' => 'reject',
+            'reason' => CanonicalOutcome::REASON_BELOW_30,
+            'justification' => 'Obrazloženje ostaje dostupno.',
+            'remarks' => 'Napomena komisije.',
+        ])->assertRedirect(route('evaluation.mmsp-ranking', $competition))->assertSessionHasNoErrors();
+
+        $outcome = CanonicalOutcome::query()->where('application_id', $application->id)->firstOrFail();
+        $this->assertSame(CanonicalOutcome::REJECT, $outcome->decision);
+        $this->assertSame(CanonicalOutcome::REASON_BELOW_30, $outcome->rejection_reason);
+        $this->assertNull($outcome->approved_amount);
+        $this->assertSame('Obrazloženje ostaje dostupno.', $outcome->justification);
+        $this->assertSame('Napomena komisije.', $outcome->remarks);
+        $this->assertSame(1, (int) $application->fresh()->ranking_position);
     }
 
     // ── helpers ──────────────────────────────────────────────────────────
