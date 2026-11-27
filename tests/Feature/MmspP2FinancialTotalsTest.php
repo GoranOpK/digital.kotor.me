@@ -154,6 +154,141 @@ class MmspP2FinancialTotalsTest extends TestCase
             ->assertSee('value="Alat"', false)
             ->assertDontSee('value="Prevoz"', false);
         $this->assertSame(2, $this->expenseRowCount($locked->getContent()));
+        $lockedTable = $this->expenseTable($locked->getContent());
+        $this->assertSame(3, preg_match_all('/<th\b/', $lockedTable));
+        $this->assertStringNotContainsString('Ukloni', $lockedTable);
+        $this->assertStringNotContainsString('mmsp-p2-expense-remove', $lockedTable);
+    }
+
+    public function test_removed_expense_rows_are_reindexed_and_do_not_return(): void
+    {
+        $owner = $this->owner();
+        $application = $this->canonicalDraft($owner, $this->competition(), [
+            'with_p2' => false,
+            'with_documents' => false,
+        ]);
+        $edit = route('applications.canonical-p2.edit', $application);
+
+        $first = $this->actingAs($owner)->get($edit)->assertOk();
+        $html = $first->getContent();
+        $table = $this->expenseTable($html);
+        $this->assertSame(4, preg_match_all('/<th\b/', $table));
+        $this->assertSame(1, substr_count($table, 'data-mmsp-remove-expense-row'));
+        $this->assertStringContainsString('>Ukloni<', $table);
+        $this->assertMatchesRegularExpression(
+            '/<th class="mmsp-p2-expense-remove"><\/th>/',
+            $table
+        );
+        $this->assertStringContainsString('data-mmsp-max-expense-lines="50"', $html);
+        $this->assertMatchesRegularExpression(
+            '/\.mmsp-p2-expense-remove \{ display:none !important; \}/',
+            $html
+        );
+        $this->assertStringContainsString('width: 1%;', $html);
+        $this->assertStringContainsString('.mmsp-p2-remove-row {', $html);
+        $this->assertStringContainsString('padding: 8px 16px;', $html);
+        $this->assertStringContainsString('border-radius: 6px;', $html);
+        $script = file_get_contents(public_path('js/mmsp-p2-financials.js'));
+        $this->assertIsString($script);
+        $this->assertStringContainsString('function reindexExpenseRows', $script);
+        $this->assertStringContainsString('function removeExpenseRow', $script);
+        $this->assertStringContainsString("target.closest('[data-mmsp-remove-expense-row]')", $script);
+        $this->assertStringContainsString("form.dispatchEvent(new Event('input'", $script);
+        $this->assertStringContainsString("|| '50'", $script);
+        $this->assertStringNotContainsString('confirm(', $script);
+        $this->assertStringNotContainsString('alert(', $script);
+
+        $lines = [
+            ['cost_type' => 'Oprema', 'description' => 'Mašina', 'amount' => '10.00'],
+            ['cost_type' => 'Alat', 'description' => 'Set alata', 'amount' => '20.00'],
+            ['cost_type' => 'Prevoz', 'description' => 'Dostava', 'amount' => '30.00'],
+        ];
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload($lines, '60.00', '10.00', '50.00'))
+            ->assertSessionHasNoErrors();
+
+        $kept = [
+            $lines[0],
+            $lines[2],
+        ];
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload($kept, '40.00', '10.00', '30.00'))
+            ->assertSessionHasNoErrors();
+
+        $reopened = $this->actingAs($owner)->get($edit)->assertOk();
+        $reopened->assertSee('value="Oprema"', false)
+            ->assertSee('value="Prevoz"', false)
+            ->assertDontSee('value="Alat"', false)
+            ->assertDontSee('name="expense_lines[2][cost_type]"', false);
+        $this->assertSame(2, $this->expenseRowCount($reopened->getContent()));
+        $this->assertSame(2, substr_count($this->expenseTable($reopened->getContent()), 'data-mmsp-remove-expense-row'));
+
+        $invalid = [
+            $lines[0],
+            ['cost_type' => 'Materijal', 'description' => 'Ambalaža', 'amount' => 'nije iznos'],
+        ];
+        $this->actingAs($owner)
+            ->from($edit)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload($invalid, '40.00', '10.00', '30.00'))
+            ->assertRedirect($edit)
+            ->assertSessionHasErrors('expense_lines.1.amount');
+
+        $keptInput = $this->actingAs($owner)->get($edit)->assertOk();
+        $keptInput->assertSee('value="Oprema"', false)
+            ->assertSee('value="Materijal"', false)
+            ->assertSee('value="nije iznos"', false)
+            ->assertDontSee('value="Alat"', false)
+            ->assertDontSee('value="Prevoz"', false);
+        $this->assertSame(2, $this->expenseRowCount($keptInput->getContent()));
+
+        $plan = CanonicalInvestmentPlan::query()->where('application_id', $application->id)->firstOrFail();
+        $this->assertSame(['Oprema', 'Prevoz'], array_column($plan->expenseLines(), 'cost_type'));
+
+        $this->actingAs($owner)
+            ->from($edit)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload([
+                ['cost_type' => '', 'description' => '', 'amount' => ''],
+            ], '0.00', '10.00', '-5.00'))
+            ->assertRedirect($edit)
+            ->assertSessionHasErrors('expected_subsidy');
+
+        $emptied = $this->actingAs($owner)->get($edit)->assertOk();
+        $emptied->assertDontSee('value="Oprema"', false)
+            ->assertDontSee('value="Materijal"', false)
+            ->assertDontSee('value="Prevoz"', false)
+            ->assertDontSee('value="Alat"', false);
+        $this->assertSame(1, $this->expenseRowCount($emptied->getContent()));
+        $plan->refresh();
+        $this->assertSame(['Oprema', 'Prevoz'], array_column($plan->expenseLines(), 'cost_type'));
+
+        $this->actingAs($owner)
+            ->put(route('applications.canonical-p2.update', $application), $this->payload([
+                $lines[0],
+            ], '10.00', '4.00', '6.00'))
+            ->assertSessionHasNoErrors();
+
+        $final = $this->actingAs($owner)->get($edit)->assertOk();
+        $final->assertSee('value="Oprema"', false)
+            ->assertDontSee('value="Prevoz"', false);
+        $this->assertSame(1, $this->expenseRowCount($final->getContent()));
+
+        $plan->refresh();
+        $plan->forceFill(['frozen_at' => now()])->save();
+        $locked = $this->actingAs($owner)->get($edit)->assertOk();
+        $lockedTable = $this->expenseTable($locked->getContent());
+        $this->assertSame(3, preg_match_all('/<th\b/', $lockedTable));
+        $this->assertStringNotContainsString('Ukloni', $lockedTable);
+        $this->assertStringNotContainsString('data-mmsp-remove-expense-row', $locked->getContent());
+        $locked->assertDontSee('js/mmsp-p2-financials.js', false)
+            ->assertSee('value="Oprema"', false)
+            ->assertDontSee('value="Prevoz"', false);
+    }
+
+    private function expenseTable(string $html): string
+    {
+        $this->assertSame(1, preg_match('/<table[^>]*data-mmsp-expense-table[\s\S]*?<\/table>/', $html, $matches));
+
+        return $matches[0];
     }
 
     private function expenseRowCount(string $html): int

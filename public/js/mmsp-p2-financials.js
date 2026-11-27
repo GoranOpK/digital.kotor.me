@@ -81,22 +81,73 @@
         });
     }
 
+    function buildExpenseRow(index) {
+        var row = document.createElement('tr');
+        row.innerHTML = ''
+            + '<td><input class="mmsp-form-control" type="text" name="expense_lines[' + index + '][cost_type]" value=""></td>'
+            + '<td><input class="mmsp-form-control" type="text" name="expense_lines[' + index + '][description]" value=""></td>'
+            + '<td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[' + index + '][amount]" value=""></td>'
+            + '<td class="mmsp-p2-expense-remove"><button type="button" class="mmsp-p2-remove-row" data-mmsp-remove-expense-row>Ukloni</button></td>';
+
+        return row;
+    }
+
+    function reindexExpenseRows(body) {
+        var rows = body.querySelectorAll('tr');
+        var rowIndex;
+        var inputIndex;
+        var inputs;
+
+        for (rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+            inputs = rows[rowIndex].querySelectorAll('input[name]');
+            for (inputIndex = 0; inputIndex < inputs.length; inputIndex += 1) {
+                inputs[inputIndex].name = inputs[inputIndex].name.replace(
+                    /^expense_lines\[\d+\]/,
+                    'expense_lines[' + rowIndex + ']'
+                );
+            }
+        }
+    }
+
     function addExpenseRow(table, button) {
         var body = table.querySelector('tbody');
         var maxLines = Number(button.getAttribute('data-mmsp-max-expense-lines') || '50');
-        var index = body.querySelectorAll('tr').length;
-        var row;
+        var index;
 
+        if (!body) {
+            return;
+        }
+        index = body.querySelectorAll('tr').length;
         if (index >= maxLines) {
             return;
         }
 
-        row = document.createElement('tr');
-        row.innerHTML = ''
-            + '<td><input class="mmsp-form-control" type="text" name="expense_lines[' + index + '][cost_type]" value=""></td>'
-            + '<td><input class="mmsp-form-control" type="text" name="expense_lines[' + index + '][description]" value=""></td>'
-            + '<td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[' + index + '][amount]" value=""></td>';
-        body.appendChild(row);
+        body.appendChild(buildExpenseRow(index));
+        reindexExpenseRows(body);
+    }
+
+    function removeExpenseRow(table, button) {
+        var row = button.closest('tr');
+        var body = table.querySelector('tbody');
+
+        if (!row || !body || !body.contains(row)) {
+            return;
+        }
+
+        row.remove();
+        if (body.querySelectorAll('tr').length === 0) {
+            body.appendChild(buildExpenseRow(0));
+        }
+        reindexExpenseRows(body);
+    }
+
+    function notifyPlanForm(table) {
+        var form = table.closest('form');
+        if (!form) {
+            return;
+        }
+
+        form.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     function bind(scope) {
@@ -140,6 +191,24 @@
             addButton.addEventListener('click', function () {
                 addExpenseRow(table, addButton);
                 update();
+                notifyPlanForm(table);
+            });
+        }
+        if (table) {
+            table.addEventListener('click', function (event) {
+                var target = event.target;
+                var button;
+
+                if (!target || !target.closest) {
+                    return;
+                }
+                button = target.closest('[data-mmsp-remove-expense-row]');
+                if (!button || !table.contains(button)) {
+                    return;
+                }
+                removeExpenseRow(table, button);
+                update();
+                notifyPlanForm(table);
             });
         }
         window.addEventListener('beforeprint', function () {
