@@ -224,6 +224,16 @@
         font-size: 12px;
         margin-top: 4px;
     }
+    .mmsp-p3 .mmsp-p3-article20-heading {
+        margin-top: 20px;
+        margin-bottom: 4px;
+        padding-top: 14px;
+        border-top: 2px solid #e5e7eb;
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.4;
+    }
     @media print {
         @page {
             size: A4;
@@ -300,7 +310,15 @@
             min-height: 2em;
             max-height: 3.5em;
         }
-        .mmsp-p3 .form-label-large { page-break-after: avoid; }
+        .mmsp-p3 .mmsp-p3-article20-heading {
+        font-size: 9.5pt;
+        font-weight: bold;
+        border-top: 1px solid #000;
+        margin-top: 8px;
+        padding-top: 6px;
+        page-break-after: avoid;
+    }
+    .mmsp-p3 .form-label-large { page-break-after: avoid; }
         .mmsp-p3 .form-section-compact .form-label-large,
         .mmsp-p3 .form-section-scores > .form-label-large,
         .mmsp-p3 .form-section-notes > .form-label-large {

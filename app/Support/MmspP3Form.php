@@ -28,27 +28,32 @@ final class MmspP3Form
 
     public const RESULT_FAIL = 'Ne ispunjava eliminatorne kriterijume';
 
+    public const ARTICLE20_HEADING = 'Dodatna administrativna provjera – član 20 Odluke';
+
     /**
-     * Postojeće MMSP formulacije. Redoslijed i fail_phrase ostaju oni koje
-     * evidencija potpunosti već upisuje u obrazloženje i obavještenje.
+     * Prikazane formulacije su pitanja iz čl.20. Tačka 3 ostaje prva, a druga
+     * dva kriterijuma idu pod poseban naslov. Da i dalje znači ispunjen uslov,
+     * Ne* eliminatorni razlog. fail_phrase ostaje tekst obrazloženja.
      *
-     * @var array<string, array{field: string, statement: string, fail_phrase: string}>
+     * @var array<string, array{field: string, statement: string, fail_phrase: string, article20?: bool}>
      */
     public const CRITERIA = [
         'documentation' => [
             'field' => 'criterion_documentation',
-            'statement' => 'Dokumentacija je potpuna',
+            'statement' => 'Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?',
             'fail_phrase' => 'dokumentacija nije potpuna',
         ],
         'report' => [
             'field' => 'criterion_report',
-            'statement' => 'Dostavljen je izvještaj o prethodnoj realizaciji, ako je obavezan',
+            'statement' => 'Da li je preduzetnik/društvo dostavilo Izvještaj o realizaciji plana sa Finansijskim izvještajem i pratećom dokumentacijom (fakture i izvodi sa banke), ukoliko je plan u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?',
             'fail_phrase' => 'nije dostavljen obavezan izvještaj o prethodnoj realizaciji',
+            'article20' => true,
         ],
         'related' => [
             'field' => 'criterion_related',
-            'statement' => 'Plan ulaganja se odnosi na vrstu subvencije',
+            'statement' => 'Da li je plan ulaganja u vezi sa subvencijama navedenim u članu 13 ove Odluke?',
             'fail_phrase' => 'plan ulaganja se ne odnosi na vrstu subvencije',
+            'article20' => true,
         ],
     ];
 

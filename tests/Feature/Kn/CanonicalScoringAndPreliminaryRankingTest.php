@@ -832,7 +832,32 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertSee('KRITERIJUMI ZA OCJENU', false)
             ->assertDontSee('<select name="criterion_1"', false)
             ->assertDontSee('id="mmsp-p3-print"', false)
-            ->assertSee('UKUPAN ZBIR', false);
+            ->assertSee('UKUPAN ZBIR', false)
+            ->assertSee('3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?')
+            ->assertSee(MmspP3Form::ARTICLE20_HEADING)
+            ->assertSee(MmspP3Form::CRITERIA['report']['statement'])
+            ->assertSee(MmspP3Form::CRITERIA['related']['statement'])
+            ->assertSee('>Da<', false)
+            ->assertSee('>Ne*<', false)
+            ->assertSee(MmspP3Form::NE_STAR_FOOTNOTE)
+            ->assertSee('Potvrdi administrativnu provjeru')
+            ->assertSee('Napomena')
+            ->assertDontSee('3. Dokumentacija je potpuna')
+            ->assertDontSee('Dostavljen je izvještaj o prethodnoj realizaciji, ako je obavezan')
+            ->assertDontSee('Plan ulaganja se odnosi na vrstu subvencije');
+        $openHtml = $this->actingAs($chair)->get(route('evaluation.create', $application))->assertOk()->getContent();
+        $questionAt = strpos($openHtml, '3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?');
+        $headingAt = strpos($openHtml, MmspP3Form::ARTICLE20_HEADING);
+        $reportAt = strpos($openHtml, MmspP3Form::CRITERIA['report']['statement']);
+        $relatedAt = strpos($openHtml, MmspP3Form::CRITERIA['related']['statement']);
+        $this->assertNotFalse($questionAt);
+        $this->assertLessThan($headingAt, $questionAt);
+        $this->assertLessThan($reportAt, $headingAt);
+        $this->assertLessThan($relatedAt, $reportAt);
+        $this->assertSame(
+            ['dokumentacija nije potpuna', 'nije dostavljen obavezan izvještaj o prethodnoj realizaciji', 'plan ulaganja se ne odnosi na vrstu subvencije'],
+            array_column(MmspP3Form::CRITERIA, 'fail_phrase')
+        );
 
         $this->actingAs($chair)
             ->post(route('evaluation.completeness', $application), [
@@ -863,7 +888,12 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertSee('Nedostaje obavezni prilog.')
             ->assertSee(MmspP3Form::RESULT_FAIL)
             ->assertSee('id="mmsp-p3-print"', false)
-            ->assertSee('UKUPAN ZBIR', false);
+            ->assertSee('UKUPAN ZBIR', false)
+            ->assertSee('3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?')
+            ->assertSee(MmspP3Form::ARTICLE20_HEADING)
+            ->assertSee(MmspP3Form::CRITERIA['report']['statement'])
+            ->assertSee(MmspP3Form::CRITERIA['related']['statement'])
+            ->assertSee(MmspP3Form::NE_STAR_FOOTNOTE);
         $this->assertSame(2, substr_count($locked->getContent(), '<strong>Da</strong>'));
 
         $this->actingAs($members[G::ROLE_SEKRETAR]->user)
