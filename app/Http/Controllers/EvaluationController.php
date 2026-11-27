@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
-use App\Models\ApplicationComplaint;
 use App\Models\CommissionMember;
 use App\Models\Competition;
 use App\Models\EvaluationScore;
@@ -14,6 +13,7 @@ use App\Services\ApplicationPrigovorService;
 use App\Services\ApplicationYouthAppealWindowService;
 use App\Services\YouthPrigovorMappingCorrectionService;
 use App\Services\CanonicalIndividualScoringService;
+use App\Services\Competitions\CanonicalReviewState;
 use App\Services\Competitions\Lifecycle\LegacyCommissionFlowGuard;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use App\Services\Competitions\ZenskoPreDeadlineContentGate;
@@ -252,8 +252,13 @@ class EvaluationController extends Controller
                     });
                 });
             } elseif ($request->filter === 'rejected') {
-                // Odbijene prijave
-                $query->where('status', 'rejected');
+                // Odbijene prijave, uključujući MMSP prijave eliminisane stanjem provjere ili prigovora.
+                $query->where(function ($outer) {
+                    $outer->where('status', 'rejected')
+                        ->orWhere(function ($canonical) {
+                            CanonicalReviewState::constrainFinallyEliminated($canonical);
+                        });
+                });
             }
         } else {
             // Ako nema filtera, prikaži sve prijave (submitted, evaluated i rejected)
@@ -261,13 +266,7 @@ class EvaluationController extends Controller
         }
 
         if ($request->filter !== 'rejected') {
-            $query->where(function ($outer) {
-                $outer->whereDoesntHave('complaint', function ($complaint) {
-                    $complaint->where('decision', ApplicationComplaint::REJECTED);
-                })->orWhereHas('competition', function ($competition) {
-                    $competition->where('type', '!=', CompetitionProfileResolver::TYPE_CANONICAL);
-                });
-            });
+            CanonicalReviewState::excludeFinallyEliminated($query);
         }
 
         $applications = $query->latest()->paginate(20)->appends($request->query());

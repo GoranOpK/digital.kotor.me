@@ -5,8 +5,10 @@ namespace App\Services\Competitions;
 use App\Models\Application;
 use App\Models\ApplicationComplaint;
 use App\Models\ApplicationCompletenessAssessment;
+use App\Services\Competitions\Profile\CanonicalMmspPolicy;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Canonical completeness/complaint state, derived from structured rows only.
@@ -93,5 +95,146 @@ final class CanonicalReviewState
         $now = $at ?? CarbonImmutable::now($policy->publicationTimezone());
 
         return ! $now->greaterThan($deadline);
+    }
+
+    /**
+     * MMSP elimination is read from the assessment and complaint rows.
+     * A rejected complaint eliminates at once. An incomplete finding eliminates only after
+     * the complaint window, and that window starts at the successful notice, not at the finding.
+     */
+    public static function isFinallyEliminated(Application $application, ?CarbonImmutable $at = null): bool
+    {
+        $application->loadMissing('competition');
+        if ($application->competition?->type !== CompetitionProfileResolver::TYPE_CANONICAL) {
+            return false;
+        }
+
+        $complaint = ApplicationComplaint::query()->where('application_id', $application->id)->first();
+        if ($complaint) {
+            return $complaint->decision === ApplicationComplaint::REJECTED;
+        }
+
+        $latest = ApplicationCompletenessAssessment::query()
+            ->where('application_id', $application->id)
+            ->latest('id')
+            ->first();
+
+        return $latest !== null
+            && $latest->outcome === ApplicationCompletenessAssessment::INCOMPLETE
+            && $latest->notice_sent_at !== null
+            && ! self::complaintWindowOpen($application, $latest, $at);
+    }
+
+    /**
+     * Status text for the commission list while the application is still in review or complaint.
+     * Null means scoring is open and the list keeps its scoring status.
+     *
+     * @return array{label: string, eliminated: bool}|null
+     */
+    public static function commissionListPresentation(Application $application, ?CarbonImmutable $at = null): ?array
+    {
+        $state = self::resolve($application, $at);
+        if ($state === null || $state === self::COMPLETE) {
+            return null;
+        }
+
+        if ($state === self::COMPLAINT_RESOLVED) {
+            $complaint = ApplicationComplaint::query()->where('application_id', $application->id)->first();
+            if ($complaint?->decision === ApplicationComplaint::ACCEPTED) {
+                return null;
+            }
+
+            return [
+                'label' => ComplaintService::STATUS_LABELS[ComplaintService::STATUS_COMPLAINT_REJECTED],
+                'eliminated' => true,
+            ];
+        }
+
+        if ($state === self::INCOMPLETE) {
+            $latest = ApplicationCompletenessAssessment::query()
+                ->where('application_id', $application->id)
+                ->latest('id')
+                ->first();
+            if ($latest?->notice_sent_at === null) {
+                return [
+                    'label' => ComplaintService::STATUS_LABELS[ComplaintService::STATUS_NOTICE_PENDING],
+                    'eliminated' => false,
+                ];
+            }
+
+            return [
+                'label' => self::LABELS[self::INCOMPLETE],
+                'eliminated' => true,
+            ];
+        }
+
+        return [
+            'label' => self::LABELS[$state],
+            'eliminated' => false,
+        ];
+    }
+
+    /**
+     * @param  Builder<Application>  $query
+     */
+    public static function constrainFinallyEliminated(Builder $query, ?CarbonImmutable $at = null): void
+    {
+        $cutoff = self::complaintWindowCutoff($at);
+
+        $query->whereHas('competition', function ($competition) {
+            $competition->where('type', CompetitionProfileResolver::TYPE_CANONICAL);
+        })->where(function ($outer) use ($cutoff) {
+            $outer->whereHas('complaint', function ($complaint) {
+                $complaint->where('decision', ApplicationComplaint::REJECTED);
+            })->orWhere(function ($expired) use ($cutoff) {
+                $expired->whereDoesntHave('complaint')
+                    ->whereExists(function ($sub) use ($cutoff) {
+                        self::expiredNoticeSubquery($sub, $cutoff);
+                    });
+            });
+        });
+    }
+
+    /**
+     * @param  Builder<Application>  $query
+     */
+    public static function excludeFinallyEliminated(Builder $query, ?CarbonImmutable $at = null): void
+    {
+        $cutoff = self::complaintWindowCutoff($at);
+
+        $query->where(function ($outer) use ($cutoff) {
+            $outer->whereDoesntHave('competition', function ($competition) {
+                $competition->where('type', CompetitionProfileResolver::TYPE_CANONICAL);
+            })->orWhere(function ($canonical) use ($cutoff) {
+                $canonical->whereDoesntHave('complaint', function ($complaint) {
+                    $complaint->where('decision', ApplicationComplaint::REJECTED);
+                })->where(function ($stillOpen) use ($cutoff) {
+                    $stillOpen->whereHas('complaint')
+                        ->orWhereNotExists(function ($sub) use ($cutoff) {
+                            self::expiredNoticeSubquery($sub, $cutoff);
+                        });
+                });
+            });
+        });
+    }
+
+    private static function complaintWindowCutoff(?CarbonImmutable $at): CarbonImmutable
+    {
+        $policy = new CanonicalMmspPolicy();
+        $now = ($at ?? CarbonImmutable::now($policy->publicationTimezone()))
+            ->timezone($policy->publicationTimezone());
+
+        return $now->subDays((int) $policy->complaintWindowDays());
+    }
+
+    private static function expiredNoticeSubquery($sub, CarbonImmutable $cutoff): void
+    {
+        $sub->selectRaw('1')
+            ->from('application_completeness_assessments as latest')
+            ->whereColumn('latest.application_id', 'applications.id')
+            ->where('latest.outcome', ApplicationCompletenessAssessment::INCOMPLETE)
+            ->whereNotNull('latest.notice_sent_at')
+            ->where('latest.notice_sent_at', '<', $cutoff)
+            ->whereRaw('latest.id = (select max(id) from application_completeness_assessments where application_id = applications.id)');
     }
 }

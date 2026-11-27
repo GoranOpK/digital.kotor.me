@@ -264,6 +264,10 @@
                                 ? $canViewFinalScoresByCompetition[$application->competition_id]
                                 : false;
                             $isYouthApplication = $application->competition?->isOmladinskoProfile();
+                            $isCanonicalApplication = $application->competition?->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
+                            $canonicalList = $isCanonicalApplication
+                                ? \App\Services\Competitions\CanonicalReviewState::commissionListPresentation($application)
+                                : null;
                             $youthRankingReady = $isYouthApplication
                                 && isset($youthPreliminaryByCompetition[$application->competition_id])
                                 && ($youthPreliminaryByCompetition[$application->competition_id]['ranking_ready'] ?? false);
@@ -271,7 +275,10 @@
                                 ? app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasYouthCanonicalSeats($application)
                                 : app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application);
 
-                            if ($application->status === 'rejected') {
+                            if ($canonicalList !== null) {
+                                $displayStatus = $canonicalList['label'];
+                                $statusClass = $canonicalList['eliminated'] ? 'status-rejected' : 'status-submitted';
+                            } elseif ($application->status === 'rejected') {
                                 $displayStatus = 'Odbijena prijava';
                                 $statusClass = 'status-rejected';
                             } elseif ($canViewFinalScores && $hasCanonicalSeats) {
@@ -290,7 +297,7 @@
                             <td>{{ $application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A') }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
-                                @if($application->status === 'rejected')
+                                @if($application->status === 'rejected' || ($canonicalList['eliminated'] ?? false))
                                     <a href="{{ route('evaluation.create', $application) }}" class="status-badge {{ $statusClass }}" style="text-decoration: none; cursor: pointer; display: inline-block;">
                                         {{ $displayStatus }}
                                     </a>
@@ -301,12 +308,14 @@
                                 @endif
                             </td>
                             <td>
-                                @if($application->status === 'rejected' && $application->isEliminatedFromScoring())
+                                @if($canonicalList !== null)
+                                    —
+                                @elseif($application->status === 'rejected' && $application->isEliminatedFromScoring())
                                     {{ number_format($application->getDisplayScore(), 2) }} / {{ $isYouthApplication ? '56' : '58' }}
                                 @elseif($isYouthApplication && $youthRankingReady && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 56
                                 @elseif(! $isYouthApplication && $canViewFinalScores && $application->final_score)
-                                    {{ number_format($application->final_score, 2) }} / 58
+                                    {{ number_format($application->final_score, 2) }} / {{ $isCanonicalApplication ? '50' : '58' }}
                                 @else
                                     Ocjenjivanje u toku
                                 @endif
@@ -318,7 +327,7 @@
                                 @endphp
                                 
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    @if($application->status === 'rejected')
+                                    @if($application->status === 'rejected' || ($canonicalList['eliminated'] ?? false))
                                         {{-- Odbijene prijave - svi članovi mogu pristupiti (read-only) --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #dc2626; color: #fff;">
                                             Pregledaj

@@ -296,7 +296,7 @@ class CompletenessComplaintTest extends TestCase
             }
 
             $this->assertTrue(app(CompletenessAssessmentService::class)->reviewBasisMatches($assessment->fresh()), $key);
-            $this->assertSame('rejected', $application->fresh()->status, $key);
+            $this->assertSame('submitted', $application->fresh()->status, $key);
             $this->assertNotNull($application->fresh()->finalClaim, $key);
         }
     }
@@ -437,7 +437,7 @@ class CompletenessComplaintTest extends TestCase
             '2026-09-10 10:00:01',
             $lateComplaint->decided_at->timezone('Europe/Belgrade')->format('Y-m-d H:i:s')
         );
-        $this->assertSame('rejected', $appLate->fresh()->status);
+        $this->assertSame('submitted', $appLate->fresh()->status);
         $this->assertNotNull($appLate->fresh()->finalClaim);
     }
 
@@ -990,7 +990,7 @@ class CompletenessComplaintTest extends TestCase
         $this->assertSame($claim->claimed_at->toIso8601String(), $afterComplaint->finalClaim->claimed_at->toIso8601String());
         $this->assertSame(12, (int) $afterComplaint->redni_broj);
         $this->assertSame($submittedAt, $afterComplaint->submitted_at->toIso8601String());
-        $this->assertSame('rejected', $afterComplaint->status);
+        $this->assertSame('submitted', $afterComplaint->status);
         $this->assertSame(1, FinalApplicationClaim::query()->where('application_id', $application->id)->count());
     }
 
