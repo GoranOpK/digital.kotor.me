@@ -828,7 +828,14 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->actingAs($chair->user)->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('Preliminarna rang-lista')
-            ->assertSee('45.00')
+            ->assertSee('RANG LISTA PLANOVA ULAGANJA')
+            ->assertSee('images/srednji_grb.png', false)
+            ->assertSee('Sekretarijat za razvoj preduzetništva')
+            ->assertSee('privreda@kotor.me')
+            ->assertSee('45.00 / 50', false)
+            ->assertDontSee('RANG LISTA BIZNIS PLANOVA')
+            ->assertDontSee('images/coat-of-arms.png', false)
+            ->assertDontSee('data-testid="mmsp-ranking-print"', false)
             ->assertSee('Evidentiraj');
         $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
@@ -1348,8 +1355,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('Preliminarna rang-lista')
-            ->assertSee('45.00')
-            ->assertSee('data-testid="mmsp-ranking-print"', false)
+            ->assertSee('45.00 / 50', false)
+            ->assertDontSee('data-testid="mmsp-ranking-print"', false)
             ->assertDontSee('id="mmsp-p3-print"', false);
         $openRow = $this->finalScoreRow($open->getContent());
         $this->assertStringContainsString('>50<', $openRow);
