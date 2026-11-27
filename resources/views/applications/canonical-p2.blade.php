@@ -78,7 +78,13 @@
 .canonical-ui-page.mmsp-business-plan textarea.mmsp-form-control[rows="1"] {
     min-height: 40px;
 }
-.canonical-ui-page.mmsp-business-plan .mmsp-p2-add-row {
+.canonical-ui-page.mmsp-business-plan .mmsp-dynamic-table .mmsp-p2-expense-remove {
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-add-row,
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-remove-row {
     background: #6b7280;
     color: #fff;
     padding: 8px 16px;
@@ -88,7 +94,8 @@
     font-size: 14px;
     cursor: pointer;
 }
-.canonical-ui-page.mmsp-business-plan .mmsp-p2-add-row:hover {
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-add-row:hover,
+.canonical-ui-page.mmsp-business-plan .mmsp-p2-remove-row:hover {
     background: #4b5563;
 }
 .canonical-ui-page.mmsp-business-plan .mmsp-dynamic-table input,
@@ -126,7 +133,8 @@
     .mmsp-business-plan .mmsp-p2-screen-only,
     .mmsp-business-plan button,
     .mmsp-business-plan .mmsp-p2-actions,
-    .mmsp-business-plan tr.mmsp-p2-expense-print-hide { display:none !important; }
+    .mmsp-business-plan tr.mmsp-p2-expense-print-hide,
+    .mmsp-business-plan .mmsp-p2-expense-remove { display:none !important; }
     .canonical-ui-page.mmsp-form-page.mmsp-business-plan {
         padding:0 !important; margin:0 !important; min-height:0 !important; background:#fff !important;
     }
@@ -392,6 +400,9 @@
                                         <th>Vrsta troška</th>
                                         <th>Opis</th>
                                         <th style="width:180px;">Iznos (EUR)</th>
+                                        @unless($readOnly)
+                                            <th class="mmsp-p2-expense-remove"></th>
+                                        @endunless
                                     </tr>
                                 </thead>
                                 <tbody id="mmsp-p2-expense-body">
@@ -400,6 +411,9 @@
                                             <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][cost_type]" value="{{ $line['cost_type'] ?? '' }}"></td>
                                             <td><input class="mmsp-form-control" type="text" name="expense_lines[{{ $i }}][description]" value="{{ $line['description'] ?? '' }}"></td>
                                             <td><input class="mmsp-form-control" type="text" inputmode="decimal" data-mmsp-expense-amount name="expense_lines[{{ $i }}][amount]" value="{{ $line['amount'] ?? '' }}"></td>
+                                            @unless($readOnly)
+                                                <td class="mmsp-p2-expense-remove"><button type="button" class="mmsp-p2-remove-row" data-mmsp-remove-expense-row>Ukloni</button></td>
+                                            @endunless
                                         </tr>
                                     @endforeach
                                 </tbody>
