@@ -121,10 +121,18 @@
     .mmsp-ranking-print-root table.mmsp-ranking-table {
         width: 100%;
         min-width: 640px;
+        table-layout: fixed;
         border-collapse: separate;
         border-spacing: 0;
         margin: 0;
     }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-pos { width: 8%; }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-subsidy { width: 20%; }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-applicant { width: 18%; }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-score { width: 12%; }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-needed { width: 14%; }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-approved { width: 14%; }
+    .mmsp-ranking-print-root table.mmsp-ranking-table col.mmsp-col-decision { width: 14%; }
     .mmsp-ranking-print-root table.mmsp-ranking-table th,
     .mmsp-ranking-print-root table.mmsp-ranking-table td {
         padding: 12px;
@@ -132,6 +140,16 @@
         border-bottom: 1px solid #e5e7eb;
         vertical-align: top;
         background-clip: padding-box;
+        overflow-wrap: anywhere;
+    }
+    .mmsp-ranking-print-root .mmsp-ranking-reason {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.35;
+        text-align: left;
+        color: #374151;
     }
     .mmsp-ranking-print-root table.mmsp-ranking-table th:first-child,
     .mmsp-ranking-print-root table.mmsp-ranking-table td:first-child {
@@ -272,6 +290,48 @@
         display: none;
     }
     .mmsp-ranking-note { margin-top: 6px; font-size: 12px; color: #6b7280; }
+    .mmsp-ranking-conclusions { margin-top: 0; padding-top: 24px; }
+    .mmsp-ranking-conclusions > h2,
+    .mmsp-ranking-signatures > h2 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--mmsp-ranking-primary);
+        margin: 0 0 12px;
+    }
+    .mmsp-ranking-conclusion {
+        background: #f9fafb;
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        border: 1px solid #e5e7eb;
+    }
+    .mmsp-ranking-print-root table.mmsp-conclusion-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    .mmsp-ranking-print-root table.mmsp-conclusion-table th,
+    .mmsp-ranking-print-root table.mmsp-conclusion-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border: 1px solid #e5e7eb;
+        vertical-align: top;
+        font-size: 14px;
+    }
+    .mmsp-ranking-print-root table.mmsp-conclusion-table th {
+        width: 28%;
+        font-weight: 600;
+        font-size: 13px;
+        color: #374151;
+        background: #f9fafb;
+    }
+    .mmsp-ranking-print-root table.mmsp-conclusion-table .mmsp-conclusion-name th {
+        width: auto;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0B3D91;
+        background: #fff;
+    }
     .mmsp-ranking-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
     @media (max-width: 768px) {
         .mmsp-ranking-print-root .obrazac-zaglavlje-top { flex-wrap: wrap; }
@@ -294,6 +354,7 @@
         }
     }
     @media print {
+        @page { size: A4 portrait; margin: 8mm 10mm; }
         nav, header, footer,
         .mmsp-ranking-no-print,
         .no-print,
@@ -302,6 +363,12 @@
         form, button, select, textarea, input {
             display: none !important;
         }
+        .admin-page {
+            min-height: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+        .container { max-width: none !important; padding: 0 !important; }
         body.mmsp-ranking-print .container > *:not(.mmsp-ranking-print-root) {
             display: none !important;
         }
@@ -319,12 +386,70 @@
             box-shadow: none;
             border: none !important;
             border-radius: 0;
-            padding: 0 0 8px 0;
-            margin-bottom: 8px;
+            padding: 0 0 4px 0;
+            margin-bottom: 4px;
         }
+        .mmsp-ranking-print-root .obrazac-zaglavlje { padding: 0 0 2px 0; }
+        .mmsp-ranking-print-root .obrazac-zaglavlje-top { gap: 8px; }
+        .mmsp-ranking-print-root .obrazac-grb img { height: 1.3cm; }
+        .mmsp-ranking-print-root .obrazac-org p,
+        .mmsp-ranking-print-root .obrazac-contact p { margin: 0; line-height: 1.2; }
+        .mmsp-ranking-print-root .obrazac-broj-i-naslov { margin-top: 2px; padding-top: 2px; gap: 4px; }
+        .mmsp-ranking-print-root .obrazac-naslov-prijava { font-size: 13pt; margin-top: 2px; }
+        .mmsp-ranking-print-root .obrazac-org,
+        .mmsp-ranking-print-root .obrazac-contact,
+        .mmsp-ranking-print-root .obrazac-podnaslov,
+        .mmsp-ranking-print-root .obrazac-broj-prijave { font-size: 8pt; }
+        .mmsp-ranking-list-card > h2 { font-size: 12pt; margin: 0 0 6px; padding-bottom: 4px; }
+        .mmsp-ranking-intro { margin-bottom: 4px !important; font-size: 8pt !important; }
+        .mmsp-ranking-print-root .below-minimum-section {
+            margin-top: 8px !important;
+            padding-top: 6px !important;
+            border-top-width: 1px !important;
+            box-shadow: none !important;
+        }
+        .mmsp-ranking-print-root .below-minimum-heading {
+            margin: 0 0 4px 0 !important;
+        }
+        .mmsp-ranking-print-root .below-minimum-section h3 { font-size: 9pt !important; margin: 0 0 4px !important; }
+        .mmsp-ranking-print-root table.mmsp-ranking-table thead { display: table-header-group; }
+        .mmsp-ranking-print-root table.mmsp-ranking-table tr,
+        .mmsp-ranking-conclusion,
+        .mmsp-ranking-signatures {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        .mmsp-ranking-conclusions { margin-top: 6px; }
+        .mmsp-ranking-conclusions > h2,
+        .mmsp-ranking-signatures > h2 { font-size: 11pt; margin: 0 0 4px; }
+        .mmsp-ranking-conclusion {
+            padding: 0;
+            margin: 0 0 4px;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+        .mmsp-ranking-print-root table.mmsp-conclusion-table th,
+        .mmsp-ranking-print-root table.mmsp-conclusion-table td {
+            border: 1px solid #000 !important;
+            padding: 2px 4px !important;
+            font-size: 8pt !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        .mmsp-ranking-signatures { padding: 2px 0 0 !important; margin: 2px 0 0 !important; font-size: 8pt !important; line-height: 1.2 !important; }
+        .mmsp-ranking-signatures > div { margin-top: 2px !important; }
+        .mmsp-ranking-signatures p { margin: 0 0 2px !important; }
+        .mmsp-ranking-signatures div { margin-top: 0 !important; margin-bottom: 2px !important; }
         .mmsp-ranking-print-root table.mmsp-ranking-table {
             min-width: 0;
             font-size: 8pt;
+            border-collapse: collapse;
+        }
+        .mmsp-ranking-print-root .mmsp-ranking-reason {
+            margin-top: 2px;
+            font-size: 7pt;
+            font-weight: 600;
         }
         .mmsp-ranking-print-root table.mmsp-ranking-table th,
         .mmsp-ranking-print-root table.mmsp-ranking-table td {
@@ -435,6 +560,16 @@
                 return $applicantName;
             };
             $mmspScoreText = static fn ($row): string => number_format((float) $row->display, 2).' / 50';
+            $mmspMoneyPlain = static fn ($amount): string => $amount === null || $amount === ''
+                ? '—'
+                : number_format((float) $amount, 2, ',', '.').' €';
+            $mmspReasonText = static function ($outcome): ?string {
+                if ($outcome === null || $outcome->isSupport() || ! filled($outcome->rejection_reason)) {
+                    return null;
+                }
+
+                return \App\Models\CanonicalOutcome::REASON_LABELS[$outcome->rejection_reason] ?? null;
+            };
             $mmspScoreClass = static function ($row): string {
                 $score = (float) $row->display;
                 if ($score >= 40) {
@@ -476,7 +611,7 @@
 
             <div class="mmsp-ranking-list-card">
                 <h2 data-testid="mmsp-ranking-title">{{ $canonicalRankingIsFinal ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }}</h2>
-                <p style="color: #4b5563; margin-bottom: 16px;">
+                <p class="mmsp-ranking-intro" style="color: #4b5563; margin-bottom: 16px;">
                     Planovi ispod 30 bodova ostaju na listi i ne mogu biti podržani.
                     Isti rang znači stvarno jednak konačni rezultat; redoslijed unutar istog ranga je tehnički i ne daje prednost.
                 </p>
@@ -484,9 +619,18 @@
                 @if(count($above) > 0)
                 <div class="mmsp-ranking-table-wrap">
                     <table class="mmsp-ranking-table">
+                        <colgroup>
+                            <col class="mmsp-col-pos">
+                            <col class="mmsp-col-subsidy">
+                            <col class="mmsp-col-applicant">
+                            <col class="mmsp-col-score">
+                            <col class="mmsp-col-needed">
+                            <col class="mmsp-col-approved">
+                            <col class="mmsp-col-decision">
+                        </colgroup>
                         <thead>
                             <tr>
-                                <th style="width: 60px;">Poz.</th>
+                                <th>Poz.</th>
                                 <th>Vrsta subvencije</th>
                                 <th>Podnosilac</th>
                                 <th style="text-align: center;">Ocjena</th>
@@ -505,10 +649,10 @@
                                     <td style="text-align: center;">
                                         <span class="score-badge {{ $mmspScoreClass($row) }}">{{ $mmspScoreText($row) }}</span>
                                     </td>
-                                    <td style="text-align: right;">{{ $row->totalInvestment !== null ? number_format((float) $row->totalInvestment, 2, ',', '.') : '—' }}</td>
+                                    <td style="text-align: right;">{{ $mmspMoneyPlain($row->totalInvestment) }}</td>
                                     <td style="text-align: right;">
                                         @if($outcome?->isSupport())
-                                            <strong>{{ number_format((float) $outcome->approved_amount, 2, ',', '.') }}</strong>
+                                            <strong>{{ $mmspMoneyPlain($outcome->approved_amount) }}</strong>
                                         @else
                                             <span style="color: #6b7280;">—</span>
                                         @endif
@@ -516,8 +660,7 @@
                                     <td style="text-align: center;">
                                         @if($outcome)
                                             <span class="score-badge {{ $outcome->isSupport() ? 'score-high' : 'score-low' }}">{{ $outcome->isSupport() ? 'Podržava' : 'Odbija' }}</span>
-                                            @if(filled($outcome->justification))<div style="white-space: pre-wrap; text-align: left; margin-top: 6px;">{{ $outcome->justification }}</div>@endif
-                                            @if(filled($outcome->remarks))<div style="white-space: pre-wrap; text-align: left; margin-top: 6px;">{{ $outcome->remarks }}</div>@endif
+                                            @if($mmspReasonText($outcome))<span class="mmsp-ranking-reason">{{ $mmspReasonText($outcome) }}</span>@endif
                                         @else
                                             <span style="color: #6b7280;">—</span>
                                         @endif
@@ -537,9 +680,18 @@
                     <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Planovi sa manje od 30 bodova</h3>
                     <div class="mmsp-ranking-table-wrap is-below">
                         <table class="mmsp-ranking-table">
+                            <colgroup>
+                                <col class="mmsp-col-pos">
+                                <col class="mmsp-col-subsidy">
+                                <col class="mmsp-col-applicant">
+                                <col class="mmsp-col-score">
+                                <col class="mmsp-col-needed">
+                                <col class="mmsp-col-approved">
+                                <col class="mmsp-col-decision">
+                            </colgroup>
                             <thead>
                                 <tr>
-                                    <th style="width: 60px;">Poz.</th>
+                                    <th>Poz.</th>
                                     <th>Vrsta subvencije</th>
                                     <th>Podnosilac</th>
                                     <th style="text-align: center;">Ocjena</th>
@@ -558,20 +710,24 @@
                                         <td style="text-align: center;">
                                             <span class="score-badge score-low">{{ $mmspScoreText($row) }}</span>
                                         </td>
-                                        <td style="text-align: right;">{{ $row->totalInvestment !== null ? number_format((float) $row->totalInvestment, 2, ',', '.') : '—' }}</td>
+                                        <td style="text-align: right;">{{ $mmspMoneyPlain($row->totalInvestment) }}</td>
                                         <td style="text-align: right;">
                                             @if($outcome?->isSupport())
-                                                <strong>{{ number_format((float) $outcome->approved_amount, 2, ',', '.') }}</strong>
+                                                <strong>{{ $mmspMoneyPlain($outcome->approved_amount) }}</strong>
                                             @else
                                                 <span style="color: #6b7280;">—</span>
                                             @endif
                                         </td>
                                         <td style="text-align: center;">
-                                            <div class="mmsp-ranking-note">Ispod praga od 30 bodova. Ne može se podržati.</div>
                                             @if($outcome)
                                                 <span class="score-badge score-low">{{ $outcome->isSupport() ? 'Podržava' : 'Odbija' }}</span>
-                                                @if(filled($outcome->justification))<div style="white-space: pre-wrap; text-align: left; margin-top: 6px;">{{ $outcome->justification }}</div>@endif
-                                                @if(filled($outcome->remarks))<div style="white-space: pre-wrap; text-align: left; margin-top: 6px;">{{ $outcome->remarks }}</div>@endif
+                                            @else
+                                                <span class="score-badge score-low">Ispod praga</span>
+                                            @endif
+                                            @if($mmspReasonText($outcome))
+                                                <span class="mmsp-ranking-reason">{{ $mmspReasonText($outcome) }}</span>
+                                            @else
+                                                <div class="mmsp-ranking-note">Ne može se podržati.</div>
                                             @endif
                                         </td>
                                     </tr>
@@ -784,11 +940,68 @@
                     });
                 </script>
                 @endif
+
+                @if($canonicalRankingIsFinal)
+                <div class="mmsp-ranking-conclusions" data-testid="mmsp-ranking-recorded-conclusions">
+                    <h2>Zaključak komisije i obrazloženje</h2>
+                    @foreach($outcomeRows as $row)
+                        @php $outcome = $outcomeRecords->get($row->id()); @endphp
+                        @continue($outcome === null)
+                        <div class="mmsp-ranking-conclusion">
+                            <table class="mmsp-conclusion-table">
+                                <tbody>
+                                    <tr class="mmsp-conclusion-name">
+                                        <th colspan="2">{{ $mmspApplicantName($row) }}</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Vrsta subvencije</th>
+                                        <td>{{ $row->subsidyType && \App\Support\CanonicalSubsidyType::isValid($row->subsidyType) ? \App\Support\CanonicalSubsidyType::label($row->subsidyType) : '—' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Pozicija</th>
+                                        <td>#{{ $row->rank }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ocjena</th>
+                                        <td>{{ $mmspScoreText($row) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Zaključak</th>
+                                        <td>{{ $outcome->isSupport() ? 'Podržava' : 'Odbija' }}</td>
+                                    </tr>
+                                    @if($mmspReasonText($outcome))
+                                        <tr>
+                                            <th>Razlog odbijanja</th>
+                                            <td>{{ $mmspReasonText($outcome) }}</td>
+                                        </tr>
+                                    @endif
+                                    <tr>
+                                        <th>Iznos odobrenih sredstava</th>
+                                        <td>{{ $outcome->isSupport() ? $mmspMoneyPlain($outcome->approved_amount) : '—' }}</td>
+                                    </tr>
+                                    @if(filled($outcome->justification))
+                                        <tr>
+                                            <th>Obrazloženje</th>
+                                            <td style="white-space: pre-wrap;">{{ $outcome->justification }}</td>
+                                        </tr>
+                                    @endif
+                                    @if(filled($outcome->remarks))
+                                        <tr>
+                                            <th>Napomene i mišljenja</th>
+                                            <td style="white-space: pre-wrap;">{{ $outcome->remarks }}</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+                    @endforeach
+                </div>
+                @endif
             </div>
 
             @if($canonicalRankingIsFinal)
-                <div class="info-card" id="signature-block" data-testid="mmsp-ranking-signatures" style="padding: 16px 24px;">
-                    <h2 style="margin-bottom: 12px; font-size: 18px;">Potpis komisije</h2>
+                <div class="info-card mmsp-ranking-signatures" id="signature-block" data-testid="mmsp-ranking-signatures" style="padding: 16px 24px;">
+                    <h2>Potpis komisije</h2>
                     <div style="margin-top: 16px; font-size: 13px; line-height: 1.5;">
                         <p style="margin-bottom: 14px;">Kotor, _______________ god.</p>
                         @php $clanNum = 0; @endphp

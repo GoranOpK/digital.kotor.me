@@ -852,7 +852,9 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertSee('Zbir evidentirane podrške')
             ->assertSee('Preostala sredstva')
             ->assertDontSee('<select name="decision"', false)
-            ->assertDontSee('data-mmsp-decision checked', false);
+            ->assertDontSee('data-mmsp-decision checked', false)
+            ->assertSee('table-layout: fixed', false)
+            ->assertSee('class="mmsp-col-decision"', false);
         $this->actingAs($secretary->user)->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('45.00')
