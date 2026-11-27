@@ -1822,7 +1822,38 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
             ->assertSee('Provjera potpunosti')
-            ->assertSee('Pregled statusa');
+            ->assertSee('Pregled statusa')
+            ->assertDontSee('Dodaj dokument')
+            ->assertDontSee('Pregled dokumentacije');
+    }
+
+    public function test_draft_status_keeps_the_document_card_and_submitted_status_uses_two_cards(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->canonicalDraft($owner, $this->openCall());
+
+        $this->actingAs($owner)->get(route('applications.show', $application))
+            ->assertOk()
+            ->assertSee('<div class="summary-grid">', false)
+            ->assertSee('Dodaj dokument')
+            ->assertSee('Priloži dokument')
+            ->assertDontSee('class="summary-grid summary-grid-submitted"', false);
+
+        $this->actingAs($owner)->post(route('applications.final-submit', $application))
+            ->assertRedirect(route('applications.show', $application));
+
+        $this->actingAs($owner)->get(route('applications.show', $application))
+            ->assertOk()
+            ->assertSee('class="summary-grid summary-grid-submitted"', false)
+            ->assertSee('Osnovni podaci')
+            ->assertSee('Pregled statusa')
+            ->assertSee('Priložena dokumentacija')
+            ->assertDontSee('class="summary-grid summary-grid-submitted summary-grid-with-notice"', false)
+            ->assertDontSee('Dodaj dokument')
+            ->assertDontSee('Pregled dokumentacije')
+            ->assertDontSee('id="application-documents"', false)
+            ->assertDontSee('Prijava je podnesena i čeka provjeru potpunosti dokumentacije.')
+            ->assertDontSee('id="application-review"', false);
     }
 
     // ---------------------------------------------------------------- Helpers

@@ -377,14 +377,14 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
                 ->assertDontSee('28.09.2026 10:00:00', false)
                 ->assertDontSee('28.09.2026. 10:00:00', false);
             $html = $page->getContent();
-            $gridAt = strpos($html, '<div class="summary-grid">');
+            $gridAt = strpos($html, '<div class="summary-grid summary-grid-submitted summary-grid-with-notice">');
             $reviewAt = strpos($html, 'id="application-review"');
-            $documentsAt = strpos($html, 'id="application-documents"');
             $this->assertNotFalse($gridAt, $key);
             $this->assertNotFalse($reviewAt, $key);
-            $this->assertNotFalse($documentsAt, $key);
+            $this->assertFalse(strpos($html, 'id="application-documents"'), $key);
+            $this->assertStringNotContainsString('Dodaj dokument', $html, $key);
+            $this->assertStringNotContainsString('Pregled dokumentacije', $html, $key);
             $this->assertLessThan($reviewAt, $gridAt, $key);
-            $this->assertLessThan($documentsAt, $reviewAt, $key);
             $this->assertDoesNotMatchRegularExpression('/class="mmsp-prigovor-card"[^>]*grid-column/', $html, $key);
 
             if ($allowed) {
@@ -705,12 +705,16 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $owner = $application->user;
         $status = fn () => $this->applicantStatusPage($owner, $application)->assertOk();
 
-        $awaiting = $status()->assertSee('data-status="'.ComplaintService::STATUS_AWAITING_REVIEW.'"', false);
+        $awaiting = $status()
+            ->assertDontSee('data-status="'.ComplaintService::STATUS_AWAITING_REVIEW.'"', false)
+            ->assertDontSee('Prijava je podnesena i čeka provjeru potpunosti dokumentacije.')
+            ->assertDontSee('Dodaj dokument')
+            ->assertDontSee('Pregled dokumentacije')
+            ->assertSee('class="summary-grid summary-grid-submitted"', false)
+            ->assertDontSee('class="summary-grid summary-grid-submitted summary-grid-with-notice"', false);
         $awaitingHtml = $awaiting->getContent();
-        $this->assertLessThan(
-            strpos($awaitingHtml, 'id="application-review"'),
-            strpos($awaitingHtml, 'id="application-documents"')
-        );
+        $this->assertFalse(strpos($awaitingHtml, 'id="application-documents"'));
+        $this->assertFalse(strpos($awaitingHtml, 'id="application-review"'));
 
         $this->actingAs($chair)->post(route('evaluation.completeness', $application), ['outcome' => 'incomplete', 'notes' => 'Nedostaje prilog A.']);
         $available = $status()->assertSee('data-status="'.ComplaintService::STATUS_COMPLAINT_AVAILABLE.'"', false)
@@ -718,10 +722,9 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->assertDontSee('Obavještenje poslato')
             ->assertDontSee('Prigovor je moguć do isteka roka.');
         $availableHtml = $available->getContent();
-        $this->assertLessThan(
-            strpos($availableHtml, 'id="application-documents"'),
-            strpos($availableHtml, 'id="application-review"')
-        );
+        $this->assertNotFalse(strpos($availableHtml, 'id="application-review"'));
+        $this->assertFalse(strpos($availableHtml, 'id="application-documents"'));
+        $this->assertStringContainsString('class="summary-grid summary-grid-submitted summary-grid-with-notice"', $availableHtml);
 
         Carbon::setTestNow(Carbon::parse('2026-09-26 10:00:00', self::TZ));
         $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => "Prilog A je predat.\n<script>alert(1)</script>"]);
@@ -781,10 +784,10 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->assertDontSee('Interna bilješka.')
             ->assertDontSee('name="body"', false);
         $completeHtml = $completePage->getContent();
-        $this->assertLessThan(
-            strpos($completeHtml, 'id="application-review"'),
-            strpos($completeHtml, 'id="application-documents"')
-        );
+        $this->assertNotFalse(strpos($completeHtml, 'id="application-review"'));
+        $this->assertFalse(strpos($completeHtml, 'id="application-documents"'));
+        $this->assertStringNotContainsString('Dodaj dokument', $completeHtml);
+        $this->assertStringNotContainsString('Pregled dokumentacije', $completeHtml);
 
         DB::table('competitions')->where('id', $call->id)->update(['canonical_ranking_formed_at' => now()]);
         $this->applicantStatusPage($complete->user, $complete)->assertOk()

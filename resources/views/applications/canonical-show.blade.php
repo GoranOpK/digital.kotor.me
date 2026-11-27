@@ -112,6 +112,8 @@
     }
     @media (min-width: 992px) {
         .summary-grid { grid-template-columns: repeat(3, 1fr); }
+        .summary-grid.summary-grid-submitted { grid-template-columns: repeat(2, 1fr); }
+        .summary-grid.summary-grid-submitted.summary-grid-with-notice { grid-template-columns: repeat(3, 1fr); }
     }
     .summary-grid .info-card {
         margin-bottom: 0;
@@ -377,7 +379,32 @@
             </div>
         @endif
 
-        <div class="summary-grid">
+        @php
+            $mmspReview = $canonicalReview;
+            $mmspNoticeStatuses = [
+                \App\Services\Competitions\ComplaintService::STATUS_INCOMPLETE,
+                \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_AVAILABLE,
+                \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_SUBMITTED,
+                \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_ACCEPTED,
+                \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_REJECTED,
+            ];
+            $mmspReviewNotice = $mmspReview !== null
+                && $application->status !== 'draft'
+                && in_array($mmspReview['status'], $mmspNoticeStatuses, true);
+            $mmspReviewSummary = $mmspReview !== null
+                && $application->status !== 'draft'
+                && ! $mmspReviewNotice
+                && ($mmspReview['status'] ?? null) !== \App\Services\Competitions\ComplaintService::STATUS_AWAITING_REVIEW;
+            $mmspStatusGridClass = 'summary-grid';
+            if ($application->status !== 'draft') {
+                $mmspStatusGridClass .= ' summary-grid-submitted';
+                if ($mmspReviewNotice) {
+                    $mmspStatusGridClass .= ' summary-grid-with-notice';
+                }
+            }
+        @endphp
+
+        <div class="{{ $mmspStatusGridClass }}">
             <div class="info-card">
                 <h2>Osnovni podaci</h2>
                 <div class="info-grid">
@@ -522,18 +549,6 @@
             </div>
 
             @php
-                $mmspReview = $canonicalReview;
-                $mmspNoticeStatuses = [
-                    \App\Services\Competitions\ComplaintService::STATUS_INCOMPLETE,
-                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_AVAILABLE,
-                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_SUBMITTED,
-                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_ACCEPTED,
-                    \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_REJECTED,
-                ];
-                $mmspReviewNotice = $mmspReview !== null
-                    && $application->status !== 'draft'
-                    && in_array($mmspReview['status'], $mmspNoticeStatuses, true);
-                $mmspReviewSummary = $mmspReview !== null && $application->status !== 'draft' && ! $mmspReviewNotice;
                 $mmspComplaintState = match (is_array($mmspReview) ? ($mmspReview['status'] ?? null) : null) {
                     \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_SUBMITTED => 'Podnesen',
                     \App\Services\Competitions\ComplaintService::STATUS_COMPLAINT_ACCEPTED => 'Prihvaćen',
@@ -641,6 +656,7 @@
                 </div>
             @endif
 
+            @if($application->status === 'draft')
             <div class="info-card" id="application-documents">
                 <h2>Dodaj dokument</h2>
 
@@ -735,6 +751,7 @@
                     </div>
                 @endif
             </div>
+            @endif
         </div>
 
         @if($mmspReviewSummary)
