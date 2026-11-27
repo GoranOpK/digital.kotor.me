@@ -81,16 +81,20 @@ class MmspDecisionFinalPhaseTest extends TestCase
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
             ->get(route('evaluation.canonical-outcome.show', $competition))
-            ->assertRedirect(route('evaluation.create', $application));
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition));
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
-            ->get(route('evaluation.create', $application))
+            ->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('Konačna rang-lista', false)
             ->assertSee('data-testid="mmsp-decision-open"', false)
-            ->assertSee('data-testid="mmsp-ranking-print"', false)
-            ->assertSee('printMmspSection(\'ranking\')', false)
-            ->assertSee('id="mmsp-p3-print"', false);
+            ->assertSee('data-testid="mmsp-ranking-print"', false);
+        $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
+            ->get(route('evaluation.create', $application))
+            ->assertOk()
+            ->assertDontSee('data-testid="mmsp-ranking-title"', false)
+            ->assertSee('id="mmsp-p3-print"', false)
+            ->assertSee('printMmspSection(\'p3\')', false);
 
         $this->signAll($competition, $members);
         $competition->refresh();
@@ -103,10 +107,10 @@ class MmspDecisionFinalPhaseTest extends TestCase
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
             ->get(route('evaluation.canonical-outcome.show', $competition))
-            ->assertRedirect(route('evaluation.create', $application));
+            ->assertRedirect(route('evaluation.mmsp-ranking', $competition));
 
         $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)
-            ->get(route('evaluation.create', $application))
+            ->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertSee('data-testid="mmsp-ranking-title"', false)
             ->assertSee('Konačna rang-lista', false)
@@ -114,7 +118,7 @@ class MmspDecisionFinalPhaseTest extends TestCase
             ->assertSee('Štampaj', false);
 
         $this->actingAs($members[G::ROLE_SEKRETAR]->user)
-            ->get(route('evaluation.create', $application))
+            ->get(route('evaluation.mmsp-ranking', $competition))
             ->assertOk()
             ->assertDontSee('data-testid="mmsp-decision-open"', false);
 

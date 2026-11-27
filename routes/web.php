@@ -527,6 +527,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict', 'mmsp_test_acce
             Route::post('/competitions/{competition}/youth-equal-score-rounds/{round}/lock', [EvaluationController::class, 'lockYouthEqualScoreRound'])->name('youth-equal-score-round.lock');
             Route::post('/competitions/{competition}/youth-allocation-list', [EvaluationController::class, 'confirmYouthAllocationList'])->name('youth-allocation-list');
             Route::get('/youth/{competition}/ranking', [EvaluationController::class, 'youthRanking'])->name('youth-ranking');
+            Route::get('/mmsp/{competition}/ranking', [EvaluationController::class, 'mmspRanking'])->name('mmsp-ranking');
             Route::get('/youth/{competition}/decision', [EvaluationController::class, 'youthDecision'])->name('youth-decision');
             Route::post('/youth/{competition}/decision', [EvaluationController::class, 'generateYouthDecision'])->name('youth-decision.generate');
             Route::get('/youth/{competition}/decision/download', [EvaluationController::class, 'downloadYouthDecision'])->name('youth-decision.download');

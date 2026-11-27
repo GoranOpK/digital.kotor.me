@@ -176,7 +176,7 @@ class EvaluationController extends Controller
             return ! $c->isCommissionProcessingBlocked();
         })->pluck('id');
 
-        $query = Application::with(['user', 'competition']);
+        $query = Application::with(['user', 'competition', 'finalClaim']);
 
         if ($competitionIds->isNotEmpty()) {
             $query->whereIn('competition_id', $competitionIds);
@@ -1136,6 +1136,55 @@ class EvaluationController extends Controller
             'youthEqualScoreCompetition' => $competition,
             'canGenerateYouthDecision' => $canGenerateYouthDecision,
             'youthRankingApplicantReadOnly' => false,
+        ]);
+    }
+
+    /**
+     * Preliminarna i konačna rang-lista jednog MMSP konkursa.
+     * Isti podaci i isti idempotentni upis pozicija kao na postojećem prikazu.
+     */
+    public function mmspRanking(Competition $competition): View
+    {
+        if ($competition->type !== CompetitionProfileResolver::TYPE_CANONICAL) {
+            abort(403, 'Rang-lista MMSP dostupna je samo za taj program.');
+        }
+
+        $user = Auth::user();
+        if (! $user instanceof User || CommissionMember::activeForCompetition($user->id, $competition) === null) {
+            abort(403, 'Niste član komisije tog Poziva.');
+        }
+
+        if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'], true)) {
+            abort(403, ScoringProfileConfig::for($competition->type)->evaluationOpensAfterApplicationDeadlineMessage());
+        }
+
+        $this->abortIfCommissionProcessingBlocked($competition);
+
+        $this->canonicalScoring->persistCanonicalPreliminaryRankingIfReady($competition);
+        $competition->refresh();
+
+        $rankingView = $this->canonicalScoring->canonicalPreliminaryRankingView($competition, $user);
+        $member = CommissionMember::activeForCompetition($user->id, $competition);
+        $isFinal = \App\Models\CanonicalFinalRanking::query()->where('competition_id', $competition->id)->exists();
+        $outcomes = app(\App\Services\Competitions\Outcome\CanonicalOutcomeService::class);
+
+        return view('evaluation.mmsp-ranking', [
+            'competition' => $competition,
+            'rankingView' => $rankingView,
+            'canonicalRankingIsFinal' => $isFinal,
+            'canonicalChair' => ($member->canonical_seat ?? null) === \App\Services\Competitions\Commission\CanonicalCommissionGovernance::ROLE_PREDSJEDNIK
+                && ($member->position ?? null) === 'predsjednik'
+                && ($member->status ?? null) === 'active',
+            'outcomeRows' => ($rankingView['visible'] ?? false) ? $outcomes->rankedRows($competition) : [],
+            'outcomeRecords' => ($rankingView['visible'] ?? false) ? $outcomes->outcomesFor($competition) : collect(),
+            'reasonLabels' => \App\Models\CanonicalOutcome::REASON_LABELS,
+            'signatories' => $isFinal
+                ? CommissionMember::query()
+                    ->where('commission_id', $competition->commission_id)
+                    ->where('status', 'active')
+                    ->orderBy('canonical_seat_no')
+                    ->get()
+                : collect(),
         ]);
     }
 

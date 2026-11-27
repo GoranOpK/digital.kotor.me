@@ -149,6 +149,25 @@
         @endif
 
         @php
+            $mmspRankingCompetitions = collect($competitions ?? [])
+                ->filter(fn ($comp) => $comp->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL)
+                ->values();
+            if (request()->filled('competition_id')) {
+                $requestedCompetitionId = (int) request('competition_id');
+                $mmspRankingCompetitions = $mmspRankingCompetitions
+                    ->filter(fn ($comp) => (int) $comp->id === $requestedCompetitionId)
+                    ->values();
+            }
+        @endphp
+        @if($mmspRankingCompetitions->isNotEmpty())
+            <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
+                @foreach($mmspRankingCompetitions as $mmspCompetition)
+                    <a href="{{ route('evaluation.mmsp-ranking', ['competition' => $mmspCompetition]) }}">{{ \App\Models\CanonicalFinalRanking::query()->where('competition_id', $mmspCompetition->id)->exists() ? 'Konačna rang-lista' : 'Preliminarna rang-lista' }} — MMSP — {{ $mmspCompetition->title }}</a>
+                @endforeach
+            </div>
+        @endif
+
+        @php
             // Defaultni konkurs u filteru: posljednji (najnoviji) iz kolekcije
             $lastCompetitionId = isset($competitions) && $competitions->isNotEmpty()
                 ? $competitions->last()->id
@@ -236,11 +255,18 @@
             @endforeach
         @endif
 
+        @php
+            $subsidyHeaderCompetition = request()->filled('competition_id')
+                ? collect($competitions ?? [])->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'))
+                : null;
+            $showSubsidyHeader = $subsidyHeaderCompetition
+                && $subsidyHeaderCompetition->type === \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
+        @endphp
         <div class="table-card">
             <table>
                 <thead>
                     <tr>
-                        <th>Naziv biznis plana</th>
+                        <th>{{ $showSubsidyHeader ? 'Vrsta subvencije' : 'Naziv biznis plana' }}</th>
                         <th>Podnosilac</th>
                         <th>Konkurs</th>
                         <th>Status</th>
@@ -295,7 +321,19 @@
                             }
                         @endphp
                         <tr>
-                            <td>{{ $application->business_plan_name }}</td>
+                            <td>
+                                @if($isCanonicalApplication)
+                                    @php
+                                        $claimSubsidy = $application->finalClaim?->subsidy_type;
+                                        $subsidyLabel = is_string($claimSubsidy) && \App\Support\CanonicalSubsidyType::isValid($claimSubsidy)
+                                            ? \App\Support\CanonicalSubsidyType::label($claimSubsidy)
+                                            : '—';
+                                    @endphp
+                                    {{ $subsidyLabel }}
+                                @else
+                                    {{ $application->business_plan_name }}
+                                @endif
+                            </td>
                             <td>{{ $application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A') }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
