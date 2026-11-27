@@ -205,7 +205,7 @@ class CanonicalP2FinancialBasisTest extends TestCase
             ->put(route('applications.canonical-p2.update', $application), [
                 'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
                 'total_investment' => '10000,10',
-                'own_contribution' => '0',
+                'own_contribution' => '5000.05',
                 'expected_subsidy' => '5000.05',
                 'expense_lines' => [
                     ['cost_type' => 'Softver', 'description' => 'ERP licenca', 'amount' => '3333,33'],
@@ -218,7 +218,7 @@ class CanonicalP2FinancialBasisTest extends TestCase
         $plan = $application->canonicalInvestmentPlan()->firstOrFail();
         $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, $plan->subsidy_type);
         $this->assertSame('10000.10', $plan->total_investment);
-        $this->assertSame('0.00', $plan->own_contribution);
+        $this->assertSame('5000.05', $plan->own_contribution);
         $this->assertSame('5000.05', $plan->expected_subsidy);
         $this->assertSame([
             ['cost_type' => 'Softver', 'description' => 'ERP licenca', 'amount' => '3333.33'],
@@ -422,7 +422,7 @@ class CanonicalP2FinancialBasisTest extends TestCase
         $this->assertSame($frozen, $plan->fresh()->basis());
         $this->assertSame(CanonicalSubsidyType::INNOVATIVE, $frozen['subsidy_type']);
         $this->assertSame('1000.00', $frozen['total_investment']);
-        $this->assertSame('200.00', $frozen['own_contribution']);
+        $this->assertSame('500.00', $frozen['own_contribution']);
         $this->assertSame('500.00', $frozen['expected_subsidy']);
         $this->assertSame([['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => '1000.00']], $frozen['expense_lines']);
 
@@ -445,7 +445,7 @@ class CanonicalP2FinancialBasisTest extends TestCase
         $frozen = $basis->frozenP2($application);
         $this->assertSame(CanonicalSubsidyType::DIGITALIZATION, $frozen['subsidy_type']);
         $this->assertSame('1000.00', $frozen['total_investment']);
-        $this->assertSame('200.00', $frozen['own_contribution']);
+        $this->assertSame('500.00', $frozen['own_contribution']);
         $this->assertSame('500.00', $frozen['expected_subsidy']);
         $this->assertCount(1, $frozen['expense_lines']);
         $this->assertNotNull($frozen['frozen_at']);
@@ -758,8 +758,8 @@ class CanonicalP2FinancialBasisTest extends TestCase
         return [
             'subsidy_type' => $subsidyType,
             'total_investment' => $total,
-            'own_contribution' => '200.00',
-            'expected_subsidy' => '500.00',
+            'own_contribution' => \App\Services\Competitions\CanonicalInvestmentPlanService::subsidySplit($total, CanonicalSubsidyType::isValid($subsidyType) ? $subsidyType : CanonicalSubsidyType::INNOVATIVE)['own_contribution'],
+            'expected_subsidy' => \App\Services\Competitions\CanonicalInvestmentPlanService::subsidySplit($total, CanonicalSubsidyType::isValid($subsidyType) ? $subsidyType : CanonicalSubsidyType::INNOVATIVE)['expected_subsidy'],
             'expense_lines' => [
                 ['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => $total],
             ],

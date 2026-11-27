@@ -1906,11 +1906,13 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
      */
     private function p2Payload(string $subsidyType): array
     {
+        $split = \App\Services\Competitions\CanonicalInvestmentPlanService::subsidySplit('1000.00', $subsidyType);
+
         return [
             'subsidy_type' => $subsidyType,
             'total_investment' => '1000.00',
-            'own_contribution' => '200.00',
-            'expected_subsidy' => '500.00',
+            'own_contribution' => $split['own_contribution'],
+            'expected_subsidy' => $split['expected_subsidy'],
             'expense_lines' => [
                 ['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => '1000.00'],
             ],

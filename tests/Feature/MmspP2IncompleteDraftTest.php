@@ -49,8 +49,8 @@ class MmspP2IncompleteDraftTest extends TestCase
         $this->assertSame($description, $plan->narrative_sections['investment_description']);
         $this->assertSame('', $plan->narrative_sections['investment_goals']);
         $this->assertSame('0.00', $plan->total_investment);
-        $this->assertNull($plan->own_contribution);
-        $this->assertNull($plan->expected_subsidy);
+        $this->assertSame('0.00', $plan->own_contribution);
+        $this->assertSame('0.00', $plan->expected_subsidy);
         $this->assertSame([], $plan->expenseLines());
         $this->assertSame('draft', $application->fresh()->status);
         $this->assertNull($application->fresh()->submitted_at);
@@ -128,8 +128,8 @@ class MmspP2IncompleteDraftTest extends TestCase
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), $this->browserPayload($description, [
                 'total_investment' => '30.75',
-                'own_contribution' => '10.75',
-                'expected_subsidy' => '20.00',
+                'own_contribution' => '15.38',
+                'expected_subsidy' => '15.37',
                 'expense_lines' => $lines,
                 'narrative_sections' => [
                     'investment_description' => $description,
@@ -140,8 +140,8 @@ class MmspP2IncompleteDraftTest extends TestCase
 
         $plan->refresh();
         $this->assertSame('30.75', $plan->total_investment);
-        $this->assertSame('10.75', $plan->own_contribution);
-        $this->assertSame('20.00', $plan->expected_subsidy);
+        $this->assertSame('15.38', $plan->own_contribution);
+        $this->assertSame('15.37', $plan->expected_subsidy);
         $this->assertSame([
             ['cost_type' => 'Oprema', 'description' => 'Mašina', 'amount' => '10.50'],
             ['cost_type' => 'Alat', 'description' => 'Set alata', 'amount' => '20.25'],
@@ -153,8 +153,8 @@ class MmspP2IncompleteDraftTest extends TestCase
 
         $completed = $this->browserPayload($description, [
             'total_investment' => '30.75',
-            'own_contribution' => '10.75',
-            'expected_subsidy' => '20.00',
+            'own_contribution' => '15.38',
+            'expected_subsidy' => '15.37',
             'expense_lines' => $lines,
             'narrative_sections' => array_fill_keys(array_keys(CanonicalInvestmentPlanService::NARRATIVE_FIELDS), $description),
         ]);
@@ -294,8 +294,8 @@ class MmspP2IncompleteDraftTest extends TestCase
         return array_replace_recursive([
             'subsidy_type' => CanonicalSubsidyType::INNOVATIVE,
             'total_investment' => '0.00',
-            'own_contribution' => '',
-            'expected_subsidy' => '',
+            'own_contribution' => '0.00',
+            'expected_subsidy' => '0.00',
             'expense_lines' => [
                 ['cost_type' => '', 'description' => '', 'amount' => ''],
                 ['cost_type' => '', 'description' => '', 'amount' => ''],

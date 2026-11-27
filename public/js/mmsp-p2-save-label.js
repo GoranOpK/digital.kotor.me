@@ -16,6 +16,20 @@
         return { cents: BigInt(parts[0]) * 100n + BigInt(fraction) };
     }
 
+    function subsidyPercent(form) {
+        var field = form.querySelector('[name="subsidy_type"]');
+        var raw = field ? field.getAttribute('data-mmsp-subsidy-percent') : '';
+        if (!/^\d{1,3}$/.test(raw || '')) {
+            return null;
+        }
+        var percent = Number(raw);
+        if (percent > 100) {
+            return null;
+        }
+
+        return percent;
+    }
+
     function fieldValue(form, name) {
         var field = form.elements.namedItem(name);
         if (!field) {
@@ -85,10 +99,16 @@
         if (own.invalid || own.empty || own.cents < 0n || own.cents > total.cents) {
             return false;
         }
-        // Same bounds as CanonicalInvestmentPlanService: above zero and no greater
-        // than the total. The form may display total - own contribution, but that
-        // identity is not a completeness rule.
         if (expected.invalid || expected.empty || expected.cents <= 0n || expected.cents > total.cents) {
+            return false;
+        }
+
+        var percent = subsidyPercent(form);
+        if (percent === null) {
+            return false;
+        }
+        var subsidyCents = (total.cents * BigInt(percent)) / 100n;
+        if (expected.cents !== subsidyCents || own.cents !== total.cents - subsidyCents) {
             return false;
         }
 

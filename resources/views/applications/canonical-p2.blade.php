@@ -268,6 +268,34 @@
     $subsidyLabel = \App\Support\CanonicalSubsidyType::isValid($subsidyCode)
         ? \App\Support\CanonicalSubsidyType::label($subsidyCode)
         : '';
+    $subsidyPercent = \App\Support\CanonicalSubsidyType::isValid($subsidyCode)
+        ? \App\Support\CanonicalSubsidyType::capPercentage($subsidyCode)
+        : null;
+    $ownPercent = $subsidyPercent === null ? null : 100 - $subsidyPercent;
+    $calculatedAmounts = (! $readOnly && $subsidyPercent !== null)
+        ? \App\Services\Competitions\CanonicalInvestmentPlanService::investmentAmountsForLines($lines, $subsidyCode)
+        : null;
+    if ($calculatedAmounts !== null) {
+        $shownTotal = $calculatedAmounts['total_investment'];
+        $shownOwn = $calculatedAmounts['own_contribution'];
+        $shownSubsidy = $calculatedAmounts['expected_subsidy'];
+    } elseif ($readOnly) {
+        $shownTotal = $plan?->total_investment;
+        $shownOwn = $plan?->own_contribution;
+        $shownSubsidy = $plan?->expected_subsidy;
+    } else {
+        $shownTotal = '';
+        $shownOwn = '';
+        $shownSubsidy = '';
+    }
+    $showPercents = $ownPercent !== null && ! $readOnly;
+    if ($readOnly && $ownPercent !== null && $plan?->total_investment !== null && $plan?->own_contribution !== null && $plan?->expected_subsidy !== null) {
+        $storedSplit = \App\Services\Competitions\CanonicalInvestmentPlanService::subsidySplit((string) $plan->total_investment, $subsidyCode);
+        $showPercents = bccomp((string) $plan->own_contribution, $storedSplit['own_contribution'], 2) === 0
+            && bccomp((string) $plan->expected_subsidy, $storedSplit['expected_subsidy'], 2) === 0;
+    }
+    $ownFieldLabel = 'Sopstveno učešće (EUR)'.($showPercents ? ' ('.$ownPercent.'%)' : '');
+    $subsidyFieldLabel = 'Očekivani iznos subvencije (EUR)'.($showPercents ? ' ('.$subsidyPercent.'%)' : '');
     $p1Complete = app(\App\Services\Competitions\CanonicalApplicantFormService::class)->finalBlockReason($application) === null;
     $p2Ready = app(\App\Services\Competitions\CanonicalInvestmentPlanService::class)->finalBlockReason($application) === null;
 @endphp
@@ -364,7 +392,7 @@
                         <p class="mmsp-form-text">Podaci su automatski preuzeti iz Obrasca {{ $p1Code }}.</p>
                         <div class="mmsp-form-group">
                             <label class="mmsp-form-label" for="p2-subsidy-display">Vrsta subvencije za koju se aplicira</label>
-                            <input id="subsidy_type" type="hidden" name="subsidy_type" value="{{ $subsidyCode }}">
+                            <input id="subsidy_type" type="hidden" name="subsidy_type" value="{{ $subsidyCode }}" @if($subsidyPercent !== null) data-mmsp-subsidy-percent="{{ $subsidyPercent }}" @endif>
                             <input id="p2-subsidy-display" class="mmsp-form-control mmsp-p2-locked @error('subsidy_type') error @enderror" value="{{ $subsidyLabel }}" readonly>
                             @error('subsidy_type')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                         </div>
@@ -431,17 +459,17 @@
                         <div class="mmsp-form-row-3">
                             <div class="mmsp-form-group">
                                 <label class="mmsp-form-label" for="total_investment">Ukupna vrijednost ulaganja (EUR) <span class="mmsp-required">*</span></label>
-                                <input id="total_investment" class="mmsp-form-control @error('total_investment') error @enderror" type="text" inputmode="decimal" name="total_investment" value="{{ old('total_investment', $plan?->total_investment) }}" readonly>
+                                <input id="total_investment" class="mmsp-form-control @error('total_investment') error @enderror" type="text" inputmode="decimal" name="total_investment" value="{{ $shownTotal }}" readonly>
                                 @error('total_investment')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                             </div>
                             <div class="mmsp-form-group">
-                                <label class="mmsp-form-label" for="own_contribution">Sopstveno učešće (EUR) <span class="mmsp-required">*</span></label>
-                                <input id="own_contribution" class="mmsp-form-control @error('own_contribution') error @enderror" type="text" inputmode="decimal" name="own_contribution" value="{{ old('own_contribution', $plan?->own_contribution) }}">
+                                <label class="mmsp-form-label" for="own_contribution">{{ $ownFieldLabel }} <span class="mmsp-required">*</span></label>
+                                <input id="own_contribution" class="mmsp-form-control @error('own_contribution') error @enderror" type="text" inputmode="decimal" name="own_contribution" value="{{ $shownOwn }}" readonly>
                                 @error('own_contribution')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                             </div>
                             <div class="mmsp-form-group">
-                                <label class="mmsp-form-label" for="expected_subsidy">Očekivani iznos subvencije (EUR) <span class="mmsp-required">*</span></label>
-                                <input id="expected_subsidy" class="mmsp-form-control @error('expected_subsidy') error @enderror" type="text" inputmode="decimal" name="expected_subsidy" value="{{ old('expected_subsidy', $plan?->expected_subsidy) }}" readonly>
+                                <label class="mmsp-form-label" for="expected_subsidy">{{ $subsidyFieldLabel }} <span class="mmsp-required">*</span></label>
+                                <input id="expected_subsidy" class="mmsp-form-control @error('expected_subsidy') error @enderror" type="text" inputmode="decimal" name="expected_subsidy" value="{{ $shownSubsidy }}" readonly>
                                 @error('expected_subsidy')<div style="color:#ef4444; font-size:12px; margin-top:4px;">{{ $message }}</div>@enderror
                             </div>
                         </div>

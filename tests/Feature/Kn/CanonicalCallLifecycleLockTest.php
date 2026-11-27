@@ -332,14 +332,17 @@ class CanonicalCallLifecycleLockTest extends TestCase
 
         $this->actingAs($owner)
             ->put(route('applications.canonical-p2.update', $application), array_replace($this->p2Payload(CanonicalSubsidyType::AUTHENTIC_LOCAL), [
-                'expected_subsidy' => '450.00',
+                'expense_lines' => [
+                    ['cost_type' => 'Oprema', 'description' => 'Dorađena mašina', 'amount' => '1000.00'],
+                ],
                 'narrative_sections' => array_fill_keys(
                     array_keys(\App\Services\Competitions\CanonicalInvestmentPlanService::NARRATIVE_FIELDS),
                     'Testni opis plana ulaganja.'
                 ),
             ]))
             ->assertSessionHasNoErrors();
-        $this->assertSame('450.00', $application->canonicalInvestmentPlan()->value('expected_subsidy'));
+        $this->assertSame('Dorađena mašina', $application->canonicalInvestmentPlan()->firstOrFail()->expenseLines()[0]['description']);
+        $this->assertSame('800.00', $application->canonicalInvestmentPlan()->value('expected_subsidy'));
 
         $this->actingAs($owner)
             ->post(route('applications.business-plan.store', $application), [
@@ -692,11 +695,13 @@ class CanonicalCallLifecycleLockTest extends TestCase
      */
     private function p2Payload(string $subsidyType): array
     {
+        $split = \App\Services\Competitions\CanonicalInvestmentPlanService::subsidySplit('1000.00', $subsidyType);
+
         return [
             'subsidy_type' => $subsidyType,
             'total_investment' => '1000.00',
-            'own_contribution' => '200.00',
-            'expected_subsidy' => '500.00',
+            'own_contribution' => $split['own_contribution'],
+            'expected_subsidy' => $split['expected_subsidy'],
             'expense_lines' => [
                 ['cost_type' => 'Oprema', 'description' => 'Mašina za preradu', 'amount' => '1000.00'],
             ],
