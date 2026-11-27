@@ -371,13 +371,14 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
 
             $page = $this->applicantStatusPage($owner, $application)->assertOk()
                 ->assertSee('Nedostaje potvrda poreske uprave.')
+                ->assertSee('Pregled statusa')
                 ->assertSee('Imate pravo na jedan Prigovor')
                 ->assertSee('28.09.2026. 10:00')
                 ->assertDontSee('Obavještenje poslato')
                 ->assertDontSee('28.09.2026 10:00:00', false)
                 ->assertDontSee('28.09.2026. 10:00:00', false);
             $html = $page->getContent();
-            $gridAt = strpos($html, '<div class="summary-grid summary-grid-submitted summary-grid-with-notice">');
+            $gridAt = strpos($html, '<div class="summary-grid" style="grid-template-columns: 1fr;">');
             $reviewAt = strpos($html, 'id="application-review"');
             $this->assertNotFalse($gridAt, $key);
             $this->assertNotFalse($reviewAt, $key);
@@ -710,8 +711,10 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
             ->assertDontSee('Prijava je podnesena i čeka provjeru potpunosti dokumentacije.')
             ->assertDontSee('Dodaj dokument')
             ->assertDontSee('Pregled dokumentacije')
-            ->assertSee('class="summary-grid summary-grid-submitted"', false)
-            ->assertDontSee('class="summary-grid summary-grid-submitted summary-grid-with-notice"', false);
+            ->assertDontSee('Pregled statusa')
+            ->assertDontSee('Provjera potpunosti')
+            ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
+            ->assertDontSee('repeat(2, 1fr)', false);
         $awaitingHtml = $awaiting->getContent();
         $this->assertFalse(strpos($awaitingHtml, 'id="application-documents"'));
         $this->assertFalse(strpos($awaitingHtml, 'id="application-review"'));
@@ -724,7 +727,15 @@ class CanonicalCompletenessComplaintUiTest extends TestCase
         $availableHtml = $available->getContent();
         $this->assertNotFalse(strpos($availableHtml, 'id="application-review"'));
         $this->assertFalse(strpos($availableHtml, 'id="application-documents"'));
-        $this->assertStringContainsString('class="summary-grid summary-grid-submitted summary-grid-with-notice"', $availableHtml);
+        $this->assertStringNotContainsString('repeat(2, 1fr)', $availableHtml);
+        $gridAt = strpos($availableHtml, '<div class="summary-grid" style="grid-template-columns: 1fr;">');
+        $statusAt = strpos($availableHtml, '<h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>');
+        $reviewAt = strpos($availableHtml, 'id="application-review"');
+        $documentsHeadingAt = strpos($availableHtml, 'Priložena dokumentacija');
+        $this->assertNotFalse($gridAt);
+        $this->assertLessThan($statusAt, $gridAt);
+        $this->assertLessThan($reviewAt, $statusAt);
+        $this->assertLessThan($documentsHeadingAt, $reviewAt);
 
         Carbon::setTestNow(Carbon::parse('2026-09-26 10:00:00', self::TZ));
         $this->actingAs($owner)->post(route('applications.complaint', $application), ['body' => "Prilog A je predat.\n<script>alert(1)</script>"]);

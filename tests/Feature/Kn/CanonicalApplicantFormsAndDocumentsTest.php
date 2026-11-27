@@ -1591,7 +1591,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.show', $first))
             ->assertOk()
             ->assertSee('Započni drugu prijavu')
-            ->assertSee('Pregled statusa');
+            ->assertDontSee('Pregled statusa')
+            ->assertDontSee('Provjera potpunosti');
 
         $second = $this->startedDraft($owner, $call, CanonicalLegalForm::PREDUZETNIK);
         $this->assertNotSame($first->id, $second->id);
@@ -1827,28 +1828,31 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             ->assertDontSee('Pregled dokumentacije');
     }
 
-    public function test_draft_status_keeps_the_document_card_and_submitted_status_uses_two_cards(): void
+    public function test_draft_status_keeps_the_document_card_and_submitted_status_keeps_three_columns(): void
     {
         $owner = $this->makeOwner();
         $application = $this->canonicalDraft($owner, $this->openCall());
 
         $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
-            ->assertSee('<div class="summary-grid">', false)
+            ->assertSee('<div class="summary-grid" style="grid-template-columns: 1fr;">', false)
+            ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
+            ->assertDontSee('repeat(2, 1fr)', false)
             ->assertSee('Dodaj dokument')
-            ->assertSee('Priloži dokument')
-            ->assertDontSee('class="summary-grid summary-grid-submitted"', false);
+            ->assertSee('Priloži dokument');
 
         $this->actingAs($owner)->post(route('applications.final-submit', $application))
             ->assertRedirect(route('applications.show', $application));
 
         $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
-            ->assertSee('class="summary-grid summary-grid-submitted"', false)
+            ->assertSee('<div class="summary-grid" style="grid-template-columns: 1fr;">', false)
+            ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
+            ->assertDontSee('repeat(2, 1fr)', false)
             ->assertSee('Osnovni podaci')
-            ->assertSee('Pregled statusa')
             ->assertSee('Priložena dokumentacija')
-            ->assertDontSee('class="summary-grid summary-grid-submitted summary-grid-with-notice"', false)
+            ->assertDontSee('Pregled statusa')
+            ->assertDontSee('Provjera potpunosti')
             ->assertDontSee('Dodaj dokument')
             ->assertDontSee('Pregled dokumentacije')
             ->assertDontSee('id="application-documents"', false)

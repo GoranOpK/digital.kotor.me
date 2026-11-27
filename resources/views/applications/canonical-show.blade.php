@@ -112,13 +112,6 @@
     }
     @media (min-width: 992px) {
         .summary-grid { grid-template-columns: repeat(3, 1fr); }
-        .summary-grid.summary-grid-submitted { grid-template-columns: repeat(2, 1fr); }
-        .summary-grid.summary-grid-submitted.summary-grid-with-notice { grid-template-columns: repeat(3, 1fr); }
-    }
-    .summary-grid .info-card {
-        margin-bottom: 0;
-        height: 100%;
-        box-sizing: border-box;
     }
     .info-grid {
         display: grid;
@@ -395,19 +388,18 @@
                 && $application->status !== 'draft'
                 && ! $mmspReviewNotice
                 && ($mmspReview['status'] ?? null) !== \App\Services\Competitions\ComplaintService::STATUS_AWAITING_REVIEW;
-            $mmspStatusGridClass = 'summary-grid';
-            if ($application->status !== 'draft') {
-                $mmspStatusGridClass .= ' summary-grid-submitted';
-                if ($mmspReviewNotice) {
-                    $mmspStatusGridClass .= ' summary-grid-with-notice';
-                }
-            }
+            $mmspAwaitingReview = ($mmspReview['status'] ?? null) === \App\Services\Competitions\ComplaintService::STATUS_AWAITING_REVIEW;
         @endphp
 
-        <div class="{{ $mmspStatusGridClass }}">
+        <div class="summary-grid" style="grid-template-columns: 1fr;">
+            <style>
+                @media (min-width: 992px) {
+                    .summary-grid { grid-template-columns: repeat(3, 1fr) !important; }
+                }
+            </style>
             <div class="info-card">
                 <h2>Osnovni podaci</h2>
-                <div class="info-grid">
+                <div class="info-grid" style="grid-template-columns: 1fr;">
                     <div class="info-item">
                         <span class="info-label">Tip podnosioca</span>
                         <span class="info-value">{{ $tipPrijave }}</span>
@@ -462,11 +454,11 @@
                             </a>
                         </span>
                     </div>
-                    @if($application->finalClaim)
-                        <div class="info-item">
+                    @if($application->finalClaim && ! $mmspAwaitingReview)
+                        <div class="info-item" style="margin-bottom: 16px;">
                             <span class="info-label">Provjera potpunosti</span>
                             <span class="info-value">
-                                <a href="{{ route('applications.canonical-review.show', $application) }}" class="status-badge status-submitted">
+                                <a href="{{ route('applications.canonical-review.show', $application) }}" class="status-badge status-submitted" style="font-size: 12px; padding: 4px 12px; text-decoration: none;">
                                     Pregled statusa
                                 </a>
                             </span>
