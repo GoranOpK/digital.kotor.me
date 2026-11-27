@@ -41,7 +41,7 @@ class CompletenessAssessmentService
     ) {
     }
 
-    public function record(Application $application, User $actor, string $outcome, ?string $notes = null): ProcessWriteResult
+    public function record(Application $application, User $actor, string $outcome, ?string $notes = null, ?array $criterionAnswers = null): ProcessWriteResult
     {
         if (! in_array($outcome, [ApplicationCompletenessAssessment::COMPLETE, ApplicationCompletenessAssessment::INCOMPLETE], true)) {
             return ProcessWriteResult::failed('Rezultat potpunosti nije dozvoljen.');
@@ -61,7 +61,7 @@ class CompletenessAssessmentService
         $policy = $competition->profile();
 
         try {
-            $result = DB::transaction(function () use ($application, $actor, $outcome, $notes, $competition, $policy) {
+            $result = DB::transaction(function () use ($application, $actor, $outcome, $notes, $criterionAnswers, $competition, $policy) {
                 $locked = Application::query()->whereKey($application->id)->lockForUpdate()->firstOrFail();
                 if (ApplicationCompletenessAssessment::query()->where('application_id', $locked->id)->exists()) {
                     return ProcessWriteResult::failed(self::ALREADY_ASSESSED_MESSAGE);
@@ -71,7 +71,7 @@ class CompletenessAssessmentService
                 $guard = $this->basis->dossierGuard($locked);
                 $snapshot = $this->basis->snapshot($locked);
 
-                $assessment = ApplicationCompletenessAssessment::query()->create([
+                $attributes = [
                     'application_id' => $locked->id,
                     'competition_id' => $competition->id,
                     'outcome' => $outcome,
@@ -82,7 +82,12 @@ class CompletenessAssessmentService
                     'evidence_fingerprint' => $this->basis->fingerprint($snapshot),
                     'recorded_at' => now(),
                     'notice_sent_at' => null,
-                ]);
+                ];
+                if (is_array($criterionAnswers)) {
+                    $attributes['criterion_answers'] = $criterionAnswers;
+                }
+
+                $assessment = ApplicationCompletenessAssessment::query()->create($attributes);
 
                 $locked->refresh();
                 if ($this->basis->dossierGuard($locked) !== $guard) {
