@@ -5,8 +5,8 @@ namespace App\Services\Competitions;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-use PhpZip\ZipFile;
 use RuntimeException;
+use ZipArchive;
 
 /**
  * Popunjava službeni MMSP DOCX. Mijenja samo oznake za podatke.
@@ -28,9 +28,16 @@ class MmspDecisionDocxWriter
             throw new RuntimeException('Službeni template Odluke za MMSP nije pronađen.');
         }
 
-        $zip = new ZipFile();
-        $zip->openFile($template);
-        $document = $this->loadXml($zip->getEntryContents('word/document.xml'));
+        $source = new ZipArchive();
+        if ($source->open($template) !== true) {
+            throw new RuntimeException('Službeni template Odluke za MMSP nije pročitan.');
+        }
+        $xml = $source->getFromName('word/document.xml');
+        $source->close();
+        if (! is_string($xml) || $xml === '') {
+            throw new RuntimeException('Službeni template Odluke za MMSP nema tekst.');
+        }
+        $document = $this->loadXml($xml);
 
         $this->fillHeaderLine($document, $proposal);
         $this->fillTitleYear($document, $proposal);
@@ -39,17 +46,21 @@ class MmspDecisionDocxWriter
         $this->fillDelivery($document, $proposal);
         $this->removeTextHighlights($document);
 
-        $zip->addFromString('word/document.xml', $this->saveXml($document));
-
         $path = tempnam(sys_get_temp_dir(), 'mmsp-odluka-');
         if ($path === false) {
-            $zip->close();
             throw new RuntimeException('Privremeni fajl Odluke nije kreiran.');
         }
         $target = $path.'.docx';
         @unlink($path);
-        $zip->saveAsFile($target);
-        $zip->close();
+        if (! copy($template, $target)) {
+            throw new RuntimeException('Privremeni fajl Odluke nije kreiran.');
+        }
+        $output = new ZipArchive();
+        if ($output->open($target) !== true) {
+            throw new RuntimeException('Privremeni fajl Odluke nije otvoren.');
+        }
+        $output->addFromString('word/document.xml', $this->saveXml($document));
+        $output->close();
 
         return $target;
     }
@@ -63,7 +74,7 @@ class MmspDecisionDocxWriter
         }
         $markers[0]->textContent = '';
         $markers[1]->textContent = $proposal->decisionDate;
-        $this->replaceExact($paragraph, ' 2026.', ' ');
+        $this->replaceExact($paragraph, ' 2026.', '');
     }
 
     private function fillTitleYear(DOMDocument $document, MmspDecisionProposal $proposal): void
@@ -128,22 +139,21 @@ class MmspDecisionDocxWriter
         $years[0]->textContent = $proposal->competitionYear;
         $years[1]->textContent = $proposal->publishedOn;
         $years[2]->textContent = $proposal->endedOn;
+        if (! $this->replaceInParagraph($opening, 'trajao 20 dana', 'trajao '.MmspDecisionInflection::days($proposal->callDurationDays))) {
+            throw new RuntimeException('Template nema trajanje javnog poziva.');
+        }
 
-        $first = $this->requireParagraph($document, 'prvoj sjednici');
-        $firstFields = $this->exactNodes($first, 'XX');
-        if (count($firstFields) < 3) {
-            throw new RuntimeException('Template nema polja prve sjednice.');
-        }
-        $firstFields[0]->textContent = $proposal->firstSessionDate;
-        $firstFields[1]->textContent = (string) $proposal->receivedCount;
-        $firstFields[2]->textContent = (string) $proposal->proceedCount;
-        $incomplete = $this->exactNodes($first, 'X');
-        if ($incomplete === []) {
-            throw new RuntimeException('Template nema polje za nepotpune prijave.');
-        }
-        $incomplete[0]->textContent = (string) $proposal->incompleteCount;
-        $this->replaceFirstContaining($first, 'prihvatanju', 'prihvatanju ('.$proposal->appealsAccepted.')');
-        $this->replaceFirstContaining($first, 'odbijanju', 'odbijanju ('.$proposal->appealsRejected.')');
+        $this->setParagraphText(
+            $this->requireParagraph($document, 'prvoj sjednici'),
+            MmspDecisionInflection::firstSessionParagraph(
+                $proposal->firstSessionDate,
+                $proposal->receivedCount,
+                $proposal->incompleteCount,
+                $proposal->appealsAccepted,
+                $proposal->appealsRejected,
+                $proposal->proceedCount,
+            )
+        );
 
         $second = $this->requireParagraph($document, 'drugoj sjednici');
         $this->replaceExact($second, 'XX', $proposal->secondSessionDate);
@@ -156,15 +166,46 @@ class MmspDecisionDocxWriter
         if (count($fields) < 3) {
             throw new RuntimeException('Template nema zbirna polja predloga Odluke.');
         }
-        $fields[0]->textContent = $proposal->competitionYear;
-        $fields[1]->textContent = (string) count($proposal->winners);
+        $winnerCount = count($proposal->winners);
+        if ($winnerCount === 0) {
+            $zeroClause = 'kojom se konstatuje da sredstva nijesu dodijeljena';
+            $replacedFunds = $this->replaceInParagraph(
+                $closing,
+                'kojom se dodijeljuju sredstva za XX plan/ova ulaganja u ukupnom iznosu XX eura',
+                $zeroClause
+            ) || $this->replaceInParagraph(
+                $closing,
+                'kojom se dodijeljuju sredstva za XX planova ulaganja u ukupnom iznosu XX eura',
+                $zeroClause
+            );
+            if (! $replacedFunds) {
+                throw new RuntimeException('Template nema rečenicu o iznosu dodijeljenih sredstava.');
+            }
+            $year = $this->exactNodes($closing, 'XX');
+            if ($year === []) {
+                throw new RuntimeException('Template nema godinu predloga Odluke.');
+            }
+            $year[0]->textContent = $proposal->competitionYear.'.';
+
+            return;
+        }
+
+        $fields[0]->textContent = $proposal->competitionYear.'.';
+        $fields[1]->textContent = (string) $winnerCount;
         $fields[2]->textContent = $proposal->awardedTotal;
+        $plan = MmspDecisionInflection::plans($winnerCount);
+        if (! $this->replaceInParagraph($closing, 'plan/ova', $plan)
+            && ! $this->replaceInParagraph($closing, 'planova', $plan)) {
+            throw new RuntimeException('Template nema broj planova ulaganja.');
+        }
     }
 
     private function fillDelivery(DOMDocument $document, MmspDecisionProposal $proposal): void
     {
-        $recipients = $this->requireParagraph($document, 'Podnosiocima prijave');
-        $this->replaceExact($recipients, 'XX', (string) count($proposal->winners));
+        $recipients = $this->requireParagraph($document, 'Podnosiocima');
+        $this->replaceExact($recipients, 'XX', (string) $proposal->participantCount);
+        $members = $this->requireParagraph($document, 'Članovima Komisije');
+        $this->replaceExact($members, '3', (string) $proposal->commissionMemberCount);
     }
 
     /**
@@ -281,17 +322,37 @@ class MmspDecisionDocxWriter
         }
     }
 
-    private function replaceFirstContaining(DOMElement $paragraph, string $needle, string $replacement): void
+    private function replaceInParagraph(DOMElement $paragraph, string $from, string $to): bool
     {
-        foreach ($this->textNodes($paragraph) as $node) {
-            if (str_contains($node->textContent, $needle)) {
-                $node->textContent = str_replace($needle, $replacement, $node->textContent);
-
-                return;
-            }
+        $nodes = $this->textNodes($paragraph);
+        $full = '';
+        $lengths = [];
+        foreach ($nodes as $node) {
+            $lengths[] = strlen($node->textContent);
+            $full .= $node->textContent;
+        }
+        $position = strpos($full, $from);
+        if ($position === false) {
+            return false;
         }
 
-        throw new RuntimeException('Template nema polje: '.$needle);
+        $end = $position + strlen($from);
+        $cursor = 0;
+        $inserted = false;
+        foreach ($nodes as $index => $node) {
+            $start = $cursor;
+            $nodeEnd = $cursor + $lengths[$index];
+            $cursor = $nodeEnd;
+            if ($nodeEnd <= $position || $start >= $end) {
+                continue;
+            }
+            $prefix = $start < $position ? substr($node->textContent, 0, $position - $start) : '';
+            $suffix = $nodeEnd > $end ? substr($node->textContent, $end - $start) : '';
+            $node->textContent = $prefix.($inserted ? '' : $to).$suffix;
+            $inserted = true;
+        }
+
+        return true;
     }
 
     private function removeTextHighlights(DOMDocument $document): void

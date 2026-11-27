@@ -216,8 +216,12 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertStringContainsString('01.08.2026.', $text);
         $this->assertStringContainsString('21.08.2026.', $text);
         $this->assertStringContainsString('Kotor, 10.09.2026.', $text);
-        $this->assertStringContainsString('prihvatanju (1)', $text);
-        $this->assertStringContainsString('odbijanju (0)', $text);
+        $this->assertStringContainsString('prihvatanju 1 prigovora ili odbijanju 0 prigovora', $text);
+        $this->assertStringContainsString('prvobitno nepotpunih prijava nema', $text);
+        $this->assertStringContainsString('1 prijava može biti uzeta', $text);
+        $this->assertStringContainsString('trajao 20 dana', $text);
+        $this->assertStringContainsString('Podnosiocima i podnositeljkama prijava (x1)', $text);
+        $this->assertStringContainsString('Članovima Komisije (x3)', $text);
         $this->assertStringContainsString('Vladan Barović', $text);
         $this->assertStringNotContainsString('XX', $text);
         $this->assertStringNotContainsString('xx', $text);
@@ -431,6 +435,9 @@ class MmspDecisionFinalPhaseTest extends TestCase
             appealsRejected: 1,
             proceedCount: 3,
             awardedTotal: '1.500,00',
+            callDurationDays: 20,
+            participantCount: 1,
+            commissionMemberCount: 4,
         );
 
         $path = app(MmspDecisionDocxWriter::class)->write($proposal);
@@ -442,11 +449,18 @@ class MmspDecisionFinalPhaseTest extends TestCase
             $this->assertStringContainsString('500,00', $text);
             $this->assertStringContainsString('2.000,00', $text);
             $this->assertStringContainsString('1.500,00', $text);
-            $this->assertStringContainsString('ukupno 4 prijava', $text);
-            $this->assertStringContainsString('1 prijava', $text);
-            $this->assertStringContainsString('da 3 prijava', $text);
-            $this->assertStringContainsString('prihvatanju (1)', $text);
-            $this->assertStringContainsString('odbijanju (1)', $text);
+            $this->assertStringContainsString('2 plana ulaganja', $text);
+            $this->assertStringContainsString('pristigle ukupno 4 prijave', $text);
+            $this->assertStringContainsString('prvobitno 1 prijava nepotpuna', $text);
+            $this->assertStringContainsString('3 prijave mogu biti uzete', $text);
+            $this->assertStringContainsString('prihvatanju 1 prigovora ili odbijanju 1 prigovora', $text);
+            $this->assertStringContainsString('trajao 20 dana', $text);
+            $this->assertStringContainsString('Podnosiocima i podnositeljkama prijava (x1)', $text);
+            $this->assertStringContainsString('Članovima Komisije (x4)', $text);
+            $this->assertStringNotContainsString('plan/ova', $text);
+            $this->assertStringNotContainsString('je/su', $text);
+            $this->assertStringNotContainsString('ppreduzetnike', $text);
+            $this->assertMatchesRegularExpression('/SEKRETAR\s*_{10,30}\s*Vladan Barović/u', preg_replace('/\s+/', ' ', $text) ?? $text);
             $this->assertStringContainsString('Kotor, 10.09.2026.', $text);
             $this->assertStringNotContainsString('Broj:  XX', $text);
             $this->assertOfficialTemplatePreserved($path);
@@ -455,6 +469,205 @@ class MmspDecisionFinalPhaseTest extends TestCase
                 unlink($path);
             }
         }
+    }
+
+    public function test_zero_winners_and_many_winners_keep_the_signature_together(): void
+    {
+        $base = [
+            'competitionId' => 9,
+            'decisionNumber' => '',
+            'decisionDate' => '10.09.2026.',
+            'competitionYear' => '2026',
+            'publishedOn' => '01.08.2026.',
+            'endedOn' => '21.08.2026.',
+            'firstSessionDate' => '25.08.2026',
+            'secondSessionDate' => '01.09.2026',
+            'thirdSessionDate' => '05.09.2026',
+            'receivedCount' => 0,
+            'incompleteCount' => 0,
+            'appealsAccepted' => 0,
+            'appealsRejected' => 0,
+            'proceedCount' => 0,
+            'awardedTotal' => '0,00',
+            'callDurationDays' => 21,
+            'participantCount' => 0,
+            'commissionMemberCount' => 3,
+        ];
+        $none = new MmspDecisionProposal(...[...$base, 'winners' => []]);
+        $emptyPath = app(MmspDecisionDocxWriter::class)->write($none);
+        try {
+            $text = $this->docxText($emptyPath);
+            $this->assertStringContainsString('sredstva nijesu dodijeljena', $text);
+            $this->assertStringContainsString('nije pristigla nijedna prijava', $text);
+            $this->assertStringContainsString('trajao 21 dan', $text);
+            $this->assertStringContainsString('(x0)', $text);
+            $this->assertStringNotContainsString('plan/ova', $text);
+        } finally {
+            if (is_file($emptyPath)) {
+                unlink($emptyPath);
+            }
+        }
+
+        $winners = [];
+        foreach (range(1, 8) as $number) {
+            $winners[] = [
+                'identity' => 'Dobitnik '.$number,
+                'subsidy' => 'Subvencije za digitalizaciju',
+                'score' => '30,00',
+                'approved' => '100,00',
+                'total_value' => '400,00',
+            ];
+        }
+        $many = new MmspDecisionProposal(...[...$base, 'winners' => $winners, 'receivedCount' => 25, 'proceedCount' => 25, 'awardedTotal' => '800,00', 'participantCount' => 22, 'callDurationDays' => 22]);
+        $manyPath = app(MmspDecisionDocxWriter::class)->write($many);
+        try {
+            $text = $this->docxText($manyPath);
+            $xml = $this->zipEntry($manyPath, 'word/document.xml');
+            $this->assertStringContainsString('Dobitnik 8', $text);
+            $this->assertStringContainsString('8 planova ulaganja', $text);
+            $this->assertStringContainsString('pristiglo ukupno 25 prijava', $text);
+            $this->assertStringContainsString('25 prijava mogu biti uzete', $text);
+            $this->assertStringContainsString('trajao 22 dana', $text);
+            $this->assertStringContainsString('(x22)', $text);
+            $this->assertGreaterThanOrEqual(8, substr_count($xml, '<w:keepNext'));
+            $this->assertStringContainsString('Vladan Barović', $text);
+        } finally {
+            if (is_file($manyPath)) {
+                unlink($manyPath);
+            }
+        }
+    }
+
+    public function test_accepted_complaint_returns_the_application_and_participants_follow_pib(): void
+    {
+        [$commission, $members] = $this->canonicalCommission();
+        $competition = Competition::create([
+            'title' => 'Poziv MMSP brojanja '.uniqid(),
+            'type' => CompetitionProfileResolver::TYPE_CANONICAL,
+            'status' => 'published',
+            'year' => 2026,
+            'budget' => 10000,
+            'deadline_days' => 15,
+            'commission_id' => $commission->id,
+            'start_date' => '2026-08-01',
+            'end_date' => '2026-08-16',
+            'published_at' => '2026-08-01 09:00:00',
+        ]);
+        $this->cleanupCompetitionIds[] = (int) $competition->id;
+        $owner = User::factory()->create([
+            'email' => 'brojanje-'.uniqid().'@example.test',
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
+        $sequence = 0;
+        $make = function (string $pib, string $suffix) use ($competition, $owner, &$sequence): Application {
+            $sequence++;
+
+            return Application::create([
+                'competition_id' => $competition->id,
+                'user_id' => $owner->id,
+                'applicant_type' => 'doo',
+                'business_stage' => 'razvoj',
+                'status' => 'submitted',
+                'business_plan_name' => 'Plan '.$suffix,
+                'founder_name' => 'Ana Anić',
+                'doo_name' => 'Primjer DOO',
+                'pib' => $pib,
+                'submitted_at' => now(),
+                'redni_broj' => $sequence,
+            ]);
+        };
+        $samePib = $make('81234567', 'A');
+        $restored = $make('81234567', 'B');
+        $rejected = $make('81234568', 'C');
+        $chairId = $members[G::ROLE_PREDSJEDNIK]->user_id;
+        $incomplete = ApplicationCompletenessAssessment::query()->create([
+            'application_id' => $restored->id,
+            'competition_id' => $competition->id,
+            'outcome' => ApplicationCompletenessAssessment::INCOMPLETE,
+            'recorded_by_user_id' => $chairId,
+            'notes' => 'Nedostaje prilog.',
+            'evidence_snapshot' => [],
+            'evidence_fingerprint' => hash('sha256', 'b'),
+            'recorded_at' => now()->subDay(),
+        ]);
+        ApplicationCompletenessAssessment::query()->create([
+            'application_id' => $rejected->id,
+            'competition_id' => $competition->id,
+            'outcome' => ApplicationCompletenessAssessment::INCOMPLETE,
+            'recorded_by_user_id' => $chairId,
+            'notes' => 'Nedostaje drugi prilog.',
+            'evidence_snapshot' => [],
+            'evidence_fingerprint' => hash('sha256', 'd'),
+            'recorded_at' => now(),
+        ]);
+        ApplicationComplaint::query()->create([
+            'application_id' => $restored->id,
+            'competition_id' => $competition->id,
+            'completeness_assessment_id' => $incomplete->id,
+            'submitted_by_user_id' => $owner->id,
+            'body' => 'Dopuna je dostavljena.',
+            'submitted_at' => now(),
+            'decision_due_at' => now()->addDays(7),
+            'decision' => ApplicationComplaint::ACCEPTED,
+            'decided_at' => now(),
+            'decided_by_user_id' => $chairId,
+            'decision_notes' => 'Prihvaćen.',
+        ]);
+        ApplicationComplaint::query()->create([
+            'application_id' => $rejected->id,
+            'competition_id' => $competition->id,
+            'completeness_assessment_id' => ApplicationCompletenessAssessment::query()->where('application_id', $rejected->id)->value('id'),
+            'submitted_by_user_id' => $owner->id,
+            'body' => 'Dopuna nije dovoljna.',
+            'submitted_at' => now(),
+            'decision_due_at' => now()->addDays(7),
+            'decision' => ApplicationComplaint::REJECTED,
+            'decided_at' => now(),
+            'decided_by_user_id' => $chairId,
+            'decision_notes' => 'Odbijen.',
+        ]);
+
+        $proposal = app(\App\Services\Competitions\MmspDecisionProposalBuilder::class)->build($competition, $this->dates(), now());
+
+        $this->assertSame(3, $proposal->receivedCount);
+        $this->assertSame(2, $proposal->incompleteCount);
+        $this->assertSame(1, $proposal->appealsAccepted);
+        $this->assertSame(1, $proposal->appealsRejected);
+        $this->assertSame(2, $proposal->proceedCount);
+        $this->assertSame(2, $proposal->participantCount);
+        $this->assertSame(15, $proposal->callDurationDays);
+        $this->assertSame(3, $proposal->commissionMemberCount);
+        $this->assertSame([], $proposal->winners);
+        $this->assertSame($samePib->pib, $restored->pib);
+    }
+
+    public function test_regeneration_keeps_the_previous_word_file(): void
+    {
+        [$members, $competition] = $this->supportedCompetition();
+        $this->signAll($competition, $members);
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+
+        $this->actingAs($chair)
+            ->post(route('evaluation.mmsp-decision.generate', $competition), $this->dates())
+            ->assertRedirect();
+        $first = MmspDecisionDocument::query()->where('competition_id', $competition->id)->firstOrFail();
+        $firstBytes = Storage::disk('local')->get($first->storage_path);
+        $this->assertIsString($firstBytes);
+        $this->assertSame($first->content_sha256, hash('sha256', $firstBytes));
+
+        $this->actingAs($chair)
+            ->post(route('evaluation.mmsp-decision.generate', $competition), $this->dates())
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Odluka je uspješno generisana i sačuvana.');
+
+        $this->assertSame(2, MmspDecisionDocument::query()->where('competition_id', $competition->id)->count());
+        $this->assertSame($firstBytes, Storage::disk('local')->get($first->storage_path));
+        $second = MmspDecisionDocument::query()->where('competition_id', $competition->id)->orderByDesc('id')->firstOrFail();
+        $this->assertNotSame($first->storage_path, $second->storage_path);
+        $this->assertSame($first->ranking_sha256, $second->ranking_sha256);
+        $this->actingAs($chair)->get(route('evaluation.mmsp-decision.download', $competition))->assertOk();
     }
 
     /**
@@ -647,7 +860,7 @@ class MmspDecisionFinalPhaseTest extends TestCase
             'Član 2',
             'Međusobna prava i obaveze utvrdiće se posebnim aktom',
             'Član 3',
-            'Dodjeljene subvencije utvrđena članom 1',
+            'Dodijeljene subvencije utvrđene članom 1',
             'Član 4',
             'Ova Odluka stupa na snagu danom donošenja.',
             'Član 5',
