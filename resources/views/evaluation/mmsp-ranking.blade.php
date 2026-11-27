@@ -104,16 +104,26 @@
         font-weight: 600;
         cursor: pointer;
     }
+    .mmsp-ranking-list-card,
+    .mmsp-ranking-decision-section {
+        max-width: 100%;
+        min-width: 0;
+    }
     .mmsp-ranking-table-wrap {
+        display: block;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        box-sizing: border-box;
     }
     .mmsp-ranking-print-root table.mmsp-ranking-table {
         width: 100%;
         min-width: 640px;
-        border-collapse: collapse;
-        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 0;
     }
     .mmsp-ranking-print-root table.mmsp-ranking-table th,
     .mmsp-ranking-print-root table.mmsp-ranking-table td {
@@ -121,6 +131,22 @@
         text-align: left;
         border-bottom: 1px solid #e5e7eb;
         vertical-align: top;
+        background-clip: padding-box;
+    }
+    .mmsp-ranking-print-root table.mmsp-ranking-table th:first-child,
+    .mmsp-ranking-print-root table.mmsp-ranking-table td:first-child {
+        width: 4.5rem;
+        min-width: 4.5rem;
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: #fff;
+    }
+    .mmsp-ranking-print-root table.mmsp-ranking-table th:first-child {
+        background: #f9fafb;
+    }
+    .mmsp-ranking-table-wrap.is-below table.mmsp-ranking-table td:first-child {
+        background: #f9fafb;
     }
     .mmsp-ranking-print-root table.mmsp-ranking-table th {
         font-weight: 600;
@@ -223,6 +249,11 @@
         grid-template-columns: 1fr 1fr;
         gap: 24px;
         margin-bottom: 24px;
+        min-width: 0;
+    }
+    .mmsp-ranking-print-root .mmsp-decision-amount-grid > *,
+    .mmsp-ranking-print-root .mmsp-decision-budget-grid > * {
+        min-width: 0;
     }
     .mmsp-ranking-print-root .mmsp-decision-budget-grid {
         display: grid;
@@ -328,6 +359,13 @@
             font-size: 9pt !important;
         }
         .mmsp-ranking-table-wrap { overflow: visible; }
+        .mmsp-ranking-print-root table.mmsp-ranking-table th:first-child,
+        .mmsp-ranking-print-root table.mmsp-ranking-table td:first-child {
+            position: static;
+            width: auto;
+            min-width: 0;
+            background: transparent;
+        }
     }
 </style>
 <script>
@@ -497,7 +535,7 @@
                         ——— Ispod praga od 30 bodova ———
                     </div>
                     <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Planovi sa manje od 30 bodova</h3>
-                    <div class="mmsp-ranking-table-wrap">
+                    <div class="mmsp-ranking-table-wrap is-below">
                         <table class="mmsp-ranking-table">
                             <thead>
                                 <tr>
