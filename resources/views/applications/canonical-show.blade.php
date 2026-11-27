@@ -215,6 +215,12 @@
     .document-name { font-weight:600; color:#111827; margin-bottom:4px; }
     .document-type { font-size:12px; color:#6b7280; }
     .document-actions { display:flex; gap:8px; }
+    @media (max-width: 700px) {
+        .document-item { align-items:flex-start; flex-direction:column; }
+        .document-info { min-width:0; max-width:100%; }
+        .document-name, .document-type { overflow-wrap:anywhere; }
+        .document-actions { flex-wrap:wrap; max-width:100%; margin-top:12px; }
+    }
     .upload-section {
         background:#f3f4f6;
         padding:20px;

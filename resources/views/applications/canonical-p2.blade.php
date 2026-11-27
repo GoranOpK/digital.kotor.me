@@ -418,7 +418,7 @@
                     <div class="mmsp-form-section">
                         <h2><span class="mmsp-section-number">III</span> FINANSIJSKI OKVIR ULAGANJA</h2>
                         <p class="mmsp-form-text">
-                            Unesite planirane troškove i sopstveno učešće. Ukupna vrijednost ulaganja i očekivani iznos subvencije računaju se automatski. Iznosi se unose u EUR, sa najviše dvije decimale.
+                            Unesite planirane troškove. Ukupna vrijednost ulaganja, sopstveno učešće i očekivani iznos subvencije računaju se automatski prema izabranoj vrsti subvencije. Iznosi se unose u EUR, sa najviše dvije decimale.
                         </p>
 
                         <div style="overflow-x:auto;">

@@ -50,6 +50,8 @@ class CanonicalP2FinancialBasisTest extends TestCase
             ->assertSee('OSNOVNI PODACI')
             ->assertSee('PLAN ULAGANJA')
             ->assertSee('FINANSIJSKI OKVIR ULAGANJA')
+            ->assertSee('Unesite planirane troškove. Ukupna vrijednost ulaganja, sopstveno učešće i očekivani iznos subvencije računaju se automatski prema izabranoj vrsti subvencije. Iznosi se unose u EUR, sa najviše dvije decimale.')
+            ->assertDontSee('Unesite planirane troškove i sopstveno učešće.')
             ->assertSee('AUTENTIČNOST / INOVATIVNOST / DIGITALIZACIJA')
             ->assertSee('OČEKIVANI REZULTATI')
             ->assertSee('UTICAJ NA LOKALNU EKONOMIJU')

@@ -1883,6 +1883,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
             '/Datum podnošenja<\/span>\s*<span class="info-value">/',
             $draft->getContent()
         );
+        $this->assertStringContainsString('@media (max-width: 700px)', $draft->getContent());
+        $this->assertStringContainsString('.document-item { align-items:flex-start; flex-direction:column; }', $draft->getContent());
 
         $empty = $this->canonicalDraft($owner, $application->competition, [
             'with_p2' => false,
