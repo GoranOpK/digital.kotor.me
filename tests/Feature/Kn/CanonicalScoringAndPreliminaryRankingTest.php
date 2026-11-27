@@ -833,7 +833,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertDontSee('<select name="criterion_1"', false)
             ->assertDontSee('id="mmsp-p3-print"', false)
             ->assertSee('UKUPAN ZBIR', false)
-            ->assertSee('3. Dostavljena su sva potrebna dokumenta?')
+            ->assertSee('3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?')
             ->assertSee(MmspP3Form::ARTICLE20_HEADING)
             ->assertSee(MmspP3Form::CRITERIA['report']['statement'])
             ->assertSee(MmspP3Form::CRITERIA['related']['statement'])
@@ -846,7 +846,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertDontSee('Dostavljen je izvještaj o prethodnoj realizaciji, ako je obavezan')
             ->assertDontSee('Plan ulaganja se odnosi na vrstu subvencije');
         $openHtml = $this->actingAs($chair)->get(route('evaluation.create', $application))->assertOk()->getContent();
-        $questionAt = strpos($openHtml, '3. Dostavljena su sva potrebna dokumenta?');
+        $questionAt = strpos($openHtml, '3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?');
         $headingAt = strpos($openHtml, MmspP3Form::ARTICLE20_HEADING);
         $reportAt = strpos($openHtml, MmspP3Form::CRITERIA['report']['statement']);
         $relatedAt = strpos($openHtml, MmspP3Form::CRITERIA['related']['statement']);
@@ -889,7 +889,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertSee(MmspP3Form::RESULT_FAIL)
             ->assertSee('id="mmsp-p3-print"', false)
             ->assertSee('UKUPAN ZBIR', false)
-            ->assertSee('3. Dostavljena su sva potrebna dokumenta?')
+            ->assertSee('3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?')
             ->assertSee(MmspP3Form::ARTICLE20_HEADING)
             ->assertSee(MmspP3Form::CRITERIA['report']['statement'])
             ->assertSee(MmspP3Form::CRITERIA['related']['statement'])
