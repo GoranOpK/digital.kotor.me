@@ -221,6 +221,15 @@ class MmspDecisionFinalPhaseTest extends TestCase
         $this->assertStringContainsString('prvobitno nepotpunih prijava nema', $text);
         $this->assertStringContainsString('1 prijava može biti uzeta', $text);
         $this->assertStringContainsString('trajao 20 dana', $text);
+        $this->assertStringContainsString('dodijeljene subvencije', $text);
+        $this->assertStringContainsString('2026. godini (u daljem tekstu: Javni poziv).', $text);
+        $this->assertStringContainsString('dodjeljuju sredstva za 1 plan ulaganja', $text);
+        $this->assertStringContainsString('preliminarne rang-liste', $text);
+        $this->assertStringContainsString('preliminarnoj rang-listi', $text);
+        $this->assertStringContainsString('konačnu rang-listu', $text);
+        $this->assertStringNotContainsString('dodjeljene subvencije', $text);
+        $this->assertStringNotContainsString('dodijeljuju sredstva', $text);
+        $this->assertStringNotContainsString('godini. (u daljem tekstu', $text);
         $this->assertStringContainsString('Podnosiocima i podnositeljkama prijava (x1)', $text);
         $this->assertStringContainsString('Članovima Komisije (x3)', $text);
         $this->assertStringContainsString('Vladan Barović', $text);
@@ -451,6 +460,12 @@ class MmspDecisionFinalPhaseTest extends TestCase
             $this->assertStringContainsString('2.000,00', $text);
             $this->assertStringContainsString('1.500,00', $text);
             $this->assertStringContainsString('2 plana ulaganja', $text);
+            $this->assertStringContainsString('dodjeljuju sredstva za 2 plana ulaganja', $text);
+            $this->assertStringContainsString('dodijeljene subvencije', $text);
+            $this->assertStringContainsString('rang-liste', $text);
+            $this->assertStringContainsString('rang-listi', $text);
+            $this->assertStringContainsString('rang-listu', $text);
+            $this->assertStringNotContainsString('dodijeljuju sredstva', $text);
             $this->assertStringContainsString('pristigle ukupno 4 prijave', $text);
             $this->assertStringContainsString('prvobitno 1 prijava nepotpuna', $text);
             $this->assertStringContainsString('3 prijave mogu biti uzete', $text);
@@ -499,6 +514,8 @@ class MmspDecisionFinalPhaseTest extends TestCase
         try {
             $text = $this->docxText($emptyPath);
             $this->assertStringContainsString('sredstva nijesu dodijeljena', $text);
+            $this->assertStringNotContainsString('dodjeljuju sredstva', $text);
+            $this->assertStringContainsString('dodijeljene subvencije', $text);
             $this->assertStringContainsString('nije pristigla nijedna prijava', $text);
             $this->assertStringContainsString('trajao 21 dan', $text);
             $this->assertStringContainsString('(x0)', $text);
@@ -853,6 +870,11 @@ class MmspDecisionFinalPhaseTest extends TestCase
             $this->assertSame($this->zipEntry($template, $entry), $this->zipEntry($generatedPath, $entry), $entry);
         }
         $this->assertSame($this->sectPr($template), $this->sectPr($generatedPath));
+
+        $templateText = $this->docxText($template);
+        $this->assertStringContainsString('konačne rang-liste', $templateText);
+        $this->assertStringContainsString('dodijeljene subvencije', $templateText);
+        $this->assertStringContainsString('dodjeljuju sredstva', $templateText);
 
         $text = $this->docxText($generatedPath);
         foreach ([

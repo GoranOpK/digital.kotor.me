@@ -190,11 +190,11 @@ class MmspDecisionDocxWriter
             $zeroClause = 'kojom se konstatuje da sredstva nijesu dodijeljena';
             $replacedFunds = $this->replaceInParagraph(
                 $closing,
-                'kojom se dodijeljuju sredstva za XX plan/ova ulaganja u ukupnom iznosu XX eura',
+                'kojom se dodjeljuju sredstva za XX plan/ova ulaganja u ukupnom iznosu XX eura',
                 $zeroClause
             ) || $this->replaceInParagraph(
                 $closing,
-                'kojom se dodijeljuju sredstva za XX planova ulaganja u ukupnom iznosu XX eura',
+                'kojom se dodjeljuju sredstva za XX planova ulaganja u ukupnom iznosu XX eura',
                 $zeroClause
             );
             if (! $replacedFunds) {
