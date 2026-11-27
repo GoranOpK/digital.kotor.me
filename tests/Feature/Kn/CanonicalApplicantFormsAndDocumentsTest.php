@@ -1591,7 +1591,8 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.show', $first))
             ->assertOk()
             ->assertSee('Započni drugu prijavu')
-            ->assertSee('Pregled statusa');
+            ->assertDontSee('Pregled statusa')
+            ->assertDontSee('Provjera potpunosti');
 
         $second = $this->startedDraft($owner, $call, CanonicalLegalForm::PREDUZETNIK);
         $this->assertNotSame($first->id, $second->id);
@@ -1822,7 +1823,41 @@ class CanonicalApplicantFormsAndDocumentsTest extends TestCase
         $this->actingAs($owner)->get(route('applications.show', $application))
             ->assertOk()
             ->assertSee('Provjera potpunosti')
-            ->assertSee('Pregled statusa');
+            ->assertSee('Pregled statusa')
+            ->assertDontSee('Dodaj dokument')
+            ->assertDontSee('Pregled dokumentacije');
+    }
+
+    public function test_draft_status_keeps_the_document_card_and_submitted_status_keeps_three_columns(): void
+    {
+        $owner = $this->makeOwner();
+        $application = $this->canonicalDraft($owner, $this->openCall());
+
+        $this->actingAs($owner)->get(route('applications.show', $application))
+            ->assertOk()
+            ->assertSee('<div class="summary-grid" style="grid-template-columns: 1fr;">', false)
+            ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
+            ->assertDontSee('repeat(2, 1fr)', false)
+            ->assertSee('Dodaj dokument')
+            ->assertSee('Priloži dokument');
+
+        $this->actingAs($owner)->post(route('applications.final-submit', $application))
+            ->assertRedirect(route('applications.show', $application));
+
+        $this->actingAs($owner)->get(route('applications.show', $application))
+            ->assertOk()
+            ->assertSee('<div class="summary-grid" style="grid-template-columns: 1fr;">', false)
+            ->assertSee('grid-template-columns: repeat(3, 1fr) !important', false)
+            ->assertDontSee('repeat(2, 1fr)', false)
+            ->assertSee('Osnovni podaci')
+            ->assertSee('Priložena dokumentacija')
+            ->assertDontSee('Pregled statusa')
+            ->assertDontSee('Provjera potpunosti')
+            ->assertDontSee('Dodaj dokument')
+            ->assertDontSee('Pregled dokumentacije')
+            ->assertDontSee('id="application-documents"', false)
+            ->assertDontSee('Prijava je podnesena i čeka provjeru potpunosti dokumentacije.')
+            ->assertDontSee('id="application-review"', false);
     }
 
     // ---------------------------------------------------------------- Helpers
