@@ -32,6 +32,7 @@ use App\Services\Competitions\ZpEqualScoreAllocationGuard;
 use App\Support\CommissionCanonicalSeat;
 use App\Support\EliminatoryProfileConfig;
 use App\Support\ScoringProfileConfig;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -240,7 +241,7 @@ class EvaluationController extends Controller
             } elseif ($request->filter === 'evaluated') {
                 $query->where(function ($outer) use ($evaluatedApplicationIds) {
                     $outer->where(function ($q) use ($evaluatedApplicationIds) {
-                        $q->whereIn('status', ['submitted', 'evaluated', 'rejected']);
+                        $this->constrainVisibleCommissionStatuses($q);
                         if (!empty($evaluatedApplicationIds)) {
                             $q->whereIn('id', $evaluatedApplicationIds);
                         } else {
@@ -258,11 +259,16 @@ class EvaluationController extends Controller
                         ->orWhere(function ($canonical) {
                             CanonicalReviewState::constrainFinallyEliminated($canonical);
                         });
+                })->where(function ($keep) {
+                    $keep->where('status', '!=', 'approved')
+                        ->orWhereHas('competition', function (Builder $competition) {
+                            $competition->where('type', '!=', CompetitionProfileResolver::TYPE_CANONICAL);
+                        });
                 });
             }
         } else {
-            // Ako nema filtera, prikaži sve prijave (submitted, evaluated i rejected)
-            $query->whereIn('status', ['submitted', 'evaluated', 'rejected']);
+            // Bez filtera i za „Sve prijave“: postojeći obuhvat, a MMSP uključuje i odobrene prijave.
+            $this->constrainVisibleCommissionStatuses($query);
         }
 
         if ($request->filter !== 'rejected') {
@@ -332,6 +338,31 @@ class EvaluationController extends Controller
             'viewerMembershipIds',
             'membershipByCommissionId',
         ));
+    }
+
+    /**
+     * Lista ocjenjivanja dijeli upit između programa.
+     * Omladinsko i žensko preduzetništvo zadržavaju submitted, evaluated i rejected.
+     * MMSP dodatno prikazuje approved, jer konačna odluka podržane prijave prebacuje u taj status.
+     *
+     * @param  Builder<Application>  $query
+     */
+    private function constrainVisibleCommissionStatuses(Builder $query): void
+    {
+        $canonical = CompetitionProfileResolver::TYPE_CANONICAL;
+        $sharedStatuses = ['submitted', 'evaluated', 'rejected'];
+
+        $query->where(function (Builder $outer) use ($canonical, $sharedStatuses) {
+            $outer->where(function (Builder $otherPrograms) use ($canonical, $sharedStatuses) {
+                $otherPrograms->whereHas('competition', function (Builder $competition) use ($canonical) {
+                    $competition->where('type', '!=', $canonical);
+                })->whereIn('status', $sharedStatuses);
+            })->orWhere(function (Builder $mmsp) use ($canonical, $sharedStatuses) {
+                $mmsp->whereHas('competition', function (Builder $competition) use ($canonical) {
+                    $competition->where('type', $canonical);
+                })->whereIn('status', array_merge($sharedStatuses, ['approved']));
+            });
+        });
     }
 
     /**

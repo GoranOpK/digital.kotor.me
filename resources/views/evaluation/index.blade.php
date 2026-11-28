@@ -307,7 +307,10 @@
                                     ? app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasCanonicalCommissionSeats($application)
                                     : app(\App\Services\CanonicalIndividualScoringService::class)->applicationHasFiveCanonicalSeats($application));
 
-                            if ($canonicalList !== null) {
+                            if ($isCanonicalApplication && $application->status === 'approved') {
+                                $displayStatus = 'Odobrena prijava';
+                                $statusClass = 'status-evaluated';
+                            } elseif ($canonicalList !== null) {
                                 $displayStatus = $canonicalList['label'];
                                 $statusClass = $canonicalList['eliminated'] ? 'status-rejected' : 'status-submitted';
                             } elseif ($application->status === 'rejected') {
@@ -352,7 +355,9 @@
                                 @endif
                             </td>
                             <td>
-                                @if($canonicalList !== null)
+                                @if($isCanonicalApplication && $application->status === 'approved' && $application->final_score !== null)
+                                    {{ number_format((float) $application->final_score, 2) }} / 50
+                                @elseif($canonicalList !== null)
                                     —
                                 @elseif($application->status === 'rejected' && $application->isEliminatedFromScoring())
                                     {{ number_format($application->getDisplayScore(), 2) }} / {{ $isYouthApplication ? '56' : '58' }}
@@ -375,6 +380,10 @@
                                         {{-- Odbijene prijave - svi članovi mogu pristupiti (read-only) --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #dc2626; color: #fff;">
                                             Pregledaj
+                                        </a>
+                                    @elseif($isCanonicalApplication && $application->status === 'approved')
+                                        <a href="{{ route('evaluation.create', $application) }}" class="btn-sm evaluated" style="background: #10b981; color: #fff;">
+                                            Ocijenjena prijava
                                         </a>
                                     @elseif($isCanonicalApplication && $canonicalList !== null && ! ($canonicalList['eliminated'] ?? false))
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm">
