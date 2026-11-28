@@ -91,7 +91,10 @@ class MmspTestPreviewHubListTest extends TestCase
             ->assertDontSee($plainDraft->title, false)
             ->assertSee($published->title, false)
             ->assertDontSee($women->title, false)
-            ->assertDontSee('Preuzmi uputstvo (PDF)', false);
+            ->assertSee('Preuzmi uputstvo (PDF)', false)
+            ->assertSee(route('competitions.mmsp-guide.pdf'), false)
+            ->assertDontSee(route('competitions.guide.pdf'), false)
+            ->assertDontSee(route('competitions.youth-guide.pdf'), false);
         $this->assertStringNotContainsString('page-header is-hub', $list->getContent());
 
         $this->actingAs($owner)
@@ -243,7 +246,10 @@ class MmspTestPreviewHubListTest extends TestCase
             ->assertDontSee($plainDraft->title, false)
             ->assertSee($published->title, false)
             ->assertDontSee($women->title, false)
-            ->assertDontSee('Preuzmi uputstvo (PDF)', false);
+            ->assertSee('Preuzmi uputstvo (PDF)', false)
+            ->assertSee(route('competitions.mmsp-guide.pdf'), false)
+            ->assertDontSee(route('competitions.guide.pdf'), false)
+            ->assertDontSee(route('competitions.youth-guide.pdf'), false);
         $this->assertStringNotContainsString('page-header is-hub', $list->getContent());
 
         $this->actingAs($owner)
