@@ -310,14 +310,19 @@
             min-height: 2em;
             max-height: 3.5em;
         }
+        .mmsp-p3 .mmsp-p3-admin-card {
+            font-size: 9pt;
+            padding: 4px 6px !important;
+            margin-top: 4px !important;
+        }
         .mmsp-p3 .mmsp-p3-article20-heading {
-        font-size: 9.5pt;
-        font-weight: bold;
-        border-top: 1px solid #000;
-        margin-top: 8px;
-        padding-top: 6px;
-        page-break-after: avoid;
-    }
+            font-size: 9.5pt;
+            font-weight: bold;
+            border-top: 1px solid #000;
+            margin-top: 8px;
+            padding-top: 6px;
+            page-break-after: avoid;
+        }
     .mmsp-p3 .form-label-large { page-break-after: avoid; }
         .mmsp-p3 .form-section-compact .form-label-large,
         .mmsp-p3 .form-section-scores > .form-label-large,
@@ -341,11 +346,17 @@
         }
         .mmsp-p3 .evaluation-table thead { display: table-header-group; }
         .mmsp-p3 .evaluation-table tbody { display: table-row-group; }
-        .mmsp-p3 .evaluation-table tr {
-            page-break-inside: auto;
-            break-inside: auto;
+        .mmsp-p3 .evaluation-table tr,
+        .mmsp-p3 .evaluation-table th,
+        .mmsp-p3 .evaluation-table td {
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         .mmsp-p3 .evaluation-table .final-score-row {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .mmsp-p3 .evaluation-table ~ div[style*="margin-top: 16px"] {
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -381,8 +392,10 @@
             font-weight: bold !important;
             color: #000 !important;
         }
+        .mmsp-p3 .evaluation-table .final-score-row,
         .mmsp-p3 .evaluation-table .final-score-row td,
         .mmsp-p3 .evaluation-table .final-score-row .average-col {
+            background: #f3f4f6 !important;
             font-weight: bold !important;
             color: #000 !important;
         }
