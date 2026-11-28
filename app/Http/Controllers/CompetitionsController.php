@@ -36,6 +36,7 @@ class CompetitionsController extends Controller
                 'competitions' => $this->canonicalTestPreviewCompetitions(),
                 'showZenskoGuidePdf' => false,
                 'showOmladinskoGuidePdf' => false,
+                'showMmspGuidePdf' => true,
                 'selectedProgramTitle' => CompetitionProgramCatalog::definitions()[$requestedType]['title'] ?? null,
             ]);
         }
@@ -47,6 +48,7 @@ class CompetitionsController extends Controller
                 'competitions' => collect(),
                 'showZenskoGuidePdf' => false,
                 'showOmladinskoGuidePdf' => false,
+                'showMmspGuidePdf' => false,
                 'selectedProgramTitle' => null,
             ]);
         }
@@ -61,6 +63,7 @@ class CompetitionsController extends Controller
             'competitions' => $competitions,
             'showZenskoGuidePdf' => $showZenskoGuidePdf,
             'showOmladinskoGuidePdf' => $requestedType === 'omladinsko',
+            'showMmspGuidePdf' => $requestedType === CompetitionProfileResolver::TYPE_CANONICAL,
             'selectedProgramTitle' => $selectedProgramTitle,
         ]);
     }

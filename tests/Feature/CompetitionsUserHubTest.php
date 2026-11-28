@@ -317,9 +317,14 @@ class CompetitionsUserHubTest extends TestCase
         foreach ([null, 'omladinsko', CompetitionProfileResolver::TYPE_CANONICAL] as $type) {
             $response = $this->get(route('competitions.index', $type === null ? [] : ['type' => $type]))
                 ->assertOk()->assertDontSee(route('competitions.guide.pdf'), false);
-            if ($type !== 'omladinsko') {
+            if ($type === null) {
                 $response->assertDontSee('Preuzmi uputstvo (PDF)')
-                    ->assertDontSee(route('competitions.youth-guide.pdf'), false);
+                    ->assertDontSee(route('competitions.youth-guide.pdf'), false)
+                    ->assertDontSee(route('competitions.mmsp-guide.pdf'), false);
+            } elseif ($type === 'omladinsko') {
+                $response->assertDontSee(route('competitions.mmsp-guide.pdf'), false);
+            } else {
+                $this->assertProgramGuideBelowHeader($response->getContent(), 'competitions.mmsp-guide.pdf');
             }
         }
     }
@@ -367,8 +372,11 @@ class CompetitionsUserHubTest extends TestCase
         @$dom->loadHTML('<?xml encoding="UTF-8">'.$html);
         $xpath = new \DOMXPath($dom);
         $href = '[@href="'.route($routeName).'"]';
-        $otherRoute = $routeName === 'competitions.guide.pdf' ? 'competitions.youth-guide.pdf' : 'competitions.guide.pdf';
-        $this->assertStringNotContainsString(route($otherRoute), $html);
+        foreach (['competitions.guide.pdf', 'competitions.youth-guide.pdf', 'competitions.mmsp-guide.pdf'] as $name) {
+            if ($name !== $routeName) {
+                $this->assertStringNotContainsString(route($name), $html);
+            }
+        }
         $this->assertSame(1, $xpath->query('//a'.$href)->length, 'Render exactly one existing guide link.');
         $header = '//div[contains(concat(" ",normalize-space(@class)," ")," page-header ")]';
         $this->assertSame(0, $xpath->query($header.'//a'.$href)->length);
