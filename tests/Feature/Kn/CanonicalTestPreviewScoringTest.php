@@ -84,7 +84,7 @@ class CanonicalTestPreviewScoringTest extends TestCase
 
         $this->actingAs($chair)
             ->post(route('evaluation.store', $application), $this->scorePayload())
-            ->assertRedirect(route('evaluation.create', $application));
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
 
         $this->assertSame(1, EvaluationScore::query()->where('application_id', $application->id)->whereNotNull('completed_at')->count());
         $this->assertNull($competition->fresh()->canonical_ranking_formed_at);
@@ -92,7 +92,7 @@ class CanonicalTestPreviewScoringTest extends TestCase
         foreach ([G::ROLE_SEKRETAR, G::ROLE_SPOLJASNJI] as $role) {
             $this->actingAs($members[$role]->user)
                 ->post(route('evaluation.store', $application), $this->scorePayload())
-                ->assertRedirect(route('evaluation.create', $application));
+                ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
         }
 
         $this->assertSame(3, EvaluationScore::query()->where('application_id', $application->id)->whereNotNull('completed_at')->count());
