@@ -49,5 +49,9 @@ class MmspP3PrintAlignmentTest extends TestCase
         $this->assertStringContainsString('.form-section-compact div[style*="background"]', $youth);
         $this->assertStringNotContainsString('mmsp-p3-admin-card', $youth);
         $this->assertStringNotContainsString('#f3f4f6', $youth);
+        $youthNote = strpos($youth, 'Biznis planovi koji nijesu ostvarili najmanje 30 bodova neće se podržati.');
+        $youthBranch = strrpos(substr($youth, 0, $youthNote), '@if(! $isOmladinskoScoring)');
+        $this->assertNotFalse($youthNote);
+        $this->assertNotFalse($youthBranch);
     }
 }

@@ -158,13 +158,89 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         $this->actingAs($chair)
             ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), ['scoring_confirmed' => '1', 'notes' => 'Obrazloženje.']))
-            ->assertRedirect(route('evaluation.create', $application))
-            ->assertSessionHas('success');
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']))
+            ->assertSessionHas('success', 'Ocjena je uspješno sačuvana.');
 
         $row = EvaluationScore::query()->sole();
         $this->assertSame(1, (int) $row->canonical_seat_no);
         $this->assertSame(40, (int) $row->final_score);
         $this->assertSame('Obrazloženje.', $row->notes);
+    }
+
+    public function test_p3_returns_to_the_evaluated_list_without_dropping_invalid_input(): void
+    {
+        [, $members, , [$application]] = $this->readyCompetition();
+        $chair = $members[G::ROLE_PREDSJEDNIK]->user;
+        $application->forceFill(['business_plan_name' => null])->save();
+        CanonicalApplicantForm::query()->create([
+            'application_id' => $application->id,
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+            'person_name' => 'Ana Anić',
+            'subsidy_type' => CanonicalSubsidyType::DIGITALIZATION,
+        ])->forceFill(['frozen_at' => now()])->save();
+        $application->finalClaim->update(['subsidy_type' => CanonicalSubsidyType::INNOVATIVE]);
+
+        $open = $this->actingAs($chair)->get(route('evaluation.create', $application))->assertOk();
+        $open->assertSee('id="mmsp-p3-print"', false)
+            ->assertSee('Sačuvaj ocjene', false)
+            ->assertDontSee('Planovi ulaganja koji ostvare manje od 30 bodova ne mogu biti podržani.')
+            ->assertSee('max="5"', false);
+
+        $this->actingAs($chair)
+            ->followingRedirects()
+            ->from(route('evaluation.create', $application))
+            ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), [
+                'criterion_3' => 6,
+                'scoring_confirmed' => '1',
+                'notes' => 'Napomena ostaje u obrascu',
+            ]))
+            ->assertOk()
+            ->assertSee('Kriterijum 3 može biti najviše 5 poena.')
+            ->assertSee('Napomena ostaje u obrascu')
+            ->assertSee('value="6"', false)
+            ->assertSee('id="mmsp-p3-print"', false);
+        $this->assertSame(0, EvaluationScore::query()->count());
+
+        $this->actingAs($chair)
+            ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(40), [
+                'scoring_confirmed' => '1',
+                'notes' => 'Sačuvana napomena',
+            ]))
+            ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']))
+            ->assertSessionHas('success', 'Ocjena je uspješno sačuvana.');
+
+        $this->actingAs($chair)
+            ->get(route('evaluation.index', ['filter' => 'evaluated']))
+            ->assertOk()
+            ->assertSee('Ocjena je uspješno sačuvana.')
+            ->assertSee('value="evaluated" selected', false)
+            ->assertSee('Ana Anić')
+            ->assertSee(CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE))
+            ->assertSee('Obrazac P3')
+            ->assertDontSee('Naziv plana ulaganja');
+
+        $locked = $this->actingAs($chair)->get(route('evaluation.create', $application->fresh()))->assertOk();
+        $locked->assertSee('id="mmsp-p3-print"', false)
+            ->assertSee('Individualna ocjena je zaključana i ne može se mijenjati.')
+            ->assertSee('Sačuvana napomena')
+            ->assertDontSee('name="criterion_1"', false);
+
+        $this->actingAs($chair)
+            ->post(route('evaluation.store', $application), array_merge($this->criteriaSumming(30), [
+                'scoring_confirmed' => '1',
+            ]))
+            ->assertForbidden();
+        $this->assertSame(40, (int) EvaluationScore::query()->sole()->final_score);
+
+        $application->forceFill(['status' => 'approved'])->save();
+        $this->actingAs($chair)->get(route('evaluation.create', $application->fresh()))
+            ->assertOk()
+            ->assertSee('id="mmsp-p3-print"', false);
+
+        $application->forceFill(['status' => 'rejected'])->save();
+        $this->actingAs($chair)->get(route('evaluation.create', $application->fresh()))
+            ->assertOk()
+            ->assertDontSee('id="mmsp-p3-print"', false);
     }
 
     public function test_non_member_and_member_of_another_commission_are_blocked(): void
@@ -1240,7 +1316,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertSee('type="number"', false)
             ->assertSee('KRITERIJUMI ZA OCJENU', false)
             ->assertDontSee('<select name="criterion_1"', false)
-            ->assertDontSee('id="mmsp-p3-print"', false)
+            ->assertSee('id="mmsp-p3-print"', false)
+            ->assertDontSee('Planovi ulaganja koji ostvare manje od 30 bodova ne mogu biti podržani.')
             ->assertSee('UKUPAN ZBIR', false)
             ->assertSee('3. Da li su ispunjeni formalni uslovi za kandidovanje plana ulaganja (potpuna dokumentacija)?')
             ->assertSee(MmspP3Form::ARTICLE20_HEADING)
@@ -1334,7 +1411,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         $this->actingAs($secretary->user)->get(route('evaluation.create', $application))
             ->assertOk()
-            ->assertDontSee('id="mmsp-p3-print"', false);
+            ->assertSee('id="mmsp-p3-print"', false);
 
         $this->score($chair, $application, 50, 'Napomena predsjednika.');
 
@@ -1348,7 +1425,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         $secretaryPage = $this->actingAs($secretary->user)->get(route('evaluation.create', $application))->assertOk();
         $secretaryPage->assertDontSee('Napomena predsjednika.')
-            ->assertDontSee('id="mmsp-p3-print"', false);
+            ->assertSee('id="mmsp-p3-print"', false);
         $this->assertStringNotContainsString('>50<', $this->finalScoreRow($secretaryPage->getContent()));
 
         $this->score($secretary, $application, 40, 'Napomena sekretara.');
@@ -1478,7 +1555,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
             ->assertSee('Prigovor je prihvaćen.')
             ->assertSee('Prilog je bio u dosijeu.')
             ->assertSee('Nedostaje obavezni prilog.')
-            ->assertDontSee('id="mmsp-p3-print"', false)
+            ->assertSee('id="mmsp-p3-print"', false)
             ->assertDontSee('Evidentiraj odluku o prigovoru');
         $this->assertSame(2, substr_count($accepted->getContent(), '<strong>Da</strong>'));
         $this->assertSame(1, substr_count($accepted->getContent(), '<strong>Ne*</strong>'));

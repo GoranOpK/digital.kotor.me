@@ -964,8 +964,8 @@ class EvaluationController extends Controller
             $request->boolean('scoring_confirmed'),
         );
 
-        return redirect()->route('evaluation.create', $application)
-            ->with('success', 'Ocjena je uspješno sačuvana i zaključana.');
+        return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+            ->with('success', 'Ocjena je uspješno sačuvana.');
     }
 
     /**

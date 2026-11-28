@@ -558,7 +558,7 @@ class CanonicalTestApplicationPhaseTest extends TestCase
         foreach ($roles as $role) {
             $this->actingAs($members[$role]->user)
                 ->post(route('evaluation.store', $application), $this->scorePayload())
-                ->assertRedirect(route('evaluation.create', $application));
+                ->assertRedirect(route('evaluation.index', ['filter' => 'evaluated']));
         }
 
         return [$members, $competition->fresh(), $application->fresh()];

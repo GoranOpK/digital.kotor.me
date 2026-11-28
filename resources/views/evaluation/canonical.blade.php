@@ -10,7 +10,8 @@
     $p3EliminatoryFail = $p3Administrative['recorded']
         && $p3Administrative['result'] === \App\Support\MmspP3Form::RESULT_FAIL
         && ! $p3Administrative['complaint_accepted'];
-    $canPrintP3 = $ownScore !== null || $p3EliminatoryFail;
+    $isRejectedApplication = $application->status === 'rejected';
+    $canPrintP3 = ! $isRejectedApplication || $p3EliminatoryFail;
     $canEnterScores = $ownScore === null && $scoreBlockReason === null;
     $commissionSeats = $commissionSeats ?? collect([$commissionMember]);
 @endphp
