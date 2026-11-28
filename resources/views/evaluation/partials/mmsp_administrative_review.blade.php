@@ -67,7 +67,7 @@
         @if($assessment === null)
             <p style="margin: 0 0 12px;">{{ \App\Services\Competitions\Commission\CanonicalCommissionGovernance::CHAIR_COMPLETENESS_REQUIRED_MESSAGE }}</p>
         @endif
-        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
+        <div class="mmsp-p3-admin-card" style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
             @if($presentation['complaint_accepted'])
                 <div style="margin-bottom: 12px; font-weight: 600;">Prvobitni eliminatorni odgovori</div>
             @endif
