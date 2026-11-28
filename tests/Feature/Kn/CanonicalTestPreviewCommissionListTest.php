@@ -69,6 +69,8 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         ]);
         $form->forceFill(['frozen_at' => now()])->save();
         $plan->forceFill(['frozen_at' => now()])->save();
+        $submitted->forceFill(['business_plan_name' => null])->save();
+        $this->assertNull($submitted->fresh()->business_plan_name);
 
         $this->assertTrue($preview->isCanonicalTestPreview());
         $this->assertFalse($preview->isApplicationDeadlinePassed());
@@ -78,8 +80,10 @@ class CanonicalTestPreviewCommissionListTest extends TestCase
         $this->actingAs($chair)
             ->get(route('admin.competitions.show', $preview))
             ->assertOk()
-            ->assertSee('Naziv plana ulaganja')
-            ->assertSee('Plan Vidljivi Podnosilac MMSP')
+            ->assertSee('Vrsta subvencije')
+            ->assertSee(CanonicalSubsidyType::label(CanonicalSubsidyType::DIGITALIZATION))
+            ->assertDontSee('Naziv plana ulaganja')
+            ->assertDontSee('Plan Vidljivi Podnosilac MMSP')
             ->assertSee('Vidljivi Podnosilac MMSP')
             ->assertSee('U obradi')
             ->assertSee('P1a popunjen')

@@ -259,10 +259,10 @@
             $listedCompetitions = collect($competitions ?? []);
             $canonicalType = \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
             if (request()->filled('competition_id')) {
-                $planHeaderCompetition = $listedCompetitions->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'));
-                $showMmspPlanHeader = $planHeaderCompetition && $planHeaderCompetition->type === $canonicalType;
+                $subsidyHeaderCompetition = $listedCompetitions->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'));
+                $showSubsidyHeader = $subsidyHeaderCompetition && $subsidyHeaderCompetition->type === $canonicalType;
             } else {
-                $showMmspPlanHeader = $listedCompetitions->isNotEmpty()
+                $showSubsidyHeader = $listedCompetitions->isNotEmpty()
                     && $listedCompetitions->every(fn ($comp) => $comp->type === $canonicalType);
             }
         @endphp
@@ -270,7 +270,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{ $showMmspPlanHeader ? 'Naziv plana ulaganja' : 'Naziv biznis plana' }}</th>
+                        <th>{{ $showSubsidyHeader ? 'Vrsta subvencije' : 'Naziv biznis plana' }}</th>
                         <th>Podnosilac</th>
                         <th>Konkurs</th>
                         <th>Status</th>
@@ -330,7 +330,7 @@
                         <tr>
                             <td>
                                 @if($isCanonicalApplication)
-                                    {{ filled($application->business_plan_name) ? $application->business_plan_name : '—' }}
+                                    {{ \App\Support\MmspP3Form::subsidyLabel($application) }}
                                 @else
                                     {{ $application->business_plan_name }}
                                 @endif
