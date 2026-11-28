@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Application;
 use App\Models\ApplicationCompletenessAssessment;
+use App\Models\CanonicalApplicantForm;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Services\CanonicalIndividualScoringService;
 use App\Services\Competitions\Commission\CanonicalCommissionGovernance as G;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CanonicalLegalForm;
 use App\Support\CanonicalSubsidyType;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
@@ -347,7 +349,7 @@ class MmspEvaluationApprovedApplicationsTest extends TestCase
             'applicant_type' => 'preduzetnica',
             'business_stage' => 'započinjanje',
             'status' => $status,
-            'business_plan_name' => 'Plan '.$name,
+            'business_plan_name' => null,
             'founder_name' => $name,
             'submitted_at' => $status === 'draft' ? null : now(),
             'redni_broj' => Application::query()->where('competition_id', $competition->id)->count() + 1,
@@ -356,6 +358,12 @@ class MmspEvaluationApprovedApplicationsTest extends TestCase
             'final_score' => $score,
             'approved_amount' => $amount,
         ])->save();
+        CanonicalApplicantForm::query()->create([
+            'application_id' => $application->id,
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+            'person_name' => $name,
+            'subsidy_type' => CanonicalSubsidyType::AUTHENTIC_LOCAL,
+        ])->forceFill(['frozen_at' => now()])->save();
         if ($claim) {
             FinalApplicationClaim::query()->create([
                 'user_id' => $owner->id,

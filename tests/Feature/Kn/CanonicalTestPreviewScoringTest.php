@@ -4,6 +4,7 @@ namespace Tests\Feature\Kn;
 
 use App\Models\Application;
 use App\Models\ApplicationCompletenessAssessment;
+use App\Models\CanonicalApplicantForm;
 use App\Models\Commission;
 use App\Models\CommissionMember;
 use App\Models\CommissionSession;
@@ -17,6 +18,7 @@ use App\Services\Competitions\Commission\CanonicalCommissionGovernance as G;
 use App\Services\Competitions\Commission\CanonicalCommissionSessionService;
 use App\Services\Competitions\CompletenessAssessmentService;
 use App\Services\Competitions\Profile\CompetitionProfileResolver;
+use App\Support\CanonicalLegalForm;
 use App\Support\CanonicalSubsidyType;
 use App\Support\ScoringProfileConfig;
 use Carbon\Carbon;
@@ -65,8 +67,10 @@ class CanonicalTestPreviewScoringTest extends TestCase
         $this->actingAs($chair)
             ->get(route('evaluation.index'))
             ->assertOk()
-            ->assertSee($application->business_plan_name)
-            ->assertDontSee('Vrsta subvencije');
+            ->assertSee(CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL))
+            ->assertSee('Vrsta subvencije')
+            ->assertDontSee('Naziv plana ulaganja')
+            ->assertDontSee($application->business_plan_name);
 
         $this->actingAs($chair)
             ->get(route('evaluation.create', $application))
@@ -100,7 +104,13 @@ class CanonicalTestPreviewScoringTest extends TestCase
     {
         [$members, $competition, $application] = $this->readyPreview();
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
-        $draft = $this->application($competition, ['status' => 'draft', 'business_plan_name' => 'Skriveni nacrt', 'submitted_at' => null], false);
+        $draft = $this->application($competition, ['status' => 'draft', 'business_plan_name' => null, 'submitted_at' => null], false);
+        CanonicalApplicantForm::query()->create([
+            'application_id' => $draft->id,
+            'legal_form' => CanonicalLegalForm::PREDUZETNIK,
+            'person_name' => 'Skriveni nacrt',
+            'subsidy_type' => CanonicalSubsidyType::AUTHENTIC_LOCAL,
+        ])->forceFill(['frozen_at' => now()])->save();
 
         $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertDontSee('Skriveni nacrt');
         $this->assertForbiddenSee(self::DRAFT_HIDDEN, fn () => $this->actingAs($chair)->get(route('evaluation.create', $draft)));
@@ -161,7 +171,9 @@ class CanonicalTestPreviewScoringTest extends TestCase
 
         $this->assertFalse($published->isCanonicalTestPreview());
         $this->assertFalse($published->isApplicationDeadlinePassed());
-        $this->actingAs($chair->user)->get(route('evaluation.index'))->assertOk()->assertDontSee($publishedApplication->business_plan_name);
+        $this->actingAs($chair->user)->get(route('evaluation.index'))->assertOk()
+            ->assertDontSee(CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL))
+            ->assertDontSee($publishedApplication->business_plan_name);
         $this->assertForbiddenSee($message, fn () => $this->actingAs($chair->user)->get(route('evaluation.create', $publishedApplication)));
         $this->assertForbiddenSee($message, fn () => $this->actingAs($chair->user)->post(route('evaluation.store', $publishedApplication), $this->scorePayload()));
         $this->assertForbiddenSee(

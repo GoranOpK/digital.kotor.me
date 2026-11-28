@@ -511,7 +511,7 @@
                     <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                         <thead>
                             <tr style="border-bottom: 2px solid #e5e7eb;">
-                                <th style="padding: 12px; text-align: left;">Naziv plana ulaganja</th>
+                                <th style="padding: 12px; text-align: left;">Vrsta subvencije</th>
                                 <th style="padding: 12px; text-align: left;">Podnosilac</th>
                                 <th style="padding: 12px; text-align: left;">Status prijave</th>
                                 <th style="padding: 12px; text-align: left;">Obrazac</th>
@@ -526,7 +526,7 @@
                                     $canonicalForm = $app->canonicalApplicantForm;
                                     $canonicalPlan = $app->canonicalInvestmentPlan;
                                     $formCode = $canonicalForm?->formCode() ?? 'P1';
-                                    $planTitle = filled($app->business_plan_name) ? $app->business_plan_name : '—';
+                                    $subsidyLabel = \App\Support\MmspP3Form::subsidyLabel($app);
                                     $statusLabels = [
                                         'draft' => 'Nacrt',
                                         'submitted' => 'U obradi',
@@ -539,7 +539,7 @@
                                     $p2Url = route('applications.canonical-p2.edit', $app);
                                 @endphp
                                 <tr style="border-bottom: 1px solid #e5e7eb;">
-                                    <td style="padding: 12px; vertical-align: top;">{{ $planTitle }}</td>
+                                    <td style="padding: 12px; vertical-align: top;">{{ $subsidyLabel }}</td>
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         <span class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px;">

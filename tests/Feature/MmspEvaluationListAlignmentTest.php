@@ -54,16 +54,22 @@ class MmspEvaluationListAlignmentTest extends TestCase
         $decided = $this->competition($commission, 'MMSP konačna odluka');
         $decided->forceFill(['canonical_ranking_formed_at' => now()])->save();
 
+        $local = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $digital = CanonicalSubsidyType::label(CanonicalSubsidyType::DIGITALIZATION);
+        $innovative = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
         $entrepreneur = $this->owner('Stari Nalog Petra');
-        $olive = $this->application($open, $entrepreneur, 'Masline u Kotoru', CanonicalLegalForm::PREDUZETNIK, 'Petar Petrović');
-        $cheese = $this->application($open, $entrepreneur, 'Bokeljski sir', CanonicalLegalForm::PREDUZETNIK, 'Petar Petrović', null, 'submitted', null, null, CanonicalSubsidyType::DIGITALIZATION);
-        $company = $this->application($open, $this->owner('Nalog Društva'), 'Digitalni vodič', CanonicalLegalForm::DRUSTVO, 'Odgovorno Lice', 'Kotor Turist DOO');
+        $olive = $this->application($open, $entrepreneur, null, CanonicalLegalForm::PREDUZETNIK, 'Petar Petrović');
+        $cheese = $this->application($open, $entrepreneur, null, CanonicalLegalForm::PREDUZETNIK, 'Petar Petrović', null, 'submitted', null, null, CanonicalSubsidyType::DIGITALIZATION);
+        $company = $this->application($open, $this->owner('Nalog Društva'), null, CanonicalLegalForm::DRUSTVO, 'Odgovorno Lice', 'Kotor Turist DOO', 'submitted', null, null, CanonicalSubsidyType::INNOVATIVE);
         $nameless = $this->application($open, $this->owner('Nalog Bez Naziva'), null, CanonicalLegalForm::PREDUZETNIK, 'Ana BezPlana');
-        $review = $this->application($open, $this->owner('Nalog Provjere'), 'Čeka provjeru');
-        $ready = $this->application($open, $this->owner('Nalog Spreman'), 'Spreman za bodovanje');
-        $partial = $this->application($open, $this->owner('Nalog Djelimican'), 'Djelimično ocijenjen');
-        $approved = $this->application($decided, $this->owner('Nalog Odobren'), 'Odobreni plan', CanonicalLegalForm::PREDUZETNIK, 'Jovan Odobren', null, 'approved', '50.00', '1500.00');
-        $rejected = $this->application($decided, $this->owner('Nalog Odbijen'), 'Odbijeni plan', CanonicalLegalForm::PREDUZETNIK, 'Mika Odbijen', null, 'rejected', '20.00');
+        $review = $this->application($open, $this->owner('Nalog Provjere'), null, CanonicalLegalForm::PREDUZETNIK, 'Luka Provjera');
+        $ready = $this->application($open, $this->owner('Nalog Spreman'), null, CanonicalLegalForm::PREDUZETNIK, 'Marko Spreman');
+        $partial = $this->application($open, $this->owner('Nalog Djelimican'), null, CanonicalLegalForm::PREDUZETNIK, 'Ivo Djelimican');
+        $approved = $this->application($decided, $this->owner('Nalog Odobren'), null, CanonicalLegalForm::PREDUZETNIK, 'Jovan Odobren', null, 'approved', '50.00', '1500.00', CanonicalSubsidyType::DIGITALIZATION);
+        $rejected = $this->application($decided, $this->owner('Nalog Odbijen'), null, CanonicalLegalForm::PREDUZETNIK, 'Mika Odbijen', null, 'rejected', '20.00', null, CanonicalSubsidyType::INNOVATIVE);
+        foreach ([$olive, $cheese, $company, $nameless, $review, $ready, $partial, $approved, $rejected] as $stored) {
+            $this->assertNull($stored->business_plan_name);
+        }
 
         foreach ([$olive, $cheese, $company, $nameless, $ready, $partial, $approved, $rejected] as $application) {
             $this->completeAssessment($application, $chair);
@@ -94,7 +100,7 @@ class MmspEvaluationListAlignmentTest extends TestCase
             'competition_id' => $open->id,
         ]))->assertOk()->getContent();
         $this->assertSame([
-            'Naziv plana ulaganja',
+            'Vrsta subvencije',
             'Podnosilac',
             'Konkurs',
             'Status',
@@ -102,57 +108,64 @@ class MmspEvaluationListAlignmentTest extends TestCase
             'Akcije',
         ], $this->headers($mmsp));
         $this->assertStringNotContainsString('Naziv biznis plana', $mmsp);
-        $this->assertStringNotContainsString('Vrsta subvencije', $mmsp);
-        $this->assertStringNotContainsString(CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL), $mmsp);
+        $this->assertStringNotContainsString('Naziv plana ulaganja', $mmsp);
 
-        $oliveRow = $this->row($mmsp, 'Masline u Kotoru');
-        $cheeseRow = $this->row($mmsp, 'Bokeljski sir');
-        $this->assertStringContainsString('Petar Petrović', $oliveRow);
-        $this->assertStringContainsString('Petar Petrović', $cheeseRow);
+        $oliveRow = $this->row($mmsp, 'Petar Petrović', $local);
+        $cheeseRow = $this->row($mmsp, 'Petar Petrović', $digital);
+        $this->assertNotSame($oliveRow, $cheeseRow);
+        $this->assertStringNotContainsString($digital, $oliveRow);
+        $this->assertStringNotContainsString($local, $cheeseRow);
         $this->assertStringNotContainsString('Novi Nalog Petra', $oliveRow);
         $this->assertStringNotContainsString('Novi Nalog Petra', $cheeseRow);
         $this->assertStringNotContainsString('Stari Nalog Petra', $mmsp);
 
-        $companyRow = $this->row($mmsp, 'Digitalni vodič');
-        $this->assertStringContainsString('Kotor Turist DOO', $companyRow);
+        $companyRow = $this->row($mmsp, 'Kotor Turist DOO', $innovative);
         $this->assertStringNotContainsString('Odgovorno Lice', $companyRow);
         $this->assertStringNotContainsString('Nalog Društva', $companyRow);
 
-        $namelessRow = $this->row($mmsp, 'Ana BezPlana');
-        $this->assertStringContainsString('—', $namelessRow);
+        $namelessRow = $this->row($mmsp, 'Ana BezPlana', $local);
         $this->assertStringNotContainsString('Nalog Bez Naziva', $namelessRow);
 
-        $reviewRow = $this->row($mmsp, 'Čeka provjeru');
+        $reviewRow = $this->row($mmsp, 'Luka Provjera', $local);
         $this->assertStringContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::PENDING_REVIEW], $reviewRow);
         $this->assertStringContainsString('Obrazac P3', $reviewRow);
         $this->assertStringNotContainsString('Ocjeni', $reviewRow);
 
-        $readyRow = $this->row($mmsp, 'Spreman za bodovanje');
+        $readyRow = $this->row($mmsp, 'Marko Spreman', $local);
         $this->assertStringContainsString('U ocjenjivanju', $readyRow);
         $this->assertStringContainsString('Obrazac P3', $readyRow);
         $this->assertStringNotContainsString('Ocjeni', $readyRow);
         $this->assertStringNotContainsString('Pregledaj ocjenu', $readyRow);
 
-        $partialRow = $this->row($mmsp, 'Djelimično ocijenjen');
+        $partialRow = $this->row($mmsp, 'Ivo Djelimican', $local);
         $this->assertStringContainsString('Vaša ocjena je unesena', $partialRow);
         $this->assertStringContainsString('btn-sm evaluated', $partialRow);
         $this->assertStringContainsString('Obrazac P3', $partialRow);
         $this->assertStringNotContainsString('Pregledaj ocjenu', $partialRow);
 
+        $commissionList = $this->actingAs($chair->user)->get(route('admin.competitions.show', $open))->assertOk()->getContent();
+        $this->assertStringContainsString('Vrsta subvencije', $commissionList);
+        $this->assertStringNotContainsString('Naziv plana ulaganja', $commissionList);
+        $oliveCommission = $this->row($commissionList, 'Novi Nalog Petra', $local);
+        $cheeseCommission = $this->row($commissionList, 'Novi Nalog Petra', $digital);
+        $this->assertNotSame($oliveCommission, $cheeseCommission);
+        $this->assertStringNotContainsString('Petar Petrović', $oliveCommission);
+        $companyCommission = $this->row($commissionList, 'Nalog Društva', $innovative);
+        $this->assertStringNotContainsString('Kotor Turist DOO', $companyCommission);
+
         $decidedList = $this->actingAs($chair->user)->get(route('evaluation.index', [
             'competition_id' => $decided->id,
         ]))->assertOk()->getContent();
-        $approvedRow = $this->row($decidedList, 'Odobreni plan');
+        $this->assertSame('Vrsta subvencije', $this->headers($decidedList)[0]);
+        $approvedRow = $this->row($decidedList, 'Jovan Odobren', $digital);
         $this->assertStringContainsString('Odobrena prijava', $approvedRow);
         $this->assertStringContainsString('status-evaluated', $approvedRow);
         $this->assertStringContainsString('50.00 / 50', $approvedRow);
-        $this->assertStringContainsString('Jovan Odobren', $approvedRow);
         $this->assertStringContainsString('Ocijenjena prijava', $approvedRow);
         $this->assertStringContainsString('#10b981', $approvedRow);
-        $rejectedRow = $this->row($decidedList, 'Odbijeni plan');
+        $rejectedRow = $this->row($decidedList, 'Mika Odbijen', $innovative);
         $this->assertStringContainsString('Odbijena prijava', $rejectedRow);
         $this->assertStringContainsString('status-rejected', $rejectedRow);
-        $this->assertStringContainsString('Mika Odbijen', $rejectedRow);
         $this->assertStringContainsString('20.00 / 50', $rejectedRow);
         $this->assertStringContainsString('Pregledaj', $rejectedRow);
         $this->assertStringNotContainsString('Odobrena prijava', $rejectedRow);
@@ -161,20 +174,20 @@ class MmspEvaluationListAlignmentTest extends TestCase
             'filter' => 'evaluated',
             'competition_id' => $decided->id,
         ]))->assertOk()->getContent();
-        $this->assertStringContainsString('Odobreni plan', $evaluated);
-        $this->assertStringContainsString('Odbijeni plan', $evaluated);
+        $this->assertStringContainsString('Jovan Odobren', $evaluated);
+        $this->assertStringContainsString('Mika Odbijen', $evaluated);
         $rejectedFilter = $this->actingAs($chair->user)->get(route('evaluation.index', [
             'filter' => 'rejected',
             'competition_id' => $decided->id,
         ]))->assertOk()->getContent();
-        $this->assertStringNotContainsString('Odobreni plan', $rejectedFilter);
-        $this->assertStringContainsString('Odbijeni plan', $rejectedFilter);
+        $this->assertStringNotContainsString('Jovan Odobren', $rejectedFilter);
+        $this->assertStringContainsString('Mika Odbijen', $rejectedFilter);
         $pending = $this->actingAs($chair->user)->get(route('evaluation.index', [
             'filter' => 'pending',
             'competition_id' => $decided->id,
         ]))->assertOk()->getContent();
-        $this->assertStringNotContainsString('Odobreni plan', $pending);
-        $this->assertStringNotContainsString('Odbijeni plan', $pending);
+        $this->assertStringNotContainsString('Jovan Odobren', $pending);
+        $this->assertStringNotContainsString('Mika Odbijen', $pending);
 
         $youthList = $this->actingAs($chair->user)->get(route('evaluation.index', [
             'competition_id' => $youth->id,
@@ -220,13 +233,20 @@ class MmspEvaluationListAlignmentTest extends TestCase
         return array_map(fn (string $cell): string => trim(strip_tags($cell)), $cells[1]);
     }
 
-    private function row(string $html, string $needle): string
+    private function row(string $html, string $needle, string ...$also): string
     {
         preg_match_all('/<tr\b[^>]*>.*?<\/tr>/s', $html, $rows);
         foreach ($rows[0] as $row) {
-            if (str_contains($row, $needle)) {
-                return $row;
+            if (! str_contains($row, $needle)) {
+                continue;
             }
+            foreach ($also as $extra) {
+                if (! str_contains($row, $extra)) {
+                    continue 2;
+                }
+            }
+
+            return $row;
         }
 
         $this->fail($needle);
