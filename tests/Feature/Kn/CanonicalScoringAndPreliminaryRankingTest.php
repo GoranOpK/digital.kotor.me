@@ -257,7 +257,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         $this->assertSame(CanonicalReviewState::COMPLAINT_PENDING, CanonicalReviewState::resolve($application->fresh()));
         $pendingList = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk();
-        $pendingRow = $this->rowContaining($pendingList->getContent(), CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL));
+        $pendingRow = $this->rowContaining($pendingList->getContent(), $application->business_plan_name);
         $this->assertStringContainsString('Obrazac P3', $pendingRow);
         $this->assertStringNotContainsString('Ocjeni', $pendingRow);
         $this->assertSame(G::SCORING_STAGE_CLOSED_MESSAGE, $this->scoring()->canonicalScoreWriteBlockReason($chair, $application->fresh()));
@@ -305,8 +305,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         foreach ($members as $member) {
             $user = $member->user;
-            $eliminatedLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
-            $keptLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
+            $eliminatedLabel = 'Plan koji se eliminiše';
+            $keptLabel = 'Plan koji ostaje u bodovanju';
             $this->actingAs($user)->get(route('evaluation.index'))
                 ->assertOk()
                 ->assertDontSee($eliminatedLabel)
@@ -356,8 +356,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertSame('submitted', $application->fresh()->status);
         $this->assertSame(CanonicalReviewState::COMPLAINT_ELIGIBLE, CanonicalReviewState::resolve($application->fresh()));
 
-        $openLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
-        $keptLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
+        $openLabel = 'Plan bez prigovora';
+        $keptLabel = 'Plan koji ostaje u bodovanju';
         $openList = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk();
         $openList->assertSee($openLabel)->assertSee($keptLabel);
         $openRow = $this->rowContaining($openList->getContent(), $openLabel);
@@ -366,8 +366,10 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertStringNotContainsString('Ocjeni', $openRow);
         $this->assertStringNotContainsString('U ocjenjivanju', $openRow);
         $keptRow = $this->rowContaining($openList->getContent(), $keptLabel);
-        $this->assertStringContainsString('Ocjeni', $keptRow);
-        $this->assertStringNotContainsString('Obrazac P3', $keptRow);
+        $this->assertStringContainsString('U ocjenjivanju', $keptRow);
+        $this->assertStringContainsString('Obrazac P3', $keptRow);
+        $this->assertStringNotContainsString('Ocjeni', $keptRow);
+        $this->assertStringNotContainsString('Pregledaj ocjenu', $keptRow);
         $this->actingAs($chair)->get(route('evaluation.index', ['filter' => 'rejected']))
             ->assertOk()
             ->assertDontSee($openLabel);
@@ -433,7 +435,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-20 10:00:00', 'Europe/Belgrade'));
         $this->assertFalse(CanonicalReviewState::isFinallyEliminated($application->fresh()));
 
-        $waitingLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $waitingLabel = 'Plan čeka obavještenje';
         $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee($waitingLabel);
         $row = $this->rowContaining($list->getContent(), $waitingLabel);
         $this->assertStringContainsString(ComplaintService::STATUS_LABELS[ComplaintService::STATUS_NOTICE_PENDING], $row);
@@ -485,8 +487,8 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->assertTrue(CanonicalReviewState::isFinallyEliminated($fresh));
         $this->assertTrue(ApplicationComplaint::query()->where('application_id', $application->id)->sole()->decision_due_at->greaterThan(now()));
 
-        $rejectedLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
-        $keptLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::INNOVATIVE);
+        $rejectedLabel = 'Ranije odbijen plan';
+        $keptLabel = 'Plan koji ostaje u bodovanju';
         $this->actingAs($chair)->get(route('evaluation.index'))
             ->assertOk()
             ->assertDontSee($rejectedLabel)
@@ -507,7 +509,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $chair = $members[G::ROLE_PREDSJEDNIK]->user;
         $this->confirmOrdinarySession($competition);
 
-        $reviewLabel = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
+        $reviewLabel = 'Plan na provjeri';
         $list = $this->actingAs($chair)->get(route('evaluation.index'))->assertOk()->assertSee($reviewLabel);
         $row = $this->rowContaining($list->getContent(), $reviewLabel);
         $this->assertStringContainsString(CanonicalReviewState::LABELS[CanonicalReviewState::PENDING_REVIEW], $row);
@@ -531,7 +533,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $list = $this->actingAs($members[G::ROLE_PREDSJEDNIK]->user)->get(route('evaluation.index'))->assertOk();
         $list->assertSee('40.00 / 50');
         $list->assertDontSee(' / 58');
-        $row = $this->rowContaining($list->getContent(), CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL));
+        $row = $this->rowContaining($list->getContent(), $application->business_plan_name);
         $this->assertStringNotContainsString(' / 58', $row);
         $this->assertStringContainsString('Ocijenjena prijava', $row);
         $this->assertStringNotContainsString('Vaša ocjena je unesena', $row);
@@ -774,16 +776,13 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $chair = $members[G::ROLE_PREDSJEDNIK];
         $secretary = $members[G::ROLE_SEKRETAR];
         $external = $members[G::ROLE_SPOLJASNJI];
-        $local = CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL);
-        $digital = CanonicalSubsidyType::label(CanonicalSubsidyType::DIGITALIZATION);
-
         $this->actingAs($chair->user)->get(route('evaluation.index'))
             ->assertOk()
             ->assertSee('Preliminarna rang-lista — MMSP — '.$competition->title)
-            ->assertSee('Vrsta subvencije')
+            ->assertSee('Naziv plana ulaganja')
             ->assertDontSee('Naziv biznis plana')
-            ->assertSee($local)
-            ->assertDontSee($application->business_plan_name);
+            ->assertDontSee('Vrsta subvencije')
+            ->assertSee($application->business_plan_name);
 
         $second = $this->finalApplication($competition, [
             'business_plan_name' => 'Druga prijava istog podnosioca',
@@ -795,12 +794,11 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
 
         $this->actingAs($secretary->user)->get(route('evaluation.index', ['competition_id' => $competition->id]))
             ->assertOk()
-            ->assertSee('Vrsta subvencije')
+            ->assertSee('Naziv plana ulaganja')
             ->assertDontSee('Naziv biznis plana')
-            ->assertSee($local)
-            ->assertSee($digital)
-            ->assertDontSee($application->business_plan_name)
-            ->assertDontSee('Druga prijava istog podnosioca');
+            ->assertDontSee('Vrsta subvencije')
+            ->assertSee($application->business_plan_name)
+            ->assertSee('Druga prijava istog podnosioca');
 
         $this->score($chair, $application, 50);
         $this->score($chair, $second, 50);
@@ -818,6 +816,7 @@ class CanonicalScoringAndPreliminaryRankingTest extends TestCase
         $this->actingAs($chair->user)->get(route('evaluation.index'))
             ->assertOk()
             ->assertSee('Naziv biznis plana')
+            ->assertDontSee('Naziv plana ulaganja')
             ->assertDontSee('Vrsta subvencije');
 
         $this->score($secretary, $application, 40);

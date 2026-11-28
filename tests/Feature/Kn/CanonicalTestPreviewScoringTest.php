@@ -65,7 +65,8 @@ class CanonicalTestPreviewScoringTest extends TestCase
         $this->actingAs($chair)
             ->get(route('evaluation.index'))
             ->assertOk()
-            ->assertSee(CanonicalSubsidyType::label(CanonicalSubsidyType::AUTHENTIC_LOCAL));
+            ->assertSee($application->business_plan_name)
+            ->assertDontSee('Vrsta subvencije');
 
         $this->actingAs($chair)
             ->get(route('evaluation.create', $application))

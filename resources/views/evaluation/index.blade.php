@@ -259,10 +259,10 @@
             $listedCompetitions = collect($competitions ?? []);
             $canonicalType = \App\Services\Competitions\Profile\CompetitionProfileResolver::TYPE_CANONICAL;
             if (request()->filled('competition_id')) {
-                $subsidyHeaderCompetition = $listedCompetitions->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'));
-                $showSubsidyHeader = $subsidyHeaderCompetition && $subsidyHeaderCompetition->type === $canonicalType;
+                $planHeaderCompetition = $listedCompetitions->first(fn ($comp) => (int) $comp->id === (int) request('competition_id'));
+                $showMmspPlanHeader = $planHeaderCompetition && $planHeaderCompetition->type === $canonicalType;
             } else {
-                $showSubsidyHeader = $listedCompetitions->isNotEmpty()
+                $showMmspPlanHeader = $listedCompetitions->isNotEmpty()
                     && $listedCompetitions->every(fn ($comp) => $comp->type === $canonicalType);
             }
         @endphp
@@ -270,7 +270,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{ $showSubsidyHeader ? 'Vrsta subvencije' : 'Naziv biznis plana' }}</th>
+                        <th>{{ $showMmspPlanHeader ? 'Naziv plana ulaganja' : 'Naziv biznis plana' }}</th>
                         <th>Podnosilac</th>
                         <th>Konkurs</th>
                         <th>Status</th>
@@ -330,18 +330,20 @@
                         <tr>
                             <td>
                                 @if($isCanonicalApplication)
-                                    @php
-                                        $claimSubsidy = $application->finalClaim?->subsidy_type;
-                                        $subsidyLabel = is_string($claimSubsidy) && \App\Support\CanonicalSubsidyType::isValid($claimSubsidy)
-                                            ? \App\Support\CanonicalSubsidyType::label($claimSubsidy)
-                                            : '—';
-                                    @endphp
-                                    {{ $subsidyLabel }}
+                                    {{ filled($application->business_plan_name) ? $application->business_plan_name : '—' }}
                                 @else
                                     {{ $application->business_plan_name }}
                                 @endif
                             </td>
-                            <td>{{ $application->isOmladinskoProfile() ? app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) : ($application->user->name ?? 'N/A') }}</td>
+                            <td>
+                                @if($isYouthApplication)
+                                    {{ app(\App\Services\Competitions\YouthDecisionApplicantIdentity::class)->display($application) }}
+                                @elseif($isCanonicalApplication)
+                                    {{ \App\Support\MmspP3Form::subjectName($application) }}
+                                @else
+                                    {{ $application->user->name ?? 'N/A' }}
+                                @endif
+                            </td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
                                 @if($application->status === 'rejected' || ($canonicalList['eliminated'] ?? false))
@@ -397,7 +399,7 @@
                                     @else
                                         {{-- Dok nisu svi ocjenili, normalni flow --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
-                                            {{ $isYouthApplication ? 'Obrazac M3' : ($isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni') }}
+                                            {{ $isYouthApplication ? 'Obrazac M3' : ($isCanonicalApplication ? 'Obrazac P3' : ($isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni')) }}
                                         </a>
                                     @endif
                                 </div>
